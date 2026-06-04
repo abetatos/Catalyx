@@ -31,9 +31,13 @@ user_notes: "Most visible structural catalyst in the market. Risk of being price
   cooling, networking as higher-alpha adjacent plays."
 
 intensity:
-  current_score: 95.0
+  current_score: 94.9
   last_updated: "2026-06-04"
   history:
+  - period: 2026-Q2
+    score: 94.9
+    note: 'Computed 2026-06-04: avg=89.87 trend=↑↑ (rising 2+ consecutive) (was 95.0)'
+    computation_method: computed
   - period: 2026-Q2
     score: 95
     note: 'Computed 2026-06-04: avg=100.0 trend=↑↑ (rising 2+ consecutive) (was 89)'
@@ -66,7 +70,7 @@ indicators:
   value_history:
   - date: "2026-04-30"
     value: 82
-  score: 100.0
+  score: 92.2
 - id: ind_02
   name: "Nvidia data center revenue quarterly growth"
   source: "Nvidia earnings"
@@ -83,7 +87,7 @@ indicators:
   value_history:
   - date: "2026-05-28"
     value: 0.28
-  score: 100.0
+  score: 85.5
 - id: ind_03
   name: "Global data center power demand growth (IEA estimate)"
   source: "IEA Electricity report"
@@ -100,7 +104,7 @@ indicators:
   value_history:
   - date: "2026-03-01"
     value: 0.24
-  score: 100.0
+  score: 91.9
 deactivation_conditions:
 - id: deact_01
   condition: "Combined hyperscaler capex guidance drops >30% YoY for two consecutive quarters."

@@ -30,9 +30,13 @@ user_notes: "Already played the first leg (EU defense prime ETFs). Monitoring fo
   acceleration."
 
 intensity:
-  current_score: 95.0
+  current_score: 82.7
   last_updated: "2026-06-04"
   history:
+  - period: 2026-Q2
+    score: 82.7
+    note: 'Computed 2026-06-04: avg=77.73 trend=↑↑ (rising 2+ consecutive) (was 95.0)'
+    computation_method: computed
   - period: 2026-Q2
     score: 95
     note: 'Computed 2026-06-04: avg=100.0 trend=↑↑ (rising 2+ consecutive) (was 88)'
@@ -65,7 +69,7 @@ indicators:
   value_history:
   - date: "2026-03-01"
     value: 2.24
-  score: 100.0
+  score: 85.5
 - id: ind_02
   name: "Rheinmetall + Leonardo + Airbus Defence combined order book growth YoY"
   source: "Quarterly earnings"
@@ -82,7 +86,7 @@ indicators:
   value_history:
   - date: "2026-05-15"
     value: 0.22
-  score: 100.0
+  score: 90.0
 - id: ind_03
   name: "EU defense ETF AUM flows (EUDF.L + peers, monthly)"
   source: "iShares + VanEck AUM data"
@@ -95,11 +99,85 @@ indicators:
   last_value: 0.034
   last_date: "2026-06-01"
 
-  semaphore: 🟢
+  semaphore: 🟡
   value_history:
-  - date: "2026-06-01"
-    value: 0.034
-  score: 100.0
+  - date: '2026-06-01'
+    value: -0.0499
+  - date: '2026-05-01'
+    value: 0.0136
+  - date: '2026-04-01'
+    value: 0.0086
+  - date: '2026-03-01'
+    value: -0.0706
+  - date: '2026-02-01'
+    value: -0.017
+  - date: '2026-01-01'
+    value: 0.1651
+  - date: '2025-12-01'
+    value: 0.0477
+  - date: '2025-11-01'
+    value: -0.081
+  - date: '2025-10-01'
+    value: -0.0222
+  - date: '2025-09-01'
+    value: 0.1214
+  - date: '2025-08-01'
+    value: 0.0023
+  - date: '2025-07-01'
+    value: 0.0214
+  - date: '2025-06-01'
+    value: 0.0604
+  - date: '2025-05-01'
+    value: 0.0798
+  - date: '2025-04-01'
+    value: 0.1253
+  - date: '2025-03-01'
+    value: 0.1148
+  - date: '2025-02-01'
+    value: 0.029
+  - date: '2025-01-01'
+    value: 0.053
+  - date: '2024-12-01'
+    value: -0.0263
+  - date: '2024-11-01'
+    value: 0.0274
+  - date: '2024-10-01'
+    value: 0.0518
+  - date: '2024-09-01'
+    value: 0.0132
+  - date: '2024-08-01'
+    value: 0.0581
+  - date: '2024-07-01'
+    value: 0.0373
+  - date: '2024-06-01'
+    value: -0.0132
+  - date: '2024-05-01'
+    value: 0.047
+  - date: '2024-04-01'
+    value: -0.0228
+  - date: '2024-03-01'
+    value: 0.0554
+  - date: '2024-02-01'
+    value: 0.1295
+  - date: '2024-01-01'
+    value: 0.0207
+  - date: '2023-12-01'
+    value: 0.02
+  - date: '2023-11-01'
+    value: 0.0784
+  - date: '2023-10-01'
+    value: 0.0027
+  - date: '2023-09-01'
+    value: -0.026
+  - date: '2023-08-01'
+    value: -0.024
+  - date: '2023-07-01'
+    value: 0.0527
+  - date: '2023-06-01'
+    value: 0.0998
+  - date: '2023-05-01'
+    value: 0.0235
+  score: 57.7
 deactivation_conditions:
 - id: deact_01
   condition: "Comprehensive Russia-Ukraine ceasefire agreement signed AND NATO formally revises GDP targets downward."

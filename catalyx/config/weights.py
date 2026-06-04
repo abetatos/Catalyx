@@ -68,17 +68,19 @@ def momentum_period_weights() -> dict:
 # ── Indicator scoring (intensity_engine) ─────────────────────────────────────
 
 _INDICATOR_SCORING_DEFAULT = {
-    "method": "percentile_with_linear_fallback",
+    "method": "percentile_with_saturating_fallback",
     "min_history_points": 6,
     "percentile_method": "mean",
-    "linear_anchors": {"weak": 50, "strong": 100},
+    "fallback_anchors": {"weak": 50, "strong": 80},
+    "fallback_above_strong_decay": 0.693,
     "clamp": [0, 100],
 }
 
 
 def indicator_scoring() -> dict:
     """Continuous indicator scoring config (v1.5): method, min_history_points,
-    percentile_method, linear_anchors {weak, strong}, clamp [lo, hi]."""
+    percentile_method, fallback_anchors {weak, strong}, fallback_above_strong_decay,
+    clamp [lo, hi]."""
     return _section("indicator_scoring", _INDICATOR_SCORING_DEFAULT)
 
 

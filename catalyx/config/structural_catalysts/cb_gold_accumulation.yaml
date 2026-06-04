@@ -31,12 +31,16 @@ user_notes: >
   Key differentiation: CB demand is sovereign-driven, price-insensitive, not reversible quickly.
 
 intensity:
-  current_score: 95.0
+  current_score: 81.1
   computation_method: "computed"
   computation_note: "Computed 2026-06-03: semaphores ind_01=🟢(100), ind_02=🟡(65), ind_03=🟢(100) → avg=88.3; trend ↑ (79→90
     vs Q1) → factor=1.02; result=90.1→90. ind_01 updated 290→315T (Q2 2026 WGC data)."
   last_updated: "2026-06-04"
   history:
+  - period: 2026-Q2
+    score: 81.1
+    note: 'Computed 2026-06-04: avg=79.13 trend=↑ (rising 1 period) (was 95.0)'
+    computation_method: computed
   - period: 2026-Q2
     score: 95.0
     note: 'Computed 2026-06-04: avg=99.17 trend=→ (flat) (was 90.1)'
@@ -86,9 +90,13 @@ indicators:
     Indonesia, Uganda. Full-year WGC forecast 700-900T."
 
   value_history:
-  - date: "2026-06-03"
+  - date: '2026-03-31'
     value: 290
-  score: 100.0
+  - date: '2025-12-31'
+    value: 330
+  - date: '2022-09-30'
+    value: 399
+  score: 89.7
 - id: ind_02
   name: "IMF COFER — Non-USD reserve share of global FX reserves"
   source: "IMF COFER quarterly data"
@@ -101,11 +109,11 @@ indicators:
   last_value: 0.591
   last_date: "2026-04-01"
 
-  semaphore: 🟢
+  semaphore: 🟡
   value_history:
   - date: "2026-04-01"
     value: 0.591
-  score: 97.5
+  score: 78.5
 - id: ind_03
   name: "Gold ETF AUM monthly change (institutional, ex-retail)"
   source: "iShares + WGC flow data"
@@ -118,11 +126,127 @@ indicators:
   last_value: 0.028
   last_date: "2026-06-01"
 
-  semaphore: 🟢
+  semaphore: 🟡
   value_history:
-  - date: "2026-06-01"
-    value: 0.028
-  score: 100.0
+  - date: '2026-06-01'
+    value: -0.0137
+  - date: '2026-05-01'
+    value: -0.0154
+  - date: '2026-04-01'
+    value: -0.0154
+  - date: '2026-03-01'
+    value: -0.1105
+  - date: '2026-02-01'
+    value: 0.0872
+  - date: '2026-01-01'
+    value: 0.1227
+  - date: '2025-12-01'
+    value: 0.0217
+  - date: '2025-11-01'
+    value: 0.0537
+  - date: '2025-10-01'
+    value: 0.0356
+  - date: '2025-09-01'
+    value: 0.1176
+  - date: '2025-08-01'
+    value: 0.0499
+  - date: '2025-07-01'
+    value: -0.0061
+  - date: '2025-06-01'
+    value: 0.0041
+  - date: '2025-05-01'
+    value: -0.0006
+  - date: '2025-04-01'
+    value: 0.0542
+  - date: '2025-03-01'
+    value: 0.0945
+  - date: '2025-02-01'
+    value: 0.0182
+  - date: '2025-01-01'
+    value: 0.0679
+  - date: '2024-12-01'
+    value: -0.0141
+  - date: '2024-11-01'
+    value: -0.0312
+  - date: '2024-10-01'
+    value: 0.043
+  - date: '2024-09-01'
+    value: 0.0509
+  - date: '2024-08-01'
+    value: 0.0209
+  - date: '2024-07-01'
+    value: 0.0537
+  - date: '2024-06-01'
+    value: -0.0013
+  - date: '2024-05-01'
+    value: 0.0162
+  - date: '2024-04-01'
+    value: 0.0299
+  - date: '2024-03-01'
+    value: 0.0867
+  - date: '2024-02-01'
+    value: 0.0046
+  - date: '2024-01-01'
+    value: -0.0142
+  - date: '2023-12-01'
+    value: 0.0128
+  - date: '2023-11-01'
+    value: 0.0253
+  - date: '2023-10-01'
+    value: 0.0737
+  - date: '2023-09-01'
+    value: -0.0476
+  - date: '2023-08-01'
+    value: -0.0128
+  - date: '2023-07-01'
+    value: 0.0229
+  - date: '2023-06-01'
+    value: -0.0222
+  - date: '2023-05-01'
+    value: -0.0134
+  - date: '2023-04-01'
+    value: 0.0086
+  - date: '2023-03-01'
+    value: 0.0792
+  - date: '2023-02-01'
+    value: -0.0537
+  - date: '2023-01-01'
+    value: 0.0576
+  - date: '2022-12-01'
+    value: 0.0293
+  - date: '2022-11-01'
+    value: 0.0849
+  - date: '2022-10-01'
+    value: -0.0178
+  - date: '2022-09-01'
+    value: -0.0289
+  - date: '2022-08-01'
+    value: -0.0294
+  - date: '2022-07-01'
+    value: -0.0259
+  - date: '2022-06-01'
+    value: -0.0157
+  - date: '2022-05-01'
+    value: -0.0326
+  - date: '2022-04-01'
+    value: -0.0207
+  - date: '2022-03-01'
+    value: 0.0127
+  - date: '2022-02-01'
+    value: 0.0612
+  - date: '2022-01-01'
+    value: -0.0168
+  - date: '2021-12-01'
+    value: 0.033
+  - date: '2021-11-01'
+    value: -0.0069
+  - date: '2021-10-01'
+    value: 0.0148
+  - date: '2021-09-01'
+    value: -0.0322
+  - date: '2021-08-01'
+    value: -0.0008
+  score: 69.2
 deactivation_conditions:
 - id: deact_01
   condition: "CB net purchases fall below 80 tonnes/quarter for two consecutive quarters per WGC data."

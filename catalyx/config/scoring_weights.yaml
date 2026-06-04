@@ -74,12 +74,19 @@ event_catalyst_decay:
 # multipliers (×trend) compounded into an uninterpretable, uncalibratable number.
 #
 # Step 1 — Score each indicator to a CONTINUOUS [0, 100] (see `indicator_scoring`):
-#   method = percentile_with_linear_fallback
+#   method = percentile_with_saturating_fallback
 #     • If the indicator has >= min_history_points values (value_history + current),
 #       score = empirical percentile of current_value within its own history.
 #       For lower_is_stronger, invert: score = (1 - percentile) × 100.
-#     • Otherwise (cold start), linear interpolation anchored on the thresholds:
-#       weak → 50, strong → 100, same slope extrapolated, clamp to [0, 100].
+#     • Otherwise (cold start), a SATURATING curve anchored on the thresholds:
+#         x = (value - weak) / (strong - weak)   # 0 at weak, 1 at strong (signed: the
+#                                                # sign flips automatically for lower_is_stronger)
+#         x ≤ 1:  score = weak_anchor + x·(strong_anchor - weak_anchor)   # linear up to strong
+#         x > 1:  score = strong_anchor + (100 - strong_anchor)·(1 - exp(-decay·(x-1)))
+#       Anchors: weak → 50, strong → 80. Being AT threshold_strong is 80, not 100 — the
+#       headroom above is what lets values far above the threshold spread (≈90–99) instead
+#       of all clamping to 100. A naive linear fallback re-saturated here because the data
+#       sits far above the thresholds; the saturating curve grades by margin-over-threshold.
 #   The 🟢/🟡/🔴 color is now DERIVED from this score (indicator_color_thresholds)
 #   and is display-only — it no longer drives the arithmetic.
 #
@@ -96,18 +103,20 @@ event_catalyst_decay:
 # Step 4 — Clamp result to [10, 95]. Never 0 (deactivated catalysts use status field).
 #
 # Example: struct_cb_gold_accumulation, ind_02 COFER (strong=0.58, weak=0.62,
-#   lower_is_stronger, value=0.582). Old semaphore: 🟡 = 65 (cliff — 95% of the way
-#   to green scored the same as a mid-range value). New linear fallback:
-#   frac = (0.62 - 0.582)/(0.62 - 0.58) = 0.95 → score = 50 + 0.95×50 = 97.5 → 🟢.
+#   lower_is_stronger, value=0.582). Old semaphore: 🟡 = 65 (CLIFF — 95% of the way to
+#   green scored the same as a mid-range value). Saturating fallback: x = (0.582-0.62)/
+#   (0.58-0.62) = 0.95 → score = 50 + 0.95×30 = 78.5 → 🟡. The cliff is gone (continuous),
+#   and 78.5 honestly reflects that COFER is right AT the strong threshold, not deep in green.
 
 # CONTINUOUS indicator scoring (v1.5)
 indicator_scoring:
-  method: percentile_with_linear_fallback
+  method: percentile_with_saturating_fallback
   min_history_points: 6        # need >= this many values before empirical percentile is used
   percentile_method: mean      # rank with ties: (n_below + 0.5·n_equal) / n
-  linear_anchors:              # cold-start fallback: map thresholds to these scores
-    weak: 50
-    strong: 100
+  fallback_anchors:            # cold-start saturating curve: map thresholds to these scores
+    weak: 50                   # score at threshold_weak
+    strong: 80                 # score at threshold_strong (headroom above → far-above values spread, not clamp)
+  fallback_above_strong_decay: 0.693   # each extra (strong-weak) band above strong closes half the gap to 100
   clamp: [0, 100]              # per-indicator score bounds
 
 # Display-only color, DERIVED from the continuous indicator score (v1.5).

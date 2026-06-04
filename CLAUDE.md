@@ -98,6 +98,7 @@ Structural catalysts are the floor signal. Event catalysts are the spike. Both c
 | Tax engine | `catalyx/execution/tax_engine.py` | Spanish CGT 2026 progressive brackets (19/21/23/27%). Incremental + YTD computation. CLI: `uv run python -m catalyx.execution.tax_engine --gain N [--ytd-prior N --loss N]` |
 | Thesis scorer | `catalyx/attribution/thesis_scorer.py` | `right_reason_score` formula from ClosedThesis. CLI: `uv run python -m catalyx.attribution.thesis_scorer <path.json>` |
 | Flow data | `catalyx/data/flow_data.py` | ETF shares_outstanding × NAV → `flow_confirmation [0–100]`. Writes to `data/snapshots/flow_snapshot_YYYYMMDD.json`. Week-over-week delta requires prior snapshot. CLI: `uv run python -m catalyx.data.flow_data [--write]` |
+| History backfill | `catalyx/data/backfill_history.py` | Populates indicator `value_history` from real data (yfinance for market-priced indicators + cited note values) so the percentile path activates. CLI: `uv run python -m catalyx.data.backfill_history [--dry-run]` |
 
 **DB location:** `data/catalyx.db` (SQLite). URL override via `CATALYX_DB_URL` env var.
 **Init command:** `uv run python -m catalyx.store.catalyst_repo init`
@@ -454,7 +455,7 @@ All JSON files written to `data/` follow the schemas in `schemas/`.
 LLMs produce unstable numeric scores across sessions. A free-floating "84" from one session ≠ "84" from another. These rules enforce reproducibility.
 
 **Rule 1 — Compute intensity, never guess it.**
-`intensity.current_score` MUST be derived from the **continuous indicator scores** using the formula in `scoring_weights.yaml` (v1.5: `round(clamp(indicator_avg + trend_delta, 10, 95), 1)`). Each indicator is scored to a continuous [0,100] (empirical percentile of its `value_history`, or a linear interpolation between thresholds while history is thin) — **not** the old 🟢/🟡/🔴 100/65/20 buckets. The color is a display-only label derived from the score. Run `/catalyx-update` after every indicator change — it recomputes intensity automatically. Only `computation_method: "bootstrap"` allows manual values, and only at file creation.
+`intensity.current_score` MUST be derived from the **continuous indicator scores** using the formula in `scoring_weights.yaml` (v1.5: `round(clamp(indicator_avg + trend_delta, 10, 95), 1)`). Each indicator is scored to a continuous [0,100] (empirical percentile of its `value_history` once ≥ `min_history_points`, else a **saturating threshold curve** — weak→50, strong→80, asymptoting to 100 far above strong) — **not** the old 🟢/🟡/🔴 100/65/20 buckets. The color is a display-only label derived from the score. Run `/catalyx-update` after every indicator change — it recomputes intensity automatically. Backfill market-priced indicators' history with `uv run python -m catalyx.data.backfill_history` (yfinance + cited note values) to activate the percentile path. Only `computation_method: "bootstrap"` allows manual values, and only at file creation.
 
 **Rule 2 — Use categories for qualitative dimensions.**
 - `narrative_maturity`: use the 5-level enum (`ignored / emerging / mainstream / crowded / exhausted`), NOT a number. See `scoring_weights.yaml` for anchored criteria with examples.
@@ -565,8 +566,8 @@ Manual reminder of what that skill does:
 
 | Date | File | Version | Change |
 |---|---|---|---|
-| 2026-06-04 | `intensity_engine.py` + `scoring_weights.yaml` + `structural_catalyst.json` | v1.5 | Indicator scoring: 🟢/🟡/🔴 100/65/20 buckets → continuous percentile (linear fallback). Trend & event interaction → additive points. `user_rank` → display ordering tiebreaker. Color is display-only, derived. `value_history[]` added per indicator (schema 1.2→1.3) |
+| 2026-06-05 | `intensity_engine.py` + `data/backfill_history.py` | v1.5 | De-compress: percentile fallback is a SATURATING curve (weak→50, strong→80, asymptote 100) so over-threshold values grade by margin instead of clamping at 100. `backfill_history.py` pulls real value_history (yfinance: copper HG=F, GLD/DFNS.L flow proxies + cited note values). Catalyst scores now spread 81–95 (gold/nato separate from copper/grid/ai) |
+| 2026-06-04 | `intensity_engine.py` + `scoring_weights.yaml` + `structural_catalyst.json` | v1.5 | Indicator scoring: 🟢/🟡/🔴 100/65/20 buckets → continuous percentile + fallback. Trend & event interaction → additive points. `user_rank` → display ordering tiebreaker. Color is display-only, derived. `value_history[]` added per indicator (schema 1.2→1.3) |
 | 2026-06-04 | `catalyx/config/weights.py` | new | Single source of truth: scorers now load weights from `scoring_weights.yaml` instead of hardcoding them (drift fix) |
 | 2026-06-04 | `catalyx/scorer/catalyst_scorer.py` | v1.5 | Multi-catalyst aggregation: arithmetic mean → max-anchored noisy-OR (mean diluted strong catalysts) |
 | 2026-06-04 | `catalyx/execution/tax_engine.py` | fix | `compute_ytd_tax` loss carry-forward: excess loss now carries to later gains instead of being zeroed |
-| 2026-06-04 | `catalyx/scorer/sector_scorer.py` | fix | `--flow` default None → flow snapshot auto-loads via CLI (was dead path; `inst_sponsorship` always null) |

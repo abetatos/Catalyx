@@ -101,7 +101,7 @@ indicators:
   value_history:
   - date: "2026-05-15"
     value: 87
-  score: 100.0
+  score: 99.2
 - id: ind_02
   name: "LME copper spot price (USD/tonne)"
   source: "LME spot price"
@@ -119,9 +119,109 @@ indicators:
 
   semaphore: 🟢
   value_history:
-  - date: "2026-06-02"
-    value: 12742
-  score: 100.0
+  - date: '2026-06-01'
+    value: 14407.0
+  - date: '2026-05-01'
+    value: 14020.0
+  - date: '2026-04-01'
+    value: 13065.0
+  - date: '2026-01-01'
+    value: 13001.0
+  - date: '2025-12-01'
+    value: 12412.0
+  - date: '2025-11-01'
+    value: 11432.0
+  - date: '2025-10-01'
+    value: 11168.0
+  - date: '2025-09-01'
+    value: 10593.0
+  - date: '2025-08-01'
+    value: 9962.0
+  - date: '2025-07-01'
+    value: 9547.0
+  - date: '2025-05-01'
+    value: 10257.0
+  - date: '2025-04-01'
+    value: 10053.0
+  - date: '2025-03-01'
+    value: 11067.0
+  - date: '2025-02-01'
+    value: 9953.0
+  - date: '2025-01-01'
+    value: 9396.0
+  - date: '2024-11-01'
+    value: 8996.0
+  - date: '2024-10-01'
+    value: 9510.0
+  - date: '2024-08-01'
+    value: 9138.0
+  - date: '2024-07-01'
+    value: 9171.0
+  - date: '2024-06-01'
+    value: 9679.0
+  - date: '2024-05-01'
+    value: 10163.0
+  - date: '2024-04-01'
+    value: 10063.0
+  - date: '2024-03-01'
+    value: 8826.0
+  - date: '2024-02-01'
+    value: 8454.0
+  - date: '2024-01-01'
+    value: 8604.0
+  - date: '2023-12-01'
+    value: 8555.0
+  - date: '2023-11-01'
+    value: 8441.0
+  - date: '2023-09-01'
+    value: 8214.0
+  - date: '2023-08-01'
+    value: 8317.0
+  - date: '2023-07-01'
+    value: 8806.0
+  - date: '2023-06-01'
+    value: 8247.0
+  - date: '2023-05-01'
+    value: 8005.0
+  - date: '2023-04-01'
+    value: 8532.0
+  - date: '2023-03-01'
+    value: 9049.0
+  - date: '2023-02-01'
+    value: 9033.0
+  - date: '2022-12-01'
+    value: 8390.0
+  - date: '2022-11-01'
+    value: 8222.0
+  - date: '2022-10-01'
+    value: 7525.0
+  - date: '2022-09-01'
+    value: 7588.0
+  - date: '2022-08-01'
+    value: 7757.0
+  - date: '2022-07-01'
+    value: 7901.0
+  - date: '2022-06-01'
+    value: 8189.0
+  - date: '2022-04-01'
+    value: 9689.0
+  - date: '2022-03-01'
+    value: 10457.0
+  - date: '2022-02-01'
+    value: 9798.0
+  - date: '2022-01-01'
+    value: 9520.0
+  - date: '2021-12-01'
+    value: 9822.0
+  - date: '2021-11-01'
+    value: 9431.0
+  - date: '2021-10-01'
+    value: 9646.0
+  - date: '2021-09-01'
+    value: 9017.0
+  - date: '2021-07-01'
+    value: 9878.0
+  score: 95.2
 - id: ind_03
   name: "LME copper warehouse inventory (tonnes) — low inventory = supply tightness"
   source: "LME daily inventory report"
@@ -140,7 +240,7 @@ indicators:
   value_history:
   - date: "2026-06-01"
     value: 112000
-  score: 100.0
+  score: 84.3
 - id: ind_04
   name: "Data center copper demand estimate — analyst consensus (Wood Mackenzie / CRU)"
   source: "Industry reports (WoodMac, CRU Group)"
@@ -157,9 +257,11 @@ indicators:
 
   semaphore: 🟢
   value_history:
-  - date: "2026-03-01"
+  - date: '2026-03-01'
     value: 1000000
-  score: 100.0
+  - date: '2025-12-31'
+    value: 500000
+  score: 90.0
 deactivation_conditions:
 - id: deact_01
   condition: "Combined hyperscaler AI capex guidance drops >30% YoY for two consecutive quarters."

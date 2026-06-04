@@ -2,12 +2,12 @@
 
 Formula (scoring_weights.yaml §STRUCTURAL CATALYST INTENSITY, v1.5):
   1. CONTINUOUS score per indicator in [0, 100] (no more 🟢/🟡/🔴 buckets):
-       method = percentile_with_linear_fallback
+       method = percentile_with_saturating_fallback
        • >= min_history_points values → empirical percentile of current_value
          within the indicator's own value_history (+ current). lower_is_stronger
          inverts: score = (1 - pct) × 100.
-       • otherwise (cold start) → linear interpolation anchored on the thresholds
-         (weak → 50, strong → 100), same slope extrapolated, clamped.
+       • otherwise (cold start) → a saturating curve anchored on the thresholds
+         (weak → 50, strong → 80, asymptoting to 100 far above strong), clamped.
      The 🟢/🟡/🔴 color is now DERIVED from this score and is display-only.
   2. indicator_avg = weighted mean (equal weight unless indicator_weight set)
   3. trend_delta (ADDITIVE points) from intensity.history last 2-3 periods
@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from datetime import date
 from pathlib import Path
@@ -46,8 +47,9 @@ from catalyx.config import weights
 
 _SCORING = weights.indicator_scoring()
 _MIN_HISTORY_POINTS = int(_SCORING["min_history_points"])
-_ANCHOR_WEAK = float(_SCORING["linear_anchors"]["weak"])
-_ANCHOR_STRONG = float(_SCORING["linear_anchors"]["strong"])
+_ANCHOR_WEAK = float(_SCORING["fallback_anchors"]["weak"])
+_ANCHOR_STRONG = float(_SCORING["fallback_anchors"]["strong"])
+_ABOVE_STRONG_DECAY = float(_SCORING["fallback_above_strong_decay"])
 _IND_CLAMP_LO, _IND_CLAMP_HI = (float(x) for x in _SCORING["clamp"])
 
 _COLOR_GREEN, _COLOR_AMBER = weights.indicator_color_thresholds()
@@ -92,12 +94,17 @@ def _percentile_score(value: float, sample: list[float], direction: str) -> floa
     return pct
 
 
-def _linear_score(value: float, ind: dict) -> float:
-    """Cold-start fallback: linear interpolation anchored on the thresholds
-    (weak → _ANCHOR_WEAK, strong → _ANCHOR_STRONG), same slope extrapolated.
+def _fallback_score(value: float, ind: dict) -> float:
+    """Cold-start fallback: a SATURATING curve anchored on the thresholds.
 
-    The signed (strong - weak) difference makes this work for both directions:
-    for lower_is_stronger, threshold_strong < threshold_weak, so the slope flips.
+      x = (value - weak) / (strong - weak)   # 0 at weak, 1 at strong
+      x ≤ 1: linear  weak_anchor → strong_anchor   (and below weak, continues down)
+      x > 1: strong_anchor + (100 - strong_anchor)·(1 - exp(-decay·(x-1)))
+
+    The signed (strong - weak) difference makes x correct for both directions
+    (for lower_is_stronger, threshold_strong < threshold_weak, so the sign flips).
+    Being far above threshold_strong asymptotes toward 100 instead of clamping there,
+    so over-threshold values grade by margin instead of all saturating.
     """
     strong = float(ind["threshold_strong"])
     weak = float(ind["threshold_weak"])
@@ -105,13 +112,16 @@ def _linear_score(value: float, ind: dict) -> float:
         # Degenerate thresholds — fall back to a direction-aware step.
         meets = value <= strong if ind["direction"] == "lower_is_stronger" else value >= strong
         return _ANCHOR_STRONG if meets else _ANCHOR_WEAK
-    slope = (_ANCHOR_STRONG - _ANCHOR_WEAK) / (strong - weak)
-    return _ANCHOR_WEAK + (value - weak) * slope
+
+    x = (value - weak) / (strong - weak)
+    if x <= 1.0:
+        return _ANCHOR_WEAK + x * (_ANCHOR_STRONG - _ANCHOR_WEAK)
+    return _ANCHOR_STRONG + (100.0 - _ANCHOR_STRONG) * (1.0 - math.exp(-_ABOVE_STRONG_DECAY * (x - 1.0)))
 
 
 def _indicator_score(ind: dict) -> float:
     """Continuous [0, 100] score for one indicator. Percentile when enough history
-    exists, else linear fallback. No data → clamp floor."""
+    exists, else the saturating threshold fallback. No data → clamp floor."""
     cur = ind.get("current_value")
     if not isinstance(cur, (int, float)):
         return _IND_CLAMP_LO
@@ -120,7 +130,7 @@ def _indicator_score(ind: dict) -> float:
     if len(sample) >= _MIN_HISTORY_POINTS:
         raw = _percentile_score(float(cur), sample, ind["direction"])
     else:
-        raw = _linear_score(float(cur), ind)
+        raw = _fallback_score(float(cur), ind)
     return round(_clamp(raw, _IND_CLAMP_LO, _IND_CLAMP_HI), 1)
 
 
@@ -134,7 +144,7 @@ def _color(score: float) -> str:
 
 
 def _scoring_mode(ind: dict) -> str:
-    return "percentile" if len(_indicator_values(ind)) >= _MIN_HISTORY_POINTS else "linear"
+    return "percentile" if len(_indicator_values(ind)) >= _MIN_HISTORY_POINTS else "fallback"
 
 
 # ── Trend (additive delta) ───────────────────────────────────────────────────

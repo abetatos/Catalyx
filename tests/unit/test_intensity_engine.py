@@ -28,32 +28,36 @@ def _ind(**kw):
     return base
 
 
-# ── Linear fallback (cold start, < min_history_points) ───────────────────────
+# ── Saturating threshold fallback (cold start, < min_history_points) ─────────
 
-def test_linear_midpoint_between_thresholds():
-    # higher_is_stronger: weak=80→50, strong=200→100. Midpoint 140 → 75.
+def test_fallback_midpoint_between_thresholds():
+    # weak=80→50, strong=200→80. Midpoint 140 (x=0.5) → 50 + 0.5×30 = 65.
     score = ie._indicator_score(_ind(current_value=140, threshold_strong=200, threshold_weak=80))
-    assert score == pytest.approx(75.0, abs=0.05)
+    assert score == pytest.approx(65.0, abs=0.05)
 
 
-def test_linear_at_strong_threshold_is_anchor():
+def test_fallback_at_strong_threshold_is_80():
+    # Being AT threshold_strong scores the strong anchor (80), not 100 — headroom above.
     score = ie._indicator_score(_ind(current_value=200, threshold_strong=200, threshold_weak=80))
-    assert score == pytest.approx(100.0, abs=0.05)
+    assert score == pytest.approx(80.0, abs=0.05)
 
 
-def test_linear_at_weak_threshold_is_anchor():
+def test_fallback_at_weak_threshold_is_50():
     score = ie._indicator_score(_ind(current_value=80, threshold_strong=200, threshold_weak=80))
     assert score == pytest.approx(50.0, abs=0.05)
 
 
-def test_linear_above_strong_clamps_to_100():
+def test_fallback_far_above_strong_saturates_below_100():
+    # x=3.5 → 80 + 20×(1 - exp(-0.693×2.5)) ≈ 96.5. Graded, not clamped at 100.
     score = ie._indicator_score(_ind(current_value=500, threshold_strong=200, threshold_weak=80))
-    assert score == 100.0
+    assert score == pytest.approx(96.5, abs=0.1)
+    assert score < 100.0
 
 
 def test_cliff_fix_cofer_case():
     """The motivating bug: COFER ind_02, lower_is_stronger, strong=0.58, weak=0.62,
-    value=0.582 scored 🟡=65 under the old semaphore. It is 95% of the way to green."""
+    value=0.582 scored 🟡=65 under the old semaphore (a cliff). The saturating fallback
+    gives a continuous 78.5 — honestly 'right at the strong threshold', no discontinuity."""
     ind = _ind(
         direction="lower_is_stronger",
         threshold_strong=0.58,
@@ -61,14 +65,16 @@ def test_cliff_fix_cofer_case():
         current_value=0.582,
     )
     score = ie._indicator_score(ind)
-    assert score == pytest.approx(97.5, abs=0.05)
-    assert ie._color(score) == "🟢"
+    assert score == pytest.approx(78.5, abs=0.05)
+    assert ie._color(score) == "🟡"
 
 
-def test_lower_is_stronger_low_value_scores_high():
-    # value below the strong (low) threshold → at/above 100, clamped.
+def test_lower_is_stronger_below_strong_scores_above_80():
+    # value below the strong (low) threshold → above strong on the band → >80, graded.
     ind = _ind(direction="lower_is_stronger", threshold_strong=0.58, threshold_weak=0.62, current_value=0.55)
-    assert ie._indicator_score(ind) == 100.0
+    score = ie._indicator_score(ind)
+    assert score == pytest.approx(88.1, abs=0.2)
+    assert 80.0 < score < 100.0
 
 
 def test_none_value_floors():
@@ -137,8 +143,8 @@ def test_compute_intensity_clamps_to_max():
         "intensity": {"current_score": 80, "history": [{"score": 90}, {"score": 84}, {"score": 78}]},
     }
     r = ie.compute_intensity(cat)
-    # avg=100, +5 trend → 105 → clamped to 95
-    assert r["indicator_avg"] == 100.0
+    # each indicator (val=500, far above strong) → ~96.5; avg ~96.5, +5 trend → clamped to 95
+    assert r["indicator_avg"] == pytest.approx(96.5, abs=0.1)
     assert r["trend_delta"] == 5
     assert r["computed_score"] == 95.0
 

@@ -15,13 +15,23 @@ chained multipliers the user flagged as opaque and unstable.
 ### `catalyx/scorer/intensity_engine.py` + `scoring_weights.yaml` — continuous indicator scoring
 **Problem:** the semaphore mapped every indicator to one of three values (100/65/20),
 creating a CLIFF — e.g. `cb_gold_accumulation` `ind_02` (COFER, strong=0.58, weak=0.62,
-lower_is_stronger, value=0.582) scored 🟡=65 despite being 95% of the way to green; a
-0.002 move to 0.580 jumped it to 100. Anchors arbitrary, gaps asymmetric (45 vs 35).
-**Fix:** `indicator_scoring.method = percentile_with_linear_fallback`. Each indicator is
+lower_is_stronger, value=0.582) scored 🟡=65 despite sitting right at the strong threshold;
+a 0.002 move to 0.580 jumped it to 100. Anchors arbitrary, gaps asymmetric (45 vs 35).
+**Fix:** `indicator_scoring.method = percentile_with_saturating_fallback`. Each indicator is
 scored to a continuous [0,100]: empirical percentile of its own `value_history` once
-≥ `min_history_points` (6) accrue, else linear interpolation between thresholds
-(weak→50, strong→100). The COFER case now scores 97.5. Color (🟢/🟡/🔴) is DERIVED from
-the score (`indicator_color_thresholds`) and is display-only — it no longer drives math.
+≥ `min_history_points` (6) accrue, else a SATURATING threshold curve (weak→50, strong→80,
+asymptoting to 100 far above strong). Strong→80 leaves headroom so over-threshold values
+grade by margin instead of all clamping to 100 — a naive linear fallback re-saturated
+because the data sits far above the thresholds. The COFER case now scores 78.5. Color
+(🟢/🟡/🔴) is DERIVED from the score and is display-only — it no longer drives math.
+
+### `catalyx/data/backfill_history.py` — real history activates the percentile path
+Pulls `value_history` from yfinance for the market-priced indicators (copper `HG=F`→USD/tonne;
+gold/defense ETF flow proxies via `GLD`/`DFNS.L` monthly returns) and seeds the rest from
+values explicitly cited in the YAML notes (no fabricated points). With real history, catalyst
+intensities de-compress from a flat 95 to a 81–95 spread: `cb_gold` 81.1 (COFER at threshold +
+gold ETF flows at the 69th percentile) and `nato_rearmament` 82.7 (defense ETF flows at the
+58th percentile) now separate from `copper_datacenter`/`energy_transition`/`ai_capex` (~95).
 
 ### Additive adjustments replace multipliers
 - **Trend:** `intensity_trend_factors` (×1.05…0.93) → `intensity_trend_deltas` (+5…−7),
