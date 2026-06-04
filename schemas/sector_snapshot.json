@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "catalyx/schemas/sector_snapshot.json",
+  "schema_version": "1.1",
+  "title": "SectorSnapshot",
+  "description": "A sector's composite score at a point in time. The output of the Scorer module. One per sector per scoring run.",
+  "type": "object",
+  "required": ["id", "schema_version", "sector_id", "sector_label", "snapshot_at", "investable", "scores", "active_catalyst_ids"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^snap_[0-9]{8}_[a-z0-9_]+$" },
+    "schema_version": { "type": "string", "const": "1.1" },
+    "sector_id": { "type": "string", "description": "Must be a valid sector_id from sector_taxonomy.yaml." },
+    "sector_label": { "type": "string" },
+    "parent_sector": { "type": "string" },
+    "snapshot_at": { "type": "string", "format": "date-time" },
+    "investable": {
+      "type": "boolean",
+      "description": "From sector_taxonomy.yaml. If false, this sector cannot be a thesis target."
+    },
+    "etf_universe": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ticker", "exchange", "currency", "ter", "aum_m_usd", "replication"],
+        "properties": {
+          "ticker": { "type": "string" },
+          "name": { "type": "string" },
+          "exchange": { "type": "string" },
+          "currency": { "type": "string" },
+          "ter": { "type": "number", "description": "Total Expense Ratio as decimal (0.005 = 0.5%)" },
+          "aum_m_usd": { "type": "number", "description": "AUM in millions USD. Flag if < 200." },
+          "replication": { "type": "string", "enum": ["physical", "synthetic_swap", "optimized_sampling"] },
+          "avg_spread_bps": { "type": "number", "description": "Average bid-ask spread in basis points. Flag if > 25." },
+          "avg_daily_volume_m_usd": { "type": ["number", "null"] },
+          "recommendation_tier": { "type": "integer", "minimum": 1, "maximum": 3 }
+        }
+      }
+    },
+    "active_catalyst_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "IDs of CatalystEvent and StructuralCatalyst objects contributing to this snapshot."
+    },
+    "scores": {
+      "type": "object",
+      "required": ["catalyst_alignment", "momentum", "flow_confirmation", "valuation_relative", "crowding_risk", "composite"],
+      "properties": {
+        "catalyst_alignment": { "type": "number", "minimum": 0, "maximum": 100 },
+        "catalyst_alignment_event_component": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+        "catalyst_alignment_structural_component": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+        "momentum": { "type": "number", "minimum": 0, "maximum": 100 },
+        "flow_confirmation": { "type": "number", "minimum": 0, "maximum": 100 },
+        "valuation_relative": { "type": "number", "minimum": 0, "maximum": 100 },
+        "crowding_risk": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Higher = more crowded = penalty to composite. Inverted before weighting."
+        },
+        "composite": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Weighted composite: alignment×0.30 + momentum×0.25 + flow×0.20 + valuation×0.15 - crowding_penalty×0.10"
+        }
+      }
+    },
+    "score_breakdown": {
+      "type": "object",
+      "properties": {
+        "catalyst_alignment_rationale": { "type": "string" },
+        "dominant_catalyst_type": { "type": "string", "enum": ["event", "structural", "mixed"] },
+        "momentum_detail": {
+          "type": "object",
+          "properties": {
+            "return_1m": { "type": "number" },
+            "return_3m": { "type": "number" },
+            "return_6m": { "type": "number" },
+            "z_score_vs_3y": { "type": "number" }
+          }
+        },
+        "flow_detail": {
+          "type": "object",
+          "properties": {
+            "aum_change_1w_pct": { "type": "number" },
+            "aum_change_1m_pct": { "type": "number" },
+            "cot_net_long_percentile": { "type": ["number", "null"] }
+          }
+        },
+        "valuation_detail": {
+          "type": "object",
+          "properties": {
+            "metric": { "type": "string" },
+            "current": { "type": "number" },
+            "percentile_3y": { "type": "number" }
+          }
+        },
+        "crowding_detail": {
+          "type": "object",
+          "properties": {
+            "short_interest_pct": { "type": ["number", "null"] },
+            "analyst_consensus": { "type": "string" },
+            "crowding_flag": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "market_data": {
+      "type": "object",
+      "properties": {
+        "benchmark_ticker": { "type": "string" },
+        "price": { "type": "number" },
+        "price_date": { "type": "string", "format": "date" }
+      }
+    },
+    "watch_triggers_status": {
+      "type": ["array", "null"],
+      "description": "Only present for watch_only sectors. Tracks which triggers have fired.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "trigger": { "type": "string" },
+          "fired": { "type": "boolean" },
+          "fired_date": { "type": ["string", "null"], "format": "date" }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

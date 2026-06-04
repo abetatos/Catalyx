@@ -1,0 +1,39 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20260603_copper_supply_deficit_2026",
+  "schema_version": "1.2",
+  "type": "event",
+  "created_at": "2026-06-03T23:59:00Z",
+  "detected_at": "2026-06-03T23:59:00Z",
+  "source": {
+    "type": "data_release",
+    "url": "https://source.benchmarkminerals.com/article/grasberg-supply-shock-to-plunge-refined-copper-market-into-deficit-in-2026-benchmark-analysis-shows",
+    "publication": "Benchmark Minerals / Crux Investor / ING Think",
+    "published_at": "2026-06-01T00:00:00Z"
+  },
+  "catalyst_type": "commodity_supply",
+  "catalyst_subtype": "supply_disruption_force_majeure",
+  "description": "Multiple simultaneous copper supply disruptions converge to produce the largest copper market deficit in at least a decade. (1) Grasberg (FCX, Indonesia): force majeure extended — full restart now delayed from 2027 to 2028. World's second-largest copper mine operating at ~85% capacity until at least late 2027. Annual output cut: ~300M lbs (9% of FCX guidance). (2) Zambia: Vedanta copper smelter shutdown for maintenance window June-September 2026, removing processing capacity during a period of tight supply. (3) Chile: copper output -9.04% YoY (March 2026). (4) DRC: Kamoa-Kakula processing limited by sulfuric acid shortage. Cumulative impact: Morgan Stanley projects 600,000-tonne deficit in 2026. JPMorgan: 330,000T. ICSG: 150,000T. All three banks expect deficit conditions. At current LME price of $13,965/tonne, the market is partially pricing the tightness but analyst models have not fully incorporated the Grasberg-to-2028 extension.",
+  "geography": ["IDN", "ZMB", "CHL", "COD", "GLOBAL"],
+  "magnitude": "high",
+  "novelty_score": 60,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": true,
+    "nov_02_new_sector": false,
+    "nov_03_new_source": false,
+    "nov_04_changes_rate": true,
+    "nov_05_consensus_surprise_gt50": true
+  },
+  "strength_score": 78,
+  "consensus_surprise": 0.6,
+  "is_priced_in_estimate": 0.50,
+  "relation_to_structural": "confirms",
+  "decay_halflife_days": 90,
+  "related_catalyst_ids": ["struct_copper_datacenter_demand", "struct_energy_transition_grid"],
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": "2027-12-31",
+  "user_rank": null,
+  "user_notes": "Múltiples disrupciones simultáneas que convierten el déficit de cobre de 2026 en un evento estructural, no cíclico. La extensión de Grasberg a 2028 es el hecho más relevante para la thesis — refuerza el argumento de supply inelástico. Este evento CONFIRMA struct_copper_datacenter_demand (lado de la oferta) y struct_energy_transition_grid. El 50% priced_in refleja que el precio ya ha subido a $13,965/T pero los modelos de analistas todavía no incorporan el déficit de 600k T. La extensión de Grasberg a 2028 fue parcialmente sorpresa (mercado esperaba 2027). Impacta directamente la thesis copper_miners — refuerza la tesis de supply tightness en la columna de supply constraints.",
+  "tags": ["copper", "supply_disruption", "Grasberg", "force_majeure", "deficit", "Chile", "Zambia", "mine_supply"]
+}

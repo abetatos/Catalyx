@@ -1,0 +1,39 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20260601_us_ai_chip_export_controls",
+  "schema_version": "1.2",
+  "type": "event",
+  "created_at": "2026-06-03T23:59:00Z",
+  "detected_at": "2026-06-03T23:59:00Z",
+  "source": {
+    "type": "official_announcement",
+    "url": "https://yournews.com/2026/06/01/7019616/u-s-moves-to-tighten-ai-chip-export-controls-closing-potential/",
+    "publication": "US Department of Commerce — BIS Guidance",
+    "published_at": "2026-06-01T00:00:00Z"
+  },
+  "catalyst_type": "sanctions_trade",
+  "catalyst_subtype": "export_control_tech",
+  "description": "The US Department of Commerce Bureau of Industry and Security (BIS) issued guidance on June 1, 2026 stating that export licensing requirements for advanced AI chips (including Nvidia Blackwell) apply to ALL businesses with headquarters or a parent company in China, including overseas subsidiaries operating outside mainland China. This closes a loophole that allowed Chinese companies to route chip acquisitions through non-China subsidiaries. The action builds on January 2026 policy changes (case-by-case licensing framework) and congressional momentum via the AI OVERWATCH Act (prohibits Blackwell sales to foreign entities of concern for 2 years). Impact: (1) Reduces accessible market for Nvidia Blackwell and equivalent chips to Chinese entities globally, not just in China. (2) Reinforces Western AI infrastructure advantage — hyperscalers (MSFT, GOOG, AMZN, META) cannot lose Blackwell to Chinese competitors through subsidiary routes. (3) Supply chain: Chinese AI companies forced to develop or acquire domestic alternatives (Huawei Ascend), extending their capability gap.",
+  "geography": ["US", "CHN", "GLOBAL"],
+  "magnitude": "medium",
+  "novelty_score": 40,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": false,
+    "nov_02_new_sector": false,
+    "nov_03_new_source": true,
+    "nov_04_changes_rate": true,
+    "nov_05_consensus_surprise_gt50": false
+  },
+  "strength_score": 62,
+  "consensus_surprise": 0.4,
+  "is_priced_in_estimate": 0.25,
+  "relation_to_structural": "independent",
+  "decay_halflife_days": 180,
+  "related_catalyst_ids": [],
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": "2028-06-01",
+  "user_rank": null,
+  "user_notes": "Evento regulatorio que refuerza la tesis AI capex occidental indirectamente — la ventaja de compute de las empresas occidentales se ensancha. Sectores impactados: semiconductors_design (Nvidia — mixed short-term/bullish long-term), cybersecurity_defense (US AI sovereignty). No está directamente enlazado a ningún catalizador estructural existente (relation_to_structural: independent). El strength_score de 62 está en el umbral — incluido porque la closure del loophole de subsidiarias es un cambio concreto con implicaciones de ejecución inmediata. El 40% novelty refleja que export controls AI son ya un patrón conocido. La extensión a subsidiarias es el elemento nuevo.",
+  "tags": ["AI", "semiconductors", "export_controls", "BIS", "China", "Nvidia", "Blackwell", "sanctions"]
+}

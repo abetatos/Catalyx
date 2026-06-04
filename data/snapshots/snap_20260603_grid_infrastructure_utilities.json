@@ -1,0 +1,54 @@
+{
+  "$schema": "catalyx/schemas/sector_snapshot.json",
+  "id": "snap_20260603_grid_infrastructure_utilities",
+  "schema_version": "1.1",
+  "sector_id": "grid_infrastructure_utilities",
+  "sector_label": "Grid Infrastructure & Storage",
+  "parent_sector": "energy",
+  "snapshot_at": "2026-06-03T23:59:00Z",
+  "investable": true,
+  "active_catalyst_ids": [
+    "struct_energy_transition_grid",
+    "struct_ai_capex_supercycle"
+  ],
+  "scores": {
+    "catalyst_alignment": 95,
+    "catalyst_alignment_event_component": null,
+    "catalyst_alignment_structural_component": 95,
+    "momentum": 87.9,
+    "flow_confirmation": 50,
+    "valuation_relative": 60,
+    "crowding_risk": 50,
+    "composite": 74.5
+  },
+  "score_breakdown": {
+    "catalyst_alignment_rationale": "Two active structural catalysts, both directly aligned: struct_energy_transition_grid (primary — grid as binding constraint) and struct_ai_capex_supercycle (secondary — DC power demand). No active confirming event catalyst at snapshot date. Pure structural signal.",
+    "dominant_catalyst_type": "structural",
+    "momentum_detail": {
+      "return_1m": 9.86,
+      "return_3m": 31.24,
+      "return_6m": 39.1,
+      "z_score_vs_3y": null
+    },
+    "flow_detail": {
+      "aum_change_1w_pct": null,
+      "aum_change_1m_pct": null,
+      "cot_net_long_percentile": null
+    },
+    "valuation_detail": {
+      "metric": "IQQH.DE relative P/E vs S&P 500 (order-book adjusted)",
+      "current": 60,
+      "percentile_3y": null
+    },
+    "crowding_detail": {
+      "short_interest_pct": null,
+      "analyst_consensus": "mainstream — clean energy policy framing; grid equipment order-book angle less crowded. Phase 0: flow_confirmation=50 (neutral placeholder). valuation_relative=60 (IQQH near 52w high, moderate premium with order-book support). crowding_risk=50 (clean energy framing is mainstream/crowded, equipment angle is not). composite = 95×0.30 + 87.9×0.25 + 50×0.20 + 60×0.15 + 50×0.10 = 74.5",
+      "crowding_flag": false
+    }
+  },
+  "market_data": {
+    "benchmark_ticker": "IQQH.DE",
+    "price": 11.454,
+    "price_date": "2026-06-04"
+  }
+}

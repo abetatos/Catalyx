@@ -1,0 +1,164 @@
+# CATALYX Catalyst Taxonomy — v1.1
+# Defines valid values for catalyst_type and catalyst_subtype fields.
+# Used by: CatalystDetector (LLM classification prompt), schema validation.
+#
+# When adding a new subtype: update this file AND re-validate existing catalyst objects.
+
+catalyst_types:
+
+  monetary_policy:
+    description: "Central bank rate decisions, forward guidance, QE/QT programs, reserve policy"
+    subtypes:
+      - rate_hike
+      - rate_cut
+      - pause_pivot_signal
+      - qe_expansion
+      - qt_acceleration
+      - reserve_requirement_change
+      - fx_intervention
+    typical_sectors: [eu_retail_banking, us_retail_banking, gold_physical, real_estate_logistics, infrastructure_core]
+    typical_geography: [US, EU, CHN, JPN]
+    decay_halflife_days: 30
+
+  fiscal_policy:
+    description: "Government spending programs, tax changes, deficit/surplus shifts, targeted subsidies"
+    subtypes:
+      - defense_spending
+      - infrastructure_program
+      - industrial_policy
+      - tax_cut
+      - tax_increase
+      - subsidy_green_energy
+      - subsidy_semiconductor
+      - austerity
+    typical_sectors: [eu_defense_prime_contractors, grid_infrastructure_utilities, semiconductors_foundry]
+    decay_halflife_days: 90
+
+  geopolitical:
+    description: "Wars, sanctions, diplomatic events, territorial disputes, alliance shifts"
+    subtypes:
+      - war_escalation
+      - war_ceasefire
+      - sanctions_imposed
+      - sanctions_lifted
+      - nato_commitment
+      - trade_agreement
+      - trade_dispute
+      - diplomatic_breakthrough
+    typical_sectors: [eu_defense_prime_contractors, gold_physical, oil_majors_integrated, lng_natural_gas]
+    decay_halflife_days: 60
+
+  commodity_supply:
+    description: "Supply disruptions, OPEC decisions, mine closures, inventory data"
+    subtypes:
+      - opec_cut
+      - opec_increase
+      - mine_closure
+      - supply_disruption_force_majeure
+      - inventory_draw
+      - inventory_build
+      - new_discovery
+    typical_sectors: [oil_majors_integrated, uranium_miners, gold_miners, copper_miners, lithium_miners]
+    decay_halflife_days: 21
+
+  regulatory:
+    description: "New regulation, deregulation, antitrust, environmental standards"
+    subtypes:
+      - approval_drug
+      - approval_technology
+      - antitrust_action
+      - environmental_mandate
+      - data_privacy_regulation
+      - financial_regulation
+      - ai_regulation
+    typical_sectors: [biotech_drug_development, cloud_software_saas, cybersecurity_commercial, fintech_payments]
+    decay_halflife_days: 45
+
+  institutional_flow:
+    description: "Large capital allocation decisions: CB reserve changes, sovereign wealth, pension mandates"
+    subtypes:
+      - central_bank_reserve_shift
+      - sovereign_wealth_allocation
+      - pension_mandate_change
+      - etf_large_creation
+      - etf_large_redemption
+      - cot_positioning_extreme
+    typical_sectors: [gold_physical, eu_defense_prime_contractors, infrastructure_core]
+    decay_halflife_days: 14
+
+  macro_data_release:
+    description: "Scheduled economic data: CPI, PMI, employment, GDP, trade balance"
+    subtypes:
+      - cpi_print
+      - pmi_manufacturing
+      - pmi_services
+      - employment_report
+      - gdp_revision
+      - trade_balance
+      - retail_sales
+    typical_sectors: [eu_retail_banking, us_retail_banking, consumer_india_em]
+    decay_halflife_days: 7
+
+  corporate_event:
+    description: "Earnings, M&A, spin-offs, restructuring within a sector that has sector-wide implications"
+    subtypes:
+      - sector_ma_wave
+      - earnings_guidance_revision
+      - sector_restructuring
+      - ipo_sector_proxy
+      - analyst_model_revision  # When ≥2 Tier-1 banks update the same sector thesis in the same direction in the same quarter.
+                                 # This is the signal that a mispricing is closing (e.g., Goldman adds DC copper demand to base case).
+                                 # Distinct from individual earnings_guidance_revision — requires consensus shift across multiple banks.
+                                 # Registration criteria: ≥2 of {GS, JPM, MS, BofA, UBS} publish revised sector models
+                                 # in the same 30-day window with ≥10% change in sector revenue estimate or price target.
+    typical_sectors: [copper_miners, gold_miners, semiconductors_design, ai_infrastructure_data_centers]
+    decay_halflife_days: 30  # Analyst model revisions have immediate impact, fade in ~1 month as market absorbs.
+
+  technology_breakthrough:
+    description: "Scientific or engineering milestone that changes the investability or demand outlook of a sector"
+    subtypes:
+      - prototype_demonstrated
+      - commercial_deployment
+      - cost_curve_inflection
+      - regulatory_approval_novel_tech
+    typical_sectors: [quantum_computing, nuclear_fusion, synthetic_biology, ai_infrastructure_data_centers]
+    decay_halflife_days: 120
+
+  technology_adoption:
+    description: "Structural: a technology is being adopted at scale, driving multi-year demand"
+    subtypes:
+      - ev_adoption_acceleration
+      - ai_inference_buildout
+      - grid_electrification
+      - satellite_internet_rollout
+    typical_sectors: [copper_miners, lithium_miners, ai_infrastructure_data_centers, grid_infrastructure_utilities]
+    decay_halflife_days: null  # Structural: does not decay, use StructuralCatalyst type instead
+
+  demographic:
+    description: "Structural population trends: aging, urbanization, middle class growth"
+    subtypes:
+      - aging_population
+      - em_middle_class_rise
+      - urbanization_wave
+    typical_sectors: [pharma_large_cap, medical_devices, consumer_india_em, luxury_goods]
+    decay_halflife_days: null  # Structural
+
+  climate_transition:
+    description: "Structural: energy transition, decarbonization, climate risk repricing"
+    subtypes:
+      - carbon_price_increase
+      - net_zero_mandate
+      - stranded_asset_risk
+      - green_subsidy_program
+    typical_sectors: [solar_energy, wind_energy_offshore, grid_infrastructure_utilities, hydrogen_clean_fuels]
+    decay_halflife_days: null  # Structural
+
+  sanctions_trade:
+    description: "Trade restrictions, export controls, supply chain weaponization"
+    subtypes:
+      - export_control_tech
+      - import_tariff
+      - entity_list_addition
+      - supply_chain_decoupling
+    typical_sectors: [semiconductors_equipment, rare_earth_miners, semiconductors_foundry]
+    decay_halflife_days: 180

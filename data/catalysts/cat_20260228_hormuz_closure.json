@@ -1,0 +1,39 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20260228_hormuz_closure",
+  "schema_version": "1.2",
+  "type": "event",
+  "created_at": "2026-06-04T00:00:00Z",
+  "detected_at": "2026-06-04T00:00:00Z",
+  "source": {
+    "type": "news_article",
+    "url": "https://247wallst.com/investing/2026/05/06/bwets-1331-surge-rests-on-a-single-geopolitical-event-that-could-reverse-overnight/",
+    "publication": "24/7 Wall St. / CNBC / Yahoo Finance",
+    "published_at": "2026-02-28T00:00:00Z"
+  },
+  "catalyst_type": "geopolitical",
+  "catalyst_subtype": "war_escalation",
+  "description": "US-Israel-Iran military conflict escalated on 2026-02-28, resulting in the effective closure of the Strait of Hormuz — the chokepoint for ~20% of global oil and ~25% of global LNG transit. VLCC tanker traffic rerouted to Cape of Good Hope routes, extending voyage times by ~14 days and tightening global tanker capacity. Crude oil ETFs surged ~96% on the disruption. Energy companies with Middle East exposure repriced sharply.",
+  "geography": ["IRN", "ISR", "USA", "MENA", "GLOBAL"],
+  "magnitude": "extreme",
+  "novelty_score": 80,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": true,
+    "nov_02_new_sector": false,
+    "nov_03_new_source": true,
+    "nov_04_changes_rate": true,
+    "nov_05_consensus_surprise_gt50": true
+  },
+  "strength_score": 94,
+  "consensus_surprise": 0.8,
+  "is_priced_in_estimate": 1.0,
+  "relation_to_structural": "confirms",
+  "decay_halflife_days": 60,
+  "related_catalyst_ids": ["struct_nato_rearmament"],
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": null,
+  "user_rank": null,
+  "user_notes": "Detectado con retraso (2026-06-04, evento ocurrido 2026-02-28). is_priced_in_estimate: 1.0 — BWET ya +1.406%, energy ETFs ya +96%. No hay entrada disponible. Registrado para documentación histórica y para calibrar la velocidad del pipeline de detección. El cierre de Ormuz sigue activo — si se reabre, este catalyst pasa a status: invalidated.",
+  "tags": ["geopolitical", "oil", "lng", "Iran", "Hormuz", "tanker", "energy", "war", "supply_disruption"]
+}

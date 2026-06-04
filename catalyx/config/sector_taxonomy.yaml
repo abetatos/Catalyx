@@ -1,0 +1,558 @@
+# CATALYX Sector Taxonomy — v1.1
+# CANONICAL SOURCE: all sector_id values in the system must reference this file.
+# Rules:
+#   - Never use free-text sector names in application code. Always use sector_id.
+#   - investable: false → sector cannot be a Thesis target (watch-only mode)
+#   - Quarterly review: ETF AUM < $200M → liquidity_warning: true
+#   - Adding a sector: must also add ETF entries in etf_universe.yaml
+#
+# Schema for each entry:
+#   id: str (snake_case, unique)
+#   label: str
+#   parent: str (parent sector group)
+#   investable: bool
+#   etf_proxy_quality: good | medium | poor | none
+#   watch_only: bool (alias for !investable, kept explicit for clarity)
+#   estimated_investable_from: YYYY (for watch_only sectors)
+#   demand_drivers: list[str]
+#   differentiation: str (why this ≠ adjacent sectors)
+#   watch_triggers: list[str] (for watch_only sectors only)
+
+sectors:
+
+  # ═══════════════════════════════════════════════
+  # DEFENSE
+  # ═══════════════════════════════════════════════
+
+  - id: eu_defense_prime_contractors
+    label: "European Defense — Prime Contractors"
+    parent: defense
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers:
+      - "NATO spending commitments (GDP% targets)"
+      - "European sovereign defense budgets"
+      - "Export demand from allied nations"
+    differentiation: "EU prime contractors (Rheinmetall, Leonardo, Airbus Defence, Dassault) have EU procurement cycles, EUR cost base, and politically driven order books. Distinct from US defense (USD-denominated, different procurement law, different geopolitical exposure)."
+
+  - id: us_defense_prime_contractors
+    label: "US Defense — Prime Contractors"
+    parent: defense
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers:
+      - "US DoD budget (mandatory + discretionary)"
+      - "FMS (Foreign Military Sales)"
+      - "Geopolitical escalation cycles"
+
+  - id: cybersecurity_defense
+    label: "Defense & Government Cybersecurity"
+    parent: defense
+    investable: true
+    etf_proxy_quality: medium
+    differentiation: "Government/military cybersecurity contracts. Different from commercial cybersecurity (B2B SaaS model). Driven by state-sponsored threat escalation, not enterprise IT budgets."
+    demand_drivers:
+      - "Nation-state cyberattack frequency"
+      - "Government IT security mandates"
+      - "Critical infrastructure protection spending"
+
+  - id: space_defense_satellite
+    label: "Space & Satellite Defense"
+    parent: defense
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers:
+      - "Military satellite constellation programs"
+      - "Space Domain Awareness (SDA) funding"
+      - "Dual-use commercial/military launch"
+
+  - id: drone_autonomous_systems
+    label: "Drones & Autonomous Combat Systems"
+    parent: defense
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers:
+      - "Ukraine war lessons (drone warfare doctrine shift)"
+      - "NATO procurement modernization"
+
+  # ═══════════════════════════════════════════════
+  # ENERGY
+  # ═══════════════════════════════════════════════
+
+  - id: oil_majors_integrated
+    label: "Oil Majors — Integrated"
+    parent: energy
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers: ["Oil price", "Refining margins", "Dividend/buyback capacity"]
+    differentiation: "Vertically integrated: E&P + refining + retail. Different from pure E&P or services. Stable cash flow, dividend-driven."
+
+  - id: oil_services_equipment
+    label: "Oil Field Services & Equipment"
+    parent: energy
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers: ["Upstream capex cycles", "Rig count", "Deepwater activity"]
+    differentiation: "Leveraged play on upstream capex, not oil price directly. Higher beta, earlier in the cycle than majors."
+
+  - id: lng_natural_gas
+    label: "LNG & Natural Gas"
+    parent: energy
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers:
+      - "European gas import dependency post-Russia"
+      - "Asian LNG demand (Japan, South Korea, China)"
+      - "US LNG export terminal buildout"
+
+  - id: nuclear_energy
+    label: "Nuclear Energy — Operators & Developers"
+    parent: energy
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers:
+      - "AI data center baseload power demand"
+      - "European energy independence policy"
+      - "SMR (Small Modular Reactor) policy support"
+    differentiation: "Operators (EDF, Constellation) have regulated revenue + power price exposure. Different from uranium miners (commodity play)."
+
+  - id: uranium_miners
+    label: "Uranium Miners & Processors"
+    parent: energy
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers:
+      - "Nuclear reactor restarts and new builds"
+      - "Uranium spot price (Kazakh/Canadian supply dynamics)"
+      - "Utility contract cycle (3-5 year forward buying)"
+    differentiation: "Pure commodity play. Supply inelastic (mine permitting 10+ years). Price driven by utility contracting cycles, not electricity demand directly."
+
+  - id: solar_energy
+    label: "Solar — Manufacturers & Project Developers"
+    parent: energy
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers: ["Policy subsidies (IRA, EU Green Deal)", "Grid parity economics", "Corporate PPA demand"]
+    differentiation: "Manufacturers (panel + inverter) have different drivers than project developers (IRR, power prices, financing costs)."
+
+  - id: wind_energy_offshore
+    label: "Wind Energy — Offshore"
+    parent: energy
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers: ["EU offshore wind targets", "Financing costs (interest rate sensitive)", "Supply chain normalization"]
+
+  - id: grid_infrastructure_utilities
+    label: "Grid Infrastructure & Storage"
+    parent: energy
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers:
+      - "Electrification of transport and heating"
+      - "AI data center power buildout"
+      - "Grid modernization mandates (EU, US)"
+    differentiation: "Transmission + distribution + battery storage. Regulated utility model. Different from generation assets."
+
+  - id: hydrogen_clean_fuels
+    label: "Hydrogen & Clean Fuels"
+    parent: energy
+    investable: true
+    etf_proxy_quality: poor
+    demand_drivers: ["Industrial decarbonization mandates", "Green hydrogen subsidies", "Heavy transport fuel switching"]
+
+  # ═══════════════════════════════════════════════
+  # PRECIOUS METALS
+  # ═══════════════════════════════════════════════
+
+  - id: gold_physical
+    label: "Gold — Physical / ETC"
+    parent: precious_metals
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers:
+      - "Central bank reserve accumulation (structural)"
+      - "Real interest rate direction (negative real rates)"
+      - "USD strength/weakness"
+      - "Geopolitical safe-haven demand"
+    differentiation: "Physical gold (no miner risk, no operational leverage). Pure commodity price exposure. Different thesis from gold miners."
+
+  - id: gold_miners
+    label: "Gold Miners"
+    parent: precious_metals
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers:
+      - "Gold price (leveraged: 10% gold → 20-30% miner)"
+      - "AISC (All-In Sustaining Cost) vs gold price spread"
+      - "M&A activity in sector"
+    differentiation: "Operational leverage to gold price. Adds: geopolitical risk (mine location), management quality, currency exposure in cost base (AUD, CAD, ZAR), AISC trajectory."
+
+  - id: silver_physical
+    label: "Silver — Physical / ETC"
+    parent: precious_metals
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers:
+      - "Gold/silver ratio mean reversion"
+      - "Industrial demand: solar panels, electronics"
+      - "Monetary demand (follows gold but more volatile)"
+    differentiation: "Dual demand: monetary (follows gold) + industrial (solar, electronics). Higher beta than gold. Different supply/demand dynamics."
+
+  - id: silver_miners
+    label: "Silver Miners"
+    parent: precious_metals
+    investable: true
+    etf_proxy_quality: medium
+    differentiation: "Most 'silver miners' are primary producers of other metals with silver byproduct. Pure-play silver miners rare. Higher operational risk than gold miners."
+
+  - id: royalty_streaming_metals
+    label: "Precious Metals Royalty & Streaming"
+    parent: precious_metals
+    investable: true
+    etf_proxy_quality: medium
+    differentiation: "No operational exposure (no mines owned). Receive royalty % or buy metal at fixed price. Lower risk than miners, lower leverage to metal price. Franco-Nevada, Wheaton, Royal Gold model."
+    demand_drivers: ["Gold/silver price", "M&A deal flow", "Financing environment for miners"]
+
+  # ═══════════════════════════════════════════════
+  # INDUSTRIAL METALS & BATTERY MATERIALS
+  # ═══════════════════════════════════════════════
+
+  - id: copper_miners
+    label: "Copper Miners"
+    parent: industrial_metals
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers:
+      - "Electrification: EVs, grid, heat pumps (copper-intensive)"
+      - "AI data center buildout: ~30kg copper per server rack, transformer windings, power cables"
+      - "Grid transmission expansion: HVDC cables are 95%+ copper"
+      - "China construction and infrastructure"
+      - "Supply constraints: grade decline, permitting (10+ year lead time for new mines)"
+    differentiation: >
+      Copper is the metal of both electrification AND AI infrastructure — the two largest
+      structural capex cycles active simultaneously. A new hyperscale data center uses
+      10,000-40,000 tonnes of copper (transformers, busbars, cables, cooling). This is
+      an underappreciated demand driver vs the well-covered EV narrative. Supply inelastic:
+      average mine takes 16 years from discovery to production. Different thesis from gold
+      (safe haven) or lithium (battery chemistry, Chinese supply dominance).
+
+  - id: lithium_miners
+    label: "Lithium Miners & Processors"
+    parent: battery_metals
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers:
+      - "EV battery demand (lithium-ion dominant)"
+      - "Grid storage buildout"
+      - "Lithium carbonate/hydroxide price cycle"
+    differentiation: "Supply cycles are brutal (2-3 year lag between price signal and new supply). Demand structural but price volatile."
+
+  - id: cobalt_nickel
+    label: "Cobalt & Nickel — Battery Materials"
+    parent: battery_metals
+    investable: true
+    etf_proxy_quality: poor
+    demand_drivers: ["EV battery chemistry (NMC vs LFP shift affects cobalt demand)", "Stainless steel (nickel)"]
+
+  - id: rare_earth_miners
+    label: "Rare Earth Elements — Miners & Processors"
+    parent: industrial_metals
+    investable: true
+    etf_proxy_quality: poor
+    demand_drivers:
+      - "Defense systems (magnets, guidance)"
+      - "Wind turbines and EV motors (permanent magnets)"
+      - "Geopolitical: China supply chain risk (controls 60%+ of processing)"
+
+  - id: steel_producers
+    label: "Steel — Producers & Mini-mills"
+    parent: industrial_metals
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers: ["Construction cycle", "Auto production", "Defense/infrastructure capex"]
+
+  - id: water_infrastructure
+    label: "Water — Infrastructure & Utilities"
+    parent: real_assets
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers: ["Structural water scarcity", "Infrastructure investment cycles", "Desalination buildout"]
+
+  - id: agriculture_soft_commodities
+    label: "Agriculture — Soft Commodities & Agri-Tech"
+    parent: real_assets
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers: ["Food security policy", "Climate disruption to crop yields", "EM population growth"]
+
+  # ═══════════════════════════════════════════════
+  # FINANCIALS
+  # ═══════════════════════════════════════════════
+
+  - id: eu_retail_banking
+    label: "European Retail Banking"
+    parent: financials
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers: ["ECB rate cycle (NIM expansion/compression)", "Credit quality", "EU economic growth"]
+    differentiation: "ECB rate cycle drives NIM. Different from US banks (different regulatory regime, lower capital markets exposure)."
+
+  - id: us_retail_banking
+    label: "US Retail Banking"
+    parent: financials
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers: ["Fed rate cycle", "Credit card delinquency", "Commercial real estate exposure"]
+
+  - id: insurance_eu
+    label: "European Insurance — Life & Non-Life"
+    parent: financials
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers: ["Interest rate level (investment income)", "Catastrophe loss frequency", "Pricing cycle"]
+
+  - id: asset_management
+    label: "Asset Management — Listed"
+    parent: financials
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers: ["AUM growth (market returns + flows)", "Fee compression", "Alternative asset demand"]
+
+  - id: fintech_payments
+    label: "Fintech & Digital Payments"
+    parent: financials
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers: ["Consumer spending volumes", "Payment digitization penetration", "Cross-border payment growth"]
+
+  - id: private_equity_listed
+    label: "Listed Private Equity"
+    parent: financials
+    investable: true
+    etf_proxy_quality: poor
+    demand_drivers: ["M&A activity", "IPO market", "Fundraising environment"]
+
+  - id: crypto_infrastructure
+    label: "Crypto Infrastructure — Exchanges & Mining"
+    parent: financials
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers: ["Bitcoin price cycle", "Regulatory clarity", "Institutional adoption"]
+
+  # ═══════════════════════════════════════════════
+  # TECHNOLOGY
+  # ═══════════════════════════════════════════════
+
+  - id: semiconductors_design
+    label: "Semiconductors — Fabless Design (Nvidia, AMD, Qualcomm)"
+    parent: technology
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers: ["AI training compute demand", "Data center upgrade cycle", "Consumer electronics cycle"]
+    differentiation: "No manufacturing risk. Margins driven by IP, not capex. Different cycle from equipment or foundries."
+
+  - id: semiconductors_equipment
+    label: "Semiconductors — Manufacturing Equipment (ASML, AMAT, Lam)"
+    parent: technology
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers: ["Fab capex cycle", "Lithography technology transitions (EUV → High-NA)", "Geopolitical reshoring capex"]
+    differentiation: "Picks-and-shovels play on semiconductor buildout. Revenue lags design demand by 12-24 months. ASML monopoly on EUV is unique moat."
+
+  - id: semiconductors_foundry
+    label: "Semiconductors — Foundries (TSMC, Samsung, Intel Foundry)"
+    parent: technology
+    investable: true
+    etf_proxy_quality: poor
+    demand_drivers: ["Leading-edge node demand", "Geopolitical risk (TSMC/Taiwan concentration)", "Reshoring subsidies (CHIPS Act, EU Chips Act)"]
+    differentiation: "Capex-intensive, cyclical, geopolitically exposed. TSMC single-point-of-failure for global tech supply chain."
+
+  - id: ai_infrastructure_data_centers
+    label: "AI Infrastructure — Data Centers, Cooling, Power"
+    parent: technology
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers:
+      - "Hyperscaler AI capex (Microsoft, Google, Amazon, Meta)"
+      - "Inference workload growth post-training boom"
+      - "Power and cooling infrastructure bottleneck"
+
+  - id: cloud_software_saas
+    label: "Cloud Software & SaaS"
+    parent: technology
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers: ["Enterprise IT spend", "AI feature monetization", "ARR growth rates"]
+
+  - id: robotics_automation
+    label: "Robotics & Industrial Automation"
+    parent: technology
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers: ["Labor cost inflation", "Reshoring manufacturing", "EV production line automation"]
+
+  - id: cybersecurity_commercial
+    label: "Commercial Cybersecurity (Enterprise B2B)"
+    parent: technology
+    investable: true
+    etf_proxy_quality: good
+    differentiation: "Enterprise SaaS model (Crowdstrike, Palo Alto). Different from defense cybersecurity (government contracts). Driven by ransomware frequency, enterprise IT budgets, not defense spending."
+
+  # ═══════════════════════════════════════════════
+  # HEALTHCARE
+  # ═══════════════════════════════════════════════
+
+  - id: biotech_drug_development
+    label: "Biotech — Clinical-Stage Drug Development"
+    parent: healthcare
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers: ["FDA approval pipeline", "M&A from large pharma", "Risk appetite cycle"]
+
+  - id: medical_devices
+    label: "Medical Devices"
+    parent: healthcare
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers: ["Aging demographics", "Surgical procedure volumes", "Regulatory approval cycles"]
+
+  - id: genomics_precision_medicine
+    label: "Genomics & Precision Medicine"
+    parent: healthcare
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers: ["Gene therapy approvals", "Liquid biopsy adoption", "Cost of sequencing decline"]
+
+  - id: pharma_large_cap
+    label: "Large-Cap Pharma"
+    parent: healthcare
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers: ["Patent cliff exposure", "Pipeline breadth", "GLP-1/obesity drug wave"]
+
+  # ═══════════════════════════════════════════════
+  # REAL ASSETS & CONSUMER
+  # ═══════════════════════════════════════════════
+
+  - id: real_estate_logistics
+    label: "Real Estate — Logistics & Industrial REITs"
+    parent: real_estate
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers: ["E-commerce penetration", "Last-mile delivery buildout", "Interest rate level"]
+
+  - id: real_estate_data_centers
+    label: "Real Estate — Data Center REITs"
+    parent: real_estate
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers: ["AI compute demand", "Hyperscaler leasing", "Power availability"]
+
+  - id: infrastructure_core
+    label: "Core Infrastructure — Toll Roads, Airports, Ports"
+    parent: real_assets
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers: ["Traffic volume recovery", "Inflation pass-through in contracts", "Interest rate level (discount rate)"]
+
+  - id: luxury_goods
+    label: "Luxury Goods — Hard & Soft"
+    parent: consumer
+    investable: true
+    etf_proxy_quality: good
+    demand_drivers: ["Chinese consumer confidence", "Global UHNW wealth levels", "USD/EUR vs CNY"]
+
+  - id: consumer_india_em
+    label: "Consumer — India & Emerging Market Middle Class"
+    parent: consumer
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers: ["India GDP per capita growth", "EM urbanization", "Mobile internet penetration"]
+
+  # ═══════════════════════════════════════════════
+  # DEEP TECH
+  # ═══════════════════════════════════════════════
+
+  - id: quantum_computing
+    label: "Quantum Computing"
+    parent: deep_tech
+    investable: false
+    watch_only: true
+    etf_proxy_quality: none
+    estimated_investable_from: "2028"
+    demand_drivers:
+      - "Government quantum programs (US, EU, China)"
+      - "Cryptography obsolescence (post-quantum migration)"
+      - "Drug discovery and optimization use cases"
+    watch_triggers:
+      - "First UCITS/US ETF with >50% pure-play quantum computing exposure launches"
+      - "Fault-tolerant quantum computer demonstrated at >1M logical qubits"
+      - "Government quantum computing procurement contract >$5B awarded to public company"
+      - "First commercial quantum advantage demonstrated in a market-relevant task"
+
+  - id: nuclear_fusion
+    label: "Nuclear Fusion — Commercial"
+    parent: deep_tech
+    investable: false
+    watch_only: true
+    etf_proxy_quality: none
+    estimated_investable_from: "2032"
+    watch_triggers:
+      - "Net energy gain sustained commercially (not just laboratory)"
+      - "First private fusion company IPO with >$2B market cap"
+      - "Government power purchase agreement with fusion provider"
+
+  - id: brain_computer_interface
+    label: "Brain-Computer Interface"
+    parent: deep_tech
+    investable: false
+    watch_only: true
+    etf_proxy_quality: none
+    estimated_investable_from: "2030"
+    watch_triggers:
+      - "FDA full approval (not breakthrough designation) for commercial BCI device"
+      - "First BCI company IPO with >$5B market cap"
+
+  - id: advanced_materials_metamaterials
+    label: "Advanced Materials & Metamaterials"
+    parent: deep_tech
+    investable: false
+    watch_only: true
+    etf_proxy_quality: none
+    estimated_investable_from: "2029"
+    watch_triggers:
+      - "First ETF with >40% pure-play advanced materials exposure"
+      - "Mass commercial deployment in semiconductor or defense application"
+
+  - id: synthetic_biology
+    label: "Synthetic Biology & Bioengineering"
+    parent: deep_tech
+    investable: true
+    watch_only: false
+    etf_proxy_quality: poor
+    demand_drivers:
+      - "Biomanufacturing policy (US Bioeconomy EO)"
+      - "Sustainable materials (bio-based plastics, textiles)"
+      - "Precision fermentation (food tech)"
+
+  - id: space_commercial
+    label: "Commercial Space — Launch, Satellites, Services"
+    parent: deep_tech
+    investable: true
+    watch_only: false
+    etf_proxy_quality: poor
+    demand_drivers:
+      - "Satellite internet (Starlink competitors)"
+      - "Earth observation commercial demand"
+      - "Launch cost reduction enabling new use cases"
+
+  - id: longevity_biotech
+    label: "Longevity & Anti-Aging Biotech"
+    parent: deep_tech
+    investable: true
+    watch_only: false
+    etf_proxy_quality: poor
+    demand_drivers:
+      - "Wealthy demographic health spending"
+      - "Senolytics and epigenetic reprogramming pipeline"
+      - "GLP-1 spillover interest in metabolic health"

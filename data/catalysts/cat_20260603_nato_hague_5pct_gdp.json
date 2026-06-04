@@ -1,0 +1,39 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20260603_nato_hague_5pct_gdp",
+  "schema_version": "1.2",
+  "type": "event",
+  "created_at": "2026-06-03T23:59:00Z",
+  "detected_at": "2026-06-03T23:59:00Z",
+  "source": {
+    "type": "official_announcement",
+    "url": "https://www.nato.int/cps/en/natohq/official_texts_236705.htm",
+    "publication": "NATO — The Hague Summit Declaration",
+    "published_at": "2026-06-03T00:00:00Z"
+  },
+  "catalyst_type": "fiscal_policy",
+  "catalyst_subtype": "defense_spending",
+  "description": "The Hague Summit Declaration, adopted unanimously by all 32 NATO member states (Spain received a partial exemption), commits allies to invest 5% of GDP annually on total defense requirements and defense-and-security-related spending by 2035. This is a second, higher-order commitment beyond the 3.5% GDP 'core defense' floor by 2028 (registered as cat_20260603_nato_defense_gdp). Distinction: the 3.5% target covers direct military capability spending by 2028; the 5% target includes the broader defense-and-security envelope (civil resilience, critical infrastructure protection, cyber defense) by 2035. Context: Norway has surpassed the US in defense spending per capita — the first European ally to do so in NATO history. Combined NATO defense spending exceeded $1.5 trillion in 2026 for the first time ever. Poland spent 4.48% of GDP on defense in 2025. Trump announced 5,000 additional US troops to Poland (May 22, 2026), signaling continued US commitment. The 5% by 2035 commitment creates a multi-decade spending floor that extends and reinforces the struct_nato_rearmament structural catalyst.",
+  "geography": ["NATO", "EU", "DEU", "FRA", "POL", "GBR", "NOR", "ITA", "SWE", "FIN", "ESP"],
+  "magnitude": "high",
+  "novelty_score": 60,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": false,
+    "nov_02_new_sector": false,
+    "nov_03_new_source": true,
+    "nov_04_changes_rate": true,
+    "nov_05_consensus_surprise_gt50": true
+  },
+  "strength_score": 82,
+  "consensus_surprise": 0.5,
+  "is_priced_in_estimate": 0.25,
+  "relation_to_structural": "confirms",
+  "decay_halflife_days": 90,
+  "related_catalyst_ids": ["struct_nato_rearmament", "cat_20260603_nato_defense_gdp"],
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": "2035-12-31",
+  "user_rank": null,
+  "user_notes": "Segunda escalada del marco de gasto NATO en el mismo día. cat_20260603_nato_defense_gdp cubrió 3.5% por 2028 (core defense). Este evento cubre 5% por 2035 (total defense + security). Son compromisos complementarios del mismo Hague Summit, no duplicados. El 25% priced_in refleja que la dirección era esperada pero el nivel 5% + unanimidad + Spain partial exemption tienen elementos de sorpresa. Spain partial exemption: no afecta la thesis para el inversor español — los ETFs (EUDF.L, DFEN.DE) tienen Rheinmetall (DEU), Leonardo (ITA), Airbus Defence (EU), no empresas españolas. relation_to_structural = confirms → usará confirmation_amplifier (×1.12) en el heatmap scoring para eu_defense_prime_contractors.",
+  "tags": ["NATO", "defense", "Hague", "5pct_GDP", "EU", "fiscal", "spending", "rearmament", "long_term"]
+}

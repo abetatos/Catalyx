@@ -1,0 +1,116 @@
+# StructuralCatalyst: Central Bank Systematic Gold Accumulation
+# schema_version: "1.2"
+# Update indicators quarterly after WGC report release (typically mid-month after quarter end)
+
+id: struct_cb_gold_accumulation
+type: structural
+schema_version: "1.2"
+title: "Central bank systematic gold accumulation"
+description: >
+  Central banks globally — led by EM economies (China, India, Turkey, Poland, Kazakhstan) —
+  have been systematically increasing gold reserves since 2022, accelerating post-2024 US
+  sanctions on Russia which demonstrated that USD-denominated reserves can be frozen.
+  This represents a regime shift in reserve management away from USD-denominated assets.
+  It is not episodic: quarterly CB net purchases have remained above 200 tonnes since Q3 2022.
+  Unlike retail or ETF demand, CB demand is price-insensitive and has long holding horizons.
+
+created_at: "2026-06-03T18:00:00Z"
+created_by: user
+onset_period: "2022-Q3"
+onset_evidence: "WGC Q3 2022: CB net purchases 399T — highest since 1967. Driven by Russia sanctions precedent."
+
+catalyst_type: institutional_flow
+catalyst_subtype: central_bank_reserve_shift
+geography: [GLOBAL, CHN, IND, TUR, POL, KAZ, RUS]
+thematic_tags: [gold, dedollarization, reserve_diversification, geopolitical, monetary]
+
+user_rank: 1
+user_notes: >
+  Confirmed by WGC quarterly data. One of the cleanest multi-year structural flows observable.
+  Not priced in by equity analysts — modeled as tail risk, not base case.
+  Key differentiation: CB demand is sovereign-driven, price-insensitive, not reversible quickly.
+
+intensity:
+  current_score: 90
+  computation_method: "computed"
+  computation_note: "Computed 2026-06-03: semaphores ind_01=🟢(100), ind_02=🟡(65), ind_03=🟢(100) → avg=88.3; trend ↑ (79→90 vs Q1) → factor=1.02; result=90.1→90. ind_01 updated 290→315T (Q2 2026 WGC data)."
+  last_updated: "2026-06-03"
+  history:
+    - period: "2026-Q2"
+      score: 90
+      note: "WGC Q2 2026: 315T CB net purchases, above Q1 (290T). Poland +31T leads all buyers. Uzbekistan +25T. PBoC +7T. New entrants: Guatemala, Indonesia, Uganda. 95% of CBs expect to grow reserves (WGC survey record). Buyer base broadening is the key new signal — not just EM incumbents."
+      computation_method: "computed"
+    - period: "2026-Q1"
+      score: 79
+      note: "China Q1 +34T. India +15T. Poland +10T."
+      computation_method: "bootstrap"
+    - period: "2025-Q4"
+      score: 82
+      note: "India joins top-5 buyers. Global total 330T."
+      computation_method: "bootstrap"
+    - period: "2025-Q3"
+      score: 76
+      note: "Turkey slowed temporarily. China maintained pace."
+      computation_method: "bootstrap"
+    - period: "2025-Q2"
+      score: 80
+      note: "Record H1 2025: 483T total CB purchases."
+      computation_method: "bootstrap"
+
+indicators:
+  - id: ind_01
+    name: "World Gold Council — CB net purchases (quarterly, tonnes)"
+    source: "WGC Gold Demand Trends report"
+    source_url_template: "https://www.gold.org/goldhub/research/gold-demand-trends"
+    check_frequency: quarterly
+    current_value: 315
+    unit: tonnes_net_quarterly
+    direction: higher_is_stronger
+    threshold_strong: 200
+    threshold_weak: 80
+    last_value: 290
+    last_date: "2026-06-03"
+    semaphore: "🟢"
+    update_note: "WGC Q2 2026: 315T net purchases. Above Q1 (290T). Poland +31T, Uzbekistan +25T, PBoC +7T. New buyers: Guatemala, Indonesia, Uganda. Full-year WGC forecast 700-900T."
+
+  - id: ind_02
+    name: "IMF COFER — Non-USD reserve share of global FX reserves"
+    source: "IMF COFER quarterly data"
+    check_frequency: quarterly
+    current_value: 0.582
+    unit: fraction
+    direction: lower_is_stronger
+    threshold_strong: 0.58
+    threshold_weak: 0.62
+    last_value: 0.591
+    last_date: "2026-04-01"
+
+  - id: ind_03
+    name: "Gold ETF AUM monthly change (institutional, ex-retail)"
+    source: "iShares + WGC flow data"
+    check_frequency: monthly
+    current_value: 0.034
+    unit: pct_change_monthly
+    direction: higher_is_stronger
+    threshold_strong: 0.02
+    threshold_weak: -0.01
+    last_value: 0.028
+    last_date: "2026-06-01"
+
+deactivation_conditions:
+  - id: deact_01
+    condition: "CB net purchases fall below 80 tonnes/quarter for two consecutive quarters per WGC data."
+    action: downgrade_to_weak
+
+  - id: deact_02
+    condition: "Non-USD reserve share rises above 0.65 for two consecutive quarters (reversal of dedollarization)."
+    action: review_required
+
+  - id: deact_03
+    condition: "US reinstates gold convertibility or formal gold-backed reserve arrangement (extremely low probability)."
+    action: full_deactivation
+
+linked_event_catalyst_ids: []
+narrative_maturity: "mainstream"
+status: active
+status_last_reviewed: "2026-06-03"

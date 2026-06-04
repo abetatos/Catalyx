@@ -1,0 +1,137 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "catalyx/schemas/sector_study.json",
+  "schema_version": "1.2",
+  "title": "SectorStudy",
+  "description": "Bottom-up sector analysis, independent of active catalysts. The sector's 'fundamental file'. Updated monthly. For watch-only sectors, tracks technology maturity and watch_triggers.",
+  "type": "object",
+  "required": ["id", "schema_version", "sector_id", "sector_label", "created_at", "last_updated", "taxonomy", "demand_drivers", "etf_analysis", "risks"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^study_[a-z0-9_]+$" },
+    "schema_version": { "type": "string", "const": "1.2" },
+    "sector_id": { "type": "string" },
+    "sector_label": { "type": "string" },
+    "created_at": { "type": "string", "format": "date" },
+    "last_updated": { "type": "string", "format": "date" },
+    "study_type": { "type": "string", "enum": ["full", "summary", "watch_only"] },
+    "taxonomy": {
+      "type": "object",
+      "required": ["parent_sector", "differentiation_note"],
+      "properties": {
+        "parent_sector": { "type": "string" },
+        "adjacent_sectors": { "type": "array", "items": { "type": "string" } },
+        "differentiation_note": {
+          "type": "string",
+          "description": "Why this sector is distinct from adjacent sectors. The core of the granularity requirement."
+        }
+      }
+    },
+    "demand_drivers": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "supply_constraints": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "technology_maturity": {
+      "type": ["object", "null"],
+      "description": "Only for deep_tech / futuristic sectors.",
+      "properties": {
+        "trl_level": { "type": "integer", "minimum": 1, "maximum": 9 },
+        "trl_description": { "type": "string" },
+        "gartner_hype_cycle_position": {
+          "type": "string",
+          "enum": ["technology_trigger", "peak_of_inflated_expectations", "trough_of_disillusionment", "slope_of_enlightenment", "plateau_of_productivity"]
+        },
+        "estimated_commercialization_horizon": { "type": "string" },
+        "investability_note": { "type": "string" },
+        "etf_proxy_quality": { "type": "string", "enum": ["good", "medium", "poor", "none"] },
+        "watch_triggers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Specific events that, when triggered, flag the sector as potentially investable."
+        }
+      }
+    },
+    "cycle_position": {
+      "type": ["object", "null"],
+      "properties": {
+        "assessment": { "type": "string" },
+        "rationale": { "type": "string" },
+        "last_assessed": { "type": "string", "format": "date" }
+      }
+    },
+    "etf_analysis": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ticker", "exchange", "currency", "ter", "aum_m_usd", "replication", "recommendation_tier"],
+        "properties": {
+          "ticker": { "type": "string" },
+          "name": { "type": "string" },
+          "exchange": { "type": "string" },
+          "currency": { "type": "string" },
+          "ter": { "type": "number" },
+          "aum_m_usd": { "type": "number" },
+          "replication": { "type": "string", "enum": ["physical", "synthetic_swap", "optimized_sampling"] },
+          "avg_spread_bps": { "type": ["number", "null"] },
+          "avg_daily_volume_m_usd": { "type": ["number", "null"] },
+          "top_10_concentration_pct": { "type": ["number", "null"] },
+          "characteristics": { "type": "string" },
+          "recommendation_tier": { "type": "integer", "minimum": 1, "maximum": 3 },
+          "limitations": { "type": "string" }
+        }
+      }
+    },
+    "key_metrics_to_monitor": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["metric", "source"],
+        "properties": {
+          "metric": { "type": "string" },
+          "unit": { "type": "string" },
+          "source": { "type": "string" },
+          "current": { "type": ["number", "string", "null"] },
+          "comment": { "type": "string" }
+        }
+      }
+    },
+    "active_catalyst_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "historical_catalyst_performance": {
+      "type": ["object", "null"],
+      "properties": {
+        "summary": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "risks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "narrative_maturity": {
+      "type": ["string", "null"],
+      "enum": ["ignored", "emerging", "mainstream", "crowded", "exhausted", null],
+      "description": "Categorical narrative saturation level. See scoring_weights.yaml narrative_maturity_levels for anchored criteria with observable examples. When multiple structural catalysts are active, use the MAXIMUM level (most mature/crowded catalyst dominates — crowding risk is set by the highest-exposure thesis). More stable than analyst_narrative_score (0-100) across LLM sessions."
+    },
+    "analyst_narrative_score": {
+      "deprecated": true,
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "maximum": 100,
+      "description": "DEPRECATED v1.2 — replaced by narrative_maturity. Retained for backwards compatibility only. Do not use in new sector studies. Rough conversion: <25=ignored, 25-45=emerging, 45-70=mainstream, 70-85=crowded, >85=exhausted."
+    },
+    "narrative_trend": {
+      "type": ["string", "null"],
+      "enum": ["increasing", "stable", "decreasing", null]
+    },
+    "narrative_notes": { "type": "string" }
+  },
+  "additionalProperties": false
+}

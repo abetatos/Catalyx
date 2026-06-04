@@ -1,0 +1,158 @@
+{
+  "$schema": "catalyx/schemas/sector_study.json",
+  "id": "study_gold_physical",
+  "schema_version": "1.2",
+  "sector_id": "gold_physical",
+  "sector_label": "Gold — Physical / ETC",
+  "created_at": "2026-06-03",
+  "last_updated": "2026-06-03",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "precious_metals",
+    "adjacent_sectors": ["gold_miners", "silver_physical", "royalty_streaming_metals"],
+    "differentiation_note": "Gold physical (ETC) ≠ gold miners in three critical dimensions: (1) Beta — physical ETC tracks gold 1.0x; miners track gold 2-3x via operational leverage. A 72% gold price rise ($2,600→$4,457) translates to 72% for IGLN holders and 140-216% theoretical leverage for GDX holders — but only if management executes. (2) Risk profile — physical ETC has NO operational risk: no mine accidents, no AISC inflation, no geopolitical asset exposure (Barrick in Mali, Newmont in Ghana). The ETC is backed by allocated, segregated physical gold in a vault. (3) Investor base and use case — physical gold is held by macro funds and CBs as a monetary hedge and reserve asset; miners are held by equity investors seeking leveraged gold exposure. The two vehicles serve different portfolio roles: physical = insurance and store of value; miners = leveraged directional bet. They share the same primary catalyst but diverge sharply when gold prices move or when cost inflation erodes mining margins."
+  },
+
+  "demand_drivers": [
+    "Central bank systematic reserve diversification (structural, Q1 2026: 244T net purchases, full-year WGC guidance 700-900T): 95% of CBs surveyed by WGC expect to grow gold reserves in next 12 months — highest share ever recorded. New buyers entering: Guatemala, Indonesia, Uganda added in Q1 2026. Buyer base is broadening beyond the established EM accumulators (China, India, Turkey, Poland). This demand is price-insensitive and has multi-decade holding horizons — it creates a structural floor that does not disappear in risk-off periods.",
+    "Investment demand acceleration (Q1 2026 +74% YoY to $193B): Gold demand hit a multi-year high in Q1 2026, with bars/coins and ETF inflows both surging. IGLN AUM has grown from $14.2B (2024 baseline) to $37.7B (May 2026), a 165% increase — institutional and retail flows are reinforcing each other. Gold ETF inflows are partially procyclical (chase price) but the structural CB buying provides a non-ETF demand floor that persists independent of ETF flow direction.",
+    "Real interest rate environment: The Fed rate cut cycle (2024-2026) has reduced the opportunity cost of holding gold (which pays no yield). Gold benefits in low or falling real rate environments. JPMorgan forecasting continued rate cuts toward neutral — supportive backdrop likely to persist through H2 2026.",
+    "USD diversification and dedollarization: Gold is the primary beneficiary of reserve diversification away from USD-denominated assets. IMF COFER non-USD reserve share at 58.2% (approaching 5-year high) confirms structural portfolio shift. Gold is the only reserve asset with no counterparty risk — no sanctions vulnerability, no credit risk. Post-2022 Russia sanctions have made this non-sanctionable nature central to EM CB reserve policy.",
+    "Geopolitical safe-haven demand (episodic): US-Iran negotiations (dampened June 3, -0.74%), Middle East tensions, Russia-Ukraine uncertainty. These create short-term volatility in both directions but the structural demand from CBs means gold's floor is now structurally higher than pre-2022 levels.",
+    "USD weakness: Gold is priced in USD. Dollar weakness (DXY decline) increases gold's purchasing power in non-USD currencies, stimulating demand from non-US buyers. Monitor DXY closely as a tactical signal superimposed on the structural trend."
+  ],
+
+  "supply_constraints": [
+    "Mine production structurally inelastic: Global gold mine production is ~3,700T/year and has been essentially flat for a decade. High prices in 2022-2026 have not produced a supply response — new mine development takes 10-15 years from discovery to first pour. The existing resource pipeline shows no major new projects coming online before 2030.",
+    "Above-ground stock dominance: Total above-ground gold stock is ~212,000 tonnes (vs ~3,700T annual mine supply). Gold never disappears — recycled gold (~1,200T/year) is the only supply response to high prices. But recycling supply is limited by holders' willingness to sell, which is low when prices are trending up and CB demand creates a guaranteed buyer.",
+    "Grade decline: Average mined ore grade has declined from ~1.8g/t (2000) to ~1.1g/t (2026). More rock must be processed to produce the same gold. This is a slow but irreversible structural drag on cost efficiency.",
+    "No meaningful supply surprise risk: Unlike copper (where AI demand was underpriced), gold supply has no analogous demand shock waiting. Supply is well-understood and geologically constrained. No technology is expected to reduce extraction costs dramatically in <10yr horizon."
+  ],
+
+  "technology_maturity": null,
+
+  "cycle_position": {
+    "assessment": "Mid-cycle secular bull market, accelerating phase",
+    "rationale": "Gold has risen from ~$1,800/oz (2023 base) to $4,457/oz (June 2026), a +148% move over 3 years. The ATH intraday print was $4,689 (January 2026). The current level ($4,457) is a consolidation below the ATH, not a reversal — gold fell 0.74% on June 3 on US-Iran peace negotiation headlines, a classic 'good news' short-term headwind in an otherwise intact bull structure. JPMorgan forecasts $5,055/oz by Q4 2026, $5,400 by end 2027. Fundamental demand is accelerating: WGC Q1 2026 showed demand +74% YoY to $193B. CB buyer base broadening to new countries. ETF inflows at record levels. The cycle analog is 2007-2011 (gold from $650 to $1,900): in mid-cycle, every 'sell the news' dip was bought back. Key risk: parabolic acceleration creates sentiment fragility — any significant macro reversal (Fed hike shock, USD surge) could produce sharp corrections before the structural trend resumes.",
+    "last_assessed": "2026-06-03"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "IGLN.L",
+      "name": "iShares Physical Gold ETC",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0012,
+      "aum_m_usd": 37700,
+      "replication": "physical",
+      "avg_spread_bps": 3,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": 1.0,
+      "characteristics": "Physically backed gold ETC — each share backed by allocated gold in HSBC vault, London. USD-denominated on LSE. Lowest TER in the UCITS gold space (0.12%). AUM has grown from $14.2B (2024) to $37.7B (May 2026) as gold price rose and institutional flows accelerated. The go-to institutional UCITS gold vehicle. Directly tracks LBMA gold price PM fix.",
+      "recommendation_tier": 1,
+      "limitations": "USD-denominated — EUR/USD adds P&L volatility for Spanish investor. TER is only 0.12% but AUM growth has been extraordinary: verify that spread remains tight at $37.7B AUM (should be fine given LSE liquidity). No EUR-hedged version in this ticker."
+    },
+    {
+      "ticker": "WGLD.L",
+      "name": "WisdomTree Physical Gold ETC",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0015,
+      "aum_m_usd": 9800,
+      "replication": "physical",
+      "avg_spread_bps": 3,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": 1.0,
+      "characteristics": "WisdomTree's physically backed gold ETC. Slightly higher TER than IGLN (0.15% vs 0.12%) but same physical structure. Both tier 1. Some investors diversify custodian risk between IGLN (BlackRock/HSBC) and WGLD (WisdomTree/ICBC Standard Bank).",
+      "recommendation_tier": 1,
+      "limitations": "TER marginally higher than IGLN. For long-term holds (multi-year), the 3bps TER difference compounds — IGLN preferred for cost efficiency. WGLD as alternative for custodian diversification or if IGLN liquidity is temporarily constrained."
+    },
+    {
+      "ticker": "XGLD.DE",
+      "name": "Xtrackers Physical Gold EUR Hedged ETC",
+      "exchange": "XETRA",
+      "currency": "EUR",
+      "ter": 0.0028,
+      "aum_m_usd": 2100,
+      "replication": "physical",
+      "avg_spread_bps": 7,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": 1.0,
+      "characteristics": "EUR-hedged physical gold ETC. Eliminates USD/EUR volatility from P&L — Spanish investor gets pure gold price exposure in EUR. Higher TER (0.28%) reflects currency hedge cost. EUR-denominated on XETRA — most convenient exchange for Spanish brokers.",
+      "recommendation_tier": 2,
+      "limitations": "EUR hedge costs erode returns when USD strengthens (which often accompanies gold bull markets). During 2024-2026 gold rally, EUR hedged version would have underperformed unhedged by the FX component. Preferred only when investor has strong EUR/USD views or wants to isolate gold exposure from FX noise."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Gold spot price (USD/oz)",
+      "unit": "USD per troy ounce",
+      "source": "LBMA PM Fix / LME / Bloomberg",
+      "current": 4457,
+      "comment": "June 3, 2026: $4,457/oz. ATH intraday: $4,689 (Jan 2026). JPMorgan Q4 2026 target: $5,055. The key level to watch: sustained break above ATH ($4,689) would signal next leg up. Support at $4,200 (recent consolidation base)."
+    },
+    {
+      "metric": "WGC Central Bank net purchases (quarterly, tonnes)",
+      "unit": "tonnes net quarterly",
+      "source": "WGC Gold Demand Trends report (quarterly)",
+      "current": 244,
+      "comment": "Q1 2026: 244T (in line with 5-year avg, +3% YoY). Full-year guidance: 700-900T. Key sub-signal: buyer base broadening (Guatemala, Indonesia, Uganda are new entrants). A buyer base broadening is BULLISH — more geographies = more demand floors."
+    },
+    {
+      "metric": "IGLN AUM (proxy for institutional gold ETF demand)",
+      "unit": "USD billion",
+      "source": "BlackRock iShares / Bloomberg",
+      "current": 37.7,
+      "comment": "May 2026: $37.7B (from $14.2B in 2024 = +165%). Institutional ETF flows are strongly positive. Monitor for monthly AUM change direction — outflows sustained >3 months would be a warning signal that institutional positioning is reversing."
+    },
+    {
+      "metric": "Real US 10-year yield (TIPS yield)",
+      "unit": "percent",
+      "source": "US Treasury / Bloomberg",
+      "current": null,
+      "comment": "Real yield is the primary macro override for gold. Falling real yields = tailwind; rising real yields = headwind. Watch Fed policy signals and CPI releases. The 2022 real yield spike to +2%+ caused the gold correction — a repeat would be the primary macro threat."
+    },
+    {
+      "metric": "USD Index (DXY)",
+      "unit": "index",
+      "source": "ICE / Bloomberg",
+      "current": null,
+      "comment": "USD weakness amplifies gold bull markets; USD strength is the most consistent counter-catalyst. Monitor DXY for sustained reversal above 105 as a tactical warning. Structural: dedollarization is reducing DXY's role as a leading indicator for gold — CB demand now drives gold independent of DXY."
+    },
+    {
+      "metric": "IMF COFER non-USD reserve share",
+      "unit": "fraction of total FX reserves",
+      "source": "IMF COFER quarterly",
+      "current": 0.582,
+      "comment": "Q2 2026 COFER data (April 2026): 0.582. Trending toward increasing non-USD share = positive for gold. Watch for sustained break above 0.60 non-USD share — would signal dedollarization acceleration and further CB gold buying impetus."
+    }
+  ],
+
+  "active_catalyst_ids": [
+    "struct_cb_gold_accumulation"
+  ],
+
+  "historical_catalyst_performance": {
+    "summary": "Physical gold ETCs (IGLN, GLD) have tracked gold spot with minimal deviation. Historically, gold's strongest 12-month moves came during: (1) Fed easing cycles — gold +32% in 2019-2020 as Fed cut from 2.5% to 0%; (2) Geopolitical shocks — gold +25% in 2022 post-Ukraine invasion; (3) Banking crises — gold +15% in March 2023 (SVB). The 2024-2026 bull market is different: driven by structural CB demand rather than episodic events. This makes it more persistent but also more vulnerable to narrative shifts. Historical analog: 2008-2011 gold bull (CB buying resumed after decade of selling). That bull run lasted 3.5 years and reached $1,900/oz (+280% from base). Current bull: started at ~$1,800 (2023), now $4,457 (+148% in 3 years). If the analog holds, $5,000-6,000 is the mid-bull target. Unlike miner ETFs (GDX, AUCO.L), physical gold ETCs have virtually no tracking error — the main risk is TER drag over time (0.12%/year for IGLN) and counterparty risk of the vault custodian (HSBC London — negligible for IGLN).",
+    "avg_response_to_fed_cut_signal_pct": 0.08,
+    "avg_response_to_cb_buying_acceleration_pct": 0.06,
+    "avg_response_to_geopolitical_shock_pct": 0.12
+  },
+
+  "risks": [
+    "Real interest rate shock: A surprise inflation resurgence forcing Fed to reverse cuts and raise rates sharply would be the most damaging scenario for gold physical. Real yields above +2% (TIPS) have historically caused 15-20% gold corrections. The risk is currently low (Fed on hold/cutting) but not zero — sticky services inflation could force a policy shift.",
+    "ETF outflow feedback loop: IGLN AUM at $37.7B represents substantial institutional positioning. If gold price corrects 10%+ and triggers stop-losses, ETF outflows could amplify the downside move. Unlike CB demand (steady, price-insensitive), ETF flows are procyclical and can reverse quickly. The 2013 gold crash (-28%) was partly ETF-driven.",
+    "USD strengthening on unexpected de-escalation: If multiple geopolitical conflicts resolve simultaneously (Russia-Ukraine ceasefire + US-Iran deal), safe-haven demand unwinds and USD strengthens. Gold would likely correct 10-15% in this scenario. Structural CB demand would absorb the dip, but the correction could take months.",
+    "China domestic demand shift: China is a key gold consumer. If the Chinese property market recovers sharply, domestic retail investors may rotate from gold back to real estate, reducing Chinese consumer gold demand. PBoC buying would continue regardless, but retail demand (~400T/year) pulling back is a meaningful headwind.",
+    "Sentiment fragility at elevated prices: Gold at $4,457 represents a 148% move from 2023 base. Sentiment surveys show extreme bullishness. Historically, when gold is 'consensus bullish' in mainstream media, short-term corrections of 10-20% are common. The structural thesis remains intact through corrections, but position sizing must account for drawdown risk.",
+    "No yield: Physical gold generates no income. In environments where cash yields are attractive (high real rates), the opportunity cost of holding gold is tangible. A portfolio with 6% position in IGLN foregoes ~3% annual yield vs T-bills if real rates rise. This is an ongoing drag, mitigated when real rates are low or negative."
+  ],
+
+  "narrative_maturity": "crowded",
+  "analyst_narrative_score": 72,
+  "narrative_trend": "increasing",
+  "narrative_notes": "Gold physical is well-covered by mainstream financial media — CNBC, Bloomberg, FT run daily gold price stories. However, the REASON for the current rally is not uniformly understood: most mainstream coverage attributes gold's rise to 'safe haven demand' and 'Fed expectations', missing the structural CB buying angle that CATALYX identifies as the primary driver. The specialist narrative (WGC quarterly reports, EM CB diversification research) is accurately capturing the driver but is not yet fully reflected in mainstream equity analyst models. This partial narrative gap is why catalyst_alignment remains investable despite the mainstream coverage. At $4,457 gold with JPMorgan targeting $5,055, the bullish consensus is building but not yet at 'exhausted' level. Narrative score 72 = mainstream but not crowded. The ETF vehicle (IGLN) is a 'gateway drug' for retail gold allocation — the AUM growth from $14.2B to $37.7B shows retail discovery is in progress, not complete."
+}

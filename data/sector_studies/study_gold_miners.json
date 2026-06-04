@@ -1,0 +1,147 @@
+{
+  "$schema": "catalyx/schemas/sector_study.json",
+  "id": "study_gold_miners",
+  "schema_version": "1.2",
+  "sector_id": "gold_miners",
+  "sector_label": "Gold Miners",
+  "created_at": "2026-06-03",
+  "last_updated": "2026-06-04",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "precious_metals",
+    "adjacent_sectors": ["gold_physical", "silver_miners", "royalty_streaming_metals"],
+    "differentiation_note": "Gold miners ≠ physical gold in three critical ways: (1) operational leverage — a 10% move in gold price typically produces a 20-30% move in miners via margin expansion (revenue fixed in gold price, costs partly fixed in local currency); (2) additional risk layers — mine location geopolitics, management quality, AISC trajectory, M&A, ESG screening; (3) different investor base — gold physical is held by CBs and macro funds as monetary hedge; miners are held by equity investors seeking leveraged gold exposure. The thesis for miners requires BOTH a bullish gold view AND a view that the AISC/price spread will hold or expand. They can diverge significantly: gold can rise while miners fall if cost inflation erodes margins."
+  },
+
+  "demand_drivers": [
+    "Central bank systematic gold accumulation (structural): the primary driver of physical gold price, which then drives miner revenues. CBs are price-insensitive buyers — they buy on weakness. This creates a price floor that benefits miners.",
+    "Real interest rate direction: negative or falling real rates reduce the opportunity cost of holding gold (which pays no yield). The 2024-2026 rate cut cycle has been gold-positive.",
+    "USD weakness: gold is priced in USD. A weaker dollar increases gold's purchasing power in other currencies, boosting non-USD demand.",
+    "Geopolitical safe-haven demand: episodic spikes in risk aversion drive gold flows. Less relevant for long-term miners thesis but creates entry/exit timing opportunities.",
+    "AISC/price spread expansion: if gold rises faster than mining cost inflation, margins expand — this is the specific miner alpha vs physical gold.",
+    "M&A activity: sector consolidation (Newmont acquiring Newcrest 2023, ongoing rationalization) can re-rate individual names and the sector."
+  ],
+
+  "supply_constraints": [
+    "Grade decline: gold ore grades declining 0.5-1.0% per year at major mines. Same rock processed, less gold output — requires more capex to maintain production.",
+    "New mine scarcity: fewer than 10 economically viable new gold deposits of scale (>5Moz) discovered in the last decade. Discovery-to-production: 10-15 years.",
+    "Energy and labor cost inflation: AISC increased from ~$900/oz in 2020 to ~$1,280/oz (2025) to estimated ~$1,420/oz (2026 run-rate, +11% YoY from energy/labor). At current gold spot ($4,457), spread is ~$3,037/oz — the widest absolute margin in sector history. However, AISC inflation pace (~11% YoY) is outrunning historical norms; watch for acceleration if energy prices spike.",
+    "Water and permitting: increasingly difficult environmental permitting for new mines, particularly in Western jurisdictions."
+  ],
+
+  "technology_maturity": null,
+
+  "cycle_position": {
+    "assessment": "Advanced bull market — re-rating substantially complete, monitoring for second leg",
+    "rationale": "Gold at $4,457/oz (June 2026), ATH $4,689 (January 2026). The sector has re-rated materially since this study was created — the 'valuation lag' thesis from the original draft has partially played out. At estimated AISC of ~$1,420/oz, miners are generating ~$3,037/oz cash margins — the widest in sector history in absolute terms. The Q2 2026 earnings cycle (July 2026) will confirm whether management delivered on production guidance at these exceptional gold prices. Current risk: the re-rating may be substantially priced in for large-caps (GDX) — the second leg of alpha, if any, is more likely in mid-cap producers or in junior miners (GDXJ) where re-rating is less complete. PENDING: GDX/GLD ratio requires live market data — run `uv run python -m catalyx.data.market_data` to get current ratio. If ratio > 0.30, the large-cap re-rating is near completion; if still < 0.25, valuation lag persists.",
+    "last_assessed": "2026-06-04"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "GDX",
+      "name": "VanEck Gold Miners ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0051,
+      "aum_m_usd": 14100,
+      "replication": "physical",
+      "avg_spread_bps": 3,
+      "top_10_concentration_pct": 0.58,
+      "characteristics": "Most liquid gold miners ETF globally. Large + mid-cap. Newmont, Barrick, Agnico Eagle, AngloGold, Gold Fields. Most institutional holdings.",
+      "recommendation_tier": 1,
+      "limitations": "Not UCITS. US-listed but global underlying. Top 3 (NEM, GOLD, AEM) = ~35% — moderate concentration. Includes some silver/copper byproduct miners."
+    },
+    {
+      "ticker": "GDXJ",
+      "name": "VanEck Junior Gold Miners ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0052,
+      "aum_m_usd": 5000,
+      "replication": "physical",
+      "avg_spread_bps": 5,
+      "top_10_concentration_pct": 0.42,
+      "characteristics": "Higher beta than GDX. 'Junior' label misleading — many mid-caps included. Use when you want more leverage to gold price in bull market.",
+      "recommendation_tier": 2,
+      "limitations": "More volatile. Less liquidity than GDX. In bear markets, juniors fall harder."
+    },
+    {
+      "ticker": "AUCO.L",
+      "name": "L&G Gold Mining UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0065,
+      "aum_m_usd": 890,
+      "replication": "physical",
+      "avg_spread_bps": 12,
+      "characteristics": "UCITS-compliant gold miners. Best UCITS option for EU investor. Similar exposure to GDX.",
+      "recommendation_tier": 2,
+      "limitations": "AUM significantly lower than GDX. Wider spread. Acceptable for medium position sizes (<€100k)."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "GDX/GLD ratio",
+      "unit": "ratio",
+      "source": "market_data computed",
+      "current": null,
+      "comment": "REQUIRES LIVE DATA: run `uv run python -m catalyx.data.market_data --tickers GDX GLD`. Prior value (2026-06-03): 0.214 — historically low miner underperformance. With gold at $4,457 and margins ~$3,037/oz, the ratio should have risen. If still below 0.25, re-rating opportunity remains. If above 0.30, large-cap re-rating largely complete."
+    },
+    {
+      "metric": "Gold spot price (USD/oz)",
+      "unit": "USD/oz",
+      "source": "market_data",
+      "current": 4457,
+      "comment": "UPDATED 2026-06-04 via WebSearch. ATH $4,689 (January 2026). Consolidating at $4,450-4,520. JPMorgan target: $5,055 Q4 2026. Primary miner revenue driver: at $4,457 vs $1,420 AISC = $3,037/oz margin."
+    },
+    {
+      "metric": "Sector average AISC (USD/oz)",
+      "unit": "USD/oz",
+      "source": "quarterly earnings aggregate",
+      "current": 1420,
+      "comment": "ESTIMATED 2026-06-04: $1,420/oz based on ~11% YoY cost inflation from $1,280 (2025). Verify from Newmont + Barrick Q1 2026 earnings. Spot - AISC = ~$3,037/oz cash margin — widest in history. Watch for cost acceleration above 15% YoY (energy or labor shock)."
+    },
+    {
+      "metric": "Newmont + Barrick combined production guidance vs actuals",
+      "unit": "Moz deviation",
+      "source": "quarterly earnings",
+      "current": null,
+      "comment": "Gold miners have chronic history of missing production guidance. If they miss guidance at current gold prices, re-rating stalls. Key execution risk."
+    },
+    {
+      "metric": "WGC gold ETF flows (monthly, institutional)",
+      "unit": "tonnes",
+      "source": "WGC monthly report",
+      "current": null,
+      "comment": "Institutional gold ETF demand is the swing factor between CB structural demand and short-term price. Strong inflows = risk-on for miners."
+    }
+  ],
+
+  "active_catalyst_ids": [
+    "struct_cb_gold_accumulation"
+  ],
+
+  "historical_catalyst_performance": {
+    "summary": "Gold miners have historically responded most strongly to: (1) Fed pivot signals — miners lead gold by 3-6 months as investors position before the rate cycle turns; (2) geopolitical crises — initial spike, but fades unless gold sustains the move; (3) CB buying acceleration — slower to price in, more sustained. The user has previously traded EU defense and gold successfully. The key lesson from gold: miners can lag physical gold by 12-18 months during structural re-ratings — the GDX/GLD ratio bottoms before GDX itself bottoms.",
+    "avg_response_to_fed_pivot_signal_pct": 0.18,
+    "avg_response_to_cb_buying_acceleration_pct": 0.12,
+    "avg_response_to_gold_10pct_move_pct": 0.22
+  },
+
+  "risks": [
+    "Management execution: gold miners have one of the worst track records of meeting production guidance. Cost overruns, operational accidents, grade reconciliation failures are endemic to the sector. This is the primary reason miners trade at a P/NAV discount to NAV even in bull markets.",
+    "Gold price reversal: if real rates spike unexpectedly or USD strengthens sharply, gold can correct 10-15% in weeks. Miners amplify this 2-3x.",
+    "Geopolitical: Barrick has exposure to Mali, Tanzania, Pakistan. Newmont in Ghana, Suriname. AngloGold in DRC. These are not headline risks until they become operational disruptions.",
+    "Cost inflation: energy (diesel for mining equipment), labor (skilled workers, community agreements), and input costs can erode AISC faster than gold price rises if inflationary environment continues.",
+    "Royalty/tax risk: governments in gold-producing countries periodically increase royalties or taxes when gold prices rise. Nevada, Ontario, South Africa have all done this.",
+    "M&A risk (both ways): large acquisitions can dilute per-share production metrics. Newmont's Newcrest acquisition was initially seen as value-destructive."
+  ],
+
+  "narrative_maturity": "mainstream",
+  "analyst_narrative_score": 65,
+  "narrative_trend": "increasing",
+  "narrative_notes": "Gold miners are getting more attention as gold spot makes all-time highs, but mainstream coverage remains focused on physical gold ETF inflows and CB buying — not on the miner equity re-rating opportunity. The GDX/GLD ratio at historical lows is mentioned in specialist mining research but not in generalist macro coverage. The narrative gap is narrowing — gold miners are moving from 'overlooked' to 'noticed' but not yet 'crowded'."
+}

@@ -1,0 +1,37 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -Command \"$file = $env:TOOL_OUTPUT; if ($file -match 'schemas[\\\\/]') { Write-Host '⚠ SCHEMA MODIFIED — Required actions: (1) bump schema_version, (2) update ClosedThesis/Thesis Pydantic models, (3) check data/ JSON files for migration, (4) add changelog note to docs/SPEC_v1.1.md' } elseif ($file -match 'sector_taxonomy') { Write-Host '⚠ TAXONOMY MODIFIED — Required actions: (1) check etf_universe.yaml has ETF coverage for new sectors, (2) grep data/theses/ for references to removed sectors, (3) check scoring_weights.yaml if demand_driver weights needed' } elseif ($file -match 'structural_catalysts[\\\\/]') { Write-Host '⚠ STRUCTURAL CATALYST MODIFIED — Required actions: (1) update intensity.history if current_score changed, (2) update status_last_reviewed, (3) check linked_event_catalyst_ids is current' }\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -Command \"$file = $env:TOOL_INPUT; if ($file -match 'schemas[\\\\/]|sector_taxonomy|catalyst_taxonomy|scoring_weights|structural_catalysts[\\\\/]') { Write-Host '📋 CONFIG/SCHEMA FILE — Read CLAUDE.md §Schema Change Protocol before editing' }\""
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Read(catalyx/config/**)",
+      "Read(schemas/**)",
+      "Read(data/**)",
+      "Write(data/catalysts/**)",
+      "Write(data/snapshots/**)",
+      "Write(data/theses/**)",
+      "Write(data/sector_studies/**)"
+    ]
+  }
+}

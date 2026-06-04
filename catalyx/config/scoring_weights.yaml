@@ -1,0 +1,408 @@
+# CATALYX Scoring Weights — v1.3
+# Defines how dimension scores combine into composite_score for SectorSnapshot.
+#
+# composite = Σ(dimension_score × weight)
+# Note: crowding_risk is INVERTED before weighting (high crowding → low score contribution)
+#
+# To recalibrate: run notebooks/calibrate_scoring_weights.ipynb after N > 50 closed theses.
+#
+# SCORING STABILITY RULES (v1.2 addition)
+# ─────────────────────────────────────────
+# Problem: LLM-assigned numeric scores (0-100) are not reproducible across sessions.
+# A score of "84" from one session ≠ "84" from another. Never assign free-floating
+# numbers by LLM judgment alone.
+#
+# Rule 1 — Compute, don't guess:
+#   intensity.current_score MUST be derived from indicator semaphores (see below).
+#   Direct LLM assignment only allowed for catalyst creation (bootstrap value).
+#   First update after creation must use the computed formula.
+#
+# Rule 2 — Use categories for qualitative dimensions:
+#   narrative_maturity: enum (ignored/emerging/mainstream/crowded/exhausted)
+#   is_priced_in_estimate: stepped (0 / 0.25 / 0.50 / 0.75 / 1.0) — not continuous
+#   novelty_score: rubric-based (see novelty_score_rubric below)
+#
+# Rule 3 — Human anchors for relative comparisons:
+#   When creating a new structural catalyst, set initial intensity relative to an
+#   existing one: "stronger than X" / "similar to X" / "weaker than X".
+#   This provides inter-catalyst calibration that persists across sessions.
+
+composite_weights:
+  catalyst_alignment: 0.30
+  momentum: 0.25
+  flow_confirmation: 0.20
+  valuation_relative: 0.15
+  crowding_risk: 0.10  # Applied as (100 - crowding_score) × 0.10
+
+# catalyst_alignment sub-weights (event vs structural contribution)
+catalyst_alignment_sub_weights:
+  event_component: 0.55    # Event catalysts are spike signals — higher immediate weight
+  structural_component: 0.45  # Structural catalysts are the floor
+
+# Momentum time-period weights (used in momentum_engine.py)
+momentum_period_weights:
+  return_1m: 0.20
+  return_3m: 0.45
+  return_6m: 0.35
+
+# Event catalyst decay function: score = strength × exp(-lambda × days_since_detection)
+# lambda = ln(2) / halflife_days
+# Default halflife: 46 days (lambda ≈ 0.015)
+event_catalyst_decay:
+  default_halflife_days: 46
+  # Override per catalyst_type defined in catalyst_taxonomy.yaml
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STRUCTURAL CATALYST INTENSITY — ALGORITHMIC DERIVATION (v1.2)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# intensity.current_score = round(indicator_avg × trend_factor, 1)
+#
+# Step 1 — Score each indicator semaphore:
+#   higher_is_stronger:  🟢 (value >= threshold_strong) = 100
+#                        🟡 (threshold_weak <= value < threshold_strong) = 65
+#                        🔴 (value < threshold_weak) = 20
+#   lower_is_stronger:   🟢 (value <= threshold_strong) = 100
+#                        🟡 (threshold_strong < value <= threshold_weak) = 65
+#                        🔴 (value > threshold_weak) = 20
+#
+# Step 2 — indicator_avg = mean of all indicator_scores (equal weight)
+#   Override weights available via indicator_weight field (default: null = equal)
+#
+# Step 3 — Trend factor from intensity.history (last 2 periods):
+#   ↑↑ (rising 2+ consecutive periods): 1.05
+#   ↑  (rising 1 period):               1.02
+#   →  (flat, ≤2 point change):         1.00
+#   ↓  (falling 1 period):              0.97
+#   ↓↓ (falling 2+ consecutive):        0.93
+#
+# Step 4 — Cap result at [10, 95]. Never 0 (deactivated catalysts use status field).
+#
+# Example: struct_cb_gold_accumulation
+#   ind_01: 🟢=100, ind_02: 🟡=65, ind_03: 🟢=100 → avg=88.3
+#   history: 79→84 (1 period rising) → trend_factor=1.02
+#   intensity = round(88.3 × 1.02, 1) = 90.1
+#   (vs manual assignment of 84 — the algorithmic version detects the upward trend)
+
+indicator_semaphore_scores:
+  green: 100    # above threshold_strong (or below, for lower_is_stronger)
+  yellow: 65    # between thresholds
+  red: 20       # below threshold_weak (or above, for lower_is_stronger)
+
+intensity_trend_factors:
+  rising_2plus: 1.05    # ↑↑
+  rising_1: 1.02        # ↑
+  flat: 1.00            # →
+  falling_1: 0.97       # ↓
+  falling_2plus: 0.93   # ↓↓
+
+intensity_bounds:
+  min: 10   # Active catalysts never score 0 — use status: weakening/deactivated
+  max: 95   # Reserve 96-100 for exceptional, user-overridden conviction
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NARRATIVE MATURITY — Categorical scale (replaces analyst_narrative_score 0-100)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# LLMs cannot reliably produce stable 0-100 narrative scores across sessions.
+# Use this 5-level categorical scale instead. Anchored with observable criteria.
+#
+# To classify: ask "does the sector appear in mainstream financial media with
+# this thesis framing?" and match to the level below.
+
+narrative_maturity_levels:
+  ignored:
+    score_equiv: 10
+    description: "Thesis is absent from sell-side coverage and financial media. Only in specialist reports."
+    observable_criteria: "Not in Bloomberg/FT/WSJ sector coverage. No thematic ETF flows yet."
+    example: "AI data center copper demand (2024-Q3)"
+  emerging:
+    score_equiv: 35
+    description: "Thesis present in specialist research. Starting to appear in generalist coverage."
+    observable_criteria: "Present in WoodMac/CRU/specialist banks. Occasional FT/Bloomberg mention."
+    example: "AI data center copper demand (2025-Q4, current)"
+  mainstream:
+    score_equiv: 60
+    description: "Thesis is consensus view in generalist sell-side. Named in ETF product descriptions."
+    observable_criteria: "Goldman/JPM/MS publish base-case reports. ETF AUM > $500M in theme."
+    example: "EU defense rearmament thesis (2024)"
+  crowded:
+    score_equiv: 80
+    description: "Thesis widely held. Contrarian signals emerging. High positioning in COT data."
+    observable_criteria: "Bloomberg/CNBC daily coverage. Retail ETF inflows accelerating. Top-10 hedge fund themes."
+    example: "AI semiconductors / Nvidia thesis (2025-2026)"
+  exhausted:
+    score_equiv: 95
+    description: "Thesis fully priced in. Only momentum traders remaining. Reversal risk high."
+    observable_criteria: "Thesis in mainstream press for >12 months. P/E at historical max. ETF flows reversing."
+    example: "Post-pandemic EV battery metals thesis (2023)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# IS_PRICED_IN — Stepped levels (replaces continuous 0-1 float)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Use one of these 5 levels only. Forces categorical judgment instead of false precision.
+# Assign based on the criteria below, not LLM intuition.
+
+is_priced_in_levels:
+  0.00:
+    label: "Not priced"
+    criteria: "Market has not yet moved on this catalyst. Position in ETF flows: neutral."
+  0.25:
+    label: "Partially priced — early"
+    criteria: "Some institutional positioning visible. Sector has outperformed broad market <10% on this catalyst."
+  0.50:
+    label: "Half priced"
+    criteria: "Consensus is aware but not fully positioned. Sector outperformed 10-25%."
+  0.75:
+    label: "Mostly priced"
+    criteria: "Widely held thesis. Sector outperformed >25%. Entering requires new catalyst or mean reversion."
+  1.00:
+    label: "Fully priced"
+    criteria: "Sector at or above fair value on this catalyst. Requires new incremental catalyst to continue."
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NOVELTY SCORE RUBRIC — 5 binary questions (replaces free-float 0-100)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# For each CatalystEvent, answer these 5 questions (yes=1, no=0).
+# novelty_score = sum × 20 → range [0, 100] in steps of 20.
+# Store individual answers in novelty_rubric_scores[] for auditability.
+
+novelty_score_rubric:
+  - id: nov_01
+    question: "Is this catalyst different in TYPE from any other active catalyst in the system?"
+    weight: 20
+    example_yes: "First CB gold buying catalyst (type: institutional_flow)"
+    example_no: "Second NATO budget announcement (same type as prior NATO catalyst)"
+  - id: nov_02
+    question: "Does this catalyst affect a sector not currently covered by any other active catalyst?"
+    weight: 20
+    example_yes: "Catalyst for hydrogen_clean_fuels — no other active catalyst in that sector"
+    example_no: "Another AI capex catalyst for semiconductors (already covered)"
+  - id: nov_03
+    question: "Has the primary data source cited never appeared in the system before?"
+    weight: 20
+    example_yes: "First use of CFTC COT data as evidence"
+    example_no: "Quarterly WGC report (used in prior catalysts)"
+  - id: nov_04
+    question: "Does this event change the RATE of an existing structural catalyst (not just confirm it)?"
+    weight: 20
+    example_yes: "NATO 3.5% GDP — changes the spending rate vs prior 2% target"
+    example_no: "Another quarter of CB gold buying above 200T (confirms existing pace)"
+  - id: nov_05
+    question: "Is consensus_surprise > 0.5 (majority of market did not anticipate this)?"
+    weight: 20
+    example_yes: "Surprise rate cut when market expected hold"
+    example_no: "Widely telegraphed FOMC decision"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STRUCTURAL ↔ EVENT INTERACTION (v1.2 — TEST 8 resolution)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# The additive formula (structural × 0.45 + event × 0.55) treats confirmation
+# and contradiction as identical. This is wrong. Use this interaction model:
+#
+# relation_to_structural values (stored in catalyst_event.json):
+#   "confirms"    → amplification: structural × confirmation_amplifier
+#   "contradicts" → dampening: structural × contradiction_dampener
+#   "independent" → additive (existing formula applies)
+#
+# Formula by relation type:
+#   confirms:    catalyst_alignment = structural × confirmation_amplifier
+#                (event does not ADD independently — it boosts the structural)
+#   contradicts: catalyst_alignment = structural × contradiction_dampener
+#                (event doesn't SUBTRACT — it reduces the structural intensity)
+#   independent: catalyst_alignment = structural × 0.45 + event_score × 0.55
+#                (existing formula — event provides genuinely new information)
+
+catalyst_interaction_factors:
+  confirmation_amplifier: 1.12   # Max amplifier when event strength = 100
+  contradiction_dampener: 0.82   # -18% to structural when event contradicts it
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONFIRMS AMPLIFIER FORMULA — v1.3 FIX
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Bug in v1.2: the amplifier was flat (+12%) regardless of event strength.
+# A rumor (strength 10) and an official announcement (strength 91) produced identical
+# amplification. This is wrong.
+#
+# Fix: scale the amplifier by event strength, floor at structural baseline.
+#
+# Step 1 — compute effective amplifier:
+#   amplifier_effective = 1.0 + (confirmation_amplifier - 1.0) × (event_strength / 100)
+#   Example: event_strength=91 → amplifier_effective = 1.0 + 0.12 × 0.91 = 1.109
+#   Example: event_strength=20 → amplifier_effective = 1.0 + 0.12 × 0.20 = 1.024
+#
+# Step 2 — apply amplifier and enforce floor + cap:
+#   raw = structural × amplifier_effective
+#   case_c = structural × 0.45 + event_strength × 0.55   (independent/additive formula)
+#   catalyst_alignment = max(structural, min(raw, case_c))
+#
+# Floor (max(structural, ...)): a confirming event, however weak, can never REDUCE the
+#   score below what the structural catalyst would produce alone.
+# Cap (min(raw, case_c)): a confirming event can never outscore an equally-strong
+#   independent signal — preserves the ordering confirms ≤ independent.
+#
+# Example: struct_nato_rearmament (88) + confirming event (strength 91, halflife 90d)
+#   amplifier_effective = 1.109
+#   raw = 88 × 1.109 = 97.6
+#   case_c = 88 × 0.45 + 91 × 0.55 = 39.6 + 50.1 = 89.7
+#   result = max(88, min(97.6, 89.7)) = max(88, 89.7) = 89.7
+#
+# Example: weak confirming event (strength 10)
+#   amplifier_effective = 1.012
+#   raw = 88 × 1.012 = 89.1
+#   case_c = 88 × 0.45 + 10 × 0.55 = 39.6 + 5.5 = 45.1
+#   result = max(88, min(89.1, 45.1)) = max(88, 45.1) = 88  ← structural baseline preserved
+#
+# DECAY: as the confirming event decays, recompute event_strength with decay applied first,
+# then use the formula above. The structural signal is preserved; only the confirmation
+# premium decays with the event.
+# remaining_relevance(t) = exp(-0.693 / halflife_days × days_since_detected)
+# event_strength_decayed(t) = event_strength × remaining_relevance(t)
+#
+# Contradiction formula is unchanged:
+#   contradicts: catalyst_alignment = structural × contradiction_dampener
+#   (dampening does not depend on event strength — any contradictory evidence weakens structural)
+#
+# Independent formula is unchanged:
+#   independent: catalyst_alignment = structural × 0.45 + event_strength × 0.55
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+# user_rank multipliers (applied to display_priority, not algorithmic score)
+user_rank_multipliers:
+  1: 1.40
+  2: 1.20
+  3: 1.00
+  4: 0.80
+  5: 0.60
+  default: 1.00  # unranked
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MOMENTUM SCORE NORMALIZATION — v1.3
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# The composite formula uses momentum_score in [0, 100]. Raw % returns cannot
+# be used directly — they need cross-sectional normalization.
+#
+# Step 1 — Compute raw weighted return per sector:
+#   raw_momentum = return_1m_pct × 0.20 + return_3m_pct × 0.45 + return_6m_pct × 0.35
+#
+# Step 2 — Percentile rank across the full scored universe:
+#   momentum_score = percentile_rank(raw_momentum, all_sector_raw_momentums) × 100
+#   Bottom sector in universe → 0, top sector → 100.
+#
+# Rationale: cross-sectional percentile rank preserves relative meaning (sector A is
+# stronger than B), is robust to outliers (a 200% semiconductor run doesn't compress
+# all other scores to 0-5), and is consistent with how momentum is used in practice
+# (relative strength, not absolute return level).
+#
+# Fallback when universe < 5 sectors with data:
+#   momentum_score = (raw_momentum - universe_min) / (universe_max - universe_min) × 100
+#   (min-max normalization, less robust but avoids degenerate cases)
+#
+# Phase 0 note: until momentum_engine.py is implemented, use the raw momentum_score
+# from the momentum_snapshot (yfinance-derived, [0,100] via its own normalization).
+# Label these scores with data_source: "phase0_yfinance_proxy" in score_breakdown.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NARRATIVE_MATURITY — MULTI-CATALYST AGGREGATION RULE — v1.3
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# A sector may have multiple active structural catalysts, each with a narrative_maturity.
+# The sector-level narrative_maturity (used in heatmap and SectorSnapshot) is the MAXIMUM
+# of all active catalysts' maturity levels.
+#
+# Ordering (least to most mature): ignored < emerging < mainstream < crowded < exhausted
+#
+# Rationale: crowding risk is set by the most mainstream thesis, not the average.
+# If one catalyst is "crowded" (widely held), the sector faces crowding-driven positioning
+# risk regardless of other catalysts being "emerging". Never average maturity levels —
+# averages dilute the crowding signal.
+#
+# Implementation:
+#   sector_narrative_maturity = max(cat.narrative_maturity for cat in active_catalysts)
+#   Use the score_equiv of the winning level for the heatmap crowding_risk input.
+#
+# SectorStudy narrative_maturity field = apply this aggregation rule and store the result.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CLOSED THESIS RUBRICS — v1.3
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Anchored rubrics for ClosedThesis scores that were previously free-floating LLM numbers.
+# Evaluate at thesis close. Store justification in right_reason_rationale.
+
+closed_thesis_rubrics:
+
+  outcome_quality:
+    description: "Investment OUTCOME score — measures result, not reasoning. A lucky bad thesis can score 7."
+    scale:
+      0:  "Full loss > 30%. Invalidation triggered, stopped out."
+      1:  "Loss 20-30%. Multiple assumptions invalidated."
+      2:  "Loss 10-20%. Thesis directionally wrong."
+      3:  "Loss 0-10% or near-breakeven. Timing badly wrong but thesis not disproven."
+      4:  "Gain 0-5% (at or below transaction costs + tax). Indeterminate outcome."
+      5:  "Gain 5-15%. Thesis partially validated. Some assumptions confirmed."
+      6:  "Gain 15-30%. Most assumptions validated. Clean exit within time horizon."
+      7:  "Gain 30-50%. All assumptions validated at exit. Full thesis delivery."
+      8:  "Gain 50-75%. Thesis fully delivered within expected_weeks horizon."
+      9:  "Gain 75-100%. Exceptional. Assumptions validated ahead of schedule."
+      10: "Gain > 100%. Reserve only — do not use for gains < 100% regardless of other factors."
+
+  thesis_quality:
+    description: "REASONING quality at creation time, evaluated retroactively. Independent of outcome."
+    scale:
+      0:  "Assumptions are vague or untestable. No falsification criteria. Sector rationale absent."
+      1:  "Mostly untestable assumptions. Sector rationale weak or circular."
+      2:  "Some testable assumptions but catalyst logic is speculative. No data sources cited."
+      3:  "Baseline quality — a standard sector story with nothing differentiated."
+      4:  "Adequate. Most assumptions testable with specific sources. Sector rationale present."
+      5:  "Good. All assumptions testable with specific data sources. Clear invalidation conditions."
+      6:  "Strong. Novel sector angle. Falsification criteria are tight and specific. No circular logic."
+      7:  "Excellent. Catalyst was non-consensus when thesis was written. Differentiation is precise."
+      8:  "Exceptional. Identified catalyst before sell-side coverage. Assumptions have clear information edge."
+      9:  "Outstanding. Novel catalyst type + non-consensus sector + clean falsification. Rare."
+      10: "Reserved for theses right for the exactly-right reason with full attribution confirmation."
+
+  right_reason_score:
+    description: "COMPUTED — do not estimate. Formula produces a value in [0.0, 1.0]."
+    formula: |
+      right_reason_score =
+        (validated_assumptions / total_assumptions) × 0.40
+        + (catalyst_materialized ? 0.35 : 0.0)
+        + (alpha_from_catalyst ? 0.25 : 0.0)
+    term_definitions:
+      validated_assumptions: "count of assumption_validation entries with outcome='validated'"
+      total_assumptions: "total count of assumption_validation entries (all outcomes included)"
+      catalyst_materialized: |
+        True ONLY if the primary mechanism described in thesis.catalyst actually occurred.
+        The price must have moved via the described mechanism, not coincidentally.
+        Set False if price moved in the right direction but for a different reason.
+      alpha_from_catalyst: |
+        True if attribution.catalyst_alpha > 0 AND attribution.attribution_confidence != 'low'.
+        A 'low' confidence attribution cannot support a True value here — the decomposition
+        is unreliable. False if attribution_confidence = 'low' regardless of catalyst_alpha.
+    example: |
+      4 assumptions, 3 validated → (3/4) × 0.40 = 0.30
+      catalyst_materialized = True → + 0.35
+      alpha_from_catalyst = True (catalyst_alpha=+8.2%, confidence=medium) → + 0.25
+      right_reason_score = 0.30 + 0.35 + 0.25 = 0.90
+
+# Conviction tiers → position size ceiling
+conviction_tiers:
+  1:
+    label: "Highest conviction"
+    max_position_pct: 0.12
+    description: "Strong catalyst + fresh signal + low crowding + validated prior hit rate > 0.65"
+  2:
+    label: "High conviction"
+    max_position_pct: 0.08
+    description: "Good catalyst + some momentum + acceptable crowding"
+  3:
+    label: "Exploratory"
+    max_position_pct: 0.04
+    description: "Interesting thesis but high uncertainty or limited prior data"

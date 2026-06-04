@@ -1,0 +1,56 @@
+{
+  "$schema": "catalyx/schemas/sector_snapshot.json",
+  "id": "snap_20260603_copper_miners",
+  "schema_version": "1.1",
+  "sector_id": "copper_miners",
+  "sector_label": "Copper Miners",
+  "parent_sector": "industrial_metals",
+  "snapshot_at": "2026-06-03T23:59:00Z",
+  "investable": true,
+  "active_catalyst_ids": [
+    "struct_copper_datacenter_demand",
+    "struct_energy_transition_grid",
+    "struct_ai_capex_supercycle",
+    "cat_20260603_copper_supply_deficit_2026"
+  ],
+  "scores": {
+    "catalyst_alignment": 89,
+    "catalyst_alignment_event_component": 78,
+    "catalyst_alignment_structural_component": 86,
+    "momentum": 77.7,
+    "flow_confirmation": 50,
+    "valuation_relative": 55,
+    "crowding_risk": 35,
+    "composite": 70.9
+  },
+  "score_breakdown": {
+    "catalyst_alignment_rationale": "Three active structural catalysts (datacenter_demand, energy_transition_grid, ai_capex_supercycle) all contributing. One confirming event (copper_supply_deficit_2026, strength 78, relation=confirms). Dominant type: structural. alignment_structural=86 from indicator semaphores; event confirmation amplifies via formula to final 89.",
+    "dominant_catalyst_type": "structural",
+    "momentum_detail": {
+      "return_1m": 14.17,
+      "return_3m": 2.37,
+      "return_6m": 42.41,
+      "z_score_vs_3y": null
+    },
+    "flow_detail": {
+      "aum_change_1w_pct": null,
+      "aum_change_1m_pct": null,
+      "cot_net_long_percentile": null
+    },
+    "valuation_detail": {
+      "metric": "P/CF proxy — FCX + SCCO AISC vs spot",
+      "current": 55,
+      "percentile_3y": null
+    },
+    "crowding_detail": {
+      "short_interest_pct": null,
+      "analyst_consensus": "mixed — EV copper thesis mainstream, AI DC angle emerging. Phase 0: flow_confirmation=50 (neutral placeholder, no ETF flow data). valuation_relative=55 (AISC vs spot margin strong; no formal P/CF percentile in Phase 0). crowding_risk=35 (AI DC angle emerging, low crowding). composite = 89×0.30 + 77.7×0.25 + 50×0.20 + 55×0.15 + 65×0.10 = 70.9",
+      "crowding_flag": false
+    }
+  },
+  "market_data": {
+    "benchmark_ticker": "COPX",
+    "price": 90.25,
+    "price_date": "2026-06-03"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "id": "gap_20260604_tanker_shipping_freight",
+  "schema_version": "1.0",
+  "status": "rejected",
+  "first_detected": "2026-06-04",
+  "last_seen": "2026-06-04",
+  "signal_count": 1,
+  "label_inferred": "Crude Oil Tanker Shipping — Freight Rates",
+  "parent_sector_inferred": "energy",
+  "demand_drivers_inferred": [
+    "Strait of Hormuz closure / Middle East conflict rerouting VLCC traffic to longer Cape routes",
+    "VLCC capacity tightening: longer routes consume more vessel-days per cargo",
+    "Sanctions-driven dark fleet shadow tankers absorbing capacity outside regulated markets",
+    "Oil supply disruption forcing non-Middle East producers to increase seaborne volumes"
+  ],
+  "differentiation_inferred": "Tanker shipping is a freight services business, not an oil producer or commodity holder. P&L is driven by daily charter rates (VLCC spot and time charter) and route distance, not oil price direction. A rising oil price can coincide with falling tanker rates (if supply is disrupted at source, fewer barrels move). Conversely, a Strait of Hormuz closure raises tanker rates even if oil price falls due to demand destruction. Entirely different factor exposure from oil_majors_integrated, oil_services_equipment, or lng_natural_gas. BWET holds VLCC freight futures — no commodity price exposure at all.",
+  "closest_existing_sectors": [
+    {
+      "sector_id": "oil_majors_integrated",
+      "similarity_reason": "Both in the oil supply chain.",
+      "why_insufficient": "Oil majors own the cargo and benefit from oil price increases. Tanker operators earn freight on the transport leg regardless of oil price direction. Their incentives can be opposite: oil supply disruption hurts majors (less volume), helps tanker operators (longer routes per barrel moved)."
+    },
+    {
+      "sector_id": "infrastructure_core",
+      "similarity_reason": "Both involve physical transport infrastructure.",
+      "why_insufficient": "Infrastructure_core covers regulated toll roads, airports, ports with inflation-linked contracts and stable cash flows. Tanker shipping is unregulated, highly cyclical, driven by spot rates that can swing 10x in a single quarter. Mean-reverting by nature. Opposite risk profile."
+    }
+  ],
+  "etf_candidates": {
+    "pure_play_found": true,
+    "pure_play_ticker": "BWET",
+    "proxies": [
+      {
+        "ticker": "BDRY",
+        "estimated_exposure_pct": 100,
+        "note": "Breakwave Dry Bulk Shipping ETF — same manager as BWET but dry bulk (iron ore, coal, grain), not crude oil. Different cycle driver."
+      }
+    ]
+  },
+  "investability_assessment": "investable_pending_etf_verify",
+  "evidence": [
+    {
+      "date": "2026-06-04",
+      "signal_type": "price_outlier",
+      "description": "BWET (Breakwave Tanker Shipping ETF) up +1,406% year-over-year as of 2026-06-01. Strait of Hormuz closure on 2026-02-28 following US-Israel-Iran conflict. VLCC freight rates spiked as Middle East crude was rerouted around Cape of Good Hope. BWET holds VLCC freight futures (90% VLCC, 10% Suezmax). $100K invested at start of 2026 = $764K by April 2026. Short interest surged 142% in February 2026 indicating significant reversion risk.",
+      "source_query": "tanker shipping ETF BWET Strait of Hormuz 2026",
+      "magnitude": "extreme"
+    }
+  ],
+  "proposed_sector_id": null,
+  "promoted_date": null,
+  "rejection_reason": "Geopolitical event catalyst, no sector estructural. El movimiento de BWET (+1.406%) está 100% explicado por el cierre del Estrecho de Ormuz (2026-02-28) — evento discreto y reversible. Freight rates son mean-reverting por naturaleza. Sin el evento, no hay tesis. Registrado como CatalystEvent cat_20260228_hormuz_closure con is_priced_in_estimate: 1.0.",
+  "notes": "STRUCTURAL CAUTION: BWET is driven by a single geopolitical event (Strait of Hormuz closure). Freight rates are mean-reverting by nature. BWET has 3.50% expense ratio and holds near-dated freight futures with structural roll cost. This is a high-conviction TACTICAL play, not a permanent structural sector. The question for promotion is whether tanker shipping deserves a permanent taxonomy entry or should be treated as a geopolitical event catalyst under existing sectors (oil_majors_integrated + geopolitical type). Consider: does the theme persist if Hormuz reopens? If no, this may be better handled as a CatalystEvent rather than a new sector."
+}

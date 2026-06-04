@@ -1,0 +1,156 @@
+{
+  "$schema": "catalyx/schemas/thesis.json",
+  "id": "thesis_20260603_grid_infrastructure_utilities_bindingconstraint",
+  "schema_version": "1.1",
+  "version": 1,
+  "created_at": "2026-06-03T23:59:00Z",
+  "last_modified_at": "2026-06-03T23:59:00Z",
+  "status": "draft",
+
+  "catalyst": {
+    "catalyst_event_id": "struct_energy_transition_grid",
+    "catalyst_type": "structural",
+    "catalyst_summary": "The grid is the binding physical constraint of two simultaneous megatrends: (1) AI hyperscale data centers adding 30-150MW of concentrated load per campus at a pace the grid cannot absorb; (2) electrification of transport, heating, and industry shifting energy demand from gas to electricity. Transformer lead times of 20 months (vs historical 3 months), a 2,600GW US grid interconnection backlog, and EU grid investment commitments of €584B through 2030 are the real-time confirmations that the bottleneck is active and structural. Grid equipment manufacturers (ABB, Eaton, Schneider Electric) are reporting record order books — Eaton Electrical backlog +48% YoY to $14.5B (Q1 2026), Schneider Electric backlog €25B+ with 18-24 month forward visibility into data center projects. The secondary catalyst `struct_ai_capex_supercycle` provides an independent demand driver: $700B combined hyperscaler AI capex in 2026 drives ~40GW of new US data center load that MUST connect to the grid regardless of clean energy policy.",
+    "novelty_assessment": "The market frames grid infrastructure as a 'clean energy policy' trade — it appears in green ETFs alongside solar panels and wind turbines, and is sold off on any sign of IRA weakening or renewable subsidy cuts. The mispricing is the framing error: the primary demand driver for grid equipment is NOT clean energy policy. It is physics and inelastic load growth. A hyperscale data center adding 150MW to the grid is a physical reality that requires a transformer, a substation, and transmission capacity regardless of whether it is powered by wind or gas. Eaton and ABB's order books do not have a 'policy risk' cancel clause — they reflect signed purchase orders from utilities legally obligated to connect new load. The market is applying a policy risk discount to an asset class whose demand driver is policy-INDEPENDENT. This is the specific mispricing. Evidence: IQQH.DE (the closest UCITS proxy) has rallied +72% YoY but still lags the S&P 500 on a P/E basis when adjusted for order book visibility — the earnings multiple hasn't caught up with the backlog reality."
+  },
+
+  "sector": {
+    "sector_id": "grid_infrastructure_utilities",
+    "sector_snapshot_id": "snap_20260603_grid_infrastructure_utilities",
+    "rationale": "Grid infrastructure ≠ clean energy generation for three investment-critical reasons: (1) Business model — grid equipment manufacturers (Eaton, ABB, Schneider, Hubbell, nVent) have order-book-driven revenue with 18-36 month visibility and margin expansion as capacity tightens. Renewable generators have merchant power prices and subsidy exposure. (2) Demand driver independence — grid equipment demand is driven by load growth (AI + electrification), which is physics-constrained. Generation investment is policy-driven (IRA, Green Deal subsidies). These have completely different risk profiles: a policy reversal kills solar ETF returns but is irrelevant to transformer lead times. (3) Rate sensitivity gradient — regulated utilities with grid capex programs (National Grid, Terna, RTE) are interest-rate sensitive (long duration assets). Equipment manufacturers are not — they are cyclical industrials. The UCITS vehicle IQQH.DE blends both, but the dominant signal at current backlog levels is the equipment cycle. Not copper_miners: that thesis is a commodity re-rating play driven by the same structural parent catalysts. Grid is an equity order-book play on equipment margins and utility capex programs. Exit triggers are different: grid exits on backlog collapse or rate shock; copper exits on spot price or China PMI."
+  },
+
+  "vehicle": {
+    "primary_etf": "IQQH.DE",
+    "currency": "EUR",
+    "currency_hedge": false,
+    "currency_risk_note": "IQQH.DE is EUR-denominated on XETRA — the most natural currency for a Spanish investor. No EUR/USD drag. Underlying companies (Eaton, ABB, Schneider, National Grid) operate globally in multiple currencies, so EUR denomination at the fund level is primarily a reporting convenience. The underlying exposure has USD, CHF, GBP, EUR components — EUR-denominated does not mean EUR-hedged at the holdings level.",
+    "alternative_etfs": ["GRID", "INFR.L"],
+    "vehicle_selection_rationale": "IQQH.DE (XETRA, EUR, UCITS, AUM €3.5B, TER 0.65%, spread ~8bps): preferred for Spanish investor — UCITS compliant, EUR-denominated, accessible via all major Spanish brokers on XETRA. Best combination of compliance, AUM, and spread in the UCITS grid space. Limitation: broader than pure grid (includes some wind/solar generation). GRID (NASDAQ, USD, not UCITS, AUM ~$780M estimated, TER 0.56%, ~12bps): purest expression of grid hardware thesis (ABB, Eaton, Schneider, Hubbell as dominant holdings). Not UCITS — Spanish PRIIP compliance issue. Use only if broker has confirmed US ETF access AND the user accepts FX management overhead. INFR.L (LSE, USD, UCITS, AUM $3.1B): includes toll roads and airports (Transurban, Vinci, Enbridge) — too diluted for this thesis. Excluded as primary vehicle. ETF purity gap: no single UCITS ETF captures pure-play grid EQUIPMENT manufacturers without also capturing generation or infrastructure. IQQH.DE is the best available compromise."
+  },
+
+  "entry": {
+    "trigger_type": "price_and_flow",
+    "trigger_description": "Enter when BOTH conditions met within a 15-trading-day window: (1) IQQH.DE holds above €10.00 for 5 consecutive trading days (price support confirmation — ensures not entering into a breakdown); (2) Eaton or Schneider Electric quarterly orders reported as positive YoY growth in their most recent earnings (confirms demand signal is current, not historical). Current IQQH.DE at €11.03, near 52-week highs following +72% YoY. If IQQH.DE gaps above €12.00 before entry without a pullback, abort entry — wait for a consolidation to €10.50-11.00 range before entering at better risk/reward.",
+    "entry_price_limit": 11.50,
+    "entry_price_limit_note": "IQQH.DE entry limit €11.50 — approximately 4% above current level. Rationale: IQQH.DE is near its 52-week high (GRID equivalent $200). Entering above €11.50 without earnings confirmation is momentum-chasing. If IQQH exceeds €11.50, wait for first significant pullback (>5%) before re-evaluating. Exception: if a major structural catalyst fires (e.g., US grid permitting reform signed, or EU announces accelerated grid investment) with clear incremental value, re-evaluate the limit.",
+    "entry_window_closes": "2026-07-31",
+    "sizing_method": "conviction_tier",
+    "conviction_tier": 2,
+    "position_size_pct_portfolio": 0.04,
+    "position_size_rationale": "PORTFOLIO CORRELATION CONSTRAINT: `grid_infrastructure_utilities` and `copper_miners` share two structural parent catalysts (`struct_energy_transition_grid` + `struct_ai_capex_supercycle`). Per CATALYX position sizing rules (CLAUDE.md, pipeline_test_prompt.md): combined allocation for correlated theses cannot exceed Tier 2 ceiling (8%) unless correlation is explicitly quantified and found low. Decision: size grid at 4%, reserving the remaining 4% (to Tier 2 ceiling of 8%) for copper_miners if/when that thesis is opened. Combined AI+energy infrastructure exposure = 4% (grid) + 4% (copper) = 8% exactly at Tier 2 cap. If copper_miners is NOT opened, grid may be sized up to 6% at first thesis review if Eaton Q2 2026 confirms backlog acceleration. Conviction tier 2 is appropriate because: (1) catalyst_alignment is strong at 95/100; (2) sector study cycle position is 'early-to-mid multi-decade buildout'; (3) IQQH momentum strong (+72% YoY); (4) offsetting factor: IQQH.DE is not a pure play — includes generation exposure that dilutes the thesis."
+  },
+
+  "assumptions": [
+    {
+      "id": "asm_01",
+      "statement": "Eaton Electrical sector backlog YoY growth stays positive (above 0%) in each quarterly earnings report during the thesis horizon.",
+      "measurability": "Source: Eaton Corp quarterly earnings press releases (SEC Form 8-K, backlog is a reported segment metric). Check within 5 days of each earnings release (Q2 July 2026, Q3 October 2026, Q4 January 2027). Falsified by: Eaton Electrical backlog reports negative YoY growth for 2 consecutive quarters. Rationale: Eaton Electrical backlog is the highest-quality real-time indicator of grid equipment demand — it aggregates signed purchase orders from utilities and data center customers. Q1 2026 reported +48% YoY to $14.5B, raised organic guidance to 10%. A sustained backlog decline would signal demand destruction, not just cyclical softness.",
+      "monitoring_source": "earnings_data",
+      "check_frequency": "quarterly",
+      "current_status": "validated",
+      "status_note": "Q1 2026: Eaton Electrical backlog +48% YoY to $14.5B. 2026 organic growth guidance raised to 10% from 8%. Record first quarter results."
+    },
+    {
+      "id": "asm_02",
+      "statement": "Power transformer delivery lead times remain above 12 months per Wood Mackenzie or S&P Global quarterly survey.",
+      "measurability": "Source: Wood Mackenzie quarterly transformer market survey / S&P Global commodity insights. Check quarterly (June, September, December, March releases). Falsified by: two consecutive quarterly reports showing lead times below 12 months. Rationale: 12 months is the historical 'normal' supply level. Sustained fall below 12 months would signal that manufacturing capacity expansion has caught up with demand — the physical bottleneck thesis is no longer operative. Current: 20 months (Q1 2026 survey). The thesis requires bottleneck persists.",
+      "monitoring_source": "user_manual",
+      "check_frequency": "quarterly",
+      "current_status": "validated",
+      "status_note": "Most recent WoodMac survey (Q1 2026): 20 months. Prior: 22 months. Slight improvement (22→20) but still 67% above threshold. No risk of falling below 12 months within thesis horizon."
+    },
+    {
+      "id": "asm_03",
+      "statement": "Combined hyperscaler AI capex guidance (Microsoft + Google + Amazon + Meta) stays above $100B/quarter for each quarterly earnings cycle during the thesis horizon.",
+      "measurability": "Source: Quarterly earnings transcripts and 10-Q/10-K filings. Check each earnings season (Q2 July, Q3 October, Q4 January). Falsified by: any single quarter where combined guidance falls below $100B AND represents a >30% sequential cut vs prior quarter guidance. Rationale: AI data center load growth is the secondary driver of grid investment. At $100B/quarter, hyperscalers are still committing ~40GW of new load that the grid must absorb. A cut below $100B + >30% sequential reduction would signal a structural AI capex reversal that removes the data center power demand driver. Q1 2026 actual: $175B/quarter — far above threshold.",
+      "monitoring_source": "earnings_data",
+      "check_frequency": "quarterly",
+      "current_status": "validated",
+      "status_note": "Q1 2026: combined guidance ~$700B annual = $175B/quarterly average. All 4 hyperscalers raised guidance. Threshold of $100B is not at risk within thesis horizon."
+    },
+    {
+      "id": "asm_04",
+      "statement": "US Federal Reserve does not raise interest rates more than 100bps cumulative above the entry date level during the thesis horizon.",
+      "measurability": "Source: FOMC rate decisions (published at each FOMC meeting, 8 per year). Track cumulative Fed funds target rate change from entry date. Falsified by: Fed funds target rate rises to entry_rate + 100bps or more at any FOMC meeting during thesis horizon. Rationale: Regulated utilities (National Grid, Terna, Iberdrola — major IQQH holdings) are long-duration assets with P/E compression risk when rates rise. A +100bps shock would reduce the utility portion of IQQH's P/E by ~15-20%, potentially overwhelming the earnings growth signal from equipment manufacturers. The thesis does NOT require rate cuts — it only requires rates do not spike unexpectedly. Current environment: Fed on hold/cutting cycle.",
+      "monitoring_source": "macro_data",
+      "check_frequency": "on_event",
+      "current_status": "monitoring",
+      "status_note": "Fed currently in easing/hold cycle (2024-2026). No hike signals in near-term forward guidance. This assumption is a macro override risk monitor, not an active concern."
+    }
+  ],
+
+  "invalidation_conditions": [
+    {
+      "id": "inv_01",
+      "condition": "Eaton Electrical segment backlog declines more than 20% YoY for 2 consecutive quarterly earnings reports AND Schneider Electric backlog also declines YoY in the same periods.",
+      "severity": "full_exit",
+      "source": "earnings_data",
+      "triggered": false,
+      "triggered_at": null,
+      "rationale": "Simultaneous backlog decline at both Eaton AND Schneider would signal broad-based demand destruction in grid equipment — not a company-specific issue. This is the clearest real-time signal that the structural demand thesis has reversed. A single company decline is noise; simultaneous decline at two major players is signal."
+    },
+    {
+      "id": "inv_02",
+      "condition": "Power transformer delivery lead times fall below 8 months per 2 consecutive quarterly Wood Mackenzie surveys.",
+      "severity": "review_and_reduce",
+      "source": "user_manual",
+      "triggered": false,
+      "triggered_at": null,
+      "rationale": "Below 8 months = supply has normalized to pre-2020 levels. The physical bottleneck that drives equipment pricing power has resolved. This does NOT invalidate the long-term demand thesis, but it removes the short-term pricing power angle. Reduce to 2% (from 4%) and reassess whether the demand growth thesis alone justifies the position without the supply constraint amplifier."
+    },
+    {
+      "id": "inv_03",
+      "condition": "US Federal Reserve raises rates to entry_rate + 200bps within 18 months of entry.",
+      "severity": "review_and_reduce",
+      "source": "macro_data",
+      "triggered": false,
+      "triggered_at": null,
+      "rationale": "A +200bps rate shock would compress utility P/E multiples enough to dominate the earnings growth signal in IQQH.DE. Reduce position to 2% and hold equipment-pure exposure only (consider rotating to GRID if UCITS constraint is resolved). Re-enter at full 4% when rate peak is confirmed."
+    },
+    {
+      "id": "inv_04",
+      "condition": "IQQH.DE falls more than 20% below entry price for 10 consecutive trading days.",
+      "severity": "review_and_reduce",
+      "source": "market_data",
+      "triggered": false,
+      "triggered_at": null,
+      "stop_price_level": 9.2,
+      "stop_price_ticker": "IQQH.DE",
+      "rationale": "A 20% drawdown from entry triggers a position review — not an automatic exit. First step: check if the decline is thesis-related (backlog deterioration, rate shock) or market-wide (risk-off, sector rotation). If the decline is market-wide and fundamentals are intact (asm_01-04 all still valid), hold or add. Only exit if combined with a triggered fundamental invalidation condition."
+    }
+  ],
+
+  "time_horizon": {
+    "min_weeks": 12,
+    "expected_weeks": 30,
+    "max_weeks": 78,
+    "catalyst_maturation_note": "Grid infrastructure has a 10-15 year investment cycle. This thesis is not a short-term catalyst trade — it is a structural position with a 6-18 month active trading window. The re-rating mechanism is: (1) quarterly order book data (every 13 weeks — ABB Q2, Eaton Q2, Schneider H1 all in July 2026) confirming demand acceleration → earnings upgrades → P/E multiple re-rating. The maximum thesis horizon is 78 weeks (18 months) because: after 18 months, either the re-rating has happened (position at target) or something fundamental has changed (exit by then). The IQQH.DE performance trajectory (+72% YoY) suggests momentum is already in place — this is a hold for continuation, not a catalyst discovery. The incremental thesis is that equipment manufacturers will report further backlog growth in Q2 2026 earnings (July) and that mainstream analysts will upgrade earnings estimates for Eaton and Schneider, driving a second leg of multiple expansion.",
+    "review_dates": ["2026-07-15", "2026-09-15", "2026-11-15", "2027-01-15", "2027-03-15"]
+  },
+
+  "tax": {
+    "entry_tax_year": 2026,
+    "ytd_realized_gains_eur_at_entry": 0,
+    "marginal_bracket_at_entry": 0.19,
+    "estimated_tax_on_full_exit_if_50pct_gain": 0.19,
+    "tax_notes": "⚠️ UPDATE REQUIRED: ytd_realized_gains_eur_at_entry = 0 is a default placeholder. Before entry, update with actual YTD realized gains for tax year 2026. If copper_miners is opened first and generates a gain, the marginal bracket for grid entry may already be 0.21 (if copper gain > €6k). IQQH.DE is EUR-denominated — no FX conversion required for P&L in EUR. This simplifies tax computation: gross gain = (exit_price_EUR - entry_price_EUR) × shares. Spanish CGT brackets: 19% on first €6k of gains, 21% on €6k-€50k, 23% on €50k-€200k, 27% above €200k. Applied sequentially across ALL capital gains realized YTD regardless of holding period. Combined copper + grid positions: if both generate gains in the same tax year, the brackets apply across the combined gains — tax planning note: coordinate exit timing across positions to stay within lower brackets if possible."
+  },
+
+  "metadata": {
+    "author": "abetatos",
+    "sector_snapshot_composite_at_entry": 74.5,
+    "catalyst_strength_at_entry": 95,
+    "prior_hit_rate_catalyst_sector": null,
+    "prior_n_trials": 0,
+    "confidence_override": null,
+    "correlation_check": {
+      "correlated_open_theses": ["thesis_20260603_copper_miners_datacenter_alpha"],
+      "shared_catalysts": ["struct_energy_transition_grid", "struct_ai_capex_supercycle"],
+      "combined_allocation_pct": 0.08,
+      "combined_at_tier_ceiling": true,
+      "correlation_note": "Grid + copper = same structural parent (AI capex + energy transition). Combined allocation 4% (grid) + 4% (copper) = 8% = Tier 2 ceiling. Cannot add to either position without closing the other first, OR explicitly quantifying that correlation is lower than assumed (requires Phase 1 market data)."
+    },
+    "tags": ["grid_infrastructure", "energy_transition", "AI_power", "equipment_manufacturers", "structural", "order_book_play", "utilities", "rate_sensitive"]
+  }
+}

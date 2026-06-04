@@ -1,0 +1,92 @@
+# StructuralCatalyst: Energy Transition Grid Infrastructure Bottleneck
+# schema_version: "1.2"
+
+id: struct_energy_transition_grid
+type: structural
+schema_version: "1.2"
+title: "Grid infrastructure as the binding constraint of energy transition"
+description: >
+  The energy transition (renewables, EVs, heat pumps) and the AI buildout are colliding
+  at the grid level. Transmission and distribution infrastructure is the binding constraint:
+  solar and wind are being built faster than the grid can connect them; EV charging and
+  data centers are adding load faster than grid capacity grows. Grid investment requires
+  10-15 year lead times. This creates a structural multi-decade demand for: transformers,
+  cables, grid management software, and utility grid operators. Copper is the key physical
+  commodity input. This structural catalyst spans: grid_infrastructure_utilities,
+  copper_miners, and partially nuclear_energy (baseload).
+
+created_at: "2026-06-03T18:00:00Z"
+created_by: user
+onset_period: "2023-Q2"
+onset_evidence: "IEA 2023: grid investment must triple by 2030 to meet climate targets. Transformer lead times >2 years (vs historical 3 months)."
+
+catalyst_type: climate_transition
+catalyst_subtype: grid_electrification
+geography: [US, EU, GLOBAL]
+thematic_tags: [grid, electrification, copper, infrastructure, energy_transition, ai_power]
+
+user_rank: 3
+user_notes: "Less crowded than pure AI play. Copper miners is the physical commodity expression; grid utilities is the regulated infrastructure expression."
+
+intensity:
+  current_score: 82
+  last_updated: "2026-06-01"
+  history:
+    - period: "2026-Q1"
+      score: 82
+      note: "Transformer lead times still >18 months. EU grid investment announced €584B through 2030."
+    - period: "2025-Q4"
+      score: 79
+      note: "US FERC permitting reform passed — reduces grid connection queue."
+
+indicators:
+  - id: ind_01
+    name: "Power transformer delivery lead times (industry survey)"
+    source: "Wood Mackenzie / S&P Global reports"
+    check_frequency: quarterly
+    current_value: 20
+    unit: months_delivery_lead_time
+    direction: higher_is_stronger
+    threshold_strong: 12
+    threshold_weak: 6
+    last_value: 22
+    last_date: "2026-03-01"
+
+  - id: ind_02
+    name: "EU grid investment announced (€B, rolling 12M)"
+    source: "ENTSO-E + EC energy reports"
+    check_frequency: quarterly
+    current_value: 96
+    unit: EUR_billion_annual
+    direction: higher_is_stronger
+    threshold_strong: 60
+    threshold_weak: 30
+    last_value: 88
+    last_date: "2026-03-01"
+
+  - id: ind_03
+    name: "Copper price trend (spot, USD/tonne)"
+    source: "LME spot price"
+    check_frequency: monthly
+    current_value: 13965
+    unit: USD_per_tonne
+    direction: higher_is_stronger
+    threshold_strong: 9000
+    threshold_weak: 7000
+    last_value: 12742
+    last_date: "2026-06-02"
+    update_note: "WebSearch confirmed 2026-06-03: LME copper $13,965/tonne. Prior value $10,200 was stale — likely a 2025 reference level. Copper well above threshold_strong ($9,000). 2026 YTD average ~$12,841."
+
+deactivation_conditions:
+  - id: deact_01
+    condition: "Grid connection queue clears materially (lead times drop below 6 months for 2 consecutive quarters)."
+    action: downgrade_to_weak
+
+  - id: deact_02
+    condition: "Major AI capex slowdown reduces data center power demand growth below 5% YoY."
+    action: review_required
+
+linked_event_catalyst_ids: []
+narrative_maturity: "mainstream"
+status: active
+status_last_reviewed: "2026-06-03"

@@ -1,0 +1,155 @@
+{
+  "$schema": "catalyx/schemas/sector_study.json",
+  "id": "study_copper_miners",
+  "schema_version": "1.2",
+  "sector_id": "copper_miners",
+  "sector_label": "Copper Miners",
+  "created_at": "2026-06-03",
+  "last_updated": "2026-06-03",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "industrial_metals",
+    "adjacent_sectors": ["gold_miners", "lithium_miners", "grid_infrastructure_utilities", "ai_infrastructure_data_centers"],
+    "differentiation_note": "Copper miners are distinct from other metals plays in three ways: (1) supply is the most inelastic of any major metal — 16 years average from discovery to production, grade declining globally at ~0.2%/year; (2) demand drivers are the most convergent — EV, grid, AI data centers, and traditional construction all require copper simultaneously; (3) the equity vehicles (COPX) offer 2-3x leverage to copper price via operational leverage, unlike physical ETCs (COPA.L) which track spot 1:1. The thesis in copper miners is specifically about the gap between what the market has priced (EV narrative only) vs the actual demand profile (EV + grid + AI data centers + traditional EM demand). This mispricing is the alpha."
+  },
+
+  "demand_drivers": [
+    "AI data center buildout: ~30kg copper per server rack, transformers (windings 85% copper), busbars, power cables, liquid cooling systems. A 100MW hyperscale DC uses 20,000-40,000 tonnes of copper — one mid-size mine's annual production. $350B+ hyperscaler capex in 2026 implies ~1.5-2M tonnes of incremental copper demand by 2028. NOT IN CONSENSUS MODELS.",
+    "Grid transmission expansion: HVDC cables (undersea, cross-country) are 95%+ copper by weight. Each GW of HVDC transmission requires ~4,000 tonnes of copper. EU €584B grid investment through 2030 = structural multi-year demand.",
+    "EV adoption: an EV uses 4x the copper of an ICE vehicle (83kg vs 23kg). Charging infrastructure adds further demand. This IS in consensus — not the alpha, but provides demand floor.",
+    "Heat pump adoption: a heat pump uses 4-6kg copper vs <1kg for a gas boiler. EU mandating phase-out of gas boilers — 100M units to replace.",
+    "Traditional EM construction: China's property market collapse has reduced this driver significantly. However, India + Southeast Asia infrastructure buildout partially offsets.",
+    "Defense: military equipment (ships, aircraft, missiles) is copper-intensive. NATO rearmament adds marginal demand."
+  ],
+
+  "supply_constraints": [
+    "Grade decline: average ore grade at major mines declining 0.2% per year. Same ore processed = less copper output. Requires more energy and processing per tonne of output.",
+    "Discovery-to-production lag: 16 years average globally. High copper prices today will not produce new supply until 2040+. No quick supply response is possible.",
+    "Permitting and ESG: major copper deposits in Chile, Peru, DRC face political risk, community opposition, water rights disputes. Codelco (Chile's state miner) has repeatedly missed production guidance.",
+    "Energy intensity: copper smelting is energy-intensive. Energy price spikes directly hit AISC (All-In Sustaining Cost). AISC currently ~$2.50-3.00/lb vs spot ~$4.60/lb — healthy margin but watch energy costs.",
+    "Geographic concentration: Chile + Peru = ~40% of global mine supply. Political risk (mining royalties, nationalization rhetoric) is structural."
+  ],
+
+  "technology_maturity": null,
+
+  "cycle_position": {
+    "assessment": "Mid-cycle bull market with structural demand acceleration",
+    "rationale": "Copper broke $10,000/tonne in 2024 for the first time since 2022. Unlike the 2022 spike (macro-driven, faded quickly), the current level has fundamental support from simultaneous demand inflection across EV, grid, and AI. Supply response is structurally impossible in the near term — no new major mines come online before 2030. The market has started pricing the EV demand story but has NOT priced the AI data center demand story — the mispricing window is approximately 12-24 months before consensus analyst models update.",
+    "last_assessed": "2026-06-03"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "COPX",
+      "name": "Global X Copper Miners ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0065,
+      "aum_m_usd": 2100,
+      "replication": "physical",
+      "avg_spread_bps": 8,
+      "top_10_concentration_pct": 0.62,
+      "characteristics": "Pure-play copper miners equity. SCCO (Southern Copper), FCX (Freeport), TECK, ANTO (Antofagasta), BHP partial. 2-3x leverage to copper price via operational leverage.",
+      "recommendation_tier": 1,
+      "limitations": "Not UCITS. Top 3 names = ~40% of fund — concentrated. SCCO has Mexican political risk; FCX has Indonesia operational risk."
+    },
+    {
+      "ticker": "COPX.L",
+      "name": "Global X Copper Miners UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0065,
+      "aum_m_usd": 380,
+      "replication": "physical",
+      "avg_spread_bps": 16,
+      "top_10_concentration_pct": 0.62,
+      "characteristics": "Same exposure as COPX. UCITS-compliant for EU investor.",
+      "recommendation_tier": 2,
+      "limitations": "Lower AUM than US version. Wider spread — size carefully. AUM growing but still sub-$400M."
+    },
+    {
+      "ticker": "COPA.L",
+      "name": "WisdomTree Copper ETC",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0049,
+      "aum_m_usd": 640,
+      "replication": "synthetic_swap",
+      "avg_spread_bps": 12,
+      "characteristics": "Physical copper commodity exposure — NOT miners. Tracks LME copper spot 1:1. Different thesis: pure commodity price play without operational leverage or mining risk.",
+      "recommendation_tier": 2,
+      "limitations": "Synthetic (swap-based). No equity upside from margin expansion. Use when you want pure commodity exposure, not when you want equity leverage."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "LME copper spot price (USD/tonne)",
+      "unit": "USD/tonne",
+      "source": "LME daily",
+      "current": 10200,
+      "comment": "Primary price indicator. Threshold_strong: $9,500. Current comfortably above."
+    },
+    {
+      "metric": "LME copper warehouse inventory",
+      "unit": "tonnes",
+      "source": "LME daily inventory report",
+      "current": 98000,
+      "comment": "Low inventory = supply tightness. <150k tonnes = bullish signal. Currently 98k — near multi-year lows."
+    },
+    {
+      "metric": "COPX vs copper spot ratio (equity premium/discount)",
+      "unit": "ratio",
+      "source": "market_data computed",
+      "current": null,
+      "comment": "If miners lag spot price, they're cheap relative to the commodity. GDX/GLD equivalent for copper."
+    },
+    {
+      "metric": "Freeport-McMoRan AISC quarterly",
+      "unit": "USD/lb",
+      "source": "FCX earnings",
+      "current": 2.75,
+      "comment": "Margin indicator. Spot at $4.60/lb vs AISC $2.75 = $1.85/lb margin. Watch AISC trend (energy costs, grade decline)."
+    },
+    {
+      "metric": "Codelco production guidance vs actuals",
+      "unit": "kt deviation",
+      "source": "Codelco quarterly",
+      "current": null,
+      "comment": "Codelco = ~10% of global supply. Persistent guidance misses = supply tighter than expected."
+    },
+    {
+      "metric": "Data center copper demand — analyst estimate revisions",
+      "unit": "Mt annual",
+      "source": "WoodMac / CRU quarterly",
+      "current": 1.2,
+      "comment": "The key alpha indicator. Each upward revision by analysts = market re-pricing the DC demand angle."
+    }
+  ],
+
+  "active_catalyst_ids": [
+    "struct_copper_datacenter_demand",
+    "struct_energy_transition_grid"
+  ],
+
+  "historical_catalyst_performance": {
+    "summary": "Copper miners have historically been highly cyclical — strong performers in China-driven commodity supercycles (2003-2008, 2020-2022), weak in risk-off or China slowdown periods. The current cycle is structurally different: demand is driven by electrification + AI rather than EM construction, and supply response is structurally impaired. However, the equity market still prices COPX with a high correlation to China PMI — this creates the mispricing opportunity when China PMI is weak but structural demand is accelerating.",
+    "avg_response_to_china_pmi_beat_pct": 0.08,
+    "avg_response_to_copper_spot_10pct_move_pct": 0.22
+  },
+
+  "risks": [
+    "China demand collapse: China is ~55% of global copper consumption. A hard landing in Chinese construction/manufacturing would overwhelm AI + EV demand in the short term. Key risk to monitor.",
+    "AI capex cycle reversal: if hyperscaler capex cuts materially (DeepSeek-type efficiency shock at scale), DC copper demand disappears. This is the thesis-specific risk.",
+    "Supply surprise: a major new copper discovery that fast-tracks (very rare) or technology that enables low-grade extraction economically. Both very low probability in <5yr horizon.",
+    "USD strength: copper is priced in USD. Strong dollar depresses copper price in local currency terms and reduces EM demand.",
+    "Geopolitical: Chile mining royalty increases (passed 2024, less aggressive than feared), Peru community conflicts, DRC political instability. Company-specific but sector-relevant.",
+    "Equity vs commodity divergence: miners can underperform copper spot if cost inflation (energy, labor) erodes margins even as copper price rises."
+  ],
+
+  "narrative_maturity": "mainstream",
+  "analyst_narrative_score": 52,
+  "narrative_trend": "increasing",
+  "narrative_notes": "Copper is transitioning from 'China construction metal' to 'electrification metal' in mainstream analyst narrative. The AI data center angle is present in only a handful of specialist reports (WoodMac, CRU, Morgan Stanley commodities) — not yet in generalist buy-side copper coverage. This is the alpha window: the story is starting to be told but not yet in price. Watch for when Goldman/JPM commodities desks publish DC copper demand as a base case (not a scenario) — that is the signal the mispricing is closing."
+}

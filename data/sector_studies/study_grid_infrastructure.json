@@ -1,0 +1,146 @@
+{
+  "$schema": "catalyx/schemas/sector_study.json",
+  "id": "study_grid_infrastructure_utilities",
+  "schema_version": "1.2",
+  "sector_id": "grid_infrastructure_utilities",
+  "sector_label": "Grid Infrastructure & Storage",
+  "created_at": "2026-06-03",
+  "last_updated": "2026-06-03",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "energy",
+    "adjacent_sectors": ["solar_energy", "wind_energy_offshore", "nuclear_energy", "copper_miners"],
+    "differentiation_note": "Grid infrastructure is NOT a generation play. It is the transmission, distribution, and storage layer that connects generation to consumption. Different business model: regulated utilities have guaranteed returns (WACC-based), equipment manufacturers (ABB, Eaton, Schneider) have order book visibility of 18-36 months. The investment thesis is about physical constraint, not energy policy. Whether solar or nuclear wins is irrelevant — both need the same grid to deliver electrons."
+  },
+
+  "demand_drivers": [
+    "AI data center power demand: hyperscale DCs require 30-150MW each, dedicated grid connection, 24/7 reliability. US added ~40GW of DC load 2024-2026.",
+    "EV charging infrastructure: public fast-chargers require 50-350kW grid upgrades at each site. Fleet electrification (trucks, buses) creates concentrated load spikes.",
+    "Heat pump adoption: replacing gas boilers with heat pumps shifts residential energy from gas to electric, increasing peak residential load 20-40%.",
+    "Renewable integration: solar and wind require 2-5x more transmission capacity per GW than conventional plants (intermittency + geographic mismatch with load centers).",
+    "Grid modernization mandates: EU requires member states to upgrade grids to meet 2030 renewable targets. US IIJA allocated $65B to grid modernization.",
+    "Industrial electrification: steel, cement, chemicals shifting from fossil fuel process heat to electric — concentrated, high-voltage demand."
+  ],
+
+  "supply_constraints": [
+    "Transformer manufacturing capacity: global capacity was not built for current demand. Lead times for large power transformers hit 24 months in 2024, vs historical 3-4 months. New manufacturing lines take 3-5 years to build.",
+    "Engineering talent: specialized HV engineers are scarce. The workforce contracted during the low-investment decade of 2010-2020.",
+    "Copper dependency: grid equipment is 40-60% copper by cost. Copper supply constraints (see study_copper_miners) directly constrain grid buildout pace.",
+    "Permitting: new transmission lines in the US take 10-15 years to permit. EU average is 7-10 years. This is the true binding constraint on grid expansion.",
+    "Grid interconnection queues: in the US, 2,600GW of generation projects are waiting for grid connection. Most will never connect — but the queue signals demand far exceeds grid capacity."
+  ],
+
+  "technology_maturity": null,
+
+  "cycle_position": {
+    "assessment": "Early-to-mid multi-decade buildout cycle",
+    "rationale": "Grid underinvestment of 2010-2020 created a structural deficit that is now colliding with AI and electrification demand acceleration. Unlike a typical capex cycle, this one is constrained by permitting and manufacturing capacity — meaning demand will remain elevated for 10-15 years regardless of economic conditions. Regulated utility revenues provide downside protection; equipment manufacturers have 18-36 month order book visibility.",
+    "last_assessed": "2026-06-03"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "GRID",
+      "name": "First Trust NASDAQ Clean Edge Smart Grid & Electric Vehicles ETF",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "ter": 0.0058,
+      "aum_m_usd": 510,
+      "replication": "physical",
+      "avg_spread_bps": 12,
+      "top_10_concentration_pct": 0.52,
+      "characteristics": "Grid equipment + EV charging + smart grid software. ABB, Eaton, Schneider Electric, Hubbell. Most direct play on grid hardware.",
+      "recommendation_tier": 1,
+      "limitations": "Not UCITS. AUM on the low side — watch liquidity. EV charging component adds unrelated exposure."
+    },
+    {
+      "ticker": "INFR.L",
+      "name": "iShares Global Infrastructure UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0065,
+      "aum_m_usd": 3100,
+      "replication": "physical",
+      "avg_spread_bps": 8,
+      "top_10_concentration_pct": 0.48,
+      "characteristics": "Core infrastructure: utilities, toll roads, airports, ports. Less pure grid play but UCITS, high AUM, good liquidity. Transurban, Enbridge, National Grid, Vinci.",
+      "recommendation_tier": 1,
+      "limitations": "Includes toll roads and airports — not pure grid. More defensive (lower beta to grid investment theme)."
+    },
+    {
+      "ticker": "IQQH.DE",
+      "name": "iShares Global Clean Energy UCITS ETF",
+      "exchange": "XETRA",
+      "currency": "USD",
+      "ter": 0.0065,
+      "aum_m_usd": 3800,
+      "replication": "physical",
+      "avg_spread_bps": 8,
+      "recommendation_tier": 2,
+      "limitations": "Clean energy broad — includes generation (solar, wind) alongside grid. Less pure. But highest AUM and good spread in UCITS space."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Power transformer delivery lead times",
+      "unit": "months",
+      "source": "Wood Mackenzie / S&P Global quarterly",
+      "current": 20,
+      "comment": "Key supply constraint indicator. >12M = structural tightness. Currently 20M — well above threshold."
+    },
+    {
+      "metric": "US grid interconnection queue backlog",
+      "unit": "GW waiting",
+      "source": "LBNL annual interconnection report",
+      "current": 2600,
+      "comment": "Proxy for latent demand. Even if 80% cancelled, remaining 520GW is 50% of current US grid capacity."
+    },
+    {
+      "metric": "EU grid investment announced (rolling 12M)",
+      "unit": "EUR billion",
+      "source": "ENTSO-E + European Commission",
+      "current": 96,
+      "comment": "€584B committed through 2030. Track whether announcements convert to actual capex."
+    },
+    {
+      "metric": "ABB + Eaton + Schneider combined order book growth YoY",
+      "unit": "% YoY",
+      "source": "Quarterly earnings",
+      "current": 0.18,
+      "comment": "Best real-time indicator of demand momentum. Orders lead revenue by 12-18 months."
+    },
+    {
+      "metric": "GEX/XLE ratio",
+      "unit": "ratio",
+      "source": "market_data",
+      "current": null,
+      "comment": "Grid infrastructure outperformance vs broad energy. Rising = grid theme outperforming."
+    }
+  ],
+
+  "active_catalyst_ids": [
+    "struct_energy_transition_grid",
+    "struct_ai_capex_supercycle"
+  ],
+
+  "historical_catalyst_performance": {
+    "summary": "Grid infrastructure has historically been a late-cycle play within energy transitions — it lags generation investment by 3-5 years because you need to know where generation is going before building transmission. We are now in that lag period: renewables were built 2018-2023, grid buildout is 2023-2030+. The sector dramatically underperformed during the 2020-2022 low-rate environment (discount rate sensitive). Post-2023 rate stabilization + physical demand inflection has driven rerating.",
+    "avg_response_to_rate_cut_signal_pct": 0.12,
+    "avg_response_to_grid_policy_announcement_pct": 0.07
+  },
+
+  "risks": [
+    "Interest rate sensitivity: regulated utilities are long-duration assets. Rate increases compress their regulated WACC and P/E multiples. Equipment manufacturers less affected.",
+    "Permitting failure: the US transmission permitting backlog is a political problem as much as a technical one. NIMBY opposition, jurisdictional complexity (FERC + states), and litigation can permanently delay projects.",
+    "Copper price: grid equipment cost is 40-60% copper. A sustained copper price spike compresses margins for equipment manufacturers and increases utility capex budgets.",
+    "Policy reversal: US IRA grid provisions could be modified. EU Green Deal implementation is politically contested. However: the physical demand from AI data centers is policy-independent.",
+    "Substitution: long-run risk from AI-optimized grid management reducing required buildout (smarter grid = less physical expansion needed). Currently theoretical."
+  ],
+
+  "narrative_maturity": "mainstream",
+  "analyst_narrative_score": 58,
+  "narrative_trend": "increasing",
+  "narrative_notes": "Grid infrastructure is moving from specialist utility coverage to mainstream macro coverage as the AI power demand story becomes consensus. The 'picks and shovels of the energy transition' framing is gaining traction. Still below defense or AI semiconductors in media saturation — alpha window narrowing but not closed."
+}

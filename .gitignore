@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# CATALYX — runtime data excluded from version control
+data/catalyx.db
+data/*.db
+data/catalyx.db-journal
+data/catalyx.db-wal
+data/catalyx.db-shm

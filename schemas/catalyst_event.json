@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "catalyx/schemas/catalyst_event.json",
+  "schema_version": "1.2",
+  "title": "CatalystEvent",
+  "description": "A discrete, timestamped macro event that may drive sector repricing. Decays in relevance over time.",
+  "type": "object",
+  "required": ["id", "schema_version", "type", "created_at", "detected_at", "catalyst_type", "description", "novelty_score", "strength_score", "status"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^cat_[0-9]{8}_[a-z0-9_]+$",
+      "description": "Format: cat_YYYYMMDD_keyword. Human-readable slug."
+    },
+    "schema_version": { "type": "string", "const": "1.2" },
+    "type": { "type": "string", "const": "event" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "detected_at": { "type": "string", "format": "date-time" },
+    "source": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string", "enum": ["news_article", "official_announcement", "data_release", "cot_report", "etf_flow", "user_manual"] },
+        "url": { "type": "string" },
+        "publication": { "type": "string" },
+        "published_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "catalyst_type": {
+      "type": "string",
+      "enum": [
+        "monetary_policy",
+        "fiscal_policy",
+        "geopolitical",
+        "commodity_supply",
+        "regulatory",
+        "institutional_flow",
+        "macro_data_release",
+        "corporate_event",
+        "technology_breakthrough",
+        "sanctions_trade"
+      ]
+    },
+    "catalyst_subtype": { "type": "string" },
+    "description": { "type": "string", "minLength": 20 },
+    "geography": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "ISO 3166-1 alpha-3 or region codes (EU, GLOBAL, APAC, EM)"
+    },
+    "magnitude": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "extreme"]
+    },
+    "novelty_score": {
+      "type": "number",
+      "enum": [0, 20, 40, 60, 80, 100],
+      "description": "Rubric-derived. Sum of 5 binary questions × 20 each. See scoring_weights.yaml novelty_score_rubric. Never assign directly — compute from novelty_rubric_scores below."
+    },
+    "novelty_rubric_scores": {
+      "type": "object",
+      "description": "Answers to the 5 novelty rubric questions (yes=true, no=false). novelty_score = count(true) × 20.",
+      "properties": {
+        "nov_01_different_type": { "type": "boolean" },
+        "nov_02_new_sector": { "type": "boolean" },
+        "nov_03_new_source": { "type": "boolean" },
+        "nov_04_changes_rate": { "type": "boolean" },
+        "nov_05_consensus_surprise_gt50": { "type": "boolean" }
+      }
+    },
+    "strength_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Composite: magnitude × surprise × confirmation. Main sort key. Unlike novelty_score, this can be continuous — it reflects event impact, not originality."
+    },
+    "consensus_surprise": {
+      "type": "number",
+      "enum": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+      "description": "0=fully expected, 1=complete surprise. Use 0.1 increments only — avoids false precision."
+    },
+    "is_priced_in_estimate": {
+      "type": "number",
+      "enum": [0.0, 0.25, 0.50, 0.75, 1.0],
+      "description": "Stepped estimate of how much is already in price. Use one of 5 levels only. See scoring_weights.yaml is_priced_in_levels for anchored criteria. Never use intermediate values."
+    },
+    "relation_to_structural": {
+      "type": ["string", "null"],
+      "enum": ["confirms", "contradicts", "independent", null],
+      "description": "Relationship of this event to its linked structural catalyst. Determines scoring interaction: confirms → amplification, contradicts → dampening, independent → additive. Required when related_catalyst_ids contains a struct_ ID. See scoring_weights.yaml catalyst_interaction_factors."
+    },
+    "decay_halflife_days": {
+      "type": "number",
+      "default": 46,
+      "description": "Days for relevance to decay to 50%. Default 46 (lambda=0.015). Adjust for policy catalysts (longer) vs data releases (shorter)."
+    },
+    "related_catalyst_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "IDs of related catalysts (struct_ or cat_). If a struct_ ID is included, relation_to_structural must be set."
+    },
+    "raw_signal_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "decayed", "invalidated", "archived"]
+    },
+    "expires_at": { "type": "string", "format": "date" },
+    "user_rank": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "description": "User-assigned priority. 1=highest. null=unranked (treated as rank 3, multiplier 1.0)."
+    },
+    "user_notes": { "type": "string" },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,140 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "catalyx/schemas/taxonomy_gap_proposal.json",
+  "schema_version": "1.0",
+  "title": "TaxonomyGapProposal",
+  "description": "An investment theme detected via market signals that does not map to any existing sector in sector_taxonomy.yaml. Output of the Discovery Pass. Accumulates evidence across monthly reviews. Promotion to sector_taxonomy.yaml is always a user decision — the system only records evidence.",
+  "type": "object",
+  "required": ["id", "schema_version", "status", "first_detected", "label_inferred", "demand_drivers_inferred", "differentiation_inferred", "evidence", "etf_candidates"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^gap_[0-9]{8}_[a-z0-9_]+$",
+      "description": "Format: gap_YYYYMMDD_slug. Date = first detection date. Never changes after creation."
+    },
+    "schema_version": { "type": "string", "const": "1.0" },
+    "status": {
+      "type": "string",
+      "enum": ["proposed", "accumulating", "promoted", "rejected"],
+      "description": "proposed: first detection this cycle. accumulating: seen in more than one scan. promoted: user decided to add to sector_taxonomy.yaml. rejected: user decided not to track."
+    },
+    "first_detected": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the gap was first identified by the Discovery Pass. Never changes."
+    },
+    "last_seen": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the most recent Discovery Pass cycle that confirmed this theme. Updated each scan cycle."
+    },
+    "signal_count": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Number of Discovery Pass cycles in which this theme was independently detected. Informational only — promotion is not triggered automatically by this value. Must equal evidence array length."
+    },
+    "label_inferred": {
+      "type": "string",
+      "description": "LLM-inferred sector label. Format mirrors sector_taxonomy.yaml labels. Can be revised as evidence accumulates."
+    },
+    "parent_sector_inferred": {
+      "type": "string",
+      "description": "Inferred parent group (e.g. technology, precious_metals, defense)."
+    },
+    "demand_drivers_inferred": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "Inferred demand drivers. Refined as evidence accumulates."
+    },
+    "differentiation_inferred": {
+      "type": "string",
+      "minLength": 30,
+      "description": "Why this is NOT the same as adjacent sectors already in the taxonomy. This is the most important field — a gap is only valid if it is genuinely differentiated."
+    },
+    "closest_existing_sectors": {
+      "type": "array",
+      "description": "Sectors in the taxonomy with the highest semantic similarity to this theme. Explains why it was flagged as a gap rather than matched.",
+      "items": {
+        "type": "object",
+        "required": ["sector_id", "similarity_reason", "why_insufficient"],
+        "properties": {
+          "sector_id": { "type": "string" },
+          "similarity_reason": { "type": "string" },
+          "why_insufficient": { "type": "string", "description": "Why the existing sector does NOT fully capture this theme." }
+        }
+      }
+    },
+    "etf_candidates": {
+      "type": "object",
+      "required": ["pure_play_found", "proxies"],
+      "properties": {
+        "pure_play_found": {
+          "type": "boolean",
+          "description": "True if a dedicated ETF with >50% exposure to this theme was found."
+        },
+        "pure_play_ticker": {
+          "type": ["string", "null"],
+          "description": "Ticker of pure-play ETF if found. null if not found."
+        },
+        "proxies": {
+          "type": "array",
+          "description": "Existing ETFs with partial exposure. Do NOT make the sector investable on their own — informational only.",
+          "items": {
+            "type": "object",
+            "required": ["ticker", "estimated_exposure_pct", "note"],
+            "properties": {
+              "ticker": { "type": "string" },
+              "estimated_exposure_pct": { "type": "number" },
+              "note": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "investability_assessment": {
+      "type": "string",
+      "enum": ["not_yet", "proxy_only", "investable_pending_etf_verify", "investable"],
+      "description": "not_yet: no ETF vehicle. proxy_only: only via a broader ETF at low weight. investable_pending_etf_verify: ETF found but not yet confirmed UCITS/accessible. investable: full ETF coverage confirmed."
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "description": "One entry per Discovery Pass cycle that detected this theme. signal_count must equal this array's length. Dates are stored explicitly so this file is self-contained and interpretable without context from other sessions.",
+      "items": {
+        "type": "object",
+        "required": ["date", "signal_type", "description", "source_query"],
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Exact date of the Discovery Pass cycle that produced this entry. Always stored as YYYY-MM-DD — never relative ('last week', 'this month')."
+          },
+          "signal_type": {
+            "type": "string",
+            "enum": ["price_outlier", "flow_anomaly", "news_volume_spike", "analyst_coverage_initiation", "earnings_surprise", "broad_market_query"]
+          },
+          "description": { "type": "string" },
+          "source_query": { "type": "string", "description": "The WebSearch query that surfaced this signal." },
+          "magnitude": { "type": "string", "enum": ["low", "medium", "high", "extreme"] }
+        }
+      }
+    },
+    "proposed_sector_id": {
+      "type": ["string", "null"],
+      "pattern": "^[a-z][a-z0-9_]+$",
+      "description": "Candidate sector_id for sector_taxonomy.yaml. Set by user when they decide to promote."
+    },
+    "promoted_date": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "Date the user confirmed promotion to sector_taxonomy.yaml. null until promoted."
+    },
+    "rejection_reason": {
+      "type": ["string", "null"],
+      "description": "Required if status = rejected. Set by user."
+    },
+    "notes": { "type": "string" }
+  },
+  "additionalProperties": false
+}

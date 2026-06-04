@@ -1,0 +1,39 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20260603_nato_defense_gdp",
+  "schema_version": "1.2",
+  "type": "event",
+  "created_at": "2026-06-03T09:14:00Z",
+  "detected_at": "2026-06-03T09:14:00Z",
+  "source": {
+    "type": "official_announcement",
+    "url": "",
+    "publication": "NATO Summit Communiqué",
+    "published_at": "2026-06-03T08:00:00Z"
+  },
+  "catalyst_type": "fiscal_policy",
+  "catalyst_subtype": "defense_spending",
+  "description": "NATO member states formally commit to a 3.5% GDP defense spending floor by 2028, replacing the prior 2% target. The binding commitment includes a timeline enforced through the NATO Defence Planning Process (NDPP). Major members (DEU, FRA, POL, GBR) have already passed or announced supplementary defense budgets.",
+  "geography": ["EU", "NATO", "DEU", "FRA", "POL", "GBR", "ITA", "NOR", "SWE", "FIN"],
+  "magnitude": "high",
+  "novelty_score": 60,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": false,
+    "nov_02_new_sector": false,
+    "nov_03_new_source": true,
+    "nov_04_changes_rate": true,
+    "nov_05_consensus_surprise_gt50": true
+  },
+  "strength_score": 91,
+  "consensus_surprise": 0.6,
+  "is_priced_in_estimate": 0.25,
+  "relation_to_structural": "confirms",
+  "decay_halflife_days": 90,
+  "related_catalyst_ids": ["struct_nato_rearmament"],
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": "2028-12-31",
+  "user_rank": 2,
+  "user_notes": "Acelerador del catalizador estructural struct_nato_rearmament. La primera pata del trade ya ejecutada. Este evento refuerza la segunda pata — order books de 3-5 años para prime contractors. El novelty_score de 72 refleja que el 2% ya era conocido; la novedad es el step-change a 3.5% con timeline vinculante.",
+  "tags": ["defense", "NATO", "EU", "fiscal", "spending", "rearmament"]
+}

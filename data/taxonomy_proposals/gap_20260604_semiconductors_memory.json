@@ -1,0 +1,60 @@
+{
+  "id": "gap_20260604_semiconductors_memory",
+  "schema_version": "1.0",
+  "status": "proposed",
+  "first_detected": "2026-06-04",
+  "last_seen": "2026-06-04",
+  "signal_count": 1,
+  "label_inferred": "Semiconductor Memory — DRAM / HBM / NAND",
+  "parent_sector_inferred": "technology",
+  "demand_drivers_inferred": [
+    "HBM (High Bandwidth Memory) demand for AI accelerators — Nvidia B200/H100 require HBM3E/HBM4 stacks from SK Hynix, Micron, Samsung",
+    "DRAM pricing cycle turning: ASP recovery driven by AI server demand far exceeding consumer DRAM weakness",
+    "Supply concentration: SK Hynix ~55% HBM share, Samsung ~38%, Micron ~7% — oligopoly with inelastic supply ramp",
+    "HBM4 transition in 2026 requiring new base-logic die architecture — new capex cycle beginning",
+    "Inference workload growth post-training boom requires persistent memory bandwidth at inference time"
+  ],
+  "differentiation_inferred": "Memory IDMs (Integrated Device Manufacturers) design and manufacture their own chips — fundamentally different business model from fabless designers (Nvidia, AMD, Qualcomm). Cycle driver is DRAM/NAND pricing + HBM supply allocation, not GPU compute demand directly. Margins are dictated by memory bit pricing, not IP monetization. Geographic concentration in South Korea and Japan adds geopolitical risk not present in US fabless plays. SK Hynix hit $1T market cap in May 2026 on HBM alone — this is a separate investable cycle.",
+  "closest_existing_sectors": [
+    {
+      "sector_id": "semiconductors_design",
+      "similarity_reason": "Both are semiconductor companies involved in AI infrastructure.",
+      "why_insufficient": "semiconductors_design covers fabless designers (Nvidia, AMD, Qualcomm) whose demand DRIVES memory demand. Memory IDMs are the suppliers to those companies, not competitors. Different business model, different margins, different cycle phase, different geographies. Putting Micron in the same bucket as Nvidia obscures the supply chain structure."
+    },
+    {
+      "sector_id": "semiconductors_foundry",
+      "similarity_reason": "Both involve chip manufacturing with large capex.",
+      "why_insufficient": "Foundries manufacture chips designed by others (fabless model). Memory IDMs design AND manufacture their own memory — they are vertically integrated but in a commodity product. TSMC does not compete with Micron."
+    }
+  ],
+  "etf_candidates": {
+    "pure_play_found": true,
+    "pure_play_ticker": "MEMU",
+    "proxies": [
+      {
+        "ticker": "SMH",
+        "estimated_exposure_pct": 5,
+        "note": "Micron ~5% weight. SK Hynix and Samsung not in SMH (US-listed focus)."
+      },
+      {
+        "ticker": "SOXX",
+        "estimated_exposure_pct": 4,
+        "note": "Micron ~4% weight. Same limitation — US-only, no SK Hynix."
+      }
+    ]
+  },
+  "investability_assessment": "investable_pending_etf_verify",
+  "evidence": [
+    {
+      "date": "2026-06-04",
+      "signal_type": "price_outlier",
+      "description": "SK Hynix +230% YTD, Micron +226% YTD in 2026. SK Hynix joined Micron in the $1 trillion market cap club driven by HBM3E/HBM4 demand from Nvidia AI accelerators. Roundhill Memory ETF (MEMU) launched 2026-04-02, has more than doubled in two months. HBM market: SK Hynix ~55% share, Samsung ~38%, Micron ~7%. HBM4 expected to demand new base-logic die in 2026.",
+      "source_query": "HBM high bandwidth memory ETF SK Hynix Micron 2026",
+      "magnitude": "extreme"
+    }
+  ],
+  "proposed_sector_id": null,
+  "promoted_date": null,
+  "rejection_reason": null,
+  "notes": "Pure-play ETF exists (Roundhill Memory ETF, MEMU, launched 2026-04-02). Verify UCITS availability before declaring investable. South Korean equity ETFs (e.g. EWY) also provide indirect exposure via SK Hynix weight. This was the 'RAM disk' case that originated the Discovery Pass architecture."
+}
