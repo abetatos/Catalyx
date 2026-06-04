@@ -1,0 +1,190 @@
+{
+  "id": "study_ai_infrastructure_data_centers",
+  "schema_version": "1.2",
+  "sector_id": "ai_infrastructure_data_centers",
+  "sector_label": "AI Infrastructure — Data Centers, Cooling, Power",
+  "created_at": "2026-06-04",
+  "last_updated": "2026-06-04",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "technology",
+    "adjacent_sectors": [
+      "ai_semiconductors_gpu",
+      "cloud_software_saas",
+      "grid_infrastructure_utilities",
+      "nuclear_energy"
+    ],
+    "differentiation_note": "This sector captures the physical infrastructure layer of the AI buildout — data center construction/operations, liquid cooling systems, power delivery equipment, and networking fabric — not the silicon that runs inside it. It is explicitly distinct from ai_semiconductors_gpu (Nvidia, AMD, TSMC): those companies manufacture the compute; this sector builds and powers the buildings that house it. The revenue model is different: data center operators and REITs earn contract-based utilization fees with long-term leases (10-25 year terms), while semiconductor companies are subject to inventory cycles and ASP pressure. Distinct from grid_infrastructure_utilities because the primary demand driver is AI workload growth, not energy transition policy; and from cloud_software_saas which captures the application layer with SaaS margins, not physical asset construction. The critical insight for position sizing: infrastructure plays (construction, power, REITs) tend to lag the semiconductor play by 12-18 months in a new cycle but sustain returns longer, because physical asset delivery takes 18-36 months from capex commitment to revenue recognition."
+  },
+
+  "demand_drivers": [
+    "Combined hyperscaler AI capex for 2026: ~$725B (Microsoft ~$190B, Amazon ~$200B, Alphabet ~$190B, Meta ~$145B) — +77% YoY, the largest coordinated corporate capex cycle in history. Approximately 75% allocated to AI infrastructure (GPUs, servers, data centers, power systems). Source: Q1 2026 earnings guidance, confirmed by Jefferies analyst.",
+    "Inference workload demand: post-training-boom transition means the growth vector is now inference serving (always-on, latency-sensitive), not one-time training runs. ChatGPT-class inference requires ~10x compute density vs. prior enterprise SaaS workloads; Anthropic, OpenAI, and Google each targeting 1B+ daily active users in 2026.",
+    "Sovereign AI programs additive to hyperscaler demand: UAE, Saudi Arabia ($100B+), France (€109B), UK, and EU member states all announced national AI compute builds in 2025-2026 as geopolitical imperative. This is additive to the 4-hyperscaler capex figure above.",
+    "Neocloud providers (AI-native data centers): CoreWeave, Lambda, Coreweave, xAI, and 20+ new AI-native cloud operators are building GPU clusters outside hyperscaler infrastructure. These operators collectively represent ~$50-80B in additional annual infrastructure capex not included in the hyperscaler headline figure.",
+    "Power as the new binding constraint: data center power demand grew +28% YoY through Q1 2026 (IEA). Power availability — not capital, land, or hardware — is now the limiting factor for new AI capacity, creating a 'power premium' dynamic where operators pre-commit to above-market electricity prices in exchange for assured grid access.",
+    "Liquid cooling mandatory transition: air-cooled rack infrastructure cannot support 1,000W+ GPU configurations (H200, B200 require liquid cooling). Mandatory retrofit of existing air-cooled facilities drives incremental capex on top of greenfield builds."
+  ],
+
+  "supply_constraints": [
+    "Grid interconnection queue: US queue backlog exceeds 3,000 GW of pending projects; new data center grid connections delayed 3-7 years in tier-1 markets (Virginia, Texas, Georgia). Hyperscalers are developing 'energy island' strategies (on-site generation) to bypass the grid entirely — structurally bullish for distributed power assets.",
+    "Power transformer and switchgear shortage: lead times for large power transformers now 60-100+ weeks (vs. historical 12-20 weeks). ABB, Eaton, and Siemens Energy are running at maximum capacity. This is the critical path bottleneck for energizing approved data centers in 2026-2027.",
+    "Land with co-located power access: suitable land near grid infrastructure commands 200-400% premiums vs. 2023 prices. In Northern Virginia (world's largest data center cluster), available powered land with grid connection is effectively exhausted, forcing geographic diversification to secondary markets.",
+    "HBM (High Bandwidth Memory) supply: TSMC/Samsung/SK Hynix HBM4 capacity is fully allocated through 2026. HBM shortage is the primary silicon constraint after GPU availability — limits the number of operational AI clusters regardless of data center capacity.",
+    "Specialized construction labor: data center construction requires specialized electrical, mechanical, and low-voltage cabling trades with data center-specific certifications. US shortage estimated at 50,000+ specialized technicians through 2028; competing with industrial and EV factory construction for the same workforce.",
+    "Water access for evaporative cooling: large-scale data centers require millions of gallons of water daily; regulatory resistance in drought-affected regions (California, Arizona, parts of EU) is blocking or delaying greenfield approvals. Liquid cooling alternatives are being adopted but add capex and operational complexity."
+  ],
+
+  "cycle_position": {
+    "assessment": "Bifurcated cycle: GPU/semiconductor layer is mid-to-late expansion; data center construction/power layer is early-to-mid expansion with 2-3 years of primary growth ahead.",
+    "rationale": "The AI infrastructure sector does not move as a single cycle. The silicon/GPU layer (Nvidia H100/H200/B200) has already experienced a full demand surge: Nvidia data center revenue peaked at +28% YoY growth in Q4 2025, decelerating to +22% in Q1 2026 — still strong but decelerating, suggesting mid-cycle for semiconductors with multiple expansion complete. The physical infrastructure layer (construction, power delivery, REITs) is 12-18 months behind: EQIX, DLR, and data center construction companies are recognizing revenue from capex committed in 2024-2025 now, with backlogs visible through 2028. Power infrastructure (transformers, switchgear, grid expansion) is in the earliest part of the cycle: grid interconnection projects take 5-10 years, meaning demand confirmed today will not convert to infrastructure revenue until 2028-2033. Investor positioning implication: the highest remaining alpha is in the power delivery and cooling sub-themes, not GPU ownership. This is consistent with user notes on struct_ai_capex_supercycle: 'focus on power, cooling, networking as higher-alpha adjacent plays.'",
+    "last_assessed": "2026-06-04"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "AIPO",
+      "name": "Defiance AI & Power Infrastructure UCITS ETF",
+      "exchange": "XETRA / Borsa Italiana",
+      "currency": "EUR",
+      "ter": 0.0069,
+      "aum_m_usd": null,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Best-fit UCITS ETF for this sector. Tracks MarketVector US Listed AI & Power Infrastructure index — covers electrical grid systems, AI infrastructure, nuclear and decentralised energy, data centre operations, and AI-related computing hardware. EUR-denominated on XETRA and Borsa Italiana. Launched March 2026. Named Best New Thematic ETF at ETF.com Awards 2026. UCITS compliant. NOTE: Not yet in etf_universe.yaml — needs to be added. AUM data pending; verify before position sizing.",
+      "recommendation_tier": 1,
+      "limitations": "Newly launched (March 2026) — limited track record and AUM data not confirmed; could be approaching or below $200M threshold. TER 69bps is high. Spread data unavailable at study date — verify bid/ask before entry. Index includes US-listed companies in USD, but ETF is EUR-denominated on XETRA: underlying FX exposure to USD exists unless ETF applies currency hedge — confirm at execution."
+    },
+    {
+      "ticker": "AINF",
+      "name": "iShares AI Infrastructure UCITS ETF",
+      "exchange": "Multiple EU exchanges",
+      "currency": "USD",
+      "ter": null,
+      "aum_m_usd": null,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "BlackRock's pure-play AI infrastructure UCITS product. Launched 2026 as part of BlackRock's European AI ETF expansion. iShares brand provides operational reliability and access via standard EU brokers. UCITS compliant. NOTE: Not yet in etf_universe.yaml. AUM, TER, and spread data unavailable at study date — must be verified before entry. Preferred over BOTZ/SRVR for a UCITS-constrained investor.",
+      "recommendation_tier": 1,
+      "limitations": "TER, AUM, and spread data not confirmed at study date. Newly launched — may have limited liquidity initially. Composition needs verification to confirm AI infrastructure (vs. application layer) weighting."
+    },
+    {
+      "ticker": "WTAI",
+      "name": "WisdomTree Artificial Intelligence UCITS ETF",
+      "exchange": "Multiple EU exchanges",
+      "currency": "USD",
+      "ter": null,
+      "aum_m_usd": 800,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Broader AI value chain ETF ($800M AUM as of 2026). Tracks Nasdaq CTA Artificial Intelligence Index — covers the full AI value chain including hardware, infrastructure, and software. AUM above $500M threshold — liquid. UCITS compliant. Broader than pure infrastructure; includes AI application companies and semiconductors alongside infrastructure plays. NOTE: Not in etf_universe.yaml — add at next quarterly ETF review.",
+      "recommendation_tier": 2,
+      "limitations": "Broader than the infrastructure sub-thesis: includes cloud software and semiconductor exposure that dilutes the power/cooling/construction alpha the thesis targets. If thesis is specifically infrastructure overweight (not broad AI), AIPO or AINF are more precise vehicles. TER not confirmed at study date."
+    },
+    {
+      "ticker": "BOTZ",
+      "name": "Global X Robotics & Artificial Intelligence ETF",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "ter": 0.0068,
+      "aum_m_usd": 2800,
+      "replication": "physical",
+      "avg_spread_bps": 7,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "High AUM ($2.8B), liquid, low spread (7bps). Proxy for AI hardware. From etf_universe.yaml. Good for US-accessible brokers.",
+      "recommendation_tier": 3,
+      "limitations": "NOT UCITS — inaccessible or restricted for Spanish investors via standard EU brokers. Includes robotics (non-relevant to data center thesis). US-only registration. Only use if broker allows non-UCITS access."
+    },
+    {
+      "ticker": "SRVR",
+      "name": "Pacer Data & Infrastructure Real Estate ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0060,
+      "aum_m_usd": 490,
+      "replication": "physical",
+      "avg_spread_bps": 12,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Data center REIT expression of the AI infra theme. Holdings: EQIX, DLR, AMT. AUM $490M, spread 12bps. From etf_universe.yaml. Real estate / REIT angle captures long-term lease revenue, lower beta than pure tech ETFs.",
+      "recommendation_tier": 3,
+      "limitations": "NOT UCITS — restricted for standard Spanish investor access. Real estate structure introduces different tax treatment vs. equity ETFs. REIT holdings subject to interest rate sensitivity: rising rates compress REIT multiples even if underlying AI demand is intact. Use only if UCITS alternatives are not available or for diversification."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Combined hyperscaler quarterly AI capex (Microsoft + Google + Amazon + Meta)",
+      "unit": "USD billion, quarterly",
+      "source": "Quarterly earnings releases / consensus estimates",
+      "current": 87,
+      "comment": "Current $87B/quarter (Q1 2026, from struct_ai_capex_supercycle indicator), up from $82B in Q4 2025. Annual run rate ~$350B. Strong threshold: >$60B/quarter. Deactivation trigger: two consecutive quarters of >30% YoY decline. This is the highest-signal single metric for the cycle."
+    },
+    {
+      "metric": "Nvidia data center revenue YoY growth",
+      "unit": "YoY growth rate",
+      "source": "Nvidia quarterly earnings (Data Center segment)",
+      "current": 0.22,
+      "comment": "Current +22% YoY (Q1 2026), decelerating from +28% in Q4 2025. Still above strong threshold (>15%). Deceleration trend signals the GPU/semiconductor layer is in mid-cycle; if growth drops below +10%, watch for capex revision downstream. Leading indicator: Nvidia demand is booked 2-3 quarters ahead."
+    },
+    {
+      "metric": "Global data center power demand growth",
+      "unit": "YoY growth rate",
+      "source": "IEA Electricity Report (quarterly)",
+      "current": 0.28,
+      "comment": "+28% YoY as of Q1 2026 (IEA). Strong threshold: >15%. IEA projects AI-specific data center power load reaches 10 GW by end-2026. Rising power demand is a bullish signal for the grid infrastructure and power delivery sub-theme. Monitoring frequency: quarterly with IEA report."
+    },
+    {
+      "metric": "Power transformer lead time (large units, >100MVA)",
+      "unit": "weeks",
+      "source": "ABB / Siemens Energy / Eaton procurement disclosures",
+      "current": "60-100 weeks",
+      "comment": "60-100 week lead times as of Q1 2026 (vs. historical 12-20 weeks). This is a proxy for the power delivery supply squeeze. Extended lead times = bullish for transformer manufacturers (Siemens Energy, Hitachi Energy, ABB), bearish for data center operators' timelines. Monitor quarterly via Siemens Energy order book disclosures."
+    },
+    {
+      "metric": "US grid interconnection queue backlog",
+      "unit": "GW pending / years average wait",
+      "source": "FERC / Lawrence Berkeley National Lab queue report",
+      "current": ">3000 GW / 7+ year wait",
+      "comment": "LBNL annual interconnection queue report. Increasing backlog = bullish for on-site power generation and distributed energy solutions (hyperscaler 'energy island' strategy). Decreasing backlog would signal permitting reform — a positive for overall cycle pace. Monitor annually (LBNL publishes late Q3)."
+    },
+    {
+      "metric": "Data center construction starts (North America + EU)",
+      "unit": "MW of new capacity under construction",
+      "source": "CBRE / JLL Data Center Outlook (semi-annual)",
+      "current": null,
+      "comment": "No confirmed current figure in study data. CBRE and JLL publish semi-annual data center market reports with MW under construction by market. Rising construction starts → revenue recognition 18-36 months later for operators and REITs. Declining starts would signal cycle peak. Must verify from CBRE Q2 2026 report."
+    }
+  ],
+
+  "active_catalyst_ids": [
+    "struct_ai_capex_supercycle",
+    "struct_energy_transition_grid",
+    "struct_copper_datacenter_demand"
+  ],
+
+  "historical_catalyst_performance": {
+    "summary": "AI infrastructure has exhibited two distinct historical response patterns: (1) semiconductor-led spikes, and (2) physical infrastructure lags with longer duration. In the 2023-2024 semiconductor phase, Nvidia gained +800% from Nov 2022 to Jun 2024 peak — a pure demand re-rating. EQIX and DLR (data center REITs, the physical infrastructure expression) gained +30-50% in the same period — modest relative performance but more sustained and less volatile. Historical analog: the 2010-2014 cloud transition cycle saw AWS-correlated infrastructure stocks (EQIX, DLR) gain +200% over 4 years, vs. +120% for cloud software plays in the same period, with infrastructure companies showing lower drawdown (-15% max) vs. software (-35% during 2011 risk-off). The DeepSeek R1 event (Jan 2025) provided a real-time test: AI infra stocks dropped -15-20% intraday on the compute efficiency narrative, then fully recovered within 6 weeks as hyperscaler capex guidance was reaffirmed. This recovery pattern confirms the thesis is driven by committed capex (contract-based), not speculative demand — distinguishing it from the 2000 fiber buildout where demand was speculative. Key asymmetry to watch: if hyperscaler capex is cut, physical infrastructure stocks will fall harder than the capex cut implies because the market will re-rate the entire multi-year pipeline simultaneously."
+  },
+
+  "risks": [
+    "AI compute efficiency breakthrough (DeepSeek-class disruption, amplified): a step-change 10x+ improvement in inference efficiency (e.g., advanced model compression, neuromorphic architectures) would reduce the compute-per-query requirement, compressing return on existing hardware and delaying next-generation builds. The Jan 2025 DeepSeek R1 event showed the market's sensitivity — a -20% intraday move before recovery. A more sustained efficiency signal (not just a single model release, but confirmed cross-model trend) would structurally impair the investment case.",
+    "Hyperscaler capex guidance deceleration: Amazon, Microsoft, Google, and Meta represent the entire demand foundation. A coordinated revision of combined guidance below $500B/year (vs. $725B current) would cascade simultaneously across the GPU supply chain, data center REIT revenue forecasts, and power infrastructure order books. No diversification within the sector protects against this systemic risk.",
+    "Crowding / simultaneous exit: the AI infrastructure thesis is among the top-5 global hedge fund themes. ETF flows into WTAI, AIAI, and newly launched AIPO are accelerating. In a risk-off event, simultaneous de-grossing from crowded positions amplifies drawdown vs. fundamentals — particularly in illiquid UCITS products with wide intraday spreads.",
+    "Power regulatory restrictions at state/utility level: US state regulators in Virginia, Texas, and Georgia are reviewing large data center interconnection applications given 8-15% residential electricity rate increases near clusters. A regulatory moratorium on new data center grid connections in tier-1 markets would force geographic diversification and extend timelines — negative for operators with committed build plans.",
+    "ETF impurity risk for the infrastructure sub-thesis: available UCITS ETFs (WTAI, AIAI, AIPO) include varying mixes of semiconductor, cloud software, and application layer exposure alongside pure infrastructure. A sector-specific infrastructure thesis (power, cooling, construction) executed via broad AI ETFs will underperform if the semiconductor layer corrects while infrastructure holds — and vice versa. No clean pure-play infrastructure UCITS ETF exists yet; this is an alpha leakage source.",
+    "EU AI Act compliance capex headwinds for EU-domiciled data centers: EU AI Act requirements (effective Aug 2025) impose energy efficiency and transparency obligations on large AI systems. While this primarily affects AI model developers, it may indirectly increase compliance costs for EU data center operators and slow EU AI capex deployment relative to US. This is a tail risk for EU-based operators but not for US-listed ETF holdings."
+  ],
+
+  "narrative_maturity": "crowded",
+  "narrative_trend": "stable",
+  "narrative_notes": "The AI infrastructure thesis has progressed from 'emerging' (2024-Q3 per scoring_weights.yaml example anchors) to 'crowded' by June 2026. Evidence: (1) $725B combined hyperscaler capex is daily Bloomberg/CNBC/FT headline coverage; (2) Multiple new UCITS ETF product launches specifically targeting this theme in 2026 (Defiance AIPO launched March 2026, BlackRock AINF launched in 2026, WisdomTree WTAI at $800M AUM) — ETF proliferation is the canonical 'crowded' signal; (3) AI infrastructure is a top-5 global hedge fund theme per prime broker data; (4) Retail investors have entered via ETF products. NOT yet 'exhausted': earnings are still confirming (+22% Nvidia DC revenue, +77% hyperscaler capex), P/E ratios have not yet peaked for infrastructure operators (unlike AI semiconductors which may be approaching exhausted for their sub-theme). Critical nuance: narrative crowding is uneven across sub-themes. GPU/semiconductors = borderline exhausted (Nvidia P/E at historical maximum, thesis 3 years old). Power/cooling/construction = mainstream-to-crowded (12-18 month lag in institutional positioning vs. GPU). For a Spanish investor, the highest-alpha entry point is the power delivery and cooling sub-theme where narrative maturity is still 'mainstream' — specifically companies building liquid cooling systems, power transformation infrastructure, and data center construction."
+}

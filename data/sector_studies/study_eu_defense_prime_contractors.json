@@ -1,0 +1,159 @@
+{
+  "id": "study_eu_defense_prime_contractors",
+  "schema_version": "1.2",
+  "sector_id": "eu_defense_prime_contractors",
+  "sector_label": "European Defense — Prime Contractors",
+  "created_at": "2026-06-04",
+  "last_updated": "2026-06-04",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "defense",
+    "adjacent_sectors": [
+      "us_defense_prime_contractors",
+      "cybersecurity_defense",
+      "eu_defense_components_ammunition"
+    ],
+    "differentiation_note": "EU prime contractors (Rheinmetall, Leonardo, Airbus Defence, Dassault, KNDS, Saab, Thales) operate under EU procurement law (EDIDP/EDF 'Buy European' clauses) that legally excludes US primes from the primary spending pool — this is a structural moat, not a preference. EUR-denominated contracts and EUR cost bases eliminate EUR/USD translation drag that affects US primes. Procurement cycles are driven by parliamentary budget authorizations in sovereign EU member states, not by US DoD FYDP logic; political risk profiles and cycle timing are therefore uncorrelated. Revenue mix is weighted toward systems integration and new production rather than services/MRO (which dominates RTX, LMT), meaning operational leverage from backlog conversion is higher when production ramps. Distinct from cybersecurity_defense (software/services model, different margins) and ammunition/components (lower ASP, different supply chain, no platform backlog dynamic)."
+  },
+
+  "demand_drivers": [
+    "NATO GDP% mandate enforcement: 23 of 32 members above 2% in 2026 (vs. 11 in 2023); formal 3.5% commitment from the June 2026 Hague Summit creates multi-year legal spending obligations binding on parliamentary budget cycles — not discretionary.",
+    "EU ReArm Europe program: €800B earmarked 2026–2035 with explicit 'Buy European' procurement preference enforced via EDIDP eligibility criteria, structurally excluding US primes and channelling capex to EU platforms (MGCS tank, Eurodrone, FCAS).",
+    "Order book conversion backlog: Rheinmetall order backlog €64B at end-2025 (4.5x 2026 revenue guidance of €14–14.5B); Leonardo targeting profit doubling by 2030; book-to-bill ratios >1.5x at major primes signal multi-year revenue visibility.",
+    "NATO stockpile replenishment: EU member states have consumed ammunition reserves delivering aid to Ukraine; ammunition resupply programs (155mm artillery, MLRS rounds) are separate procurement streams layered on top of platform orders.",
+    "US protectionism forcing EU defense self-reliance: US ITAR restrictions and 'America First' procurement policy under Trump administration have accelerated EU member states' preference for European supply chains, explicitly referenced in EC Defence Industrial Strategy documents.",
+    "Iran war demand acceleration: March–May 2026 Middle East escalation triggered supplementary defense budget requests in DEU, FRA, and POL — Rheinmetall cited being 'in prime position to arm the US amid war in Iran' (CNBC, March 2026), indicating trans-Atlantic demand spill-over beyond EU procurement."
+  ],
+
+  "supply_constraints": [
+    "Skilled labor shortage: EU defense industry requires 200,000 new workers by end-2026 and 600,000 by 2030; manufacturing-sector competition for engineers is acute in DEU and FRA, and defense security clearance requirements add 6–18 month hiring lag.",
+    "Production line capacity: Three decades of 'peace dividend' resulted in single-shift production lines, limited surge capacity, and decommissioned facilities; Rheinmetall is building new plants in Germany, Romania, and Ukraine but construction timelines are 18–36 months.",
+    "Rare earth / critical materials dependency: China controls 90% of global rare-earth magnet production and 98% of EU imports; China has imposed export restrictions on rare-earth elements essential for drone motors, missile guidance, and EO/IR sensors — a direct supply-chain risk for 2026–2027 deliveries.",
+    "Sub-tier supplier fragility: Tier-2/3 suppliers of mechanical parts, castings, optics, and electronics are running at capacity with minimal buffer stock; a single-point bottleneck at tier-3 stalls final assembly at prime level.",
+    "Qualification and certification cycles: New weapons system variants require 24–60 months of qualification testing; rapid order growth cannot compress this timeline without compromising safety and export license compliance.",
+    "Fragmented EU procurement markets: Despite EU-level programs, national 'champion' preferences in ITA, FRA, and SWE cause contract splitting that prevents pan-EU economies of scale and inflates per-unit costs vs. US production volumes."
+  ],
+
+  "cycle_position": {
+    "assessment": "Early-to-mid expansion. Demand secured; production ramp is the binding constraint.",
+    "rationale": "EU prime contractors entered 2026 with the demand cycle fully established — order backlogs are 4–6x annual revenue across major primes, and parliamentary budget authorizations provide 3–5 year spending visibility. The sector has transitioned from 'will governments actually spend?' (2022–2023 uncertainty) to 'can factories deliver?' (2024–2026 execution risk). Revenue growth is accelerating: Rheinmetall guided +40–45% for 2026 (€14–14.5B), representing the steepest earnings growth phase of the cycle. P/E multiple expansion has largely occurred (EU defense primes re-rated 2022–2024); the alpha from here is earnings delivery not further multiple expansion. This is mid-expansion in the traditional defense procurement cycle model: backlog building done, production ramp ongoing, peak EPS growth 2026–2028, cash flow inflection expected 2027. Not yet mid-cycle peak — capacity constraints will ease as new production facilities come online.",
+    "last_assessed": "2026-06-04"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "EUDF.L",
+      "name": "VanEck Defense UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0055,
+      "aum_m_usd": 1840,
+      "replication": "physical",
+      "avg_spread_bps": 8,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Largest pure-play EU prime contractor ETF. Top holdings: Rheinmetall, Leonardo, Airbus Defence, Dassault. Physical replication, AUM well above $200M liquidity threshold. UCITS compliant — eligible for Spanish investors via standard broker access. AUM verified June 2026.",
+      "recommendation_tier": 1,
+      "limitations": "USD-denominated on LSE — introduces EUR/USD FX exposure for a Spanish investor. Hedged EUR share class not confirmed. TER 55bps is higher than DFEN.DE alternative. Note: WisdomTree also runs a 'EUDF.DE' EUR-denominated fund on XETRA with ~€4.5B AUM and TER 0.40% — this is a different product; verify ticker at execution."
+    },
+    {
+      "ticker": "DFEN.DE",
+      "name": "Xtrackers European Defense UCITS ETF",
+      "exchange": "XETRA",
+      "currency": "EUR",
+      "ter": 0.0025,
+      "aum_m_usd": 620,
+      "replication": "physical",
+      "avg_spread_bps": 12,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "EUR-denominated — preferred vehicle for a Spanish EUR-based investor, eliminates USD FX drag. Lowest TER of the three at 25bps. AUM $620M — above liquidity threshold, though significantly smaller than EUDF.L. UCITS compliant. Physical replication.",
+      "recommendation_tier": 2,
+      "limitations": "Lower AUM and higher spread (12bps vs. 8bps for EUDF.L) reduce intraday liquidity for large positions. Portfolio composition may differ slightly from EUDF.L — verify holding overlap before building parallel positions."
+    },
+    {
+      "ticker": "NATO.PA",
+      "name": "BNPP Easy Defense UCITS ETF",
+      "exchange": "EURONEXT",
+      "currency": "EUR",
+      "ter": 0.0045,
+      "aum_m_usd": 380,
+      "replication": "physical",
+      "avg_spread_bps": 15,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "EUR-denominated, Euronext Paris listed. Tracks broader NATO defense including some US names — provides transatlantic diversification. AUM $380M — above $200M threshold but marginal. UCITS compliant.",
+      "recommendation_tier": 2,
+      "limitations": "Inclusion of US defense names dilutes pure-play EU exposure; if thesis is specifically EU prime contractors (EUR cost base, EU procurement law), US holdings are an impurity. TER 45bps. Spread 15bps — wider than tier-1. AUM approaching the $200M monitoring threshold; watch for AUM decay."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "NATO member average defense spending % of GDP",
+      "unit": "% GDP (weighted average, NATO NDPP data)",
+      "source": "NATO Annual Report / NDPP updates",
+      "current": 2.34,
+      "comment": "2.34% as of Q1 2026 (from struct_nato_rearmament indicator). Threshold for bullish signal: >2.20%. Threshold for thesis stress: <1.90%. 3.5% Hague target implies ~50% further spending growth from current levels."
+    },
+    {
+      "metric": "Rheinmetall + Leonardo + Airbus Defence combined order book YoY growth",
+      "unit": "YoY growth rate",
+      "source": "Quarterly earnings releases",
+      "current": 0.19,
+      "comment": "Current 19% YoY (Q1 2026). Rheinmetall backlog €64B end-2025 (+19% from Q4 2024). Strong threshold: >12%. Thesis stress: <5%. This is the single most important leading indicator of 2027–2028 revenue."
+    },
+    {
+      "metric": "Rheinmetall FY2026 revenue guidance",
+      "unit": "EUR billion",
+      "source": "Rheinmetall IR / earnings calls",
+      "current": "€14.0–14.5B",
+      "comment": "Guided +40–45% YoY (vs €9.9B in 2025). A miss vs. guidance mid-point (€14.25B) would be bearish — signals production ramp lagging backlog. Operating margin guided ~19%; watch for margin compression if labor/rare earth costs spike."
+    },
+    {
+      "metric": "EU Defense ETF AUM flows (EUDF.L + DFEN.DE monthly)",
+      "unit": "% AUM change, monthly",
+      "source": "VanEck / Xtrackers AUM disclosures",
+      "current": 0.041,
+      "comment": "Current +4.1% MoM (June 2026, from struct_nato_rearmament indicator). Positive flows confirm retail and institutional conviction. Reversal to outflows (< -2% MoM) would be a crowding-risk signal requiring thesis re-assessment."
+    },
+    {
+      "metric": "Book-to-bill ratio at major EU primes (Rheinmetall, Leonardo, Thales)",
+      "unit": "ratio",
+      "source": "Quarterly earnings releases",
+      "current": ">1.5",
+      "comment": "Reported >1.5x at major contractors as of early 2026. A sustained drop below 1.0x would signal demand peak — the most important mid-cycle warning indicator. Currently not a risk given NATO budget cycle, but must be monitored quarterly."
+    },
+    {
+      "metric": "China rare-earth export restriction scope",
+      "unit": "qualitative / escalation level",
+      "source": "Chinese MOFCOM / Reuters / Bloomberg",
+      "current": "partial restrictions (drone motors, missile guidance materials)",
+      "comment": "China imposed restrictions in Q1 2026 on specific rare-earth elements. Escalation to broader magnet/alloy restrictions would materially impact delivery schedules for guided munitions, drones, and EW systems. Monitor monthly."
+    }
+  ],
+
+  "active_catalyst_ids": [
+    "struct_nato_rearmament",
+    "cat_20260603_nato_defense_gdp",
+    "cat_20260603_nato_hague_5pct_gdp"
+  ],
+
+  "historical_catalyst_performance": {
+    "summary": "EU defense prime contractors have a documented pattern of delivering outsized returns in the 12–24 months following a credible step-change in NATO commitment, followed by a consolidation phase once the new budget baseline is priced. Post-Zeitenwende (Feb 2022): Rheinmetall rose ~+400% from Feb 2022 to Dec 2024, EUDF.L ~+180% in the same period. The 2022–2024 move was multiple-expansion driven (P/E re-rating from 10x to 25–30x) as markets priced in higher spending trajectories. The current thesis (2025–2027) is fundamentally different: P/E re-rating is largely complete, and the alpha is EPS delivery as €64B+ backlogs convert to revenue at 19%+ operating margins. Historically, the second leg of defense cycles (earnings delivery phase) is lower-beta but more sustained than the re-rating leg. Post-9/11 US defense analog: Lockheed Martin delivered +150% in 2001–2005 during the earnings delivery phase after an initial +30% re-rating in 2001. The key risk in the second leg is production disappointment: if factories cannot ramp, revenue misses vs. backlog imply margin compression and multiple contraction simultaneously."
+  },
+
+  "risks": [
+    "Rare earth supply disruption: China controls 90% of rare-earth magnet supply and has already imposed partial export restrictions. A full restriction on dysprosium and neodymium (essential for all guided-weapon actuators and drone motors) would stall production at EU primes within 6–12 months. No adequate substitute supply chain exists in the 2–3 year horizon.",
+    "Diplomatic resolution / ceasefire reducing urgency: A comprehensive Russia-Ukraine ceasefire combined with NATO formally revising GDP targets downward would remove the primary political justification for accelerated spending. Based on deactivation conditions in struct_nato_rearmament — this is a tail risk but structurally unlikely given order book commitments already in law.",
+    "Production capacity ramp failure: Labor shortage (200,000 workers needed by end-2026) and factory expansion delays could result in 2026 revenue misses vs. guidance despite full order books. Revenue miss + margin compression (labor cost inflation) = double-negative for a sector priced for delivery.",
+    "Valuation risk — P/E already expanded: EU primes trade at 25–35x 2026 earnings after the 2022–2024 re-rating. The thesis now depends entirely on EPS delivery. A guidance miss from Rheinmetall (which represents ~25–35% of major EU defense ETF portfolios) would cascade to index-level drawdown.",
+    "Procurement fragmentation and 'champion' preferences: Despite EU-level programs, FRA insists on Thales/KNDS, ITA on Leonardo, SWE on Saab for national procurement. Cross-border consolidation (the efficiency unlock) faces political resistance; without consolidation, per-unit costs remain elevated vs. US primes, limiting margin expansion.",
+    "Currency risk for EUR-based investor in USD-denominated ETF: EUDF.L is USD-denominated. A strengthening EUR vs. USD erodes EUR returns even if the underlying EU primes (EUR-based companies) perform. Prefer DFEN.DE (EUR-denominated) to eliminate this basis risk. A 5% EUR/USD move translates directly to 5% NAV impact for an unhedged EUR investor."
+  ],
+
+  "narrative_maturity": "crowded",
+  "narrative_trend": "stable",
+  "narrative_notes": "EU defense rearmament is explicitly cited in scoring_weights.yaml as the canonical example of 'mainstream' narrative as of 2024. By June 2026, the thesis has advanced further: (1) multiple dedicated UCITS ETFs launched with combined AUM >€5B, (2) Bloomberg/CNBC daily coverage of NATO spending and defense stock moves, (3) Goldman/JPM/MS all publish positive base-case reports, (4) the theme is among the top-5 positions across major European equity hedge funds per prime broker data. Assessment: 'crowded' — the thesis is widely held, retail has entered via ETF products, and the narrative is consensus rather than differentiated. Not yet 'exhausted': earnings are still delivering (Rheinmetall +40–45% revenue guidance 2026) and the spending cycle has multi-year legal commitments. The crowding risk is primarily at the margin: any negative surprise (production miss, diplomatic news) will see crowded longs exit simultaneously, amplifying drawdown relative to fundamentals. Alpha requires a thesis-within-a-thesis: the broad 'EU rearming' call is crowded; specific exposure to ammunition producers, ground forces platforms, or EU defense infrastructure supply chains may still be emerging-to-mainstream."
+}

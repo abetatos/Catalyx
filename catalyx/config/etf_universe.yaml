@@ -821,6 +821,42 @@ etf_universe:
       last_verified: "2026-06-01"
 
   ai_infrastructure_data_centers:
+    - ticker: "AIPO"
+      name: "Defiance AI & Power Infrastructure UCITS ETF"
+      exchange: XETRA
+      currency: EUR
+      ucits: true
+      ter: 0.0069
+      aum_m_usd: null
+      replication: physical
+      avg_spread_bps: null
+      recommendation_tier: 1
+      notes: "Best-fit UCITS ETF for this sector. Tracks MarketVector US Listed AI & Power Infrastructure index — covers grid systems, data centers, nuclear, and AI computing hardware. Also listed on Borsa Italiana. Launched March 2026. Named Best New Thematic ETF at ETF.com Awards 2026. AUM and spread pending — verify before entry."
+      last_verified: "2026-06-04"
+    - ticker: "AINF"
+      name: "iShares AI Infrastructure UCITS ETF"
+      exchange: multiple
+      currency: USD
+      ucits: true
+      ter: null
+      aum_m_usd: null
+      replication: physical
+      avg_spread_bps: null
+      recommendation_tier: 1
+      notes: "BlackRock pure-play AI infrastructure UCITS ETF, launched 2026. TER, AUM, and spread data pending verification. UCITS compliant. Preferred over BOTZ/SRVR for UCITS-constrained investors."
+      last_verified: "2026-06-04"
+    - ticker: "WTAI"
+      name: "WisdomTree Artificial Intelligence UCITS ETF"
+      exchange: multiple
+      currency: USD
+      ucits: true
+      ter: null
+      aum_m_usd: 800
+      replication: physical
+      avg_spread_bps: null
+      recommendation_tier: 2
+      notes: "Broader AI value chain ($800M AUM). Tracks Nasdaq CTA Artificial Intelligence Index — covers hardware, infrastructure, and software. Dilutes pure infrastructure thesis with semiconductor and application layer exposure."
+      last_verified: "2026-06-04"
     - ticker: "BOTZ"
       name: "Global X Robotics & Artificial Intelligence ETF"
       exchange: NASDAQ
@@ -830,21 +866,9 @@ etf_universe:
       aum_m_usd: 2800
       replication: physical
       avg_spread_bps: 7
-      recommendation_tier: 2
-      notes: "Broader than pure AI infra — includes robotics. Proxy for AI hardware."
-      last_verified: "2026-06-01"
-    - ticker: "DTLA"
-      name: "No pure-play AI infrastructure ETF"
-      exchange: N/A
-      currency: N/A
-      ucits: false
-      ter: null
-      aum_m_usd: null
-      replication: null
-      avg_spread_bps: null
       recommendation_tier: 3
-      notes: "Gap in ETF market. Best proxy: SRVR (data center REITs) + GRID (power infra) + SOXX (silicon). Monitor for new launches."
-      last_verified: "2026-06-01"
+      notes: "NOT UCITS — restricted for Spanish investors. Broader than pure AI infra (includes robotics). Proxy for AI hardware. Only use if broker allows non-UCITS access."
+      last_verified: "2026-06-04"
     - ticker: "SRVR"
       name: "Pacer Data & Infrastructure Real Estate ETF"
       exchange: NYSE
@@ -854,9 +878,9 @@ etf_universe:
       aum_m_usd: 490
       replication: physical
       avg_spread_bps: 12
-      recommendation_tier: 2
-      notes: "Data center REITs: EQIX, DLR, AMT. Real estate expression of AI infra theme."
-      last_verified: "2026-06-01"
+      recommendation_tier: 3
+      notes: "NOT UCITS — restricted for Spanish investors. Data center REIT expression: EQIX, DLR, AMT. Interest-rate sensitive. Use only if UCITS alternatives unavailable."
+      last_verified: "2026-06-04"
 
   cloud_software_saas:
     - ticker: "CLOU"

@@ -24,6 +24,31 @@ It exists to:
 
 ---
 
+## Architecture Philosophy — Permanent Hybrid Model
+
+**This is not a migration path from Claude to Python.** The target architecture is a permanent hybrid:
+
+```
+Claude (interface + intelligence)          Python (deterministic backbone)
+─────────────────────────────────          ───────────────────────────────
+- Conversational thesis formulation        - Scoring formulas (no LLM drift)
+- News analysis & catalyst detection       - Market data fetching (yfinance)
+- Assumption critique and discussion       - DB reads/writes (SQLAlchemy)
+- Monthly review orchestration             - Tax computation (Spanish CGT)
+- Qualitative judgment (sector narrative)  - Attribution decomposition
+- Output formatting for the user           - Event decay calculation
+```
+
+**Skills invoke Python.** A skill (.md file) calls `uv run python -m catalyx.<module> <args>` via Bash, receives deterministic JSON output, and uses that as data for reasoning. Claude never free-assigns numbers that a formula can compute.
+
+**Why this design is stable long-term:**
+- Formulas in code are tested, version-controlled, and reproducible across sessions
+- Claude handles the parts that genuinely require reasoning — not arithmetic
+- Adding Python modules expands capability without changing the conversational interface
+- The feedback loop (Phase 3 ML) requires structured data that Python produces; Claude produces the analysis on top of it
+
+---
+
 ## Catalyst Model: Dual Types
 
 CATALYX supports two fundamentally different catalyst types. Never collapse them into one.
@@ -39,21 +64,45 @@ Structural catalysts are the floor signal. Event catalysts are the spike. Both c
 
 ## Development Phases & Version Stacks
 
-### Phase 0 — Skill Prototype (current)
-**Goal:** Validate the thesis workflow with zero Python infrastructure. Claude Code as the interface.
-**Duration:** 1–2 weeks
+### Phase 0.5 — Skill + Python Data Layer (current)
+**Goal:** Claude remains the conversational interface and intelligence layer. Python handles deterministic computation, data storage, and market data fetching. Skills call Python modules via `uv run python -m catalyx.*`.
+**Architecture principle:** Python = infrastructure (formulas, DB, fetching). Claude = reasoning, analysis, thesis formulation, discussion.
 
 | Component | Tool |
 |---|---|
 | News scanning | Claude WebSearch |
 | Thesis drafting | Claude (conversational + Write to JSON) |
-| Sector snapshots | Claude + WebFetch for ETF data |
-| Storage | JSON files in `data/` |
-| P&L / tax | Manual, user-computed |
+| Market data / momentum | `catalyx/data/market_data.py` (yfinance) |
+| Deterministic scoring formulas | Python modules callable from skills |
+| Storage | SQLite `data/catalyx.db` via SQLAlchemy + JSON files in `data/` |
+| P&L / tax | Manual (tax_engine.py next) |
 | Scheduling | CronCreate (limited) |
 
 **Claude model:** `claude-sonnet-4-6` (current session model)
-**No pinned LLM API — this phase uses the Claude Code session directly.**
+**No pinned LLM API yet — this phase uses the Claude Code session directly.**
+
+### Python infrastructure already built (Phase 0.5)
+
+| Module | Path | What it does |
+|---|---|---|
+| DB + LLM log | `catalyx/store/db.py` | SQLAlchemy engine, Base, `LLMLog` table, `init_db()` |
+| Catalyst repo | `catalyx/store/catalyst_repo.py` | CRUD for `CatalystEvent` + `TaxonomyGapProposal`. CLI: `python -m catalyx.store.catalyst_repo summary` |
+| Sector study repo | `catalyx/store/sector_study_repo.py` | CRUD for `SectorStudy` objects |
+| Thesis repo | `catalyx/store/thesis_repo.py` | CRUD for `Thesis` + `ClosedThesis` |
+| Structural catalyst repo | `catalyx/store/structural_catalyst_repo.py` | CRUD for `StructuralCatalyst` |
+| Market data | `catalyx/data/market_data.py` | yfinance ETF momentum fetcher. CLI: `uv run python -m catalyx.data.market_data` → `data/snapshots/momentum_snapshot_YYYYMMDD.json` |
+| Intensity engine | `catalyx/scorer/intensity_engine.py` | Compute `intensity.current_score` from indicator semaphores. CLI: `uv run python -m catalyx.scorer.intensity_engine --all [--write-back]` |
+| Catalyst scorer | `catalyx/scorer/catalyst_scorer.py` | v1.3/v1.4 confirms/contradicts/independent formula + event decay → `catalyst_alignment`. CLI: `uv run python -m catalyx.scorer.catalyst_scorer <sector_id>` |
+| Momentum engine | `catalyx/scorer/momentum_engine.py` | Cross-sectional percentile rank from yfinance snapshot → `momentum_score [0–100]`. CLI: `uv run python -m catalyx.scorer.momentum_engine [--snapshot path]` |
+| Sector scorer | `catalyx/scorer/sector_scorer.py` | Composite formula orchestrator: calls catalyst_scorer + momentum_engine → full SectorSnapshot scores. CLI: `uv run python -m catalyx.scorer.sector_scorer <sector_id> [--flow N --val N --crowd N]` |
+| Tax engine | `catalyx/execution/tax_engine.py` | Spanish CGT 2026 progressive brackets (19/21/23/27%). Incremental + YTD computation. CLI: `uv run python -m catalyx.execution.tax_engine --gain N [--ytd-prior N --loss N]` |
+| Thesis scorer | `catalyx/attribution/thesis_scorer.py` | `right_reason_score` formula from ClosedThesis. CLI: `uv run python -m catalyx.attribution.thesis_scorer <path.json>` |
+| Flow data | `catalyx/data/flow_data.py` | ETF shares_outstanding × NAV → `flow_confirmation [0–100]`. Writes to `data/snapshots/flow_snapshot_YYYYMMDD.json`. Week-over-week delta requires prior snapshot. CLI: `uv run python -m catalyx.data.flow_data [--write]` |
+
+**DB location:** `data/catalyx.db` (SQLite). URL override via `CATALYX_DB_URL` env var.
+**Init command:** `uv run python -m catalyx.store.catalyst_repo init`
+
+**Skills call Python modules** using `uv run python -m catalyx.<module> <command>` via Bash tool. This is the integration model — not a separate CLI for the user, but Python as a deterministic backend that skills invoke.
 
 ---
 
@@ -255,6 +304,10 @@ This section tells Claude which files to read before working on each area. **Alw
 | LLM integration | `catalyx/data/llm_client.py` — all calls must go through this, pinned model IDs only |
 | Feedback loop / priors | `schemas/closed_thesis.json` → `CatalystSectorPrior` table schema in `store/prior_repo.py` |
 | Taxonomy gaps / discovery | `schemas/taxonomy_gap_proposal.json` + `data/taxonomy_proposals/*.json` |
+| DB schema / SQLAlchemy models | `catalyx/store/db.py` (Base, LLMLog) then the relevant `*_repo.py` |
+| Catalyst DB operations (read/write/query) | `catalyx/store/catalyst_repo.py` — has CLI: `python -m catalyx.store.catalyst_repo summary` |
+| Scoring formulas (computing, not config) | `catalyx/config/scoring_weights.yaml` + the relevant `catalyx/scorer/*.py` |
+| Market data / momentum snapshot | `catalyx/data/market_data.py` — run to produce `data/snapshots/momentum_snapshot_YYYYMMDD.json` |
 
 ---
 
@@ -458,41 +511,69 @@ Manual reminder of what that skill does:
 - [x] Catalyst taxonomy (types, subtypes, decay half-lives)
 - [x] Scoring weights (composite formula + conviction tiers)
 - [x] 5 structural catalysts pre-configured with indicators
-- [x] 1 event catalyst registered (NATO 3.5% GDP)
+- [x] 4 event catalysts registered (NATO 3.5% GDP, NATO Hague 5%, copper supply deficit, AI chip controls)
 - [x] 3 sector studies (grid_infrastructure, copper_miners, gold_miners)
 - [x] Report templates (catalyst_dashboard, heatmap)
 - [x] 2 reports generated (catalyst dashboard + partial heatmap)
-- [x] Spanish CGT tax model
-- [x] Return attribution decomposition method
+- [x] Spanish CGT tax model (spec only)
+- [x] Return attribution decomposition method (spec only)
 - [x] User catalyst ranking system
 - [x] Phase 0/1/2/3/4 roadmap with pinned model versions
-- [x] Phase 0 workflow documented (generate → critique → improve loop)
+- [x] Phase 0.5 workflow documented (generate → critique → improve loop)
 - [x] Signal-first architecture: Discovery Pass in `/catalyx-scan` (Pass 1 market-led, Pass 2 taxonomy-led)
 - [x] `TaxonomyGapProposal` schema — tracks emerging themes not in taxonomy
 - [x] Monthly taxonomy gap review step (Step 12) in `/catalyx-monthly-review`
+- [x] `catalyx/store/db.py` — SQLAlchemy engine, `LLMLog` table, `init_db()`
+- [x] `catalyx/store/catalyst_repo.py` — CRUD + CLI for `CatalystEvent` and `TaxonomyGapProposal`
+- [x] `catalyx/store/sector_study_repo.py` — CRUD for `SectorStudy`
+- [x] `catalyx/store/thesis_repo.py` — CRUD for `Thesis` + `ClosedThesis`
+- [x] `catalyx/store/structural_catalyst_repo.py` — CRUD for `StructuralCatalyst`
+- [x] `catalyx/data/market_data.py` — yfinance ETF momentum fetcher with fixed formula
+- [x] `data/catalyx.db` — SQLite DB initialized and present
+- [x] `catalyx/scorer/intensity_engine.py` — `intensity.current_score` from semaphores, `--write-back` to YAML (ruamel.yaml preserves format)
+- [x] `catalyx/scorer/catalyst_scorer.py` — `catalyst_alignment` per sector: confirms/contradicts/independent formula with exponential decay
 
 ## What Is Still Missing
 
-### Phase 0 (no code needed)
+### Phase 0.5 (no code needed)
 - [x] Thesis draft — `thesis_20260603_copper_miners_datacenter_alpha` (status: draft, entry params need recalibration to current prices)
-- [ ] Open the copper thesis after recalibrating entry price limit (COPX ~$47 was drafted at $10,200 copper; actual ~$13,965)
-- [ ] Thesis draft for `grid_infrastructure_utilities` (next priority — see TEST 5)
-- [ ] SectorStudy for `eu_defense_prime_contractors`, `gold_physical`, `ai_infrastructure_data_centers` (high priority: all in top-5 catalyst_alignment)
-- [ ] Run `/catalyx-scan` to build event catalogue and test scan quality
-- [x] Monthly review skill updated with correct pipeline order (Step 0 = WebSearch first)
-- [ ] `.env.example` and `pyproject.toml` scaffold
+- [x] Thesis draft for `grid_infrastructure_utilities` — `thesis_20260603_grid_infrastructure_utilities_bindingconstraint` exists
+- [x] SectorStudy for `gold_physical` — `data/sector_studies/study_gold_physical.json` present
+- [ ] Open the copper thesis after recalibrating entry price limit (COPX ~$90, drafted at $10,200 copper; actual LME ~$13,965)
+- [ ] SectorStudy for `eu_defense_prime_contractors` and `ai_infrastructure_data_centers` (both in top-5 catalyst_alignment)
 - [ ] Schema migration: update existing catalyst YAMLs to schema v1.2 (add `narrative_maturity`, recompute `intensity` algorithmically)
 - [ ] Update copper catalyst indicators with real market data (LME ~$13,965, hyperscaler capex ~$700B)
 
 ### Design gaps to fix (identified in pipeline tests)
-- [ ] Structural ↔ event interaction formula: add `relation_to_structural` to `cat_20260603_nato_defense_gdp.json` (confirms `struct_nato_rearmament`) and use `confirmation_amplifier` in heatmap scoring
+- [x] Structural ↔ event interaction formula — `cat_20260603_nato_defense_gdp.json` already has `relation_to_structural: "confirms"` and `related_catalyst_ids: ["struct_nato_rearmament"]`
+- [x] Heatmap LLM drift — skill now calls `sector_scorer --all` for Python-computed scores; sector study freshness gate (7-day max age) enforced before scoring
 - [ ] Portfolio correlation enforcement in `/catalyx-thesis draft` skill — check combined allocation before opening
 - [ ] `analyst_model_revision` event type in `catalyst_taxonomy.yaml` — the copper thesis alpha closes when Goldman/JPM update models; the scan skill currently misses this signal
 
-### Phase 1 (Python required — unlocks full heatmap)
-- [ ] `catalyx/data/market_data.py` → momentum scores
-- [ ] `catalyx/data/flow_data.py` → flow_confirmation scores
-- [ ] `catalyx/scorer/sector_scorer.py` → full SectorSnapshot
-- [ ] `catalyx/execution/tax_engine.py` → Spanish CGT P&L
-- [ ] `catalyx/store/db.py` + Alembic → SQLite persistence
-- [ ] `catalyx/cli/` Typer commands
+### Python scoring layer (highest stability impact — callable from skills)
+- [x] `catalyx/scorer/intensity_engine.py` — compute `intensity.current_score` from indicator semaphores. CLI: `uv run python -m catalyx.scorer.intensity_engine --all [--write-back] [--period 2026-Q2]`
+- [x] `catalyx/scorer/catalyst_scorer.py` — confirms/contradicts/independent formula with event decay. CLI: `uv run python -m catalyx.scorer.catalyst_scorer <sector_id> [--all]`
+- [x] `catalyx/scorer/momentum_engine.py` — cross-sectional percentile normalization (17 sectors). CLI: `uv run python -m catalyx.scorer.momentum_engine [--snapshot path]`
+- [x] `catalyx/scorer/sector_scorer.py` — composite formula orchestrator. CLI: `uv run python -m catalyx.scorer.sector_scorer <sector_id> [--all --flow N --val N --crowd N]`
+- [x] `catalyx/execution/tax_engine.py` — Spanish CGT 2026 brackets (19/21/23/27%), incremental + YTD. CLI: `uv run python -m catalyx.execution.tax_engine --gain N [--ytd-prior N --loss N]`
+- [x] `catalyx/attribution/thesis_scorer.py` — `right_reason_score` formula. CLI: `uv run python -m catalyx.attribution.thesis_scorer <path.json> [--all]`
+
+### Phase 1 (Python required — infrastructure completion)
+- [x] `catalyx/data/flow_data.py` → flow_confirmation scores from ETF shares_outstanding × price. Baseline snapshot written 2026-06-04. Week-over-week delta activates from next run.
+- [ ] Alembic migrations scaffold → `alembic init alembic/` + first migration from current models
+- [ ] `catalyx/cli/` Typer commands (wraps Python modules for direct terminal use)
+
+---
+
+## Recent Changes
+
+> Last 5 entries — oldest rotate to [`CHANGELOG.md`](CHANGELOG.md). Read that file only on demand ("when did X change?", "why is field Y structured this way?").
+> Convention: the *why* (bug description + fix rationale) lives inline in the modified file. The *what and when* lives here and in CHANGELOG.md.
+
+| Date | File | Version | Change |
+|---|---|---|---|
+| 2026-06-04 | `catalyx/data/flow_data.py` | new | ETF flow data: shares_outstanding × NAV → flow_confirmation [0–100]. Baseline snapshot written. |
+| 2026-06-04 | `.claude/commands/catalyx-heatmap.md` | — | Wired to sector_scorer + momentum_engine + flow_data; 7-day study freshness gate |
+| 2026-06-04 | `.claude/commands/catalyx-thesis.md` | — | close: tax_engine + thesis_scorer replace manual computation |
+| 2026-06-04 | `catalyx/scorer/momentum_engine.py` | new | Cross-sectional percentile normalization (17 sectors from yfinance snapshot) |
+| 2026-06-04 | `catalyx/scorer/sector_scorer.py` | new | Composite formula orchestrator: calls catalyst_scorer + momentum_engine + flow_data |

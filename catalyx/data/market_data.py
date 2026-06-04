@@ -36,7 +36,7 @@ SECTOR_TICKERS: dict[str, list[str]] = {
     "grid_infrastructure_utilities": ["IQQH.DE", "GRID"],
     "copper_miners":                 ["COPX", "COPX.L"],
     "eu_defense_prime_contractors":  ["EUDF.L", "DFEN.DE"],
-    "ai_infrastructure_data_centers":["SRVR", "BOTZ"],
+    "ai_infrastructure_data_centers":["WTAI", "BOTZ"],
     "semiconductors_design":         ["SEMI.L", "SMH"],
     "gold_physical":                 ["IGLN.L", "GLD"],
     "gold_miners":                   ["GDX", "AUCO.L"],

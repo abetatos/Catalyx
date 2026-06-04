@@ -1,11 +1,11 @@
 {
   "$schema": "catalyx/schemas/thesis.json",
   "id": "thesis_20260603_grid_infrastructure_utilities_bindingconstraint",
-  "schema_version": "1.1",
-  "version": 1,
+  "schema_version": "1.2",
+  "version": 2,
   "created_at": "2026-06-03T23:59:00Z",
-  "last_modified_at": "2026-06-03T23:59:00Z",
-  "status": "draft",
+  "last_modified_at": "2026-06-04T12:00:00Z",
+  "status": "open",
 
   "catalyst": {
     "catalyst_event_id": "struct_energy_transition_grid",
@@ -35,6 +35,11 @@
     "entry_price_limit": 11.50,
     "entry_price_limit_note": "IQQH.DE entry limit €11.50 — approximately 4% above current level. Rationale: IQQH.DE is near its 52-week high (GRID equivalent $200). Entering above €11.50 without earnings confirmation is momentum-chasing. If IQQH exceeds €11.50, wait for first significant pullback (>5%) before re-evaluating. Exception: if a major structural catalyst fires (e.g., US grid permitting reform signed, or EU announces accelerated grid investment) with clear incremental value, re-evaluate the limit.",
     "entry_window_closes": "2026-07-31",
+    "entry_executed_at": "2026-06-04",
+    "entry_price_actual_eur": 11.43,
+    "shares_bought": 43,
+    "amount_invested_eur": 491.49,
+    "amount_invested_note": "User stated €500. At €11.43/share = 43 whole shares × €11.43 = €491.49 executed. €8.51 remains as cash. Confirm exact fill with broker.",
     "sizing_method": "conviction_tier",
     "conviction_tier": 2,
     "position_size_pct_portfolio": 0.04,
@@ -134,12 +139,12 @@
     "ytd_realized_gains_eur_at_entry": 0,
     "marginal_bracket_at_entry": 0.19,
     "estimated_tax_on_full_exit_if_50pct_gain": 0.19,
-    "tax_notes": "⚠️ UPDATE REQUIRED: ytd_realized_gains_eur_at_entry = 0 is a default placeholder. Before entry, update with actual YTD realized gains for tax year 2026. If copper_miners is opened first and generates a gain, the marginal bracket for grid entry may already be 0.21 (if copper gain > €6k). IQQH.DE is EUR-denominated — no FX conversion required for P&L in EUR. This simplifies tax computation: gross gain = (exit_price_EUR - entry_price_EUR) × shares. Spanish CGT brackets: 19% on first €6k of gains, 21% on €6k-€50k, 23% on €50k-€200k, 27% above €200k. Applied sequentially across ALL capital gains realized YTD regardless of holding period. Combined copper + grid positions: if both generate gains in the same tax year, the brackets apply across the combined gains — tax planning note: coordinate exit timing across positions to stay within lower brackets if possible."
+    "tax_notes": "✅ CONFIRMED: ytd_realized_gains_eur_at_entry = 0 verified at entry (2026-06-04). No closed theses prior to this entry in tax year 2026. If copper_miners is opened first and generates a gain, the marginal bracket for grid entry may already be 0.21 (if copper gain > €6k). IQQH.DE is EUR-denominated — no FX conversion required for P&L in EUR. This simplifies tax computation: gross gain = (exit_price_EUR - entry_price_EUR) × shares. Spanish CGT brackets: 19% on first €6k of gains, 21% on €6k-€50k, 23% on €50k-€200k, 27% above €200k. Applied sequentially across ALL capital gains realized YTD regardless of holding period. Combined copper + grid positions: if both generate gains in the same tax year, the brackets apply across the combined gains — tax planning note: coordinate exit timing across positions to stay within lower brackets if possible."
   },
 
   "metadata": {
     "author": "abetatos",
-    "sector_snapshot_composite_at_entry": 74.5,
+    "sector_snapshot_composite_at_entry": 91.8,
     "catalyst_strength_at_entry": 95,
     "prior_hit_rate_catalyst_sector": null,
     "prior_n_trials": 0,

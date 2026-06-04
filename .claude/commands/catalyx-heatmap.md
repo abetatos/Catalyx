@@ -22,82 +22,87 @@ Generate the CATALYX Sector Heatmap — ranks all investable sectors by composit
    uv run python -m catalyx.store.catalyst_repo summary
    uv run python -m catalyx.store.sector_study_repo summary
    ```
-   For full detail on any specific record needed for scoring, use `get <id>` on the relevant repo.
 
-   **OPTIONAL — Python momentum data (Phase 0.5+):**
-   Check if `data/snapshots/momentum_snapshot_*.json` exists. If yes:
-   - Read the most recent one (sort by filename date)
-   - For each sector, extract `momentum_score` from `snapshot.sectors.<sector_id>.primary`
-   - Use this score as the `momentum` dimension in the composite (weight: 0.25)
-   - Mark `momentum: ✅ computed` instead of `❌ Missing`
-   - If the snapshot is >3 days old, flag it as stale and re-run:
-     `uv run python -m catalyx.data.market_data`
-   If no snapshot exists, momentum remains missing (mark `❌`).
+3. **Prerequisite gate — sector study freshness check.**
 
-   To generate a fresh snapshot before running the heatmap:
+   The heatmap scores exactly the sectors that have a `data/sector_studies/study_<sector_id>.json` file.
+   No study → not ranked (appears only in the GAPS section at step 9).
+
+   A study is considered stale if `last_updated` is older than 7 days.
+
+   **Scope of this gate:** only the sectors that DO have a study file. Read their `last_updated` field.
+   For each study file found in `data/sector_studies/`:
+   - Parse `last_updated` and compute days since that date
+   - If > 7 days: mark stale
+
+   **If any existing study is stale, STOP HERE.**
+   Print a checklist of what must be refreshed before proceeding:
+
    ```
-   uv run python -m catalyx.data.market_data
+   ⛔ HEATMAP BLOCKED — stale sector studies:
+   [ ] /catalyx-sector-study <sector_id>   ← last_updated: YYYY-MM-DD (N days old)
+   ...
+   Run the above commands, then re-run /catalyx-heatmap.
    ```
 
-3. For each sector in the taxonomy with `investable: true`, compute `catalyst_alignment`:
+   If all studies are fresh (≤ 7 days), proceed. Sectors with NO study are not blocked —
+   they simply don't appear in the ranking (flagged as gaps in step 9).
 
-   **Structural component** (for each structural catalyst):
-   - Primary sector (sector is the direct named beneficiary): `intensity.current_score × 0.95`
-   - Secondary sector (indirect or partial beneficiary): `intensity.current_score × 0.70`
-   - If multiple structural catalysts apply: `max(primary) + 0.30 × sum(secondary)`, cap at 95
+4. **Run Python scoring pipeline (one call per module).**
 
-   Map each structural catalyst to sectors using `thematic_tags` and the sector's `demand_drivers`:
-   - Semantic match HIGH (direct demand driver): primary
-   - Semantic match MEDIUM (related but indirect): secondary
-   - No match: 0
+   Refresh market data if stale (>3 days old):
+   ```bash
+   uv run python -m catalyx.data.market_data     # momentum snapshot → data/snapshots/momentum_snapshot_YYYYMMDD.json
+   uv run python -m catalyx.data.flow_data --write  # flow snapshot → data/snapshots/flow_snapshot_YYYYMMDD.json
+   ```
 
-   **Event component** — interaction mode depends on `relation_to_structural` field in the event JSON:
+   The flow snapshot computes week-over-week shares_outstanding delta (ETF creation/redemption).
+   On first run it initialises to 50 (neutral) — `flow_pct_1w` becomes meaningful from the second run onward.
 
-   First, compute `remaining_relevance`:
-   - `remaining_relevance = exp(-0.693 / decay_halflife_days × days_since_detected)`
+   Then run the scoring pipeline:
+   ```bash
+   # Cross-sectional momentum percentile ranks across all sectors in snapshot
+   uv run python -m catalyx.scorer.momentum_engine --json
 
-   Then apply interaction formula based on `relation_to_structural`:
+   # Composite scores for all sectors
+   # Auto-loads latest momentum + flow snapshots; catalyst_alignment derived from sector studies
+   uv run python -m catalyx.scorer.sector_scorer --all --json
+   ```
 
-   **Case A — `relation_to_structural: "confirms"`:**
-   - `amplifier_effective = 1.0 + 0.12 × remaining_relevance`
-   - `case_a_raw = structural_component × amplifier_effective`
-   - `case_c_equivalent = structural_component × 0.45 + strength_score × remaining_relevance × alignment_factor × 0.55`
-   - `catalyst_alignment = min(case_a_raw, case_c_equivalent)`, cap at 95
-   - Rationale: the event validates the structural thesis — it boosts conviction but does not add independent information. The cap ensures a confirming event never scores higher than an equally-strong independent signal would. As the event decays, the boost fades back toward the structural baseline.
+   These outputs are the authoritative scores. Do NOT recompute catalyst_alignment, momentum, or flow manually.
 
-   **Case B — `relation_to_structural: "contradicts"`:**
-   - `dampener_effective = 1.0 - 0.18 × remaining_relevance`
-   - `catalyst_alignment = structural_component × dampener_effective`
-   - Floor at 0
-   - Rationale: the event raises doubt about the structural thesis — it reduces effective intensity but doesn't invalidate it.
+5. **Apply crowding_risk from sector studies.**
 
-   **Case C — `relation_to_structural: "independent"` or `null`:**
-   - `event_score = strength_score × remaining_relevance × alignment_factor`
-   - `alignment_factor`: 0.95 for primary sector, 0.70 for secondary
-   - `catalyst_alignment = structural_component × 0.45 + event_score × 0.55`
-   - Rationale: the event provides genuinely new information not captured by any structural catalyst.
+   The sector_scorer defaults `crowding_risk` to 35. Override it per sector using `narrative_maturity`
+   from the sector study:
+   - `ignored`    → 10
+   - `emerging`   → 25
+   - `mainstream` → 55
+   - `crowded`    → 75
+   - `exhausted`  → 90
 
-   If multiple events apply to a sector, apply interaction formula for each separately and take the most impactful result (do not stack multipliers).
+   For each sector whose study has `narrative_maturity` set, re-run with the override:
+   ```bash
+   uv run python -m catalyx.scorer.sector_scorer <sector_id> --crowd <N> --json
+   ```
 
-   If no active event catalysts: `catalyst_alignment = structural_component`
-
-4. For each sector, note which dimensions are MISSING (momentum, flow, valuation, crowding).
-   Mark composite as partial if any dimension is missing.
-
-5. Flag crowding risk qualitatively using `sector_study` if available, or from the structural catalyst user_notes.
+   Mark each sector's crowding source: `🟢 study.narrative_maturity` or `⚠ default (35)`.
 
 6. For `watch_only: true` sectors: compute trigger progress (N triggers met / total triggers).
-   Do not score these — only show trigger status.
+   Do not score — only show trigger status.
 
-7. Rank investable sectors by `catalyst_alignment` descending (Phase 0). In Phase 1 rank by `composite`.
+7. Rank all investable sectors by `composite` descending. Note which dimensions are Phase 0.5 defaults:
+   - `flow_confirmation`: ⚠ default (50) — no ETF flow data yet
+   - `valuation_relative`: ⚠ default (50) — no formal percentile yet
+   - `crowding_risk`: 🟢 from study or ⚠ default (35)
 
 8. For the top 5 sectors, write a detailed block including:
-   - Which catalysts are driving alignment and why (cite specific catalyst IDs)
+   - Which catalysts are driving alignment and why (cite specific catalyst IDs and their `catalyst_alignment` breakdown from the scorer output)
    - The non-obvious finding (what the market has NOT priced)
    - Best ETF vehicle for a Spanish investor (UCITS preference, flag AUM < $200M)
    - What real-time data would change the ranking
 
-9. Flag any sector where catalyst_alignment is high (>75) but a sector_study does NOT exist yet — these are gaps to fill.
+9. Flag any sector where `catalyst_alignment > 75` but where the composite is pulling it down due to weak momentum or high crowding — these are "strong catalyst, bad timing" sectors worth monitoring.
 
 10. Write report to `data/reports/heatmap_YYYYMMDD.md` following `docs/report_templates/heatmap_template.md`.
 
@@ -107,6 +112,7 @@ Generate the CATALYX Sector Heatmap — ranks all investable sectors by composit
 - Never recommend an ETF without stating TER, AUM, UCITS status, and spread.
 - The non-obvious finding section is mandatory for each top-5 sector. If the reason a sector ranks high is obvious, the analysis adds no value.
 - If two adjacent sectors score similarly, explain the differentiation explicitly.
+- **Pre-calibration banner is mandatory.** The composite score weights (0.30/0.25/0.20/0.15/0.10) are uncalibrated — they require N > 50 closed theses to validate. Until then, all composite scores carry calibration uncertainty. Include this notice at the top of every heatmap report and at the top of every ranking table: `⚠ PRE-CALIBRATION: weights unvalidated (0 closed theses). Scores indicate relative ordering, not precise conviction levels.`
 
 ## Output format
 

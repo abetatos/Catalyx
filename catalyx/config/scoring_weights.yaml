@@ -1,4 +1,4 @@
-# CATALYX Scoring Weights — v1.3
+# CATALYX Scoring Weights — v1.4
 # Defines how dimension scores combine into composite_score for SectorSnapshot.
 #
 # composite = Σ(dimension_score × weight)
@@ -263,9 +263,38 @@ catalyst_interaction_factors:
 # remaining_relevance(t) = exp(-0.693 / halflife_days × days_since_detected)
 # event_strength_decayed(t) = event_strength × remaining_relevance(t)
 #
-# Contradiction formula is unchanged:
-#   contradicts: catalyst_alignment = structural × contradiction_dampener
-#   (dampening does not depend on event strength — any contradictory evidence weakens structural)
+# ─────────────────────────────────────────────────────────────────────────────
+# CONTRADICTION DAMPENER FORMULA — v1.4 FIX
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Bug in v1.2/v1.3: the dampener was flat (-18%) regardless of event strength.
+# A rumor (strength 10) and an official policy reversal (strength 91) produced
+# identical dampening. The same asymmetry that was fixed for confirms in v1.3
+# was left unfixed for contradicts.
+#
+# Fix: scale the dampener by effective event strength, matching the confirms logic.
+#
+# Step 1 — apply decay to event strength:
+#   effective_event_strength = event_strength × remaining_relevance(t)
+#   remaining_relevance(t) = exp(-0.693 / halflife_days × days_since_detected)
+#
+# Step 2 — compute scaled dampener:
+#   dampener_effective = 1.0 - (1.0 - contradiction_dampener) × (effective_event_strength / 100)
+#   = 1.0 - 0.18 × (effective_event_strength / 100)
+#   Example: event_strength=91, remaining_relevance=1.0 → dampener_effective = 0.836
+#   Example: event_strength=20, remaining_relevance=1.0 → dampener_effective = 0.964
+#   Example: event_strength=10, remaining_relevance=0.5 → dampener_effective = 0.991
+#   At event_strength=0 (fully decayed): dampener_effective = 1.0 (no dampening)
+#
+# Step 3 — apply and enforce cap:
+#   raw = structural × dampener_effective
+#   catalyst_alignment = max(0, min(raw, structural))
+#   Cap (min(raw, structural)): a contradicting event can only reduce the structural,
+#   never increase it. This guards against floating point edge cases at strength ≈ 0.
+#
+# Why this matters: a strength-10 contradicting event now produces <2% dampening
+# instead of 18%. Only strong contradictory evidence (strength ≥ 60) causes >10%
+# dampening. This prevents soft rumors from materially suppressing structural signals.
 #
 # Independent formula is unchanged:
 #   independent: catalyst_alignment = structural × 0.45 + event_strength × 0.55

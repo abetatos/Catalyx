@@ -108,6 +108,17 @@ Use `get <id>` on either repo for full detail when a specific record is needed.
 "commodity supply OPEC production" last 14 days
 ```
 
+**Analyst model revision queries — run every scan (thesis close signal):**
+```
+"Goldman Sachs JPMorgan Morgan Stanley sector research report [MONTH YEAR]"
+"sell-side analyst initiates upgrades sector [MONTH YEAR]"
+"copper price target revision Goldman JPMorgan [MONTH YEAR]"
+"analyst commodities model update copper gold [MONTH YEAR]"
+"Wall Street copper outlook revision [MONTH YEAR]"
+```
+
+These detect `corporate_event / analyst_model_revision` — the signal that a thesis mispricing is closing. Classification rule: if ≥2 of {GS, JPM, MS, BofA, UBS} publish revised sector models in the same 30-day window with ≥10% change in sector revenue estimate or price target, register as `corporate_event / analyst_model_revision`. This is a **thesis exit trigger** — flag explicitly in the "Structural catalyst flags" table and note which open thesis it affects.
+
 Also run one query per sector that appeared in the Discovery Pass output, to check for discrete events.
 
 ### Step C3 — Classify and score each significant result
@@ -166,6 +177,10 @@ Present a unified summary table after both passes:
 ### Structural catalyst flags
 | Structural ID | New event | Recommended intensity update |
 |---|---|---|
+
+### Analyst model revision flags (thesis exit signals)
+| Catalyst ID | Banks revised | Sector | Affected open thesis | Action |
+|---|---|---|---|---|
 ```
 
 If any structural catalyst's `indicators` appear to have changed materially, flag it explicitly:

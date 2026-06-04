@@ -1,0 +1,350 @@
+{
+  "generated_at": "2026-06-04",
+  "date": "2026-06-04",
+  "source": "yfinance",
+  "note": "flow_pct_1w requires a prior snapshot to be meaningful. First run = estimated (50).",
+  "sector_scores": {
+    "grid_infrastructure_utilities": {
+      "ticker": "IQQH.DE",
+      "flow_confirmation": 50.0,
+      "flow_pct_1w": null,
+      "implied_aum_m_usd": 4387.3,
+      "data_quality": "estimated",
+      "error": null
+    },
+    "copper_miners": {
+      "ticker": "COPX",
+      "flow_confirmation": 50.0,
+      "flow_pct_1w": null,
+      "implied_aum_m_usd": 7991.8,
+      "data_quality": "estimated",
+      "error": null
+    },
+    "eu_defense_prime_contractors": {
+      "ticker": "EUDF.L",
+      "flow_confirmation": 50.0,
+      "flow_pct_1w": null,
+      "implied_aum_m_usd": 4556.4,
+      "data_quality": "estimated",
+      "error": null
+    },
+    "ai_infrastructure_data_centers": {
+      "ticker": "SRVR",
+      "flow_confirmation": 50.0,
+      "flow_pct_1w": null,
+      "implied_aum_m_usd": 407.4,
+      "data_quality": "estimated",
+      "error": null
+    },
+    "semiconductors_design": {
+      "ticker": "SEMI.L",
+      "flow_confirmation": 50.0,
+      "flow_pct_1w": null,
+      "implied_aum_m_usd": 3554.9,
+      "data_quality": "estimated",
+      "error": null
+    },
+    "gold_physical": {
+      "ticker": "IGLN.L",
+      "flow_confirmation": 50.0,
+      "flow_pct_1w": null,
+      "implied_aum_m_usd": null,
+      "data_quality": "estimated",
+      "error": null
+    },
+    "gold_miners": {
+      "ticker": "GDX",
+      "flow_confirmation": 50.0,
+      "flow_pct_1w": null,
+      "implied_aum_m_usd": 27132.4,
+      "data_quality": "estimated",
+      "error": null
+    },
+    "nuclear_energy": {
+      "ticker": "NLR",
+      "flow_confirmation": 50.0,
+      "flow_pct_1w": null,
+      "implied_aum_m_usd": 4874.4,
+      "data_quality": "estimated",
+      "error": null
+    },
+    "uranium_miners": {
+      "ticker": "URNM",
+      "flow_confirmation": 50.0,
+      "flow_pct_1w": null,
+      "implied_aum_m_usd": 2210.1,
+      "data_quality": "estimated",
+      "error": null
+    },
+    "silver_physical": {
+      "ticker": "PHAG.L",
+      "flow_confirmation": 50.0,
+      "flow_pct_1w": null,
+      "implied_aum_m_usd": null,
+      "data_quality": "estimated",
+      "error": null
+    },
+    "us_defense_prime_contractors": {
+      "ticker": "ITA",
+      "flow_confirmation": 50.0,
+      "flow_pct_1w": null,
+      "implied_aum_m_usd": 14330.8,
+      "data_quality": "estimated",
+      "error": null
+    },
+    "cybersecurity_defense": {
+      "ticker": "CIBR",
+      "flow_confirmation": 50.0,
+      "flow_pct_1w": null,
+      "implied_aum_m_usd": 13681.3,
+      "data_quality": "estimated",
+      "error": null
+    },
+    "rare_earth_miners": {
+      "ticker": "REMX",
+      "flow_confirmation": 50.0,
+      "flow_pct_1w": null,
+      "implied_aum_m_usd": 3011.7,
+      "data_quality": "estimated",
+      "error": null
+    },
+    "lithium_miners": {
+      "ticker": "LIT",
+      "flow_confirmation": 50.0,
+      "flow_pct_1w": null,
+      "implied_aum_m_usd": 2238.5,
+      "data_quality": "estimated",
+      "error": null
+    },
+    "solar_energy": {
+      "ticker": "TAN",
+      "flow_confirmation": 50.0,
+      "flow_pct_1w": null,
+      "implied_aum_m_usd": 2292.3,
+      "data_quality": "estimated",
+      "error": null
+    },
+    "wind_energy_offshore": {
+      "ticker": "WNDY",
+      "flow_confirmation": 50.0,
+      "flow_pct_1w": null,
+      "implied_aum_m_usd": 1.7,
+      "data_quality": "estimated",
+      "error": null
+    },
+    "silver_miners": {
+      "ticker": "SIL",
+      "flow_confirmation": 50.0,
+      "flow_pct_1w": null,
+      "implied_aum_m_usd": 5223.3,
+      "data_quality": "estimated",
+      "error": null
+    }
+  },
+  "etfs": {
+    "IQQH.DE": {
+      "ticker": "IQQH.DE",
+      "shares_outstanding": 381838147,
+      "shares_source": "derived_from_total_assets",
+      "nav_price": 11.49,
+      "implied_aum_m_usd": 4387.3,
+      "shares_delta_1w": null,
+      "flow_usd_1w": null,
+      "flow_pct_1w": null,
+      "source": "yfinance",
+      "fetched_at": "2026-06-04"
+    },
+    "COPX": {
+      "ticker": "COPX",
+      "shares_outstanding": 87773804,
+      "shares_source": "derived_from_total_assets",
+      "nav_price": 91.05,
+      "implied_aum_m_usd": 7991.8,
+      "shares_delta_1w": null,
+      "flow_usd_1w": null,
+      "flow_pct_1w": null,
+      "source": "yfinance",
+      "fetched_at": "2026-06-04"
+    },
+    "EUDF.L": {
+      "ticker": "EUDF.L",
+      "shares_outstanding": 149971884,
+      "shares_source": "derived_from_total_assets",
+      "nav_price": 30.3816,
+      "implied_aum_m_usd": 4556.4,
+      "shares_delta_1w": null,
+      "flow_usd_1w": null,
+      "flow_pct_1w": null,
+      "source": "yfinance",
+      "fetched_at": "2026-06-04"
+    },
+    "SRVR": {
+      "ticker": "SRVR",
+      "shares_outstanding": 11952788,
+      "shares_source": "derived_from_total_assets",
+      "nav_price": 34.0858,
+      "implied_aum_m_usd": 407.4,
+      "shares_delta_1w": null,
+      "flow_usd_1w": null,
+      "flow_pct_1w": null,
+      "source": "yfinance",
+      "fetched_at": "2026-06-04"
+    },
+    "SEMI.L": {
+      "ticker": "SEMI.L",
+      "shares_outstanding": 160227095,
+      "shares_source": "derived_from_total_assets",
+      "nav_price": 22.1865,
+      "implied_aum_m_usd": 3554.9,
+      "shares_delta_1w": null,
+      "flow_usd_1w": null,
+      "flow_pct_1w": null,
+      "source": "yfinance",
+      "fetched_at": "2026-06-04"
+    },
+    "IGLN.L": {
+      "ticker": "IGLN.L",
+      "shares_outstanding": null,
+      "shares_source": "yfinance_direct",
+      "nav_price": 86.1625,
+      "implied_aum_m_usd": null,
+      "shares_delta_1w": null,
+      "flow_usd_1w": null,
+      "flow_pct_1w": null,
+      "source": "yfinance",
+      "fetched_at": "2026-06-04"
+    },
+    "GDX": {
+      "ticker": "GDX",
+      "shares_outstanding": 318530335,
+      "shares_source": "derived_from_total_assets",
+      "nav_price": 85.18,
+      "implied_aum_m_usd": 27132.4,
+      "shares_delta_1w": null,
+      "flow_usd_1w": null,
+      "flow_pct_1w": null,
+      "source": "yfinance",
+      "fetched_at": "2026-06-04"
+    },
+    "NLR": {
+      "ticker": "NLR",
+      "shares_outstanding": 36840557,
+      "shares_source": "derived_from_total_assets",
+      "nav_price": 132.31,
+      "implied_aum_m_usd": 4874.4,
+      "shares_delta_1w": null,
+      "flow_usd_1w": null,
+      "flow_pct_1w": null,
+      "source": "yfinance",
+      "fetched_at": "2026-06-04"
+    },
+    "URNM": {
+      "ticker": "URNM",
+      "shares_outstanding": 35520242,
+      "shares_source": "derived_from_total_assets",
+      "nav_price": 62.22,
+      "implied_aum_m_usd": 2210.1,
+      "shares_delta_1w": null,
+      "flow_usd_1w": null,
+      "flow_pct_1w": null,
+      "source": "yfinance",
+      "fetched_at": "2026-06-04"
+    },
+    "PHAG.L": {
+      "ticker": "PHAG.L",
+      "shares_outstanding": null,
+      "shares_source": "yfinance_direct",
+      "nav_price": 66.84,
+      "implied_aum_m_usd": null,
+      "shares_delta_1w": null,
+      "flow_usd_1w": null,
+      "flow_pct_1w": null,
+      "source": "yfinance",
+      "fetched_at": "2026-06-04"
+    },
+    "ITA": {
+      "ticker": "ITA",
+      "shares_outstanding": 63740539,
+      "shares_source": "derived_from_total_assets",
+      "nav_price": 224.8306,
+      "implied_aum_m_usd": 14330.8,
+      "shares_delta_1w": null,
+      "flow_usd_1w": null,
+      "flow_pct_1w": null,
+      "source": "yfinance",
+      "fetched_at": "2026-06-04"
+    },
+    "CIBR": {
+      "ticker": "CIBR",
+      "shares_outstanding": 149309984,
+      "shares_source": "derived_from_total_assets",
+      "nav_price": 91.63,
+      "implied_aum_m_usd": 13681.3,
+      "shares_delta_1w": null,
+      "flow_usd_1w": null,
+      "flow_pct_1w": null,
+      "source": "yfinance",
+      "fetched_at": "2026-06-04"
+    },
+    "REMX": {
+      "ticker": "REMX",
+      "shares_outstanding": 30548182,
+      "shares_source": "derived_from_total_assets",
+      "nav_price": 98.59,
+      "implied_aum_m_usd": 3011.7,
+      "shares_delta_1w": null,
+      "flow_usd_1w": null,
+      "flow_pct_1w": null,
+      "source": "yfinance",
+      "fetched_at": "2026-06-04"
+    },
+    "LIT": {
+      "ticker": "LIT",
+      "shares_outstanding": 26215470,
+      "shares_source": "derived_from_total_assets",
+      "nav_price": 85.39,
+      "implied_aum_m_usd": 2238.5,
+      "shares_delta_1w": null,
+      "flow_usd_1w": null,
+      "flow_pct_1w": null,
+      "source": "yfinance",
+      "fetched_at": "2026-06-04"
+    },
+    "TAN": {
+      "ticker": "TAN",
+      "shares_outstanding": 32523412,
+      "shares_source": "derived_from_total_assets",
+      "nav_price": 70.48,
+      "implied_aum_m_usd": 2292.3,
+      "shares_delta_1w": null,
+      "flow_usd_1w": null,
+      "flow_pct_1w": null,
+      "source": "yfinance",
+      "fetched_at": "2026-06-04"
+    },
+    "WNDY": {
+      "ticker": "WNDY",
+      "shares_outstanding": 134055,
+      "shares_source": "derived_from_total_assets",
+      "nav_price": 12.34,
+      "implied_aum_m_usd": 1.7,
+      "shares_delta_1w": null,
+      "flow_usd_1w": null,
+      "flow_pct_1w": null,
+      "source": "yfinance",
+      "fetched_at": "2026-06-04"
+    },
+    "SIL": {
+      "ticker": "SIL",
+      "shares_outstanding": 59423384,
+      "shares_source": "derived_from_total_assets",
+      "nav_price": 87.9,
+      "implied_aum_m_usd": 5223.3,
+      "shares_delta_1w": null,
+      "flow_usd_1w": null,
+      "flow_pct_1w": null,
+      "source": "yfinance",
+      "fetched_at": "2026-06-04"
+    }
+  }
+}

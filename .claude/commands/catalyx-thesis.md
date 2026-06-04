@@ -75,7 +75,11 @@ uv run python -c "from catalyx.store import init_all; init_all()"
 
 6. For `vehicle`: always choose the ETF with best AUM + spread for the sector. If no UCITS option has AUM > $200M, flag this explicitly and suggest a non-UCITS alternative.
 
-7. For `tax`: set `ytd_realized_gains_eur_at_entry` to 0 as default and add a warning comment that the user must update this before entry. Apply Spanish CGT brackets: 19% ≤€6k, 21% ≤€50k, 23% ≤€200k, 27% >€200k.
+7. For `tax`: set `ytd_realized_gains_eur_at_entry` to 0 as default and add a warning that the user must update this before entry. To preview the tax impact at any gain target, use:
+   ```
+   uv run python -m catalyx.execution.tax_engine --gain <expected_pnl_eur> --ytd-prior <ytd_eur>
+   ```
+   Do NOT apply brackets manually in the thesis JSON — actual tax is computed at close time by `tax_engine.py`.
 
 8. Set `status: "draft"`. The user must change to `"open"` after reviewing.
 
@@ -143,18 +147,34 @@ uv run python -c "from catalyx.store import init_all; init_all()"
    ```
 2. Ask user for: exit_date, exit_price, close_reason.
 3. Read entry data from the thesis file (entry_price, entry_date, shares, currency).
-4. Compute P&L:
+4. Compute P&L and tax:
    - gross_pnl_eur = (exit_price - entry_price) × shares × fx_rate_at_exit
    - Get the current YTD realized gains baseline (may differ from `ytd_realized_gains_eur_at_entry` if other theses closed since entry):
      ```
      uv run python -m catalyx.store.thesis_repo tax-snapshot
      ```
-   - Use `realized_gains_eur` from tax-snapshot as the YTD baseline for bracket computation (not the value frozen in the thesis JSON)
-   - Apply Spanish CGT brackets sequentially from the YTD baseline: 19% ≤€6k, 21% ≤€50k, 23% ≤€200k, 27% >€200k
-   - Show bracket breakdown (how much of this gain is taxed at each rate)
+   - Use `realized_gains_eur` from tax-snapshot as `ytd_prior`. Then call the tax engine:
+     ```
+     uv run python -m catalyx.execution.tax_engine \
+       --gain <gross_pnl_eur> \
+       --ytd-prior <realized_gains_eur> \
+       --json
+     ```
+   - Use the engine output directly for `tax_due`, `effective_rate`, and `net_gain` in the ClosedThesis JSON.
+   - Do NOT recompute brackets manually — the engine is the single source of truth for tax.
+
 5. For attribution: ask user for benchmark return and sector index return over the holding period (or use WebSearch to find them).
-6. Score assumption_validation: for each assumption, ask user: validated / invalidated / indeterminate.
-7. Compute `right_reason_score`: fraction of assumptions validated AND catalyst materialized as described.
+
+6. Score assumption_validation: for each assumption, ask user: `validated` / `invalidated` / `indeterminate`. Also ask: did the primary catalyst mechanism actually materialize as described (`catalyst_materialized: true/false`)?
+
+7. Compute `right_reason_score` using the thesis scorer (do NOT estimate manually):
+   - Write the ClosedThesis JSON with `assumption_validation[]`, `attribution`, and `catalyst_materialized` filled in
+   - Then call:
+     ```
+     uv run python -m catalyx.attribution.thesis_scorer data/theses/closed_<thesis_id>.json --json
+     ```
+   - Use the `right_reason_score` from the output. Copy into the ClosedThesis JSON.
+
 8. Assign `matrix_cell`:
    - profit + thesis_quality ≥ 7 → "confirmed"
    - profit + thesis_quality < 7 → "lucky"

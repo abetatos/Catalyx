@@ -15,47 +15,30 @@ Examples:
 
 ## Steps — indicator update (`<indicator_id>`)
 
-1. Read `CLAUDE.md` for schema change protocol.
-2. Read the target catalyst file: `catalyx/config/structural_catalysts/<catalyst_id>.yaml`
-3. Find the indicator with `id: <indicator_id>`.
-4. Update:
+1. Read the target catalyst file: `catalyx/config/structural_catalysts/<catalyst_id>.yaml`
+2. Find the indicator with `id: <indicator_id>`.
+3. Update the indicator fields in the YAML:
    - `current_value` → `<new_value>`
    - `last_value` → previous `current_value` (shift down)
    - `last_date` → today's date
-5. Compute new indicator status:
-   - For `higher_is_stronger`: 🟢 if new_value ≥ threshold_strong, 🟡 if threshold_weak ≤ new_value < threshold_strong, 🔴 if new_value < threshold_weak
-   - For `lower_is_stronger`: invert
-   - If status changed (e.g., 🟢 → 🟡), flag this prominently
-6. If `[note]` provided, add it to `intensity.history` for the current quarter. If a history entry for the current quarter already exists, append to its `note`.
-7. Update `status_last_reviewed` to today.
-8. Compute the new `intensity.current_score` using the algorithmic formula from `scoring_weights.yaml`.
-   **Do not guess or use qualitative ranges — compute the exact value:**
-
-   **8a — Score each indicator** (using the updated value for the modified indicator, stored values for all others):
-   - `higher_is_stronger`: value ≥ threshold_strong → 100 | threshold_weak ≤ value < threshold_strong → 65 | value < threshold_weak → 20
-   - `lower_is_stronger`: value ≤ threshold_strong → 100 | threshold_strong < value ≤ threshold_weak → 65 | value > threshold_weak → 20
-
-   **8b — `indicator_avg` = arithmetic mean of all indicator scores (equal weight)**
-
-   **8c — Trend factor** from the last 2 periods in `intensity.history`:
-   - ↑↑ (2+ consecutive rising periods): × 1.05
-   - ↑ (1 period rising): × 1.02
-   - → (flat, ≤2 point change): × 1.00
-   - ↓ (1 period falling): × 0.97
-   - ↓↓ (2+ consecutive falling): × 0.93
-
-   **8d — `new_intensity = round(indicator_avg × trend_factor, 1)`, clamped to [10, 95]**
-
-   If a `deactivation_conditions` threshold is approaching, print: ⚠ DEACTIVATION CONDITION APPROACHING: [condition text]
-
-   Present to user: "`<catalyst_id>`: intensity `<current_score>` → `<new_intensity>` (computed from indicators — semaphore scores: [list each])" and ask user to confirm before writing.
-
-9. Write the updated YAML file (after user confirms intensity).
-10. Resync the DB so dashboard and heatmap read fresh data in this session:
-    ```
-    uv run python -m catalyx.store.structural_catalyst_repo sync
-    ```
-11. Print a one-line summary: `<catalyst_id> — ind_<id> updated: <old> → <new> [status change if any]`
+   - If status changed (🟢→🟡 etc.), flag this prominently before writing
+4. If `[note]` provided, add it to the human-readable `update_note` field on the indicator.
+5. Update `status_last_reviewed` to today.
+6. Check `deactivation_conditions` — if any threshold is now breached or approaching, print:
+   ⚠ DEACTIVATION CONDITION APPROACHING: [condition text]
+7. Write the updated YAML file.
+8. Run the intensity engine to recompute the score and write it back automatically:
+   ```bash
+   uv run python -m catalyx.scorer.intensity_engine \
+     catalyx/config/structural_catalysts/<catalyst_id>.yaml \
+     --write-back --period "<current_quarter e.g. 2026-Q2>"
+   ```
+   Show the output to the user. The engine prints computed_score, stored_score, Δ, and the per-indicator breakdown. No manual arithmetic needed.
+9. Resync the DB:
+   ```bash
+   uv run python -m catalyx.store.structural_catalyst_repo sync
+   ```
+10. Print a one-line summary: `<catalyst_id> — ind_<id>: <old_value> → <new_value> | intensity: <old_score> → <new_score>`
 
 ---
 
@@ -75,7 +58,7 @@ Examples:
 
 ## Rules
 
-- Never update `intensity.current_score` without computing it from the formula — present the exact computed value and ask user to confirm. Do NOT suggest qualitative ranges (+2 to +5, etc.).
+- Never manually compute `intensity.current_score` — always delegate to `intensity_engine.py --write-back`. The engine is the single source of truth for the formula.
 - Always shift `current_value → last_value` before writing the new `current_value`. Do not lose the prior value.
 - If the new value crosses a `deactivation_conditions` threshold, print a warning: ⚠ DEACTIVATION CONDITION APPROACHING: [condition text].
 - Update `status_last_reviewed` on every call, even if no status changes.

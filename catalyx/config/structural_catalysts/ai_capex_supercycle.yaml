@@ -18,7 +18,8 @@ description: >
 created_at: "2026-06-03T18:00:00Z"
 created_by: user
 onset_period: "2023-Q1"
-onset_evidence: "Microsoft $10B OpenAI investment announced Jan 2023. Google Bard launch. Hyperscaler capex guidance inflections in Q1 2023 earnings."
+onset_evidence: "Microsoft $10B OpenAI investment announced Jan 2023. Google Bard launch. Hyperscaler capex guidance inflections
+  in Q1 2023 earnings."
 
 catalyst_type: technology_adoption
 catalyst_subtype: ai_inference_buildout
@@ -26,70 +27,79 @@ geography: [US, EU, APAC, GLOBAL]
 thematic_tags: [ai, data_center, semiconductors, power, infrastructure, capex]
 
 user_rank: 2
-user_notes: "Most visible structural catalyst in the market. Risk of being priced in for semiconductors — focus on power, cooling, networking as higher-alpha adjacent plays."
+user_notes: "Most visible structural catalyst in the market. Risk of being priced in for semiconductors — focus on power,
+  cooling, networking as higher-alpha adjacent plays."
 
 intensity:
-  current_score: 89
-  last_updated: "2026-06-01"
+  current_score: 95
+  last_updated: "2026-06-04"
   history:
-    - period: "2026-Q1"
-      score: 89
-      note: "Microsoft $80B capex guidance 2026. Google $75B. Meta $60-65B. Amazon $100B+ guide."
-    - period: "2025-Q4"
-      score: 85
-      note: "Inference demand confirmed at scale. DeepSeek efficiency scare caused brief dip then recovery."
-    - period: "2025-Q3"
-      score: 82
-      note: "Sovereign AI programs: UAE, Saudi, France all announced large builds."
+  - period: 2026-Q2
+    score: 95
+    note: 'Computed 2026-06-04: avg=100.0 trend=↑↑ (rising 2+ consecutive) (was 89)'
+    computation_method: computed
+  - period: "2026-Q1"
+    score: 89
+    note: "Microsoft $80B capex guidance 2026. Google $75B. Meta $60-65B. Amazon $100B+ guide."
+  - period: "2025-Q4"
+    score: 85
+    note: "Inference demand confirmed at scale. DeepSeek efficiency scare caused brief dip then recovery."
+  - period: "2025-Q3"
+    score: 82
+    note: "Sovereign AI programs: UAE, Saudi, France all announced large builds."
 
+  computation_method: computed
 indicators:
-  - id: ind_01
-    name: "Combined hyperscaler capex guidance (Microsoft + Google + Amazon + Meta, quarterly earnings)"
-    source: "Earnings transcripts + consensus estimates"
-    check_frequency: quarterly
-    current_value: 87
-    unit: USD_billion_quarterly
-    direction: higher_is_stronger
-    threshold_strong: 60
-    threshold_weak: 40
-    last_value: 82
-    last_date: "2026-04-30"
+- id: ind_01
+  name: "Combined hyperscaler capex guidance (Microsoft + Google + Amazon + Meta, quarterly earnings)"
+  source: "Earnings transcripts + consensus estimates"
+  check_frequency: quarterly
+  current_value: 87
+  unit: USD_billion_quarterly
+  direction: higher_is_stronger
+  threshold_strong: 60
+  threshold_weak: 40
+  last_value: 82
+  last_date: "2026-04-30"
 
-  - id: ind_02
-    name: "Nvidia data center revenue quarterly growth"
-    source: "Nvidia earnings"
-    check_frequency: quarterly
-    current_value: 0.22
-    unit: yoy_growth_rate
-    direction: higher_is_stronger
-    threshold_strong: 0.15
-    threshold_weak: 0.00
-    last_value: 0.28
-    last_date: "2026-05-28"
+  semaphore: 🟢
+- id: ind_02
+  name: "Nvidia data center revenue quarterly growth"
+  source: "Nvidia earnings"
+  check_frequency: quarterly
+  current_value: 0.22
+  unit: yoy_growth_rate
+  direction: higher_is_stronger
+  threshold_strong: 0.15
+  threshold_weak: 0.00
+  last_value: 0.28
+  last_date: "2026-05-28"
 
-  - id: ind_03
-    name: "Global data center power demand growth (IEA estimate)"
-    source: "IEA Electricity report"
-    check_frequency: quarterly
-    current_value: 0.28
-    unit: yoy_growth_rate
-    direction: higher_is_stronger
-    threshold_strong: 0.15
-    threshold_weak: 0.05
-    last_value: 0.24
-    last_date: "2026-03-01"
+  semaphore: 🟢
+- id: ind_03
+  name: "Global data center power demand growth (IEA estimate)"
+  source: "IEA Electricity report"
+  check_frequency: quarterly
+  current_value: 0.28
+  unit: yoy_growth_rate
+  direction: higher_is_stronger
+  threshold_strong: 0.15
+  threshold_weak: 0.05
+  last_value: 0.24
+  last_date: "2026-03-01"
 
+  semaphore: 🟢
 deactivation_conditions:
-  - id: deact_01
-    condition: "Combined hyperscaler capex guidance drops >30% YoY for two consecutive quarters."
-    action: full_deactivation
+- id: deact_01
+  condition: "Combined hyperscaler capex guidance drops >30% YoY for two consecutive quarters."
+  action: full_deactivation
 
-  - id: deact_02
-    condition: "Fundamental AI efficiency breakthrough (e.g., 100x compute efficiency gain) removes need for scaling infrastructure."
-    action: review_required
+- id: deact_02
+  condition: "Fundamental AI efficiency breakthrough (e.g., 100x compute efficiency gain) removes need for scaling infrastructure."
+  action: review_required
 
 linked_event_catalyst_ids: []
 linked_structural_catalyst_ids:
-  - struct_copper_datacenter_demand  # Commodity expression: copper miners as physical beneficiary
+- struct_copper_datacenter_demand    # Commodity expression: copper miners as physical beneficiary
 status: active
 status_last_reviewed: "2026-06-01"

@@ -48,102 +48,120 @@ user_notes: >
   hits copper disproportionately vs the distributed EV demand story.
 
 intensity:
-  current_score: 87
+  current_score: 95
   computation_method: "computed"
-  computation_note: "Recomputed 2026-06-03 from indicator semaphores: ind_01=🟢(100), ind_02=🟢(100), ind_03=🟢(100), ind_04=🟢(100) → avg=100; trend ↑ (68→76→87) → factor=1.02; capped at 95. Override to 87 reflecting genuine strength without hitting ceiling. WebSearch confirmed: hyperscaler capex $700B combined 2026, LME copper $13,965/tonne."
-  last_updated: "2026-06-03"
+  computation_note: "Recomputed 2026-06-03 from indicator semaphores: ind_01=🟢(100), ind_02=🟢(100), ind_03=🟢(100), ind_04=🟢(100)
+    → avg=100; trend ↑ (68→76→87) → factor=1.02; capped at 95. Override to 87 reflecting genuine strength without hitting
+    ceiling. WebSearch confirmed: hyperscaler capex $700B combined 2026, LME copper $13,965/tonne."
+  last_updated: "2026-06-04"
   history:
-    - period: "2026-Q2"
-      score: 87
-      note: "Hyperscaler capex upgraded to $700B combined 2026 (Q1 earnings). Copper spot $13,965/t (+37% vs prior estimate). LME inventories near multi-year lows. Goldman publishes DC copper demand 500kT/year by 2030 — thesis entering emerging narrative phase."
-      computation_method: "computed"
-    - period: "2026-Q1"
-      score: 76
-      note: "Combined hyperscaler capex guide $350B+. Copper spot ~$12,742/t avg. LME inventories low."
-      computation_method: "bootstrap"
-    - period: "2025-Q4"
-      score: 68
-      note: "DeepSeek efficiency scare temporarily reduced perceived data center demand. Recovered."
-      computation_method: "bootstrap"
-    - period: "2025-Q3"
-      score: 71
-      note: "First mainstream analyst reports (Morgan Stanley, WoodMac) quantifying DC copper demand."
-      computation_method: "bootstrap"
-    - period: "2025-Q2"
-      score: 60
-      note: "Emerging thesis — not yet in consensus."
-      computation_method: "bootstrap"
+  - period: 2026-Q2
+    score: 95
+    note: 'Computed 2026-06-04: avg=100.0 trend=↑↑ (rising 2+ consecutive) (was 87)'
+    computation_method: computed
+  - period: "2026-Q2"
+    score: 87
+    note: "Hyperscaler capex upgraded to $700B combined 2026 (Q1 earnings). Copper spot $13,965/t (+37% vs prior estimate).
+      LME inventories near multi-year lows. Goldman publishes DC copper demand 500kT/year by 2030 — thesis entering emerging
+      narrative phase."
+    computation_method: "computed"
+  - period: "2026-Q1"
+    score: 76
+    note: "Combined hyperscaler capex guide $350B+. Copper spot ~$12,742/t avg. LME inventories low."
+    computation_method: "bootstrap"
+  - period: "2025-Q4"
+    score: 68
+    note: "DeepSeek efficiency scare temporarily reduced perceived data center demand. Recovered."
+    computation_method: "bootstrap"
+  - period: "2025-Q3"
+    score: 71
+    note: "First mainstream analyst reports (Morgan Stanley, WoodMac) quantifying DC copper demand."
+    computation_method: "bootstrap"
+  - period: "2025-Q2"
+    score: 60
+    note: "Emerging thesis — not yet in consensus."
+    computation_method: "bootstrap"
 
 indicators:
-  - id: ind_01
-    name: "Combined hyperscaler AI capex guidance (Microsoft + Google + Amazon + Meta, $B quarterly)"
-    source: "Quarterly earnings transcripts"
-    check_frequency: quarterly
-    current_value: 175
-    unit: USD_billion_quarterly
-    direction: higher_is_stronger
-    threshold_strong: 60
-    threshold_weak: 35
-    last_value: 87
-    last_date: "2026-05-15"
-    update_note: "Q1 2026 earnings (Apr-May 2026): combined 2026 capex guidance upgraded to ~$700B ($175B/quarter avg). MSFT $190B, Alphabet $180-190B, Meta $125-145B, Amazon $200B. Doubled vs prior $350B estimate. Source: Q1 2026 earnings transcripts."
+- id: ind_01
+  name: "Combined hyperscaler AI capex guidance (Microsoft + Google + Amazon + Meta, $B quarterly)"
+  source: "Quarterly earnings transcripts"
+  check_frequency: quarterly
+  current_value: 175
+  unit: USD_billion_quarterly
+  direction: higher_is_stronger
+  threshold_strong: 60
+  threshold_weak: 35
+  last_value: 87
+  last_date: "2026-05-15"
+  update_note: "Q1 2026 earnings (Apr-May 2026): combined 2026 capex guidance upgraded to ~$700B ($175B/quarter avg). MSFT
+    $190B, Alphabet $180-190B, Meta $125-145B, Amazon $200B. Doubled vs prior $350B estimate. Source: Q1 2026 earnings transcripts."
 
-  - id: ind_02
-    name: "LME copper spot price (USD/tonne)"
-    source: "LME spot price"
-    check_frequency: monthly
-    current_value: 13965
-    unit: USD_per_tonne
-    direction: higher_is_stronger
-    threshold_strong: 9500
-    threshold_weak: 7500
-    last_value: 12742
-    last_date: "2026-06-02"
-    update_note: "WebSearch confirmed 2026-06-03: LME copper spot $13,965/tonne (June 2, 2026). 2026 YTD range $12,528-$13,965. Prior YAML value of $10,200 was stale. JPMorgan forecasting $12,500 Q2 / $12,075 FY — actual is well above bank forecasts, consistent with thesis."
+  semaphore: 🟢
+- id: ind_02
+  name: "LME copper spot price (USD/tonne)"
+  source: "LME spot price"
+  check_frequency: monthly
+  current_value: 13965
+  unit: USD_per_tonne
+  direction: higher_is_stronger
+  threshold_strong: 9500
+  threshold_weak: 7500
+  last_value: 12742
+  last_date: "2026-06-02"
+  update_note: "WebSearch confirmed 2026-06-03: LME copper spot $13,965/tonne (June 2, 2026). 2026 YTD range $12,528-$13,965.
+    Prior YAML value of $10,200 was stale. JPMorgan forecasting $12,500 Q2 / $12,075 FY — actual is well above bank forecasts,
+    consistent with thesis."
 
-  - id: ind_03
-    name: "LME copper warehouse inventory (tonnes) — low inventory = supply tightness"
-    source: "LME daily inventory report"
-    check_frequency: monthly
-    current_value: 98000
-    unit: tonnes
-    direction: lower_is_stronger
-    threshold_strong: 150000
-    threshold_weak: 300000
-    last_value: 112000
-    last_date: "2026-06-01"
-    update_note: "Value unchanged at 98,000T — consistent with supply tightness thesis. Grasberg production cut (FCX H2 2026) will further tighten supply."
+  semaphore: 🟢
+- id: ind_03
+  name: "LME copper warehouse inventory (tonnes) — low inventory = supply tightness"
+  source: "LME daily inventory report"
+  check_frequency: monthly
+  current_value: 98000
+  unit: tonnes
+  direction: lower_is_stronger
+  threshold_strong: 150000
+  threshold_weak: 300000
+  last_value: 112000
+  last_date: "2026-06-01"
+  update_note: "Value unchanged at 98,000T — consistent with supply tightness thesis. Grasberg production cut (FCX H2 2026)
+    will further tighten supply."
 
-  - id: ind_04
-    name: "Data center copper demand estimate — analyst consensus (Wood Mackenzie / CRU)"
-    source: "Industry reports (WoodMac, CRU Group)"
-    check_frequency: quarterly
-    current_value: 1200000
-    unit: tonnes_annual_estimate
-    direction: higher_is_stronger
-    threshold_strong: 800000
-    threshold_weak: 400000
-    last_value: 1000000
-    last_date: "2026-03-01"
-    update_note: "Goldman Sachs published 500,000T/year by 2030 (partial estimate — likely understated). WoodMac/CRU update pending. Current 1.2M T/year estimate still valid as base case."
+  semaphore: 🟢
+- id: ind_04
+  name: "Data center copper demand estimate — analyst consensus (Wood Mackenzie / CRU)"
+  source: "Industry reports (WoodMac, CRU Group)"
+  check_frequency: quarterly
+  current_value: 1200000
+  unit: tonnes_annual_estimate
+  direction: higher_is_stronger
+  threshold_strong: 800000
+  threshold_weak: 400000
+  last_value: 1000000
+  last_date: "2026-03-01"
+  update_note: "Goldman Sachs published 500,000T/year by 2030 (partial estimate — likely understated). WoodMac/CRU update
+    pending. Current 1.2M T/year estimate still valid as base case."
 
+  semaphore: 🟢
 deactivation_conditions:
-  - id: deact_01
-    condition: "Combined hyperscaler AI capex guidance drops >30% YoY for two consecutive quarters."
-    action: full_deactivation
+- id: deact_01
+  condition: "Combined hyperscaler AI capex guidance drops >30% YoY for two consecutive quarters."
+  action: full_deactivation
 
-  - id: deact_02
-    condition: "New data center architecture reduces copper intensity by >50% (e.g., optical interconnects replacing copper at rack level at scale)."
-    action: review_required
+- id: deact_02
+  condition: "New data center architecture reduces copper intensity by >50% (e.g., optical interconnects replacing copper
+    at rack level at scale)."
+  action: review_required
 
-  - id: deact_03
-    condition: "Copper spot price drops below $7,500/t for 3+ months (supply surge or demand collapse signal)."
-    action: downgrade_to_weak
+- id: deact_03
+  condition: "Copper spot price drops below $7,500/t for 3+ months (supply surge or demand collapse signal)."
+  action: downgrade_to_weak
 
 linked_event_catalyst_ids:
-  - cat_20260603_copper_supply_deficit_2026
+- cat_20260603_copper_supply_deficit_2026
 linked_structural_catalyst_ids:
-  - struct_ai_capex_supercycle  # Parent theme — this is the copper commodity expression of AI capex
+- struct_ai_capex_supercycle    # Parent theme — this is the copper commodity expression of AI capex
 narrative_maturity: "emerging"
 status: active
 status_last_reviewed: "2026-06-03"

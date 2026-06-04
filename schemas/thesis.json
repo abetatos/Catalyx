@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "catalyx/schemas/thesis.json",
-  "schema_version": "1.1",
+  "schema_version": "1.2",
+  "_changelog": "v1.2: added entry_missed to status enum (expired entry windows); added correlation_check to metadata (shared-catalyst allocation check, step 2.5 of /catalyx-thesis draft).",
   "title": "Thesis",
   "description": "A structured, falsifiable investment thesis. Every field must be specific and measurable — vague theses are rejected by ThesisValidator.",
   "type": "object",
@@ -12,13 +13,14 @@
       "pattern": "^thesis_[0-9]{8}_[a-z0-9_]+$",
       "description": "Format: thesis_YYYYMMDD_sectorid_keyword"
     },
-    "schema_version": { "type": "string", "const": "1.1" },
+    "schema_version": { "type": "string", "const": "1.2" },
     "version": { "type": "integer", "minimum": 1, "description": "Increments on material edits to open thesis." },
     "created_at": { "type": "string", "format": "date-time" },
     "last_modified_at": { "type": "string", "format": "date-time" },
     "status": {
       "type": "string",
-      "enum": ["draft", "open", "exited_by_invalidation", "exited_by_time", "exited_by_conviction_loss", "closed"]
+      "enum": ["draft", "entry_missed", "open", "exited_by_invalidation", "exited_by_time", "exited_by_conviction_loss", "closed"],
+      "description": "entry_missed: entry_window_closes passed without the thesis moving to open. Thesis remains valid but entry conditions must be re-evaluated before re-activating."
     },
     "catalyst": {
       "type": "object",
@@ -164,7 +166,19 @@
         "prior_hit_rate_catalyst_sector": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
         "prior_n_trials": { "type": ["integer", "null"] },
         "confidence_override": { "type": ["number", "null"] },
-        "tags": { "type": "array", "items": { "type": "string" } }
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "correlation_check": {
+          "type": "object",
+          "description": "Populated by /catalyx-thesis draft. Documents shared catalysts with open/draft theses and confirms allocation ceiling compliance.",
+          "properties": {
+            "correlated_open_theses": { "type": "array", "items": { "type": "string" }, "description": "thesis IDs sharing a primary structural catalyst" },
+            "shared_catalysts": { "type": "array", "items": { "type": "string" }, "description": "struct_* IDs shared across correlated theses" },
+            "combined_allocation_pct": { "type": "number", "description": "sum of position_size_pct_portfolio across all correlated theses including this one" },
+            "combined_at_tier_ceiling": { "type": "boolean", "description": "true if combined_allocation_pct >= tier ceiling" },
+            "correlation_note": { "type": "string" }
+          },
+          "required": ["correlated_open_theses", "shared_catalysts", "combined_allocation_pct", "combined_at_tier_ceiling", "correlation_note"]
+        }
       }
     }
   },
