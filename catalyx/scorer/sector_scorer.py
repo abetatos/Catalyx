@@ -40,18 +40,20 @@ import json
 import sys
 from pathlib import Path
 
+from catalyx.config import weights
 from catalyx.scorer.catalyst_scorer import compute_catalyst_alignment
 from catalyx.scorer.momentum_engine import compute_momentum_scores
 
 _REPO_ROOT = Path(__file__).parents[2]
 _STUDY_DIR = _REPO_ROOT / "data" / "sector_studies"
 
-# Composite weights from scoring_weights.yaml
-_W_CATALYST = 0.30
-_W_MOMENTUM = 0.25
-_W_FLOW = 0.20
-_W_VALUATION = 0.15
-_W_CROWDING = 0.10  # applied as (100 - crowding_risk) × 0.10
+# Composite weights — single source of truth: scoring_weights.yaml §composite_weights
+_CW = weights.composite_weights()
+_W_CATALYST = _CW["catalyst_alignment"]
+_W_MOMENTUM = _CW["momentum"]
+_W_FLOW = _CW["flow_confirmation"]
+_W_VALUATION = _CW["valuation_relative"]
+_W_CROWDING = _CW["crowding_risk"]  # applied as (100 - crowding_risk) × weight
 
 # Phase 0.5 defaults for dimensions without automated data
 _DEFAULT_FLOW = 50.0
@@ -223,8 +225,8 @@ def main() -> None:
                         help="Pre-computed catalyst_alignment [0-100]. Default: auto.")
     parser.add_argument("--mom", type=float, default=None, dest="momentum",
                         help="Pre-computed momentum score [0-100]. Default: auto.")
-    parser.add_argument("--flow", type=float, default=_DEFAULT_FLOW,
-                        help=f"flow_confirmation [0-100]. Default: {_DEFAULT_FLOW} (neutral).")
+    parser.add_argument("--flow", type=float, default=None,
+                        help="flow_confirmation [0-100]. Default: auto-load from flow snapshot.")
     parser.add_argument("--val", type=float, default=_DEFAULT_VALUATION,
                         help=f"valuation_relative [0-100]. Default: {_DEFAULT_VALUATION}.")
     parser.add_argument("--crowd", type=float, default=_DEFAULT_CROWDING,

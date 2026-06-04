@@ -1,10 +1,10 @@
 # StructuralCatalyst: Central Bank Systematic Gold Accumulation
-# schema_version: "1.2"
+# schema_version: "1.3"
 # Update indicators quarterly after WGC report release (typically mid-month after quarter end)
 
 id: struct_cb_gold_accumulation
 type: structural
-schema_version: "1.2"
+schema_version: "1.3"
 title: "Central bank systematic gold accumulation"
 description: >
   Central banks globally — led by EM economies (China, India, Turkey, Poland, Kazakhstan) —
@@ -31,12 +31,16 @@ user_notes: >
   Key differentiation: CB demand is sovereign-driven, price-insensitive, not reversible quickly.
 
 intensity:
-  current_score: 90.1
+  current_score: 95.0
   computation_method: "computed"
   computation_note: "Computed 2026-06-03: semaphores ind_01=🟢(100), ind_02=🟡(65), ind_03=🟢(100) → avg=88.3; trend ↑ (79→90
     vs Q1) → factor=1.02; result=90.1→90. ind_01 updated 290→315T (Q2 2026 WGC data)."
   last_updated: "2026-06-04"
   history:
+  - period: 2026-Q2
+    score: 95.0
+    note: 'Computed 2026-06-04: avg=99.17 trend=→ (flat) (was 90.1)'
+    computation_method: computed
   - period: 2026-Q2
     score: 90.1
     note: 'Computed 2026-06-04: avg=88.33 trend=↑ (rising 1 period) (was 90)'
@@ -81,6 +85,10 @@ indicators:
   update_note: "WGC Q2 2026: 315T net purchases. Above Q1 (290T). Poland +31T, Uzbekistan +25T, PBoC +7T. New buyers: Guatemala,
     Indonesia, Uganda. Full-year WGC forecast 700-900T."
 
+  value_history:
+  - date: "2026-06-03"
+    value: 290
+  score: 100.0
 - id: ind_02
   name: "IMF COFER — Non-USD reserve share of global FX reserves"
   source: "IMF COFER quarterly data"
@@ -93,7 +101,11 @@ indicators:
   last_value: 0.591
   last_date: "2026-04-01"
 
-  semaphore: 🟡
+  semaphore: 🟢
+  value_history:
+  - date: "2026-04-01"
+    value: 0.591
+  score: 97.5
 - id: ind_03
   name: "Gold ETF AUM monthly change (institutional, ex-retail)"
   source: "iShares + WGC flow data"
@@ -107,6 +119,10 @@ indicators:
   last_date: "2026-06-01"
 
   semaphore: 🟢
+  value_history:
+  - date: "2026-06-01"
+    value: 0.028
+  score: 100.0
 deactivation_conditions:
 - id: deact_01
   condition: "CB net purchases fall below 80 tonnes/quarter for two consecutive quarters per WGC data."

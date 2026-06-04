@@ -7,6 +7,92 @@
 
 ---
 
+## 2026-06-05 — Scoring redesign v1.5: continuous indicators, additive adjustments
+
+Replaces the traffic-light (🟢/🟡/🔴 = 100/65/20) indicator discretization and the
+chained multipliers the user flagged as opaque and unstable.
+
+### `catalyx/scorer/intensity_engine.py` + `scoring_weights.yaml` — continuous indicator scoring
+**Problem:** the semaphore mapped every indicator to one of three values (100/65/20),
+creating a CLIFF — e.g. `cb_gold_accumulation` `ind_02` (COFER, strong=0.58, weak=0.62,
+lower_is_stronger, value=0.582) scored 🟡=65 despite being 95% of the way to green; a
+0.002 move to 0.580 jumped it to 100. Anchors arbitrary, gaps asymmetric (45 vs 35).
+**Fix:** `indicator_scoring.method = percentile_with_linear_fallback`. Each indicator is
+scored to a continuous [0,100]: empirical percentile of its own `value_history` once
+≥ `min_history_points` (6) accrue, else linear interpolation between thresholds
+(weak→50, strong→100). The COFER case now scores 97.5. Color (🟢/🟡/🔴) is DERIVED from
+the score (`indicator_color_thresholds`) and is display-only — it no longer drives math.
+
+### Additive adjustments replace multipliers
+- **Trend:** `intensity_trend_factors` (×1.05…0.93) → `intensity_trend_deltas` (+5…−7),
+  applied as `indicator_avg + trend_delta` instead of `× factor`.
+- **Event interaction (`catalyst_scorer.py`):** `confirmation_amplifier ×1.12` /
+  `contradiction_dampener ×0.82` → `catalyst_interaction_deltas`
+  (`confirm_max_points: 10`, `contradict_max_points: 15`), scaled by decayed strength.
+  Floor/cap guards preserved (confirm ≥ structural and ≤ independent blend; contradict ≤ structural, ≥ 0).
+- **`user_rank`:** `user_rank_multipliers` (×1.40…0.60 on `display_priority`) →
+  `user_rank_ordering` (rank descending by `algorithmic_score`, `user_rank` breaks ties only).
+  Stops a weaker-but-preferred catalyst from leapfrogging a materially stronger one.
+
+### Schema migration 1.2 → 1.3 (`schemas/structural_catalyst.json`, 5 catalyst YAMLs)
+Each indicator gains `value_history[]` (seeded with the recoverable prior observation),
+plus derived `score` and `semaphore` fields. Old config sections kept with
+`deprecated: true` for one major version per the Schema Change Protocol.
+
+---
+
+## 2026-06-04 — Critique fixes: wiring, tax, aggregation, single-source weights
+
+Session-wide pass triggered by a project critique. Five concrete defects fixed plus
+documentation realignment.
+
+### `catalyx/scorer/sector_scorer.py` — flow auto-load was dead via CLI
+**Bug:** `--flow` defaulted to `50.0`, never `None`. Auto-load of the flow snapshot only
+fires when `flow_confirmation is None`, so the heatmap (`sector_scorer --all`, no `--flow`)
+always used neutral 50 and `inst_sponsorship_score` was always `null`. The entire
+`flow_data.py` pipeline was disconnected from scoring.
+**Fix:** `--flow` default → `None`; neutral defaults applied inside `score_sector` only when
+no datum exists. `inst_sponsorship_score` now surfaces (e.g. copper_miners = 78.2 from EDGAR
+13F). Composite scores unchanged today (baseline flow snapshot is all-50).
+
+### `catalyx/execution/tax_engine.py` — loss carry-forward discarded excess losses
+**Bug:** `compute_ytd_tax` reset `ytd_loss_carry = 0.0` after applying a loss to a single
+gain. A 100 loss followed by two 50 gains taxed the second gain; correct result is zero tax.
+**Fix:** consume only `loss_used = pnl - taxable_gain` and carry the remainder forward.
+Added `loss_offset_used` / `loss_carry_balance` to the per-trade breakdown.
+
+### `catalyx/scorer/catalyst_scorer.py` v1.4 → v1.5 — aggregation dilution
+**Bug:** sector `catalyst_alignment` was the arithmetic mean of per-catalyst scores, so adding
+a weaker catalyst *lowered* a strong sector's score — the opposite of the stated intent that
+more confirming catalysts = stronger signal.
+**Fix:** max-anchored noisy-OR (`_aggregate_alignment`). Strongest catalyst sets the floor;
+each additional one closes part of the remaining gap to 100 scaled by its strength and
+`reinforce_factor` (0.25, in `scoring_weights.yaml §multi_catalyst_aggregation`). Monotonic,
+bounded `[max, 100]`. Single-catalyst sectors unchanged; ai_infrastructure (3 catalysts at 95)
+95.0 → 97.1, copper/grid (2) → 96.2.
+
+### `catalyx/config/weights.py` (new) — single source of truth for weights
+**Problem:** composite weights, momentum period weights, interaction amplifier/dampener,
+sub-weights and decay halflife were hardcoded in the scorers AND listed in `scoring_weights.yaml`.
+Recalibrating the YAML changed nothing — the code never read it, violating the project's own
+"formulas in code, no drift" principle.
+**Fix:** `catalyx.config.weights` loads `scoring_weights.yaml` once (cached) with documented
+fallbacks. `sector_scorer`, `momentum_engine` and `catalyst_scorer` now import from it.
+Behaviour-preserving (YAML values equalled the old constants).
+
+### `tests/unit/test_tax_engine.py` (new) + `catalyx/cli/main.py` (new)
+First unit tests in the repo: 16 cases covering bracket boundaries, incremental tax given
+prior YTD gains, loss offset, and the carry-forward regression. CLI `main.py` is a Phase 0.5
+stub that lists the wired module CLIs — fixes the `[project.scripts] catalyx` entry point that
+pointed to a non-existent module.
+
+### `CLAUDE.md` — documentation realignment
+Repository Structure tree annotated with `✅ built` vs `(planned)` so future sessions don't chase
+non-existent modules (`llm_client.py`, `valuation_engine.py`, `prior_repo.py`, etc.). Structural
+catalyst list corrected to the real 5 files. Key Files table marks unbuilt targets.
+
+---
+
 ## 2026-06-04 — Scoring formula fixes + thesis schema v1.2
 
 ### `catalyx/config/scoring_weights.yaml` v1.3 → v1.4

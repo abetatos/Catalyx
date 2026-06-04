@@ -1,28 +1,29 @@
 """Catalyst alignment scorer for SectorSnapshot.
 
 Implements the confirms/contradicts/independent formula with event decay
-(scoring_weights.yaml §STRUCTURAL ↔ EVENT INTERACTION v1.3/v1.4).
+(scoring_weights.yaml §STRUCTURAL ↔ EVENT INTERACTION v1.5 — additive).
 
 Formula summary:
   For each structural catalyst active in a sector:
     1. Get structural intensity score (from intensity_engine / YAML)
     2. Find event catalysts relating to this structural catalyst
     3. Apply decay: event_strength_decayed = strength × exp(-ln2/halflife × days_elapsed)
-    4. Apply interaction formula by relation_to_structural:
-       - confirms:     amplifier_eff = 1 + 0.12 × (decayed/100)
-                       raw = structural × amplifier_eff
+    4. Apply interaction formula by relation_to_structural (ADDITIVE points):
+       - confirms:     boost = confirm_max_points × (decayed/100)
                        case_c = structural × 0.45 + decayed × 0.55
-                       score = max(structural, min(raw, case_c))
-       - contradicts:  dampener_eff = 1 - 0.18 × (decayed/100)
-                       score = max(0, min(structural × dampener_eff, structural))
+                       score = max(structural, min(structural + boost, case_c))
+       - contradicts:  penalty = contradict_max_points × (decayed/100)
+                       score = max(0, min(structural - penalty, structural))
        - independent:  score = structural × 0.45 + decayed × 0.55
   5. If multiple events relate to the same structural catalyst, use the one
      with the highest |impact| (strongest confirms or contradicts wins).
-  6. catalyst_alignment = mean(modified_structural_scores across all active catalysts)
+  6. catalyst_alignment = max-anchored noisy-OR over modified_structural_scores
 
-Multi-structural aggregation: arithmetic mean, equal weight.
-Rationale: multiple catalysts reinforce independently; mean avoids double-counting
-while reflecting that more catalysts = stronger signal than one alone.
+Multi-structural aggregation: max-anchored noisy-OR (see _aggregate_alignment).
+The strongest catalyst sets the floor; each additional catalyst closes part of
+the remaining gap to 100 in proportion to its strength. This is monotonic and
+makes "more confirming catalysts = stronger signal" actually true — unlike the
+arithmetic mean it replaced, where adding a weaker catalyst diluted a strong one.
 
 Usage (callable from skills):
     uv run python -m catalyx.scorer.catalyst_scorer <sector_id>
@@ -41,16 +42,44 @@ from pathlib import Path
 
 import yaml
 
+from catalyx.config import weights
+
 _REPO_ROOT = Path(__file__).parents[2]
 _STRUCTURAL_DIR = _REPO_ROOT / "catalyx" / "config" / "structural_catalysts"
 _CATALYST_DIR = _REPO_ROOT / "data" / "catalysts"
 _STUDY_DIR = _REPO_ROOT / "data" / "sector_studies"
 
-# From scoring_weights.yaml
-_CONFIRMATION_AMPLIFIER = 0.12   # max extra above structural (at event_strength=100)
-_CONTRADICTION_DAMPENER = 0.18   # max reduction below structural (at event_strength=100)
-_STRUCTURAL_SUB_WEIGHT = 0.45
-_EVENT_SUB_WEIGHT = 0.55
+# Single source of truth: scoring_weights.yaml (loaded via catalyx.config.weights)
+# v1.5: interaction is ADDITIVE — confirm/contradict adjust the structural score by
+# points scaled with the decayed event strength (not multiplicative factors).
+_CONFIRM_MAX_POINTS, _CONTRADICT_MAX_POINTS = weights.catalyst_interaction_deltas()
+_STRUCTURAL_SUB_WEIGHT, _EVENT_SUB_WEIGHT = weights.catalyst_sub_weights()
+_DEFAULT_HALFLIFE = weights.event_default_halflife()
+
+# Multi-catalyst aggregation: how much each additional (weaker) catalyst closes
+# the remaining gap to 100. 0.0 → only the strongest catalyst counts; 1.0 → a full
+# noisy-OR. See scoring_weights.yaml §MULTI-CATALYST AGGREGATION.
+_REINFORCE_FACTOR = weights.reinforce_factor()
+
+
+def _aggregate_alignment(modified_scores: list[float]) -> float:
+    """Combine per-catalyst modified scores into one sector catalyst_alignment.
+
+    Max-anchored noisy-OR: the strongest catalyst sets the floor, and each
+    additional catalyst closes part of the remaining gap to 100 in proportion
+    to its own strength. This is monotonic (adding any catalyst never lowers the
+    score) and bounded to [max(scores), 100].
+
+    Rationale: a sector backed by several strong structural catalysts must rank
+    ABOVE one backed by a single equally-strong catalyst. The previous arithmetic
+    mean did the opposite — adding a weaker catalyst diluted a strong one, which
+    contradicts the stated intent that more confirming catalysts = stronger signal.
+    """
+    ordered = sorted(modified_scores, reverse=True)
+    combined = ordered[0]
+    for score in ordered[1:]:
+        combined += (100.0 - combined) * (score / 100.0) * _REINFORCE_FACTOR
+    return round(min(100.0, combined), 1)
 
 
 # ── Decay ──────────────────────────────────────────────────────────────────────
@@ -72,15 +101,20 @@ def _decayed_strength(strength: float, halflife_days: float, detected_at: str) -
 # ── Interaction formulas ───────────────────────────────────────────────────────
 
 def _apply_confirms(structural: float, decayed: float) -> float:
-    amplifier_eff = 1.0 + _CONFIRMATION_AMPLIFIER * (decayed / 100.0)
-    raw = structural * amplifier_eff
+    """Additive boost (v1.5): +confirm_max_points at decayed=100, scaled linearly.
+    Floor at structural (a confirm never lowers it), cap at the independent blend
+    (a confirm never outscores an equally-strong independent signal)."""
+    boost = _CONFIRM_MAX_POINTS * (decayed / 100.0)
+    raw = structural + boost
     case_c = structural * _STRUCTURAL_SUB_WEIGHT + decayed * _EVENT_SUB_WEIGHT
     return round(max(structural, min(raw, case_c)), 2)
 
 
 def _apply_contradicts(structural: float, decayed: float) -> float:
-    dampener_eff = 1.0 - _CONTRADICTION_DAMPENER * (decayed / 100.0)
-    raw = structural * dampener_eff
+    """Additive penalty (v1.5): -contradict_max_points at decayed=100, scaled linearly.
+    Floor at 0, cap at structural (a contradict never raises it)."""
+    penalty = _CONTRADICT_MAX_POINTS * (decayed / 100.0)
+    raw = structural - penalty
     return round(max(0.0, min(raw, structural)), 2)
 
 
@@ -187,7 +221,7 @@ def compute_catalyst_alignment(
         event_details = []
         for ev in related_events:
             strength = ev.get("strength_score", 0)
-            halflife = ev.get("decay_halflife_days", 46)
+            halflife = ev.get("decay_halflife_days", _DEFAULT_HALFLIFE)
             detected = ev.get("detected_at") or ev.get("created_at", "")
             decayed = _decayed_strength(strength, halflife, detected)
             relation = ev.get("relation_to_structural", "independent")
@@ -215,12 +249,12 @@ def compute_catalyst_alignment(
             "events": event_details,
         })
 
-    # Aggregate: mean of modified scores (skip errored catalysts)
+    # Aggregate: max-anchored noisy-OR over modified scores (skip errored catalysts)
     valid = [r["modified_score"] for r in structural_results if r.get("modified_score") is not None]
     if not valid:
         return {"sector_id": sector_id, "error": "No valid structural scores to aggregate", "breakdown": structural_results}
 
-    catalyst_alignment = round(sum(valid) / len(valid), 1)
+    catalyst_alignment = _aggregate_alignment(valid)
 
     # Dominant catalyst type: structural if no events, else event
     has_events = any(r.get("events") for r in structural_results)

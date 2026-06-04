@@ -18,10 +18,11 @@ Examples:
 1. Read the target catalyst file: `catalyx/config/structural_catalysts/<catalyst_id>.yaml`
 2. Find the indicator with `id: <indicator_id>`.
 3. Update the indicator fields in the YAML:
+   - `value_history` → **append** `{date: <previous last_date>, value: <previous current_value>}` so the prior observation is retained as history (the empirical-percentile score uses this once ≥ `min_history_points` accrue). Append, never overwrite — history is cumulative.
    - `current_value` → `<new_value>`
    - `last_value` → previous `current_value` (shift down)
    - `last_date` → today's date
-   - If status changed (🟢→🟡 etc.), flag this prominently before writing
+   - Do NOT set `semaphore` or `score` by hand — both are DERIVED and written by the intensity engine in step 8 (`semaphore` is a display-only color computed from the continuous `score`). If the color flips (🟢→🟡 etc.) the engine reports it as drift — flag it prominently.
 4. If `[note]` provided, add it to the human-readable `update_note` field on the indicator.
 5. Update `status_last_reviewed` to today.
 6. Check `deactivation_conditions` — if any threshold is now breached or approaching, print:
@@ -59,7 +60,8 @@ Examples:
 ## Rules
 
 - Never manually compute `intensity.current_score` — always delegate to `intensity_engine.py --write-back`. The engine is the single source of truth for the formula.
-- Always shift `current_value → last_value` before writing the new `current_value`. Do not lose the prior value.
+- Never set `semaphore` or `score` by hand — both are derived and written by the engine (`score` = continuous [0,100]; `semaphore` = display color from it).
+- Always shift `current_value → last_value` AND append the prior observation to `value_history` before writing the new `current_value`. Do not lose the prior value — `value_history` is what makes the percentile score possible.
 - If the new value crosses a `deactivation_conditions` threshold, print a warning: ⚠ DEACTIVATION CONDITION APPROACHING: [condition text].
 - Update `status_last_reviewed` on every call, even if no status changes.
 - Always run `structural_catalyst_repo sync` after writing the YAML, so the DB is current within the session.

@@ -1,5 +1,5 @@
 # StructuralCatalyst: Copper Demand from AI Data Center Infrastructure
-# schema_version: "1.2"
+# schema_version: "1.3"
 # Update indicators: quarterly (hyperscaler capex earnings) + monthly (copper spot + LME inventory)
 #
 # Note: this is DISTINCT from struct_energy_transition_grid.
@@ -9,7 +9,7 @@
 
 id: struct_copper_datacenter_demand
 type: structural
-schema_version: "1.2"
+schema_version: "1.3"
 title: "Copper demand from AI hyperscale data center buildout"
 description: >
   AI data centers are a structurally new and underappreciated source of copper demand.
@@ -48,7 +48,7 @@ user_notes: >
   hits copper disproportionately vs the distributed EV demand story.
 
 intensity:
-  current_score: 95
+  current_score: 95.0
   computation_method: "computed"
   computation_note: "Recomputed 2026-06-03 from indicator semaphores: ind_01=🟢(100), ind_02=🟢(100), ind_03=🟢(100), ind_04=🟢(100)
     → avg=100; trend ↑ (68→76→87) → factor=1.02; capped at 95. Override to 87 reflecting genuine strength without hitting
@@ -98,6 +98,10 @@ indicators:
     $190B, Alphabet $180-190B, Meta $125-145B, Amazon $200B. Doubled vs prior $350B estimate. Source: Q1 2026 earnings transcripts."
 
   semaphore: 🟢
+  value_history:
+  - date: "2026-05-15"
+    value: 87
+  score: 100.0
 - id: ind_02
   name: "LME copper spot price (USD/tonne)"
   source: "LME spot price"
@@ -114,6 +118,10 @@ indicators:
     consistent with thesis."
 
   semaphore: 🟢
+  value_history:
+  - date: "2026-06-02"
+    value: 12742
+  score: 100.0
 - id: ind_03
   name: "LME copper warehouse inventory (tonnes) — low inventory = supply tightness"
   source: "LME daily inventory report"
@@ -129,6 +137,10 @@ indicators:
     will further tighten supply."
 
   semaphore: 🟢
+  value_history:
+  - date: "2026-06-01"
+    value: 112000
+  score: 100.0
 - id: ind_04
   name: "Data center copper demand estimate — analyst consensus (Wood Mackenzie / CRU)"
   source: "Industry reports (WoodMac, CRU Group)"
@@ -144,6 +156,10 @@ indicators:
     pending. Current 1.2M T/year estimate still valid as base case."
 
   semaphore: 🟢
+  value_history:
+  - date: "2026-03-01"
+    value: 1000000
+  score: 100.0
 deactivation_conditions:
 - id: deact_01
   condition: "Combined hyperscaler AI capex guidance drops >30% YoY for two consecutive quarters."

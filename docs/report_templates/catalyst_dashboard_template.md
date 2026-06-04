@@ -4,8 +4,8 @@
 **Generated:** {{datetime}}
 **Event catalysts active:** {{N}} · **Structural catalysts active:** {{N}}
 
-> Ranked by `display_priority = intensity_score × user_rank_multiplier`.
-> Indicators: 🟢 strong · 🟡 monitoring · 🔴 alert
+> Ranked by `display_priority = algorithmic_score` (intensity), ties broken by `user_rank` (1 = highest). v1.5: user_rank no longer multiplies the score.
+> Indicators: 🟢 strong · 🟡 monitoring · 🔴 alert — display-only color derived from each indicator's continuous score.
 
 ---
 

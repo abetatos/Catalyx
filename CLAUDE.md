@@ -183,107 +183,107 @@ Structural catalysts are the floor signal. Event catalysts are the spike. Both c
 
 ## Repository Structure
 
+> **Legend:** `✅` = built and on disk today (Phase 0.5). Unmarked entries are the
+> TARGET architecture (Phase 1+) and **do not exist yet** — do not assume you can
+> read them. Before citing a path from this tree, confirm it is `✅` or run a quick
+> `ls`/glob. This tree is a roadmap, not an inventory.
+
 ```
 catalyx/
-├── CLAUDE.md                          ← THIS FILE — always read first
+├── CLAUDE.md                          ← THIS FILE — always read first  ✅
 ├── .claude/
-│   └── settings.json                  ← Hooks: auto-validation on schema edits
-├── catalyx/                           ← Main Python package (Phase 1+)
-│   ├── scanner/
+│   ├── settings.json                  ← Hooks: auto-validation on schema edits  ✅
+│   └── commands/                      ← 7 catalyx-* skill definitions  ✅
+├── catalyx/                           ← Main Python package
+│   ├── scanner/                       ← (planned, Phase 1/2)
 │   │   ├── signal_ingester.py
 │   │   ├── novelty_filter.py
 │   │   ├── catalyst_detector.py
 │   │   ├── strength_scorer.py
 │   │   └── structural_monitor.py      ← Phase 2
 │   ├── scorer/
-│   │   ├── sector_scorer.py
-│   │   ├── momentum_engine.py
-│   │   ├── flow_engine.py
-│   │   └── valuation_engine.py
-│   ├── thesis/
+│   │   ├── catalyst_scorer.py         ← catalyst_alignment (confirms/contradicts + decay)  ✅
+│   │   ├── intensity_engine.py        ← structural intensity from semaphores  ✅
+│   │   ├── momentum_engine.py         ← cross-sectional percentile rank  ✅
+│   │   ├── sector_scorer.py           ← composite orchestrator  ✅
+│   │   ├── flow_engine.py             ← (planned — live today as data/flow_data.py)
+│   │   └── valuation_engine.py        ← (planned — valuation_relative still manual)
+│   ├── thesis/                        ← (planned, Phase 1)
 │   │   ├── thesis_builder.py
 │   │   ├── thesis_validator.py
 │   │   ├── assumption_monitor.py
 │   │   └── invalidation_watcher.py
 │   ├── execution/
-│   │   ├── trade_logger.py
-│   │   ├── pnl_engine.py
-│   │   └── tax_engine.py              ← Spanish CGT progressive brackets
+│   │   ├── tax_engine.py              ← Spanish CGT progressive brackets  ✅
+│   │   ├── trade_logger.py            ← (planned)
+│   │   └── pnl_engine.py              ← (planned)
 │   ├── attribution/
-│   │   ├── return_decomposer.py
-│   │   └── thesis_scorer.py
-│   ├── feedback/
+│   │   ├── thesis_scorer.py           ← right_reason_score  ✅
+│   │   └── return_decomposer.py       ← (planned)
+│   ├── feedback/                      ← (planned, Phase 3)
 │   │   ├── prior_updater.py
 │   │   └── pattern_reporter.py
-│   ├── sector_study/                  ← Phase 1 (bottom-up analysis)
+│   ├── sector_study/                  ← (planned, Phase 1 — studies are JSON today)
 │   │   ├── study_builder.py
 │   │   ├── study_updater.py
 │   │   └── watch_trigger_monitor.py
 │   ├── data/
-│   │   ├── market_data.py             ← yfinance wrapper
-│   │   ├── flow_data.py               ← ETF AUM (shares outstanding × NAV, not AUM)
-│   │   ├── cot_data.py                ← CFTC COT parser
-│   │   ├── news_adapter.py
-│   │   ├── cb_calendar.py
-│   │   └── llm_client.py              ← Anthropic + OpenAI wrappers, logs all calls
+│   │   ├── market_data.py             ← yfinance momentum fetcher  ✅
+│   │   ├── flow_data.py               ← shares_outstanding × NAV → flow_confirmation  ✅
+│   │   ├── cot_data.py                ← (planned — CFTC COT parser)
+│   │   ├── news_adapter.py            ← (planned)
+│   │   ├── cb_calendar.py             ← (planned)
+│   │   └── llm_client.py              ← (planned — Anthropic+OpenAI, logs all calls)
 │   ├── store/
-│   │   ├── db.py
-│   │   ├── catalyst_repo.py
-│   │   ├── snapshot_repo.py
-│   │   ├── thesis_repo.py
-│   │   ├── trade_repo.py
-│   │   └── prior_repo.py
+│   │   ├── db.py                      ← SQLAlchemy engine + LLMLog  ✅
+│   │   ├── catalyst_repo.py           ← CatalystEvent + TaxonomyGapProposal CRUD  ✅
+│   │   ├── sector_study_repo.py       ← SectorStudy CRUD  ✅
+│   │   ├── structural_catalyst_repo.py← StructuralCatalyst CRUD  ✅
+│   │   ├── thesis_repo.py             ← Thesis + ClosedThesis CRUD  ✅
+│   │   ├── snapshot_repo.py           ← (planned)
+│   │   ├── trade_repo.py              ← (planned)
+│   │   └── prior_repo.py              ← (planned — CatalystSectorPrior table)
 │   ├── cli/
-│   │   ├── main.py
-│   │   ├── cmd_scan.py
-│   │   ├── cmd_score.py
-│   │   ├── cmd_thesis.py
-│   │   ├── cmd_trade.py
-│   │   └── cmd_feedback.py
+│   │   ├── main.py                    ← Phase 0.5 stub (lists module CLIs)  ✅
+│   │   ├── cmd_scan.py                ← (planned)
+│   │   ├── cmd_score.py               ← (planned)
+│   │   ├── cmd_thesis.py              ← (planned)
+│   │   ├── cmd_trade.py               ← (planned)
+│   │   └── cmd_feedback.py            ← (planned)
 │   └── config/
-│       ├── sector_taxonomy.yaml       ← CANONICAL: all sector IDs live here
-│       ├── catalyst_taxonomy.yaml     ← Catalyst types and subtypes enum
-│       ├── etf_universe.yaml          ← ETFs per sector (quarterly review)
-│       ├── scoring_weights.yaml       ← Dimension weights for composite score
-│       └── structural_catalysts/      ← One .yaml per structural catalyst
-│           ├── cb_gold_accumulation.yaml
-│           ├── ai_capex_supercycle.yaml
-│           ├── nato_rearmament.yaml
-│           ├── deglobalization_reshoring.yaml
-│           ├── energy_transition_grid.yaml
-│           ├── negative_real_rates.yaml
-│           ├── em_consumer_rise.yaml
-│           └── water_scarcity.yaml
-├── schemas/                           ← JSON Schema files (source of truth for all objects)
-│   ├── catalyst_event.json
-│   ├── structural_catalyst.json
-│   ├── sector_snapshot.json
-│   ├── sector_study.json
-│   ├── thesis.json
-│   ├── closed_thesis.json
-│   └── taxonomy_gap_proposal.json     ← Output of Discovery Pass: themes not in taxonomy yet
-├── data/                              ← Runtime data (gitignored except examples)
-│   ├── catalysts/
-│   ├── snapshots/
-│   ├── theses/
-│   ├── sector_studies/
-│   ├── taxonomy_proposals/            ← TaxonomyGapProposal JSON files (gap_YYYYMMDD_slug.json)
-│   └── catalyx.db
+│       ├── sector_taxonomy.yaml       ← CANONICAL: all sector IDs live here  ✅
+│       ├── catalyst_taxonomy.yaml     ← Catalyst types and subtypes enum  ✅
+│       ├── etf_universe.yaml          ← ETFs per sector (quarterly review)  ✅
+│       ├── scoring_weights.yaml       ← Dimension weights — SINGLE SOURCE OF TRUTH  ✅
+│       ├── weights.py                 ← Loads scoring_weights.yaml for all scorers  ✅
+│       └── structural_catalysts/      ← One .yaml per structural catalyst  ✅
+│           ├── ai_capex_supercycle.yaml        ✅
+│           ├── cb_gold_accumulation.yaml       ✅
+│           ├── copper_datacenter_demand.yaml   ✅
+│           ├── energy_transition_grid.yaml     ✅
+│           └── nato_rearmament.yaml            ✅
+├── schemas/                           ← JSON Schema files (source of truth for objects)  ✅
+│   ├── catalyst_event.json            ✅
+│   ├── structural_catalyst.json       ✅
+│   ├── sector_snapshot.json           ✅
+│   ├── sector_study.json              ✅
+│   ├── thesis.json                    ✅
+│   ├── closed_thesis.json             ✅
+│   └── taxonomy_gap_proposal.json     ← Discovery Pass output  ✅
+├── data/                              ← Runtime data  ✅
+│   ├── catalysts/  snapshots/  theses/  sector_studies/  taxonomy_proposals/  reports/  ✅
+│   └── catalyx.db                     ← SQLite (gitignored)  ✅
 ├── tests/
 │   ├── unit/
-│   │   ├── test_tax_engine.py         ← Test all bracket edge cases
-│   │   ├── test_strength_scorer.py
-│   │   └── test_return_decomposer.py
-│   └── integration/
-│       ├── test_scan_to_score.py
-│       └── test_thesis_lifecycle.py
-├── notebooks/
-│   ├── calibrate_scoring_weights.ipynb
-│   └── prior_table_analysis.ipynb
+│   │   ├── test_tax_engine.py         ← bracket + carry-forward edge cases  ✅
+│   │   ├── test_strength_scorer.py    ← (planned)
+│   │   └── test_return_decomposer.py  ← (planned)
+│   └── integration/                   ← (planned)
+├── notebooks/                         ← (planned)
 ├── docs/
-│   └── SPEC_v1.1.md                   ← Full technical specification
-├── pyproject.toml
-└── .env.example
+│   └── SPEC_v1.1.md                   ← (referenced; verify before citing)
+├── pyproject.toml                     ✅
+└── .env.example                       ✅
 ```
 
 ---
@@ -300,9 +300,9 @@ This section tells Claude which files to read before working on each area. **Alw
 | Structural catalysts | `catalyx/config/structural_catalysts/<relevant>.yaml` + `schemas/structural_catalyst.json` |
 | Tax engine or P&L | `docs/SPEC_v1.1.md` §Tax section — Spanish CGT brackets are progressive, no short/long term distinction |
 | ETF selection logic | `catalyx/config/etf_universe.yaml` — check TER, AUM, replication type, spread |
-| CLI commands | `catalyx/cli/main.py` first, then the relevant `cmd_*.py` |
-| LLM integration | `catalyx/data/llm_client.py` — all calls must go through this, pinned model IDs only |
-| Feedback loop / priors | `schemas/closed_thesis.json` → `CatalystSectorPrior` table schema in `store/prior_repo.py` |
+| CLI commands | `catalyx/cli/main.py` (Phase 0.5 stub today; `cmd_*.py` are Phase 1, not built) |
+| LLM integration | _(planned)_ `catalyx/data/llm_client.py` — all calls must go through this, pinned model IDs only. **Not built yet** — Phase 0.5 uses the Claude Code session directly |
+| Feedback loop / priors | `schemas/closed_thesis.json` → `CatalystSectorPrior` table _(planned)_ `store/prior_repo.py` (not built yet) |
 | Taxonomy gaps / discovery | `schemas/taxonomy_gap_proposal.json` + `data/taxonomy_proposals/*.json` |
 | DB schema / SQLAlchemy models | `catalyx/store/db.py` (Base, LLMLog) then the relevant `*_repo.py` |
 | Catalyst DB operations (read/write/query) | `catalyx/store/catalyst_repo.py` — has CLI: `python -m catalyx.store.catalyst_repo summary` |
@@ -364,18 +364,11 @@ When `sector_taxonomy.yaml` is modified (sector added, removed, or field changed
 
 ## User Catalyst Management
 
-Users rank catalysts with `user_rank` (integer, 1 = highest priority). This multiplies into `display_priority`:
+Users rank catalysts with `user_rank` (integer, 1 = highest priority). **v1.5: `user_rank` is a display ORDERING tiebreaker, not a score multiplier.**
 
-| user_rank | multiplier |
-|---|---|
-| 1 | ×1.40 |
-| 2 | ×1.20 |
-| 3 | ×1.00 (neutral) |
-| 4 | ×0.80 |
-| 5+ | ×0.60 |
-| unranked | ×1.00 |
+`display_priority = algorithmic_score` (the computed intensity). Catalysts are ranked by `algorithmic_score` descending, with `user_rank` (1 = highest) breaking ties only. This honors user preference among near-equals but never lets a weaker catalyst leapfrog a materially stronger one.
 
-`display_priority = algorithmic_score × user_rank_multiplier`
+> The old multiplicative table (`user_rank ×1.40…0.60`) is **deprecated** — kept in `scoring_weights.yaml` (`user_rank_multipliers`) for one major version per the Schema Change Protocol, but no longer applied. Config: `user_rank_ordering`.
 
 Archived catalysts are retained in DB with `status: "archived"`. History is never deleted.
 
@@ -461,7 +454,7 @@ All JSON files written to `data/` follow the schemas in `schemas/`.
 LLMs produce unstable numeric scores across sessions. A free-floating "84" from one session ≠ "84" from another. These rules enforce reproducibility.
 
 **Rule 1 — Compute intensity, never guess it.**
-`intensity.current_score` MUST be derived from indicator semaphores using the formula in `scoring_weights.yaml`. Run `/catalyx-update` after every indicator change — it recomputes intensity automatically. Only `computation_method: "bootstrap"` allows manual values, and only at file creation.
+`intensity.current_score` MUST be derived from the **continuous indicator scores** using the formula in `scoring_weights.yaml` (v1.5: `round(clamp(indicator_avg + trend_delta, 10, 95), 1)`). Each indicator is scored to a continuous [0,100] (empirical percentile of its `value_history`, or a linear interpolation between thresholds while history is thin) — **not** the old 🟢/🟡/🔴 100/65/20 buckets. The color is a display-only label derived from the score. Run `/catalyx-update` after every indicator change — it recomputes intensity automatically. Only `computation_method: "bootstrap"` allows manual values, and only at file creation.
 
 **Rule 2 — Use categories for qualitative dimensions.**
 - `narrative_maturity`: use the 5-level enum (`ignored / emerging / mainstream / crowded / exhausted`), NOT a number. See `scoring_weights.yaml` for anchored criteria with examples.
@@ -572,8 +565,8 @@ Manual reminder of what that skill does:
 
 | Date | File | Version | Change |
 |---|---|---|---|
-| 2026-06-04 | `catalyx/data/flow_data.py` | new | ETF flow data: shares_outstanding × NAV → flow_confirmation [0–100]. Baseline snapshot written. |
-| 2026-06-04 | `.claude/commands/catalyx-heatmap.md` | — | Wired to sector_scorer + momentum_engine + flow_data; 7-day study freshness gate |
-| 2026-06-04 | `.claude/commands/catalyx-thesis.md` | — | close: tax_engine + thesis_scorer replace manual computation |
-| 2026-06-04 | `catalyx/scorer/momentum_engine.py` | new | Cross-sectional percentile normalization (17 sectors from yfinance snapshot) |
-| 2026-06-04 | `catalyx/scorer/sector_scorer.py` | new | Composite formula orchestrator: calls catalyst_scorer + momentum_engine + flow_data |
+| 2026-06-04 | `intensity_engine.py` + `scoring_weights.yaml` + `structural_catalyst.json` | v1.5 | Indicator scoring: 🟢/🟡/🔴 100/65/20 buckets → continuous percentile (linear fallback). Trend & event interaction → additive points. `user_rank` → display ordering tiebreaker. Color is display-only, derived. `value_history[]` added per indicator (schema 1.2→1.3) |
+| 2026-06-04 | `catalyx/config/weights.py` | new | Single source of truth: scorers now load weights from `scoring_weights.yaml` instead of hardcoding them (drift fix) |
+| 2026-06-04 | `catalyx/scorer/catalyst_scorer.py` | v1.5 | Multi-catalyst aggregation: arithmetic mean → max-anchored noisy-OR (mean diluted strong catalysts) |
+| 2026-06-04 | `catalyx/execution/tax_engine.py` | fix | `compute_ytd_tax` loss carry-forward: excess loss now carries to later gains instead of being zeroed |
+| 2026-06-04 | `catalyx/scorer/sector_scorer.py` | fix | `--flow` default None → flow snapshot auto-loads via CLI (was dead path; `inst_sponsorship` always null) |

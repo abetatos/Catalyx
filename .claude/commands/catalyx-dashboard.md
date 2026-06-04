@@ -29,11 +29,11 @@ Generate the CATALYX Catalyst Dashboard report from current data files.
    uv run python -m catalyx.store.catalyst_repo get <id>
    ```
 
-4. Read `catalyx/config/scoring_weights.yaml` for user_rank multipliers.
+4. Read `catalyx/config/scoring_weights.yaml` for `user_rank_ordering` and `indicator_color_thresholds`.
 
 5. For each structural catalyst, compute:
-   - `display_priority = intensity.current_score × user_rank_multiplier`
-   - Indicator status per indicator: 🟢 if above `threshold_strong`, 🟡 if between thresholds, 🔴 if below `threshold_weak`. Invert logic for `lower_is_stronger` indicators.
+   - `display_priority = intensity.current_score` (v1.5: user_rank no longer multiplies — see step 7).
+   - Indicator color per indicator: read the DERIVED `semaphore` field (written by the intensity engine from the continuous `score`). Do not recompute from thresholds — the score, not the threshold bucket, is the source of truth. 🟢 if `score ≥ green`, 🟡 if `≥ amber`, else 🔴 (`indicator_color_thresholds`).
    - Trend arrow from `intensity.history`: ↑↑ (2+ periods rising), ↑ (1 period rising), → (flat), ↓ (falling)
    - Days since `status_last_reviewed` — flag if > 45 days
 
@@ -41,7 +41,7 @@ Generate the CATALYX Catalyst Dashboard report from current data files.
    - Remaining relevance using decay: `score × exp(-0.693 / halflife_days × days_since_detected)`
    - Days since `detected_at`
 
-7. Rank all catalysts by `display_priority` descending.
+7. Rank all catalysts by `display_priority` (= algorithmic score) descending, breaking ties with `user_rank` ascending (1 = highest). user_rank only reorders near-equals — it can no longer push a weaker catalyst above a materially stronger one.
 
 8. Identify alerts:
    - 🔴 Critical: any indicator below `threshold_weak`

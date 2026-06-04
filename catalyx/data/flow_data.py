@@ -20,12 +20,18 @@ Flow confirmation score [0–100]:
    < 50 = net outflow (shares redeemed)
 
 Institutional ownership (US-listed ETFs only):
-   Source: yfinance institutional_holders / major_holders (SEC 13F data, ~45-day lag).
+   Source: SEC EDGAR 13F full-text search via CUSIP (quarterly filings, ~45-day lag).
+   CUSIP derived from yfinance ISIN (US ISINs: CUSIP = ISIN[2:11]).
    UCITS ETFs (LSE, XETRA, Euronext, SIX) have no 13F equivalent → null.
 
-   inst_sponsorship_score [0–100]: inverted-U over % of float held by institutions.
-   Peaks at ~55% ownership (strong validation, not yet crowded).
-   Low at extremes: 0% = pre-institutional, >80% = crowded trade.
+   inst_13f_filer_count: number of distinct 13F-HR filings mentioning the CUSIP in
+   the last 9 months. Proxy for breadth of institutional ownership.
+
+   inst_sponsorship_score [0–100]: inverted-U over filer breadth count.
+   Anchors calibrated to observed range in this universe (0–4000+ filers):
+     Pre-institutional (<100) → low score (pre-discovery)
+     Building conviction (500–1500) → peak score (thesis validated, not yet crowded)
+     Overcrowded (3000+) → lower score (exit risk)
 
 Output: `data/snapshots/flow_snapshot_YYYYMMDD.json`
 
@@ -39,6 +45,8 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
+import urllib.request
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -46,7 +54,6 @@ import yfinance as yf
 
 _REPO_ROOT = Path(__file__).parents[2]
 _SNAPSHOTS_DIR = _REPO_ROOT / "data" / "snapshots"
-_MIN_SECTORS_FOR_PERCENTILE = 5
 
 # Mirrors market_data.py SECTOR_TICKERS — primary ETF per sector.
 # Only the tier-1 ETF is used for flow data (most liquid → cleanest flow signal).
@@ -71,55 +78,39 @@ SECTOR_TICKERS: dict[str, str] = {
 }
 
 # iShares fund IDs for the iShares API (stubbed — add as needed).
-# Key = ticker, value = iShares product page ID.
-# Example: IQQH.DE → "IQQH" on iShares EU platform.
-_ISHARES_FUND_IDS: dict[str, str] = {
-    # Populated as iShares API integration is built out.
-    # "IQQH.DE": "IQQH",
-    # "IGLN.L": "IGLN",
-}
+_ISHARES_FUND_IDS: dict[str, str] = {}
 
 # European exchange suffixes → UCITS ETFs, no SEC 13F filing.
 _UCITS_EXCHANGE_SUFFIXES = {".L", ".DE", ".PA", ".SW", ".AS", ".MI", ".MC", ".CO", ".ST"}
 
+# EDGAR EFTS 13F search window: 9 months rolling.
+_EDGAR_LOOKBACK_MONTHS = 9
+# Per-request delay to respect EDGAR fair-access policy.
+# 0.35s observed reliable; shorter causes intermittent 429/timeouts under load.
+_EDGAR_REQUEST_DELAY_S = 0.35
+_EDGAR_MAX_RETRIES = 2
+# Contact info required by SEC EDGAR User-Agent policy.
+_EDGAR_USER_AGENT = "catalyx-research/0.1 abetatos@gmail.com"
+
 
 def _is_ucits(ticker: str) -> bool:
     upper = ticker.upper()
-    return any(upper.endswith(suffix.upper()) for suffix in _UCITS_EXCHANGE_SUFFIXES)
+    return any(upper.endswith(s.upper()) for s in _UCITS_EXCHANGE_SUFFIXES)
 
 
 # ── iShares API (stubbed) ──────────────────────────────────────────────────────
 
 def _fetch_ishares(ticker: str) -> dict | None:
-    """Fetch shares_outstanding and NAV from iShares API.
-
-    Currently stubbed. Returns None until per-fund URL mapping is built.
-    When implemented, should return:
-        {"shares_outstanding": int, "nav": float, "source": "ishares_api"}
-    """
     if ticker not in _ISHARES_FUND_IDS:
         return None
     # TODO: implement iShares API call
-    # fund_id = _ISHARES_FUND_IDS[ticker]
-    # url = f"https://www.ishares.com/uk/individual/en/products/{fund_id}/fund.jsonp?..."
-    # ...
     return None
 
 
 # ── yfinance flow data ─────────────────────────────────────────────────────────
 
 def _fetch_yfinance(ticker: str, lookback_days: int = 7) -> dict | None:
-    """Fetch shares_outstanding delta over the last N days from yfinance.
-
-    yfinance ETF info contains:
-      - info['sharesOutstanding']: current shares outstanding
-      - info['previousClose']: last close price (≈ NAV for most ETFs)
-      - info['totalAssets']: total AUM (price-appreciation-inclusive, not used for flow)
-
-    Flow proxy: shares_outstanding_now - shares_outstanding_prior
-    Prior period: compare to a snapshot saved lookback_days ago (if available),
-                  otherwise use week-over-week change from history volume as proxy.
-    """
+    """Fetch shares_outstanding delta over the last N days from yfinance."""
     try:
         t = yf.Ticker(ticker)
         info = t.info
@@ -130,7 +121,6 @@ def _fetch_yfinance(ticker: str, lookback_days: int = 7) -> dict | None:
     nav_price = info.get("navPrice") or info.get("previousClose") or info.get("regularMarketPrice")
     total_assets = info.get("totalAssets")
 
-    # Derive shares from totalAssets + price if not directly available
     if shares_now is None and total_assets and nav_price:
         shares_now = int(total_assets / nav_price)
         shares_source = "derived_from_total_assets"
@@ -147,8 +137,6 @@ def _fetch_yfinance(ticker: str, lookback_days: int = 7) -> dict | None:
 
     implied_aum = (shares_now * nav_price) if shares_now else total_assets or 0.0
 
-    # Week-over-week flow: requires a prior snapshot.
-    # On first run, flow_pct_1w = None (no baseline to compare).
     prior = _load_prior_snapshot(ticker, lookback_days)
     shares_delta = None
     flow_usd = None
@@ -167,7 +155,9 @@ def _fetch_yfinance(ticker: str, lookback_days: int = 7) -> dict | None:
         "implied_aum_m_usd": round(implied_aum / 1e6, 1) if implied_aum else None,
         "shares_delta_1w": shares_delta,
         "flow_usd_1w": round(flow_usd, 0) if flow_usd is not None else None,
-        "flow_pct_1w": round(flow_usd / (implied_aum - flow_usd) * 100, 3) if flow_usd and (implied_aum - flow_usd) > 0 else None,
+        "flow_pct_1w": round(
+            flow_usd / (implied_aum - flow_usd) * 100, 3
+        ) if flow_usd and (implied_aum - flow_usd) > 0 else None,
         "source": "yfinance",
         "fetched_at": date.today().isoformat(),
     }
@@ -183,7 +173,7 @@ def _load_prior_snapshot(ticker: str, lookback_days: int) -> dict | None:
         except ValueError:
             continue
         if snap_date <= cutoff:
-            continue  # too old
+            continue
         try:
             snap = json.loads(f.read_text(encoding="utf-8"))
             etf_data = snap.get("etfs", {})
@@ -194,79 +184,91 @@ def _load_prior_snapshot(ticker: str, lookback_days: int) -> dict | None:
     return None
 
 
-# ── Institutional ownership ────────────────────────────────────────────────────
+# ── Institutional ownership via SEC EDGAR 13F ─────────────────────────────────
+
+def _cusip_from_yfinance(ticker: str) -> str | None:
+    """Derive CUSIP from yfinance ISIN. US ISIN = 'US' + 9-char CUSIP + check digit."""
+    try:
+        isin = yf.Ticker(ticker).isin
+        if isin and isin.startswith("US") and len(isin) >= 12:
+            return isin[2:11]
+    except Exception:
+        pass
+    return None
+
+
+def _edgar_13f_count(cusip: str) -> int | None:
+    """Query SEC EDGAR EFTS for 13F-HR filings mentioning this CUSIP.
+
+    Returns filing count over the last _EDGAR_LOOKBACK_MONTHS months.
+    Each unique filing ≈ one institutional holder reporting this position.
+    Requires no API key. Rate-limited to respect SEC fair-access policy.
+    """
+    today = date.today()
+    start = (today.replace(day=1) - timedelta(days=_EDGAR_LOOKBACK_MONTHS * 30)).isoformat()
+    url = (
+        f"https://efts.sec.gov/LATEST/search-index"
+        f"?q=%22{cusip}%22&forms=13F-HR"
+        f"&dateRange=custom&startdt={start}&enddt={today.isoformat()}"
+    )
+    for attempt in range(_EDGAR_MAX_RETRIES + 1):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": _EDGAR_USER_AGENT})
+            with urllib.request.urlopen(req, timeout=15) as r:
+                data = json.loads(r.read())
+            return data.get("hits", {}).get("total", {}).get("value", 0)
+        except OSError:
+            if attempt < _EDGAR_MAX_RETRIES:
+                time.sleep(_EDGAR_REQUEST_DELAY_S * (2 ** attempt))
+    return None
+
 
 def _fetch_institutional_ownership(ticker: str) -> dict:
-    """Fetch institutional ownership from yfinance (SEC 13F data, US-listed ETFs only).
+    """Fetch institutional ownership breadth from SEC EDGAR 13F (US ETFs only).
 
-    Returns null fields for UCITS ETFs — no 13F equivalent in EU.
-    Data has ~45-day reporting lag (quarterly 13F filings).
+    Pipeline: yfinance ISIN → CUSIP → EDGAR EFTS 13F search → filer count.
+    UCITS ETFs return null (no 13F equivalent in EU).
     """
+    today = date.today().isoformat()
+
     if _is_ucits(ticker):
         return {
-            "inst_pct_float": None,
-            "inst_holders_top3": None,
+            "inst_cusip": None,
+            "inst_13f_filer_count": None,
+            "inst_sponsorship_score": None,
             "inst_source": "not_available_ucits",
-            "inst_fetched_at": date.today().isoformat(),
+            "inst_fetched_at": today,
         }
 
-    try:
-        t = yf.Ticker(ticker)
-
-        # % of float held by institutions
-        pct_float: float | None = None
-        try:
-            major = t.major_holders
-            if major is not None and not major.empty:
-                for _, row in major.iterrows():
-                    desc = str(row.iloc[1]).lower() if len(row) > 1 else ""
-                    if "float" in desc and "institution" in desc:
-                        raw_val = str(row.iloc[0]).replace("%", "").strip()
-                        pct_float = float(raw_val)
-                        # yfinance sometimes returns fraction (0.32) sometimes percent (32.0)
-                        if pct_float > 1.0:
-                            pct_float /= 100.0
-                        break
-        except Exception:
-            pass
-
-        # Top 3 institutional holders
-        top3: list[dict] | None = None
-        try:
-            holders = t.institutional_holders
-            if holders is not None and not holders.empty:
-                top3 = []
-                for _, row in holders.head(3).iterrows():
-                    name = row.get("Holder", row.iloc[0] if len(row) > 0 else "Unknown")
-                    pct_out = row.get("% Out", row.get("pctOut", None))
-                    try:
-                        pct_val = float(pct_out)
-                        if pct_val > 1.0:
-                            pct_val /= 100.0
-                    except (TypeError, ValueError):
-                        pct_val = None
-                    top3.append({
-                        "name": str(name),
-                        "pct_out": round(pct_val * 100, 2) if pct_val is not None else None,
-                    })
-        except Exception:
-            pass
-
+    cusip = _cusip_from_yfinance(ticker)
+    if cusip is None:
         return {
-            "inst_pct_float": round(pct_float, 4) if pct_float is not None else None,
-            "inst_holders_top3": top3,
-            "inst_source": "yfinance_13f",
-            "inst_fetched_at": date.today().isoformat(),
+            "inst_cusip": None,
+            "inst_13f_filer_count": None,
+            "inst_sponsorship_score": None,
+            "inst_source": "error_no_cusip",
+            "inst_fetched_at": today,
         }
 
-    except Exception as exc:
+    time.sleep(_EDGAR_REQUEST_DELAY_S)
+    count = _edgar_13f_count(cusip)
+
+    if count is None:
         return {
-            "inst_pct_float": None,
-            "inst_holders_top3": None,
-            "inst_source": "error",
-            "inst_error": str(exc),
-            "inst_fetched_at": date.today().isoformat(),
+            "inst_cusip": cusip,
+            "inst_13f_filer_count": None,
+            "inst_sponsorship_score": None,
+            "inst_source": "error_edgar",
+            "inst_fetched_at": today,
         }
+
+    return {
+        "inst_cusip": cusip,
+        "inst_13f_filer_count": count,
+        "inst_sponsorship_score": _inst_sponsorship_score(count),
+        "inst_source": "edgar_13f",
+        "inst_fetched_at": today,
+    }
 
 
 # ── Scoring functions ──────────────────────────────────────────────────────────
@@ -276,57 +278,52 @@ def _flow_score(flow_pct: float | None) -> float:
 
     Anchors:
       +5% AUM inflow  → 90 (strong inflow)
-      +2% AUM inflow  → 70
-      0% (neutral)    → 50
-      -2% AUM outflow → 30
+       0% (neutral)   → 50
       -5% AUM outflow → 10 (strong outflow)
-
-    Uses a sigmoid-like linear piecewise mapping capped at [10, 90].
     """
     if flow_pct is None:
-        return 50.0  # neutral default
-    # linear: score = 50 + flow_pct × 8 (i.e. +5% → 90, -5% → 10)
+        return 50.0
     raw = 50.0 + flow_pct * 8.0
     return round(max(10.0, min(90.0, raw)), 1)
 
 
-def _inst_sponsorship_score(pct_float: float | None) -> float | None:
-    """Convert % of float held by institutions to [0-100] sponsorship score.
+def _inst_sponsorship_score(filer_count: int | None) -> float | None:
+    """Convert 13F filer breadth count to [0–100] inst_sponsorship_score.
 
-    Inverted-U peaking at ~55% ownership: institutions have validated the thesis
-    but the trade is not yet overcrowded.
+    Inverted-U: peaks at ~1000–1500 filers (institutional conviction building,
+    trade not yet overcrowded). Calibrated to this universe's observed range.
 
-    Calibrated breakpoints:
-      0%   → 30 (no institutional interest — pre-discovery)
-      15%  → 42 (early institutional interest)
-      40%  → 72 (growing conviction, strong confirmation)
-      55%  → 82 (peak: well-validated, crowding risk still low)
-      70%  → 58 (well-owned, crowding risk building)
-      80%  → 40 (crowded — risk of simultaneous exits)
-      100% → 28 (extremely crowded)
+    Anchored breakpoints:
+       0     → 22  (no institutional presence — pre-discovery)
+      100    → 40  (early institutional interest)
+      500    → 68  (growing conviction, strong confirmation)
+     1200    → 82  (peak: well-validated, crowding risk moderate)
+     2000    → 70  (well-established, crowding building)
+     3000    → 50  (crowded — large-cap ETF saturation)
+     4500+   → 35  (very crowded, exit risk elevated)
 
-    Returns None for UCITS ETFs (no data available).
+    Returns None when count is unavailable (UCITS or fetch error).
     """
-    if pct_float is None:
+    if filer_count is None:
         return None
 
     breakpoints = [
-        (0.00, 30.0),
-        (0.15, 42.0),
-        (0.40, 72.0),
-        (0.55, 82.0),
-        (0.70, 58.0),
-        (0.80, 40.0),
-        (1.00, 28.0),
+        (0,    22.0),
+        (100,  40.0),
+        (500,  68.0),
+        (1200, 82.0),
+        (2000, 70.0),
+        (3000, 50.0),
+        (4500, 35.0),
     ]
 
-    p = max(0.0, min(1.0, pct_float))
+    c = max(0, filer_count)
     for i in range(len(breakpoints) - 1):
         x0, y0 = breakpoints[i]
         x1, y1 = breakpoints[i + 1]
-        if x0 <= p <= x1:
-            t_interp = (p - x0) / (x1 - x0)
-            return round(y0 + t_interp * (y1 - y0), 1)
+        if x0 <= c <= x1:
+            t = (c - x0) / (x1 - x0)
+            return round(y0 + t * (y1 - y0), 1)
     return breakpoints[-1][1]
 
 
@@ -335,13 +332,13 @@ def _inst_sponsorship_score(pct_float: float | None) -> float | None:
 def fetch_flow_data(
     sector_tickers: dict[str, str] | None = None,
 ) -> dict:
-    """Fetch flow data + institutional ownership for all sectors.
+    """Fetch flow data + institutional ownership breadth for all sectors.
 
     Args:
         sector_tickers: {sector_id: ticker}. Defaults to SECTOR_TICKERS.
 
     Returns:
-        Snapshot dict with per-sector flow data, inst ownership, and scores.
+        Snapshot dict with per-sector flow data, inst sponsorship scores, and raw data.
     """
     tickers = sector_tickers or SECTOR_TICKERS
     today = date.today().isoformat()
@@ -349,9 +346,7 @@ def fetch_flow_data(
     sector_scores: dict[str, dict] = {}
 
     for sector_id, ticker in tickers.items():
-        # Flow data
         result = _fetch_ishares(ticker) or _fetch_yfinance(ticker)
-        # Institutional ownership (separate yfinance call — 13F data)
         inst = _fetch_institutional_ownership(ticker)
 
         if result:
@@ -359,7 +354,6 @@ def fetch_flow_data(
 
         flow_pct = result.get("flow_pct_1w") if result else None
         error = result.get("error") if result else "fetch failed"
-        inst_pct = inst.get("inst_pct_float")
 
         sector_scores[sector_id] = {
             "ticker": ticker,
@@ -368,17 +362,20 @@ def fetch_flow_data(
             "implied_aum_m_usd": result.get("implied_aum_m_usd") if result else None,
             "data_quality": "estimated" if flow_pct is None else "computed",
             "error": error if flow_pct is None else None,
-            "inst_ownership_pct": round(inst_pct * 100, 1) if inst_pct is not None else None,
-            "inst_sponsorship_score": _inst_sponsorship_score(inst_pct),
+            "inst_sponsorship_score": inst.get("inst_sponsorship_score"),
+            "inst_13f_filer_count": inst.get("inst_13f_filer_count"),
             "inst_source": inst.get("inst_source"),
-            "inst_holders_top3": inst.get("inst_holders_top3"),
         }
 
     return {
         "generated_at": today,
         "date": today,
-        "source": "yfinance",
-        "note": "flow_pct_1w requires a prior snapshot to be meaningful. First run = estimated (50). inst_ownership from 13F (~45-day lag). UCITS ETFs: inst_source=not_available_ucits.",
+        "source": "yfinance + edgar_13f",
+        "note": (
+            "flow_pct_1w requires a prior snapshot. "
+            "inst_sponsorship_score from EDGAR 13F CUSIP search (~9-month window, ~45-day lag). "
+            "UCITS ETFs: inst_source=not_available_ucits."
+        ),
         "sector_scores": sector_scores,
         "etfs": etf_results,
     }
@@ -395,20 +392,17 @@ def write_snapshot(snapshot: dict) -> Path:
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def main() -> None:
+    """CLI entry point for flow + institutional ownership snapshot."""
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
     parser = argparse.ArgumentParser(
-        description="CATALYX flow data — ETF shares_outstanding × NAV + institutional ownership"
+        description="CATALYX flow data — ETF shares_outstanding × NAV + EDGAR 13F institutional breadth"
     )
-    parser.add_argument(
-        "--tickers", nargs="+", default=None,
-        help="Specific tickers to fetch (overrides SECTOR_TICKERS list)."
-    )
-    parser.add_argument(
-        "--write", action="store_true",
-        help="Write snapshot to data/snapshots/flow_snapshot_YYYYMMDD.json."
-    )
+    parser.add_argument("--tickers", nargs="+", default=None,
+                        help="Specific tickers to fetch.")
+    parser.add_argument("--write", action="store_true",
+                        help="Write snapshot to data/snapshots/flow_snapshot_YYYYMMDD.json.")
     parser.add_argument("--json", action="store_true", help="Output raw JSON only.")
     args = parser.parse_args()
 
@@ -416,7 +410,7 @@ def main() -> None:
     if args.tickers:
         sector_tickers = {t: t for t in args.tickers}
 
-    print("Fetching ETF flow + institutional ownership data...", file=sys.stderr)
+    print("Fetching ETF flow + institutional ownership (EDGAR 13F)...", file=sys.stderr)
     snapshot = fetch_flow_data(sector_tickers=sector_tickers)
 
     if args.write:
@@ -427,31 +421,35 @@ def main() -> None:
         print(json.dumps(snapshot, indent=2, ensure_ascii=False))
         return
 
-    print(f"\nCATALYX — ETF Flow + Institutional Data  [{snapshot['date']}]\n")
-    print(f"  {'sector_id':<45} {'flow_conf':>9}  {'flow_%':>8}  {'inst_spons':>10}  {'inst_%':>7}  {'aum_m':>9}")
-    print(f"  {'-'*45} {'-'*9}  {'-'*8}  {'-'*10}  {'-'*7}  {'-'*9}")
+    print(f"\nCATALYX — ETF Flow + Institutional Sponsorship  [{snapshot['date']}]\n")
+    print(
+        f"  {'sector_id':<42} {'ticker':<10} {'flow_conf':>9}  "
+        f"{'inst_score':>10}  {'13f_filers':>10}  {'aum_m':>8}"
+    )
+    print(f"  {'-'*42} {'-'*10} {'-'*9}  {'-'*10}  {'-'*10}  {'-'*8}")
 
-    for sid, s in sorted(snapshot["sector_scores"].items(), key=lambda x: x[1].get("inst_sponsorship_score") or 0, reverse=True):
-        flow_str = f"{s['flow_pct_1w']:+.2f}%" if s["flow_pct_1w"] is not None else "    n/a"
+    for sid, s in sorted(
+        snapshot["sector_scores"].items(),
+        key=lambda x: x[1].get("inst_sponsorship_score") or -1,
+        reverse=True,
+    ):
         inst_score = s.get("inst_sponsorship_score")
-        inst_pct = s.get("inst_ownership_pct")
-        inst_str = f"{inst_score:.1f}" if inst_score is not None else "n/a (UCITS)"
-        inst_pct_str = f"{inst_pct:.1f}%" if inst_pct is not None else "n/a"
-        aum_str = f"{s['implied_aum_m_usd']:.0f}" if s["implied_aum_m_usd"] else "n/a"
+        filer_count = s.get("inst_13f_filer_count")
+        inst_src = s.get("inst_source", "")
+        if inst_score is not None:
+            inst_str = f"{inst_score:>10.1f}"
+        elif inst_src == "not_available_ucits":
+            inst_str = "  n/a(UCIT)"
+        else:
+            inst_str = f"  err({inst_src[:4]})" if inst_src else "       n/a"
+        filer_str = f"{filer_count:>10d}" if filer_count is not None else "       n/a"
+        aum_str = f"{s['implied_aum_m_usd']:>8.0f}" if s["implied_aum_m_usd"] else "     n/a"
         print(
-            f"  {sid:<45} {s['flow_confirmation']:>9.1f}  {flow_str:>8}  {inst_str:>10}  {inst_pct_str:>7}  {aum_str:>9}"
+            f"  {sid:<42} {s['ticker']:<10} {s['flow_confirmation']:>9.1f}  "
+            f"{inst_str}  {filer_str}  {aum_str}"
         )
 
-    print(f"\n  Note: {snapshot['note']}")
-    print("\n  Top institutional holders (US ETFs only):")
-    for sid, s in snapshot["sector_scores"].items():
-        top3 = s.get("inst_holders_top3")
-        if top3:
-            holders_str = ", ".join(
-                f"{h['name']} ({h['pct_out']}%)" if h.get("pct_out") else h["name"]
-                for h in top3
-            )
-            print(f"    {sid}: {holders_str}")
+    print(f"\n  {snapshot['note']}")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "catalyx/schemas/structural_catalyst.json",
-  "schema_version": "1.2",
+  "schema_version": "1.3",
   "title": "StructuralCatalyst",
   "description": "A secular, ongoing macro trend (not a discrete event). Validated by persistent indicators, not a single headline. Decays slowly over months/years.",
   "type": "object",
@@ -12,7 +12,7 @@
       "pattern": "^struct_[a-z0-9_]+$",
       "description": "Format: struct_keyword_keyword. Human-readable slug."
     },
-    "schema_version": { "type": "string", "const": "1.2" },
+    "schema_version": { "type": "string", "const": "1.3" },
     "type": { "type": "string", "const": "structural" },
     "title": { "type": "string" },
     "description": {
@@ -63,7 +63,7 @@
     "user_rank": {
       "type": ["integer", "null"],
       "minimum": 1,
-      "description": "User-assigned priority. 1=highest conviction. null=unranked (multiplier 1.0)."
+      "description": "User-assigned priority. 1=highest conviction. null=unranked. v1.5: used as a display ORDERING tiebreaker (see scoring_weights.yaml user_rank_ordering), not a score multiplier."
     },
     "user_notes": { "type": "string" },
     "intensity": {
@@ -74,7 +74,7 @@
           "type": "number",
           "minimum": 10,
           "maximum": 95,
-          "description": "COMPUTED from indicator semaphores. Formula in scoring_weights.yaml: round(indicator_avg × trend_factor, 1). Do NOT assign manually after initial bootstrap. Run /catalyx-update to recompute after any indicator change."
+          "description": "COMPUTED from the continuous indicator scores. Formula in scoring_weights.yaml (v1.5): round(clamp(indicator_avg + trend_delta, 10, 95), 1). Do NOT assign manually after initial bootstrap. Run /catalyx-update to recompute after any indicator change."
         },
         "computation_method": {
           "type": "string",
@@ -130,10 +130,37 @@
             "enum": ["higher_is_stronger", "lower_is_stronger"],
             "description": "Which direction of this indicator confirms the structural trend."
           },
-          "threshold_strong": { "type": "number", "description": "Value above/below which trend is confirmed as strong." },
-          "threshold_weak": { "type": "number", "description": "Value above/below which trend is considered weakening." },
+          "threshold_strong": { "type": "number", "description": "Value above/below which trend is confirmed as strong. Maps to the linear-fallback 'strong' anchor (100)." },
+          "threshold_weak": { "type": "number", "description": "Value above/below which trend is considered weakening. Maps to the linear-fallback 'weak' anchor (50)." },
           "last_value": { "type": ["number", "null"] },
-          "last_date": { "type": ["string", "null"], "format": "date" }
+          "last_date": { "type": ["string", "null"], "format": "date" },
+          "indicator_weight": {
+            "type": ["number", "null"],
+            "description": "Optional weight for this indicator in the intensity average. null = equal weight."
+          },
+          "value_history": {
+            "type": "array",
+            "description": "Past observations of this indicator (excluding current_value), used for the empirical-percentile score once >= min_history_points accrue (scoring_weights.yaml indicator_scoring). The update skill appends a new entry on each observed value.",
+            "items": {
+              "type": "object",
+              "required": ["value"],
+              "properties": {
+                "value": { "type": "number" },
+                "date": { "type": "string", "format": "date" }
+              }
+            }
+          },
+          "score": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "maximum": 100,
+            "description": "DERIVED — continuous [0,100] indicator score written by intensity_engine (percentile or linear fallback). Do not set manually."
+          },
+          "semaphore": {
+            "type": "string",
+            "description": "DERIVED display-only color (🟢/🟡/🔴) computed from `score` via indicator_color_thresholds. v1.5: no longer drives the math."
+          },
+          "update_note": { "type": "string" }
         }
       }
     },

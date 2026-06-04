@@ -1,8 +1,8 @@
 {
   "generated_at": "2026-06-04",
   "date": "2026-06-04",
-  "source": "yfinance",
-  "note": "flow_pct_1w requires a prior snapshot to be meaningful. First run = estimated (50).",
+  "source": "yfinance + edgar_13f",
+  "note": "flow_pct_1w requires a prior snapshot. inst_sponsorship_score from EDGAR 13F CUSIP search (~9-month window, ~45-day lag). UCITS ETFs: inst_source=not_available_ucits.",
   "sector_scores": {
     "grid_infrastructure_utilities": {
       "ticker": "IQQH.DE",
@@ -10,7 +10,10 @@
       "flow_pct_1w": null,
       "implied_aum_m_usd": 4387.3,
       "data_quality": "estimated",
-      "error": null
+      "error": null,
+      "inst_sponsorship_score": null,
+      "inst_13f_filer_count": null,
+      "inst_source": "not_available_ucits"
     },
     "copper_miners": {
       "ticker": "COPX",
@@ -18,7 +21,10 @@
       "flow_pct_1w": null,
       "implied_aum_m_usd": 7991.8,
       "data_quality": "estimated",
-      "error": null
+      "error": null,
+      "inst_sponsorship_score": 78.2,
+      "inst_13f_filer_count": 1008,
+      "inst_source": "edgar_13f"
     },
     "eu_defense_prime_contractors": {
       "ticker": "EUDF.L",
@@ -26,7 +32,10 @@
       "flow_pct_1w": null,
       "implied_aum_m_usd": 4556.4,
       "data_quality": "estimated",
-      "error": null
+      "error": null,
+      "inst_sponsorship_score": null,
+      "inst_13f_filer_count": null,
+      "inst_source": "not_available_ucits"
     },
     "ai_infrastructure_data_centers": {
       "ticker": "SRVR",
@@ -34,7 +43,10 @@
       "flow_pct_1w": null,
       "implied_aum_m_usd": 407.4,
       "data_quality": "estimated",
-      "error": null
+      "error": null,
+      "inst_sponsorship_score": 57.7,
+      "inst_13f_filer_count": 353,
+      "inst_source": "edgar_13f"
     },
     "semiconductors_design": {
       "ticker": "SEMI.L",
@@ -42,7 +54,10 @@
       "flow_pct_1w": null,
       "implied_aum_m_usd": 3554.9,
       "data_quality": "estimated",
-      "error": null
+      "error": null,
+      "inst_sponsorship_score": null,
+      "inst_13f_filer_count": null,
+      "inst_source": "not_available_ucits"
     },
     "gold_physical": {
       "ticker": "IGLN.L",
@@ -50,7 +65,10 @@
       "flow_pct_1w": null,
       "implied_aum_m_usd": null,
       "data_quality": "estimated",
-      "error": null
+      "error": null,
+      "inst_sponsorship_score": null,
+      "inst_13f_filer_count": null,
+      "inst_source": "not_available_ucits"
     },
     "gold_miners": {
       "ticker": "GDX",
@@ -58,7 +76,10 @@
       "flow_pct_1w": null,
       "implied_aum_m_usd": 27132.4,
       "data_quality": "estimated",
-      "error": null
+      "error": null,
+      "inst_sponsorship_score": 43.5,
+      "inst_13f_filer_count": 3654,
+      "inst_source": "edgar_13f"
     },
     "nuclear_energy": {
       "ticker": "NLR",
@@ -66,7 +87,10 @@
       "flow_pct_1w": null,
       "implied_aum_m_usd": 4874.4,
       "data_quality": "estimated",
-      "error": null
+      "error": null,
+      "inst_sponsorship_score": 79.4,
+      "inst_13f_filer_count": 1373,
+      "inst_source": "edgar_13f"
     },
     "uranium_miners": {
       "ticker": "URNM",
@@ -74,7 +98,10 @@
       "flow_pct_1w": null,
       "implied_aum_m_usd": 2210.1,
       "data_quality": "estimated",
-      "error": null
+      "error": null,
+      "inst_sponsorship_score": 72.2,
+      "inst_13f_filer_count": 708,
+      "inst_source": "edgar_13f"
     },
     "silver_physical": {
       "ticker": "PHAG.L",
@@ -82,7 +109,10 @@
       "flow_pct_1w": null,
       "implied_aum_m_usd": null,
       "data_quality": "estimated",
-      "error": null
+      "error": null,
+      "inst_sponsorship_score": null,
+      "inst_13f_filer_count": null,
+      "inst_source": "not_available_ucits"
     },
     "us_defense_prime_contractors": {
       "ticker": "ITA",
@@ -90,7 +120,10 @@
       "flow_pct_1w": null,
       "implied_aum_m_usd": 14330.8,
       "data_quality": "estimated",
-      "error": null
+      "error": null,
+      "inst_sponsorship_score": 49.5,
+      "inst_13f_filer_count": 3047,
+      "inst_source": "edgar_13f"
     },
     "cybersecurity_defense": {
       "ticker": "CIBR",
@@ -98,7 +131,10 @@
       "flow_pct_1w": null,
       "implied_aum_m_usd": 13681.3,
       "data_quality": "estimated",
-      "error": null
+      "error": null,
+      "inst_sponsorship_score": 62.5,
+      "inst_13f_filer_count": 2377,
+      "inst_source": "edgar_13f"
     },
     "rare_earth_miners": {
       "ticker": "REMX",
@@ -106,7 +142,10 @@
       "flow_pct_1w": null,
       "implied_aum_m_usd": 3011.7,
       "data_quality": "estimated",
-      "error": null
+      "error": null,
+      "inst_sponsorship_score": 72.9,
+      "inst_13f_filer_count": 744,
+      "inst_source": "edgar_13f"
     },
     "lithium_miners": {
       "ticker": "LIT",
@@ -114,7 +153,10 @@
       "flow_pct_1w": null,
       "implied_aum_m_usd": 2238.5,
       "data_quality": "estimated",
-      "error": null
+      "error": null,
+      "inst_sponsorship_score": 75.8,
+      "inst_13f_filer_count": 892,
+      "inst_source": "edgar_13f"
     },
     "solar_energy": {
       "ticker": "TAN",
@@ -122,7 +164,10 @@
       "flow_pct_1w": null,
       "implied_aum_m_usd": 2292.3,
       "data_quality": "estimated",
-      "error": null
+      "error": null,
+      "inst_sponsorship_score": 72.6,
+      "inst_13f_filer_count": 731,
+      "inst_source": "edgar_13f"
     },
     "wind_energy_offshore": {
       "ticker": "WNDY",
@@ -130,7 +175,10 @@
       "flow_pct_1w": null,
       "implied_aum_m_usd": 1.7,
       "data_quality": "estimated",
-      "error": null
+      "error": null,
+      "inst_sponsorship_score": 22.0,
+      "inst_13f_filer_count": 0,
+      "inst_source": "edgar_13f"
     },
     "silver_miners": {
       "ticker": "SIL",
@@ -138,7 +186,10 @@
       "flow_pct_1w": null,
       "implied_aum_m_usd": 5223.3,
       "data_quality": "estimated",
-      "error": null
+      "error": null,
+      "inst_sponsorship_score": 77.2,
+      "inst_13f_filer_count": 959,
+      "inst_source": "edgar_13f"
     }
   },
   "etfs": {
@@ -148,11 +199,16 @@
       "shares_source": "derived_from_total_assets",
       "nav_price": 11.49,
       "implied_aum_m_usd": 4387.3,
-      "shares_delta_1w": null,
-      "flow_usd_1w": null,
+      "shares_delta_1w": 0,
+      "flow_usd_1w": 0.0,
       "flow_pct_1w": null,
       "source": "yfinance",
-      "fetched_at": "2026-06-04"
+      "fetched_at": "2026-06-04",
+      "inst_cusip": null,
+      "inst_13f_filer_count": null,
+      "inst_sponsorship_score": null,
+      "inst_source": "not_available_ucits",
+      "inst_fetched_at": "2026-06-04"
     },
     "COPX": {
       "ticker": "COPX",
@@ -160,11 +216,16 @@
       "shares_source": "derived_from_total_assets",
       "nav_price": 91.05,
       "implied_aum_m_usd": 7991.8,
-      "shares_delta_1w": null,
-      "flow_usd_1w": null,
+      "shares_delta_1w": 0,
+      "flow_usd_1w": 0.0,
       "flow_pct_1w": null,
       "source": "yfinance",
-      "fetched_at": "2026-06-04"
+      "fetched_at": "2026-06-04",
+      "inst_cusip": "37954Y830",
+      "inst_13f_filer_count": 1008,
+      "inst_sponsorship_score": 78.2,
+      "inst_source": "edgar_13f",
+      "inst_fetched_at": "2026-06-04"
     },
     "EUDF.L": {
       "ticker": "EUDF.L",
@@ -172,11 +233,16 @@
       "shares_source": "derived_from_total_assets",
       "nav_price": 30.3816,
       "implied_aum_m_usd": 4556.4,
-      "shares_delta_1w": null,
-      "flow_usd_1w": null,
+      "shares_delta_1w": 0,
+      "flow_usd_1w": 0.0,
       "flow_pct_1w": null,
       "source": "yfinance",
-      "fetched_at": "2026-06-04"
+      "fetched_at": "2026-06-04",
+      "inst_cusip": null,
+      "inst_13f_filer_count": null,
+      "inst_sponsorship_score": null,
+      "inst_source": "not_available_ucits",
+      "inst_fetched_at": "2026-06-04"
     },
     "SRVR": {
       "ticker": "SRVR",
@@ -184,23 +250,33 @@
       "shares_source": "derived_from_total_assets",
       "nav_price": 34.0858,
       "implied_aum_m_usd": 407.4,
-      "shares_delta_1w": null,
-      "flow_usd_1w": null,
+      "shares_delta_1w": 0,
+      "flow_usd_1w": 0.0,
       "flow_pct_1w": null,
       "source": "yfinance",
-      "fetched_at": "2026-06-04"
+      "fetched_at": "2026-06-04",
+      "inst_cusip": "69374H741",
+      "inst_13f_filer_count": 353,
+      "inst_sponsorship_score": 57.7,
+      "inst_source": "edgar_13f",
+      "inst_fetched_at": "2026-06-04"
     },
     "SEMI.L": {
       "ticker": "SEMI.L",
-      "shares_outstanding": 160227095,
+      "shares_outstanding": 157519938,
       "shares_source": "derived_from_total_assets",
-      "nav_price": 22.1865,
+      "nav_price": 22.5678,
       "implied_aum_m_usd": 3554.9,
-      "shares_delta_1w": null,
-      "flow_usd_1w": null,
+      "shares_delta_1w": 0,
+      "flow_usd_1w": 0.0,
       "flow_pct_1w": null,
       "source": "yfinance",
-      "fetched_at": "2026-06-04"
+      "fetched_at": "2026-06-04",
+      "inst_cusip": null,
+      "inst_13f_filer_count": null,
+      "inst_sponsorship_score": null,
+      "inst_source": "not_available_ucits",
+      "inst_fetched_at": "2026-06-04"
     },
     "IGLN.L": {
       "ticker": "IGLN.L",
@@ -212,7 +288,12 @@
       "flow_usd_1w": null,
       "flow_pct_1w": null,
       "source": "yfinance",
-      "fetched_at": "2026-06-04"
+      "fetched_at": "2026-06-04",
+      "inst_cusip": null,
+      "inst_13f_filer_count": null,
+      "inst_sponsorship_score": null,
+      "inst_source": "not_available_ucits",
+      "inst_fetched_at": "2026-06-04"
     },
     "GDX": {
       "ticker": "GDX",
@@ -220,11 +301,16 @@
       "shares_source": "derived_from_total_assets",
       "nav_price": 85.18,
       "implied_aum_m_usd": 27132.4,
-      "shares_delta_1w": null,
-      "flow_usd_1w": null,
+      "shares_delta_1w": 0,
+      "flow_usd_1w": 0.0,
       "flow_pct_1w": null,
       "source": "yfinance",
-      "fetched_at": "2026-06-04"
+      "fetched_at": "2026-06-04",
+      "inst_cusip": "92189F106",
+      "inst_13f_filer_count": 3654,
+      "inst_sponsorship_score": 43.5,
+      "inst_source": "edgar_13f",
+      "inst_fetched_at": "2026-06-04"
     },
     "NLR": {
       "ticker": "NLR",
@@ -232,11 +318,16 @@
       "shares_source": "derived_from_total_assets",
       "nav_price": 132.31,
       "implied_aum_m_usd": 4874.4,
-      "shares_delta_1w": null,
-      "flow_usd_1w": null,
+      "shares_delta_1w": 0,
+      "flow_usd_1w": 0.0,
       "flow_pct_1w": null,
       "source": "yfinance",
-      "fetched_at": "2026-06-04"
+      "fetched_at": "2026-06-04",
+      "inst_cusip": "92189F601",
+      "inst_13f_filer_count": 1373,
+      "inst_sponsorship_score": 79.4,
+      "inst_source": "edgar_13f",
+      "inst_fetched_at": "2026-06-04"
     },
     "URNM": {
       "ticker": "URNM",
@@ -244,11 +335,16 @@
       "shares_source": "derived_from_total_assets",
       "nav_price": 62.22,
       "implied_aum_m_usd": 2210.1,
-      "shares_delta_1w": null,
-      "flow_usd_1w": null,
+      "shares_delta_1w": 0,
+      "flow_usd_1w": 0.0,
       "flow_pct_1w": null,
       "source": "yfinance",
-      "fetched_at": "2026-06-04"
+      "fetched_at": "2026-06-04",
+      "inst_cusip": "85208P303",
+      "inst_13f_filer_count": 708,
+      "inst_sponsorship_score": 72.2,
+      "inst_source": "edgar_13f",
+      "inst_fetched_at": "2026-06-04"
     },
     "PHAG.L": {
       "ticker": "PHAG.L",
@@ -260,7 +356,12 @@
       "flow_usd_1w": null,
       "flow_pct_1w": null,
       "source": "yfinance",
-      "fetched_at": "2026-06-04"
+      "fetched_at": "2026-06-04",
+      "inst_cusip": null,
+      "inst_13f_filer_count": null,
+      "inst_sponsorship_score": null,
+      "inst_source": "not_available_ucits",
+      "inst_fetched_at": "2026-06-04"
     },
     "ITA": {
       "ticker": "ITA",
@@ -268,11 +369,16 @@
       "shares_source": "derived_from_total_assets",
       "nav_price": 224.8306,
       "implied_aum_m_usd": 14330.8,
-      "shares_delta_1w": null,
-      "flow_usd_1w": null,
+      "shares_delta_1w": 0,
+      "flow_usd_1w": 0.0,
       "flow_pct_1w": null,
       "source": "yfinance",
-      "fetched_at": "2026-06-04"
+      "fetched_at": "2026-06-04",
+      "inst_cusip": "464288760",
+      "inst_13f_filer_count": 3047,
+      "inst_sponsorship_score": 49.5,
+      "inst_source": "edgar_13f",
+      "inst_fetched_at": "2026-06-04"
     },
     "CIBR": {
       "ticker": "CIBR",
@@ -280,11 +386,16 @@
       "shares_source": "derived_from_total_assets",
       "nav_price": 91.63,
       "implied_aum_m_usd": 13681.3,
-      "shares_delta_1w": null,
-      "flow_usd_1w": null,
+      "shares_delta_1w": 0,
+      "flow_usd_1w": 0.0,
       "flow_pct_1w": null,
       "source": "yfinance",
-      "fetched_at": "2026-06-04"
+      "fetched_at": "2026-06-04",
+      "inst_cusip": "33734X846",
+      "inst_13f_filer_count": 2377,
+      "inst_sponsorship_score": 62.5,
+      "inst_source": "edgar_13f",
+      "inst_fetched_at": "2026-06-04"
     },
     "REMX": {
       "ticker": "REMX",
@@ -292,11 +403,16 @@
       "shares_source": "derived_from_total_assets",
       "nav_price": 98.59,
       "implied_aum_m_usd": 3011.7,
-      "shares_delta_1w": null,
-      "flow_usd_1w": null,
+      "shares_delta_1w": 0,
+      "flow_usd_1w": 0.0,
       "flow_pct_1w": null,
       "source": "yfinance",
-      "fetched_at": "2026-06-04"
+      "fetched_at": "2026-06-04",
+      "inst_cusip": "92189H805",
+      "inst_13f_filer_count": 744,
+      "inst_sponsorship_score": 72.9,
+      "inst_source": "edgar_13f",
+      "inst_fetched_at": "2026-06-04"
     },
     "LIT": {
       "ticker": "LIT",
@@ -304,11 +420,16 @@
       "shares_source": "derived_from_total_assets",
       "nav_price": 85.39,
       "implied_aum_m_usd": 2238.5,
-      "shares_delta_1w": null,
-      "flow_usd_1w": null,
+      "shares_delta_1w": 0,
+      "flow_usd_1w": 0.0,
       "flow_pct_1w": null,
       "source": "yfinance",
-      "fetched_at": "2026-06-04"
+      "fetched_at": "2026-06-04",
+      "inst_cusip": "37954Y855",
+      "inst_13f_filer_count": 892,
+      "inst_sponsorship_score": 75.8,
+      "inst_source": "edgar_13f",
+      "inst_fetched_at": "2026-06-04"
     },
     "TAN": {
       "ticker": "TAN",
@@ -316,11 +437,16 @@
       "shares_source": "derived_from_total_assets",
       "nav_price": 70.48,
       "implied_aum_m_usd": 2292.3,
-      "shares_delta_1w": null,
-      "flow_usd_1w": null,
+      "shares_delta_1w": 0,
+      "flow_usd_1w": 0.0,
       "flow_pct_1w": null,
       "source": "yfinance",
-      "fetched_at": "2026-06-04"
+      "fetched_at": "2026-06-04",
+      "inst_cusip": "46138G706",
+      "inst_13f_filer_count": 731,
+      "inst_sponsorship_score": 72.6,
+      "inst_source": "edgar_13f",
+      "inst_fetched_at": "2026-06-04"
     },
     "WNDY": {
       "ticker": "WNDY",
@@ -328,11 +454,16 @@
       "shares_source": "derived_from_total_assets",
       "nav_price": 12.34,
       "implied_aum_m_usd": 1.7,
-      "shares_delta_1w": null,
-      "flow_usd_1w": null,
+      "shares_delta_1w": 0,
+      "flow_usd_1w": 0.0,
       "flow_pct_1w": null,
       "source": "yfinance",
-      "fetched_at": "2026-06-04"
+      "fetched_at": "2026-06-04",
+      "inst_cusip": "37960A800",
+      "inst_13f_filer_count": 0,
+      "inst_sponsorship_score": 22.0,
+      "inst_source": "edgar_13f",
+      "inst_fetched_at": "2026-06-04"
     },
     "SIL": {
       "ticker": "SIL",
@@ -340,11 +471,16 @@
       "shares_source": "derived_from_total_assets",
       "nav_price": 87.9,
       "implied_aum_m_usd": 5223.3,
-      "shares_delta_1w": null,
-      "flow_usd_1w": null,
+      "shares_delta_1w": 0,
+      "flow_usd_1w": 0.0,
       "flow_pct_1w": null,
       "source": "yfinance",
-      "fetched_at": "2026-06-04"
+      "fetched_at": "2026-06-04",
+      "inst_cusip": "37954Y848",
+      "inst_13f_filer_count": 959,
+      "inst_sponsorship_score": 77.2,
+      "inst_source": "edgar_13f",
+      "inst_fetched_at": "2026-06-04"
     }
   }
 }

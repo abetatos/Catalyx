@@ -147,7 +147,7 @@ def compute_ytd_tax(realised_gains: list[float]) -> dict:
         Dict with total_tax, net_gains, effective_rate, and per_trade breakdown.
     """
     ytd_positive = 0.0
-    ytd_loss_carry = 0.0  # losses not yet offset (carry into next positive gain)
+    ytd_loss_carry = 0.0  # losses not yet offset (carry into subsequent positive gains)
     total_tax = 0.0
     per_trade: list[dict] = []
 
@@ -158,17 +158,24 @@ def compute_ytd_tax(realised_gains: list[float]) -> dict:
                 "index": i,
                 "pnl": round(pnl, 2),
                 "loss_carried": round(abs(pnl), 2),
+                "loss_carry_balance": round(ytd_loss_carry, 2),
                 "tax_due": 0.0,
             })
         else:
             result = compute_tax(gross_gain=pnl, ytd_prior=ytd_positive, losses=ytd_loss_carry)
+            # Only the portion of the loss carry actually absorbed by this gain is
+            # consumed; any excess loss carries forward to later gains. Previously the
+            # full carry was zeroed after one gain, silently discarding unused losses.
+            loss_used = round(pnl - result.taxable_gain, 2)  # = min(ytd_loss_carry, pnl)
+            ytd_loss_carry = round(ytd_loss_carry - loss_used, 2)
             ytd_positive += result.taxable_gain
-            ytd_loss_carry = 0.0
             total_tax += result.tax_due
             per_trade.append({
                 "index": i,
                 "pnl": round(pnl, 2),
                 "taxable": result.taxable_gain,
+                "loss_offset_used": loss_used,
+                "loss_carry_balance": round(ytd_loss_carry, 2),
                 "ytd_prior": result.ytd_prior,
                 "tax_due": result.tax_due,
                 "effective_rate_pct": round(result.effective_rate * 100, 2),

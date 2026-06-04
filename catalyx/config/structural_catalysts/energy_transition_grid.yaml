@@ -1,9 +1,9 @@
 # StructuralCatalyst: Energy Transition Grid Infrastructure Bottleneck
-# schema_version: "1.2"
+# schema_version: "1.3"
 
 id: struct_energy_transition_grid
 type: structural
-schema_version: "1.2"
+schema_version: "1.3"
 title: "Grid infrastructure as the binding constraint of energy transition"
 description: >
   The energy transition (renewables, EVs, heat pumps) and the AI buildout are colliding
@@ -31,7 +31,7 @@ user_notes: "Less crowded than pure AI play. Copper miners is the physical commo
   infrastructure expression."
 
 intensity:
-  current_score: 95
+  current_score: 95.0
   last_updated: "2026-06-04"
   history:
   - period: 2026-Q2
@@ -60,6 +60,10 @@ indicators:
   last_date: "2026-03-01"
 
   semaphore: 🟢
+  value_history:
+  - date: "2026-03-01"
+    value: 22
+  score: 100.0
 - id: ind_02
   name: "EU grid investment announced (€B, rolling 12M)"
   source: "ENTSO-E + EC energy reports"
@@ -73,6 +77,10 @@ indicators:
   last_date: "2026-03-01"
 
   semaphore: 🟢
+  value_history:
+  - date: "2026-03-01"
+    value: 88
+  score: 100.0
 - id: ind_03
   name: "Copper price trend (spot, USD/tonne)"
   source: "LME spot price"
@@ -88,6 +96,10 @@ indicators:
     level. Copper well above threshold_strong ($9,000). 2026 YTD average ~$12,841."
 
   semaphore: 🟢
+  value_history:
+  - date: "2026-06-02"
+    value: 12742
+  score: 100.0
 deactivation_conditions:
 - id: deact_01
   condition: "Grid connection queue clears materially (lead times drop below 6 months for 2 consecutive quarters)."

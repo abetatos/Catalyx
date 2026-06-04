@@ -1,5 +1,10 @@
-# CATALYX Scoring Weights — v1.4
+# CATALYX Scoring Weights — v1.5
 # Defines how dimension scores combine into composite_score for SectorSnapshot.
+#
+# v1.5: indicator scoring is CONTINUOUS (percentile + linear fallback, replacing the
+# 🟢/🟡/🔴 semaphore buckets); trend and event-interaction adjustments are ADDITIVE
+# points (not multipliers); colors are display-only, derived from the score; user_rank
+# is a display ORDERING tiebreaker (no longer a score multiplier).
 #
 # composite = Σ(dimension_score × weight)
 # Note: crowding_risk is INVERTED before weighting (high crowding → low score contribution)
@@ -13,7 +18,8 @@
 # numbers by LLM judgment alone.
 #
 # Rule 1 — Compute, don't guess:
-#   intensity.current_score MUST be derived from indicator semaphores (see below).
+#   intensity.current_score MUST be derived from the continuous indicator scores
+#   (percentile/linear, see below) — never assigned by LLM judgment.
 #   Direct LLM assignment only allowed for catalyst creation (bootstrap value).
 #   First update after creation must use the computed formula.
 #
@@ -53,52 +59,91 @@ event_catalyst_decay:
   # Override per catalyst_type defined in catalyst_taxonomy.yaml
 
 # ─────────────────────────────────────────────────────────────────────────────
-# STRUCTURAL CATALYST INTENSITY — ALGORITHMIC DERIVATION (v1.2)
+# STRUCTURAL CATALYST INTENSITY — ALGORITHMIC DERIVATION (v1.5)
 # ─────────────────────────────────────────────────────────────────────────────
 #
-# intensity.current_score = round(indicator_avg × trend_factor, 1)
+# intensity.current_score = round(clamp(indicator_avg + trend_delta, 10, 95), 1)
 #
-# Step 1 — Score each indicator semaphore:
-#   higher_is_stronger:  🟢 (value >= threshold_strong) = 100
-#                        🟡 (threshold_weak <= value < threshold_strong) = 65
-#                        🔴 (value < threshold_weak) = 20
-#   lower_is_stronger:   🟢 (value <= threshold_strong) = 100
-#                        🟡 (threshold_strong < value <= threshold_weak) = 65
-#                        🔴 (value > threshold_weak) = 20
+# v1.5 change — CONTINUOUS indicator scoring replaces the 🟢/🟡/🔴 semaphore buckets,
+# and the trend factor becomes an ADDITIVE delta instead of a multiplier.
+# ─────────────────────────────────────────────────────────────────────────────
+# Why: the old semaphore mapped every indicator to one of three values (100/65/20).
+# That created a CLIFF — a value just below threshold_strong scored 65, and a tiny
+# move across the threshold jumped it to 100 (a 35-point discontinuity). The
+# 100/65/20 anchors were arbitrary and the gaps asymmetric (45 vs 35). Chained
+# multipliers (×trend) compounded into an uninterpretable, uncalibratable number.
 #
-# Step 2 — indicator_avg = mean of all indicator_scores (equal weight)
+# Step 1 — Score each indicator to a CONTINUOUS [0, 100] (see `indicator_scoring`):
+#   method = percentile_with_linear_fallback
+#     • If the indicator has >= min_history_points values (value_history + current),
+#       score = empirical percentile of current_value within its own history.
+#       For lower_is_stronger, invert: score = (1 - percentile) × 100.
+#     • Otherwise (cold start), linear interpolation anchored on the thresholds:
+#       weak → 50, strong → 100, same slope extrapolated, clamp to [0, 100].
+#   The 🟢/🟡/🔴 color is now DERIVED from this score (indicator_color_thresholds)
+#   and is display-only — it no longer drives the arithmetic.
+#
+# Step 2 — indicator_avg = weighted mean of indicator scores
 #   Override weights available via indicator_weight field (default: null = equal)
 #
-# Step 3 — Trend factor from intensity.history (last 2 periods):
-#   ↑↑ (rising 2+ consecutive periods): 1.05
-#   ↑  (rising 1 period):               1.02
-#   →  (flat, ≤2 point change):         1.00
-#   ↓  (falling 1 period):              0.97
-#   ↓↓ (falling 2+ consecutive):        0.93
+# Step 3 — Trend DELTA (additive) from intensity.history (last 2-3 periods):
+#   ↑↑ (rising 2+ consecutive periods): +5
+#   ↑  (rising 1 period):               +2
+#   →  (flat, ≤2 point change):          0
+#   ↓  (falling 1 period):              -3
+#   ↓↓ (falling 2+ consecutive):        -7
 #
-# Step 4 — Cap result at [10, 95]. Never 0 (deactivated catalysts use status field).
+# Step 4 — Clamp result to [10, 95]. Never 0 (deactivated catalysts use status field).
 #
-# Example: struct_cb_gold_accumulation
-#   ind_01: 🟢=100, ind_02: 🟡=65, ind_03: 🟢=100 → avg=88.3
-#   history: 79→84 (1 period rising) → trend_factor=1.02
-#   intensity = round(88.3 × 1.02, 1) = 90.1
-#   (vs manual assignment of 84 — the algorithmic version detects the upward trend)
+# Example: struct_cb_gold_accumulation, ind_02 COFER (strong=0.58, weak=0.62,
+#   lower_is_stronger, value=0.582). Old semaphore: 🟡 = 65 (cliff — 95% of the way
+#   to green scored the same as a mid-range value). New linear fallback:
+#   frac = (0.62 - 0.582)/(0.62 - 0.58) = 0.95 → score = 50 + 0.95×50 = 97.5 → 🟢.
 
+# CONTINUOUS indicator scoring (v1.5)
+indicator_scoring:
+  method: percentile_with_linear_fallback
+  min_history_points: 6        # need >= this many values before empirical percentile is used
+  percentile_method: mean      # rank with ties: (n_below + 0.5·n_equal) / n
+  linear_anchors:              # cold-start fallback: map thresholds to these scores
+    weak: 50
+    strong: 100
+  clamp: [0, 100]              # per-indicator score bounds
+
+# Display-only color, DERIVED from the continuous indicator score (v1.5).
+# Replaces the old indicator_semaphore_scores math. Colors no longer affect numbers.
+indicator_color_thresholds:
+  green: 80     # score >= 80 → 🟢
+  amber: 50     # 50 <= score < 80 → 🟡 ; score < 50 → 🔴
+
+# Additive trend adjustment in score-space (v1.5). Replaces intensity_trend_factors.
+intensity_trend_deltas:
+  rising_2plus: 5     # ↑↑
+  rising_1: 2         # ↑
+  flat: 0             # →
+  falling_1: -3       # ↓
+  falling_2plus: -7   # ↓↓
+
+intensity_bounds:
+  min: 10   # Active catalysts never score 0 — use status: weakening/deactivated
+  max: 95   # Reserve 96-100 for exceptional, user-overridden conviction
+
+# DEPRECATED (v1.5) — kept one major version per Schema Change Protocol. Not read by
+# intensity_engine anymore; indicator scoring is continuous (see indicator_scoring).
 indicator_semaphore_scores:
-  green: 100    # above threshold_strong (or below, for lower_is_stronger)
-  yellow: 65    # between thresholds
-  red: 20       # below threshold_weak (or above, for lower_is_stronger)
+  deprecated: true
+  green: 100    # was: above threshold_strong (or below, for lower_is_stronger)
+  yellow: 65    # was: between thresholds
+  red: 20       # was: below threshold_weak (or above, for lower_is_stronger)
 
+# DEPRECATED (v1.5) — superseded by intensity_trend_deltas (additive). Not read.
 intensity_trend_factors:
+  deprecated: true
   rising_2plus: 1.05    # ↑↑
   rising_1: 1.02        # ↑
   flat: 1.00            # →
   falling_1: 0.97       # ↓
   falling_2plus: 0.93   # ↓↓
-
-intensity_bounds:
-  min: 10   # Active catalysts never score 0 — use status: weakening/deactivated
-  max: 95   # Reserve 96-100 for exceptional, user-overridden conviction
 
 # ─────────────────────────────────────────────────────────────────────────────
 # NARRATIVE MATURITY — Categorical scale (replaces analyst_narrative_score 0-100)
@@ -197,112 +242,132 @@ novelty_score_rubric:
     example_no: "Widely telegraphed FOMC decision"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# STRUCTURAL ↔ EVENT INTERACTION (v1.2 — TEST 8 resolution)
+# STRUCTURAL ↔ EVENT INTERACTION (v1.5 — additive)
 # ─────────────────────────────────────────────────────────────────────────────
 #
-# The additive formula (structural × 0.45 + event × 0.55) treats confirmation
-# and contradiction as identical. This is wrong. Use this interaction model:
+# The plain additive blend (structural × 0.45 + event × 0.55) treats confirmation
+# and contradiction as identical. That is wrong. We model the interaction by
+# relation_to_structural — but as ADDITIVE point adjustments, not multipliers, so
+# the effect is interpretable ("+10 points at full strength") and does not compound.
 #
 # relation_to_structural values (stored in catalyst_event.json):
-#   "confirms"    → amplification: structural × confirmation_amplifier
-#   "contradicts" → dampening: structural × contradiction_dampener
-#   "independent" → additive (existing formula applies)
+#   "confirms"    → boost the structural by up to confirm_max_points
+#   "contradicts" → penalise the structural by up to contradict_max_points
+#   "independent" → weighted blend (structural × 0.45 + event × 0.55) — unchanged
 #
-# Formula by relation type:
-#   confirms:    catalyst_alignment = structural × confirmation_amplifier
-#                (event does not ADD independently — it boosts the structural)
-#   contradicts: catalyst_alignment = structural × contradiction_dampener
-#                (event doesn't SUBTRACT — it reduces the structural intensity)
-#   independent: catalyst_alignment = structural × 0.45 + event_score × 0.55
-#                (existing formula — event provides genuinely new information)
+# Each adjustment scales with the (decayed) event strength: full points at
+# strength=100, zero at strength=0. See the CONFIRMS / CONTRADICTION blocks below.
 
+catalyst_interaction_deltas:
+  confirm_max_points: 10     # max points ADDED to structural at event_strength=100
+  contradict_max_points: 15  # max points SUBTRACTED from structural at event_strength=100
+
+# DEPRECATED (v1.5) — multiplicative factors, replaced by catalyst_interaction_deltas.
+# Kept one major version per Schema Change Protocol. Still exposed by weights.py
+# (confirmation_amplifier()/contradiction_dampener()) for backward compatibility,
+# but catalyst_scorer.py no longer uses them.
 catalyst_interaction_factors:
-  confirmation_amplifier: 1.12   # Max amplifier when event strength = 100
-  contradiction_dampener: 0.82   # -18% to structural when event contradicts it
+  deprecated: true
+  confirmation_amplifier: 1.12   # was: max amplifier when event strength = 100
+  contradiction_dampener: 0.82   # was: -18% to structural when event contradicts it
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CONFIRMS AMPLIFIER FORMULA — v1.3 FIX
+# MULTI-CATALYST AGGREGATION — v1.5 FIX
 # ─────────────────────────────────────────────────────────────────────────────
 #
-# Bug in v1.2: the amplifier was flat (+12%) regardless of event strength.
-# A rumor (strength 10) and an official announcement (strength 91) produced identical
-# amplification. This is wrong.
+# A sector may have several active structural catalysts. The sector-level
+# catalyst_alignment combines their (event-modified) scores.
 #
-# Fix: scale the amplifier by event strength, floor at structural baseline.
+# Bug in ≤v1.4: arithmetic mean. Adding a weaker catalyst DILUTED a strong one,
+# so a sector with three strong catalysts could score the same as — or lower than —
+# one with a single equally-strong catalyst. This contradicts the design intent
+# that more confirming catalysts = stronger signal.
 #
-# Step 1 — compute effective amplifier:
-#   amplifier_effective = 1.0 + (confirmation_amplifier - 1.0) × (event_strength / 100)
-#   Example: event_strength=91 → amplifier_effective = 1.0 + 0.12 × 0.91 = 1.109
-#   Example: event_strength=20 → amplifier_effective = 1.0 + 0.12 × 0.20 = 1.024
+# Fix: max-anchored noisy-OR. The strongest catalyst sets the floor; each
+# additional catalyst closes part of the remaining gap to 100, scaled by its own
+# strength and by reinforce_factor:
+#   combined = max(scores)
+#   for s in sorted(scores, desc)[1:]:
+#       combined += (100 - combined) × (s / 100) × reinforce_factor
+#   catalyst_alignment = min(100, combined)
 #
-# Step 2 — apply amplifier and enforce floor + cap:
-#   raw = structural × amplifier_effective
-#   case_c = structural × 0.45 + event_strength × 0.55   (independent/additive formula)
+# Monotonic (adding any catalyst never lowers the score) and bounded [max, 100].
+# reinforce_factor = 0.0 → only the strongest catalyst counts; 1.0 → full noisy-OR.
+#
+# Example: three catalysts at 95 → 95 → 96.2 → 97.1 (vs mean = 95.0).
+multi_catalyst_aggregation:
+  reinforce_factor: 0.25
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONFIRMS FORMULA — v1.5 (additive)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# A confirming event ADDS points to the structural score, scaled by the event's
+# (decayed) strength, with the same floor/cap guards as before.
+#
+# Step 1 — decay the event strength:
+#   decayed = event_strength × remaining_relevance(t)
+#   remaining_relevance(t) = exp(-0.693 / halflife_days × days_since_detected)
+#
+# Step 2 — additive boost:
+#   boost = confirm_max_points × (decayed / 100)        # 10 pts at decayed=100
+#   raw = structural + boost
+#   case_c = structural × 0.45 + decayed × 0.55          # independent/blend formula
 #   catalyst_alignment = max(structural, min(raw, case_c))
 #
-# Floor (max(structural, ...)): a confirming event, however weak, can never REDUCE the
-#   score below what the structural catalyst would produce alone.
+# Floor (max(structural, ...)): a confirming event, however weak, can never REDUCE
+#   the score below what the structural catalyst produces alone.
 # Cap (min(raw, case_c)): a confirming event can never outscore an equally-strong
 #   independent signal — preserves the ordering confirms ≤ independent.
 #
-# Example: struct_nato_rearmament (88) + confirming event (strength 91, halflife 90d)
-#   amplifier_effective = 1.109
-#   raw = 88 × 1.109 = 97.6
-#   case_c = 88 × 0.45 + 91 × 0.55 = 39.6 + 50.1 = 89.7
-#   result = max(88, min(97.6, 89.7)) = max(88, 89.7) = 89.7
+# Example: struct_nato_rearmament (88) + confirming event (decayed 91)
+#   boost = 10 × 0.91 = 9.1 → raw = 97.1
+#   case_c = 88 × 0.45 + 91 × 0.55 = 89.7
+#   result = max(88, min(97.1, 89.7)) = 89.7
 #
-# Example: weak confirming event (strength 10)
-#   amplifier_effective = 1.012
-#   raw = 88 × 1.012 = 89.1
-#   case_c = 88 × 0.45 + 10 × 0.55 = 39.6 + 5.5 = 45.1
-#   result = max(88, min(89.1, 45.1)) = max(88, 45.1) = 88  ← structural baseline preserved
-#
-# DECAY: as the confirming event decays, recompute event_strength with decay applied first,
-# then use the formula above. The structural signal is preserved; only the confirmation
-# premium decays with the event.
-# remaining_relevance(t) = exp(-0.693 / halflife_days × days_since_detected)
-# event_strength_decayed(t) = event_strength × remaining_relevance(t)
+# Example: weak confirming event (decayed 10)
+#   boost = 10 × 0.10 = 1.0 → raw = 89.0
+#   case_c = 88 × 0.45 + 10 × 0.55 = 45.1
+#   result = max(88, min(89.0, 45.1)) = 88  ← structural baseline preserved
 #
 # ─────────────────────────────────────────────────────────────────────────────
-# CONTRADICTION DAMPENER FORMULA — v1.4 FIX
+# CONTRADICTION FORMULA — v1.5 (additive)
 # ─────────────────────────────────────────────────────────────────────────────
 #
-# Bug in v1.2/v1.3: the dampener was flat (-18%) regardless of event strength.
-# A rumor (strength 10) and an official policy reversal (strength 91) produced
-# identical dampening. The same asymmetry that was fixed for confirms in v1.3
-# was left unfixed for contradicts.
+# A contradicting event SUBTRACTS points from the structural score, scaled by the
+# event's (decayed) strength.
 #
-# Fix: scale the dampener by effective event strength, matching the confirms logic.
-#
-# Step 1 — apply decay to event strength:
-#   effective_event_strength = event_strength × remaining_relevance(t)
-#   remaining_relevance(t) = exp(-0.693 / halflife_days × days_since_detected)
-#
-# Step 2 — compute scaled dampener:
-#   dampener_effective = 1.0 - (1.0 - contradiction_dampener) × (effective_event_strength / 100)
-#   = 1.0 - 0.18 × (effective_event_strength / 100)
-#   Example: event_strength=91, remaining_relevance=1.0 → dampener_effective = 0.836
-#   Example: event_strength=20, remaining_relevance=1.0 → dampener_effective = 0.964
-#   Example: event_strength=10, remaining_relevance=0.5 → dampener_effective = 0.991
-#   At event_strength=0 (fully decayed): dampener_effective = 1.0 (no dampening)
-#
-# Step 3 — apply and enforce cap:
-#   raw = structural × dampener_effective
+# Step 1 — decay the event strength (as above).
+# Step 2 — additive penalty:
+#   penalty = contradict_max_points × (decayed / 100)    # 15 pts at decayed=100
+#   raw = structural - penalty
 #   catalyst_alignment = max(0, min(raw, structural))
 #   Cap (min(raw, structural)): a contradicting event can only reduce the structural,
-#   never increase it. This guards against floating point edge cases at strength ≈ 0.
+#   never increase it. Floor at 0.
 #
-# Why this matters: a strength-10 contradicting event now produces <2% dampening
-# instead of 18%. Only strong contradictory evidence (strength ≥ 60) causes >10%
-# dampening. This prevents soft rumors from materially suppressing structural signals.
+# Why additive points (vs the old ×0.82 dampener): the effect is interpretable and
+# does not scale with the structural level. A strength-10 contradicting event now
+# removes ~1.5 points; only strong contradictory evidence materially suppresses the
+# signal — soft rumors no longer dominate.
 #
 # Independent formula is unchanged:
-#   independent: catalyst_alignment = structural × 0.45 + event_strength × 0.55
+#   independent: catalyst_alignment = structural × 0.45 + decayed × 0.55
 
 # ─────────────────────────────────────────────────────────────────────────────
 
-# user_rank multipliers (applied to display_priority, not algorithmic score)
+# user_rank → DISPLAY ORDERING (v1.5). user_rank no longer multiplies the score.
+# display_priority = algorithmic_score (intensity.current_score). Catalysts are
+# ranked by algorithmic_score descending, with user_rank (1 = highest) as the
+# TIE-BREAKER only. This stops a user-preferred-but-weaker catalyst from leapfrogging
+# a materially stronger one, while still honoring user preference among near-equals.
+user_rank_ordering:
+  primary: algorithmic_score_desc
+  tiebreak: user_rank_asc   # lower user_rank wins ties (1 = highest priority)
+
+# DEPRECATED (v1.5) — replaced by user_rank_ordering. Kept one major version per
+# Schema Change Protocol. No longer applied to display_priority.
 user_rank_multipliers:
+  deprecated: true
   1: 1.40
   2: 1.20
   3: 1.00

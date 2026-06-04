@@ -1,10 +1,19 @@
 """Deterministic intensity scorer for StructuralCatalyst objects.
 
-Formula (scoring_weights.yaml §STRUCTURAL CATALYST INTENSITY):
-  1. Semaphore score per indicator: green=100, yellow=65, red=20
+Formula (scoring_weights.yaml §STRUCTURAL CATALYST INTENSITY, v1.5):
+  1. CONTINUOUS score per indicator in [0, 100] (no more 🟢/🟡/🔴 buckets):
+       method = percentile_with_linear_fallback
+       • >= min_history_points values → empirical percentile of current_value
+         within the indicator's own value_history (+ current). lower_is_stronger
+         inverts: score = (1 - pct) × 100.
+       • otherwise (cold start) → linear interpolation anchored on the thresholds
+         (weak → 50, strong → 100), same slope extrapolated, clamped.
+     The 🟢/🟡/🔴 color is now DERIVED from this score and is display-only.
   2. indicator_avg = weighted mean (equal weight unless indicator_weight set)
-  3. trend_factor from intensity.history last 2 periods
-  4. score = round(indicator_avg × trend_factor, 1), capped to [10, 95]
+  3. trend_delta (ADDITIVE points) from intensity.history last 2-3 periods
+  4. score = round(clamp(indicator_avg + trend_delta, min, max), 1)
+
+All constants come from scoring_weights.yaml via catalyx.config.weights.
 
 Usage (callable from skills via Bash):
     uv run python -m catalyx.scorer.intensity_engine <path/to/catalyst.yaml>
@@ -14,8 +23,10 @@ Usage (callable from skills via Bash):
 Write-back behaviour:
   - Updates intensity.current_score and intensity.last_updated in the YAML
   - Prepends a new entry to intensity.history (computation_method: "computed")
-  - Writes updated semaphore fields on each indicator
-  - Does NOT change indicator current_value — that is the user/update-skill's job
+  - Writes the derived color to indicator.semaphore and the continuous score to
+    indicator.score
+  - Does NOT change indicator current_value or value_history — those are the
+    user/update-skill's job (the update skill appends each new observation)
 
 Output: JSON with computed_score, stored_score, delta, and per-indicator breakdown.
 """
@@ -29,73 +40,132 @@ from pathlib import Path
 
 import yaml
 
-# ── Constants from scoring_weights.yaml ───────────────────────────────────────
+from catalyx.config import weights
 
-SEMAPHORE_SCORES: dict[str, int] = {"🟢": 100, "🟡": 65, "🔴": 20}
+# ── Config from scoring_weights.yaml (via weights.py — single source of truth) ──
 
-TREND_FACTORS: dict[str, float] = {
-    "rising_2plus": 1.05,
-    "rising_1":     1.02,
-    "flat":         1.00,
-    "falling_1":    0.97,
-    "falling_2plus": 0.93,
-}
+_SCORING = weights.indicator_scoring()
+_MIN_HISTORY_POINTS = int(_SCORING["min_history_points"])
+_ANCHOR_WEAK = float(_SCORING["linear_anchors"]["weak"])
+_ANCHOR_STRONG = float(_SCORING["linear_anchors"]["strong"])
+_IND_CLAMP_LO, _IND_CLAMP_HI = (float(x) for x in _SCORING["clamp"])
 
-INTENSITY_MIN = 10
-INTENSITY_MAX = 95
+_COLOR_GREEN, _COLOR_AMBER = weights.indicator_color_thresholds()
+_TREND_DELTAS = weights.intensity_trend_deltas()
+_INTENSITY_MIN, _INTENSITY_MAX = weights.intensity_bounds()
 
 _CATALYSTS_DIR = Path(__file__).parents[1] / "config" / "structural_catalysts"
 
 
-# ── Core logic ─────────────────────────────────────────────────────────────────
+# ── Continuous indicator scoring ─────────────────────────────────────────────
 
-def _semaphore(ind: dict) -> str:
-    """Compute semaphore from thresholds. Ignores any stored semaphore field."""
-    val = ind.get("current_value")
-    if val is None:
-        return "🔴"
-    strong = ind["threshold_strong"]
-    weak = ind["threshold_weak"]
-
-    if ind["direction"] == "higher_is_stronger":
-        if val >= strong:
-            return "🟢"
-        if val >= weak:
-            return "🟡"
-        return "🔴"
-    else:  # lower_is_stronger
-        if val <= strong:
-            return "🟢"
-        if val <= weak:
-            return "🟡"
-        return "🔴"
+def _clamp(value: float, lo: float, hi: float) -> float:
+    return max(lo, min(hi, value))
 
 
-def _trend_factor(history: list[dict]) -> tuple[float, str]:
-    """Return (factor, label) from the two most-recent history entries.
+def _indicator_values(ind: dict) -> list[float]:
+    """All numeric observations for an indicator: value_history + current_value.
+
+    value_history entries are {date, value}; order does not matter for percentile.
+    The current value is always included so the percentile reflects where today sits.
+    """
+    values: list[float] = []
+    for entry in ind.get("value_history") or []:
+        v = entry.get("value") if isinstance(entry, dict) else entry
+        if isinstance(v, (int, float)):
+            values.append(float(v))
+    cur = ind.get("current_value")
+    if isinstance(cur, (int, float)):
+        values.append(float(cur))
+    return values
+
+
+def _percentile_score(value: float, sample: list[float], direction: str) -> float:
+    """Empirical percentile of `value` within `sample` (the 'mean' rank method),
+    mapped to [0, 100]. lower_is_stronger inverts the result."""
+    n = len(sample)
+    n_below = sum(1 for s in sample if s < value)
+    n_equal = sum(1 for s in sample if s == value)
+    pct = (n_below + 0.5 * n_equal) / n * 100.0
+    if direction == "lower_is_stronger":
+        pct = 100.0 - pct
+    return pct
+
+
+def _linear_score(value: float, ind: dict) -> float:
+    """Cold-start fallback: linear interpolation anchored on the thresholds
+    (weak → _ANCHOR_WEAK, strong → _ANCHOR_STRONG), same slope extrapolated.
+
+    The signed (strong - weak) difference makes this work for both directions:
+    for lower_is_stronger, threshold_strong < threshold_weak, so the slope flips.
+    """
+    strong = float(ind["threshold_strong"])
+    weak = float(ind["threshold_weak"])
+    if strong == weak:
+        # Degenerate thresholds — fall back to a direction-aware step.
+        meets = value <= strong if ind["direction"] == "lower_is_stronger" else value >= strong
+        return _ANCHOR_STRONG if meets else _ANCHOR_WEAK
+    slope = (_ANCHOR_STRONG - _ANCHOR_WEAK) / (strong - weak)
+    return _ANCHOR_WEAK + (value - weak) * slope
+
+
+def _indicator_score(ind: dict) -> float:
+    """Continuous [0, 100] score for one indicator. Percentile when enough history
+    exists, else linear fallback. No data → clamp floor."""
+    cur = ind.get("current_value")
+    if not isinstance(cur, (int, float)):
+        return _IND_CLAMP_LO
+
+    sample = _indicator_values(ind)
+    if len(sample) >= _MIN_HISTORY_POINTS:
+        raw = _percentile_score(float(cur), sample, ind["direction"])
+    else:
+        raw = _linear_score(float(cur), ind)
+    return round(_clamp(raw, _IND_CLAMP_LO, _IND_CLAMP_HI), 1)
+
+
+def _color(score: float) -> str:
+    """Display-only color derived from a continuous score."""
+    if score >= _COLOR_GREEN:
+        return "🟢"
+    if score >= _COLOR_AMBER:
+        return "🟡"
+    return "🔴"
+
+
+def _scoring_mode(ind: dict) -> str:
+    return "percentile" if len(_indicator_values(ind)) >= _MIN_HISTORY_POINTS else "linear"
+
+
+# ── Trend (additive delta) ───────────────────────────────────────────────────
+
+def _trend_delta(history: list[dict]) -> tuple[float, str]:
+    """Return (additive_points, label) from the two most-recent history entries.
 
     History is expected most-recent-first (as written in YAML files).
     Consecutive = both the most-recent AND the prior period moved in the same direction.
     """
     scores = [h["score"] for h in history if isinstance(h.get("score"), (int, float))]
     if len(scores) < 2:
-        return TREND_FACTORS["flat"], "→ (flat — insufficient history)"
+        return float(_TREND_DELTAS["flat"]), "→ (flat — insufficient history)"
 
     d1 = scores[0] - scores[1]  # most-recent period delta
 
     if len(scores) >= 3:
         d2 = scores[1] - scores[2]  # prior period delta
         if d1 > 2 and d2 > 2:
-            return TREND_FACTORS["rising_2plus"], "↑↑ (rising 2+ consecutive)"
+            return float(_TREND_DELTAS["rising_2plus"]), "↑↑ (rising 2+ consecutive)"
         if d1 < -2 and d2 < -2:
-            return TREND_FACTORS["falling_2plus"], "↓↓ (falling 2+ consecutive)"
+            return float(_TREND_DELTAS["falling_2plus"]), "↓↓ (falling 2+ consecutive)"
 
     if d1 > 2:
-        return TREND_FACTORS["rising_1"], "↑ (rising 1 period)"
+        return float(_TREND_DELTAS["rising_1"]), "↑ (rising 1 period)"
     if d1 < -2:
-        return TREND_FACTORS["falling_1"], "↓ (falling 1 period)"
-    return TREND_FACTORS["flat"], "→ (flat)"
+        return float(_TREND_DELTAS["falling_1"]), "↓ (falling 1 period)"
+    return float(_TREND_DELTAS["flat"]), "→ (flat)"
 
+
+# ── Core logic ───────────────────────────────────────────────────────────────
 
 def compute_intensity(catalyst: dict) -> dict:
     """Compute intensity score for a parsed StructuralCatalyst dict.
@@ -113,12 +183,12 @@ def compute_intensity(catalyst: dict) -> dict:
     scores_weighted: list[tuple[float, float]] = []  # (score, weight)
 
     for ind in indicators:
-        sem = _semaphore(ind)
-        score = SEMAPHORE_SCORES[sem]
+        score = _indicator_score(ind)
+        color = _color(score)
         weight = float(ind.get("indicator_weight") or 1.0)
         scores_weighted.append((score, weight))
 
-        stored_sem = ind.get("semaphore", "")
+        stored_color = ind.get("semaphore", "")
         breakdown.append({
             "id": ind["id"],
             "name": ind.get("name", ""),
@@ -127,10 +197,12 @@ def compute_intensity(catalyst: dict) -> dict:
             "direction": ind["direction"],
             "threshold_strong": ind["threshold_strong"],
             "threshold_weak": ind["threshold_weak"],
-            "semaphore_computed": sem,
-            "semaphore_stored": stored_sem,
-            "semaphore_drift": sem != stored_sem and bool(stored_sem),
-            "score": score,
+            "scoring_mode": _scoring_mode(ind),
+            "history_points": len(_indicator_values(ind)),
+            "indicator_score": score,
+            "color_computed": color,
+            "color_stored": stored_color,
+            "color_drift": color != stored_color and bool(stored_color),
             "weight": weight,
         })
 
@@ -138,10 +210,10 @@ def compute_intensity(catalyst: dict) -> dict:
     indicator_avg = sum(s * w for s, w in scores_weighted) / total_weight
 
     history = catalyst.get("intensity", {}).get("history", [])
-    trend_factor, trend_label = _trend_factor(history)
+    trend_delta, trend_label = _trend_delta(history)
 
-    raw = indicator_avg * trend_factor
-    computed_score = round(max(INTENSITY_MIN, min(INTENSITY_MAX, raw)), 1)
+    raw = indicator_avg + trend_delta
+    computed_score = round(_clamp(raw, _INTENSITY_MIN, _INTENSITY_MAX), 1)
 
     stored = catalyst.get("intensity", {}).get("current_score")
     delta = round(computed_score - stored, 1) if stored is not None else None
@@ -152,7 +224,7 @@ def compute_intensity(catalyst: dict) -> dict:
         "stored_score": stored,
         "delta": delta,
         "indicator_avg": round(indicator_avg, 2),
-        "trend_factor": trend_factor,
+        "trend_delta": trend_delta,
         "trend_label": trend_label,
         "capped": raw != computed_score,
         "breakdown": breakdown,
@@ -183,8 +255,9 @@ def write_back(path: Path, result: dict, period: str | None = None) -> None:
     Updates:
       - intensity.current_score, computation_method, last_updated
       - intensity.history — prepends new entry (skips if same period+score already logged)
-      - indicators[*].semaphore — set to computed value
-      Does NOT touch indicator current_value.
+      - indicators[*].semaphore — set to the derived display color
+      - indicators[*].score — set to the continuous indicator score
+      Does NOT touch indicator current_value or value_history.
     """
     from ruamel.yaml import YAML as RuamelYAML
     from ruamel.yaml.comments import CommentedMap
@@ -225,10 +298,12 @@ def write_back(path: Path, result: dict, period: str | None = None) -> None:
         })
         history.insert(0, new_entry)
 
-    sem_map = {b["id"]: b["semaphore_computed"] for b in breakdown}
+    by_id = {b["id"]: b for b in breakdown}
     for ind in catalyst.get("indicators", []):
-        if ind["id"] in sem_map:
-            ind["semaphore"] = sem_map[ind["id"]]
+        b = by_id.get(ind["id"])
+        if b is not None:
+            ind["semaphore"] = b["color_computed"]
+            ind["score"] = b["indicator_score"]
 
     with path.open("w", encoding="utf-8") as fh:
         ry.dump(catalyst, fh)
@@ -241,12 +316,12 @@ def _format_result(r: dict) -> str:
     if "error" in r:
         return f"  {r['id']}: ERROR — {r['error']}"
     delta_str = f"  Δ={r['delta']:+.1f}" if r["delta"] is not None else ""
-    drift = [b for b in r.get("breakdown", []) if b.get("semaphore_drift")]
-    drift_str = f"  ⚠ semaphore drift: {[b['id'] for b in drift]}" if drift else ""
+    drift = [b for b in r.get("breakdown", []) if b.get("color_drift")]
+    drift_str = f"  ⚠ color drift: {[b['id'] for b in drift]}" if drift else ""
     return (
         f"  {r['id']}: computed={r['computed_score']}  "
         f"stored={r['stored_score']}{delta_str}  "
-        f"avg={r['indicator_avg']}  trend={r['trend_label']}{drift_str}"
+        f"avg={r['indicator_avg']}  trend={r['trend_label']} ({r['trend_delta']:+g}){drift_str}"
     )
 
 
@@ -256,7 +331,7 @@ def main() -> None:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
     parser = argparse.ArgumentParser(
-        description="CATALYX intensity engine — compute structural catalyst scores from indicator semaphores"
+        description="CATALYX intensity engine — compute structural catalyst scores from continuous indicator scores"
     )
     parser.add_argument(
         "yaml_file", nargs="?", type=Path,
@@ -302,11 +377,11 @@ def main() -> None:
         print(_format_result(r))
         if "breakdown" in r:
             for b in r["breakdown"]:
-                drift_flag = " ⚠ DRIFT" if b.get("semaphore_drift") else ""
+                drift_flag = " ⚠ DRIFT" if b.get("color_drift") else ""
                 print(
-                    f"    {b['id']}: {b['semaphore_computed']} "
-                    f"score={b['score']}  val={b['current_value']} {b['unit']}"
-                    f"{drift_flag}"
+                    f"    {b['id']}: {b['color_computed']} "
+                    f"score={b['indicator_score']}  val={b['current_value']} {b['unit']}"
+                    f"  [{b['scoring_mode']}, n={b['history_points']}]{drift_flag}"
                 )
         print()
 

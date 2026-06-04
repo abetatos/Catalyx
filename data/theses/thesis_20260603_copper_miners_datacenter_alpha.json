@@ -2,10 +2,10 @@
   "$schema": "catalyx/schemas/thesis.json",
   "id": "thesis_20260603_copper_miners_datacenter_alpha",
   "schema_version": "1.2",
-  "version": 2,
+  "version": 3,
   "created_at": "2026-06-03T21:00:00Z",
-  "last_modified_at": "2026-06-03T23:59:00Z",
-  "status": "draft",
+  "last_modified_at": "2026-06-04T12:30:00Z",
+  "status": "open",
 
   "catalyst": {
     "catalyst_event_id": "struct_copper_datacenter_demand",
@@ -21,12 +21,12 @@
   },
 
   "vehicle": {
-    "primary_etf": "COPX.L",
+    "primary_etf": "4COP",
     "currency": "USD",
     "currency_hedge": false,
-    "currency_risk_note": "COPX.L is USD-denominated on LSE. EUR/USD currently ~1.14. Copper is priced in USD — a strengthening USD partially offsets EUR/USD depreciation risk. Not hedging: the thesis catalyst (US AI capex) is USD-bullish, creating a natural partial hedge. If EUR/USD falls significantly, P&L suffers in EUR terms independently of copper performance.",
-    "alternative_etfs": ["COPX", "COPA.L"],
-    "vehicle_selection_rationale": "CHANGED v2 2026-06-03: Primary vehicle changed from COPX (NYSE, not UCITS) to COPX.L (LSE, UCITS). Rationale: Spanish investor requires PRIIP-compliant product; COPX access via Spanish broker is not guaranteed. COPX.L: $380M AUM, 16bps spread, same underlying exposure as COPX. For positions <€150k the 16bps spread is immaterial. If position grows above €150k, review liquidity. COPX (NYSE) remains the alternative if UCITS access is not a constraint and broker has US ETF access — better liquidity ($2.1B AUM, 8bps). COPA.L is explicitly NOT the preferred vehicle: it tracks copper spot 1:1 (synthetic swap) and misses the equity re-rating that is the core alpha of this thesis."
+    "currency_risk_note": "4COP es la versión XETRA del Global X Copper Miners UCITS ETF (mismo ISIN IE0003Z9E2Y3 que COPX.L). Fondo denominado en USD, listado en XETRA. EUR/USD ~1.14. Copper cotiza en USD — un USD fuerte compensa parcialmente la depreciación EUR/USD. No se cubre: el catalizador (AI capex US) es USD-bullish, creando una cobertura natural parcial.",
+    "alternative_etfs": ["COPX.L", "COPX"],
+    "vehicle_selection_rationale": "CHANGED v3 2026-06-04: Vehículo actualizado de COPX.L (LSE) a 4COP (XETRA). Mismo fondo, mismo ISIN IE0003Z9E2Y3, misma exposición subyacente. Diferencia clave: 4COP es ACUMULATIVO (dividendos reinvertidos) vs distributing — fiscalmente mejor para inversor español al no generar rentas del capital anuales. AUM €1.1B (dato actualizado vs $380M previo — el fondo ha crecido). TER 0.55%. Disponible en Revolut. COPA.L sigue excluida: replica cobre spot 1:1 (swap sintético) y no captura la re-rating de equity que es el alpha del thesis."
   },
 
   "entry": {
@@ -35,6 +35,9 @@
     "entry_price_limit": 73.50,
     "entry_price_limit_note": "UPDATED 2026-06-04 from live yfinance data. COPX.L current price: $70.12. Entry limit set at $73.50 (+5% above current = allows entry on breakout but not chasing a gap). COPX at $90.25 for reference (non-UCITS). The 1M acceleration (+14.2%) and supply shock catalyst (Grasberg force majeure) create a valid breakout entry. Rule: do not enter if COPX.L has gapped above $75 without a pullback — wait for consolidation.",
     "entry_window_closes": "2026-07-15",
+    "entry_executed_at": "2026-06-04",
+    "entry_price_actual_note": "Ejecutado vía Revolut en 4COP (XETRA). Confirmar precio exacto de ejecución con broker. Referencia: COPX.L a $70.12 en snapshot 2026-06-04; equivalente 4COP ~€61.50 al cambio EUR/USD 1.14.",
+    "amount_invested_eur": 1000,
     "sizing_method": "conviction_tier",
     "conviction_tier": 2,
     "position_size_pct_portfolio": 0.06,

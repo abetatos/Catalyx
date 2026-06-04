@@ -27,12 +27,16 @@ import json
 import sys
 from pathlib import Path
 
+from catalyx.config import weights
+
 _REPO_ROOT = Path(__file__).parents[2]
 _SNAPSHOTS_DIR = _REPO_ROOT / "data" / "snapshots"
 
-_WEIGHT_1M = 0.20
-_WEIGHT_3M = 0.45
-_WEIGHT_6M = 0.35
+# Period weights — single source of truth: scoring_weights.yaml §momentum_period_weights
+_MPW = weights.momentum_period_weights()
+_WEIGHT_1M = _MPW["return_1m"]
+_WEIGHT_3M = _MPW["return_3m"]
+_WEIGHT_6M = _MPW["return_6m"]
 
 _MIN_SECTORS_FOR_PERCENTILE = 5
 
