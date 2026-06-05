@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CATALYX — Dashboard</title>
+  <style>
+    :root { --bg:#0d1117; --panel:#161b22; --border:#30363d; --fg:#e6edf3; --muted:#8b949e;
+            --accent:#58a6ff; --green:#3fb950; --red:#f85149; --amber:#d29922; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--fg);
+           font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+    header { padding:18px 24px; border-bottom:1px solid var(--border); display:flex;
+             align-items:baseline; gap:14px; }
+    header h1 { font-size:18px; margin:0; letter-spacing:.5px; }
+    header .sub { color:var(--muted); font-size:12px; }
+    #status { margin-left:auto; font-size:12px; color:var(--muted); }
+    nav { display:flex; gap:4px; padding:10px 24px 0; border-bottom:1px solid var(--border);
+          flex-wrap:wrap; }
+    nav button { background:transparent; color:var(--muted); border:none; border-bottom:2px solid transparent;
+                 padding:8px 14px; cursor:pointer; font-size:13px; }
+    nav button.active { color:var(--fg); border-bottom-color:var(--accent); }
+    main { padding:22px 24px; max-width:1200px; }
+    .panel { display:none; }
+    .panel.active { display:block; }
+    h2 { font-size:15px; margin:0 0 4px; }
+    .hint { color:var(--muted); font-size:12px; margin:0 0 14px; }
+    table { border-collapse:collapse; width:100%; font-size:13px; }
+    th,td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
+    th { color:var(--muted); font-weight:600; position:sticky; top:0; background:var(--panel); }
+    tr:hover td { background:#1c2230; }
+    td.num { text-align:right; font-variant-numeric:tabular-nums; }
+    .pos { color:var(--green); } .neg { color:var(--red); }
+    .pill { padding:1px 7px; border-radius:10px; font-size:11px; background:#21262d; color:var(--muted); }
+    select, input, textarea, .btn { background:var(--panel); color:var(--fg); border:1px solid var(--border);
+            border-radius:6px; padding:7px 10px; font:inherit; }
+    .btn { cursor:pointer; } .btn:hover { border-color:var(--accent); }
+    .row { display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
+    textarea { width:100%; min-height:90px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+    .err { color:var(--red); background:#2a1416; border:1px solid #5c2326; padding:10px 12px;
+           border-radius:6px; white-space:pre-wrap; font-family:ui-monospace,monospace; font-size:12px; }
+    .card { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:14px 16px;
+            display:inline-block; margin:0 12px 12px 0; min-width:170px; vertical-align:top; }
+    .card .big { font-size:22px; font-variant-numeric:tabular-nums; }
+    .card .lbl { color:var(--muted); font-size:12px; }
+    svg .axis { stroke:var(--border); } svg text { fill:var(--muted); font-size:10px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CATALYX</h1>
+    <span class="sub">sector ETF dashboard · parquet lake · DuckDB-WASM</span>
+    <span id="status">cargando…</span>
+  </header>
+  <nav id="tabs">
+    <button data-tab="ranking" class="active">Ranking</button>
+    <button data-tab="sector">Sector history</button>
+    <button data-tab="portfolios">Carteras</button>
+    <button data-tab="moves">Rank moves</button>
+    <button data-tab="lineage">Lineage</button>
+    <button data-tab="sql">SQL</button>
+  </nav>
+  <main>
+    <section class="panel active" id="panel-ranking">
+      <h2>Ranking del último run</h2>
+      <p class="hint">Top sectores por composite del run más reciente.</p>
+      <div id="ranking-out"></div>
+    </section>
+
+    <section class="panel" id="panel-sector">
+      <h2>Evolución de un sector</h2>
+      <div class="row">
+        <label>Sector: <select id="sector-select"></select></label>
+      </div>
+      <div id="sector-out"></div>
+    </section>
+
+    <section class="panel" id="panel-portfolios">
+      <h2>Carteras — modelo vs real</h2>
+      <p class="hint">Último NAV/retorno por cartera (índice 100 = inicio).</p>
+      <div id="portfolios-cards"></div>
+      <div id="portfolios-out"></div>
+      <h2 style="margin-top:22px">Holdings</h2>
+      <div class="row"><label>Cartera: <select id="pf-select"></select></label></div>
+      <div id="holdings-out"></div>
+    </section>
+
+    <section class="panel" id="panel-moves">
+      <h2>Cambios de ranking (último run)</h2>
+      <p class="hint">Sectores que entran/salen del top-N o se mueven ≥3 puestos.</p>
+      <div id="moves-out"></div>
+    </section>
+
+    <section class="panel" id="panel-lineage">
+      <h2>Trazabilidad de una decisión</h2>
+      <div class="row"><label>Trade: <select id="trade-select"></select></label></div>
+      <div id="lineage-out"></div>
+    </section>
+
+    <section class="panel" id="panel-sql">
+      <h2>Consola SQL</h2>
+      <p class="hint">Read-only sobre las vistas del lake. Ej: <code>SELECT * FROM sector_snapshot LIMIT 10</code></p>
+      <textarea id="sql-input">SELECT sector_id, rank, composite, momentum, primary_etf
+FROM sector_snapshot
+WHERE run_id = (SELECT max(run_id) FROM sector_snapshot)
+ORDER BY rank LIMIT 20;</textarea>
+      <div class="row"><button class="btn" id="sql-run">Ejecutar</button></div>
+      <div id="sql-out"></div>
+    </section>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
