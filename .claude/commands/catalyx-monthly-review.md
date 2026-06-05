@@ -156,6 +156,27 @@ Write to `data/reports/heatmap_YYYYMMDD.md`.
 
 ---
 
+### Step 5b — Model Portfolios + NAV vs S&P500
+
+After the heatmap records the run (so `sector_snapshot` exists in the lake), rebuild the model
+portfolios from this run and refresh their NAV vs the market. This is what feeds the dashboard's
+Carteras tab (4 strategies + "¿batimos mercado?").
+
+```bash
+# build the 4 strategy portfolios from the latest run → lake portfolio_holding (records entry_price)
+uv run python -m catalyx.execution.portfolio build-all
+
+# trailing-backtest NAV of current holdings vs SPY (last 180 days) → lake portfolio_nav
+for p in momentum conviction equal_weight low_crowding; do
+  uv run python -m catalyx.execution.nav_engine model "$p" --backtest-days 180
+done
+```
+
+Report in the summary: each strategy's return and whether it beat SPY (`vs_benchmark_pct`).
+Strategies live in `catalyx/config/portfolios/*.yaml`; NAV math/benchmark in `nav_engine.py`.
+
+---
+
 ### Step 6 — Open Thesis Reviews
 
 For each file in `data/theses/*.json` where `status == "open"`:

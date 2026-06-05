@@ -1,0 +1,16 @@
+portfolio_id: momentum
+name: Momentum
+strategy: momentum
+description: >
+  Rides the trend. Selects and weights by cross-sectional momentum, not composite —
+  so it concentrates in whatever is moving hardest right now. Highest dispersion of the
+  four strategies. Matches the investor's momentum tilt.
+benchmark_etf: SPY
+construction:
+  max_positions: 10
+  min_composite: 45
+  min_momentum: 55
+  max_crowding: 100
+  exclude_narrative_maturity: [exhausted]
+  weighting: momentum
+  max_position_pct: 18

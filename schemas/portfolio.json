@@ -5,7 +5,7 @@
   "title": "PortfolioConfig",
   "description": "A model-portfolio definition (risk profile + deterministic construction rules). A model portfolio is a function of (score_run × this config): the same run feeds N portfolios. config_version = md5 of this file, recorded with every built holding so an evolution is always traceable to the rules that produced it.",
   "type": "object",
-  "required": ["portfolio_id", "name", "risk_profile", "construction"],
+  "required": ["portfolio_id", "name", "construction"],
   "properties": {
     "portfolio_id": {
       "type": "string",
@@ -13,6 +13,11 @@
       "description": "Canonical id; also the holding/nav partition key. e.g. 'balanced'."
     },
     "name": { "type": "string" },
+    "strategy": {
+      "type": "string",
+      "enum": ["momentum", "conviction", "equal", "low_crowding"],
+      "description": "Selection + weighting strategy. momentum: pick/weight by momentum. conviction: by composite. equal: top-N by composite, equal weight. low_crowding: only uncrowded sectors, weight by composite."
+    },
     "risk_profile": {
       "type": "string",
       "enum": ["conservative", "balanced", "aggressive"]
@@ -38,8 +43,8 @@
         },
         "weighting": {
           "type": "string",
-          "enum": ["composite_proportional", "equal_weight"],
-          "description": "How selected sectors are weighted before the position cap."
+          "enum": ["momentum", "composite", "equal"],
+          "description": "How selected sectors are weighted before the position cap (momentum/composite ∝ that score; equal = same weight)."
         },
         "max_position_pct": { "type": "number", "minimum": 0, "maximum": 100, "description": "Per-position weight ceiling (%). Excess water-fills to the rest; if all capped, the remainder is implicit cash." }
       }

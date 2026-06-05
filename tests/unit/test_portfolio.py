@@ -103,4 +103,4 @@ def test_real_profiles_load_and_are_valid():
     schema = json.loads((pf._REPO_ROOT / "schemas" / "portfolio.json").read_text(encoding="utf-8"))
     for pid in pf.list_profiles():
         jsonschema.validate(pf.load_profile(pid), schema)
-    assert set(pf.list_profiles()) == {"aggressive", "balanced", "conservative"}
+    assert set(pf.list_profiles()) == {"momentum", "conviction", "equal_weight", "low_crowding"}

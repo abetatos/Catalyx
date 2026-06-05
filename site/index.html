@@ -5,53 +5,66 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CATALYX — Dashboard</title>
   <style>
-    :root { --bg:#0d1117; --panel:#161b22; --border:#30363d; --fg:#e6edf3; --muted:#8b949e;
-            --accent:#58a6ff; --green:#3fb950; --red:#f85149; --amber:#d29922; }
+    :root { --bg:#f6f8fa; --panel:#ffffff; --border:#d0d7de; --fg:#1f2328; --muted:#656d76;
+            --accent:#0969da; --green:#1a7f37; --amber:#9a6700; --red:#cf222e; --track:#eaeef2; }
     * { box-sizing: border-box; }
     body { margin:0; background:var(--bg); color:var(--fg);
-           font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
-    header { padding:18px 24px; border-bottom:1px solid var(--border); display:flex;
-             align-items:baseline; gap:14px; }
-    header h1 { font-size:18px; margin:0; letter-spacing:.5px; }
+           font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+    header { padding:16px 24px; background:var(--panel); border-bottom:1px solid var(--border);
+             display:flex; align-items:baseline; gap:12px; }
+    header h1 { font-size:18px; margin:0; letter-spacing:.5px; color:var(--accent); }
     header .sub { color:var(--muted); font-size:12px; }
     #status { margin-left:auto; font-size:12px; color:var(--muted); }
-    nav { display:flex; gap:4px; padding:10px 24px 0; border-bottom:1px solid var(--border);
-          flex-wrap:wrap; }
+    nav { display:flex; gap:2px; padding:0 16px; background:var(--panel); border-bottom:1px solid var(--border);
+          flex-wrap:wrap; position:sticky; top:0; z-index:5; }
     nav button { background:transparent; color:var(--muted); border:none; border-bottom:2px solid transparent;
-                 padding:8px 14px; cursor:pointer; font-size:13px; }
-    nav button.active { color:var(--fg); border-bottom-color:var(--accent); }
-    main { padding:22px 24px; max-width:1200px; }
-    .panel { display:none; }
-    .panel.active { display:block; }
-    h2 { font-size:15px; margin:0 0 4px; }
-    .hint { color:var(--muted); font-size:12px; margin:0 0 14px; }
-    table { border-collapse:collapse; width:100%; font-size:13px; }
-    th,td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
-    th { color:var(--muted); font-weight:600; position:sticky; top:0; background:var(--panel); }
-    tr:hover td { background:#1c2230; }
-    td.num { text-align:right; font-variant-numeric:tabular-nums; }
-    .pos { color:var(--green); } .neg { color:var(--red); }
-    .pill { padding:1px 7px; border-radius:10px; font-size:11px; background:#21262d; color:var(--muted); }
-    select, input, textarea, .btn { background:var(--panel); color:var(--fg); border:1px solid var(--border);
-            border-radius:6px; padding:7px 10px; font:inherit; }
-    .btn { cursor:pointer; } .btn:hover { border-color:var(--accent); }
+                 padding:11px 14px; cursor:pointer; font-size:13px; font-weight:500; }
+    nav button:hover { color:var(--fg); }
+    nav button.active { color:var(--accent); border-bottom-color:var(--accent); }
+    main { padding:22px 24px; max-width:1220px; }
+    .panel { display:none; } .panel.active { display:block; }
+    h2 { font-size:15px; margin:0 0 4px; } h3 { font-size:13px; color:var(--muted); margin:20px 0 8px; }
+    .hint { color:var(--muted); font-size:12px; margin:0 0 16px; }
     .row { display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
-    textarea { width:100%; min-height:90px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
-    .err { color:var(--red); background:#2a1416; border:1px solid #5c2326; padding:10px 12px;
-           border-radius:6px; white-space:pre-wrap; font-family:ui-monospace,monospace; font-size:12px; }
-    .card { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:14px 16px;
-            display:inline-block; margin:0 12px 12px 0; min-width:170px; vertical-align:top; }
-    .card .big { font-size:22px; font-variant-numeric:tabular-nums; }
+    select, input, textarea, .btn { background:var(--panel); color:var(--fg); border:1px solid var(--border);
+            border-radius:7px; padding:8px 11px; font:inherit; }
+    select:focus, .btn:hover { border-color:var(--accent); outline:none; }
+    .btn { cursor:pointer; font-weight:500; }
+    textarea { width:100%; min-height:90px; font-family:ui-monospace,Menlo,monospace; }
+
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:14px; }
+    .card { background:var(--panel); border:1px solid var(--border); border-radius:10px;
+            padding:15px 17px; box-shadow:0 1px 2px rgba(27,31,36,.04); }
+    .card.click { cursor:pointer; } .card.click:hover { border-color:var(--accent); }
     .card .lbl { color:var(--muted); font-size:12px; }
-    svg .axis { stroke:var(--border); } svg text { fill:var(--muted); font-size:10px; }
-    .md { background:var(--panel); border:1px solid var(--border); border-radius:8px;
-          padding:18px 24px; line-height:1.65; max-width:900px; }
-    .md h1,.md h2,.md h3 { border-bottom:1px solid var(--border); padding-bottom:5px; margin-top:22px; }
-    .md h1 { font-size:20px; } .md h2 { font-size:17px; } .md h3 { font-size:15px; }
-    .md code { background:#21262d; padding:1px 5px; border-radius:4px; font-size:12px; }
-    .md pre { background:#0b0f14; padding:12px; border-radius:6px; overflow:auto; }
-    .md table { margin:12px 0; } .md a { color:var(--accent); }
-    .md blockquote { border-left:3px solid var(--border); margin:10px 0; padding:2px 14px; color:var(--muted); }
+    .card .big { font-size:26px; font-weight:600; font-variant-numeric:tabular-nums; }
+    .pos { color:var(--green); } .neg { color:var(--red); }
+    .pill { display:inline-block; padding:1px 8px; border-radius:11px; font-size:11px; font-weight:500;
+            background:#eaeef2; color:var(--muted); }
+    .pill.g { background:#dafbe1; color:var(--green); } .pill.a { background:#fff8c5; color:var(--amber); }
+    .pill.r { background:#ffebe9; color:var(--red); } .pill.b { background:#ddf4ff; color:var(--accent); }
+
+    .bar { background:var(--track); border-radius:5px; height:9px; overflow:hidden; }
+    .bar > i { display:block; height:100%; border-radius:5px; }
+    .barrow { display:grid; grid-template-columns:minmax(120px,200px) 1fr 44px; gap:10px; align-items:center;
+              margin:6px 0; font-size:12px; }
+    .barrow .v { text-align:right; font-variant-numeric:tabular-nums; color:var(--muted); }
+    .barrow .nm { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    table { border-collapse:collapse; width:100%; font-size:13px; }
+    th,td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); }
+    th { color:var(--muted); font-weight:600; }
+    td.num { text-align:right; font-variant-numeric:tabular-nums; }
+    .err { color:var(--red); background:#ffebe9; border:1px solid #ffcecb; padding:10px 12px;
+           border-radius:8px; white-space:pre-wrap; font-family:ui-monospace,monospace; font-size:12px; }
+    .md { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:18px 24px;
+          line-height:1.65; max-width:880px; }
+    .md h1,.md h2,.md h3 { border-bottom:1px solid var(--border); padding-bottom:5px; color:var(--fg); }
+    .md h1{font-size:20px;} .md h2{font-size:17px;} .md h3{font-size:15px;border:none;}
+    .md code { background:#eff1f3; padding:1px 5px; border-radius:4px; font-size:12px; }
+    .md pre { background:#f6f8fa; padding:12px; border-radius:6px; overflow:auto; border:1px solid var(--border); }
+    .md a { color:var(--accent); } .md blockquote{border-left:3px solid var(--border);margin:10px 0;padding:2px 14px;color:var(--muted);}
+    svg.spark { vertical-align:middle; }
   </style>
 </head>
 <body>
@@ -74,63 +87,53 @@
   <main>
     <section class="panel active" id="panel-ranking">
       <h2>Ranking del último run</h2>
-      <p class="hint">Top sectores por composite del run más reciente.</p>
+      <p class="hint">Sectores por composite. Barra = composite, número = momentum.</p>
       <div id="ranking-out"></div>
     </section>
 
     <section class="panel" id="panel-catalysts">
       <h2>Catalizadores</h2>
-      <p class="hint">Estructurales (tendencias seculares, con sus indicadores) y de evento. Toda la info del parquet/config.</p>
-      <div class="row">
-        <label>Estructural: <select id="cat-select"></select></label>
-        <span id="cat-meta" class="hint"></span>
-      </div>
+      <p class="hint">Estructurales con sus indicadores (barra = score, sparkline = historia del lake) y de evento.</p>
+      <div class="row"><label>Estructural: <select id="cat-select"></select></label></div>
       <div id="cat-detail"></div>
-      <h2 style="margin-top:24px">Indicadores — historia (lake)</h2>
-      <p class="hint">Serie temporal de los indicadores de este catalizador (tabla <code>indicator_history</code>).</p>
-      <div id="cat-history"></div>
-      <h2 style="margin-top:24px">Catalizadores de evento</h2>
-      <div id="cat-events"></div>
+      <h3>Catalizadores de evento</h3>
+      <div id="cat-events" class="grid"></div>
     </section>
 
     <section class="panel" id="panel-studies">
       <h2>Sector studies</h2>
-      <p class="hint">Análisis bottom-up por sector (narrative_maturity, tesis, ETFs, riesgos).</p>
+      <p class="hint">Análisis bottom-up por sector.</p>
       <div class="row"><label>Sector: <select id="study-select"></select></label></div>
       <div id="study-detail"></div>
     </section>
 
     <section class="panel" id="panel-reports">
       <h2>Runs e informes</h2>
-      <p class="hint">Cada run de scoring + el informe de texto que produjo (heatmap/dashboard).</p>
+      <p class="hint">Cada run de scoring + el informe de texto que produjo.</p>
       <div class="row"><label>Run: <select id="run-select"></select></label></div>
-      <div id="run-meta"></div>
+      <div id="run-meta" class="grid" style="margin-bottom:16px"></div>
       <div id="report-out" class="md"></div>
+    </section>
+
+    <section class="panel" id="panel-portfolios">
+      <h2>Carteras — 4 estrategias vs S&amp;P500</h2>
+      <p class="hint">Backtest trailing de las holdings actuales. ¿Batimos mercado? Sparkline: cartera (azul) vs SPY (gris).</p>
+      <div id="pf-cards" class="grid"></div>
+      <h3>Holdings de la estrategia</h3>
+      <div class="row"><label>Estrategia: <select id="pf-select"></select></label></div>
+      <div id="holdings-out"></div>
     </section>
 
     <section class="panel" id="panel-sector">
       <h2>Evolución de un sector</h2>
-      <div class="row">
-        <label>Sector: <select id="sector-select"></select></label>
-      </div>
+      <div class="row"><label>Sector: <select id="sector-select"></select></label></div>
       <div id="sector-out"></div>
-      <h3 style="font-size:13px;color:var(--muted);margin-top:18px">Narrativa (último run con estudio)</h3>
+      <h3>Narrativa (último run con estudio)</h3>
       <div id="sector-narrative" class="md"></div>
-    </section>
-
-    <section class="panel" id="panel-portfolios">
-      <h2>Carteras — modelo vs real</h2>
-      <p class="hint">Último NAV/retorno por cartera (índice 100 = inicio).</p>
-      <div id="portfolios-cards"></div>
-      <div id="portfolios-out"></div>
-      <h2 style="margin-top:22px">Holdings</h2>
-      <div class="row"><label>Cartera: <select id="pf-select"></select></label></div>
-      <div id="holdings-out"></div>
     </section>
 
     <section class="panel" id="panel-moves">
       <h2>Cambios de ranking (último run)</h2>
-      <p class="hint">Sectores que entran/salen del top-N o se mueven ≥3 puestos.</p>
       <div id="moves-out"></div>
     </section>
 

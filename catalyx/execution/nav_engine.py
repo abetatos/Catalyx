@@ -61,15 +61,28 @@ def holdings_nav(holdings: list[dict], prices, base: float = 100.0) -> list[dict
         return []
 
     cols = [t for t in weights if t in getattr(prices, "columns", [])]
-    px = prices[cols].copy().ffill().dropna()
-    if len(px) < 1:
+    if not cols:
+        return []
+    px = prices[cols].ffill()
+    px = px.dropna(how="all")                       # drop leading rows where NOTHING traded yet
+    if px.empty:
+        return []
+    # Only tickers with a real price at the window START form the curve; the rest (e.g.
+    # newly-listed ETFs with no history over the window) are held flat as cash. This stops
+    # a single short-history ETF from poisoning the whole series via row-wise dropna.
+    base_row = px.iloc[0]
+    included = [t for t in cols if pd.notna(base_row[t])]
+    if not included:
+        return []
+    px = px[included].ffill().dropna()
+    if px.empty:
         return []
 
     rel = px / px.iloc[0]
     invested = pd.Series(0.0, index=px.index)
-    for t in cols:
+    for t in included:
         invested = invested + rel[t] * weights[t]
-    cash = 1.0 - sum(weights[t] for t in cols)  # weight of dropped/uninvested ETFs → flat cash
+    cash = 1.0 - sum(weights[t] for t in included)
     nav = base * (invested + cash)
 
     out = []
@@ -92,8 +105,17 @@ def _run_date(run_id: str | None) -> str | None:
 
 
 def compute_model_nav(portfolio_id: str, run_id: str | None = None, as_of: str | None = None,
-                      price_fn=None, persist: bool = True, lake_dir: Path | None = None) -> dict:
-    """Compute (and persist) the NAV series of a model portfolio's holdings vs its benchmark."""
+                      backtest_days: int | None = None, price_fn=None, persist: bool = True,
+                      lake_dir: Path | None = None) -> dict:
+    """Compute (and persist) the NAV series of a model portfolio's holdings vs its benchmark.
+
+    `backtest_days`: if set, measure the CURRENT holdings over the trailing window
+    (today − N days → today) — a buy-and-hold backtest that shows immediately whether the
+    book would have beaten the market (vs benchmark_etf, e.g. SPY). Otherwise the series
+    starts at the run date and accrues forward.
+    """
+    from datetime import timedelta
+
     from catalyx.execution import portfolio as pf
 
     price_fn = price_fn or yfinance_prices
@@ -103,8 +125,12 @@ def compute_model_nav(portfolio_id: str, run_id: str | None = None, as_of: str |
         return {"portfolio_id": portfolio_id, "error": "no holdings — build the portfolio first"}
     run_id = shown["run_id"]
 
-    start = _run_date(run_id) or date.today().isoformat()
+    mode = "backtest" if backtest_days else "forward"
     end = as_of or date.today().isoformat()
+    if backtest_days:
+        start = (date.today() - timedelta(days=backtest_days)).isoformat()
+    else:
+        start = _run_date(run_id) or date.today().isoformat()
 
     try:
         profile = pf.load_profile(portfolio_id)
@@ -126,7 +152,7 @@ def compute_model_nav(portfolio_id: str, run_id: str | None = None, as_of: str |
     for p in port:
         bnav = bench_by_date.get(p["date"])
         rows.append({
-            "portfolio_id": portfolio_id, "kind": "model", "run_id": run_id,
+            "portfolio_id": portfolio_id, "kind": "model", "mode": mode, "run_id": run_id,
             "config_version": cfg_ver, "date": p["date"], "nav": p["nav"],
             "return_pct": round(p["nav"] - 100.0, 4),
             "benchmark_etf": benchmark, "benchmark_nav": bnav,
@@ -219,6 +245,8 @@ def main() -> None:
     m.add_argument("portfolio_id")
     m.add_argument("--run-id", default=None)
     m.add_argument("--as-of", default=None)
+    m.add_argument("--backtest-days", type=int, default=None,
+                   help="Trailing backtest window (e.g. 180) — current holdings vs market over last N days")
     rl = sub.add_parser("real", help="Compute the real book's NAV from the trade log")
     rl.add_argument("portfolio_id")
     rl.add_argument("--start", default=None)
@@ -229,15 +257,17 @@ def main() -> None:
     args = p.parse_args()
 
     if args.cmd == "model":
-        r = compute_model_nav(args.portfolio_id, run_id=args.run_id, as_of=args.as_of)
+        r = compute_model_nav(args.portfolio_id, run_id=args.run_id, as_of=args.as_of,
+                              backtest_days=args.backtest_days)
         if r.get("error"):
             print(f"  {args.portfolio_id}: {r['error']}")
             return
         vsb = r["last_vs_benchmark_pct"]
+        ret = r["last_return_pct"]
         vsb_str = f"{vsb:+}" if vsb is not None else "n/a"
+        ret_str = f"{ret:+}%" if ret is not None else "n/a (no price data)"
         print(f"  {r['portfolio_id']}  {r['start']} → {r['end']}  ({r['points']} pts)")
-        print(f"  last NAV={r['last_nav']}  return={r['last_return_pct']:+}%  "
-              f"vs {r['benchmark']}={vsb_str}")
+        print(f"  last NAV={r['last_nav']}  return={ret_str}  vs {r['benchmark']}={vsb_str}")
     elif args.cmd == "real":
         r = compute_real_nav(args.portfolio_id, start=args.start, as_of=args.as_of,
                              benchmark=args.benchmark)

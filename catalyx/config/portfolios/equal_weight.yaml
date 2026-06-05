@@ -1,0 +1,16 @@
+portfolio_id: equal_weight
+name: Equal weight
+strategy: equal
+description: >
+  Diversification-first. Picks the top sectors by composite but holds each at the SAME
+  weight — no single bet dominates. The control portfolio: if a weighted strategy can't
+  beat equal-weight, the weighting isn't adding value.
+benchmark_etf: SPY
+construction:
+  max_positions: 12
+  min_composite: 55
+  min_momentum: 40
+  max_crowding: 85
+  exclude_narrative_maturity: [exhausted]
+  weighting: equal
+  max_position_pct: 12

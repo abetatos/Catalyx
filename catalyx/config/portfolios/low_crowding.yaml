@@ -1,0 +1,16 @@
+portfolio_id: low_crowding
+name: Low crowding
+strategy: low_crowding
+description: >
+  Contrarian / early. Only holds sectors that are NOT yet crowded (low crowding_risk,
+  early narrative_maturity), then weights by composite among them. Aims to be in themes
+  before the crowd — higher potential, less consensus support.
+benchmark_etf: SPY
+construction:
+  max_positions: 10
+  min_composite: 50
+  min_momentum: 35
+  max_crowding: 55
+  exclude_narrative_maturity: [crowded, exhausted]
+  weighting: composite
+  max_position_pct: 16

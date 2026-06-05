@@ -102,6 +102,26 @@ def water_fill(scores: list[float], max_w: float) -> list[float]:
 
 # ── Build ────────────────────────────────────────────────────────────────────
 
+def _entry_prices(lake_dir: Path | None = None) -> dict:
+    """{sector_id: current_price of its primary ETF} from the latest momentum partition.
+    Used as the model entry price so NAV/return can be measured against the market."""
+    mdf = lake.read_table("momentum", lake_dir=lake_dir)
+    if mdf.empty or "current_price" not in mdf.columns:
+        return {}
+    if "role" in mdf.columns:
+        mdf = mdf[mdf["role"] == "primary"]
+    if mdf.empty:
+        return {}
+    latest = mdf["date"].max()
+    mdf = mdf[mdf["date"] == latest]
+    out = {}
+    for _, r in mdf.iterrows():
+        v = r.get("current_price")
+        if v is not None:
+            out[r["sector_id"]] = float(v)
+    return out
+
+
 def _latest_run_id(df) -> str | None:
     """Latest run by run_id. The id format `run_YYYYMMDD_HHMMSS` sorts lexically =
     chronologically, and (unlike timestamps) is immune to tz-naive/aware mismatches
@@ -137,8 +157,10 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
         df = df[~df["narrative_maturity"].isin(excl)]
     df = df[df["primary_etf"].notna()]
 
-    # 2. dedupe by ETF (highest composite wins), 3. top N
-    df = df.sort_values("composite", ascending=False)
+    # 2. select + 3. dedupe by ETF + top N — ranked by the STRATEGY's signal.
+    weighting = c["weighting"]                       # momentum | composite | equal
+    rank_col = "momentum" if weighting == "momentum" else "composite"
+    df = df.sort_values(rank_col, ascending=False)
     df = df.drop_duplicates("primary_etf", keep="first")
     df = df.head(int(c["max_positions"]))
 
@@ -146,14 +168,18 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
         return {"portfolio_id": portfolio_id, "run_id": run_id, "holdings": [],
                 "error": "no sectors passed the construction filters"}
 
-    # 4. weights
-    if c["weighting"] == "equal_weight":
+    # 4. weights per strategy
+    if weighting == "equal":
         scores = [1.0] * len(df)
-    else:
+    elif weighting == "momentum":
+        scores = [float(x) for x in df["momentum"]]
+    else:  # composite (conviction, low_crowding)
         scores = [float(x) for x in df["composite"]]
     weights = water_fill(scores, float(c["max_position_pct"]) / 100.0)
 
+    entry_prices = _entry_prices(lake_dir)
     cfg_ver = config_version(portfolio_id)
+    strategy = profile.get("strategy", weighting)
     built_at = datetime.now(timezone.utc)
     rows = []
     for rank, ((_, r), w) in enumerate(zip(df.iterrows(), weights), 1):
@@ -161,6 +187,7 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
             "portfolio_id": portfolio_id,
             "run_id": run_id,
             "config_version": cfg_ver,
+            "strategy": strategy,
             "rank_in_portfolio": rank,
             "sector_id": r["sector_id"],
             "primary_etf": r["primary_etf"],
@@ -169,6 +196,7 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
             "crowding_risk": float(r["crowding_risk"]),
             "narrative_maturity": r.get("narrative_maturity"),
             "weight_pct": round(w * 100.0, 2),
+            "entry_price": entry_prices.get(r["sector_id"]),
             "built_at": built_at,
         })
 
