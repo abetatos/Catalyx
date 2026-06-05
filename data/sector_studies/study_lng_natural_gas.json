@@ -1,0 +1,162 @@
+{
+  "id": "study_lng_natural_gas",
+  "schema_version": "1.2",
+  "sector_id": "lng_natural_gas",
+  "sector_label": "LNG & Natural Gas",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "energy",
+    "adjacent_sectors": [
+      "oil_majors_integrated",
+      "oil_services_equipment",
+      "nuclear_energy",
+      "grid_infrastructure_utilities"
+    ],
+    "differentiation_note": "LNG & Natural Gas is a pure-play on gas-specific supply chains — E&P producers (EQT, AR, Coterra), midstream pipelines (Williams, Kinder Morgan), and LNG export terminal operators (Cheniere, New Fortress Energy) — whose revenue is driven primarily by Henry Hub spot prices, JKM/TTF LNG spreads, and long-term offtake contract volumes, not by crude oil prices. This is fundamentally distinct from oil_majors_integrated (Shell, TotalEnergies, BP), which are diversified across oil, gas, refining, and downstream retail: an integrated major hedges natural gas weakness with refining margin or oil price strength, while a pure-play gas E&P has no such buffer. The sector is also distinct from nuclear_energy and grid_infrastructure_utilities, which benefit from gas prices as a COST input (power generation fuel) rather than as a revenue driver — when TTF/Henry Hub rises, nuclear operators gain relative competitiveness, whereas LNG companies gain directly on margin and contract repricing."
+  },
+
+  "demand_drivers": [
+    "European structural dependency on US LNG post-Russia: Europe will source two-thirds of LNG imports from the US in 2026 (IEEFA), with US share projected to reach 80% of EU LNG imports by 2028. European LNG imports forecast at 145 million tonnes in 2026 (Kpler). The Strait of Hormuz closure in March 2026 cut ~25% of global LNG transit, forcing QatarEnergy force majeure and redirecting EU buyers to US suppliers on an emergency and long-term basis.",
+    "Hormuz crisis premium embedded in Asian LNG prices: The Japan-Korea Marker (JKM) surged +83% since the Iran conflict onset (late February 2026), reaching ~$16/MMBtu in March 2026. US Gulf Coast LNG cargoes command a routing premium as the only major source unaffected by the Hormuz disruption. Asia (Japan, South Korea, China) takes approximately 35% of US LNG exports after Europe.",
+    "US LNG export terminal wave: US total export capacity reached ~102 MTPA in 2026, with exports forecast at 17.0 Bcf/d average and capacity potentially exceeding 19 Bcf/d by end-2026. Plaquemines LNG Phase 1 (13 MTPA, Venture Global) targeting first LNG mid-2026; Corpus Christi Stage 3 (Cheniere) ramping; Golden Pass (ExxonMobil/QatarEnergy) under construction. The US is now the single largest LNG exporter globally.",
+    "Long-term EU offtake contracts accelerating: The Hormuz disruption has accelerated European utility and national energy company decisions to lock in 10-20 year US LNG supply agreements, providing durable backlog for US exporters and reducing their Henry Hub price exposure. This structural shift reduces spot market uncertainty for Cheniere, New Fortress, and NextDecade.",
+    "Henry Hub–TTF spread arbitrage strongly positive: With Henry Hub at ~$3.00/MMBtu (US domestic price) and European TTF at €60+/MWh (~$18+/MMBtu equivalent) post-Hormuz spike, the export arbitrage margin is at multi-year highs. US LNG exporters capture spread minus liquefaction + shipping costs (~$3-4/MMBtu), implying ~$10-14/MMBtu net margin on spot cargoes — well above long-run average of $3-5/MMBtu.",
+    "AI data center gas-fired power demand (indirect): AI hyperscaler buildout is creating baseload power demand that US gas-fired generation is best positioned to serve rapidly (vs. nuclear's 10+ year lead time, vs. renewables' intermittency). EIA projects US natural gas generation grows ~4% YoY in 2026-2027. This supports domestic Henry Hub demand floors independent of LNG export volumes."
+  ],
+
+  "supply_constraints": [
+    "LNG liquefaction capacity is a multi-year bottleneck: New export terminals require 4-7 years from FID (Final Investment Decision) to first cargo. Even with Plaquemines and Corpus Christi Stage 3 ramping in 2026, the supply response to current demand tightness is structurally slow. Incremental capacity additions through 2028 are largely committed to long-term offtake agreements, leaving limited spot supply flexibility.",
+    "Hormuz closure constrains Qatar and Middle East supply: Qatar (~21% of global LNG trade) has declared force majeure; UAE and Oman exports are also disrupted. Rerouting around Cape of Good Hope adds ~14 days transit time and absorbs a significant portion of global LNG shipping capacity (VLCC fleet utilization near historical peaks). This is a supply constraint of indefinite duration.",
+    "Permitting and FERC approval delays for new US projects: Several proposed US LNG terminals (CP2, Port Arthur Phase 2, Commonwealth LNG) remain in FERC permitting queue. The Biden/current administration pause on LNG export permits (partially lifted) continues to delay projects not yet at FID. The pipeline between Appalachian gas fields and Gulf Coast terminals is near capacity in peak seasons.",
+    "Appalachian basin gas takeaway capacity: EQT and Antero Resources face periodic pipeline takeaway constraints from the Marcellus/Utica shale to Gulf Coast export points. Mountain Valley Pipeline completed 2024, partially relieving the constraint, but further Appalachian pipeline additions remain politically contentious.",
+    "European LNG import terminal overcapacity risk (medium-term): Europe installed or expanded 6 LNG terminals in 2026 (+6% import capacity). By 2030, EU LNG import capacity could be 3x actual LNG demand. While this does not constrain 2026, it signals potential rebalancing in 2027-2029 as Russian gas alternatives mature and European demand structurally declines 14% through 2030 (IEEFA)."
+  ],
+
+  "cycle_position": {
+    "assessment": "Early-to-mid upcycle with a geopolitical spike overlay",
+    "rationale": "The LNG sector entered 2026 in a standard upcycle: rising US export volumes, strong JKM/TTF–Henry Hub spreads, and European long-term contract acceleration. The Hormuz closure (February 28, 2026) injected a severe geopolitical premium on top of this cycle: TTF nearly doubled to €60+/MWh in March, JKM rose +83%, and FCG gained ~28.8% YTD as of late April 2026. The sector is NOT in a late-cycle exhaustion phase — Cheniere raised 2026 guidance by $500M, analysts project 36% EPS growth for LNG equity, and structural demand drivers (EU import dependency, Asian demand, AI power) remain intact. The key cycle risk is that the geopolitical spike has accelerated what would have been a 2027-2028 pricing peak into 2026, creating a potential reversion if Hormuz reopens. The underlying structural demand floor (EU structural LNG dependency) limits downside below pre-crisis levels. Current positioning: overweight for the duration of the Hormuz disruption; reassess on any ceasefire signal.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Henry Hub natural gas spot price",
+      "unit": "USD/MMBtu",
+      "source": "EIA / CME Group Henry Hub futures",
+      "current": 3.00,
+      "comment": "Prompt-month fell to $2.63/MMBtu low in April 2026 before recovering. EIA lowered 2026 STEO forecast by 4.4% in May 2026. Key watch: $2.50 floor (production curtailment trigger) and $4.00 ceiling (demand destruction). US domestic price remains well below international LNG benchmarks."
+    },
+    {
+      "metric": "TTF European gas benchmark",
+      "unit": "EUR/MWh",
+      "source": "ICE TTF front-month futures",
+      "current": 55,
+      "comment": "Surged to €60+/MWh post-Hormuz closure (March 2026), highest in 3+ years. Pre-crisis level was ~€35/MWh. Current ~€50-55/MWh range. Any Hormuz de-escalation signal could trigger rapid TTF decline toward €35-40/MWh — the single most important reversion risk to monitor."
+    },
+    {
+      "metric": "JKM Asian LNG benchmark (Japan-Korea Marker)",
+      "unit": "USD/MMBtu",
+      "source": "Platts JKM / ICE",
+      "current": 16.0,
+      "comment": "Rose +83% since Iran conflict onset to ~$16/MMBtu in March 2026. US-Asia arbitrage remains strongly positive. Monitor weekly for Qatari supply restoration signal (any QatarEnergy force majeure withdrawal)."
+    },
+    {
+      "metric": "US LNG export volumes",
+      "unit": "Bcf/day",
+      "source": "EIA Weekly Natural Gas Storage Report / Bloomberg",
+      "current": 17.0,
+      "comment": "EIA forecast 17.0 Bcf/d average for 2026, up from ~14 Bcf/d in 2025. Plaquemines Phase 1 ramp (mid-2026) and Corpus Christi Stage 3 are the primary volume drivers. Track weekly cargo data via Kpler/Vortexa."
+    },
+    {
+      "metric": "Strait of Hormuz LNG transit status",
+      "unit": "% of pre-crisis volume",
+      "source": "Kpler tanker tracking / CNBC / Reuters",
+      "current": "~0%",
+      "comment": "Effective closure since February 28, 2026. Qatari force majeure declared. This is the single highest-impact binary event for the sector — reopening would trigger immediate TTF/JKM repricing and reversion of the geopolitical premium. Monitor daily."
+    },
+    {
+      "metric": "Cheniere Energy (LNG) EBITDA guidance",
+      "unit": "USD billion",
+      "source": "Cheniere quarterly earnings / SEC filings",
+      "current": "7.25-7.75",
+      "comment": "Raised from $6.75-7.25B to $7.25-7.75B in Q1 2026 earnings. Proxy for entire US LNG exporter earnings power. Scotiabank PT $288 (Outperform). Track quarterly for upward/downward revisions."
+    }
+  ],
+
+  "etf_analysis": [
+    {
+      "ticker": "FCG",
+      "name": "First Trust Natural Gas ETF",
+      "exchange": "NYSE Arca",
+      "currency": "USD",
+      "ter": 0.0060,
+      "aum_m_usd": 560,
+      "replication": "physical",
+      "avg_spread_bps": 12,
+      "avg_daily_volume_m_usd": 18,
+      "top_10_concentration_pct": 62,
+      "characteristics": "Tracks the ISE-Revere Natural Gas Index. Holds US natural gas E&P producers and midstream pipeline operators. Top holdings include EQT, Coterra Energy, Antero Resources, Williams Companies, Cheniere Energy. AUM $560M — above $200M liquidity threshold. Non-UCITS (US-listed). TER 0.60% is relatively high for an equity ETF but acceptable for a thematic play. FCG is up ~28.8% YTD 2026 and ~41.9% on a 1-year basis as of late April 2026. For a Spanish investor, this is accessible via Interactive Brokers (US-listed) but NOT UCITS-compliant — additional KID documentation required. Concentrated exposure: top-10 holdings ~62% of NAV.",
+      "recommendation_tier": 1,
+      "limitations": "NOT UCITS — not compliant for EU retail distribution under PRIIPS. Spanish investors can access via professional/execution-only route on IBKR but cannot be sold by Spanish financial advisors without KID. TER 0.60% higher than sector-agnostic energy ETFs. No direct LNG exporter pure-play — midstream and E&P weighting means performance partly driven by domestic Henry Hub rather than international LNG spreads. Equity-only: misses pure commodity exposure to gas price."
+    },
+    {
+      "ticker": "LNGA.L",
+      "name": "WisdomTree Natural Gas 1x Daily ETC",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0049,
+      "aum_m_usd": 280,
+      "replication": "synthetic_swap",
+      "avg_spread_bps": 20,
+      "avg_daily_volume_m_usd": 3,
+      "top_10_concentration_pct": null,
+      "characteristics": "UCITS-compliant commodity ETC providing 1x daily exposure to natural gas front-month futures (Henry Hub via NYMEX). AUM $280M — above $200M threshold but approaching warning zone ($200M floor). Spread ~20bps — at the 20bps threshold; acceptable but not ideal. Synthetic (swap-based) replication — counterparty risk with WisdomTree's swap provider. This is a COMMODITY product, not an equity product — tracks Henry Hub gas price directly, not natural gas company earnings. For a Spanish UCITS-required investor, this is the primary UCITS-accessible vehicle. WARNING: Spread 20bps = at threshold. Monitor for spread widening. WARNING: AUM $280M is adequate but not deep. Rolling cost from futures curve contango adds implicit cost on top of TER.",
+      "recommendation_tier": 2,
+      "limitations": "UCITS compliant but ETC structure (not UCITS SICAV fund) — check Spanish broker ETC eligibility. Synthetic swap replication adds counterparty risk. Commodity exposure only — misses equity alpha from LNG company earnings growth (Cheniere +36% EPS 2026 not captured). Contango in gas futures curve creates negative roll yield in normal market conditions; current backwardation (post-Hormuz spike) temporarily reverses this. Spread at 20bps threshold — verify live spread before entry. Daily reset means slight tracking deviation vs. spot over multi-day holds (though 1x product, deviation is minimal)."
+    }
+  ],
+
+  "risks": [
+    "Hormuz reopening / Iran ceasefire: The entire geopolitical premium embedded in TTF (~€20/MWh above pre-crisis), JKM (~$6/MMBtu above seasonal norm), and FCG (+20% geopolitical beta) could revert rapidly on any credible ceasefire or Hormuz transit restoration signal. This is the primary tail risk — binary, non-gradual, and not predictable with fundamental analysis. FCG declined in prior Hormuz de-escalation false starts.",
+    "Henry Hub price weakness: US domestic gas prices remain soft (~$3/MMBtu), constrained by record Marcellus/Permian associated gas production. EIA lowered 2026-2027 Henry Hub forecasts in May 2026. A warm US summer 2026 reducing power generation demand for gas cooling could push Henry Hub back toward $2.50/MMBtu, which is near production curtailment levels for high-cost producers (Appalachian basin breakevens ~$2.50-3.00/MMBtu). This hits E&P earnings directly.",
+    "European structural demand erosion: IEEFA projects EU gas consumption falls 14% between 2025 and 2030, implying LNG demand decline of ~23% over the same period. Europe is overbuild on LNG import terminal capacity — by 2030, EU LNG import capacity will likely be 3x actual demand. As the energy crisis subsides, EU buyers may renegotiate or not renew long-term contracts, exposing US exporters to spot market repricing.",
+    "Permitting and political risk on new US LNG approvals: Multiple proposed US LNG terminals (CP2 LNG, Commonwealth LNG, Port Arthur Phase 2) remain pending DOE export authorization and FERC permitting. Democratic administrations have historically restricted LNG exports on climate grounds. Any reversal of export permit approvals could reduce the forward capacity pipeline and depress long-dated project economics.",
+    "Shipping capacity and rerouting normalization: The current LNG shipping premium (Cape of Good Hope rerouting, extended voyage times) is tightening the global LNGC (LNG carrier) fleet. If Hormuz reopens, a surplus of vessels returns to market simultaneously — spot shipping rates collapse and the routing premium disappears, compressing LNG exporter realized margins on spot cargoes beyond the benchmark price reversion.",
+    "Concentration and correlation risk (FCG): FCG's top-5 holdings (EQT, Coterra, Antero, Williams, Cheniere) represent ~50%+ of NAV. A single-name event (e.g., EQT earnings miss, Cheniere mechanical force majeure, Williams pipeline incident) has outsized ETF impact. FCG also has significant pipeline/midstream exposure which correlates more with oil and broader energy than with international LNG spread dynamics."
+  ],
+
+  "narrative_maturity": "mainstream",
+  "narrative_trend": "increasing",
+  "narrative_notes": "The LNG & Natural Gas thesis occupies a 'mainstream' narrative maturity level per scoring_weights.yaml criteria. The structural European import dependency theme was already in Goldman/JPM/MS base-case coverage pre-Hormuz (observable criteria: ETF AUM >$500M with FCG at $560M, IEA and IEEFA publishing quantitative forecasts, EU energy independence named as policy in European Commission communications). The Hormuz crisis acceleration elevated the thesis into daily Bloomberg/CNBC/Reuters coverage beginning March 2026 — 'Hormuz LNG crisis' and 'US natural gas exports Europe' are front-page energy stories. However, this has not yet crossed into full 'crowded' status: retail ETF inflows into FCG are meaningful but not the panic-driven acceleration seen in AI semiconductors; institutional positioning via COT data shows elevated but not extreme net long in gas futures. Narrative trend is 'increasing' — analyst coverage intensifying with Cheniere guidance raise (+$500M), Scotiabank PT upgrades, and Seeking Alpha upgrade on CQP. The risk of crowding is rising — reassess to 'crowded' if FCG YTD return exceeds 40% and COT net longs cross 2-standard-deviation threshold above 5-year mean.",
+
+  "historical_catalyst_performance": {
+    "summary": "LNG & Natural Gas equities have historically shown two distinct performance regimes: (1) Domestic gas price cycles: FCG broadly tracks Henry Hub with a leverage multiple of ~1.5-2x due to operational leverage in E&P earnings. The January 2026 Henry Hub spike to ~$31/MMBtu (brief, weather-driven) demonstrated this sensitivity — FCG surged ~15% in the week before the spike reversed. (2) Geopolitical LNG supply disruptions: The 2021-2022 European energy crisis (Russian gas cutoff threat) drove TTF from €20/MWh to €350/MWh peak and LNG equity outperformance of ~60-80% vs. S&P 500 Energy over 12 months. The current Hormuz crisis is structurally similar: FCG +41.9% TTM as of late April 2026. Historical pattern on geopolitical premium reversion: when Russian gas fears abated in H1 2023, FCG gave back ~40% of geopolitical gains in 3 months. (3) Long-term contract signing events: Cheniere Energy long-term SPAs (e.g., with European utilities) have historically triggered +3-5% single-day moves and sustained outperformance. Current analyst consensus (36% EPS growth for Cheniere, EQT/AR buys) reflects the sector being in the favorable portion of its earnings revision cycle, a historically persistent signal for 6-9 months.",
+    "key_events": [
+      {
+        "event": "Russia Ukraine gas supply disruption (2021-2022)",
+        "fcg_return": "+85% peak from pre-event levels (mid-2021 to Aug 2022)",
+        "driver": "TTF spike €20 → €350/MWh; EU scramble for LNG alternatives",
+        "reversion": "FCG -50% from peak Aug 2022 to Feb 2023 as EU gas storage refilled and TTF normalized to €50/MWh"
+      },
+      {
+        "event": "US LNG Freeport explosion (June 2022)",
+        "fcg_return": "-8% in 2 weeks",
+        "driver": "20% of US LNG export capacity offline for 9 months; domestic Henry Hub supply overhang",
+        "reversion": "Partial recovery as European TTF remained elevated"
+      },
+      {
+        "event": "Hormuz closure / Iran conflict onset (Feb 28, 2026)",
+        "fcg_return": "+28.8% YTD as of late April 2026 (+41.9% 1-year)",
+        "driver": "Qatar force majeure, TTF +35% in one session, JKM +83% since conflict onset",
+        "reversion": "Not yet — Hormuz closure ongoing as of June 2026"
+      }
+    ]
+  },
+
+  "active_catalyst_ids": [
+    "cat_20260228_hormuz_closure"
+  ]
+}

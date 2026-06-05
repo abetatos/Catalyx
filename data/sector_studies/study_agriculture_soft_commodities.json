@@ -1,0 +1,169 @@
+{
+  "$schema": "catalyx/schemas/sector_study.json",
+  "id": "study_agriculture_soft_commodities",
+  "schema_version": "1.2",
+  "sector_id": "agriculture_soft_commodities",
+  "sector_label": "Agriculture — Soft Commodities & Agri-Tech",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "real_assets",
+    "adjacent_sectors": [
+      "water_infrastructure",
+      "copper_miners",
+      "energy_transition_grid",
+      "industrial_metals"
+    ],
+    "differentiation_note": "This sector encompasses two structurally distinct investment expressions that must never be conflated: (1) the commodity-futures basket play (DBA) which gives direct exposure to physical agricultural futures — wheat, corn, soybeans, sugar, coffee — and profits from spot price appreciation driven by supply shortfalls, weather shocks, and inventory drawdowns; (2) the agribusiness-equity play (MOO/ISAG.L) which gives exposure to the companies that manufacture, distribute, and enable agricultural production (Deere, Corteva, Nutrien, CNH Industrial, Yara), and whose profitability depends on farm income, input pricing power, and technology adoption curves rather than raw commodity price alone. The two vehicles diverge significantly in bear markets: DBA can rally on a crop disaster while MOO falls because the same disaster depresses farm incomes and capital equipment spending. Against adjacent real assets, the sector is distinct from water_infrastructure (no commodity futures exposure, no weather-driven earnings volatility) and copper_miners (demand driver is food/population rather than electrification/industrialization; the supply constraint is climate and arable land, not discovery lag). Agriculture is also the only real-assets sector with direct structural exposure to EM population growth and food sovereignty policy mandates — factors that are absent from the metal and energy sectors."
+  },
+
+  "demand_drivers": [
+    "EM population growth and caloric transition: global population projected at 8.6B in 2030 rising to 9.8B by 2050 (UN). More critically, the EM middle-class dietary shift from grain-based to protein-based diets requires 7-10x more grain per calorie (1kg beef = ~7kg feed grain). Sub-Saharan Africa adds ~300M people by 2035 with the fastest urbanization rate globally — the highest-marginal-demand cohort.",
+    "Food security mandates and strategic stockpiling: the 2025-2026 US-China trade war and retaliatory tariffs caused Chinese soybean imports from the US to collapse from $12B to $5.5B in H1 2025. In response, China, India, and the EU have each launched strategic grain reserve programs and mandated domestic production support. Policy-driven floor demand is now structurally higher than pre-trade-war baseline.",
+    "Biofuel blending mandates driving grain/oilseed demand: USDA May 2026 WASDE projects US soybean crush at 2.750B bushels, up 120M year-over-year, driven specifically by biofuel (SAF and biodiesel) demand. The EU's SAF (Sustainable Aviation Fuel) mandate of 2% by 2025 rising to 6% by 2030 creates a persistent incremental demand for oilseed feedstocks that did not exist before 2024.",
+    "Climate-induced supply disruption creating persistent price floors: the FAO/WMO 2026 joint report identifies 25°C as the threshold above which yields decline sharply, with effects lasting up to a year. Brazil's Minas Gerais suffered drought cutting rainfall to 75% of normal (arabica coffee impact: ~47M bags expected for 2026/27 off a poor-quality 2025 crop). La Niña probability of 71% through early 2026 adds further weather uncertainty. This is not a one-off event — the structural frequency of ENSO-driven droughts is increasing.",
+    "Fertilizer price recovery supporting agri-company margins: Nutrien Q1 2026 adj. EBITDA of $1.11B, up year-over-year, driven by higher global fertilizer benchmarks and record potash sales volumes. Higher fertilizer prices expand margins for producers (Nutrien, Mosaic, Yara) — a direct revenue catalyst for the agribusiness-equity expression of this sector.",
+    "Wheat tightness from supply collapse: USDA May 2026 WASDE projects US wheat at 1,561M bushels — down 424M from last year's record — pushing the season-average farm price up $1.50 to $6.50/bu. World corn ending stocks at 277.5M tonnes are the lowest since 2013/14, with global consumption exceeding production by 19.4M tonnes. This is an acute supply shock layered on top of the structural demand drivers above."
+  ],
+
+  "supply_constraints": [
+    "Arable land scarcity and soil degradation: global arable land per capita has declined ~50% since 1960 as population grows and urbanization converts agricultural land. An estimated 12M hectares of productive land are lost annually to desertification and soil degradation (UNCCD). New arable land conversion (Amazon, Congo basin) faces regulatory barriers and long development lead times.",
+    "Climate volatility shortening planting windows: ENSO events (El Niño/La Niña) create multi-season supply disruptions across the Americas. Brazil (world's largest soybean, sugar, and arabica exporter) is the single-largest supply concentration risk: drought in Minas Gerais and Mato Grosso affects global supply of 3 commodities simultaneously.",
+    "Fertilizer geopolitical concentration: Russia and Belarus account for ~40% of global potash supply. Sanctions and trade restrictions since 2022 have structurally tightened potash markets. Urea production is energy-intensive — European natural gas prices directly affect European fertilizer output (CF Industries, Yara). This constrains yield improvements even where land is available.",
+    "Water scarcity limiting irrigation-dependent crops: aquifer depletion in India (Punjab), the US (Ogallala), and northern China is permanently reducing yield potential in historically high-output regions. This is a slow-moving but irreversible supply constraint on 30-40% of global irrigated grain production.",
+    "Input cost inflation reducing farmer equipment investment: Deere Q2 2026 saw production & precision agriculture revenue shrink year-over-year, with weakness reflecting 'sustained difficulty for North American growers.' High input costs (fertilizer, equipment, energy) suppress farmer investment in productivity-enhancing technology, creating a lag between demand signals and yield response.",
+    "Trade fragmentation increasing distribution costs: US tariffs raised costs of some fertilizers by ~$100/tonne (steel/nitrogen). China's retaliatory suspension of US soybean purchases forces global rerouting — Brazilian soy to China, US soy to other markets — adding freight cost and storage inefficiency to the supply chain. This is now a structural feature, not a temporary disruption."
+  ],
+
+  "technology_maturity": null,
+
+  "cycle_position": {
+    "assessment": "Early-to-mid bull cycle; supply shock phase entering consensus, commodity futures ahead of equities",
+    "rationale": "Agriculture is exiting a multi-year bear market (2022-2025) driven by post-COVID supply normalization and favorable ENSO. The current inflection is driven by a confluence of supply shocks (US wheat production down 27% year-on-year per WASDE, world corn stocks at 12-year lows) and demand acceleration (biofuel mandates, EM dietary transition, strategic reserves). The commodity-futures expression (DBA) has responded first — grains and oilseeds are already printing higher prices, with corn at $4.40/bu (+25c vs prior year), soybeans at $11.40/bu (+$1.00), and wheat at $6.50/bu (+$1.50). The agribusiness-equity expression (MOO) is lagging due to Deere's farm-equipment headwinds (North American growers under pressure from high input costs), but fertilizer producers (Nutrien) are already seeing the margin recovery. The equity inflection likely follows within 6-12 months as higher commodity prices feed through to farm incomes and equipment investment. This is a classic commodity-lead-equity-lag setup. Crowding risk is moderate — the food security narrative is present in media but not yet driving retail ETF flows. The biofuel/SAF demand angle and the strategic reserve mandates are not yet in mainstream sell-side agriculture models.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "DBA",
+      "name": "Invesco DB Agriculture Fund",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0085,
+      "aum_m_usd": 810,
+      "replication": "synthetic_swap",
+      "avg_spread_bps": 10,
+      "avg_daily_volume_m_usd": 15.0,
+      "top_10_concentration_pct": null,
+      "characteristics": "Pure commodity-futures basket: wheat (~15%), corn (~14%), soybeans (~12%), sugar (~10%), coffee (~10%), cocoa, cattle, hogs. Exposure is to futures prices, not equities. Rolls futures contracts; contango drag applies (~1-2%/yr in normal market structure). AUM $810M — adequate liquidity. NOT UCITS. Not available for Spanish retail investors via standard UCITS channels — currency risk (USD) applies. Best vehicle for pure commodity price appreciation thesis (supply shock / weather event).",
+      "recommendation_tier": 1,
+      "limitations": "NOT UCITS — Spanish investor must use ISAG.L as UCITS alternative for equity or AIGA.L for commodity futures. Synthetic replication (swap-based) — counterparty risk. Futures roll creates contango drag in normal market; negative roll yield offsets spot gains in non-backwardated markets. Does not benefit from agribusiness company earnings growth — pure commodity beta."
+    },
+    {
+      "ticker": "MOO",
+      "name": "VanEck Agribusiness ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0053,
+      "aum_m_usd": 680,
+      "replication": "physical",
+      "avg_spread_bps": 11,
+      "avg_daily_volume_m_usd": 12.0,
+      "top_10_concentration_pct": 0.55,
+      "characteristics": "Equity basket of agribusiness companies: Deere & Co (~8%), Corteva (~7%), Nutrien (~6%), CNH Industrial, Bunge, Archer-Daniels-Midland, Yara, CF Industries. Profits from farm income expansion, fertilizer pricing power, precision agriculture tech adoption. Distinct from DBA: can underperform even when commodity prices rise if input costs erode farm margins. Deere Q2 FY2026 beat expectations but precision agriculture revenue declining — North American grower stress is a near-term headwind for this vehicle specifically.",
+      "recommendation_tier": 2,
+      "limitations": "NOT UCITS — Spanish investor requires ISAG.L as UCITS equivalent. Top 10 = ~55% concentration — Deere's individual performance materially moves the fund. Lags commodity price moves by 6-12 months (farm income transmission lag). Deere equipment cycle currently depressed — MOO underperforms DBA in early commodity bull markets. Prefer once farm income recovery is confirmed (commodity prices sustained >2 quarters)."
+    },
+    {
+      "ticker": "ISAG.L",
+      "name": "iShares Agribusiness UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0055,
+      "aum_m_usd": 460,
+      "replication": "physical",
+      "avg_spread_bps": 18,
+      "avg_daily_volume_m_usd": 3.5,
+      "top_10_concentration_pct": 0.58,
+      "characteristics": "UCITS-compliant agribusiness equity ETF tracking the S&P Commodity Producers Agribusiness index. AUM ~€417M / ~$460M (June 2026). Similar underlying exposure to MOO — large agribusiness companies (Deere, Corteva, Nutrien, Archer-Daniels-Midland, CNH). Listed on LSE, domiciled in Ireland. Preferred vehicle for a Spanish investor requiring UCITS compliance. AUM above $200M threshold — adequate. Spread ~18bps — within acceptable range but higher than DBA; size carefully (limit order only).",
+      "recommendation_tier": 1,
+      "limitations": "UCITS TIER 1 FOR SPANISH INVESTOR. AUM $460M — adequate but watch for AUM erosion below $200M threshold. Spread 18bps — wider than DBA/MOO; use limit orders. USD-denominated on LSE — EUR/USD currency exposure not hedged. Same Deere/precision-agriculture headwind as MOO in current phase. No commodity-futures exposure — pure equity play."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "USDA WASDE global corn ending stocks (Mt)",
+      "unit": "million tonnes",
+      "source": "USDA WASDE monthly (wasde.usda.gov)",
+      "current": 277.5,
+      "comment": "277.5Mt for 2026/27 = lowest since 2013/14. Threshold_strong: <280Mt (bullish). Current AT threshold. Global consumption exceeding production by 19.4Mt — structural deficit condition."
+    },
+    {
+      "metric": "US wheat season-average farm price",
+      "unit": "USD/bushel",
+      "source": "USDA WASDE monthly",
+      "current": 6.50,
+      "comment": "Up $1.50/bu from prior year on 27% production decline. Threshold_strong: >$6.00/bu. Currently well above. Watch for supply-side recovery in next WASDE release."
+    },
+    {
+      "metric": "US soybean season-average farm price",
+      "unit": "USD/bushel",
+      "source": "USDA WASDE monthly",
+      "current": 11.40,
+      "comment": "Up $1.00/bu from 2025/26. Biofuel crush demand driving — 2.750B bushels crush forecast, up 120M. Strong biofuel demand is a structural price floor distinct from food demand."
+    },
+    {
+      "metric": "ICE Arabica coffee front-month futures (C price)",
+      "unit": "USD/lb",
+      "source": "ICE Futures US (KCc1)",
+      "current": "~$2.20-2.40",
+      "comment": "Down from 2025 highs (~$3.30+) as Brazil 2026/27 crop recovery expected (+24% to 47M bags). Weather risk (La Niña 71% probability) remains the upside catalyst. US 50% tariff on Brazilian beans creates structural import cost floor."
+    },
+    {
+      "metric": "Nutrien potash benchmark price",
+      "unit": "USD/tonne",
+      "source": "Nutrien quarterly earnings (SEC 6-K)",
+      "current": null,
+      "comment": "Nutrien Q1 2026 EBITDA $1.11B on higher fertilizer benchmarks and record potash sales volumes. Higher potash = margin expansion for Nutrien, cost headwind for DBA-expression farmers. Monitor spread between potash price and corn/soy price for farmer margin proxy."
+    },
+    {
+      "metric": "Deere precision agriculture segment revenue growth (YoY)",
+      "unit": "% YoY",
+      "source": "Deere quarterly earnings (SEC 8-K)",
+      "current": "negative",
+      "comment": "Key leading indicator for MOO/ISAG.L recovery timing. Deere Q2 FY2026: precision agriculture unit revenue declining, reflecting 'sustained difficulty for North American growers.' When this turns positive (farm income recovering), it signals the equity leg of the agriculture bull cycle is starting."
+    },
+    {
+      "metric": "La Niña probability (NOAA CPC 3-month outlook)",
+      "unit": "probability %",
+      "source": "NOAA Climate Prediction Center (monthly)",
+      "current": 71,
+      "comment": "La Niña = drought risk for Brazil/Argentina (soy, corn, coffee, sugar) and potential flooding in Southeast Asia (rice). At 71%, it represents the primary near-term catalyst for a DBA spike. Update monthly before any entry decision."
+    }
+  ],
+
+  "active_catalyst_ids": [],
+
+  "historical_catalyst_performance": {
+    "summary": "Agriculture soft commodities have historically exhibited two dominant catalyst patterns: (1) weather/ENSO shocks — La Niña/El Niño events cause 20-40% commodity price moves over 6-18 months (DBA gained ~35% in 2021-2022 driven by La Niña drought across South America and Black Sea supply disruption from Russia-Ukraine war); the equity expression (MOO/ISAG) lags by 6-12 months as farm income must first recover before equipment and input spending follows. (2) trade policy disruptions — the 2018-2019 US-China trade war caused soybean prices to fall 25% in 6 months as Chinese purchases collapsed; the recovery came when Phase 1 deal was signed. The 2025-2026 round is potentially more severe (50% tariffs on Brazil coffee, retaliatory measures), creating wider dislocations between producing-country and importing-country price signals. Agriculture ETFs also historically respond to broad commodity supercycle phases — 2003-2008 (commodity bull), 2011-2014 (second leg), 2020-2022 (post-COVID commodity boom). The current macro backdrop (tight global grain stocks, climate disruption, food security mandates) structurally resembles 2007-2008 more than 2018-2019, with the key differentiator being the addition of biofuel/SAF demand as a persistent new demand vector. A pure weather event (severe La Niña drought in Brazil) could trigger 25-35% DBA upside within 3-6 months based on historical precedent.",
+    "avg_response_to_severe_la_nina_pct": 0.28,
+    "avg_response_to_usda_wasde_supply_cut_pct": 0.06,
+    "equity_lag_vs_commodity_months": 9
+  },
+
+  "risks": [
+    "Weather normalization / La Niña reversal: if La Niña conditions fail to materialize (NOAA probability 71% but not certain) and Brazil 2026/27 arabica crop recovers to 47M bags as projected (up 24% YoY), arabica prices could fall 13% year-on-year. More broadly, a return to neutral ENSO after 2026 would remove the primary near-term supply disruption catalyst for DBA. This is the commodity-expression (DBA) exit risk — the weather premium evaporates quickly on improved forecast models.",
+    "US-China trade war escalation / further agricultural retaliation: Chinese soybean purchases from the US collapsed from $12B to $5.5B in H1 2025. A further escalation (additional tariffs, import bans) would suppress US farm incomes, reduce planting intentions, and hurt both DBA (via US futures prices) and MOO/ISAG (via Deere, Corteva, ADM earnings). The reverse is also a risk: a US-China trade deal that resolves retaliatory tariffs would compress the risk premium currently in DBA commodity prices.",
+    "Fertilizer input cost inflation eroding agribusiness margins: Trump tariffs raised fertilizer costs by ~$100/tonne. If potash/nitrogen prices continue rising (via Russia/Belarus supply disruption or energy cost inflation), the cost increase reduces farm profitability faster than commodity price gains, compressing Deere/Corteva/Nutrien margins and creating a squeeze that hurts MOO/ISAG while DBA remains flat or rises. This is the specific risk in the equity-expression thesis.",
+    "Brazil structural oversupply recovery: Brazil has shown exceptional ability to expand soybean and corn acreage (Cerrado expansion). A multi-year investment in Brazilian grain capacity could restore global supply balance by 2028-2029, ending the current tight-stock environment. This is a medium-term risk (2-3yr) rather than a near-term one, but it caps the duration of any agri commodity bull market.",
+    "Substitute demand destruction / biofuel policy reversal: US soybean crush demand is partly driven by biofuel mandates. If US EPA reduces RVO (Renewable Volume Obligations) or if the EU revises SAF mandates, the biofuel demand floor disappears. Soybean prices would be materially affected — SAF/biofuel accounted for a significant portion of the $1/bu price increase projected for 2026/27.",
+    "Technology disruption to DBA-expression via precision agriculture: if Corteva's biotech seed pipeline (drought-resistant varieties, nitrogen-use-efficient crops) delivers yield improvements that offset weather disruption, the supply constraint thesis weakens. This is a 3-5yr risk, not near-term, but represents the scenario where the structural bull case for commodity prices gradually erodes even as EM demand grows."
+  ],
+
+  "narrative_maturity": "emerging",
+  "narrative_trend": "increasing",
+  "narrative_notes": "Agriculture and food security sit between 'ignored' and 'emerging' by the scoring_weights.yaml criteria. The food security/population growth thesis is present in specialist research (USDA WASDE, FAO, WMO reports, agricultural bank desks) and beginning to appear in generalist financial media, primarily via the grain stocks / La Niña angle. However, the specific investment thesis — tight global grain stocks + biofuel demand mandate + EM dietary transition as a multi-year commodity supercycle driver — is NOT yet in generalist sell-side equity coverage as a named theme. Goldman/JPM agricultural commodities desks publish on soft commodities but do not yet frame it as an equity alpha opportunity the way they framed EU defense rearmament or AI semiconductors. The biofuel/SAF demand angle for soybeans is specifically under-covered. Classified as 'emerging' (score_equiv: 35): present in specialist research, occasional FT/Bloomberg commodity coverage, but not named in mainstream ETF product descriptions as a primary investment theme. Narrative is increasing — food inflation headlines are bringing this into wider coverage, but the equity alpha framing (agribusiness companies, not just commodity prices) remains specialist. No significant retail ETF inflows visible yet. This is the alpha window — the narrative is starting to be told but the crowd has not positioned."
+}

@@ -1,0 +1,175 @@
+{
+  "$schema": "catalyx/schemas/sector_study.json",
+  "id": "study_semiconductors_foundry",
+  "schema_version": "1.2",
+  "sector_id": "semiconductors_foundry",
+  "sector_label": "Semiconductors — Foundries (TSMC, Samsung, Intel Foundry)",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "technology",
+    "adjacent_sectors": [
+      "semiconductors_design",
+      "semiconductors_equipment",
+      "semiconductors_memory",
+      "ai_infrastructure_data_centers"
+    ],
+    "differentiation_note": "Semiconductor foundries are the capex-intensive, cyclical manufacturing layer of the semiconductor stack: they build and operate the fabs that physically etch chips onto wafers, but they do not own the IP of the designs they manufacture. This separates them from fabless designers (semiconductors_design — Nvidia, AMD, Qualcomm — who own the IP and have zero fab assets) and from equipment makers (semiconductors_equipment — ASML, AMAT, Lam — who supply the tools that fabs buy). The foundry business is structurally different: $30-50B annual capex per leading-edge node, 3-5 year fab construction lead times, 50-70% gross margins only achievable at scale on leading-edge nodes, and extreme geographic concentration in Taiwan (TSMC) and South Korea (Samsung). Crucially, TSMC is the single point of failure for the entire global technology supply chain — >90% of the world's leading-edge logic chips (sub-7nm) are manufactured in Taiwan. This Taiwan concentration creates a geopolitical risk premium with no parallel in semiconductors_design or semiconductors_equipment, where assets are diversified across the US and Europe. Memory IDMs (semiconductors_memory) are also vertically integrated manufacturers but produce commodity DRAM/NAND and are driven by bit-pricing cycles — not by logic foundry node transitions or AI logic chip allocation. The foundry sector's investment thesis lives or dies on: (1) TSMC's pricing power and capacity allocation, (2) Taiwan geopolitical premium, and (3) CHIPS Act/EU Chips Act reshoring timelines — none of which drive the adjacent sectors."
+  },
+
+  "demand_drivers": [
+    "AI accelerator chip demand at leading-edge nodes: every Nvidia Blackwell (B200/B100) and Google TPU v5/v6 is manufactured exclusively at TSMC's N3/N4 (3nm/4nm) nodes. Nvidia and Apple have pre-secured TSMC allocation through end-2026, leaving minimal capacity for second-tier customers. Combined hyperscaler AI capex guidance of ~$350B in 2026 (Microsoft $80B, Google $75B, Amazon $100B+, Meta $60-65B) translates directly into leading-edge wafer demand that only TSMC can satisfy at scale.",
+    "HPC (High Performance Computing) chip migration to advanced nodes: Apple M4/M5, AMD EPYC 'Turin', Qualcomm Snapdragon all transitioned to 3nm in 2025-2026. Each node transition requires customers to commit multi-quarter capacity deposits, locking TSMC revenue 18-24 months forward.",
+    "TSMC revenue guided >30% growth in 2026 (full-year, USD terms), with Q1 2026 at $35.9B revenue (+35% YoY) and 66.2% gross margin — demonstrating that the AI-demand-driven pricing power is real and expanding, not merely cyclical recovery.",
+    "Sovereign AI and defense chip programs: the US-Taiwan TSMC deal, EU's proposed €30B advanced AI foundry (3nm node, announced June 2026), and Rapidus Japan (2nm, ~$5.6B cumulative Japanese government funding) are creating state-backed demand anchors that sustain capex even in a cyclical slowdown. These are non-cyclical demand commitments.",
+    "Reshoring subsidy engine — CHIPS Act and EU Chips Act: TSMC Arizona received $6.6B in grants plus $5B in loan guarantees from the US CHIPS Act. TSMC has now committed to 12 fabs and 4 advanced packaging facilities in Arizona (total disclosed investment: $165B+). Apple publicly committed to buying 100M+ TSMC Arizona chips in 2026. This reshoring demand is politically locked in and multi-decade.",
+    "Leading-edge node transitions driving wafer revenue intensity: moving from 5nm → 3nm → 2nm roughly doubles the wafer price per unit area (advanced lithography + more EUV mask layers). TSMC reportedly raised N3/N4 prices 3-10% in 2026, with customers paying premiums rather than accept allocation cuts."
+  ],
+
+  "supply_constraints": [
+    "Fab construction lead time: a leading-edge fab takes 3-5 years to build and qualify from greenfield. TSMC Arizona Fab 21 Phase 1 (4nm) is now operational but N3 high-volume production is targeted for 2027. No capacity shortfall can be remedied within 12-18 months — the bottleneck is structural, not operational.",
+    "EUV lithography equipment scarcity: ASML ships fewer than 60 EUV machines per year and High-NA EUV (required for 2nm and below) is in early ramp. TSMC, Samsung, and Intel compete for the same limited ASML allocation. Equipment lead times constrain how fast any foundry can expand leading-edge capacity regardless of capital commitment.",
+    "Yield ramp complexity at advanced nodes: Samsung's 3GAE (3nm GAA) node suffers persistent yield issues vs TSMC's N3, and Intel 18A has faced multiple setbacks. Only TSMC has demonstrated consistent, scalable leading-edge yields. This creates a natural monopoly on the most profitable capacity tier — Samsung and Intel cannot absorb overflow demand from TSMC customers reliably.",
+    "Geopolitical concentration in Taiwan: ~65-72% of global foundry revenue is generated in Taiwan (TSMC alone at ~62% market share; Samsung in Korea adds another ~12%). Taiwan Strait conflict scenarios range from economic blockade to direct military action — each is a different severity tail risk but all would disrupt global chip supply catastrophically. TSMC's international fabs (Arizona, Kumamoto Japan, Dresden Europe) will not reach sufficient scale before 2030 to meaningfully de-risk this.",
+    "Skilled semiconductor engineering talent scarcity: TSMC's Japan Kumamoto fab and Arizona Fab 21 have both experienced delays partly attributable to challenges training local workforces to Taiwanese fab operational standards. This soft constraint limits how quickly geographic diversification can proceed.",
+    "Water and energy intensity: a leading-edge fab consumes 10-20 million gallons of ultrapure water per day and hundreds of megawatts of power. Arizona's water scarcity (Colorado River allocation disputes) and TSMC's Japan fabs' energy requirements add infrastructure constraints that slow buildout timelines."
+  ],
+
+  "technology_maturity": null,
+
+  "cycle_position": {
+    "assessment": "Early-to-mid cycle recovery with structural AI demand floor — leading-edge nodes at capacity, legacy nodes still digesting oversupply",
+    "rationale": "The foundry cycle is bifurcated in 2026 in a way with no historical precedent. Leading-edge nodes (sub-5nm, particularly N3/N4) are structurally constrained: Nvidia and Apple have locked TSMC capacity through year-end, AI training chip demand is pulling forward multi-year wafer volumes, and TSMC's Q1 2026 gross margin of 66.2% is near historical highs — a classic capacity-constrained pricing environment. TSMC's full-year 2026 revenue guidance of >30% YoY growth is above any point in prior cycles. Legacy/mature nodes (28nm and above) tell the opposite story: post-COVID inventory digestion is only partially complete, SMIC (China) has aggressively expanded mature node capacity creating oversupply pressure, and utilization rates at legacy fabs remain below 80% for most foundries outside TSMC. The investment thesis is therefore node-specific: owning the leading-edge foundry story (overwhelmingly TSMC) is a structural bull case; owning generic foundry sector exposure conflates two very different dynamics. The primary risk to the bull case is a sudden pause in hyperscaler AI capex commitments — which would relieve leading-edge allocation pressure and reset pricing power — and Taiwan geopolitical escalation, which is a binary tail risk, not a continuous probability.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "TSMC quarterly revenue (USD) and gross margin %",
+      "unit": "USD billions / gross margin %",
+      "source": "TSMC earnings release (quarterly, ~mid-month after quarter end)",
+      "current": "Q1 2026: $35.9B revenue, 66.2% gross margin",
+      "comment": "Primary leading indicator. >65% gross margin = capacity constrained. <60% = pricing pressure or demand slowdown. Revenue growth >30% YoY in 2026 is guided."
+    },
+    {
+      "metric": "TSMC N3/N4 wafer capacity utilization rate",
+      "unit": "% utilization",
+      "source": "TSMC earnings call commentary + TrendForce monthly reports",
+      "current": ">95% at N3/N4 as of Q1 2026 (estimated from allocation behavior and pricing)",
+      "comment": "When utilization drops below 85% at leading edge, expect guidance cuts and margin compression. Watch for customer pushouts as the leading indicator."
+    },
+    {
+      "metric": "Combined hyperscaler AI capex (Microsoft + Google + Amazon + Meta) quarterly",
+      "unit": "USD billions, quarterly",
+      "source": "Big Tech earnings transcripts (quarterly)",
+      "current": "~$87B/quarter combined as of Q1 2026",
+      "comment": "The single most important demand driver for TSMC leading-edge allocation. A >20% cut in combined guidance would be the clearest leading indicator of foundry demand softness."
+    },
+    {
+      "metric": "TSMC advanced node price per wafer (N3 equivalent)",
+      "unit": "USD per wafer",
+      "source": "TrendForce, DigiTimes, industry analyst reports",
+      "current": "~$20,000-24,000 per wafer for N3 (estimated; TSMC does not disclose officially)",
+      "comment": "TSMC raised N3/N4 prices 3-10% in 2026. Track for signs of customer resistance or spot market deterioration."
+    },
+    {
+      "metric": "Intel Foundry Services (IFS) external revenue quarterly",
+      "unit": "USD millions",
+      "source": "Intel earnings release (Intel Foundry segment)",
+      "current": "$174M external revenue in Q1 2026",
+      "comment": "Proxy for whether alternative leading-edge foundry capacity is becoming viable. At $174M vs TSMC's $35.9B, Intel is not yet a structural alternative. Watch for 18A customer wins."
+    },
+    {
+      "metric": "TSMC Arizona / Japan fab ramp milestones",
+      "unit": "Qualitative milestones",
+      "source": "TSMC press releases + CHIPS Act NIST tracking",
+      "current": "Arizona Fab 21 Ph1 (4nm) operational 2026; N3 HVM targeted 2027; Kumamoto Japan Ph2 3nm targeted 2027",
+      "comment": "Geographic diversification progress reduces Taiwan risk premium. Delays push out the de-risking timeline and keep geopolitical discount elevated."
+    }
+  ],
+
+  "etf_analysis": [
+    {
+      "ticker": "TSM",
+      "name": "Taiwan Semiconductor Manufacturing Co. — ADR (direct equity, not ETF)",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0,
+      "aum_m_usd": 1880000,
+      "replication": "physical",
+      "avg_spread_bps": 1,
+      "top_10_concentration_pct": null,
+      "characteristics": "Pure-play foundry equity. TSMC controls ~62-72% of global foundry market, ~90%+ of leading-edge sub-7nm. $35.9B Q1 2026 revenue, 66.2% gross margin. Consensus analyst target ~$467 (19 analysts, Strong Buy). Market cap ~$1.88T as of June 2026. NOT an ETF — this is a direct single-name position. Included here because no ETF provides pure foundry exposure at adequate quality.",
+      "recommendation_tier": 2,
+      "limitations": "Single-name risk (concentration). Taiwan geopolitical binary tail risk — one strait incident could wipe years of gains. Not accessible via UCITS ETF wrapper. US ADR adds USD/TWD currency layer. Spanish investors should verify broker access and PRIIP KID documentation. Not recommended as a primary vehicle without a defined geopolitical stop-loss protocol."
+    },
+    {
+      "ticker": "SEMI.L",
+      "name": "iShares MSCI Global Semiconductors UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0035,
+      "aum_m_usd": 2400,
+      "replication": "physical",
+      "avg_spread_bps": 8,
+      "top_10_concentration_pct": null,
+      "characteristics": "UCITS. Includes TSMC (~15-20% weight), Samsung Semiconductor, ASML, Nvidia, AMAT, and other global names. AUM $2.4B, spread 8bps — accessible and liquid. Best UCITS vehicle for foundry-adjacent exposure. Geographic diversification vs US-only SOXX/SMH is a feature for this thesis (Taiwan + Korea + NL exposure). TER 0.35% is competitive for the theme.",
+      "recommendation_tier": 1,
+      "limitations": "NOT a pure foundry ETF. TSMC weight ~15-20% diluted by design names (Nvidia ~15%, Broadcom ~8%). Investor gets a blended semiconductor portfolio, not pure foundry exposure. Fabless names dominate the index by market cap, so the foundry-specific catalyst is diluted roughly 5:1 vs a pure-play. Best available UCITS option despite dilution. For Spanish investors: UCITS compliant, accessible on LSE via major brokers, USD-denominated (EUR/USD exposure retained)."
+    },
+    {
+      "ticker": "SOXX",
+      "name": "iShares Semiconductor ETF",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "ter": 0.0035,
+      "aum_m_usd": 11200,
+      "replication": "physical",
+      "avg_spread_bps": 2,
+      "top_10_concentration_pct": null,
+      "characteristics": "Largest liquid US semiconductor ETF. NVDA, AVGO, AMD, QCOM, INTC, plus TSMC ADR (~5-7% weight). AUM $11.2B, spread 2bps. Most liquid vehicle for general semiconductor exposure. Captures some TSMC upside via ADR holding.",
+      "recommendation_tier": 3,
+      "limitations": "NOT UCITS — generally not accessible to EU retail investors under PRIIPs/KID rules without professional investor status. Foundry exposure is minimal: TSMC ~5-7% of index weight, Samsung absent (not US-listed). Primarily a fabless design + memory play. Only use if broker allows non-UCITS access. Do not use as a foundry-specific vehicle."
+    },
+    {
+      "ticker": "GAP_NO_PURE_FOUNDRY_ETF",
+      "name": "TAXONOMY GAP: No pure-play foundry ETF exists (UCITS or US-domiciled)",
+      "exchange": "N/A",
+      "currency": "N/A",
+      "ter": 0.0,
+      "aum_m_usd": null,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "No ETF focuses exclusively on semiconductor foundries. The closest single-name proxy is TSM (TSMC ADR). The 'foundry thesis' cannot be cleanly expressed via an ETF product: (1) TSMC is a single company with no peer of comparable size or quality; (2) Samsung Foundry is embedded inside Samsung Electronics (consumer electronics, memory, foundry — impossible to isolate via ETF); (3) Intel Foundry Services contributes <1.3% of Intel total revenue ($174M/quarter). Any ETF containing foundry exposure is predominantly a fabless design ETF. The ETF coverage gap is structural and unlikely to be resolved until a dedicated TSMC-only product or a foundry-focused index is created. MONITOR for new product launches: a UCITS 'Pure Foundry ETF' would immediately become Tier 1 for this sector.",
+      "recommendation_tier": 3,
+      "limitations": "This entry documents the absence of a suitable vehicle, not a product recommendation. Pure foundry exposure currently requires accepting single-name concentration risk in TSM or using broad semiconductor ETFs as impure proxies. For a Spanish investor with UCITS constraint, SEMI.L (iShares MSCI Global Semiconductors UCITS ETF) is the least-worst option, with the understanding that foundry-specific alpha will be significantly diluted."
+    }
+  ],
+
+  "risks": [
+    "Taiwan Strait binary tail risk: ~65-72% of global foundry capacity is located in Taiwan. Any military escalation, naval blockade, or even credible threat of conflict could cause immediate de-rating of TSMC (and adjacent semiconductor stocks) by 30-50%+. This risk cannot be hedged within the sector — it must be managed via position sizing and geopolitical monitoring. TSMC's Arizona and Japan fabs will not provide meaningful supply redundancy before 2028-2030 at the earliest.",
+    "AI capex pause or efficiency breakthrough: if hyperscalers cut AI capex (demand shock) or a fundamental efficiency breakthrough (e.g., a DeepSeek-like model achieving 100x compute efficiency per chip) reduces the need for raw compute scaling, TSMC's leading-edge utilization would drop sharply. TSMC's Q4 2022 experience — when memory customers cancelled orders and utilization fell to ~80% — showed how quickly margin compression can materialize. The current cycle is more structurally grounded than 2022 but not immune to demand shocks.",
+    "Intel Foundry Services 18A competitive risk: if Intel successfully ramps 18A node (Gate-All-Around, expected HVM 2026-2027) and wins Nvidia or Apple as a customer, TSMC loses monopoly pricing power on the most profitable allocation tier. TSMC management acknowledged Intel as a 'formidable competitor' in its Q1 2026 earnings call — an unusual admission. Intel 18A customer wins would be a material negative catalyst for TSMC's pricing model.",
+    "Samsung Foundry yield recovery: Samsung's 3nm GAA node has persistent yield issues vs TSMC's N3. If Samsung closes the yield gap by late 2026, customers who switched to TSMC during Samsung's quality problems would have a viable alternative, reducing TSMC's pricing power. Monitor Samsung's foundry revenue growth — sustained above-market growth signals yield recovery.",
+    "Geopolitical chip controls escalation: US BIS export controls on AI chips (H100, B200) to China directly reduce addressable market for both TSMC (who manufactures for Nvidia) and the downstream thesis. Further tightening — e.g., controls extended to A-series processors or any sub-7nm chip — could meaningfully shrink TSMC's customer base. Conversely, a US-China technology detente would reduce controls and be a positive catalyst.",
+    "Valuation risk — TSMC is not cheap: at a market cap of ~$1.88T and a P/E above 25x (May 2026), TSMC is priced for continued AI capex growth. Consensus analyst target is $467 (~25% upside from current levels), implying the market has already priced in substantial growth. A multiple compression — even without earnings deterioration — would deliver negative returns. The sector trades with a 'crowded' narrative label; entering at current levels requires accepting that much of the AI foundry thesis is already reflected in the price."
+  ],
+
+  "narrative_maturity": "crowded",
+  "narrative_trend": "stable",
+  "narrative_notes": "The TSMC/foundry AI narrative has been mainstream-to-crowded since late 2024 and is now firmly 'crowded' by the scoring_weights.yaml criteria: (1) Bloomberg/CNBC feature TSMC and AI chip shortages as daily coverage items; (2) TSMC is cited in every major sell-side 'AI infrastructure' theme report from Goldman, JPM, Morgan Stanley, and BofA; (3) semiconductor ETFs (SOXX, SMH) have seen sustained retail inflows and are top-10 hedge fund themes by most COT-equivalent data; (4) TSM stock delivered a ~2,095% 10-year total return (documented 247wallst.com, 2026-06-04) and is in every mainstream 'AI winner' list; (5) TSMC analyst consensus is 19/19 buy or strong-buy ratings per S&P Global. The narrative_maturity_levels.crowded criteria from scoring_weights.yaml are fully satisfied. The sector is NOT exhausted (ETF flows have not reversed, forward estimates are still rising, no sign of positioning unwind) but adding new foundry exposure at current levels means buying a crowded thesis. The alpha opportunity, if it exists, is in geopolitical premium de-risking (Arizona ramp milestones) or in a re-acceleration of AI capex above current guidance — not in the base case of the existing narrative. narrative_trend: stable — the foundry AI narrative has been at 'crowded' intensity for approximately 6 months with no sign of cooling, but also no sign of the exhaustion phase trigger (earnings miss + multiple contraction + fund outflows) materializing yet. Applied multi-catalyst aggregation rule: the active catalyst (struct_ai_capex_supercycle) has its own narrative_maturity at crowded level; no contradicting catalyst with a lower maturity lowers this assessment. Sector narrative_maturity = crowded per the maximum rule.",
+
+  "historical_catalyst_performance": {
+    "summary": "TSMC and semiconductor foundry stocks have historically exhibited three distinct response patterns to catalysts: (1) AI capex acceleration events — TSMC stock has rallied 15-40% within 3-6 months of major AI capex guidance increases (e.g., Microsoft $80B announcement Jan 2026, Google $75B Feb 2026 — TSMC re-rated sharply higher in Q1 2026, with EPS more than doubling YoY by Q2 2026); (2) Taiwan geopolitical escalation events — TSMC ADR fell 25-35% in 3 days during the August 2022 Pelosi Taiwan visit, demonstrating the binary, rapid-onset nature of the geopolitical tail risk; recovery was full within 60 days as the incident resolved without escalation, but this demonstrates that geopolitical events create sharp but potentially temporary dislocations rather than permanent impairment; (3) technology node transition announcements — TSMC's 2nm/1.6nm trial production announcement (January 2026) and confirmation of N3 high-volume production ahead of schedule drove analyst target upgrades but only incremental stock response, suggesting node roadmap execution is now priced in as expected execution rather than a positive surprise. Key historical lesson: the foundry sector responds strongly to demand-side AI capex catalysts (non-consensus revisions up) and violently to Taiwan escalation (even noise without substance). The asymmetry of outcomes — large gains on gradual AI demand confirmation vs large sudden losses on geopolitical shock — makes position sizing and geopolitical stop-loss design more critical here than in any other tech sub-sector. CHIPS Act / reshoring milestone announcements (e.g., TSMC Arizona Fab 21 operational confirmation, 2026) produced modest positive reactions — already partially priced from the subsidy announcement in 2023.",
+    "ai_capex_catalyst_response": "TSMC outperforms broad semiconductor ETFs by 10-20% in quarters following above-consensus hyperscaler capex guidance increases. The signal is strongest when guidance increases are accompanied by specific wafer volume commitments rather than general capex budget guidance.",
+    "taiwan_strait_risk_response": "Historical precedent (Pelosi 2022): -25 to -35% in 3 trading days on escalation, full recovery in ~60 days post-de-escalation. A prolonged conflict scenario has no precedent and would likely be a permanent impairment event for TSM ADR holders.",
+    "reshoring_milestone_response": "CHIPS Act/EU Chips Act announcements provide short-term positive sentiment but multi-year execution risk keeps the market from pricing in full reshoring benefit. Arizona HVM ramp confirmation (expected 2027) would be a substantive catalyst."
+  },
+
+  "active_catalyst_ids": [
+    "struct_ai_capex_supercycle"
+  ]
+}

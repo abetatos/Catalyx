@@ -1,0 +1,145 @@
+{
+  "$schema": "catalyx/schemas/sector_study.json",
+  "id": "study_infrastructure_core",
+  "schema_version": "1.2",
+  "sector_id": "infrastructure_core",
+  "sector_label": "Core Infrastructure — Toll Roads, Airports, Ports",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "real_assets",
+    "adjacent_sectors": [
+      "grid_infrastructure_utilities",
+      "water_infrastructure",
+      "real_estate_logistics"
+    ],
+    "differentiation_note": "Core infrastructure (toll roads, airports, ports) is a TRAFFIC FLOW and CONCESSION PRICING business, not a capital equipment or generation business. The revenue model is: government-granted monopoly concession + formula-based toll escalation (typically CPI + fixed premium) + volume throughput. Returns are driven by traffic growth and inflation pass-through, not the power market, the commodity cycle, or technology adoption. Grid infrastructure (adjacent sector) owns regulated wires and storage assets — it earns a WACC-based regulated return on its asset base, independent of how much energy flows through it; core infrastructure earns directly per unit of traffic/tonne/passenger. Water infrastructure earns a regulated return on utility assets — similar to grid, it is a quantity-indifferent regulated franchise, not a volume-sensitive concession. Core infrastructure therefore combines volume sensitivity (economic cycle) with structural inflation protection (contract escalation) in a way neither adjacent sector does, making it simultaneously a growth asset (traffic) and an inflation hedge (contractual CPI links)."
+  },
+
+  "demand_drivers": [
+    "Global air passenger traffic: ACI World forecasts 10.2 billion passengers in 2026 (+3.9% YoY), driven by leisure travel normalisation in Asia-Pacific and sustained business travel in Europe and North America. IATA data: January 2026 RPK +3.8% YoY; February 2026 +6.1% YoY. Long-run CAGR of 3.4% through 2045 (18.8 billion passengers) per ACI World Traffic Forecasts 2025-2054.",
+    "Toll road volume recovery: Ferrovial 407 ETR (Canada) delivered double-digit EBITDA growth in Q1 2026 despite adverse weather; Ferrovial Highways revenues +13.7% LFL to €336M in Q1 2026, driven by North America. Transurban average daily traffic +3.0% in March 2026 quarter across Sydney, Melbourne, and North American assets. VINCI Autoroutes revenues +0.6% to €1.44B in Q1 2026 on 4,443 km of French network.",
+    "Inflation pass-through in concession contracts: toll road concessions in France, UK, Spain, Australia, and Canada incorporate explicit CPI (or CPI + fixed minimum) escalation clauses. US core CPI running at 2.8% YoY (May 2026) provides ~3% annual toll uplift without volume growth. Transurban WestConnex tolls escalate annually by the higher of CPI or 4% through 2040.",
+    "Port freight volumes: US freight infrastructure handles 54 million tonnes/day. S&P Global 2026 US Transportation Activity Estimates show steady but slower port volume growth, with Houston outperforming; the US Dept of Transportation's $32B five-year National Freight Strategic Plan (unveiled 2026) underpins public capex commitment.",
+    "Nearshoring and supply chain reshoring: industrial onshoring (Mexico, Eastern Europe, US Sunbelt) increases multimodal freight intensity — more truck-rail-port handoffs per unit of production. Toll road networks in Mexico (VINCI Brazil/India expansion), Eastern European motorways, and US interstate toll corridors benefit structurally from this trade-route shift.",
+    "Greenfield concession pipeline: VINCI Highways signed acquisition of 9-concession Safeway portfolio in India (~700 km, maturities 2048-2058) in Q1 2026, extending organic growth runway. Ferrovial active in US managed-lane expansions. Sector remains asset-light for operators post-concession award — incremental capex required is maintenance, not buildout."
+  ],
+
+  "supply_constraints": [
+    "Concession duration is finite: most major toll roads, airports, and ports operate under 30-50 year concessions from governments. As concessions approach expiry, the asset reverts to the state. New concession procurement is slow — governments award 1-3 major infrastructure concessions per country per year. This limits organic growth for any single operator.",
+    "Greenfield airport construction: major new airport capacity (terminals, runways) requires 10-20 year planning, permitting, and build timelines. Secondary airports and terminal expansions are faster (5-8 years) but slot-constrained in core hubs. This supply inelasticity supports airport aeronautical charges.",
+    "Port capacity expansion: deep-water port development requires dredging, environmental clearances, and rail/road landside connections. Lead time 8-15 years in most jurisdictions. US Gulf and East Coast ports are capacity-constrained versus import demand growth.",
+    "Political risk on concession renewal: when concessions approach expiry, governments can re-tender competitively or nationalise. Political pressure on toll pricing (especially in France where VINCI Autoroutes faces periodic public debate) can limit pricing power independent of contractual rights.",
+    "Capital intensity at concession acquisition: winning a new concession typically requires bidding at thin initial IRR (4-7% unleveraged) with value accruing from traffic growth and inflation over decades. This creates a high upfront capital barrier and long payback periods, limiting new entrants but also concentrating capital risk in operators who overpay."
+  ],
+
+  "technology_maturity": null,
+
+  "cycle_position": {
+    "assessment": "Mid-cycle — re-rating from rate-peak lows underway, inflation tailwind intact, traffic recovery complete",
+    "rationale": "Core infrastructure was aggressively derated in 2022-2023 as rate rises compressed the long-duration discount rate. That derating created a valuation trough. With rate stabilisation (ECB held through H1 2026, Fed projected to cut 100bps in 2026) and confirmed traffic recovery (Transurban +3.0%, VINCI Airports +1.5% in Q1 2026, IATA +6.1% Feb 2026), the sector is in a mid-cycle re-rating. The inflation pass-through mechanism is now fully active — core CPI at 2.8% in the US means contractual toll escalators are automatically delivering 3%+ revenue uplift with zero volume growth. Infrastructure equity is not at the early-cycle distress entry point of 2023, but it is not yet crowded — YTD performance of IFRA at ~17% (through June 2026) suggests re-rating is underway but not complete. The 10-year secular driver (global middle class travel growth, urbanisation, freight volume growth) is in its third decade with no end in sight. Rate-cut trajectory is the near-term catalyst: each 25bps of Fed/ECB cutting directly expands the DCF multiple for long-duration infrastructure cash flows.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "INFR.L",
+      "name": "iShares Global Infrastructure UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0065,
+      "aum_m_usd": 2048,
+      "replication": "physical",
+      "avg_spread_bps": 8,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": 0.48,
+      "characteristics": "UCITS-compliant global core infrastructure: toll roads (Transurban, Ferrovial, VINCI Autoroutes), airports (Aena, Auckland), ports (DP World exposure via multi-sector operators), and utilities (Enbridge, National Grid). Physically replicated. AUM €2.05B (confirmed May 2026). USD-denominated on LSE — Spanish investor incurs EUR/USD FX exposure but no PRIIPs barrier. Best single UCITS vehicle for the sector.",
+      "recommendation_tier": 1,
+      "limitations": "TER of 0.65% is not cheap for an infrastructure ETF — but acceptable given UCITS access and AUM. USD denomination on LSE adds EUR/USD noise. Utilities exposure (~25% of index) dilutes pure toll/airport thesis by adding rate-sensitive regulated networks to the portfolio."
+    },
+    {
+      "ticker": "IFRA",
+      "name": "iShares U.S. Infrastructure ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0030,
+      "aum_m_usd": 1900,
+      "replication": "physical",
+      "avg_spread_bps": 7,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "US-focused infrastructure: utilities, transportation (toll roads, airports), and construction. Lowest TER in the category (0.30%). YTD 2026 return ~17% (as of early June 2026) — confirms re-rating thesis. Equal-weighted construction gives mid-cap exposure alongside large caps. Top holdings include Jacobs Engineering, AES, Veolia US, Eaton.",
+      "recommendation_tier": 2,
+      "limitations": "NOT UCITS — Spanish investors face PRIIPs/KID barrier. US-only exposure misses best-in-class non-US concession operators (Transurban, VINCI, Ferrovial, Aena). Construction sector exposure (~15%) dilutes pure concession thesis and adds cyclical project risk. Tier 2 for Spanish investor due to UCITS constraint — Tier 1 if non-UCITS access available."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "IATA Revenue Passenger Kilometres (RPK) — monthly YoY growth",
+      "unit": "% YoY",
+      "source": "IATA monthly Air Passenger Market Analysis",
+      "current": 6.1,
+      "comment": "February 2026: +6.1% YoY. Accelerating from January (+3.8%). Key leading indicator for airport aeronautical revenue. Watch: any deceleration below +2% would signal traffic slowdown."
+    },
+    {
+      "metric": "Ferrovial Highways LFL revenue growth",
+      "unit": "% YoY, like-for-like",
+      "source": "Ferrovial quarterly earnings (SEC Form 6-K)",
+      "current": 13.7,
+      "comment": "Q1 2026: +13.7% LFL, driven by North America (407 ETR Canada + US managed lanes). Best real-time indicator of premium toll road pricing power and traffic elasticity."
+    },
+    {
+      "metric": "Transurban average daily traffic growth",
+      "unit": "% YoY",
+      "source": "Transurban quarterly traffic update (ASX)",
+      "current": 3.0,
+      "comment": "March 2026 quarter: +3.0% across Sydney, Melbourne, North America. Consistent with 2-4% structural range. Watch: Sydney M7 widening and Warringah completion (H2 2026) should add incremental volume."
+    },
+    {
+      "metric": "US core CPI (YoY) — proxy for contractual toll escalation floor",
+      "unit": "% YoY",
+      "source": "BLS CPI report (monthly)",
+      "current": 2.8,
+      "comment": "May 2026: core CPI 2.8% YoY. Directly feeds into CPI-linked toll concession escalators. Above the 2% Fed target — provides ~3% revenue uplift per year without volume growth in CPI-linked concessions."
+    },
+    {
+      "metric": "ECB/Fed rate trajectory — forward curve 12M outlook",
+      "unit": "basis points of projected cuts",
+      "source": "Fed FOMC dot plot / ECB guidance",
+      "current": 100,
+      "comment": "Market pricing: Fed to cut 100bps in 2026. Each 25bps cut expands DCF multiples for long-duration infrastructure cash flows. Rate-cut pace is the primary re-rating catalyst. A reversal (cuts delayed/reversed) would compress multiples."
+    },
+    {
+      "metric": "INFR.L YTD total return (USD)",
+      "unit": "% YTD",
+      "source": "Bloomberg / iShares website",
+      "current": null,
+      "comment": "Proxy for sector re-rating pace. IFRA (US proxy) +17% YTD through early June 2026. INFR.L directionally similar but with FX overlay. Monitor monthly for thesis validation / crowding signal."
+    }
+  ],
+
+  "active_catalyst_ids": [],
+
+  "historical_catalyst_performance": {
+    "summary": "Core infrastructure has a well-documented inverse relationship with long-term interest rates: the 2022 rate shock delivered -25% to -35% drawdowns in listed infrastructure globally (INFR.L, IFRA both down ~25-30% from 2021 peaks by October 2022), as DCF multiples compressed. The 2023 recovery began when rate expectations peaked. Notably, the sector proved resilient through COVID traffic shutdowns — operators renegotiated concession terms (extended durations, reduced concession fees) with governments rather than entering default, validating the government-backed concession model. Post-COVID traffic recovery in toll roads was faster than airports (toll roads recovered to pre-pandemic volumes by 2022; most airport operators by 2023). Historically, the sector outperforms the broader equity market in the 12-24 months following a rate-cut cycle onset: the 2015-2016 global rate-cut cycle delivered +20-30% for listed infrastructure ETFs. The current rate-cut setup (Fed -100bps expected in 2026) mirrors this historical pattern.",
+    "rate_shock_drawdown_pct": -28,
+    "post_rate_peak_12m_return_pct": 22,
+    "covid_traffic_recovery_completion_year": 2023
+  },
+
+  "risks": [
+    "Interest rate re-acceleration: core CPI at 2.8% (May 2026) is still above target. If inflation re-accelerates and the Fed delays or reverses cuts, the entire re-rating thesis stalls or reverses. Infrastructure is long-duration — each 100bps of unexpected rate rise typically compresses listed infrastructure multiples 12-18%.",
+    "Concession political risk — toll pricing populism: France, Spain, and Mexico have experienced periodic political pressure to freeze or limit toll increases, especially during election cycles. VINCI Autoroutes faced French government scrutiny over 'excess profits' in 2023-2024. If regulatory renegotiation overrides contractual CPI escalators, revenue growth is impaired.",
+    "Aviation demand shock: a major geopolitical disruption (Middle East escalation affecting transatlantic routes), a new pandemic-class health event, or sustained oil price spike could reduce passenger volumes. Airport concession operators (VINCI Airports, Aena, Auckland Airport) have high operating leverage — a 10% volume decline typically produces a 25-35% EBITDA decline.",
+    "FX translation risk: most top concession operators report in EUR (Vinci, Ferrovial) or AUD (Transurban) but earn significant cash flows in USD (407 ETR, US toll lanes), AUD, MXN, and INR. EUR appreciation reduces reported EBITDA for non-EUR revenues. VINCI Q1 2026 concession revenue was flat on a reported basis (+2% LFL) due to exchange rate headwinds.",
+    "Concession expiry / non-renewal cliff: major concessions have fixed end dates. A significant portion of VINCI Autoroutes' French portfolio expires 2030-2045. Revenue cliff risk is partially mitigated by reinvestment into new concessions (India, Brazil, US), but improperly priced new concession bids can destroy value if traffic growth underperforms.",
+    "Climate event frequency: toll roads and airports face increasing physical risk from extreme weather events (floods, storms). Transurban Sydney reported traffic impact from heavy rainfall in Q1 2026. Insurance cost inflation + potential physical damage to concession assets is an underpriced tail risk as climate event frequency increases."
+  ],
+
+  "narrative_maturity": "mainstream",
+  "narrative_trend": "increasing",
+  "narrative_notes": "Core infrastructure is a well-established investment category with a dedicated institutional investor base (pension funds, sovereign wealth funds, listed infra specialists like Cohen & Steers, CBRE IM, Morgan Stanley Infrastructure). The 'inflation hedge + stable cash flow' framing has been mainstream since at least 2018 and is a consensus allocation in institutional real assets portfolios. Sell-side coverage is thorough (Goldman, JPM, MS all publish infrastructure sector strategy). However, the SPECIFIC catalyst of rate-cut-driven re-rating after the 2022-2023 derating is more recently discussed — this is the alpha opportunity. The sector is 'mainstream' in general allocation terms but the near-term re-rating trade is 'emerging' within that mainstream framing. Classifying as 'mainstream' per scoring_weights.yaml — the thesis is consensus-known, but the current timing of entry (post-derating, pre-cut-cycle delivery) means the crowding element is not yet present. Score equivalent: 60."
+}

@@ -1,0 +1,166 @@
+{
+  "$schema": "catalyx/schemas/sector_study.json",
+  "id": "study_private_equity_listed",
+  "schema_version": "1.2",
+  "sector_id": "private_equity_listed",
+  "sector_label": "Listed Private Equity",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "financials",
+    "adjacent_sectors": ["asset_management", "banking", "insurance_europe"],
+    "differentiation_note": "Listed private equity (LPE) ≠ asset management in two critical ways: (1) revenue structure — asset managers (BlackRock, Amundi) earn fee income tied to AUM, which is largely equity-market-correlated and predictable; LPE firms (Blackstone, KKR, Apollo, EQT) earn a blend of fee-related earnings (FRE, stable and growing) plus carried interest (carry, lumpy and cyclical) which is tied to PE exit activity, M&A volumes, and credit spread compression — instruments that asset managers do not own or operate; (2) leverage and cycle exposure — LPE firms use balance-sheet commitments, GP stakes, and fund-level leverage in ways traditional asset managers do not, creating both higher upside in exit cycles and higher drawdown risk in illiquidity events. LPE ≠ banking because LPE firms have no deposit base, no net interest income sensitivity, no regulatory capital (Basel III/IV) requirements in the banking sense, and derive alpha from private market operations rather than credit intermediation. The thesis for listed PE requires a specific view on: (a) the deal exit cycle reopening (M&A + IPO), (b) management fee stickiness as AUM compounds, and (c) FRE quality — carry is optionality on top, not the base case."
+  },
+
+  "demand_drivers": [
+    "M&A exit cycle reopening: global sponsor-backed M&A value rose ~58% YoY in Q3 2025, continuing into 2026. PE deal volume is forecast to accelerate through H2 2026 as sponsors work through a backlog of ~32,000 unsold companies worth $3.8 trillion (McKinsey 2026 Global Private Markets Report). Every percentage-point improvement in exit activity directly expands realized carry income and accelerates capital recycling.",
+    "Structural FRE compounding: Blackstone, KKR, and Apollo each achieved 23-30% YoY growth in fee-related earnings in Q1 2026. FRE is management-fee-driven and largely non-cyclical — it compounds with AUM regardless of exit markets. Blackstone reached $1.3T AUM (+12% YoY), Apollo $1.03T AUM (+31% YoY), KKR $758B AUM (+14% YoY). FRE is now the dominant earnings driver for all three, shifting the revenue mix toward a more stable, asset-manager-like profile.",
+    "Easing interest rate tailwind: central bank rate cuts since H2 2024 have (a) reduced LBO financing costs, improving acquisition ROE; (b) widened valuation multiples, narrowing bid-ask gaps between PE-held assets and strategic buyers; (c) restored confidence in IPO pipelines. Falling borrowing costs are the primary enabler of the 2026 M&A recovery.",
+    "Democratization / wealth channel expansion: all major LPE firms are aggressively building retail and semi-institutional products (Blackstone BREIT, KKR's partnership with Capital Group, Apollo's Athene platform). This opens a new AUM flywheel outside institutional LPs, structurally expanding fee bases beyond the traditional endowment/sovereign wealth fund universe.",
+    "Dry powder deployment pressure: ~$3.7 trillion in global PE dry powder as of Q1 2026 (PitchBook). Funds raised in 2021-2023 are approaching 4-5 year deployment deadlines — GPs face mounting LP pressure to act. Aging capital (held >4 years) now represents 24% of total dry powder (up from 20% in 2022), creating a deployment urgency that drives deal volumes and accelerates exit timelines.",
+    "Private credit expansion: alternative asset managers are capturing traditional bank lending market share as post-Basel IV bank retrenchment from leveraged/corporate lending opens white space. Apollo's Athene and Blackstone's credit platforms are growing at 40-60% YoY. This structural shift diversifies LPE revenue beyond buyout carry into credit management fees, which are more stable."
+  ],
+
+  "supply_constraints": [
+    "Fundraising compression: capital raising is down >30% from 2023 peak levels. Megafunds (>$10B) continue to attract disproportionate LP capital, crowding out mid-tier managers. First-time and sub-$2B funds face acute difficulty raising. This constraint does not affect listed LPE firms (who are typically megafund managers) but signals LP fatigue that could eventually slow aggregate AUM growth.",
+    "Exit backlog and distribution drought: distributions as a percentage of NAV have held below 15% for four consecutive years — an industry record. With average holding periods at exit now ~7 years (vs. 5-year norms), LP capital is locked longer than expected. This creates LP liquidity pressure and reduces their ability to commit to new funds until exits materialize.",
+    "Valuation gap persistence: despite narrowing, valuation gaps between PE-held assets and public market buyers remain elevated. Private market valuations (stale marks) still trail public comps in several sectors. This delays exits and pressures PE NAV marks, which affects the LPE equity price premium/discount to NAV.",
+    "Carry crystallization lag: even with improving exit markets, carry income (20% of fund profits above hurdle) is only recognized on actual exits — not on mark-to-market gains. The stock market leads carry realization by 12-18 months, meaning EPS can appear depressed relative to underlying portfolio appreciation.",
+    "Political and regulatory risk on carry taxation: recurring legislative proposals to reclassify carried interest as ordinary income (currently taxed at long-term capital gains rates: 23.8% US maximum). Every legislative cycle introduces uncertainty. A reclassification would reduce GP economics materially.",
+    "Talent competition: competition from private credit, hedge funds, and tech is intensifying for investment professionals. Management fee economics are under pressure from LP negotiations at renewal."
+  ],
+
+  "technology_maturity": null,
+
+  "cycle_position": {
+    "assessment": "Early-to-mid recovery — FRE momentum is established, carry cycle is just beginning to reopen",
+    "rationale": "Listed PE is at an inflection point as of June 2026. The FRE engine (management fees) has already re-rated and is compounding at 20-30% YoY for the mega-managers — this portion of the thesis is mainstream and partially priced in. The carry/realization cycle, however, is still early: after a four-year distribution drought and with $3.8 trillion in unrealized portfolio value overhanging the market, the GP community is deploying the 2026 M&A recovery as the reopening catalyst. Deal volume is up ~50% from 2024 troughs, but still below 2021 peak. The LPE equity complex has outperformed broader financials YTD 2026 but remains at a discount to peak-cycle multiples (2021) because investors are discounting the timing and scale of carry realization. The key forward inflection is H2 2026 IPO and strategic-exit season — if equity markets hold (S&P resilience through Q1 2026 earnings has helped), the carry pipeline begins to monetize and EPS should accelerate sharply from a low base. Valuation: consensus estimates likely understate the EPS leverage from carry crystallization at current M&A volumes. Risk: tariff-driven equity market volatility (Q1 2026 tariff shock) and macro uncertainty remain the primary delay mechanisms. Cycle analogy: 2013-2014 or 2010-2011 — the base business is sound, the optionality on carry is repricing, but patience is required.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "IPRV",
+      "name": "iShares Listed Private Equity UCITS ETF USD (Dist)",
+      "exchange": "LSE / Euronext Amsterdam (IPRV.AS)",
+      "currency": "USD",
+      "ter": 0.0075,
+      "aum_m_usd": 890,
+      "replication": "physical",
+      "avg_spread_bps": 20,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": 0.65,
+      "characteristics": "UCITS. Oldest and largest dedicated listed-PE UCITS ETF (launched March 2007). Tracks S&P Listed Private Equity Index. Holds Blackstone, KKR, Apollo, Ares, Carlyle, EQT, Partners Group, Intermediate Capital. EUR AUM ~€684M (Feb 2026). Available on Euronext Amsterdam as IPRV.AS — accessible to Spanish investors via most brokers. Distributing share class.",
+      "recommendation_tier": 1,
+      "limitations": "TER of 0.75% is high vs. passive equity ETFs — justified by the niche exposure. Spread ~20bps: within acceptable range but monitor on low-volume days. High concentration in top 10 (~65%). Tracks S&P LPE Index which has specific inclusion rules (listed PE companies, not all alt-managers) — some newer entrants (Blue Owl, TPG) may not be in index immediately. USD-denominated with EUR FX risk for Spanish investors."
+    },
+    {
+      "ticker": "GSPE",
+      "name": "Goldman Sachs MSCI World Private Equity Return Tracker UCITS ETF",
+      "exchange": "Deutsche Boerse (Xetra) / LSE",
+      "currency": "USD",
+      "ter": 0.0050,
+      "aum_m_usd": null,
+      "replication": "synthetic_swap",
+      "avg_spread_bps": null,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "UCITS. Launched January 2026 — very new. Tracks MSCI World Private Equity Return Tracker Index, which uses a factor-based public equity replication of PE return characteristics (not direct holdings of LPE stocks). Managed by Goldman Sachs QIS team. TER 0.50% — cheaper than IPRV. Listed on Deutsche Boerse (Xetra) and LSE; Euronext and other European listings planned.",
+      "recommendation_tier": 2,
+      "limitations": "Too new to have reliable AUM, spread, or tracking error data (launched January 2026 — only 5 months of track record). Synthetic replication approach: MSCI PE Return Tracker replicates PE return factor using public equities — it does NOT directly hold Blackstone/KKR/Apollo shares. This is a return-replication product, not a direct listed-PE holdings fund. The replication methodology may not perfectly capture the upside from carry realization cycles. AUM and liquidity data unavailable until further track record develops — monitor over H2 2026. FLAG: monitor AUM growth — if it crosses $200M by Q3 2026, may warrant upgrade to Tier 1."
+    },
+    {
+      "ticker": "PSP",
+      "name": "Invesco Global Listed Private Equity ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0144,
+      "aum_m_usd": 520,
+      "replication": "physical",
+      "avg_spread_bps": 25,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": 0.60,
+      "characteristics": "NOT UCITS (US-listed). Tracks Red Rocks Global Listed Private Equity Index. YTD 2026 return of 8.21% — outperforming PEX (4.20%). Net AUM growing: +$22M 3-month, +$9M 1-year (June 2026). Includes global listed PE companies.",
+      "recommendation_tier": 3,
+      "limitations": "NOT UCITS — not accessible to Spanish retail investors via most EU brokers (Directive compliance issue). TER 1.44% — extremely high; erodes return vs. IPRV substantially over time. Spread approximately 25bps — at the warning threshold. Included for comparison/reference only. Spanish investors should default to IPRV for UCITS compliance. Classified Tier 3 solely due to non-UCITS status for target investor profile."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Big-3 LPE AUM quarterly growth rate (Blackstone + KKR + Apollo combined)",
+      "unit": "% YoY",
+      "source": "Quarterly earnings releases (BX, KKR, APO on NYSE)",
+      "current": "Blackstone +12% YoY ($1.3T), KKR +14% YoY ($758B), Apollo +31% YoY ($1.03T) — Q1 2026",
+      "comment": "AUM growth is the FRE engine. Watch for deceleration below 10% YoY — would indicate LP demand softening. Apollo's 31% is exceptional and partly reflects Athene credit AUM; monitor organic PE AUM separately."
+    },
+    {
+      "metric": "Fee-Related Earnings (FRE) per share growth — Blackstone, KKR, Apollo",
+      "unit": "% YoY",
+      "source": "Quarterly earnings (BX: FRE/share; KKR: FRE/share; APO: FRE/share)",
+      "current": "Blackstone +23% YoY, KKR +23% YoY, Apollo +30% YoY — Q1 2026",
+      "comment": "FRE is the base business — stable, recurring. Carry on top is option value. If FRE growth decelerates to <15%, multiple compression likely. Apollo at 30% is the sector outlier — credit/insurance AUM mix driving this."
+    },
+    {
+      "metric": "Global sponsor-backed M&A deal value",
+      "unit": "$B quarterly / YoY % change",
+      "source": "PwC Global M&A Trends, Refinitiv/LSEG, Bain Global PE Report (annual)",
+      "current": "Sponsor-backed M&A up ~58% YoY in Q3 2025; continuing recovery in 2026",
+      "comment": "This is the carry crystallization trigger. Need M&A volumes to stay above 2023 lows for exits to flow. Watch: LBO financing spreads (investment grade + leveraged loan market) as the cost-of-deal proxy."
+    },
+    {
+      "metric": "Distributions to NAV ratio — industry aggregate",
+      "unit": "%, trailing 12 months",
+      "source": "Bain Global Private Equity Report (annual, January), McKinsey Global Private Markets Report",
+      "current": "<15% for 4 consecutive years — below historical 20-25% norm (2026)",
+      "comment": "This is the LP liquidity stress indicator. Sustained sub-15% distributions mean LPs cannot recycle into new funds — suppresses fundraising and delays FRE growth for second-tier managers. Watch for recovery toward 20%+ as the carry pipeline opens."
+    },
+    {
+      "metric": "Dry powder overhang — global PE undeployed capital",
+      "unit": "$T",
+      "source": "PitchBook, Preqin, Bain Global PE Report",
+      "current": "~$3.7 trillion as of Q1 2026 (all private capital strategies)",
+      "comment": "High dry powder = deployment pressure = M&A activity tailwind. However, aging dry powder (>4 years old, now 24% of total) also creates LP pressure for exits. Both effects are positive for LPE equity stocks in the near term."
+    },
+    {
+      "metric": "IPRV ETF premium/discount to NAV",
+      "unit": "% (premium = positive)",
+      "source": "iShares.com product page / Bloomberg daily",
+      "current": null,
+      "comment": "Proxy for market sentiment on listed PE. When IPRV trades at a premium to its underlying NAV, the market is pricing in carry upside not yet in marks. A discount suggests M&A recovery doubt or carry crystallization skepticism. Check weekly."
+    },
+    {
+      "metric": "US Investment Grade and Leveraged Loan spreads",
+      "unit": "bps over benchmark",
+      "source": "FRED (ICE BofA IG OAS), LSEG LPC leveraged loan data",
+      "current": null,
+      "comment": "LBO financing costs are the key enabler of PE deal activity. IG spreads <130bps and lev loan spreads <450bps are 'deal-friendly'. Spread widening is the fastest leading indicator of M&A slowdown."
+    }
+  ],
+
+  "active_catalyst_ids": [],
+
+  "historical_catalyst_performance": {
+    "summary": "Listed PE equities exhibit a distinct historical pattern: they are hypersensitive to the M&A and exit cycle, with a lead-lag relationship vs. underlying portfolio value. In 2009-2012 (post-GFC recovery): Blackstone (BX) rose ~300% as M&A volumes recovered and carry crystallized from pre-crisis vintages — outperforming the S&P 500 by ~180% in that window. In 2021 (peak cycle): BX, KKR, APO all hit all-time highs on record deal volumes and carry income; the sector re-rated to 20-25x earnings on carry expectations. In 2022-2023 (rate shock): listed PE sold off 30-50% as rising rates compressed LBO multiples, froze exit markets, and slashed carry expectations — this was structurally NOT an earnings collapse but a multiple de-rating on carry optionality. The 2024-2026 recovery mirrors 2010-2013: FRE base business reprices first (stable earnings), then carry optionality reprices as M&A activity confirms recovery. Key historical lesson: the best entry point for LPE equities is when FRE is growing but carry is still depressed — this is the current 2026 setup. Late entry (after carry has crystallized into P&L) offers much lower upside. Historical sensitivity to rate catalysts: every 100bps of rate cuts added approximately 15-25% to LPE equity multiples in the 2019 and 2024 rate-cut cycles, reflecting lower discount rate on future carry NPV and improved LBO economics.",
+    "rate_cut_impact": "Historical: +15-25% multiple expansion per 100bps of central bank rate cuts. Mechanism: (1) lower discount rate on future carry NPV; (2) LBO financing cost reduction improves deal IRRs; (3) bid-ask compression on portfolio company exits.",
+    "ma_recovery_impact": "Historical correlation >0.85 between quarterly PE deal volume and BX/KKR/APO 3-month returns (lagged 1 quarter). The portfolio company exit → carry income → EPS growth chain takes 2-3 quarters from deal signing to P&L recognition.",
+    "rate_shock_vulnerability": "In the 2022 rate shock: LPE stocks (BX, KKR, APO) fell 30-50% even though underlying portfolio companies were still generating cash. Pure multiple de-rating on carry optionality. Recovery was faster than GFC because FRE base was larger and more resilient by 2022."
+  },
+
+  "risks": [
+    "Carry crystallization delay: the core investment thesis assumes M&A exit volumes accelerate through 2026, triggering carry income from funds with large unrealized gains. If equity market volatility (tariff shock, geopolitical escalation, credit spread widening) causes deal activity to stall again, EPS growth will miss consensus and multiples compress. The $3.8T unrealized portfolio backlog is both the upside and the timing risk.",
+    "Fundraising cycle deterioration: mega-managers have maintained fundraising momentum, but the market is structurally bifurcated. If LP 'denominator effect' (overweight private assets as public portfolios fell in Q1 2026 tariff volatility) returns, LP commitment pacing could slow, reducing AUM growth velocity for new vintages.",
+    "Regulatory/tax risk on carried interest: recurring legislative proposals in the US and UK to tax carry as ordinary income (37% vs. 23.8% in the US). Apollo, Blackstone, and KKR collectively had billions in carry income in 2021. A reclassification would reduce GP take-home and potentially deter talent, though FRE would be unaffected. This is a binary political risk that is difficult to price.",
+    "Concentration risk in mega-managers: the S&P Listed Private Equity Index (IPRV's benchmark) is dominated by Blackstone, KKR, Apollo, Ares, Carlyle. These five stocks drive the majority of the ETF return. IPRV is effectively a basket of 5-7 large-cap US alternative managers plus a few European names (EQT, Partners Group). Any company-specific negative event (fraud, key-man departure, fund performance blow-up) concentrates downside into the index.",
+    "Secondary market / distribution substitution: GPs are increasingly using NAV loans, continuation vehicles, and GP-led secondaries to generate LP liquidity without public market exits. This delays carry crystallization into listed-company EPS — the market cannot price what has not yet been recognized. If secondary liquidity solutions become the dominant exit form (vs. strategic M&A or IPO), carry income recognition timelines extend.",
+    "Interest rate reversal risk: if macro conditions force central banks to pause or reverse rate cuts (e.g., inflation re-acceleration from tariff pass-through), LBO financing costs re-rise, deal economics deteriorate, and M&A activity freezes. Listed PE multiples are highly rate-sensitive — a 100bps move upward historically triggers 15-20% de-rating. This is the key macro risk to monitor in H2 2026."
+  ],
+
+  "narrative_maturity": "mainstream",
+
+  "narrative_trend": "increasing",
+
+  "narrative_notes": "Classified as 'mainstream' per scoring_weights.yaml narrative_maturity_levels. Observable criteria met: (1) Goldman Sachs, JP Morgan, Morgan Stanley, and Blackstone's own IR have published FRE-compounding base cases as consensus investment theses — this has been the dominant financial media narrative for alternative asset managers since 2023; (2) VanEck launched a dedicated ETF (GPZ, 2025) specifically for this thesis, now with $243M AUM, confirming the thesis is named in ETF product descriptions; (3) FT, Bloomberg, and WSJ regularly cover BX/KKR/APO earnings as a proxy for the M&A market health; (4) IPRV ETF AUM at ~$890M (Feb 2026) is well above the $500M 'mainstream' threshold from scoring criteria. The narrative has NOT yet reached 'crowded' because: carry crystallization has not yet occurred at scale (the most bullish phase of the thesis is still ahead), and there is meaningful investor debate about timing and magnitude. If M&A volumes accelerate and carry income materializes in H2 2026 earnings, the narrative could advance to 'crowded' by Q4 2026 — watch for CNBC/retail-flow acceleration as the signal."
+}

@@ -1,0 +1,151 @@
+{
+  "id": "study_oil_services_equipment",
+  "schema_version": "1.2",
+  "sector_id": "oil_services_equipment",
+  "sector_label": "Oil Field Services & Equipment",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+  "taxonomy": {
+    "parent_sector": "energy",
+    "adjacent_sectors": [
+      "oil_majors_integrated",
+      "lng_natural_gas",
+      "copper_miners",
+      "steel_producers"
+    ],
+    "differentiation_note": "Oil field services and equipment companies (SLB, Halliburton, Baker Hughes, TechnipFMC, NOV) generate revenue by providing drilling, completion, stimulation, subsea installation, and production enhancement services to upstream operators — they are paid for activity, not for the oil itself. This creates a fundamentally different exposure than oil_majors_integrated: services earnings are driven by upstream capex budgets and rig deployment decisions, not directly by oil price; the beta to oil price is higher (because capex is discretionary and leveraged to oil price expectations) but the causality runs through operator willingness to spend, not through spot oil realization. Timing also differs: services companies respond to capex cycle initiation 6–18 months before production flows and are therefore an earlier-cycle expression than integrated majors, whose earnings are smoothed by refining and marketing margins. Adjacent sector copper_miners shares capex-cycle sensitivity but has no operational overlap; steel_producers supply tubular goods to drillers but derive most revenue from construction and auto, not the upstream cycle. The services sector is the only way to express a 'drill-more' thesis in ETF form without direct commodity price exposure."
+  },
+  "demand_drivers": [
+    "Global upstream E&P capex cycle: the seven oil majors (ExxonMobil, Chevron, BP, TotalEnergies, Shell, Equinor, Eni) collectively allocated ~$91–93 billion in 2026 upstream capex — roughly flat vs 2025 at the aggregate level, but with meaningful geographic rotation: Middle East state-backed operators (Saudi Aramco, ADNOC, QatarEnergy) accelerating long-cycle investments while OECD-based independents cut 5% YoY under ESG covenants, creating a two-speed capital market that biases international services revenue.",
+    "Deepwater and offshore activity resurgence: Transocean added ~$1.6 billion in new backlog since April 2026, including multi-year Petrobras (Brazil) extensions and Norwegian Sea awards; the proposed Transocean-Valaris merger creates a combined ~$10 billion backlog across 73 rigs, signaling multi-year visibility for subsea-equipment and well-construction service providers. Deepwater day-rates have risen 15–20% YoY as active drillship utilization exceeds 90%.",
+    "Strait of Hormuz supply shock (event catalyst): the 2026 Iran conflict sent Brent from ~$70 in late February to a peak near $120/bbl in late March, crossing $100 on 8 March. As of early June 2026 Brent trades near $95, still up >35% from pre-crisis levels. Elevated oil prices improve operator free cash flow and incentivize above-budget capex releases, particularly for fast-cycle onshore projects (North America unconventional, Middle East brownfield) where services are deployed within months of the spending decision.",
+    "ChampionX integration at SLB: SLB's Q1 2026 Production Systems division grew 23% YoY to $3.51 billion, boosted by two months of ChampionX contribution — a chemical production enhancement business that adds ~$1.8 billion of incremental annual revenue and diversifies SLB beyond pure drilling into artificial lift and reservoir chemicals, expanding the addressable production-optimization market.",
+    "North America unconventional recovery: Halliburton management described Q1 2026 as 'early innings of a recovery' in North America, with mid- to high-single-digit international revenue growth (ex-Middle East) guided for the full year. US oil rig count at 429 as of 29 May 2026 remains 22 rigs below year-ago levels — suggesting the recovery is nascent and activity ramp is ahead, not behind, creating a positive inflection setup for completion services.",
+    "Natural gas / LNG-directed drilling: the Baker Hughes weekly rig count as of 29 May 2026 shows gas rigs at 125, up 16 YoY, providing a more durable floor for pressure pumping and well services activity than oil-directed drilling; LNG project commissioning in the US, Canada, and Qatar is expected to drive 7% growth in global gas spending in 2026 per Wood Mackenzie.",
+    "Digital and AI-assisted reservoir management: SLB's Digital segment continues growing above group average; data analytics, seismic processing, and reservoir simulation contracts are less cyclical than drilling and provide a recurring revenue layer that partially offsets activity downturns."
+  ],
+  "supply_constraints": [
+    "Drillship and jackup fleet attrition: the global offshore rig fleet declined by ~30% between 2015 and 2021 as utilization collapsed and capital-constrained contractors cold-stacked or scrapped units; lead times for newbuild semi-submersibles are 3–4 years, meaning tight utilization (>90% in deepwater as of mid-2026) cannot be alleviated quickly. The Transocean-Valaris merger consolidates supply further, maintaining pricing discipline.",
+    "Specialty steel and tubular goods: casing, tubing, and line pipe require high-grade steel alloys (chrome, nickel-bearing) with limited global production capacity; tariff uncertainty under the current US trade framework and OCTG import restrictions periodically constrain North America completion activity even when drilling demand is robust.",
+    "Skilled labor shortage: wireline operators, pressure pumping crews, and directional drillers were permanently lost during the 2020 downturn layoffs; rehiring trained personnel takes 6–12 months and constrains service company capacity utilization during demand upturns faster than capital equipment can be reactivated.",
+    "Pressure pumping equipment life-cycle: diesel frac fleets average 6–8 years to mechanical degradation; the current US unconventional fleet skews older (peak additions were 2011–2014), and e-frac (electric fracturing) replacement capital is constrained by power grid buildout timelines, creating a ceiling on simultaneous completions capacity.",
+    "Middle East conflict disruption: the Hormuz crisis directly disrupted SLB's well construction and reservoir performance divisions in Q1 2026 (CEO cited 'widespread disruptions'); Q2 2026 Halliburton guided a $0.07–$0.09/share earnings headwind from the same factor. Until the strait fully reopens and operator confidence returns, Middle East services activity remains 10–15% below pre-conflict levels."
+  ],
+  "cycle_position": {
+    "assessment": "Early-to-mid upcycle with a geopolitical spike overlay. The structural cycle is recovering from the 2023–2024 capex softness trough; the Hormuz shock created an oil price spike that has pulled forward some service demand while simultaneously disrupting Middle East operations. Net: a bifurcated recovery — international (ex-Middle East) and deepwater accelerating, North America unconventional in early innings, Middle East temporarily impaired.",
+    "rationale": "Key data points anchoring this assessment: (1) OIH +39% YTD through February 2026, accelerating to +55% YTD through mid-May, confirming a strong upcycle repricing already in motion. (2) SLB Q1 2026 revenue +3% YoY with Production Systems +23% YoY; well construction -6% YoY dragged by Middle East — the divergence confirms it is a regional disruption, not a sector-level downturn. (3) Halliburton beat Q1 EPS by 10%, with international revenue +3% and early-innings North America language from management — typical mid-cycle commentary. (4) Rig count at 562 total US as of 29 May, with oil rigs 22 below year-ago — completion activity recovery still ahead. (5) Deepwater backlog additions ($1.6B at Transocean since April) reflect 2–3 year visibility. (6) Global upstream capex flat-to-down 2–3% in aggregate but growing 5–10% in the regions (deepwater, Middle East long-cycle, Latin America) that drive higher-margin international services. The cycle is not late — it is early-to-mid, with the North America frac cycle still recovering and the oil price spike providing incremental budget releases from operators sitting on elevated free cash flow.",
+    "last_assessed": "2026-06-05"
+  },
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Baker Hughes US Oil Rig Count (weekly)",
+      "unit": "number of active oil rigs",
+      "source": "Baker Hughes (rigcount.bakerhughes.com), published every Friday",
+      "current": 429,
+      "comment": "As of 29 May 2026. Down 22 rigs YoY — still in recovery mode. Watch for a sustained move above 450 as confirmation of the North America upcycle."
+    },
+    {
+      "metric": "Baker Hughes International Rig Count (monthly)",
+      "unit": "number of active rigs, ex-North America",
+      "source": "Baker Hughes monthly international report",
+      "current": null,
+      "comment": "International activity is the primary revenue driver for SLB and Baker Hughes. Watch for Middle East recovery once Hormuz normalizes. Full 2026 monthly figures not yet available; SLB guided mid-to-high single-digit international growth ex-Middle East."
+    },
+    {
+      "metric": "Brent Crude Oil Spot Price",
+      "unit": "USD per barrel",
+      "source": "ICE Futures / Bloomberg",
+      "current": 95,
+      "comment": "As of early June 2026, ~$95/bbl — well above the $70–75 pre-crisis level. Services budgets are revised quarterly; a sustained Brent above $85 is the threshold where operators typically increase discretionary capex. The Hormuz crisis spike (near $120 in late March) has partially unwound but remains structurally elevated."
+    },
+    {
+      "metric": "SLB quarterly revenue and Drilling & Evaluation margins",
+      "unit": "USD billions revenue, % operating margin",
+      "source": "SLB quarterly earnings (10-Q)",
+      "current": "Q1 2026: $8.72B revenue, D&E margin declining",
+      "comment": "D&E is the most cycle-sensitive segment. A recovery here (currently -6% YoY) would confirm the Middle East headwind is transitory. Watch Q2 2026 (July report) for inflection."
+    },
+    {
+      "metric": "Halliburton North America Completion & Production revenue",
+      "unit": "USD billions",
+      "source": "Halliburton quarterly earnings (10-Q)",
+      "current": "Q1 2026: $3.0B (-3% YoY)",
+      "comment": "This is the best proxy for US frac activity. Management says 'early innings of recovery' — watch for first YoY positive comp as confirmation. Q2 2026 result expected July."
+    },
+    {
+      "metric": "Offshore drillship utilization rate (active fleet)",
+      "unit": "percentage of marketed drillship fleet under contract",
+      "source": "Bassoe Offshore / Rystad Energy / Transocean filings",
+      "current": "~90%+ for ultra-deepwater floaters",
+      "comment": "Above 90% utilization sustains day-rate pricing power. The Transocean-Valaris merger consolidates supply; any utilization slip below 85% would be an early warning of demand softening."
+    }
+  ],
+  "active_catalyst_ids": [],
+  "historical_catalyst_performance": {
+    "summary": "Oil field services exhibit high beta to oil price shocks and upstream capex cycles with a consistent pattern: (1) Oil price spike → 6–18 month lag → services revenue inflection. OIH +39% YTD in the first two months of 2026 following the Hormuz-driven Brent spike to $120 illustrates the dynamic in real time — the market repriced services before the capex budgets were formally revised. (2) 2014–2016 downcycle: SLB and HAL revenue fell 35–40% as Brent dropped from $115 to $27; OIH fell ~75% from peak. Recovery from that trough took 4 years. (3) 2020 COVID collapse: OIH fell ~55% in weeks; recovery to pre-COVID levels took until 2022. (4) 2022 energy crisis: OIH +87% in 12 months as operator budgets expanded. Pattern: services are early-cycle on the upswing (market prices in capex recovery before earnings confirm) but late-cycle on the downswing (long-cycle projects continue spending even after oil price peaks). Deepwater contracts in particular are multi-year and provide revenue visibility that buffers early-cycle weakness. Key historical lesson: the sector consistently overshoots oil price moves on both sides because of operating leverage — a 10% oil price increase translates to a 20–30% services revenue increase when capex budgets respond, and the reverse is true on the downside.",
+    "oih_ytd_2026_pct": 55.29,
+    "brent_crisis_peak_usd": 119.5,
+    "brent_current_usd": 95,
+    "hal_q1_2026_eps_beat_pct": 10.55,
+    "slb_q1_2026_revenue_bn": 8.72
+  },
+  "etf_analysis": [
+    {
+      "ticker": "OIH",
+      "name": "VanEck Oil Services ETF",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "ter": 0.0035,
+      "aum_m_usd": 2100,
+      "replication": "physical",
+      "avg_spread_bps": 5,
+      "top_10_concentration_pct": 72,
+      "avg_daily_volume_m_usd": 85,
+      "recommendation_tier": 1,
+      "characteristics": "Tracks MVIS US Listed Oil Services 25 Index. Top holdings: SLB ~21%, Baker Hughes ~12%, Halliburton ~7%, TechnipFMC ~6%, Tenaris ~5%. Highly concentrated — top 2 holdings represent ~33%. Best liquidity and most direct expression of the sector thesis. AUM $2.1B, avg spread 5bps — tier 1 by liquidity and tracking metrics. NOT UCITS: Spanish investors face PRIIPs/KID access restrictions via most EU brokers. Use only if broker allows non-UCITS access (e.g., Interactive Brokers).",
+      "limitations": "NOT UCITS — restricted access for Spanish/EU retail investors under PRIIPs regulation. No KIID available. Use OIHV (see below) as the UCITS alternative. Concentration in SLB+HAL means idiosyncratic news in those names dominates ETF performance."
+    },
+    {
+      "ticker": "OIHV",
+      "name": "VanEck Oil Services UCITS ETF",
+      "exchange": "SIX",
+      "currency": "USD",
+      "ter": 0.0035,
+      "aum_m_usd": 358,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "top_10_concentration_pct": 72,
+      "avg_daily_volume_m_usd": null,
+      "recommendation_tier": 1,
+      "characteristics": "ISIN: IE000NXF88S1. UCITS-compliant European wrapper over the same underlying index as OIH (MVIS US Listed Oil Services 25). Same 0.35% TER. AUM $358M as of mid-May 2026 — above the $200M liquidity threshold. YTD return through mid-May 2026: +55.29%. Listed on SIX Swiss Exchange (USD-denominated). Preferred vehicle for Spanish investors. Same portfolio as OIH: SLB, Baker Hughes, HAL, TechnipFMC, Tenaris top holdings. UCITS: YES — accessible for EU retail without PRIIP restriction.",
+      "limitations": "AUM $358M — above the $200M threshold but smaller than the US version ($2.1B); bid/ask spread data not confirmed. Verify spread via broker before entry — if >25bps, reduce position size. USD-denominated on a CHF exchange: Spanish investor has USD/EUR currency exposure unless hedged separately. Liquidity lower than OIH; use limit orders."
+    },
+    {
+      "ticker": "OGZB.DE",
+      "name": "iShares Oil & Gas Exploration & Production UCITS ETF (partial proxy)",
+      "exchange": "XETRA",
+      "currency": "USD",
+      "ter": 0.0055,
+      "aum_m_usd": 650,
+      "replication": "physical",
+      "avg_spread_bps": 12,
+      "top_10_concentration_pct": null,
+      "avg_daily_volume_m_usd": null,
+      "recommendation_tier": 3,
+      "characteristics": "UCITS. EUR-accessible on XETRA. Covers E&P operators, NOT services companies — different thesis (oil price exposure, not upstream capex cycle). Included here as a monitor-only proxy for tracking upstream operator sentiment, which leads services capex. AUM $650M, spread 12bps — adequate liquidity.",
+      "limitations": "NOT a services ETF — this is an E&P operators fund. Correlation to oil price is higher and correlation to services cycle is lower than OIH/OIHV. Do not use as a substitute for the services thesis. Use only as a comparative reference to monitor the operator capex sentiment that drives services demand."
+    }
+  ],
+  "risks": [
+    "Oil price reversal: if Brent corrects below $75/bbl as Hormuz normalizes and OPEC+ supply returns, operator free cash flow compresses and discretionary capex is the first budget line cut. A return to $65–70 would trigger negative earnings revisions across the sector; OIH historically declines 25–35% in the 6 months following oil price peaks. The current $95 Brent is still elevated and carries significant downside if Iran-US talks succeed.",
+    "Middle East operations disruption extends: SLB guided $400–500M of revenue impact from Hormuz-related disruptions in 2026; Halliburton guided $0.07–$0.09/share headwind in Q2 alone. If the conflict escalates or the strait remains partially restricted through H2 2026, both companies will miss consensus estimates. The Middle East (Saudi, Iraq, UAE) represents ~20–25% of international services revenue for the majors.",
+    "OPEC+ production cut reversal: if OPEC+ decides to increase output quotas aggressively (as it did in late 2024), rising production from existing fields reduces incremental drilling need, directly cutting services activity. The current OPEC+ supply discipline is fragile — Saudi Arabia and UAE have been in tension over quotas.",
+    "North America frac over-capacity: the US pressure pumping market has structural excess capacity from equipment built in 2021–2022; Halliburton has been disciplining pricing by removing horsepower from service rather than competing on price. A new entrant or price war could compress completion margins, which are already under pressure (-17% operating income in Completion & Production in Q1 2026 despite flat revenue).",
+    "Transition-related capex reduction: major oil companies under ESG pressure are targeting flat or declining upstream investment over a multi-year horizon; BP and Shell have announced explicit E&P capex reduction programs. Structural decline in long-cycle sanctioning (deepwater projects typically 5–7 year development timelines) could create a 2029–2031 activity cliff even if short-cycle activity recovers in 2026–2027.",
+    "Currency and geopolitical cost base: services companies bill in USD but operate across 100+ countries with local-currency cost bases; USD strength (particularly vs LatAm and African currencies where field operations are labor-intensive) compresses margins. Additionally, nationalization risk in key markets (Argentina, Nigeria, Venezuela) periodically disrupts contract enforcement."
+  ],
+  "narrative_maturity": "mainstream",
+  "narrative_trend": "increasing",
+  "narrative_notes": "The oil services upcycle thesis has been present in generalist sell-side research since early 2026. Goldman Sachs, Morgan Stanley, and JPMorgan all published sector upgrade notes following the Hormuz spike. Bloomberg and CNBC regularly featured OIH and SLB as 'beneficiary' names during the crisis. The thesis — 'elevated oil prices force capex budget increases → services volumes recover → earnings inflection' — is the consensus view among energy analysts and is named in VanEck ETF product descriptions. OIH AUM of $2.1B and OIHV AUM of $358M reflect meaningful institutional allocation already. This is 'mainstream' not 'crowded' because: (1) the North America recovery is still 'early innings' per Halliburton management — meaning the earnings inflection has not fully materialized, reducing the crowding risk that comes with fully-priced consensus; (2) Middle East disruption headwinds are suppressing reported results, making the thesis feel less confirmed than it is structurally; (3) sell-side coverage has increased but retail inflows are not yet accelerating at the pace seen in 2022 (the prior cycle peak). Score equivalent: 60 (mainstream). Narrative trend is 'increasing' — the Hormuz crisis has elevated media coverage and analyst attention above the baseline level that existed before February 2026."
+}

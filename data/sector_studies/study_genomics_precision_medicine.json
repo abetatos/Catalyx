@@ -1,0 +1,157 @@
+{
+  "$schema": "catalyx/schemas/sector_study.json",
+  "id": "study_genomics_precision_medicine",
+  "schema_version": "1.2",
+  "sector_id": "genomics_precision_medicine",
+  "sector_label": "Genomics & Precision Medicine",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "healthcare",
+    "adjacent_sectors": ["biotech_drug_development", "medical_devices", "pharma_large_cap"],
+    "differentiation_note": "Genomics & Precision Medicine is fundamentally a platform-layer sector, not a drug-development sector: the investment thesis turns on the cost curve of genomic tools (sequencing, gene editing, bioinformatics) and on structural enablement (reimbursement, regulatory pathway for gene therapy, liquid biopsy adoption) rather than on specific drug approval catalysts. Biotech drug development (IBB/XBI) is a binary-outcome bet on clinical-stage pipeline — the P&L is driven by FDA phase-transition read-outs and M&A premia; genomics names generate revenue from instruments, diagnostics, and platform licensing that compounds even when individual drug programs fail. The sector is also differentiated from large-cap pharma (which monetises patent-protected drugs at scale): genomics companies operate in a pre-revenue or early-revenue stage with structurally declining cost curves (WGS now sub-$200 consumer, sub-$100 research) that create the deflationary enablement analogous to how falling chip costs enabled the software industry. A position in ARKG or GNOM is not a substitute for IBB or XBI — it captures a different part of the healthcare value chain: the infrastructure, diagnostics, and editing tools that make precision medicine possible, not the drugs that run on top of them."
+  },
+
+  "demand_drivers": [
+    "Cost of whole-genome sequencing: from $2.7B (2003 Human Genome Project) to ~$200 consumer / ~$100 research (Element Biosciences VITARI + Ultima Genomics, February 2026). The sub-$100 WGS threshold activates population-scale genomic screening — a market inflection analogous to the $1,000 genome crossing in 2014. Clinical genomics market estimated at $13.93B in 2026, growing at 11.4% CAGR to $29.65B by 2033.",
+    "Gene therapy regulatory pipeline acceleration: FDA approved two gene therapies in H1 2026 — Otarmeni (OTOF-gene hearing loss, April 2026) and Kresladi (LAD-I immune disorder, March 2026). FDA also issued February 2026 draft guidance establishing a formal approval pathway for bespoke CRISPR therapies — the first regulatory infrastructure for personalised gene medicines. Casgevy (CRISPR Therapeutics / Vertex, approved Dec 2023) priced at $2.2M per patient for sickle cell disease, demonstrating the commercial model works.",
+    "Intellia Therapeutics Phase 3 HAELO trial success (April 2026): lonvo-z (in vivo CRISPR for hereditary angioedema) achieved 87% reduction in swelling attacks vs placebo. Rolling FDA submission started; commercial launch targeted 2027. This is the first in vivo CRISPR therapy to demonstrate Phase 3 efficacy — a sector-defining validation event. FDA clinical holds on MAGNITUDE / MAGNITUDE-2 trials (ATTR amyloidosis) lifted Q1 2026, resuming Phase 3 patient screening.",
+    "Liquid biopsy adoption: global liquid biopsy market valued at $7.0B in 2025, projected $8.1B in 2026 (CAGR 15.6% through 2035). Early cancer detection sub-segment at $2.48B in 2025, growing to $7.85B by 2035 at 12.1% CAGR. FDA approved Guardant360 CDx as companion diagnostic for BRAF V600E-mutant colorectal cancer (January 22, 2026), expanding liquid-biopsy platform scope. North America holds 50.99% market share. Reimbursement remains the gating constraint (CMS coverage decisions pending for multi-cancer early detection tests).",
+    "AI + genomics data convergence: Tempus AI is among the top 3 ARKG holdings (7.49%) — the integration of AI inference with genomic data creates a flywheel: more sequencing → more training data → better models → better diagnostics. Precision medicine market estimated at $125.71B in 2026, growing at 16.26% CAGR through 2035. Pharma-Big-Tech alliances (e.g., Google DeepMind, Microsoft Azure Genomics) are accelerating the data layer.",
+    "M&A demand from large pharma filling pipeline gaps: $228B in pharma M&A in 2025 — genomics and gene editing companies are primary acquisition targets as large pharma faces patent cliffs and seeks differentiated pipeline. Vertex acquisition of Casgevy commercialisation rights from CRISPR Therapeutics is the template. This creates a structural floor under genomics valuations as M&A premia repeatedly reset downside scenarios."
+  ],
+
+  "supply_constraints": [
+    "Manufacturing scale-up for gene therapies: viral vector (AAV) manufacturing remains a significant bottleneck. A single patient's gene therapy requires thousands of litres of AAV production — capacity is limited globally to a handful of CDMOs. This constrains commercial ramp even after FDA approval and forces single-digit patient ramp rates in year 1-2 post-approval.",
+    "Reimbursement and payer acceptance: the primary commercial constraint for the sector. Casgevy at $2.2M per patient requires specialised payer arrangements — most insurers have not established cost-effectiveness frameworks for one-time gene cures vs. lifetime chronic disease management. CMS coverage for multi-cancer early detection (MCED) liquid biopsy tests remains pending; without Medicare coverage, addressable market for Grail/Guardant/Exact Sciences MCED products is limited to the commercially insured.",
+    "Regulatory pathway uncertainty for personalised CRISPR therapies: the FDA's February 2026 draft guidance for bespoke CRISPR is a positive step, but draft guidance is not final rule. Until the final pathway is confirmed, companies cannot lock manufacturing and clinical trial designs for n-of-1 therapies, constraining the pipeline.",
+    "Talent and intellectual property concentration: CRISPR editing technology is still subject to multi-year patent disputes (Broad Institute vs UC Berkeley). IP uncertainty delays product development timelines and increases litigation cost for smaller companies. Key scientific talent concentrated at ~10 institutions globally.",
+    "Sequencing data interpretation: sub-$100 WGS generates enormous volumes of genomic data, but clinical interpretation (variant classification, clinical actionability) remains a bottleneck. 80% of genomic variants identified in clinical WGS are still classified as 'variants of uncertain significance' — limiting clinical utility and reimbursement justification."
+  ],
+
+  "technology_maturity": null,
+
+  "cycle_position": {
+    "assessment": "Early recovery from deep trough — sector in slope-of-enlightenment phase, not yet re-rated",
+    "rationale": "ARKG is down -6.56% YTD in 2026 and has returned -20.86%/yr over 5 years — investors are still paying for the 2021 peak euphoria. However, the fundamental picture has shifted materially: the Intellia Phase 3 HAELO success (April 2026) is a genuine sector-validation event not yet reflected in ETF prices, the FDA has established a gene therapy regulatory infrastructure that reduces approval risk for future products, and WGS costs have crossed the sub-$100 threshold that enables population-scale applications. Valuation multiples (EV/Revenue median 4.4x in Q1 2026) are at multi-year lows and a 15% discount to broader markets on forward P/E. The sector is trading at trough relative valuations while the science is at a peak inflection — a classic disconnection that historically precedes sector re-rating. The recovery catalyst is not a macro event but an endogenous one: the first commercial launches of in vivo CRISPR therapies (2027) and CMS reimbursement decisions for MCED tests. The risk is timing: these catalysts have well-understood binary outcomes but uncertain timing. GNOM (-1.82% YTD) is outperforming ARKG materially, suggesting the active manager's stock selection (heavy CRISPR/gene editing names) is lagging the passive basket — the sector is not uniformly recovering. Entry here is early-cycle, not momentum.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "ARKG",
+      "name": "ARK Genomic Revolution ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0075,
+      "aum_m_usd": 984,
+      "replication": "physical",
+      "avg_spread_bps": 8,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Actively managed by ARK Invest. Top holdings: Twist Bioscience (9.46%), CRISPR Therapeutics (7.79%), Tempus AI (7.49%), 10x Genomics (7.30%), Personalis (6.19%). High idiosyncratic risk from active positioning. Direct exposure to pure-play gene editing names — the highest conviction vehicle if you have a specific CRISPR/gene therapy view.",
+      "recommendation_tier": 2,
+      "limitations": "NOT UCITS — not usable for a Spanish investor via standard broker. AUM declined from $9B peak (2021) to ~$984M (March 2026) — ongoing outflows create forced-selling risk in smaller holdings. TER 0.75% is high for an ETF. 5-year return -20.86%/yr significantly underperforms GNOM. Active management adds tracking error and manager concentration risk (ARK brand risk). WARNING: AUM below $1B crosses a threshold where fund viability becomes a consideration; monitor for AUM stabilisation."
+    },
+    {
+      "ticker": "GNOM",
+      "name": "Global X Genomics & Biotechnology ETF",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "ter": 0.0050,
+      "aum_m_usd": 310,
+      "replication": "physical",
+      "avg_spread_bps": 16,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Passive, rule-based index exposure. Outperforming ARKG in 2026 YTD (-1.82% vs -6.56%) and over 5 years (-12.47%/yr vs -20.86%/yr). More stable than ARKG due to systematic rather than active weightings. Lower TER.",
+      "recommendation_tier": 2,
+      "limitations": "NOT UCITS — not usable for a Spanish investor via standard broker. AUM $310M is adequate but below the $500M+ tier-1 threshold — watch for AUM growth or decline. Spread 16bps is acceptable but wider than Tier 1 ETFs in other sectors. Also lacks a European-listed equivalent with comparable AUM. WARNING: No UCITS primary vehicle exists with AUM > $200M and spread < 20bps for this sector — this is a critical liquidity gap for EU investors."
+    },
+    {
+      "ticker": "ARKG.L",
+      "name": "ARK Genomic Revolution UCITS ETF (USD Acc)",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0075,
+      "aum_m_usd": 85,
+      "replication": "physical",
+      "avg_spread_bps": 35,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "UCITS-compliant version of ARKG, listed on LSE and SIX. Active ARK Invest strategy in a UCITS wrapper. For EU investors requiring UCITS, this is the only like-for-like ARKG exposure available. ISIN: IE000O5M6XO1.",
+      "recommendation_tier": 3,
+      "limitations": "WARNING: AUM ~$85M is significantly below the $200M minimum for Tier 1/2. Spread ~35bps is above the 25bps warning threshold — meaningful entry/exit friction on positions above €30k. LOW LIQUIDITY risk: forced closing in adverse conditions may require accepting wide spreads. Only use for small exploratory positions (Tier 3 conviction max 4% portfolio per scoring_weights.yaml). Confirm AUM and spread live before trading — these figures are estimates from available data as of June 2026."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Intellia lonvo-z FDA rolling submission progress / PDUFA date",
+      "unit": "regulatory milestone",
+      "source": "Intellia Therapeutics IR (ir.intelliatx.com), FDA PDUFA tracker",
+      "current": "Rolling submission started Q2 2026; commercial launch target 2027",
+      "comment": "The single most important near-term catalyst for the sector. Lonvo-z is the first in vivo CRISPR therapy with Phase 3 efficacy data. FDA approval would validate the entire in vivo CRISPR modality — watch for PDUFA date announcement and advisory committee meeting."
+    },
+    {
+      "metric": "CMS reimbursement decision — multi-cancer early detection (MCED) liquid biopsy",
+      "unit": "binary decision",
+      "source": "CMS.gov coverage decisions, Grail/Illumina + Guardant Health IR",
+      "current": "Pending — no 2026 decision date confirmed as of June 2026",
+      "comment": "Medicare coverage for MCED tests (Grail Shield, Guardant Infinity) would unlock a $70B+ US addressable market. This is the reimbursement unlock event for liquid biopsy adoption. Watch for National Coverage Determination (NCD) proceedings."
+    },
+    {
+      "metric": "Whole-genome sequencing consumer price floor",
+      "unit": "USD per 30x WGS",
+      "source": "Chronos Genomics pricing index, NHGRI cost tracking (genome.gov)",
+      "current": 169,
+      "comment": "Dante Labs flash-sale price as of mid-2026 (€169/$184). Research/clinical floor: sub-$100 (Element Biosciences VITARI, Ultima Genomics). The sub-$200 consumer WGS is now accessible — watch for price continuing to sub-$100 consumer, which triggers population-scale adoption."
+    },
+    {
+      "metric": "ARKG AUM trajectory",
+      "unit": "USD million",
+      "source": "ARK Invest daily holdings (ark-funds.com)",
+      "current": 984,
+      "comment": "AUM peaked at ~$9B (early 2021) and has fallen to ~$984M (March 2026). Continued outflows accelerate forced-selling risk in ARKG's smaller-cap holdings. Stabilisation above $800M is needed; a fall below $500M would raise fund viability questions. Monitor monthly."
+    },
+    {
+      "metric": "Gene therapy AAV manufacturing capacity — CDMO lead times",
+      "unit": "weeks lead time",
+      "source": "Industry conferences (ASGCT annual meeting), CDMO earnings calls (Lonza, Catalent/Danaher, WuXi)",
+      "current": null,
+      "comment": "Commercial constraint for gene therapy approvals in 2026-2027. If Intellia lonvo-z and other therapies receive approval simultaneously, CDMO capacity becomes a binding constraint. Track lead times from Lonza Biotech + Danaher/Cytiva quarterly updates."
+    },
+    {
+      "metric": "Precision medicine market deal flow — pharma M&A targeting genomics",
+      "unit": "deal count and value (USD B)",
+      "source": "Bloomberg M&A tracker, BioPharma Dive M&A section",
+      "current": "228B total pharma M&A in 2025 — genomics names as primary acquisition targets",
+      "comment": "M&A is the exit and re-rating mechanism for this sector. Monitor for large-cap pharma acquisitions of ARKG/GNOM holdings (Intellia, CRISPR Therapeutics, Exact Sciences) — these create immediate re-rating catalysts and validate the sector thesis."
+    }
+  ],
+
+  "active_catalyst_ids": [],
+
+  "historical_catalyst_performance": {
+    "summary": "Genomics & precision medicine ETFs respond most sharply to three catalyst types, in order of magnitude: (1) In vivo gene editing Phase 3 / FDA approval events — ARKG surged ~35% in the week of Casgevy Phase 3 data (June 2023), then corrected as commercialisation timelines were pushed. The sector pattern is spike-and-fade on approval news as pricing and reimbursement uncertainty re-emerges; (2) Sequencing cost breakthroughs — the $1,000 WGS threshold crossing (2014) preceded a multi-year ARKG bull run; the sub-$100 research genome achievement (2026) is analogous in kind but the sector is now starting from trough valuations rather than elevated ones; (3) Reimbursement decisions — CMS Medicare coverage decisions create sustained (not spike) re-ratings because they unlock addressable markets rather than validating science. Historical response data from ARKG: FDA approval catalyst → median +25-40% in 60 days followed by 50-70% retracement; positive Phase 3 data → +15-25% persistent if no regulatory uncertainty; negative trial → -20% to -40% in one session with 12-18 month recovery horizon. The sector's volatility profile (ARKG 12.87% vs GNOM 9.88% current) implies option pricing is consistently elevated — long ARKG during binary catalysts is structurally expensive.",
+    "avg_response_to_phase3_success_pct": 0.25,
+    "avg_response_to_fda_approval_pct": 0.35,
+    "avg_response_to_reimbursement_decision_pct": 0.18,
+    "avg_peak_drawdown_after_catalyst_spike_pct": -0.58
+  },
+
+  "risks": [
+    "Reimbursement gating risk (primary commercial constraint): FDA approval is necessary but not sufficient — the gene therapy and liquid biopsy businesses both require CMS / insurer coverage to generate revenue at scale. Casgevy ($2.2M per patient) has struggled with commercial uptake in 2025-2026 precisely because payer frameworks for one-time gene cures do not exist yet. If CMS rejects MCED coverage, the liquid biopsy growth thesis loses its largest demand driver. This is not a binary risk but a multi-year attrition risk.",
+    "ARKG fund viability: ARKG AUM at ~$984M is approaching levels where forced-selling risk becomes self-reinforcing. If outflows continue and AUM falls below $500M, ARK may be forced to liquidate positions in illiquid small-caps at distressed prices — paradoxically depressing the sector the ETF is meant to track. Investors using ARKG as the vehicle are exposed to fund-level liquidation risk in addition to market risk.",
+    "In vivo CRISPR safety signal: Intellia's lonvo-z Phase 3 data is positive, but the FDA clinical hold history (MAGNITUDE trials) and a patient death at JPMorgan 2026 conference presentation (JPM26) indicate that safety signals can emerge at scale. A serious adverse event in the lonvo-z rolling submission period or post-approval would devastate the entire sector — CRISPR Therapeutics, Beam Therapeutics, Editas, and Intellia would all reprice. This is the tail risk with the highest sector-wide impact.",
+    "IP litigation overhang — Broad Institute vs UC Berkeley CRISPR patent dispute: the dispute affects who can commercially use which CRISPR editing tools and at what royalty rate. Final resolution could advantage or disadvantage different commercial participants. Companies that have licensed from the losing party face potential retroactive royalty renegotiation, increasing their cost of goods for gene editing products.",
+    "Sequencing market concentration: Illumina holds ~80% of the sequencing market. If regulatory antitrust scrutiny of Illumina increases (it previously attempted to acquire GRAIL in 2021, blocked by EU/FTC) or if new entrants (Element Biosciences, Ultima Genomics) disrupt the pricing model faster than expected, Illumina-weighted indices could diverge dramatically from the sector's fundamental growth. This is especially relevant for GNOM which has index exposure to Illumina.",
+    "Clinical translation gap: sub-$100 WGS generates data, but ~80% of identified genomic variants are still 'variants of uncertain significance.' Without the clinical interpretation infrastructure (bioinformatics, functional assays, clinical databases), cheaper sequencing does not accelerate treatment directly. This creates a multi-year lag between sequencing cost inflection and clinical outcome improvement — the commercial ramp is slower than the technology curve."
+  ],
+
+  "narrative_maturity": "emerging",
+  "narrative_trend": "increasing",
+  "narrative_notes": "Genomics and precision medicine sits at 'emerging' by the scoring_weights.yaml criteria: the thesis is present in specialist biotech research (ARK Invest, specialist banks like SVB Securities, Jefferies healthcare desk) and is starting to appear in generalist coverage, but it is not yet a Goldman/JPM base-case macro call. The Intellia Phase 3 success in April 2026 received CNBC/STAT News/BioPharma Dive coverage — these are semi-specialist outlets, not mainstream financial media. The narrative driver is endogenous science (Phase 3 wins, WGS cost curves) not macro flows — that means it lacks the broadening-out that pushes a thesis from 'emerging' to 'mainstream.' The ARK Invest brand association is a double-edged narrative signal: ARKG gets media coverage as an ARK fund (crowded/negative brand narrative from 2022-2024 drawdown) rather than as a genomics vehicle, which suppresses the positive thesis narrative while increasing retail recognition. Score_equiv anchors this at 35 (emerging). Trend is increasing — if lonvo-z gets approved and MCED reimbursement proceeds, the thesis will cross into 'mainstream' (score_equiv 60) within 12-18 months."
+}

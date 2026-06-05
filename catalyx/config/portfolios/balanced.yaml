@@ -1,0 +1,16 @@
+portfolio_id: balanced
+name: Balanced
+risk_profile: balanced
+description: >
+  The default book. Moderate breadth, a sensible composite floor, tolerates mainstream
+  narratives but drops exhausted ones. Composite-proportional weights capped so no single
+  sector dominates.
+benchmark_etf: ACWI
+construction:
+  max_positions: 8
+  min_composite: 55
+  min_momentum: 40
+  max_crowding: 80
+  exclude_narrative_maturity: [exhausted]
+  weighting: composite_proportional
+  max_position_pct: 18

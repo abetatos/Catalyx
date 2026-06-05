@@ -1,0 +1,153 @@
+{
+  "$schema": "catalyx/schemas/sector_study.json",
+  "id": "study_oil_majors_integrated",
+  "schema_version": "1.2",
+  "sector_id": "oil_majors_integrated",
+  "sector_label": "Oil Majors — Integrated",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "energy",
+    "adjacent_sectors": ["oil_services_equipment", "lng_natural_gas", "uranium_miners", "nuclear_energy"],
+    "differentiation_note": "Oil majors (XOM, CVX, Shell, BP, TotalEnergies) are vertically integrated across the full hydrocarbon value chain — upstream exploration, midstream transportation, downstream refining, and retail distribution — which creates a structural hedge: when oil prices rise, upstream margins expand while downstream (refining) margins can compress due to feedstock costs, and vice versa. This integration smooths earnings volatility compared to pure-play E&P operators and is what enables the sustained dividend-and-buyback programs that define the investment thesis. Adjacent sector oil_services_equipment (SLB, HAL, BKR) provides capital goods and technical services to drillers; it is a leveraged play on upstream capex cycles, not on oil price directly, and earns no production margin — it benefits when majors are SPENDING, not when they are earning. Adjacent sector lng_natural_gas covers pure LNG infrastructure and gas-weighted producers whose primary cash flow driver is gas prices (Henry Hub, TTF, JKM), not oil, and whose asset base is predominantly non-equity-accounted pipeline and liquefaction infrastructure with regulated or long-term contracted returns — structurally different from the mark-to-market oil exposure of majors."
+  },
+
+  "demand_drivers": [
+    "Brent/WTI oil price uplift from Strait of Hormuz crisis (2026): Brent surged from ~$72 in Dec 2025 to a peak near $120 by early Q2 2026 (+67%) following the US-Iran conflict closure of the Strait of Hormuz, which disrupted 20% of global oil supplies. Goldman Sachs estimated a 14.5 mb/d Middle East crude production loss, swinging the market to a record 9.6 mb/d deficit in Q2 2026. Prices pulled back ~20% from peak toward ~$96-97 on ceasefire optimism (as of early June 2026) but remain structurally elevated vs pre-conflict levels, generating exceptional upstream margins for integrated majors.",
+    "Shareholder return capacity at elevated prices: The five supermajors (XOM, CVX, Shell, BP, TotalEnergies + Eni/Equinor) collectively generated $29 billion in Q1 2026 profit amid rising oil prices. ExxonMobil is running a $20B annual buyback pace, Shell committed $3B Q1 buyback with dividend increase, and TotalEnergies repurchased 9.4M shares ($750M) in Q1. At Brent ~$95-100, FCF generation is exceptional — the sector is returning capital at rates not seen since 2022.",
+    "Trading desk alpha in volatile markets: Oil majors' in-house trading desks (Shell Trading, BP Integrated Supply & Trading) generated outsized revenue in Q1 2026 from dislocation-driven arbitrage opportunities in the Iran supply shock — a structural advantage unavailable to pure E&P companies. CNBC reported May 2026 that trading desks are quietly becoming a major earnings driver.",
+    "Refining margin volatility with US Gulf Coast structural advantage: US Gulf Coast refiners benefit from access to domestic WTI crude at a discount to Brent during Hormuz disruptions; USGC crack spreads temporarily reached multi-year highs in March-April 2026 as Middle East crude was diverted. By Q2 2026, diesel cracks had eased but remain above historical averages (per Kpler, Feb 2026 mid-distillate pullback). Majors with US refining exposure (XOM: Beaumont; Chevron: Pascagoula) benefit from this structural spread.",
+    "Dividend durability: Integrated majors have maintained dividends through multiple cycles. XOM has sustained dividend growth for 44 consecutive years; at $95 Brent, dividend coverage ratio exceeds 2.5x for all five supermajors, making the yield sustainable. For income-oriented investors the ~3.5-5.5% dividend yield is the primary driver, not capital appreciation.",
+    "Global oil demand resilience: IEA May 2026 forecast projects global demand at 104 mb/d for 2026 — a revision downward due to Hormuz disruption (demand destruction in aviation, petrochemicals by ~420 kb/d YoY), but total demand remains historically high. As Hormuz flows resume (assumed gradual from June 2026), demand recovery should support price normalization in the $85-100 range."
+  ],
+
+  "supply_constraints": [
+    "OPEC+ spare capacity and cohesion: Pre-conflict, OPEC+ was unwinding production cuts and Saudi Arabia signaled willingness to add barrels. The Iran conflict effectively removed ~3-4 mb/d of Iranian production from the market, tightening supply. OPEC+ spare capacity (primarily Saudi Arabia, UAE) of ~4-5 mb/d provides a ceiling on sustained $120+ prices but also a floor via potential cuts if prices fall back toward $70.",
+    "Upstream capex undershoot creates medium-term supply inelasticity: Majors have been running capex discipline ($20-25B per year for XOM vs. $30B+ pre-2015 peak). Deepwater and tight oil projects have 3-7 year lead times. Even with elevated prices since 2022, new project sanctioning has been subdued — meaning production growth is capped at ~2-3% annually. This structural supply constraint is favorable for sustained $80+ pricing.",
+    "Refinery capacity rationalization in Europe: Multiple European refineries closed in 2020-2022 (Convent, Vohburg), reducing refining throughput capacity just as demand recovered. New capacity additions (Saudi Aramco JVs in Asia) come online in 2026-2027 and will compress European margins as Atlantic Basin trade patterns re-normalize.",
+    "Energy transition regulatory risk: EU Carbon Border Adjustment Mechanism (CBAM) on fuels creates increasing cost overhang for European majors (Shell, BP, TotalEnergies). Scope 3 emissions reporting requirements increase compliance costs. However, near-term (2026) earnings impact is limited — transition costs are a 2030+ headwind.",
+    "Geopolitical production risk: Libya, Nigeria, and Iraq are chronically unreliable OPEC members with a combined ~7 mb/d production and frequent outages. Iran conflict creates contagion risk to Gulf producers. Any material disruption beyond Iran tightens the market further — but already partially priced at $96 Brent."
+  ],
+
+  "technology_maturity": null,
+
+  "cycle_position": {
+    "assessment": "Late-cycle oil price spike — exceptional but peak earnings likely passed; transitioning to normalization phase",
+    "rationale": "The Hormuz crisis drove Brent to ~$120 (early Q2 2026), generating the highest integrated margins since 2022. However, prices have already pulled back ~20% from peak as US-Iran ceasefire talks accelerate (Trump: talks at 'rapid pace', June 2026). Goldman Sachs Q4 2026 Brent forecast: $90 (revised up from $80 on Apr 26). JPMorgan's $150 overshoot scenario appears to be fading with ceasefire progress. The most acute phase of the price spike is likely past — majors have already banked exceptional Q2 profits, but Q3 2026 earnings may disappoint vs Q2 unless ceasefire talks collapse. The investment case shifts from momentum (price spike beneficiary) to value (FCF yield, buyback pace, dividend growth) at Brent $85-100. Crowding risk is elevated: XLE delivered +34-57% YTD by late Q1 2026, attracting significant retail and ETF inflows. Positioning may be stretched in US-listed instruments; UCITS equivalent IUES.L is less crowded.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "XLE",
+      "name": "Energy Select Sector SPDR Fund",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0009,
+      "aum_m_usd": 38000,
+      "replication": "physical",
+      "avg_spread_bps": 1,
+      "top_10_concentration_pct": 0.75,
+      "characteristics": "Lowest TER in sector (0.09%). XOM ~24%, CVX ~17% — heavily US-integrated major dominated. Also includes E&P (EOG, COP, PXD) and midstream at smaller weights. $38B AUM ensures pristine liquidity — 1bp spread. YTD 2026 return approximately +34-57% depending on measurement date.",
+      "recommendation_tier": 1,
+      "limitations": "NOT UCITS — not directly purchasable by Spanish retail investor under PRIIPs rules without professional/elective classification. Heavy XOM+CVX concentration (41%) means it is essentially a two-stock bet on US supermajors. European majors (Shell, BP, Total, ENI) absent — thesis is US-centric. Also includes non-integrated E&P names which dilute the pure integrated major thesis."
+    },
+    {
+      "ticker": "IUES.L",
+      "name": "iShares S&P 500 Energy Sector UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0015,
+      "aum_m_usd": 1200,
+      "replication": "physical",
+      "avg_spread_bps": 8,
+      "top_10_concentration_pct": 0.73,
+      "characteristics": "UCITS-compliant equivalent of XLE. Tracks S&P 500 Energy Sector — same US major composition (XOM, CVX dominant). AUM $1.2B, spread 8bps — adequate for retail-sized positions (below 25bps threshold). USD-denominated on LSE introduces EUR/USD currency exposure for EUR-base investors.",
+      "recommendation_tier": 1,
+      "limitations": "Same US-centric limitation as XLE — no European supermajors. AUM $1.2B is sufficient but much smaller than XLE ($38B); institutional-size blocks may see market impact. EUR/USD exposure adds ~8-12% volatility overlay for a EUR-base investor. Last verified AUM: 2026-06-01 — verify current AUM before entry given 2026 energy inflows."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Brent crude spot price",
+      "unit": "USD/barrel",
+      "source": "ICE, Reuters",
+      "current": "~97 (early June 2026, post-peak pullback from ~$120 high)",
+      "comment": "Primary revenue driver for upstream segment. Threshold for sector FCF breakeven: ~$55-60. At $97, all five supermajors are generating exceptional FCF. Watch: ceasefire confirmation would drive Brent to $80-90; escalation or Hormuz re-closure could push to $120+."
+    },
+    {
+      "metric": "3-2-1 Crack Spread (US Gulf Coast)",
+      "unit": "USD/barrel",
+      "source": "CME, RBN Energy, Kpler",
+      "current": "Easing from March-April peaks; mid-distillate cracks retreating as of Feb-May 2026",
+      "comment": "Downstream refining margin indicator. USGC refinery configuration benefits from WTI/Brent discount. Crack spread compression signals downstream margin headwinds. Monitor quarterly with refiner earnings."
+    },
+    {
+      "metric": "Supermajor aggregate FCF yield",
+      "unit": "percent",
+      "source": "Bloomberg, company filings",
+      "current": "~8-12% at $95 Brent (estimated from Q1 2026 earnings run-rate)",
+      "comment": "Key value metric. At FCF yield > 8%, buyback/dividend sustainability is assured. Threshold: FCF yield < 4% would signal balance sheet stress or price collapse."
+    },
+    {
+      "metric": "US-Iran ceasefire probability / Hormuz shipping status",
+      "unit": "qualitative",
+      "source": "Reuters, AP, CNBC live feeds",
+      "current": "Ceasefire talks 'at rapid pace' per Trump (June 2026); Iranian FM signals 'no significant progress'",
+      "comment": "Most important near-term binary. Confirmed ceasefire with Hormuz reopening → Brent likely falls $15-25 immediately. Talks collapse → Brent re-tests $120. This single variable dominates all others in the near term."
+    },
+    {
+      "metric": "XOM and CVX quarterly EPS vs consensus",
+      "unit": "USD",
+      "source": "Bloomberg earnings calendar, CNBC earnings",
+      "current": "Q1 2026: both beat on oil price tailwind; Q2 2026 results due July 2026",
+      "comment": "Earnings beat/miss drives sector momentum. Q2 will be the peak earnings quarter if oil prices have already pulled back. Consensus reset lower into Q3 is the key timing indicator."
+    },
+    {
+      "metric": "ExxonMobil buyback pace (annualized)",
+      "unit": "USD billions/year",
+      "source": "XOM IR, SEC filings",
+      "current": "$20B committed annual pace through 2026",
+      "comment": "Largest single-stock buyback in S&P 500. Sustained buyback is the primary ETF flow signal — XLE inflows track XOM repurchase activity. Any reduction signals balance sheet concern or price collapse."
+    }
+  ],
+
+  "active_catalyst_ids": [],
+
+  "historical_catalyst_performance": {
+    "summary": "Oil majors exhibit well-documented performance patterns in geopolitical supply shocks. In the 2022 Russia-Ukraine war, the five supermajors (XOM, CVX, Shell, BP, TotalEnergies) collectively generated $467 billion in profits between Feb 2022 and end-2024, with 2022 alone seeing a 125% profit surge (from $87B to $195B — all-time record). XLE returned approximately +66% in 2022 (vs S&P 500 -18%), the strongest relative performance in the ETF's history. The 2026 Hormuz crisis has produced a faster but potentially shallower spike: XLE +34-57% YTD by late Q1 2026 vs the 2022 cycle, consistent with faster institutional positioning and the market having learned the 'oil shock = buy energy' playbook from 2022. Historical pattern: (1) Initial shock: large E&P and integrated majors outperform by 15-25% in first 60 days. (2) Mid-cycle: earnings beats drive second leg; buyback announcements sustain inflows. (3) Resolution phase: as ceasefire pricing begins, energy underperforms while market rallies; rotation out of energy into cyclicals and growth. We appear to be entering phase 3 in June 2026. Prior 2022 resolution (oil peaked June 2022, returned to $80 by Dec 2022): XLE gave back ~30% from peak in 6 months. Current analog suggests downside risk of 20-30% from XLE peak if ceasefire confirmed and Brent normalizes to $80-85.",
+    "analog_2022_ru_ukraine": {
+      "event": "Russia-Ukraine invasion (Feb 2022)",
+      "brent_peak": 139,
+      "brent_trough_6m": 80,
+      "xle_return_12m": 0.66,
+      "xle_drawdown_from_peak": -0.28,
+      "supermajor_profit_uplift_pct": 1.25
+    },
+    "analog_2026_hormuz": {
+      "event": "US-Iran conflict / Strait of Hormuz closure (Feb 2026)",
+      "brent_peak_approx": 120,
+      "brent_current_june_2026": 97,
+      "xle_ytd_return_q1_2026": 0.34,
+      "phase": "Entering resolution/normalization (ceasefire talks active)"
+    }
+  },
+
+  "risks": [
+    "Ceasefire-driven price collapse: The single largest near-term risk. Confirmed US-Iran ceasefire with Hormuz reopening would immediately remove 3-5 mb/d of disruption premium from oil prices. Goldman Sachs April 2026 forecast: Q4 2026 Brent at $90, implying a further $7-10 fall from current $97. JPMorgan's base case Brent forecasts have been revised downward as ceasefire talks accelerate. XLE could give back 20-30% from its 2026 peak in a rapid normalization scenario, as occurred after the 2022 Russia oil price peak.",
+    "Demand destruction overshoot: IEA May 2026 revised global oil demand down 420 kb/d YoY to 104 mb/d due to Hormuz-driven economic slowdown. If the disruption has already triggered a demand recession in aviation and petrochemicals that persists beyond Hormuz reopening, the supply-demand balance could flip to surplus faster than expected — compressing prices below $80 breakeven for some majors' capex budgets.",
+    "European major ESG and climate policy headwinds: Shell, BP, and TotalEnergies face growing EU regulatory pressure (CBAM, CSRD emissions reporting, EU Taxonomy exclusions). BP in particular has reduced its 2026 buyback to $750M (from $1.75B prior quarter) — a capital allocation signal that it faces balance sheet constraints and/or accelerating energy transition capex. European majors may underperform US peers (XOM, CVX) on capital returns.",
+    "Valuation re-rating risk at peak cycle: XLE's YTD gain of +34-57% has compressed the forward yield and elevated P/E vs historical norms. At $95 Brent, EV/EBITDA for integrated majors is ~4-5x (still reasonable) but assuming Brent normalizes to $80, implied earnings decline 25-30% and current multiples look stretched. The sector has absorbed considerable inflows — crowded positioning in US ETFs (XLE) makes it vulnerable to mechanical de-risking.",
+    "USD strengthening from energy shock: Higher oil prices are inflationary in the US and globally, keeping Fed policy restrictive for longer. A stronger USD reduces the USD-translated earnings of European majors (Shell, Total, BP, ENI) and reduces demand in EM oil-importing economies. For a EUR-base investor, USD-denominated ETF (XLE, IUES.L) adds FX risk if USD weakens as risk appetite returns.",
+    "Carbon tax and stranded asset risk (medium-term): EU ETS carbon prices, CBAM implementation, and potential US executive-order rollback of fossil fuel subsidies create a medium-term headwind. Not a 2026 catalyst but a structural reason to cap position size and monitor regulatory developments in the EU Council."
+  ],
+
+  "narrative_maturity": "crowded",
+
+  "narrative_trend": "decreasing",
+
+  "narrative_notes": "Classified as 'crowded' per scoring_weights.yaml criteria: the 'buy oil majors in geopolitical supply shock' thesis has been consensus since the 2022 Russia-Ukraine analog. By Q1 2026, CNBC, Bloomberg, and FT all covered XLE inflows and oil major earnings beats daily. Multiple ETF-focused financial media outlets (24/7 Wall St, ETF Trends, ETF Beacon) published 'how to play the oil shock' roundups referencing XLE and integrated majors explicitly. Goldman/JPMorgan both published price target upgrades (Goldman 4th upgrade since Feb 2026 by late April). Retail ETF flows into XLE accelerated. This is squarely the 'Bloomberg/CNBC daily coverage + retail ETF inflows accelerating + top hedge fund themes' combination that defines crowded. Trend is 'decreasing' because ceasefire news flow is actively reducing the urgency of the thesis — the narrative is beginning to shift from 'oil shock opportunity' to 'peak earnings priced in, time to rotate'. The sector's narrative_maturity would drop to 'mainstream' if ceasefire is confirmed and prices normalize."
+}

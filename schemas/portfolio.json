@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "catalyx/schemas/portfolio.json",
+  "schema_version": "1.0",
+  "title": "PortfolioConfig",
+  "description": "A model-portfolio definition (risk profile + deterministic construction rules). A model portfolio is a function of (score_run × this config): the same run feeds N portfolios. config_version = md5 of this file, recorded with every built holding so an evolution is always traceable to the rules that produced it.",
+  "type": "object",
+  "required": ["portfolio_id", "name", "risk_profile", "construction"],
+  "properties": {
+    "portfolio_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Canonical id; also the holding/nav partition key. e.g. 'balanced'."
+    },
+    "name": { "type": "string" },
+    "risk_profile": {
+      "type": "string",
+      "enum": ["conservative", "balanced", "aggressive"]
+    },
+    "description": { "type": "string" },
+    "benchmark_etf": {
+      "type": ["string", "null"],
+      "description": "ETF ticker to measure relative performance against (e.g. ACWI, SPY). null = absolute only."
+    },
+    "construction": {
+      "type": "object",
+      "description": "Deterministic rules turning a score_run's sector_snapshot into holdings.",
+      "required": ["max_positions", "min_composite", "weighting", "max_position_pct"],
+      "properties": {
+        "max_positions": { "type": "integer", "minimum": 1, "description": "Cap on number of held sectors." },
+        "min_composite": { "type": "number", "minimum": 0, "maximum": 100, "description": "Exclude sectors below this composite." },
+        "min_momentum": { "type": "number", "minimum": 0, "maximum": 100, "description": "Momentum floor (0 = no floor)." },
+        "max_crowding": { "type": "number", "minimum": 0, "maximum": 100, "description": "Exclude sectors above this crowding_risk (100 = no cap)." },
+        "exclude_narrative_maturity": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["ignored", "emerging", "mainstream", "crowded", "exhausted"] },
+          "description": "Narrative-maturity levels to exclude entirely."
+        },
+        "weighting": {
+          "type": "string",
+          "enum": ["composite_proportional", "equal_weight"],
+          "description": "How selected sectors are weighted before the position cap."
+        },
+        "max_position_pct": { "type": "number", "minimum": 0, "maximum": 100, "description": "Per-position weight ceiling (%). Excess water-fills to the rest; if all capped, the remainder is implicit cash." }
+      }
+    }
+  }
+}

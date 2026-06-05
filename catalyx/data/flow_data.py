@@ -163,8 +163,52 @@ def _fetch_yfinance(ticker: str, lookback_days: int = 7) -> dict | None:
     }
 
 
+def _load_prior_from_lake(ticker: str, lookback_days: int) -> dict | None:
+    """Most recent prior flow row for `ticker` from the parquet lake (Tier 2 truth)."""
+    try:
+        import pandas as pd
+        from catalyx.store import lake
+    except Exception:
+        return None
+    df = lake.read_table("flow")
+    if df.empty or "ticker" not in df.columns:
+        return None
+    cutoff = date.today() - timedelta(days=lookback_days)
+    sub = df[df["ticker"] == ticker].copy()
+    if sub.empty:
+        return None
+
+    def _d(s):
+        try:
+            return date.fromisoformat(str(s))
+        except ValueError:
+            return None
+
+    sub["_d"] = sub["date"].map(_d)
+    sub = sub[sub["_d"].notna() & (sub["_d"] > cutoff)]
+    if sub.empty:
+        return None
+    row = sub.sort_values("_d").iloc[-1]
+
+    def _clean(v):
+        return None if v is None or (isinstance(v, float) and pd.isna(v)) else v
+
+    return {
+        "shares_outstanding": _clean(row.get("shares_outstanding")),
+        "nav_price": _clean(row.get("nav_price")),
+    }
+
+
 def _load_prior_snapshot(ticker: str, lookback_days: int) -> dict | None:
-    """Load the most recent prior flow snapshot within the lookback window."""
+    """Load the most recent prior flow data within the lookback window.
+
+    Parquet-first: try the lake, then fall back to the legacy snapshot JSON files
+    (kept during migration). Returns a dict with shares_outstanding + nav_price.
+    """
+    from_lake = _load_prior_from_lake(ticker, lookback_days)
+    if from_lake and from_lake.get("shares_outstanding") and from_lake.get("nav_price"):
+        return from_lake
+
     cutoff = date.today() - timedelta(days=lookback_days)
     candidates = sorted(_SNAPSHOTS_DIR.glob("flow_snapshot_*.json"), reverse=True)
     for f in candidates:
@@ -381,11 +425,73 @@ def fetch_flow_data(
     }
 
 
+def flow_to_rows(snapshot: dict) -> list[dict]:
+    """Flatten a flow snapshot into one row per sector (= its primary ETF), merging the
+    derived `sector_scores` with the raw `etfs` data (shares_outstanding, nav_price).
+    This is the tabular shape the parquet lake stores."""
+    etfs = snapshot.get("etfs", {})
+    meta = {
+        "date": snapshot.get("date"),
+        "generated_at": snapshot.get("generated_at"),
+        "source": snapshot.get("source", "yfinance + edgar_13f"),
+    }
+    rows: list[dict] = []
+    for sid, s in snapshot.get("sector_scores", {}).items():
+        ticker = s.get("ticker")
+        raw = etfs.get(ticker, {})
+        rows.append({
+            **meta,
+            "sector_id": sid,
+            "ticker": ticker,
+            "flow_confirmation": s.get("flow_confirmation"),
+            "flow_pct_1w": s.get("flow_pct_1w"),
+            "implied_aum_m_usd": s.get("implied_aum_m_usd"),
+            "data_quality": s.get("data_quality"),
+            "shares_outstanding": raw.get("shares_outstanding"),
+            "nav_price": raw.get("nav_price"),
+            "shares_delta_1w": raw.get("shares_delta_1w"),
+            "flow_usd_1w": raw.get("flow_usd_1w"),
+            "inst_sponsorship_score": s.get("inst_sponsorship_score"),
+            "inst_13f_filer_count": s.get("inst_13f_filer_count"),
+            "inst_source": s.get("inst_source"),
+        })
+    return rows
+
+
+def _write_lake_partition(snapshot: dict) -> None:
+    """Dual-write the flow snapshot to the parquet lake (Tier 2 source of truth).
+    Best-effort during migration: never let a parquet failure break the JSON pipeline."""
+    rows = flow_to_rows(snapshot)
+    if not rows or not snapshot.get("date"):
+        return
+    try:
+        import pandas as pd
+        from catalyx.store import lake
+
+        df = pd.DataFrame(rows)
+        lake.append_partition("flow", df, {"date": snapshot["date"]}, overwrite=True)
+        print(f"lake: flow partition date={snapshot['date']} ({len(df)} rows)", file=sys.stderr)
+    except Exception as e:  # noqa: BLE001
+        print(f"WARN lake write skipped: {e}", file=sys.stderr)
+
+
+def backfill_lake() -> int:
+    """Convert existing data/snapshots/flow_snapshot_*.json into lake partitions."""
+    n = 0
+    for p in sorted(_SNAPSHOTS_DIR.glob("flow_snapshot_*.json")):
+        snap = json.loads(p.read_text(encoding="utf-8"))
+        snap.setdefault("date", p.stem.replace("flow_snapshot_", ""))
+        _write_lake_partition(snap)
+        n += 1
+    return n
+
+
 def write_snapshot(snapshot: dict) -> Path:
-    """Write flow snapshot to data/snapshots/flow_snapshot_YYYYMMDD.json."""
+    """Write flow snapshot to data/snapshots/flow_snapshot_YYYYMMDD.json + dual-write lake."""
     _SNAPSHOTS_DIR.mkdir(parents=True, exist_ok=True)
     path = _SNAPSHOTS_DIR / f"flow_snapshot_{snapshot['date']}.json"
     path.write_text(json.dumps(snapshot, indent=2, ensure_ascii=False), encoding="utf-8")
+    _write_lake_partition(snapshot)
     return path
 
 
@@ -404,7 +510,14 @@ def main() -> None:
     parser.add_argument("--write", action="store_true",
                         help="Write snapshot to data/snapshots/flow_snapshot_YYYYMMDD.json.")
     parser.add_argument("--json", action="store_true", help="Output raw JSON only.")
+    parser.add_argument("--backfill-lake", action="store_true",
+                        help="Convert existing flow_snapshot_*.json into lake partitions and exit.")
     args = parser.parse_args()
+
+    if args.backfill_lake:
+        n = backfill_lake()
+        print(f"Backfilled {n} flow snapshot(s) into the lake", file=sys.stderr)
+        return
 
     sector_tickers = None
     if args.tickers:

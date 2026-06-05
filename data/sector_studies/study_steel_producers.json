@@ -1,0 +1,162 @@
+{
+  "id": "study_steel_producers",
+  "schema_version": "1.2",
+  "sector_id": "steel_producers",
+  "sector_label": "Steel — Producers & Mini-mills",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "industrial_metals",
+    "adjacent_sectors": [
+      "copper_miners",
+      "iron_ore_miners",
+      "rare_earth_miners",
+      "cobalt_nickel",
+      "infrastructure_core",
+      "eu_defense_prime_contractors"
+    ],
+    "differentiation_note": "Steel producers and mini-mills are an intermediate manufacturing sector, not a raw-materials mining play: they transform iron ore or scrap into finished flat/long/tubular steel products and sell at a margin over input costs (iron ore, coking coal, scrap), making them far more sensitive to the steel-to-raw-material spread (the 'metal margin') than to commodity price levels per se. This is structurally different from copper miners or iron ore miners, whose revenue IS the commodity price. The US mini-mill sub-segment (Nucor, Steel Dynamics) operates electric arc furnaces on cheap domestic scrap with sub-$200/t cost advantages over integrated blast-furnace mills — a business model unique to the US that creates a domestic structural profit floor independent of global seaborne prices. Adjacent infrastructure and defense sectors are downstream end-users of steel, not competitors; a defense capex tailwind shows up in steel as volume demand rather than as a shared price catalyst."
+  },
+
+  "demand_drivers": [
+    "US infrastructure spending: The US Bipartisan Infrastructure Law channels ~$1.2 trillion over 10 years, with steel-intensive highway, bridge, and grid categories still in peak disbursement phase in 2026. AISI estimates each $1B of US construction spending requires ~40,000–50,000 tonnes of steel.",
+    "Non-residential construction: US non-residential construction starts remain elevated (+3% YoY in Q1 2026) driven by manufacturing reshoring (semiconductor fabs, battery plants, EV assembly) — each large-scale industrial facility requires 20,000–100,000 tonnes of structural steel.",
+    "Defense and military infrastructure: NATO's 5% GDP commitment and EU ReArm Europe's €800B mobilization drive military base upgrades, munitions production facilities, and armored vehicle production lines — all steel-intensive. US DoD FY2026 military construction budget targets base hardening and Indo-Pacific readiness infrastructure.",
+    "Automotive production: US light vehicle production forecast at 10.2M units in 2026 (flat YoY). EV platforms use 200–300 kg less steel per vehicle than ICE, but Cleveland-Cliffs reports automotive customers actively reshoring to US steel from foreign sources, partially offsetting the EV steel-content headwind. Full-order books reported Q1 2026.",
+    "Tariff-driven import substitution (Section 232): Trump April 2026 proclamation restructured Section 232 tariffs to apply to full customs value (not metal content) of derivative products; 50% rates on Annex I-A imports. June 1, 2026 proclamation extends regime through December 2027. US domestic producers capture additional volume as imports become structurally expensive; US capacity utilization rose to 81.4% in May 2026 from 76.6% YoY.",
+    "EAF scrap economics: US mini-mills (Nucor, STLD) use ~80% scrap. Shredded scrap averaged $370/t in late 2025, rising to ~$450/t in early 2026 before stabilizing. As long as the scrap-to-HRC spread remains positive (~$700/t HRC vs ~$450/t scrap), mini-mill economics are healthy. This provides a self-correcting margin floor unavailable to integrated blast-furnace mills.",
+    "India and emerging market demand: India's steel demand projected to grow 7.4% in 2026 and 9.2% in 2027 (World Steel), underpinning global price floors even if China demand remains tepid. India represents the only major demand growth market globally in 2026."
+  ],
+
+  "supply_constraints": [
+    "US blast-furnace overcapacity is being retired or converted: Cleveland-Cliffs has been curtailing blast furnace capacity in response to EAF competition, structurally tightening US flat-rolled supply at the margin.",
+    "Chinese overcapacity remains the primary global supply risk: China produces ~54% of global steel (1,019 Mt in 2025) and its export volumes directly suppress ex-China prices. Any demand deceleration in Chinese construction (still in property sector stress) risks renewed export flooding — though Section 232 shields US producers specifically.",
+    "Scrap availability: EAF mini-mills depend on domestic scrap supply, which is not infinitely elastic. Rapid production ramp (US YTD output +6.5% to 35.2M t through mid-May 2026) tightened the scrap market, with shredded scrap prices rising 22% from Oct 2025 to early 2026. This caps mini-mill margin expansion during production surges.",
+    "Energy cost volatility: Cleveland-Cliffs reported an $80M one-time energy cost hit in Q1 2026 from extreme cold weather — a structural risk for EAF operators who are intensive electricity consumers. Power price inflation from AI data center demand competes for the same grid capacity.",
+    "Capital cycle lag: New greenfield steel capacity requires 3–5 years and $3–6B investment. No major US greenfield projects announced, so supply response to demand is slow — a positive for pricing but also means incumbents must absorb volume surges via utilization, not new capacity.",
+    "European CBAM and TRQ trade tools: ArcelorMittal (EU/global integrated) benefits from the EU's Carbon Border Adjustment Mechanism (now imposing a carbon cost on steel imports) and a Tariff Rate Quota tool effective July 2026. These structurally reduce competitive import pressure into the EU, supporting European steel margins."
+  ],
+
+  "cycle_position": {
+    "assessment": "Early recovery / cyclical trough has passed — but recovery is uneven and fragile.",
+    "rationale": "US steel sector appears to have passed the earnings trough. Nucor Q1 2026 net sales +21% YoY to $9.5B; EPS $3.23 vs $0.67 Q1 2025 — record steel mill shipments and +14% average selling price per ton. Steel Dynamics also cited record shipments. This signals that tariff-driven import displacement plus infrastructure demand has pushed US utilization and pricing firmly into profitable territory. HRC prices at ~$1,169/t in late May 2026 (+9.4% YTD in North America) are above breakeven for all major US producers. However, the recovery is not a genuine demand upcycle: global worldsteel demand forecast is only +0.3% in 2026 (1,724 Mt), and China's sluggish property market suppresses the seaborne price signal that historically leads the cycle. The real driver is the US regulatory arbitrage (Section 232) and infrastructure spend creating a temporary domestic premium above world prices. This means the cycle position is 'recovering with tariff floor' rather than a classic demand-driven bull cycle. Key risk: if Trump tariff regime is modified or trade deals negotiated, the US domestic premium collapses quickly. SLX YTD +33.8% as of June 2, 2026 confirms market has already moved substantially on this thesis.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "US HRC (Hot Rolled Coil) spot price",
+      "unit": "USD per metric tonne",
+      "source": "CME HRC Futures (HR1!) / SteelBenchmarker / CRU",
+      "current": 1169,
+      "comment": "As of late May 2026. US domestic HRC ~$1,169/t, up ~9.4% YTD. Must stay above ~$900/t for US mini-mill EAF economics to remain solidly profitable at current scrap levels."
+    },
+    {
+      "metric": "US steel capacity utilization rate",
+      "unit": "percent",
+      "source": "American Iron and Steel Institute (AISI) — weekly",
+      "current": 81.4,
+      "comment": "As of mid-May 2026, up from 76.6% a year prior. 80%+ historically associated with pricing power for US mills. Monitor weekly AISI data — sustained drop below 75% signals demand softening."
+    },
+    {
+      "metric": "US shredded scrap price (No. 1 heavy melting steel / shredded)",
+      "unit": "USD per net ton",
+      "source": "American Recycler / SteelOrbis / AMM",
+      "current": 450,
+      "comment": "Peaked ~$450/t in early 2026, slight softening in May. Mini-mill margin = HRC price minus scrap cost minus ~$200-250/t conversion. Current spread (~$470/t) is healthy. Watch for scrap spikes if output ramp accelerates."
+    },
+    {
+      "metric": "US steel imports (monthly volume)",
+      "unit": "million net tons per month",
+      "source": "AISI monthly import license data",
+      "current": null,
+      "comment": "Section 232 at full customs value (effective April 2026) has structurally raised import cost. Monitor actual monthly import volumes as leading indicator of whether tariffs are achieving displacement. A rebound in imports would compress domestic premiums."
+    },
+    {
+      "metric": "Nucor / Steel Dynamics average selling price per ton (quarterly)",
+      "unit": "USD per net ton",
+      "source": "Company earnings releases (quarterly)",
+      "current": null,
+      "comment": "Nucor Q1 2026 ASP +14% YoY. This is the most direct measure of pricing power for US EAF mini-mills. Watch for Q2 2026 guidance (June/July 2026 earnings calls) — management has flagged higher consolidated Q2 earnings expected."
+    },
+    {
+      "metric": "US YTD crude steel production",
+      "unit": "million net tons (YTD)",
+      "source": "AISI weekly raw steel production report",
+      "current": 35.2,
+      "comment": "Through mid-May 2026 (~4.5 months): 35.2 Mt, +6.5% vs same period 2025. Annualised pace ~93–95 Mt. Signals domestic supply response to tariff-driven pricing."
+    },
+    {
+      "metric": "Global steel demand growth (worldsteel Short Range Outlook)",
+      "unit": "percent YoY",
+      "source": "World Steel Association (worldsteel) — biannual SRO (April + October)",
+      "current": 0.3,
+      "comment": "Worldsteel April 2026 SRO: +0.3% global demand growth in 2026, accelerating to +2.2% in 2027. China flat/declining, India +7.4%. The global number matters for seaborne price floor — sustained weakness below 0% threatens the US domestic premium via increased Chinese export pressure."
+    }
+  ],
+
+  "etf_analysis": [
+    {
+      "ticker": "SLX",
+      "name": "VanEck Steel ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0056,
+      "aum_m_usd": 110,
+      "replication": "physical",
+      "avg_spread_bps": 22,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "The only dedicated steel ETF available. Holdings include NUE (~15%), STLD (~10%), CLF (~8%), MT (~12%), VALE (~8%), and international names. Physical replication. NOT UCITS — not accessible under PRIIPS rules for Spanish retail investors. AUM of ~$110M is well below the $200M liquidity threshold — use small position sizing only. Spread of ~22 bps is approaching the 25 bps warning threshold. YTD +33.8% through June 2, 2026. Best available vehicle for pure-play steel ETF exposure if broker allows non-UCITS access.",
+      "recommendation_tier": 2,
+      "limitations": "CRITICAL: NOT UCITS — generally NOT purchasable by EU retail investors under PRIIPs/KID rules without professional client designation or explicit broker exception. AUM ~$110M is below the $200M liquidity threshold (WARNING). Spread ~22 bps approaching the 25 bps spread warning. No UCITS equivalent exists for steel-specific ETF exposure. For a Spanish investor, SLX access requires broker-level PRIIPS exemption or professional classification. Tier 2 (not Tier 1) due to AUM and UCITS constraints."
+    },
+    {
+      "ticker": "No UCITS steel-specific ETF available",
+      "name": "UCITS proxy options: broad materials ETFs with steel weight",
+      "exchange": "N/A",
+      "currency": "N/A",
+      "ter": 0.0,
+      "aum_m_usd": 0,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "No UCITS ETF exists with dedicated steel producer exposure. Best UCITS proxies for a Spanish investor: (1) iShares MSCI World Materials UCITS ETF (IS3R.DE, XETRA, EUR, TER 0.25%, AUM ~$900M) — includes NUE/STLD/MT but at small weights alongside miners and chemicals; (2) Direct positions in NUE or STLD via a Spanish broker with access to NYSE. Steel is not yet covered by a dedicated UCITS thematic ETF. This is a significant access constraint for a UCITS-constrained investor.",
+      "recommendation_tier": 3,
+      "limitations": "No UCITS steel ETF exists as of 2026-06-05. The UCITS gap means the only pure-play vehicle (SLX) is inaccessible to most EU retail investors. Watch for new UCITS launches as sector narrative develops. Until a UCITS vehicle exists, size any SLX position as a small exploratory allocation via professional classification only."
+    }
+  ],
+
+  "risks": [
+    "Section 232 tariff reversal or bilateral trade deal: The entire US domestic steel premium is constructed on the April 2026 Section 232 restructuring. A trade deal with the EU, Canada, or Korea (as in 2022) that reintroduces quota-exempt imports could collapse US HRC premiums by $150–250/t within months. June 2026 proclamation is temporary through Dec 2027 — the sunset creates a binary policy risk in 2027.",
+    "Chinese export surge: China produces ~54% of global steel and its domestic construction demand (property sector) remains under stress in 2026. Any meaningful demand disappointment triggers Chinese mills to divert exports at sub-cost prices to global markets. Though Section 232 blocks direct imports to the US, Chinese exports to third countries depress global prices, which then leak into US pricing via complex product chains not fully covered by derivative tariffs.",
+    "EV platform steel intensity decline: EV platforms use 200–300 kg less steel per vehicle than equivalent ICE vehicles. With EVs forecast at 42% of US production by 2027, the automotive channel — historically ~25% of US flat-rolled demand — faces a multi-year structural volume headwind. This is partially offset by higher-strength advanced high-strength steel (AHSS) content per vehicle, but is a net negative for ton volume.",
+    "EAF energy cost exposure: Electric arc furnaces are intensive electricity consumers (~400–500 kWh per tonne of steel). Rising grid power prices driven by AI data center buildout (competing for the same grid capacity) compress EAF conversion margins. Cleveland-Cliffs reported an $80M one-time energy cost hit in Q1 2026 from extreme cold. Structural energy inflation is a sector-specific risk for US mini-mills that does not affect blast-furnace competitors equally.",
+    "Crowded positioning and SLX already +33.8% YTD: The US steel tariff thesis has been in mainstream financial media since early 2026 and the market has moved materially. SLX is up 33.8% YTD as of June 2, 2026 — much of the tariff premium may already be priced into equities. The forward alpha opportunity is smaller than in January 2026. Further upside requires a new incremental catalyst (Q2 earnings beat, additional tariff expansion, or demand surprise) rather than tariff repricing.",
+    "Global demand remains tepid (+0.3% in 2026): The global steel demand cycle has not inflected. Without a China construction recovery or a major EM demand acceleration, the seaborne price floor remains capped, limiting upside for global integrated producers like ArcelorMittal in the portfolio. India is the only major growth market (+7.4%) but its steel prices are domestically anchored.",
+    "UCITS access constraint for Spanish investors: No dedicated UCITS steel ETF exists. SLX is non-UCITS. This limits position sizing and creates execution risk — access may depend on broker classification or future UCITS product launches. This is an operational risk layer on top of the investment thesis risk."
+  ],
+
+  "narrative_maturity": "mainstream",
+  "narrative_trend": "increasing",
+  "narrative_notes": "Steel sector narrative in the US has moved from 'ignored' to 'mainstream' driven by the high-profile Section 232 tariff restructuring (April 2026) and strong Q1 2026 earnings from Nucor and Steel Dynamics. The thesis is clearly present in generalist sell-side coverage, industry news outlets, and ETF product discussions. Goldman Sachs and JPMorgan cover this in their Basic Materials/Industrials sector updates; Nucor's Q1 beat was widely reported across Bloomberg, WSJ, and Manufacturing Dive. However, it has not yet reached the 'crowded' threshold per scoring_weights.yaml criteria: COT data for steel producers is not showing extreme long positioning, retail ETF inflows into SLX remain modest (AUM still only ~$110M despite the YTD move — inflows are not accelerating to ETF record highs), and the thesis is not the #1 theme on Bloomberg/CNBC daily cycles. Classification: 'mainstream' (score_equiv 60) is appropriate — this is a consensus view among generalist sell-side but not yet a positioning-risk-level crowded trade. Narrative is 'increasing' because the June 2026 tariff proclamation extension through Dec 2027 refreshes the catalyst, keeping media coverage active through H2 2026.",
+
+  "historical_catalyst_performance": {
+    "summary": "Steel producers have historically shown high sensitivity (beta >1.5x) to trade policy catalysts and construction/infrastructure demand cycles. Key historical episodes: (1) Section 232 initial tariffs (March 2018) — SLX rallied ~25% in the 3 months following the March 2018 announcement before giving back half on exemption negotiations with Canada/Mexico. Peak-to-announcement return was front-loaded within 60 days. (2) US infrastructure bill passage (Nov 2021) — steel equities (NUE, STLD) rallied 15–20% in the following 8 weeks as the market priced incremental demand over a 5-year horizon; importantly, the rally was more durable than the 2018 tariff spike because it was demand-driven rather than protection-driven. (3) China steel production cuts (2016 supply-side reform) — global HRC prices rose ~60% from mid-2016 to early 2017; SLX rose ~80% peak-to-trough over 12 months, dramatically outperforming the raw material. This demonstrates the operational leverage of steel producers (fixed-cost base means margin expansion is non-linear above breakeven). (4) Post-pandemic destocking cycle (2022-2023) — SLX fell ~45% from its 2022 peak as demand normalization + Chinese export resumption compressed margins globally, illustrating the downside leverage symmetry. Historical lesson: steel producer alpha is front-loaded in policy/demand catalyst windows (typically 60–120 day peak impact); holding through the subsequent mean-reversion captures lower returns per unit of volatility. The current 2026 run (+33.8% YTD in ~5 months) is already within the historical distribution of a full tariff catalyst cycle.",
+    "key_catalyst_responses": {
+      "trade_policy_tariff": "SLX typically +20–35% within 90 days of a major tariff announcement; gains partly reverted if exemptions follow.",
+      "infrastructure_legislation": "More durable rally profile (+15–25% over 6 months) as demand is visible and multi-year.",
+      "china_supply_cuts": "Most violent upside move (+60–80% over 12 months) but requires sustained Chinese policy discipline — hard to maintain.",
+      "demand_cycle_trough": "Earnings trough typically leads stock trough by 1–2 quarters; Nucor Q1 2026 surge in EPS confirms trough has passed."
+    }
+  },
+
+  "active_catalyst_ids": [
+    "struct_nato_rearmament",
+    "cat_20260603_nato_defense_gdp"
+  ]
+
+}

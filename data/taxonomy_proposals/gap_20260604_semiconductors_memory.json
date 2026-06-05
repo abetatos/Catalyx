@@ -1,7 +1,7 @@
 {
   "id": "gap_20260604_semiconductors_memory",
   "schema_version": "1.0",
-  "status": "proposed",
+  "status": "promoted",
   "first_detected": "2026-06-04",
   "last_seen": "2026-06-04",
   "signal_count": 1,
@@ -53,8 +53,8 @@
       "magnitude": "extreme"
     }
   ],
-  "proposed_sector_id": null,
-  "promoted_date": null,
+  "proposed_sector_id": "semiconductors_memory",
+  "promoted_date": "2026-06-04",
   "rejection_reason": null,
   "notes": "Pure-play ETF exists (Roundhill Memory ETF, MEMU, launched 2026-04-02). Verify UCITS availability before declaring investable. South Korean equity ETFs (e.g. EWY) also provide indirect exposure via SK Hynix weight. This was the 'RAM disk' case that originated the Discovery Pass architecture."
 }

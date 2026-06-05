@@ -160,3 +160,21 @@ def reinforce_factor() -> float:
     """Multi-catalyst aggregation reinforcement [0,1]. 0 → max-only; 1 → full noisy-OR."""
     agg = _section("multi_catalyst_aggregation", {"reinforce_factor": 0.25})
     return float(agg["reinforce_factor"])
+
+
+# ── Crowding from narrative_maturity (sector_scorer / snapshot recorder) ──────
+
+_CROWDING_FROM_MATURITY_DEFAULT = {
+    "ignored": 10,
+    "emerging": 25,
+    "mainstream": 55,
+    "crowded": 75,
+    "exhausted": 90,
+}
+
+
+def crowding_from_maturity() -> dict:
+    """Map a sector study's `narrative_maturity` enum to a crowding_risk [0-100].
+    Single source of truth — previously hardcoded in the heatmap skill prose and in
+    ad-hoc scripts (drift risk). Higher maturity → more crowded → bigger composite penalty."""
+    return _section("crowding_from_maturity", _CROWDING_FROM_MATURITY_DEFAULT)

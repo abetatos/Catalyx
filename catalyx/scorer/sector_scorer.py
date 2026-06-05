@@ -40,12 +40,15 @@ import json
 import sys
 from pathlib import Path
 
+import yaml
+
 from catalyx.config import weights
 from catalyx.scorer.catalyst_scorer import compute_catalyst_alignment
 from catalyx.scorer.momentum_engine import compute_momentum_scores
 
 _REPO_ROOT = Path(__file__).parents[2]
 _STUDY_DIR = _REPO_ROOT / "data" / "sector_studies"
+_TAXONOMY = _REPO_ROOT / "catalyx" / "config" / "sector_taxonomy.yaml"
 
 # Composite weights — single source of truth: scoring_weights.yaml §composite_weights
 _CW = weights.composite_weights()
@@ -210,6 +213,23 @@ def _all_sector_ids() -> list[str]:
     ]
 
 
+def _investable_sector_ids() -> list[str]:
+    """All investable sector_ids from the taxonomy (watch_only excluded).
+
+    Used by --universe so the heatmap covers EVERY investable sector with a momentum
+    baseline, not only the subset that already has a study file. Sectors without a
+    study still score: catalyst_alignment falls back to 0 (no study → no linked
+    catalysts), momentum comes from the snapshot, crowding from the default — an
+    honest momentum-only baseline that the screen then promotes into studies.
+    """
+    data = yaml.safe_load(_TAXONOMY.read_text(encoding="utf-8"))
+    return [
+        s["id"]
+        for s in data.get("sectors", [])
+        if s.get("investable", False) and not s.get("watch_only", False)
+    ]
+
+
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -219,8 +239,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="CATALYX sector scorer — composite score from all dimensions"
     )
-    parser.add_argument("sector_id", nargs="?", help="Sector ID. Omit with --all.")
+    parser.add_argument("sector_id", nargs="?", help="Sector ID. Omit with --all or --universe.")
     parser.add_argument("--all", action="store_true", help="Score all sectors with a study.")
+    parser.add_argument("--universe", action="store_true",
+                        help="Score ALL investable sectors from the taxonomy (momentum baseline "
+                             "even without a study). Use for the full-coverage heatmap.")
     parser.add_argument("--ca", type=float, default=None, dest="catalyst_alignment",
                         help="Pre-computed catalyst_alignment [0-100]. Default: auto.")
     parser.add_argument("--mom", type=float, default=None, dest="momentum",
@@ -236,7 +259,12 @@ def main() -> None:
     parser.add_argument("--json", action="store_true", help="Output raw JSON only.")
     args = parser.parse_args()
 
-    sector_ids = _all_sector_ids() if (args.all or args.sector_id is None) else [args.sector_id]
+    if args.universe:
+        sector_ids = _investable_sector_ids()
+    elif args.all or args.sector_id is None:
+        sector_ids = _all_sector_ids()
+    else:
+        sector_ids = [args.sector_id]
 
     results = []
     for sid in sector_ids:

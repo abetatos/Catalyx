@@ -1,0 +1,135 @@
+{
+  "id": "study_medical_devices",
+  "schema_version": "1.2",
+  "sector_id": "medical_devices",
+  "sector_label": "Medical Devices",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+  "taxonomy": {
+    "parent_sector": "healthcare",
+    "adjacent_sectors": [
+      "pharma_large_cap",
+      "biotech_drug_development",
+      "genomics_precision_medicine",
+      "robotics_automation"
+    ],
+    "differentiation_note": "Medical devices generate revenue through hardware placements, consumable/instrument cycles, and service contracts — a fundamentally different revenue model than pharma or biotech, which depend on drug patent lifecycles, FDA NDA/BLA approvals, and reimbursement formulary negotiations. Crucially, device companies face a per-procedure demand linkage: revenue scales directly with surgical volume and installed-base utilization (e.g. ISRG earns on every da Vinci procedure via instrument kits), not on whether a drug is covered by a PBM formulary. Adjacent sector robotics_automation shares the hardware model but serves industrial end-markets with entirely different demand drivers (labor arbitrage, manufacturing reshoring) rather than aging demographics and hospital capital budgets."
+  },
+  "demand_drivers": [
+    "Global population aged 65+ is projected to reach 761 million by 2026, up from 703 million in 2023 (UN DESA). This cohort drives disproportionate orthopedic (hip/knee replacement), cardiac (pacemakers, TAVR, ablation), and ophthalmic device demand — procedures with direct per-unit device revenue linkage.",
+    "Robotic surgery penetration is still early: Intuitive Surgical placed 431 da Vinci systems in Q1 2026 (vs 367 in Q1 2025), with only 232 being the next-generation da Vinci 5. ISRG raised 2026 global procedure growth guidance to 13.5%–15.5% after Q1 procedures rose 17% YoY. The installed base of ~9,000 systems worldwide underpins a high-margin recurring instrument/accessory revenue stream (86% of Q1 2026 revenues were recurring).",
+    "Global medical devices market projected to grow from USD 678.9B in 2025 to USD 719.6B in 2026 (~6% YoY), with 6.99% CAGR through 2031. Hospital and ambulatory surgical center end-users account for ~42–45% of revenue and are expanding both volume and acuity of outpatient procedures.",
+    "Post-pandemic surgical backlog clearance is ongoing. Minimally invasive procedures — which require fewer OR resources and allow same-day discharge — are recovering fastest. Orthopedic joint replacement, fracture care, and cardiac ablation volumes are rising as hospitals optimize OR scheduling and migrate appropriate cases to ambulatory surgical centers (ASCs).",
+    "AI-validated diagnostic imaging and AI-guided surgery are entering routine regulatory pathways: FDA has cleared 950+ AI/ML-enabled medical devices as of 2025. This opens an incremental premium pricing tier for OEMs — devices with AI features command 15–30% price premiums over standard analogs in imaging and pathology.",
+    "Emerging market procedure volume growth: India and Southeast Asia are expanding hospital networks and device procurement budgets at ~10–12% CAGR, providing a non-US growth lever that is less exposed to Medicaid/Medicare reimbursement risk."
+  ],
+  "supply_constraints": [
+    "China supply chain concentration: ~62% of medical devices used in the US are imported; a significant portion of components (PCBs, sensors, rare-earth magnets for imaging) originate from China. Trump administration tariff escalation in 2026 has imposed 10% baseline tariffs with specific rates of 25–50% on categories including syringes, masks, and rubber gloves. Component reshoring is multi-year and capital-intensive.",
+    "FDA review capacity bottleneck: FDA CDRH shed 220+ positions in February 2026 followed by broader HHS cuts. 510(k) review times average 140–175 days in 2025–2026, with 70–80% of submissions exceeding the 90-day target. High-risk PMA approvals fell to a ten-year low in Q1 2025. This delays revenue recognition for pipeline products and creates uncertainty in financial guidance.",
+    "Skilled labor for device manufacturing (cleanroom-qualified technicians, precision machinists) remains tight. US manufacturing wage inflation for this category was ~5.8% YoY in 2025. Companies shifting away from China face a 2–4 year ramp before alternative supply chains (Mexico, Malaysia, Eastern Europe) reach comparable unit economics.",
+    "Hospital capital expenditure sensitivity: large-ticket capital placements (surgical robots $1–2M+, MRI systems $1–3M) are highly correlated with hospital operating margins and interest rates. Rising interest rates in 2025 compressed hospital margins, causing deferrals of elective CapEx — a headwind partially reversing if rates ease in H2 2026.",
+    "Concentration of certain critical raw materials: ISRG's da Vinci instrument tips and Boston Scientific's electrophysiology catheters require specialty polymers and shape-memory alloys (nitinol) where supply is dominated by 2–3 global manufacturers."
+  ],
+  "cycle_position": {
+    "assessment": "Mid-cycle correction within a secular growth trend. Sector is in a policy-driven drawdown in 2026 YTD (-21% IHI as of May 2026) that is disconnected from underlying procedure volume fundamentals, which remain healthy.",
+    "rationale": "The 2026 YTD selloff (-20.5% IHI, -15.9% UMDV through April) is driven primarily by three non-fundamental factors: (1) RFK Jr. / HHS uncertainty creating headline risk for FDA approval timelines and reimbursement policy; (2) Medicaid cut fears compressing procedure volume estimates for Medicaid-dependent procedures (bariatric, some orthopedic); and (3) GLP-1 procedure displacement fears (bariatric surgeries down 20%+ since 2022). Against this, actual Q1 2026 results were broadly healthy: Stryker reported 2.4% organic sales growth and maintained full-year guidance; Boston Scientific beat Q1 estimates; ISRG posted 23% revenue growth and raised guidance. The sector trades at a meaningful discount to its 5-year average forward P/E (~22x vs. ~28x historical), which is more consistent with mid-cycle or entry-level positioning for long-duration investors. The GLP-1 displacement thesis has genuine structural legs for bariatric-only device companies but is limited for the broad diversified device universe (cardiac rhythm, orthopedic, neuromodulation, imaging remain uncorrelated to obesity drug adoption).",
+    "last_assessed": "2026-06-05"
+  },
+  "key_metrics_to_monitor": [
+    {
+      "metric": "IHI YTD total return",
+      "unit": "percent",
+      "source": "iShares / Yahoo Finance (daily)",
+      "current": -20.53,
+      "comment": "As of late May 2026. Signal of sentiment; divergence from procedure volume data is the key watchpoint."
+    },
+    {
+      "metric": "ISRG quarterly procedure growth (da Vinci + Ion combined)",
+      "unit": "percent YoY",
+      "source": "Intuitive Surgical earnings release (quarterly)",
+      "current": 17.0,
+      "comment": "Q1 2026 result. Company raised FY2026 guidance to 13.5–15.5% growth. Barometer for robotic surgery adoption pace."
+    },
+    {
+      "metric": "FDA 510(k) average review time",
+      "unit": "days",
+      "source": "FDA CDRH / MedTech Dive (quarterly tracking)",
+      "current": "140–175",
+      "comment": "2025–2026 average. 70–80% of submissions exceed the 90-day target. Monitors regulatory pipeline clearance risk post-DOGE cuts."
+    },
+    {
+      "metric": "Stryker organic net sales growth",
+      "unit": "percent YoY",
+      "source": "Stryker Corporation 10-Q / 8-K (quarterly)",
+      "current": 2.4,
+      "comment": "Q1 2026. Bellwether for orthopedic + surgical equipment cycle. Tracks Medicaid and hospital CapEx sensitivity."
+    },
+    {
+      "metric": "US bariatric surgery volume",
+      "unit": "procedures per year (000s)",
+      "source": "ASMBS / GlobeNewswire (annual)",
+      "current": "<200",
+      "comment": "Below 200,000 for the first time this decade. Down ~34% vs 2022. Directly measures GLP-1 procedure displacement risk for metabolic device companies (Apollo Endosurgery, Medtronic bariatric segment)."
+    },
+    {
+      "metric": "US tariff rate on medical device components from China",
+      "unit": "percent ad valorem",
+      "source": "USTR / Federal Register (as updated)",
+      "current": "10–50",
+      "comment": "Baseline 10% on most categories; 25% on rubber gloves, 50% on syringes/needles as of 2026. Cost-of-goods headwind for US-marketed devices with China-sourced components."
+    }
+  ],
+  "etf_analysis": [
+    {
+      "ticker": "UMDV",
+      "name": "iShares US Medical Devices UCITS ETF USD (Acc)",
+      "exchange": "Euronext Amsterdam (XAMS)",
+      "currency": "USD",
+      "ter": 0.0025,
+      "aum_m_usd": 147.0,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "UCITS compliant (IE00BMX0DF60, Ireland domicile). Tracks the same Dow Jones US Select Medical Equipment Index as IHI. Accumulating share class — no dividend leakage, tax-efficient for Spanish resident. TER 0.25% vs IHI's 0.40%. Launched August 2020. WARNING: AUM of $147M is below the €200M liquidity threshold — monitor for potential closure or limited secondary market depth. Spread data unavailable from this search; verify on Euronext/justetf before trading. Best available UCITS vehicle for this sector.",
+      "recommendation_tier": 1,
+      "limitations": "AUM BELOW LIQUIDITY WARNING THRESHOLD ($147M < $200M equivalent). Verify bid-ask spread on Euronext Amsterdam before execution — thin AUM may imply spreads >25bps in stressed markets. No EUR-hedged share class available; full USD/EUR currency risk. UCITS — eligible for Spanish IRPF traspaso regime if held via fund account."
+    },
+    {
+      "ticker": "IHI",
+      "name": "iShares U.S. Medical Devices ETF",
+      "exchange": "NYSE Arca",
+      "currency": "USD",
+      "ter": 0.0040,
+      "aum_m_usd": 4800.0,
+      "replication": "physical",
+      "avg_spread_bps": 4,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Non-UCITS. Largest and most liquid US medical devices pure-play ETF. AUM $4.8B, spread ~4bps — excellent liquidity. Top holdings: ABT, MDT, BSX, SYK, ISRG. High US large-cap concentration, limited international device exposure. NAV $48.83 as of June 1, 2026. NOT eligible for Spanish UCITS fund traspaso. Suitable for cash accounts where UCITS is not required.",
+      "recommendation_tier": 2,
+      "limitations": "NOT UCITS — not accessible via Spanish UCITS fund vehicles; requires direct brokerage account. TER 40bps higher than UMDV. No dividend reinvestment (distributing). For a Spanish tax-resident investor, prefer UMDV (UCITS, accumulating, lower TER) despite lower AUM, unless liquidity concerns at UMDV prove material."
+    }
+  ],
+  "active_catalyst_ids": [],
+  "risks": [
+    "GLP-1 obesity drug procedure displacement: Bariatric surgery volumes have fallen >20% since 2022 and are now below 200,000/year US as GLP-1 prescriptions rose 140% over the same period. This is a structural — not cyclical — shift for metabolic device companies (e.g. endoscopic bariatric tools, lap-band segments). Cardiovascular device companies face a more ambiguous picture: GLP-1s reduce MACE by ~20%, potentially reducing cardiovascular procedure volumes long-term, but the effect is 5–10 year lag and offset by aging demographics in the near term.",
+    "FDA/CDRH workforce cuts and regulatory backlog: 220+ CDRH positions eliminated in 2026. 510(k) reviews running 140–175 days vs. a 90-day target. PMA high-risk approvals at 10-year lows. This delays revenue recognition for companies with pending pipeline products and creates guidance uncertainty that disproportionately penalizes growth-oriented smaller device OEMs.",
+    "Medicaid procedure volume exposure: UBS analyst Danielle Antalffy estimates that companies dependent on Medicaid-reimbursed procedures (some orthopedic, wound care, bariatric) face volume headwinds if proposed cuts materialize in 2026. Hospital capital spending sensitivity is a second-order effect: margin-pressured hospitals defer large-ticket CapEx (surgical robots, imaging systems).",
+    "China tariff cost-of-goods inflation: 62% of US-used devices are imported; tariffs of 10–50% on specific categories (syringes, gloves, sensors) increase COGS. Gross margin compression of 100–300bps for companies with high China component exposure (mid-tier and lower-cost device segments more affected than premium surgical robotics).",
+    "RFK Jr. / HHS policy uncertainty: Novel regulatory frameworks (stricter device AI validation requirements, potential changes to 510(k) predicate reliance pathways) could increase approval costs and timelines. Sector is pricing in elevated headline risk even where actual policy impact is unclear.",
+    "High concentration risk in IHI/UMDV: Top 5 holdings (ABT, MDT, BSX, SYK, ISRG) represent a substantial share of both ETFs. Idiosyncratic risk from any single name (e.g. MDT pipeline failure, BSX legal liability, ISRG antitrust) creates non-diversifiable ETF-level volatility."
+  ],
+  "narrative_maturity": "mainstream",
+  "narrative_trend": "decreasing",
+  "narrative_notes": "Medical devices sits at 'mainstream' on the narrative maturity scale: the aging demographics / procedure volume recovery thesis has been consensus sell-side view since 2022–2023, Goldman/JPM/MS all publish base-case medical devices reports, and IHI AUM ($4.8B) and UMDV together indicate substantial institutional positioning. However, the narrative is experiencing a clear negative inflection in 2026: GLP-1 procedure displacement, FDA regulatory uncertainty under RFK Jr., and Medicaid cut fears have shifted media tone from 'recovery play' to 'headwind navigation'. The narrative_trend is 'decreasing' — not because the sector is crowded or exhausted, but because the mainstream consensus is being actively revised downward, creating a potential divergence between narrative pessimism and underlying procedure volume fundamentals that remain intact. This narrative mean-reversion setup (mainstream negative → re-rating when fundamentals confirm recovery) is the core of any 2026 thesis on this sector.",
+  "historical_catalyst_performance": {
+    "summary": "Medical devices have historically exhibited three distinct catalyst response patterns: (1) Rate cut cycles: the sector has outperformed the S&P 500 by an average of ~8–12% in the 12 months following the first Fed rate cut in historical easing cycles, driven by hospital CapEx unlocking and PE expansion as discount rates fall on long-duration earnings streams; (2) FDA approval waves: a 12-month period of above-average 510(k) / PMA clearances has historically preceded 6–9% sector outperformance relative to healthcare as new products drive ASP uplift and share gains; (3) Regulatory headwind periods: the 2017–2018 EU MDR implementation and the 2013 medical device excise tax both created 10–18% underperformance periods of 12–18 months before normalization — the 2026 FDA CDRH cuts are most analogous to these historical periods. Robotic surgery as a subsector has compounded at ~25% annually since 2016 through multiple macro cycles, driven by penetration growth that is largely insulated from macro conditions — the key risk to this subsector is FDA approval delays for new systems (da Vinci 5 expansion) rather than macro headwinds.",
+    "rate_cut_tailwind_avg_outperformance_pct": 10,
+    "fda_approval_wave_outperformance_pct": 7.5,
+    "regulatory_headwind_underperformance_pct": -14,
+    "regulatory_headwind_duration_months": 15,
+    "robotic_surgery_subsector_cagr_2016_2025_pct": 25
+  }
+}

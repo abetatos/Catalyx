@@ -90,31 +90,33 @@ def _build_value_history(spec: dict) -> list[dict]:
 
 
 def backfill(dry_run: bool = False) -> None:
+    """Fetch the mapped indicators' history and write it to the parquet lake (Tier 2 truth).
+
+    No longer touches the YAML files — value_history is externalized to
+    data/lake/indicators/. The intensity engine reads the lake first.
+    """
+    from catalyx.store import indicator_history
+
     ry = YAML()
     ry.preserve_quotes = True
-    ry.width = 120
 
     for filename, ind_specs in SPEC.items():
         path = _CATALYSTS_DIR / filename
         with path.open("r", encoding="utf-8") as fh:
             cat = ry.load(fh)
+        catalyst_id = cat.get("id")
 
-        by_id = {ind["id"]: ind for ind in cat.get("indicators", [])}
+        histories: dict[str, list[dict]] = {}
         for ind_id, spec in ind_specs.items():
-            ind = by_id.get(ind_id)
-            if ind is None:
-                print(f"  ! {filename}:{ind_id} not found, skipping", file=sys.stderr)
-                continue
             vh = _build_value_history(spec)
             src = spec.get("ticker", "notes")
+            histories[ind_id] = [{**p, "source": src} for p in vh]
             print(f"  {filename}:{ind_id} ← {src}  ({len(vh)} points, "
                   f"{vh[-1]['value']}..{vh[0]['value']})")
-            if not dry_run:
-                ind["value_history"] = vh
 
-        if not dry_run:
-            with path.open("w", encoding="utf-8") as fh:
-                ry.dump(cat, fh)
+        if not dry_run and histories:
+            n = indicator_history.write_catalyst(catalyst_id, histories)
+            print(f"    → lake: {catalyst_id} ({n} rows)")
 
     if dry_run:
         print("\n(dry run — no files written)")
@@ -122,13 +124,50 @@ def backfill(dry_run: bool = False) -> None:
         print("\nDone. Recompute: uv run python -m catalyx.scorer.intensity_engine --all --write-back --period <YYYY-Qn>")
 
 
+def migrate_yaml_to_lake(dry_run: bool = False) -> int:
+    """One-off: copy the inline `value_history` embedded in every structural-catalyst YAML
+    into the parquet lake (no network). Run once when externalizing; the YAML field then
+    becomes a deprecated fallback. Returns total rows written."""
+    from catalyx.store import indicator_history
+
+    ry = YAML()
+    total = 0
+    for path in sorted(_CATALYSTS_DIR.glob("*.yaml")):
+        with path.open("r", encoding="utf-8") as fh:
+            cat = ry.load(fh)
+        catalyst_id = cat.get("id")
+        histories: dict[str, list[dict]] = {}
+        for ind in cat.get("indicators", []):
+            vh = ind.get("value_history")
+            if vh:
+                histories[ind["id"]] = [
+                    {"date": e.get("date"), "value": e.get("value"), "source": "yaml_migrated"}
+                    for e in vh if e.get("value") is not None
+                ]
+        points = sum(len(v) for v in histories.values())
+        print(f"  {path.name}: {catalyst_id} → {points} points across {len(histories)} indicators")
+        if histories and not dry_run:
+            total += indicator_history.write_catalyst(catalyst_id, histories)
+    if dry_run:
+        print("\n(dry run — nothing written)")
+    else:
+        print(f"\nMigrated {total} observations into data/lake/indicators/.")
+    return total
+
+
 def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    parser = argparse.ArgumentParser(description="Backfill indicator value_history from yfinance + notes")
+    parser = argparse.ArgumentParser(description="Backfill indicator value_history into the parquet lake")
     parser.add_argument("--dry-run", action="store_true", help="Print planned writes without modifying files")
+    parser.add_argument("--migrate-yaml", action="store_true",
+                        help="One-off: copy inline value_history from the YAMLs into the lake (no network)")
     args = parser.parse_args()
-    print("CATALYX — Indicator history backfill\n")
+    if args.migrate_yaml:
+        print("CATALYX — Migrate inline value_history → lake\n")
+        migrate_yaml_to_lake(dry_run=args.dry_run)
+        return
+    print("CATALYX — Indicator history backfill (→ lake)\n")
     backfill(dry_run=args.dry_run)
 
 

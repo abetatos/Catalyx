@@ -1,0 +1,175 @@
+{
+  "id": "study_real_estate_logistics",
+  "schema_version": "1.2",
+  "sector_id": "real_estate_logistics",
+  "sector_label": "Real Estate — Logistics & Industrial REITs",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "real_estate",
+    "adjacent_sectors": [
+      "real_estate_data_centers",
+      "infrastructure_core",
+      "grid_infrastructure_utilities"
+    ],
+    "differentiation_note": "Logistics & Industrial REITs own and lease warehouses, distribution centers, last-mile fulfillment hubs, and light industrial facilities whose primary revenue driver is e-commerce penetration and physical goods throughput — not compute workloads. Real Estate Data Center REITs (Equinix, Digital Realty) lease floor space measured in power density (kW/rack), not square footage of dock doors; their tenants pay for power infrastructure and cooling, not proximity to consumers. Infrastructure Core (toll roads, airports, ports) is regulated-utility-style revenue with inflation pass-through contracts; it has no direct e-commerce demand sensitivity and trades on traffic volumes and concession terms. The logistics REIT thesis is directionally rate-sensitive like all REITs, but its operating fundamentals are uniquely tied to the structural shift in retail from store-based to direct-to-consumer fulfilment, supply chain resilience stockpiling (just-in-case vs just-in-time), and nearshoring-driven manufacturing relocation — none of which apply to data center or infrastructure sub-sectors."
+  },
+
+  "demand_drivers": [
+    "E-commerce penetration: US e-commerce share of total retail rose ~0.9 percentage points from Q1 2025 to Q1 2026. Each 1-point increase in US e-commerce penetration historically requires an incremental ~100 million sq ft of logistics space. Total addressable base remains ~20% penetration nationally with structural runway to 35%+ over a decade.",
+    "Just-in-case inventory restocking: Tariff-driven supply chain uncertainty (tariffs ranked #2 concern by 48% of Prologis customers in 2026) has reversed the just-in-time inventory drawdown of 2023–2024. Customers are pre-positioning safety stock, lifting average inventory-to-sales ratios and effective space demand per revenue dollar.",
+    "Nearshoring and reshoring-driven North–South trade corridor: 66% of Prologis enterprise poll respondents intend to expand further in Mexico; 62% plan US regional distribution expansion. Texas and Midwest gateway markets are absorbing incremental warehouse requirements as production migrates from Asia. This is a multi-year structural demand add.",
+    "Last-mile and same-day delivery infrastructure buildout: Last-mile delivery market reached ~$194 billion in 2026, growing at ~9% CAGR. Urban infill industrial real estate commands 30–50% rent premiums vs exurban big-box. Micro-fulfillment centers and hyperlocal nodes are a structurally growing sub-category within logistics real estate.",
+    "Supply tightening: Q1 2026 completions fell 27% YoY to 54 million sq ft, the lowest quarterly figure since mid-2017. Speculative development has been replaced by build-to-suit and owner-user projects. New supply is insufficient to offset demand recovery — the pipeline for 2026–2027 is the thinnest in a decade.",
+    "Prologis Q1 2026 fundamentals: Prologis (PLD, ~40% of pure logistics REIT indexes) reported Q1 2026 Core FFO of $1.50/share (vs $1.42 year-ago), revenues $2.30B (+beats), occupancy 95.3% above guidance, and raised FY 2026 Core FFO guidance to $6.07–$6.23. Record 64 million sq ft leasing signings. Direct evidence of operational inflection."
+  ],
+
+  "supply_constraints": [
+    "Construction cost inflation: Steel, concrete, and labor costs remain structurally elevated post-2022 cycle; break-even rents for new speculative builds have risen to $8–10/sq ft NNN in most US markets, limiting competitive new supply from non-institutional developers.",
+    "Land scarcity in infill / last-mile markets: High-density metro areas (Los Angeles, New Jersey/NYC, South Bay, Dallas, Chicago) have minimal developable land within 20-mile delivery radii. Permit timelines for greenfield industrial are 18–36 months. Urban infill supply is structurally constrained independent of capital cycles.",
+    "Permitting and zoning friction: Industrial-to-residential rezoning pressure in many coastal markets pushes new supply to exurban locations that are less desirable for last-mile economics, reducing effective competitive supply for premium logistics nodes.",
+    "High replacement cost vs rent gap: Current rents in most secondary markets remain below replacement cost for new construction, making speculative development financially non-viable and providing a natural floor under existing landlord pricing power.",
+    "Interest rate transmission to new development: With SOFR/LIBOR-linked construction loan rates still elevated (effective borrowing costs 6–7% for floating-rate construction), developer IRR requirements remain above achievable yields on speculative completions, self-limiting pipeline organically."
+  ],
+
+  "cycle_position": {
+    "assessment": "Inflection — late supply-correction phase, demand recovery beginning",
+    "rationale": "Logistics REITs exited a 2023–2025 correction driven by post-pandemic supply surge (+400M sq ft cumulative deliveries over 3 years) that pushed vacancy from 3% to ~7%. That wave has cleared: Q1 2026 saw the lowest new supply in 9 years, while demand returned to positive net absorption of 40M sq ft, up 52% YoY. Cushman & Wakefield confirmed peak vacancy is 'likely in the rearview mirror' (April 2026). Rents are flat-to-mildly positive in 2026, with the consensus trajectory pointing to inflationary (+CPI) rent growth resuming in 2027 as vacancies tighten below 6%. Interest rate tailwind is modest but directional: Fed funds at 3.50–3.75% (January 2026), with one additional cut projected, reducing REIT discount rates at the margin. Prologis PLD Q1 2026 beat-and-raise supports the inflection thesis. The sector is NOT cheap — PLD trades near $145 with significant index weight in XLRE (~9%) and GF Score 89/100 notes 6.5% overvaluation — but the fundamental cycle is turning. This is a recovery-phase sector, not a distressed opportunity. Position sizing should reflect a mid-cycle entry on an early-cycle fundamental turn.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Prologis average occupancy",
+      "unit": "%",
+      "source": "Prologis quarterly earnings (ir.prologis.com)",
+      "current": 95.3,
+      "comment": "Q1 2026 result, above FY guidance midpoint of 95.0–95.75%. Key inflection signal: below 94% is bearish; above 96% is tight-market pricing power trigger."
+    },
+    {
+      "metric": "US industrial net absorption",
+      "unit": "million sq ft per quarter",
+      "source": "Cushman & Wakefield / JLL / CBRE quarterly industrial reports",
+      "current": 40,
+      "comment": "Q1 2026: +40M sq ft, strongest since 2023, +52% YoY. Sustained >35M sq ft/quarter confirms demand recovery. Negative absorption = early warning of new oversupply."
+    },
+    {
+      "metric": "US industrial vacancy rate",
+      "unit": "%",
+      "source": "Cushman & Wakefield quarterly industrial market report",
+      "current": "~6.8-7.0 (approaching peak)",
+      "comment": "Expected to peak mid-2026 ~7%, then tighten. Below 6% historically triggers above-CPI rent growth. Above 8% would indicate structural demand destruction."
+    },
+    {
+      "metric": "US industrial new supply completions",
+      "unit": "million sq ft per quarter",
+      "source": "Prologis / CBRE quarterly reports",
+      "current": 54,
+      "comment": "Q1 2026: 54M sq ft, lowest since mid-2017 and -27% YoY. Declining completions are the supply-cycle confirmation signal. Under construction pipeline also at multi-year lows."
+    },
+    {
+      "metric": "Prologis Core FFO per share (FY guidance midpoint)",
+      "unit": "USD/share",
+      "source": "Prologis investor relations press releases",
+      "current": 6.15,
+      "comment": "FY 2026 guidance midpoint $6.07–$6.23. FFO growth trajectory is the primary valuation anchor for PLD-weighted logistics REIT indexes. Watch for Q2 guidance raise/cut."
+    },
+    {
+      "metric": "US Federal Funds Rate",
+      "unit": "%",
+      "source": "Federal Reserve FOMC statements",
+      "current": "3.50-3.75",
+      "comment": "January 2026 meeting held at 3.50–3.75%. Year-end target 3.25–3.50% (one more cut). Each 25bps cut adds ~2–3% to REIT NAV via cap rate compression. Critical sensitivity: if Fed pauses or reverses, logistics REIT multiple expansion thesis breaks."
+    }
+  ],
+
+  "etf_analysis": [
+    {
+      "ticker": "PROL",
+      "name": "GAP NOTE: No pure-play logistics REIT ETF — PROL placeholder",
+      "exchange": "N/A",
+      "currency": "N/A",
+      "ter": null,
+      "aum_m_usd": null,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "TAXONOMY GAP: No ETF provides pure-play logistics/industrial REIT exposure in a UCITS wrapper with AUM >$200M and spread <25bps. This is a structural vehicle gap for Spanish investors. The closest UCITS-eligible option is WTRE.L (see below). The closest non-UCITS pure-play is INDS, which carries both AUM (<$200M) and UCITS access barriers. The recommended implementation for a Spanish investor is a direct position in Prologis (PLD) on a US exchange (single-stock, no ETF wrapper fee, direct fundamental exposure to the global #1) or WTRE.L as the best-available UCITS proxy.",
+      "recommendation_tier": 3,
+      "limitations": "Placeholder entry flagging the absence of a qualifying pure-play logistics REIT ETF. Not a tradeable instrument."
+    },
+    {
+      "ticker": "INDS",
+      "name": "Pacer Benchmark Industrial Real Estate SCTR ETF",
+      "exchange": "NYSE Arca",
+      "currency": "USD",
+      "ter": 0.0060,
+      "aum_m_usd": 112,
+      "replication": "physical",
+      "avg_spread_bps": 28,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Closest available pure-play industrial/logistics REIT ETF. Tracks Solactive GPR Industrial Real Estate Index — companies deriving ≥85% of revenues from industrial real estate. Includes self-storage (reduces purity). AUM $112M as of February 2026. Launched May 2018. YTD +4.2% as of Feb 2026, but -10.6% in March 2026 (underperformed real estate category average -6.4%). Dividend yield 9.23%.",
+      "recommendation_tier": 3,
+      "limitations": "CRITICAL WARNINGS: (1) NOT UCITS — inaccessible for Spanish retail investor under PRIIPs without KID. (2) AUM $112M is BELOW the $200M liquidity floor — spread at 28bps also EXCEEDS the 25bps warning threshold. (3) Morningstar negative medalist rating. (4) Includes self-storage operators which dilute pure logistics thesis. USE ONLY as a position-size-limited fallback if broker grants non-UCITS access, or as sector price benchmark."
+    },
+    {
+      "ticker": "WTRE.L",
+      "name": "WisdomTree New Economy Real Estate UCITS ETF — USD Acc",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0045,
+      "aum_m_usd": null,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "UCITS-compliant. Also listed on Borsa Italiana (WTRE.MI). Tracks WisdomTree New Economy Real Estate UCITS Index (from April 2025; prior benchmark was CenterSquare index). Covers data centres, cell towers, life-sciences labs, last-mile distribution, cold storage, and modern logistics — the 'new economy real estate' universe. Physically replicated. Best available UCITS proxy for logistics thesis exposure alongside data centre and digital real estate. AUM not confirmed — verify via WisdomTree before entry.",
+      "recommendation_tier": 2,
+      "limitations": "WARNINGS: (1) NOT a pure-play logistics ETF — ~40–50% estimated in data centres / cell towers / life-sciences, which introduces real_estate_data_centers sector correlation. The logistics thesis is diluted. (2) AUM not confirmed in current data — MUST verify AUM >$200M and spread <20bps before entry (flag as unverified). (3) Index change (April 2025) means pre-April 2025 backtest does not reflect current portfolio. UCITS status confirmed. Best-available UCITS vehicle, but carry a dilution discount on thesis purity."
+    },
+    {
+      "ticker": "IUSP.L",
+      "name": "iShares US Property Yield UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0040,
+      "aum_m_usd": null,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "iShares UCITS ETF tracking the FTSE EPRA/NAREIT US Dividend+ Index. Broad US REIT exposure — industrial, residential, retail, office, specialty. PLD has meaningful index weight (~6–9% via NAREIT index composition). Very broad — residential and retail REITs dilute logistics thesis significantly. Liquid iShares vehicle with UCITS compliance. AUM and spread to be verified.",
+      "recommendation_tier": 3,
+      "limitations": "Broad REIT index — logistics thesis significantly diluted by residential, retail, healthcare, office exposure. Use only as tail-hedge or tactical REIT beta play, not as a pure logistics thesis vehicle. Verify AUM and spread before entry."
+    }
+  ],
+
+  "risks": [
+    "Interest rate reversal: Logistics REITs are interest-rate-sensitive assets (cap rate = NOI/value). If the Fed pauses its rate-cut path due to re-acceleration of inflation (tariff pass-through, tight labor) or re-prices to hold at 3.75%+, REIT multiples compress and PLD's ~$145 valuation faces downside. GF Score already flags 6.5% overvaluation at current price. This is the #1 macro risk.",
+    "Tariff-driven demand destruction (double-edged): While short-term tariff fears drive inventory pre-positioning (a demand positive), a sustained US–China trade war could reduce import volume from Asia by 15–25% over 3–5 years, cutting demand for West Coast port-adjacent logistics real estate (LA, Long Beach, Seattle). Prologis has heavy exposure to California IBI markets. This risk is underappreciated by street models.",
+    "Rent growth delay beyond 2026: The consensus expects inflationary rent growth to resume in 2027. If vacancy remains stubbornly above 6.5% due to slow demand recovery or continued secondary-market supply clearing, rent growth could remain flat or negative through 2027, extending the earnings trough for PLD and sector peers.",
+    "Concentration risk: INDS and most logistics REIT proxies carry >30% concentration in Prologis. PLD-specific execution risk (CFO transition, development pipeline overruns, FX on EUR/GBP/JPY leases) creates single-name risk even in the ETF wrapper.",
+    "E-commerce penetration growth moderation: US e-commerce penetration growth slowed to +0.9pp in Q1 2026 (from +2–3pp during pandemic). If grocery (5% penetration) and bulky goods resist online migration due to unit economics, the long-run logistics demand curve may flatten earlier than expected, compressing forward occupancy.",
+    "No clean pure-play UCITS ETF: The structural vehicle gap (flagged in ETF analysis) means a Spanish investor must accept either a single-stock exposure (PLD direct) or a diluted proxy (WTRE.L with ~50% non-logistics exposure). Portfolio construction using impure vehicles introduces basis risk: the chosen vehicle may not respond to the logistics thesis even if the thesis is correct."
+  ],
+
+  "narrative_maturity": "mainstream",
+
+  "narrative_trend": "increasing",
+
+  "narrative_notes": "Classified 'mainstream' per scoring_weights.yaml criteria: the logistics/industrial REIT inflection thesis is consensus sell-side view (Morgan Stanley, Goldman, JPM all published 2026 sector rotation notes), named in ETF product descriptions (Pacer INDS, WisdomTree WTRE), and has appeared repeatedly in Bloomberg/FT/CNBC coverage since Q4 2025 as the 'post-warehouse-supply-glut recovery play'. Goldman Asset Management Q2 2026 Market Know-How referenced real estate recovery. Prologis is second-largest position in XLRE (9%), ensuring significant index inclusion in mainstream portfolios. The thesis is NOT yet crowded: COT positioning is moderate, retail ETF inflows to logistics-specific vehicles remain subdued (INDS AUM only $112M), and the sector is still recovering from a 2023–2025 underperformance period. 'Mainstream' is the correct level — known and consensus, but not yet top-of-mind for retail investors or generating euphoric inflows. Score equivalent: 60. Not eligible for crowded until COT data shows net long spec positions in REIT futures above historical 80th percentile or INDS AUM crosses $500M.",
+
+  "historical_catalyst_performance": {
+    "summary": "Logistics REITs have a well-documented response pattern to their primary catalysts: (1) Rate-cut cycles — Industrial REITs averaged +18–25% total return in the 12 months following the first Fed rate cut in the 2019 and 2020 cycles, outperforming broad REIT indexes. The mechanism is dual: discount rate compression (NAV expansion) + financing cost reduction enabling accretive development. (2) E-commerce structural acceleration — Prologis 5-year return 2016–2021 was +280% (10-bagger on an indexed basis) as e-commerce went from 8% to 14% of US retail during the Amazon/Prime ecosystem buildout. The sector outperformed the S&P 500 by +120pp over that window. (3) Post-glut correction — The 2022–2025 correction provides the most recent case: PLD fell from ~$168 (April 2022) to ~$95 (October 2023), a -43% drawdown as rate hikes compressed multiples and warehouse supply surged +400M sq ft. Recovery from that low was +52% to $145 by June 2026, demonstrating mean-reversion speed when supply-demand balance tips. (4) Supply-shock events (post-COVID inventory destocking 2022–2023) — Vacancy expanded 400bps in 18 months; rent growth reversed from +20% to -5% YoY. Sector historically recovers in 18–24 months once new supply pipeline closes. Current 2026 setup mirrors the 2014–2015 inflection after the prior warehouse overbuilding cycle.",
+    "rate_sensitivity_note": "Historical beta of PLD to 10-year Treasury yield changes: approximately -1.8x (a 100bps rise in 10Y yields = ~18% PLD price decline, all else equal). This is the most important single risk factor for position sizing.",
+    "ecommerce_penetration_sensitivity": "Rule of thumb from Prologis research: each 1-point gain in US e-commerce penetration requires ~100 million sq ft of incremental logistics space. At current 20% penetration and 9% e-commerce CAGR, organic demand add is ~50–70M sq ft/year — roughly equal to 1.5–2 quarters of current completions.",
+    "tariff_historical_analog": "2018–2019 US–China tariff war: PLD and logistics REITs initially fell 8–12% on demand-uncertainty fears, but within 9 months rebounded +20% as tariff front-loading (inventory restocking) drove near-term occupancy to record highs. The current 2026 tariff environment mirrors this dynamic, though with higher structural complexity (broader tariff scope).",
+    "active_catalysts_note": "No active CatalystEvent in the system currently maps to real_estate_logistics. Sector tailwinds are secular (e-commerce, supply chain reshoring) rather than acute catalyst-driven. Rate-cut cycle is the nearest event-driven driver. Recommend creating StructuralCatalyst 'struct_ecommerce_logistics_buildout' if this sector is promoted to thesis-target status."
+  },
+
+  "active_catalyst_ids": []
+}

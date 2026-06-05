@@ -1,0 +1,208 @@
+{
+  "$schema": "catalyx/schemas/sector_study.json",
+  "id": "study_royalty_streaming_metals",
+  "schema_version": "1.2",
+  "sector_id": "royalty_streaming_metals",
+  "sector_label": "Precious Metals Royalty & Streaming",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "precious_metals",
+    "adjacent_sectors": ["gold_miners", "silver_miners", "gold_physical", "silver_physical"],
+    "differentiation_note": "Royalty and streaming companies own no mines and bear zero operational exposure: no capex, no AISC, no labor or energy cost risk, no permitting or environmental liability. They provide upfront capital to miners in exchange for a fixed percentage of future production (royalty) or the right to buy production at a pre-agreed below-market price (stream). This means their cost structure is essentially fixed regardless of gold or silver price, so every dollar of metal price appreciation flows almost entirely to the bottom line — a margin expansion profile impossible for miners to match. This is categorically different from gold_miners (which carry full operational leverage, execution risk, AISC inflation, ESG liabilities, and management quality risk) and from gold_physical or silver_physical (which are pure price vehicles with no revenue or earnings growth component). The royalty/streaming model is also distinct from silver_miners in that WPM and FNV are fundamentally multi-metal royalty companies whose revenue includes gold, silver, copper, and platinum group metals — not single-metal exposures. A single royalty company like Franco-Nevada holds 400+ royalties across multiple commodities and geographies, providing diversification impossible to replicate with any miner ETF."
+  },
+
+  "demand_drivers": [
+    "Gold and silver spot prices are the primary revenue driver: royalty and streaming companies receive a fixed percentage of mine output, so their revenue scales linearly with metal prices with virtually no cost offset. At gold $4,457/oz (June 2026) vs Wheaton's per-ounce production cost of ~$400-500 (blended cash cost on streams), the gross margin on gold streams is approximately 88-90%. Every $100 increase in gold price translates directly to $100/oz of additional net cash flow with no operational drag.",
+    "M&A deal flow from capital-constrained miners: mining companies seeking project financing increasingly turn to royalty/streaming companies as an alternative to equity dilution or expensive debt. With gold at record levels, miners are investing in mine expansions and greenfield projects — Wheaton signed a $4.3B Antamina silver stream with BHP in Q1 2026, its largest deal in company history. High capex cycles in mining directly generate new royalty/streaming deal pipeline.",
+    "Portfolio growth through new stream and royalty agreements: the three majors (WPM, FNV, RGLD) are all guiding production growth without any operational capex. Wheaton guides 860,000-940,000 GEOs in 2026 growing to 1.2M GEOs by 2030 (+50% over 4 years) — this growth is locked in contractually from agreements already signed, unlike miners whose guidance depends on operational execution.",
+    "Central bank systematic gold accumulation (struct_cb_gold_accumulation, intensity 76.1): as the structural floor for gold demand, CB buying above 300T/quarter supports a gold price regime that makes royalty margins structurally wide. Price-insensitive sovereign buying prevents the kind of sustained gold selloff that would compress royalty company revenues.",
+    "Declining interest rates and real yield compression: royalty/streaming companies are priced partially on a dividend-growth / DCF basis. Lower discount rates expand the present value of long-dated royalty streams. The 2024-2026 Fed rate cut cycle has been a direct tailwind to royalty company valuations independent of gold price.",
+    "Consolidation of the royalty sector itself: smaller royalty companies (Metalla, Gold Royalty Corp, Osisko Gold Royalties) are acquisition targets for the three majors. M&A within the sector allows majors to acquire diversified portfolios of nascent royalties at discounts to intrinsic value, creating NAV per share accretion not available via direct miner investment."
+  ],
+
+  "supply_constraints": [
+    "Finite deal pipeline: royalty/streaming growth requires miners to be willing to monetize future production. In a high-gold-price environment, cash-rich miners may prefer equity or bond markets over streaming deals, reducing the pipeline of accretive agreements available. At gold $4,457, senior miners have historically strong balance sheets — the deal flow environment is active but selective, not distressed.",
+    "NAV dilution risk from large upfront payments: every major new deal (e.g., WPM's $4.3B Antamina payment) requires capital. Wheaton's cash position was $2.16B at Q1 2026 end — future large deals may require debt or equity issuance, creating share dilution or leverage risk that partially offsets the cash flow accretion.",
+    "Counterparty concentration in top miners: WPM's largest streams are on Salobo (Vale), Penasquito (Newmont), and Sudbury (Glencore). If any of these operators faces operational disruption, production shutdowns, or contract renegotiation (as happened to FNV with Cobre Panama), the royalty company's revenue is directly impacted despite having no operational control.",
+    "Franco-Nevada Cobre Panama binary risk: FNV lost its largest stream (Cobre Panama, worth ~30% of growth NAV) when the mine was shut in November 2023 following political protests and a Supreme Court ruling. Processing of stockpiled ore was authorized April 2026 (delivering ~23,000 oz gold), but full restart depends on Panama government review expected mid-2026 and an October 2026 ICSID arbitration hearing. This remains an unresolved binary event affecting FNV's growth trajectory.",
+    "Royalty/streaming deal terms under renegotiation pressure: as mines mature and gold prices rise, operators increasingly argue that original streaming deal terms are unfairly favorable to the royalty company. While legally binding contracts protect the royalty company, political and social license pressure in mining jurisdictions can create renegotiation attempts (e.g., Mexico, West Africa).",
+    "Limited short-term upside relative to physical gold in early bull phase: royalty companies are priced on a NAV basis. In the early stages of a gold bull market, physical gold and physical-focused ETFs tend to move faster — royalties lag until the market re-rates the earnings growth component."
+  ],
+
+  "technology_maturity": null,
+
+  "cycle_position": {
+    "assessment": "Mid bull market — margin expansion in progress, deal pipeline accelerating, re-rating 60-70% complete",
+    "rationale": "The royalty/streaming sector is in the most favorable part of its cycle: gold at record $4,457/oz has expanded cash margins to historical highs (WPM blended cash cost ~$450/GEO vs spot, implying ~90% gross margins), yet royalty companies still trade at discounts to their peak historical NAV multiples. Q1 2026 was a record quarter across all three majors: WPM delivered $901.5M revenue (+2x YoY) and $582M net earnings; RGLD delivered $469.1M record revenue (+143% YoY) with record operating cash flow of $293.6M; FNV reported with 87% precious metal revenue mix. The sector's growth pipeline is now locked in: WPM's $4.3B Antamina deal (largest ever silver stream) adds contracted production through the mid-2030s. The cycle is NOT exhausted: FNV's Cobre Panama restart (binary, mid-2026) provides a one-time re-rating catalyst if arbitration resolves favorably. The key cycle risk is that much of the gold price upside may already be priced in to current royalty company stock prices following a strong 2025-2026 run. The next re-rating leg requires either further gold price appreciation above $5,000 (JPMorgan target Q4 2026: $5,055) or new large accretive deals signed at current price levels.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "NO_PURE_PLAY_ETF",
+      "name": "ETF GAP FLAG: No pure-play royalty/streaming ETF exists",
+      "exchange": "N/A",
+      "currency": "N/A",
+      "ter": null,
+      "aum_m_usd": null,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "CRITICAL ETF GAP: As of June 2026, there is no UCITS or US-listed ETF that provides pure-play exposure to precious metals royalty and streaming companies. This is a structural gap in the investable ETF universe. The closest available vehicles are imperfect proxies described below. A Spanish investor wanting pure exposure must access individual equities (WPM on NYSE, FNV on NYSE/TSX, RGLD on NASDAQ) directly, which requires checking broker access and may require KID documentation. This gap should be flagged in taxonomy_proposals if a new royalty ETF launches.",
+      "recommendation_tier": 3,
+      "limitations": "NOT an investable vehicle — this entry documents the gap. See proxy vehicles below."
+    },
+    {
+      "ticker": "GDX",
+      "name": "VanEck Gold Miners ETF (proxy — ~7-8% royalty/streaming exposure)",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0051,
+      "aum_m_usd": 14100,
+      "replication": "physical",
+      "avg_spread_bps": 3,
+      "top_10_concentration_pct": 0.58,
+      "characteristics": "GDX includes WPM (~4.93% weighting as of March 2026 per VanEck NPORT filing) and RGLD at a smaller weight. Combined royalty/streaming exposure estimated at 7-8% of the fund. The remaining ~92% is operational gold miners — a fundamentally different business model. Using GDX as a royalty proxy severely dilutes the thesis: you are primarily buying miner exposure, not royalty exposure. Only valid as a complement to a direct WPM or FNV position.",
+      "recommendation_tier": 3,
+      "limitations": "NOT UCITS. Royalty exposure is diluted (~7-8% combined). Remainder is operational miners with full cost and execution risk. NOT a suitable primary vehicle for the royalty/streaming thesis."
+    },
+    {
+      "ticker": "AUCO.L",
+      "name": "L&G Gold Mining UCITS ETF (partial proxy — some royalty exposure)",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0065,
+      "aum_m_usd": 890,
+      "replication": "physical",
+      "avg_spread_bps": 12,
+      "top_10_concentration_pct": null,
+      "characteristics": "UCITS-compliant gold miners ETF with some royalty/streaming exposure. Likely includes WPM and possibly RGLD as they appear in most broad gold equity indices. UCITS — accessible for Spanish investors. However, royalty exposure is small and the fund is predominantly operational miners.",
+      "recommendation_tier": 3,
+      "limitations": "UCITS but royalty exposure diluted. AUM $890M is acceptable. Spread 12bps is within tolerance. Primary limitation: this buys gold miners, not royalties. Best use: partial proxy for combined gold miners + royalty exposure in a single UCITS wrapper. Preferred over GDX only due to UCITS status."
+    },
+    {
+      "ticker": "WPM",
+      "name": "Wheaton Precious Metals Corp — direct equity (recommended primary vehicle)",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": null,
+      "aum_m_usd": null,
+      "replication": null,
+      "avg_spread_bps": 2,
+      "top_10_concentration_pct": null,
+      "characteristics": "The purest and most liquid single-name expression of the royalty/streaming model. $45B+ market cap (June 2026). Q1 2026: record revenue $901.5M, net earnings $582M, operating cash flow $765.8M. Cash $2.16B. 2026 guidance 860,000-940,000 GEOs. Consensus: Strong Buy, 10 buy ratings, average target $184-187. Largest royalty company by revenue quality. Multi-metal (gold ~55%, silver ~30%, other ~15%). Salobo + Antamina + Penasquito + Sudbury = four tier-1 assets. WPM pays quarterly dividends (~1% yield at current prices).",
+      "recommendation_tier": 1,
+      "limitations": "NOT an ETF — single name equity, higher idiosyncratic risk than a fund. Requires broker access with NYSE listing capability and KID/PRIIP compliance check for Spanish broker. Concentration risk in top 4 streams (~60% of revenue). Counterparty risk on Vale (Salobo operator). Not suitable for investors who cannot access US-listed equities."
+    },
+    {
+      "ticker": "FNV",
+      "name": "Franco-Nevada Corp — direct equity (tier 2, binary Cobre Panama risk)",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": null,
+      "aum_m_usd": null,
+      "replication": null,
+      "avg_spread_bps": 2,
+      "top_10_concentration_pct": null,
+      "characteristics": "Largest royalty company by market cap (~C$35B, February 2026). Most diversified portfolio: 400+ royalties including oil & gas, mining, and energy. Q1 2026: 87% precious metal revenue (67% gold, 17% silver, 3% PGM). Pioneered the royalty model — Franco-Nevada invented modern gold streaming. The key asymmetric catalyst in 2026: Cobre Panama restart would add ~30% to FNV's growth outlook. Stockpile processing authorized April 2026 (+23,000 oz gold + 265,000 oz silver). Full mine restart awaits government review (summer 2026) and October 2026 ICSID arbitration hearing.",
+      "recommendation_tier": 2,
+      "limitations": "NOT UCITS — same broker access constraint as WPM. Cobre Panama binary risk: mine was shut November 2023, adding earnings uncertainty. Until arbitration resolves (October 2026), FNV carries a binary event risk that WPM and RGLD do not. At current prices, a positive resolution is partially priced in — but upside remains if mine reopens. Downside if arbitration fails or is delayed is material (~15-20% FNV-specific drawdown)."
+    },
+    {
+      "ticker": "RGLD",
+      "name": "Royal Gold Inc — direct equity (tier 2, smaller but high-quality)",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "ter": null,
+      "aum_m_usd": null,
+      "replication": null,
+      "avg_spread_bps": 3,
+      "top_10_concentration_pct": null,
+      "characteristics": "Smaller than WPM/FNV but delivered record Q1 2026 results: revenue $469.1M (+143% YoY), operating cash flow $293.6M (+115% YoY). Revenue mix: 71% gold, 16% silver, 10% copper. Copper exposure (via stream on Wassa, Robin Hood, and others) gives slight differentiation from pure gold plays. More concentrated portfolio than FNV (~30 producing assets vs FNV's 400+), which creates both higher upside per asset and higher single-asset risk.",
+      "recommendation_tier": 2,
+      "limitations": "NOT UCITS. Smaller market cap than WPM/FNV — less institutional liquidity. More concentrated portfolio increases single-asset disruption risk. No UCITS wrapper available."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Gold spot price (USD/oz)",
+      "unit": "USD/oz",
+      "source": "market_data / Bloomberg",
+      "current": 4457,
+      "comment": "CURRENT AS OF 2026-06-04. The primary revenue driver for all royalty/streaming companies. Every $100/oz increase in gold adds approximately $80-90M/year to WPM's operating cash flow at current production levels. JPMorgan target Q4 2026: $5,055/oz. CLSA forecast: $5,500 by 2028. Watch for consolidation resistance at $4,700 (prior ATH) as the next major level."
+    },
+    {
+      "metric": "Silver spot price (USD/oz)",
+      "unit": "USD/oz",
+      "source": "market_data / Bloomberg",
+      "current": null,
+      "comment": "Secondary revenue driver — particularly important for Wheaton (30% of revenue from silver streams). Silver underperforms gold in early bull markets and outperforms in late stages. Gold/silver ratio currently elevated (verify current ratio). If ratio mean-reverts from ~85x to 60x, WPM's revenue receives an additional silver-price tailwind above what gold price models would predict."
+    },
+    {
+      "metric": "Wheaton GEO production guidance vs actuals (2026)",
+      "unit": "GEOs (gold equivalent ounces)",
+      "source": "WPM quarterly earnings",
+      "current": 940000,
+      "comment": "WPM 2026 guidance: 860,000-940,000 GEOs. Q1 2026 actuals: 211,951 GEOs (+21.5% YoY). Run-rate implies 847,804 GEOs for full year — tracking at the lower end of guidance. Key new contributor: Antamina silver stream (effective April 1, 2026) should boost Q2-Q4 production materially. 2030 target: 1.2M GEOs. Monitor quarterly delivery reports."
+    },
+    {
+      "metric": "Franco-Nevada Cobre Panama arbitration timeline",
+      "unit": "binary event",
+      "source": "FNV SEC filings / ICSID arbitration docket",
+      "current": "Stockpile processing authorized April 2026; full restart hearing October 2026",
+      "comment": "Binary catalyst: if Panama government authorizes full mine restart before October 2026 hearing, FNV could re-rate +20-30%. If arbitration fails or is delayed beyond 2026, FNV continues operating without its largest former stream. Panama government stated intention to decide by summer 2026. Track via FNV 6-K filings on SEC Edgar. This is the single most important near-term catalyst for FNV specifically."
+    },
+    {
+      "metric": "Royal Gold record revenue trend",
+      "unit": "USD quarterly",
+      "source": "RGLD 8-K quarterly earnings",
+      "current": 469100000,
+      "comment": "CURRENT Q1 2026 RECORD: $469.1M revenue, $293.6M operating cash flow. Prior year Q1: $193.4M revenue — 143% YoY growth reflects gold price expansion. If gold holds $4,400+, RGLD is tracking to $1.8B+ annualized revenue vs ~$770M FY2025 run rate. Monitor Q2 2026 results for sustainability confirmation."
+    },
+    {
+      "metric": "New streaming deal announcements (deal count and upfront payment size)",
+      "unit": "deal count / USD upfront",
+      "source": "company press releases / Bloomberg M&A",
+      "current": "WPM $4.3B Antamina deal (April 2026 — largest silver stream in history)",
+      "comment": "New deals are NAV-accretive events and act as positive catalysts for royalty company stocks. Monitor for new streaming agreements, especially those on tier-1 assets from major miners. The WPM Antamina deal sets a benchmark: $4.3B upfront for 33.75% of BHP's Antamina silver until 100Moz delivered, then 22.5% life-of-mine, at 20% of spot price. Deal quality (asset tier, mine life, operator credit quality) matters more than deal count."
+    },
+    {
+      "metric": "Royalty/streaming company NAV premium/discount",
+      "unit": "P/NAV ratio",
+      "source": "sell-side sector research (BMO, RBC, Scotiabank)",
+      "current": null,
+      "comment": "Royalty companies are valued on P/NAV (price to net asset value). Historical range for WPM: 1.2x-2.5x NAV. At current gold prices and with Antamina added, WPM's NAV has increased substantially. If the stock is trading at 1.5-1.8x NAV, meaningful upside remains vs the 2.2-2.5x NAV multiples seen at prior gold peaks. BMO and RBC regularly publish NAV models for WPM/FNV/RGLD — these are the most important sell-side inputs to track."
+    }
+  ],
+
+  "active_catalyst_ids": [
+    "struct_cb_gold_accumulation"
+  ],
+
+  "historical_catalyst_performance": {
+    "summary": "Precious metals royalty/streaming companies have historically demonstrated three distinct performance patterns relative to gold miners: (1) Downside protection in bear markets — in the 2011-2015 gold bear market, GDX fell ~80% while WPM fell ~55% from peak; royalty companies' fixed-cost model eliminated the operational leverage that magnified miner losses. (2) Comparable upside capture in bull markets — in the 2018-2020 gold rally, royalty companies matched or slightly lagged miners on the way up but with less volatility (lower beta). (3) Re-rating events as unique catalysts — large new streaming deals (WPM's Vale Salobo III expansion in 2021, FNV's Cobre Panama stream in 2012) created discrete positive re-rating events not correlated with gold price moves. The sector's defining historical attribute is the Sharpe ratio: royalty companies have delivered gold-like returns with 30-40% lower volatility over 20-year periods. In the current 2024-2026 bull market, the royalty sector outperformed miners in Q1 2026: WPM share price +24.1% in February 2026 alone. The Precious Metals R&S Index grew 13.44% in January 2026 and 20.81% in February 2026, before correcting 16.52% in March 2026 — consistent with the metal price volatility during that period.",
+    "key_historical_catalysts": {
+      "2022_russia_sanctions": "Russia sanctions drove gold above $2,000 and ignited CB buying regime. Royalty companies benefited from gold price move + new deal flow as sanctioned-adjacent operators sought non-bank financing.",
+      "2020_covid_gold_spike": "Gold to $2,080 in August 2020. WPM stock rose ~100% peak-to-peak from March 2020 lows. Demonstrated the leverage to gold price that royalty companies provide without operational risks that plagued miners during COVID shutdowns.",
+      "2023_cobre_panama_shutdown": "FNV lost its largest stream in November 2023 — stock fell ~30% from peak. Illustrates the counterparty/political risk that royalty companies cannot eliminate despite having no operational control.",
+      "2026_antamina_deal": "WPM's $4.3B Antamina silver stream (April 2026) is the largest silver streaming transaction in history. Represents a step-change in WPM's contracted production growth. Analyst consensus targets raised to $184-187 following deal announcement."
+    }
+  },
+
+  "risks": [
+    "Counterparty concentration: WPM's Salobo stream (Vale), Penasquito stream (Newmont), and Sudbury stream (Glencore) together account for an estimated 50-60% of 2026 revenue. If any of these three operators faces a material operational disruption, mine flooding, labor strike, or pit wall failure, the royalty company has zero control and cannot substitute production. FNV's Cobre Panama shutdown (2023-2026) is the clearest real-world demonstration of this risk — a royalty company lost ~30% of its growth NAV with no recourse except arbitration.",
+    "Political and sovereign risk on large streams: mining streams span jurisdictions including Panama (FNV arbitration active), Mexico (Penasquito — WPM, Newmont operator), Democratic Republic of Congo, West Africa, and South America. Mining royalty and tax regimes can be changed unilaterally by host governments, particularly when gold prices rise and political pressure to 'capture more value' increases. Mexico nationalized lithium in 2022; similar rhetoric has appeared around gold in West Africa.",
+    "Valuation premium compression: royalty companies trade at significant P/NAV premiums to their underlying asset values. If gold corrects sharply (>15%), the premium multiple also compresses — producing a double-negative: lower NAV AND lower multiple. In a severe gold correction, royalty companies can lose 40-50% despite the underlying business remaining fundamentally intact.",
+    "Deal execution risk on large upfront payments: WPM deployed $4.3B for the Antamina stream in April 2026. At that scale, deal execution quality matters. If Antamina underdelivers (grade disappointment, environmental shutdown, water rights dispute in Peru), the $4.3B upfront becomes partially impaired. Large deals also tie up capital that could otherwise be deployed on multiple smaller, more diversified streams.",
+    "Scarcity of tier-1 streaming opportunities: the royalty/streaming model works best on large, long-life, low-cost mines operated by investment-grade counterparties. Such assets are finite. As the three majors compete for the same tier-1 streaming agreements, deal terms may become less favorable (higher upfront payments, lower stream percentages). The best deals of the last decade (WPM's Salobo I/II, FNV's Cobre Panama) were done when gold was at $1,200-1,500 — replicating those economics at $4,457 gold is structurally harder.",
+    "Interest rate reversal risk: royalty companies carry long-duration cash flow profiles (streams lasting 20-40+ years). A surprise reversal of the rate cut cycle — for example, inflation re-acceleration forcing the Fed to pause or hike — would increase the discount rate applied to future streams and compress valuations even without a gold price move. This is a secondary risk in the current environment but cannot be ignored given WPM's $4.3B Antamina payment implying a 30+ year stream horizon."
+  ],
+
+  "narrative_maturity": "mainstream",
+  "narrative_trend": "increasing",
+  "narrative_notes": "The royalty/streaming narrative is squarely mainstream as of June 2026. The thesis ('royalty companies are superior to miners because they capture gold price upside without operational risk') appears regularly in generalist financial media (FT, Bloomberg, Wall Street Journal) alongside gold bull market coverage, and Seeking Alpha publishes a monthly dedicated report tracking the Precious Metals R&S Index (January, February, March 2026 reports confirmed). ETF AUM in the sector cannot be measured directly because no pure-play ETF exists, but WPM's $45B+ market cap and RGLD/FNV individually above $20B+ implies significant institutional ownership. However, narrative_maturity is assessed as 'mainstream' not 'crowded' for two reasons: (1) there is no pure-play ETF enabling retail crowd inflows — the primary access vehicle is direct equity, which creates a structural ceiling on retail participation; (2) the FNV Cobre Panama story has kept a meaningful uncertainty discount on the sector, preventing full crowding. The narrative is not 'crowded' in the same way as, say, AI semiconductors — royalty/streaming remains primarily an institutional and sophisticated-retail story. The risk of moving to 'crowded' increases if: (a) a pure-play royalty ETF launches and attracts >$500M AUM within 6 months, or (b) gold exceeds $5,000 and CNBC/Bloomberg begin daily royalty company coverage."
+}

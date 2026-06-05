@@ -1,0 +1,143 @@
+{
+  "id": "study_uranium_miners",
+  "schema_version": "1.2",
+  "sector_id": "uranium_miners",
+  "sector_label": "Uranium Miners & Processors",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+  "taxonomy": {
+    "parent_sector": "energy",
+    "adjacent_sectors": ["nuclear_energy", "oil_services_equipment", "lng_natural_gas"],
+    "differentiation_note": "Uranium miners are a pure commodity extraction play driven by the uranium spot and term contract price cycle — distinct from nuclear_energy operators (EDF, Constellation, CEG) whose revenue comes from selling electricity at regulated or market power prices and whose margins depend on wholesale power prices, not uranium prices. A utility operator like Constellation can hedge uranium costs forward and still earn whether spot uranium is $80/lb or $150/lb; a miner like Cameco has direct P&L leverage to each dollar of spot price movement, making it a commodity-beta vehicle, not an infrastructure-yield vehicle. Additionally, the supply inelasticity of uranium mining (permitting timelines of 10+ years, zero net new mines since 2011) creates a structural inventory and contracting cycle with its own timing dynamics that are entirely uncorrelated with the nuclear power dispatch merit-order or electricity market dynamics that govern nuclear_energy operators."
+  },
+  "demand_drivers": [
+    "Nuclear reactor restarts and new builds: as of Q1 2026, 440 reactors are operational globally (415 GWe capacity) and 65 are under construction, requiring approximately 180 million lbs U3O8/year in total global demand, against mined supply of ~145 million lbs — a structural deficit of ~35 million lbs/year.",
+    "Utility under-contracting cycle: years of cheap spot uranium post-Fukushima led utilities to run inventories down and avoid long-term contracts; as of 2026 the volume of 'uncovered requirements' for 2027-2035 has reached record levels, forcing a re-contracting wave at materially higher term prices than legacy book.",
+    "AI-driven power demand creating incremental nuclear baseload: hyperscaler data center buildout (combined capex ~$700B in 2026) is creating 24/7 baseload power demand that intermittent renewables cannot serve; tech companies (Microsoft, Google, Amazon) are signing nuclear PPAs and SMR offtake agreements, directly increasing uranium demand projections by an estimated additional 15-20 million lbs/year by 2030.",
+    "Policy-driven nuclear renaissance: COP28 (Dec 2023) declaration by 22 nations to triple nuclear capacity by 2050; Japan accelerating reactor restart program (target 20+ reactors by 2030); China's 10-year plan includes 100 new reactors; France recommitting to 6 new EPR2 reactors confirmed 2025.",
+    "Kazakh export risk premium: Kazakhstan (Kazatomprom) accounts for ~45% of global mined uranium supply; recurring production shortfalls (2022-2025 due to sulfuric acid constraints), plus transit dependency on Russia and China, have added a sovereign risk premium to spot pricing that incentivizes Western utilities to diversify and contract with Cameco (Canada) and NexGen (Canada).",
+    "Uranium spot price momentum above $85/lb: spot started 2026 above $80/lb, peaked at $101.41 in January 2026 — the highest since the 2007 bull market top; even at the post-spike level of ~$85-90/lb, miner economics for tier-1 producers (Cameco, Paladin, NexGen) show significant margin expansion vs. 2021 cost levels of $20-25/lb all-in sustaining cost."
+  ],
+  "supply_constraints": [
+    "Mine permitting and development timeline of 10-15 years: no significant new uranium mine has been brought to production since the Fukushima-induced bear market ended in 2023; existing pipeline projects (NexGen Arrow, Denison Wheeler River) are 2028-2030 at earliest.",
+    "Zero exploration investment during 2011-2021 bear market: exploration budgets collapsed from ~$2.5B/year (2007-2008) to under $300M/year (2016-2019), meaning the discovery pipeline for new deposits was structurally starved for a decade; new greenfield projects will not enter production until after 2030.",
+    "Kazatomprom structural underperformance: Kazakhstan has missed production guidance for 3 consecutive years (2022-2024) due to sulfuric acid supply shortages needed for in-situ leach mining; 2025 guidance was revised down 17%; this removes the market's largest swing producer as a reliable supply buffer.",
+    "Sovereign risk and transport dependencies: ~65% of global uranium supply transits through or is processed in Russia or Kazakhstan; Western sanctions context has incentivized utility diversification but physically constrained deliveries; U.S. Prohibiting Russian Uranium Imports Act (signed 2024) has directly reduced US utility access to Russian enriched uranium, tightening Western spot supply.",
+    "Enrichment bottleneck: URENCO and Orano enrichment capacity has been running at near-full utilization; additional uranium supply cannot immediately be converted to usable reactor fuel without parallel enrichment capacity expansion — adding 2-3 years of lead time to any supply response."
+  ],
+  "cycle_position": {
+    "assessment": "Mid-cycle bull market with consolidation — structural supply deficit intact, utility contracting wave not yet in full swing",
+    "rationale": "Uranium miners are in a confirmed bull market that began in earnest in 2023 (spot +88.54%, URNM +61% in 2023), but Q1-Q2 2026 has seen spot price consolidation at $85-90/lb after the January 2026 spike to $101/lb. This is characteristic of mid-cycle behavior: the primary structural catalyst (supply deficit + utility under-contracting) is intact and widening, but price discovery is paused as financial buyers digest the January spike and utilities remain cautious about contracting at elevated spot rather than at term discount. The cycle is NOT exhausted — forward uranium curves remain backwardated (indicating market stress in near-term supply, not demand destruction), and the utility uncovered requirements gap for 2028-2035 is at record levels. The next leg up is most likely triggered by a visible acceleration in utility contracting activity, which Goldman Sachs projects will drive spot to ~$91/lb by year-end 2026, with Bank of America seeing potential to $135/lb if contracting surges. URNM YTD 2026: +11.6%; 1-year trailing: +61%; URA YTD: +18.8%.",
+    "last_assessed": "2026-06-05"
+  },
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Uranium spot price (U3O8)",
+      "unit": "USD/lb",
+      "source": "UxC (uxc.com weekly), TradeTech",
+      "current": 87.50,
+      "comment": "Peaked at $101.41 in Jan 2026, consolidated to ~$85-90 range as of June 2026. Key watch level: break above $100 sustained would signal utility contracting wave onset; break below $75 would indicate demand destruction concern."
+    },
+    {
+      "metric": "Uranium term contract price (long-term indicator)",
+      "unit": "USD/lb",
+      "source": "UxC Long-Term Price Indicator (monthly)",
+      "current": 78.0,
+      "comment": "Term price typically trades at discount to spot in bull markets; spread narrowing signals utilities entering multi-year contracts. Target: >$85 term price to confirm full utility re-contracting cycle."
+    },
+    {
+      "metric": "Kazatomprom annual production guidance",
+      "unit": "million lbs U3O8",
+      "source": "Kazatomprom quarterly earnings (KAP.L LSE)",
+      "current": "~54 million lbs (2026E, revised down from 63M)",
+      "comment": "Third consecutive year of downward guidance revision. Each miss tightens global supply balance by 5-10M lbs. Watch Q2 2026 quarterly report for any further revision."
+    },
+    {
+      "metric": "Cameco realized uranium price",
+      "unit": "USD/lb",
+      "source": "Cameco quarterly earnings (CCJ NYSE)",
+      "current": "~$68/lb (Q1 2026 realized vs. ~$55 in Q1 2025)",
+      "comment": "Q1 2026 uranium segment EBITDA: $423M vs. $286M in Q1 2025. Earnings leverage to spot confirms miners' P&L sensitivity: ~$10/lb spot increase → ~25-30% EBITDA uplift for Cameco."
+    },
+    {
+      "metric": "Utility uncovered requirements (2026-2030)",
+      "unit": "million lbs U3O8",
+      "source": "UxC Market Outlook (quarterly), World Nuclear Association",
+      "current": "Record high — estimated 300-350M lbs uncovered for 2028-2035",
+      "comment": "This is the leading indicator for long-term contracting wave. When utilities begin covering these requirements, demand signal will lift term prices first, then spot."
+    },
+    {
+      "metric": "URNM / URA 30-day average daily volume",
+      "unit": "USD millions",
+      "source": "Bloomberg, Yahoo Finance",
+      "current": "URNM ~$85M/day, URA ~$120M/day",
+      "comment": "Financial buyer activity proxy. Elevated volumes without corresponding spot price move indicate institutional accumulation phase. Volume collapse would signal positioning unwind."
+    }
+  ],
+  "etf_analysis": [
+    {
+      "ticker": "URNM",
+      "name": "Sprott Uranium Miners ETF",
+      "exchange": "NYSE Arca",
+      "currency": "USD",
+      "ter": 0.0075,
+      "aum_m_usd": 1600,
+      "replication": "physical",
+      "avg_spread_bps": 8,
+      "avg_daily_volume_m_usd": 85,
+      "top_10_concentration_pct": 72,
+      "characteristics": "Pure-play uranium miners focused vehicle. Top holdings: Cameco (CCJ), NexGen Energy (NXE), Paladin Energy (PDN), Kazatomprom (KAP). Highest commodity beta in the uranium ETF space — moves 1.5-2x the spot price in trending markets. NOT UCITS — not available for direct purchase by Spanish retail investors without qualified investor status. US-listed only.",
+      "recommendation_tier": 1,
+      "limitations": "NOT UCITS — Spanish investors should use URNM.L (HANetf LSE-listed UCITS equivalent) or U3O8 GY (Xetra). Higher TER (0.75%) than URA. High concentration risk: top 5 holdings ~55% of fund. Kazatomprom weighting (~15%) adds direct EM sovereign risk."
+    },
+    {
+      "ticker": "URA",
+      "name": "Global X Uranium ETF",
+      "exchange": "NYSE Arca",
+      "currency": "USD",
+      "ter": 0.0069,
+      "aum_m_usd": 3100,
+      "replication": "physical",
+      "avg_spread_bps": 5,
+      "avg_daily_volume_m_usd": 120,
+      "top_10_concentration_pct": 65,
+      "characteristics": "Largest uranium-themed ETF by AUM ($3.1B). Broader mandate than URNM: includes nuclear utilities alongside pure miners (CCJ, NLR, CEG, NXE). YTD 2026: +18.8% vs URNM +11.6% — outperformance driven by nuclear operator exposure (Constellation, Vistra). Lower pure commodity beta than URNM. NOT UCITS.",
+      "recommendation_tier": 1,
+      "limitations": "NOT UCITS — Spanish investors cannot use directly. Inclusion of nuclear utilities dilutes the pure uranium commodity play thesis: in a spot price spike scenario URNM would outperform URA; in a power price rally scenario URA may outperform. Choose based on thesis clarity: for pure uranium commodity exposure, URNM is cleaner."
+    },
+    {
+      "ticker": "URNM.L",
+      "name": "HANetf Sprott Uranium Miners UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0085,
+      "aum_m_usd": 420,
+      "replication": "physical",
+      "avg_spread_bps": 18,
+      "avg_daily_volume_m_usd": 8,
+      "top_10_concentration_pct": 72,
+      "characteristics": "UCITS-compliant European listing of the Sprott Uranium Miners strategy. Tracks the same North Shore Sprott Uranium Miners Index as US URNM. Also listed on Deutsche Börse Xetra as U3O8 GY. Passported for sale across EU/EEA. TIER 1 for Spanish investors — preferred UCITS vehicle for pure uranium mining exposure. AUM of $420M exceeds the $200M minimum threshold. Spread of 18bps is within the 20bps tier-1 warning level.",
+      "recommendation_tier": 1,
+      "limitations": "Higher TER (0.85%) vs. US URNM (0.75%) — 10bps EU premium. Lower daily liquidity than US listing ($8M vs $85M) — use limit orders in EUR, avoid market orders at open. Currency risk: fund denominated in USD, Spanish investor has USD/EUR exposure. Hedged share class not available as of last check."
+    }
+  ],
+  "active_catalyst_ids": [],
+  "historical_catalyst_performance": {
+    "summary": "Uranium miners exhibit extreme asymmetric bull/bear cycles, with 3 identifiable major regimes since 2000. (1) 2003-2007 bull market: uranium spot rose from $7/lb to $136/lb (+1,843%), driven by China's first reactor buildout wave and Cigar Lake mine flooding (supply shock) — uranium miners (URNM predecessor) gained 400-700% during this period. (2) 2007-2020 bear market: Fukushima (2011) triggered global reactor shutdowns, uranium spot collapsed from $72/lb to $18/lb (-75%) and miner equities lost 85-95% peak-to-trough over a decade of oversupply. URNM lost ~90% from 2011 peak to 2016 trough. (3) 2020-present bull market: Sprott Physical Uranium Trust launch (2021) and systematic buying removed ~50M lbs from spot market, combined with Kazatomprom shortfalls and the COP28 nuclear renaissance declaration (2023) drove spot from $28/lb to $101/lb (+261%). Uranium miners (URNM) gained approximately 300% from 2020 trough to January 2026 peak. Historical pattern: miners amplify spot moves by 2-4x on the upside and 1.5-3x on the downside — high beta to commodity, not to energy markets broadly. Key event catalyst type: utility contract announcement waves have historically led to the sharpest 30-60 day miner equity moves, even more than spot price changes, because contracts lock in realized prices and reduce earnings uncertainty.",
+    "response_to_spot_price_increase": "In the 2022-2024 spot rise from $40 to $106/lb (+165%), URNM gained approximately 240% — a 1.45x amplification factor. In the 2005-2007 spike from $40 to $136/lb, miners amplified by 3-5x. Amplification increases with duration and magnitude of the spot move.",
+    "response_to_fukushima_type_shock": "Instantaneous 30-40% equity drawdown on a major reactor shutdown event. Full recovery requires 5+ years if the shutdown triggers global fleet rethinks (e.g., Germany). Single-reactor accidents in geographically isolated jurisdictions (e.g., US TMI 2025 incident) showed <10% drawdown in miner equities, confirming the narrative is now more resilient than in 2011.",
+    "response_to_utility_contracting_wave": "2005-2006 utility contracting wave (US utilities signing 10-year contracts post-Cigar Lake flood) caused URNM equivalent to gain 85% in 6 months, well ahead of the spot price curve. This pattern is the most actionable signal for entry timing in uranium miners."
+  },
+  "risks": [
+    "Geopolitical risk — nuclear accident or reactor shutdown: a major reactor accident (probability: low but non-zero given aging global fleet) would trigger immediate 30-50% drawdown in uranium miners regardless of supply/demand fundamentals, as occurred post-Fukushima (2011) and Three Mile Island (1979). The 2026 narrative is more resilient than 2011, but a Chernobyl-scale event in a Western country would reverse the policy renaissance.",
+    "Utility contracting delay — financial buyers' exit: the current spot market is significantly influenced by financial buyers (ETFs, hedge funds, Sprott Physical Uranium Trust) rather than utility demand. If utility contracting does not accelerate in H2 2026 as projected, financial buyers who entered at $80-100/lb may exit, causing a disorderly 25-40% spot correction and a 40-60% miner equity correction — exactly the pattern seen in 2022 when uranium dropped from $64/lb to $47/lb in 3 months.",
+    "Kazatomprom production recovery: Kazakhstan has structural incentives to solve its sulfuric acid supply problem, and Chinese-backed investment in Kazakh mining infrastructure could add 10-15M lbs/year to production by 2028 — partially offsetting the deficit narrative. Any credible announcement of production recovery would be interpreted as bearish for spot price.",
+    "SMR delays and nuclear policy reversal: the nuclear renaissance narrative is heavily dependent on Small Modular Reactor deployments proceeding on schedule. NuScale's VOYGR project cancellation (2023) was a warning signal; further SMR project failures or licensing delays in the US/UK would reduce long-term demand projections and weaken the thesis.",
+    "US import policy and Russian enrichment: the Prohibiting Russian Uranium Imports Act (2024) tightened Western supply in the near term but also incentivized US enrichment alternatives and potential imports from Australia and Canada at scale. If US policy shifts or waiver programs are expanded, the supply tightness narrative for Western-facing utilities weakens.",
+    "Concentration and liquidity risk in mining equities: Cameco (CCJ) alone represents ~25-30% of URNM; any company-specific event (production miss, labor dispute at Cigar Lake/McArthur River, tax dispute with Canada) disproportionately impacts the ETF. Individual uranium miners are micro/small-cap with daily volumes of $5-50M — position sizing must account for potential 3-5% spread cost in stress scenarios."
+  ],
+  "narrative_maturity": "mainstream",
+  "narrative_trend": "increasing",
+  "narrative_notes": "Classifying uranium miners as 'mainstream' per scoring_weights.yaml criteria: (1) Goldman Sachs, Bank of America, and Scotia Bank all publish explicit uranium spot price forecasts for 2026 with named targets ($91, $135, $80 respectively) — a definitive marker of consensus sell-side coverage; (2) URNM AUM of $1.6B and URA AUM of $3.1B far exceed the $500M ETF AUM threshold cited as a 'mainstream' observable criterion; (3) the nuclear/uranium thesis appears in Bloomberg, FT, and mining.com with regular frequency (weekly or more), with specific framing around AI power demand + nuclear renaissance — not specialist-only coverage; (4) however, it does NOT yet meet 'crowded' criteria: COT data does not show extreme long positioning, the thesis is not on CNBC daily, and retail ETF inflow acceleration has plateaued after the Jan 2026 spike. The trend is increasing because AI-as-nuclear-driver is a new layer of narrative being added on top of the already-mainstream supply deficit story, pulling a new wave of generalist investors into the sector. Score equivalent: 60 (mainstream midpoint). Multi-catalyst aggregation rule: no separate structural catalyst YAML exists for uranium specifically — the adjacent ai_capex_supercycle catalyst contributes indirectly via nuclear power demand, keeping the maturity classification in the mainstream zone rather than pushing to crowded."
+}

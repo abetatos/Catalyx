@@ -22,7 +22,7 @@ Step 8:  Tax Snapshot
 Step 9:  Thesis Draft Decision  ← uses Step 5 heatmap + Step 6 reviews + Step 7 correlation
 Step 10: Stale Indicators Check
 Step 11: Watch-Only Trigger Progress
-Step 12: Taxonomy Gap Review → promote or reject pending proposals
+Step 12: Taxonomy Gap Review → contextualize each pending proposal, then ASK the user (promote/reject/defer)
 ```
 
 ---
@@ -99,15 +99,45 @@ For any indicator flagged as stale OR where Step 0 found a value different from 
 
 ### Step 3 — Sector Studies (PREREQUISITE FOR HEATMAP)
 
-For each sector in the top-10 catalyst_alignment ranking that lacks a current sector study
-OR whose sector study is > 30 days old:
-- Run `/catalyx-sector-study <sector_id>` using WebSearch for current data
-- Priority order: sectors with open theses first, then highest catalyst_alignment sectors
+**Default coverage: ALL investable sectors.** The pipeline studies every investable sector
+in the taxonomy each cycle (not just the catalyst-driven top-N) so that opportunities in
+sectors without a structural catalyst — uranium, silver, lithium, etc. — are never missed.
 
-**Minimum sector studies required before heatmap:**
-- Any sector where a thesis draft is being considered
-- Any sector in top-5 catalyst_alignment without an existing study
-- If time-constrained: write partial studies (study_type: "partial") with key metrics only
+**Freshness skip (rotation):** skip any sector whose existing study `last_updated` is ≤ 7 days
+old (already fresh this cycle). Study everything else. This naturally rotates coverage and
+avoids paying to re-study a sector analyzed days ago.
+
+Build the work list:
+```
+uv run python -c "from catalyx.store import init_all; init_all()"
+```
+Then list investable sectors and their study freshness:
+```
+uv run python -m catalyx.scorer.sector_scorer --universe --json   # gives the full investable sector_id list
+```
+For each investable sector_id whose study is missing or > 7 days old, run a sector study.
+
+**Parallelize with subagents.** Sector studies are independent and WebSearch-bound, so fan
+them out across background subagents (Agent tool, `subagent_type: general-purpose`,
+`model: sonnet`, `run_in_background: true`), one or a few sectors per agent. Each agent must
+follow `.claude/commands/catalyx-sector-study.md` for its assigned sector(s) and Write the
+JSON to `data/sector_studies/study_<sector_id>.json`.
+
+> ⚠ **Subagents cannot run shell commands** (Bash/PowerShell are blocked in subagent
+> sessions). They Write the study JSON fine, but the DB import (`sector_study_repo
+> import-file`) must be run from THIS session. After all agents finish, batch-import:
+> ```
+> uv run python -m catalyx.store.sector_study_repo import-dir data/sector_studies
+> ```
+> (Use `import-dir` if available; otherwise loop `import-file` over each new study.)
+
+**Cost note:** a single sonnet sector study runs ≈ 45–50k tokens / 6 WebSearches /
+~3–3.5 min wall-clock. Studying the full ~46-sector universe is a material spend — fan out
+in parallel batches and let freshness-skip shrink the list on subsequent cycles.
+
+**Time-constrained fallback:** if a full run is not feasible, prioritize (a) sectors with an
+open thesis, (b) top catalyst_alignment sectors, (c) highest-momentum sectors from the latest
+snapshot; write `study_type: "partial"` for the rest.
 
 ---
 
@@ -144,10 +174,11 @@ uv run python -m catalyx.store.thesis_repo summary
 ```
 
 - List all open/draft theses and their primary structural catalyst IDs
+- Read `correlated_catalyst_cap` from `scoring_weights.yaml` (`max_combined_pct`, default 0.20; `enforcement`, default "warn").
 - For each potential new thesis (sectors in top-5 with no open thesis), compute:
   - Is the primary structural catalyst shared with any open thesis?
   - `combined_allocation = existing_open_pct + proposed_new_pct`
-  - If combined > Tier 2 ceiling (8%): flag as BLOCKED unless explicitly authorized
+  - If combined > `max_combined_pct`: flag as ⚠ OVER-CAP (a flexible warning — not a hard block unless `enforcement == "block"`). The user may still authorize it in Step 9 with an override note.
 - Record this check in the monthly report
 
 ---
@@ -172,17 +203,47 @@ If no closed theses: state YTD gains = 0.
 ### Step 9 — Thesis Draft Decision
 
 Based on heatmap (Step 5), thesis reviews (Step 6), and correlation check (Step 7):
-- List sectors that rank in top-5 AND have no open thesis: are any ready for a draft?
-- Only propose a draft if Step 7 confirmed combined allocation is within tier ceiling
+- List sectors that rank in top-5 AND have no open thesis — these are the draft candidates.
+
+**For EACH candidate, present a context block AND ask the user to decide. Do not draft automatically and do not skip the question** (same pattern as Step 12 taxonomy review). A thesis commits capital — it always requires explicit authorization.
+
+For each candidate, write a short context block so the user can decide without opening files:
+
+```
+### <sector_id>   [heatmap rank: #N | composite: X]
+- **Why it ranks:** dominant catalyst(s) + their alignment, and momentum (flag if parabolic — high rank ≠ entry point).
+- **Crowding / timing:** narrative_maturity and what it implies for entering now vs waiting.
+- **Best ETF (UCITS):** ticker, TER, AUM, UCITS status, spread. Flag AUM < $200M.
+- **Allocation fit:** proposed size, shared catalyst with any open thesis, `combined_allocation` vs `max_combined_pct` (Step 7). If ⚠ OVER-CAP, state the breach amount — it is a flexible warning, the user may authorize it.
+- **Recommendation:** Draft now / Wait (bad timing) / Skip — with one line of reasoning.
+```
+
+After presenting all context blocks, use the **AskUserQuestion** tool — one question per candidate — with options **Draft now**, **Wait / defer**, **Skip** (and let the user add notes).
+- If the user selects **Draft now**: proceed with the `draft` sub-flow of the `catalyx-thesis` skill for that sector. If the candidate is ⚠ OVER-CAP and `enforcement == "warn"`, the draft may proceed but MUST record the override reason in `correlation_note`; if `enforcement == "block"`, do not draft until the user reduces sizing.
+- Never write a thesis JSON before the user answers.
 
 ---
 
-### Step 10 — Stale Indicators Check
+### Step 10 — Catalyst Lifecycle (stale indicators + auto-deprecation)
 
-For each structural catalyst, for each indicator:
+Read `catalyst_lifecycle` from `scoring_weights.yaml` for the thresholds and `governance` mode.
+
+**10a. Stale indicators.** For each structural catalyst, for each indicator:
 - Compute: days since `last_date` vs `check_frequency`
 - Flag if overdue: daily > 3 days, weekly > 10 days, monthly > 40 days, quarterly > 95 days
 - List all overdue in a single table (this step catches what Step 2 might have missed)
+
+**10b. Auto-deprecation (governance: "auto" → apply + log; "ask" → prompt per transition).**
+History is NEVER deleted — only the `status` field flips. Evaluate every active catalyst:
+
+- **Event → `archived`:** if `strength_decayed < event_archive_strength_below` AND `priced_in ≥ event_archive_priced_in_min`. The event is spent and fully absorbed.
+- **Event → `invalidated`:** if Step 0/1 found the event reversed (policy walked back). Set `invalidation_reason`. Immediate, regardless of decay.
+- **Structural → `dormant`:** if `intensity.current_score < structural_dormant_intensity_below` for `structural_dormant_consecutive_cycles` consecutive reviews, OR `narrative_maturity == "exhausted"`. Reactivatable — if indicators repoint above threshold next cycle, flip back to `active`.
+- **Event → promote to structural:** if the same event has been re-detected for `event_promote_to_structural_cycles` consecutive cycles and is not decaying (the underlying is ongoing) → draft a structural catalyst from it.
+
+If `governance == "auto"`: apply each transition (write the status change to the catalyst file) and record it in the report's lifecycle log. If `governance == "ask"`: present each pending transition and use AskUserQuestion before writing.
+
+> **Note (Phase 0.5):** these transitions are applied by this skill today. The deterministic home is a future `catalyx/scorer/catalyst_lifecycle.py` module (Phase 1) so the rules run in Python, not via LLM judgment.
 
 ---
 
@@ -206,11 +267,27 @@ For each proposal, update the file mechanically:
 - If detected again this cycle: increment `signal_count`, append a new entry to `evidence[]` with today's date, update `last_seen`, set `status: accumulating`.
 - If NOT detected this cycle: leave unchanged. Note it in the report as "not seen this cycle".
 
-Then present the full gap table to the user. **Do not promote or reject automatically** — the user decides.
+**Then, for EACH pending proposal (`status` in `proposed` / `accumulating`), present a context block AND ask the user to decide. Do not skip the question and do not decide automatically.**
 
-The table is purely informational. The user reads it and says "promote X" or "reject Y". No automatic criteria.
+For each pending proposal, write a short context block so the user can decide without opening the JSON:
 
-**Promotion action (only when user explicitly says so):**
+```
+### <proposed_sector_id or theme>   [signal_count: N | first_seen → last_seen]
+- **Investment thesis:** one line — why this theme could move, what the demand/supply driver is.
+- **Why now:** what surfaced it this cycle (cite the Step 0 / Step 1 evidence, not last month's).
+- **ETF coverage:** pure-play ticker if found (TER/AUM if known), else best proxies and their estimated exposure %.
+- **Relation to existing sectors:** which current `sector_id`(s) it overlaps with or complements, and whether it is genuinely distinct under the granularity principle (Gold ≠ Gold miners). If it is just a slice of an existing sector, say so.
+- **Strength / novelty:** strength_score and novelty_score from the proposal; how it compares to an existing catalyst for calibration.
+- **Risk / reason to wait:** liquidity, single-issuer ETF, cyclical timing, or "signal too thin (signal_count < 3)".
+- **Recommendation:** Promote / Reject / Defer — with one line of reasoning.
+```
+
+After presenting all context blocks, use the **AskUserQuestion** tool — one question per pending proposal — with options **Promote**, **Reject**, **Defer to next cycle** (and let the user add notes). Carry out the action the user selects for each. Never write to `sector_taxonomy.yaml` before the user answers.
+
+- A proposal with `signal_count < 3` should default the recommendation to **Defer** (signal too thin) unless Step 0 produced a strong fresh catalyst for it.
+- Already-`rejected` proposals are not re-asked; list them in the report for the record only.
+
+**Promotion action (only when the user selects Promote):**
 - Set `proposed_sector_id` and `promoted_date` in the gap file, set `status: promoted`
 - Add sector entry to `catalyx/config/sector_taxonomy.yaml`
 - Add ETF entry to `catalyx/config/etf_universe.yaml` (or mark as gap if no ETF found)
@@ -293,6 +370,7 @@ Print to chat: "Monthly review complete. Key findings: [3 bullets]. Full report:
 - The Executive Summary must contain at least one NON-OBVIOUS finding. If everything is "no change", state that explicitly.
 - Open thesis review must make a concrete recommendation (Hold / Add / Reduce / Exit). "Monitor" is not a recommendation.
 - Stale indicators are not optional to flag — they are data quality issues that corrupt downstream analysis.
-- **Taxonomy promotions require explicit user confirmation** before writing to `sector_taxonomy.yaml`. Never promote automatically.
+- **Step 12 actively asks the user per pending proposal** (AskUserQuestion: Promote / Reject / Defer) after presenting a context block for each. Never present the gap table as read-only and never promote, reject, or skip a proposal without an explicit answer. Writing to `sector_taxonomy.yaml` only happens after the user selects Promote.
 - **Portfolio correlation check (Step 7) is a prerequisite for any draft decision (Step 9).** Never propose a new thesis without first checking combined allocation against open theses sharing the same primary structural catalyst.
+- **Step 9 actively asks the user per draft candidate** (AskUserQuestion: Draft now / Wait / Skip) after presenting a context block for each. Never draft a thesis without an explicit answer. The `correlated_catalyst_cap` (default 20%, `enforcement: warn`) is a FLEXIBLE warning — a breach is surfaced and requires an override note, but does not by itself block a draft.
 - **AI SCORING RULE:** Never assign `intensity.current_score` manually. Always recompute from indicator semaphores using the formula in `scoring_weights.yaml`. If a user_override is needed, document the reason in `computation_note`.

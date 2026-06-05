@@ -1,0 +1,130 @@
+{
+  "$schema": "catalyx/schemas/sector_study.json",
+  "id": "study_rare_earth_miners",
+  "schema_version": "1.2",
+  "sector_id": "rare_earth_miners",
+  "sector_label": "Rare Earth Elements — Miners & Processors",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "industrial_metals",
+    "adjacent_sectors": ["copper_miners", "lithium_miners", "cobalt_nickel", "eu_defense_prime_contractors"],
+    "differentiation_note": "Rare earth miners are categorically distinct from copper or lithium miners because the bottleneck is not mine supply but processing: China controls >90% of global rare earth separation and refining capacity, and >95% of permanent magnet manufacturing — meaning ex-China mining projects (MP Materials, Lynas) still funnel ore through Chinese processors, preserving the strategic choke point regardless of mine location. The equity thesis is therefore primarily a geopolitical supply-chain re-routing story — not a commodity price story — unlike copper (price-cycle driven) or lithium (battery chemistry cycle). A second key distinction from lithium miners is end-use: rare earth permanent magnets (neodymium-iron-boron, NdFeB) are irreplaceable in high-torque density applications — EV traction motors, wind turbine direct-drive generators, missile guidance, radar gimbals — where no commercial substitute exists at equivalent energy density, whereas lithium faces active chemistry substitution (LFP vs NMC vs solid-state) that creates demand uncertainty rare earths do not face in the same way."
+  },
+
+  "demand_drivers": [
+    "EV traction motors: each battery electric vehicle uses 1-2 kg of NdFeB permanent magnet material (NdPr as primary rare earth content). With global EV production projected at ~25M units in 2026 and rising, magnet demand represents ~25,000-50,000 tonnes of NdPr oxide equivalent per year — approximately 50-100% of current ex-China annual NdPr supply. This demand is inelastic: no EV motor architecture delivers equivalent power density without rare earth magnets.",
+    "Wind turbines — direct drive generators: offshore wind turbines above 8MW capacity increasingly use direct-drive permanent magnet generators (vs. geared induction), each requiring ~500-600 kg of rare earth magnet material. IEA estimates 300+ GW of new offshore wind capacity to 2030 globally, implying ~180,000 tonnes of NdPr oxide demand from this segment alone — almost entirely structural, contracted years in advance.",
+    "Defense systems — guided munitions and electronics: precision-guided munitions, radar gimbal systems, aircraft actuators, submarine sonar transducers, and drone motors are all NdFeB-dependent. NATO rearmament cycle (est. $650B+ in EU defense spend 2026-2030) and US DoD production ramp (Javelin, HIMARS, F-35, hypersonic programs) are creating multi-year structured demand. In July 2025, the US DoD signed a PPA agreement with MP Materials specifically to secure domestic magnet supply for defense — first-ever such contract for rare earths.",
+    "AI data center cooling and power systems: server rack power modules, industrial motors for cooling systems, and precision positioning systems in data center robotics all use rare earth magnets. Secondary to EV/wind in volume but growing: ~$350B hyperscaler AI capex in 2026 embeds incremental rare earth demand not yet modeled by specialist analysts.",
+    "Consumer electronics and industrial automation: rare earth magnets are in every hard disk drive spindle motor, loudspeaker, MRI machine, and industrial servo. While not a growth driver at the same pace as EV/wind, this represents a durable demand floor of ~50,000 tonnes NdPr-equivalent annually that would need to be satisfied even without green energy growth.",
+    "Western supply chain re-routing premium: the China export control regime (Wave 1: April 2025 — heavy REE incl. dysprosium, terbium; Wave 2: October 2025, partial suspension until November 2026) is forcing OEMs (Toyota, GM, GE Vernova, Airbus) to pre-qualify Western suppliers at above-spot prices. Long-term supply agreements being signed in 2026 at premium to Chinese domestic pricing, improving economics for Lynas and MP Materials."
+  ],
+
+  "supply_constraints": [
+    "Chinese processing monopoly is structural: China controls ~90% of global rare earth separation (solvent extraction refining) and ~95% of NdFeB magnet production. Building a greenfield separation facility outside China takes 7-10 years, $500M-$1B in capex, and requires rare process chemistry expertise concentrated entirely within Chinese state enterprises and their diaspora. No amount of mine investment bypasses this bottleneck in the <5yr horizon.",
+    "Heavy rare earth scarcity — dysprosium and terbium: these heat-tolerance dopants (added to NdFeB magnets used in EV motors, which operate at 150-200°C) come almost exclusively from ionic clay deposits in southern China. There is no commercially viable non-China source at scale. MP Materials is commissioning a heavy REE separation facility at Mountain Pass mid-2026 (targeting ~3,000 MT/yr feedstock capacity, initially dysprosium and terbium) — a first step but far below global demand.",
+    "Ore grade and deposit type: economically viable rare earth deposits outside China are rare and geographically concentrated. Lynas (Mt. Weld, Australia) and MP Materials (Mountain Pass, California) are the only two ex-China operations at scale. The next tier (Energy Fuels, USA Rare Earth, Arafura, Vital Metals) are at various pre-production or early-production stages with 3-7 year ramp timelines.",
+    "Processing chemistry IP concentration: solvent extraction of individual rare earth elements (separation of Ce, La, Nd, Pr, Dy, Tb, etc.) requires proprietary process chemistry that was developed in China with state backing. Western facilities must either license IP, hire Chinese-trained engineers, or develop alternatives — each path is slow and expensive.",
+    "Environmental permitting in Western democracies: rare earth mining involves thorium and uranium co-extraction (radioactive byproducts). Permitting in the US, Australia, and Canada requires extensive environmental review. Lynas' Kalgoorlie separation plant (Australia) took 5+ years to permit.",
+    "MIIT production quotas (China domestic): China's Ministry of Industry and Information Technology sets annual REO production quotas. 2026 quotas remain constrained — total quota ~270,000 tonnes REO, well below theoretical installed capacity — as a deliberate policy lever to support domestic pricing and strategic leverage."
+  ],
+
+  "technology_maturity": null,
+
+  "cycle_position": {
+    "assessment": "Early bull market — geopolitical re-rating underway, not yet fully in price",
+    "rationale": "NdPr oxide opened 2026 at ~$53/kg and surged to $136-139/kg by end-April (a ~160% YTD gain) before a sharp correction (-21% in May to ~$99/kg). The correction reflects profit-taking and short-term demand softness, not structural deterioration — the deficit in the NdPr market is forecast to persist for a second consecutive year in 2026. The key cycle characteristic distinguishing this from prior rare earth spikes (2011: +600%, driven purely by speculation; 2022: modest) is that the 2025-2026 move is underpinned by simultaneous demand inflection in EV, wind, and defense, plus a supply response that is structurally constrained to <10% of the gap in any 5-year horizon. Western equity names (MP, Lynas, Energy Fuels) are re-rating as DoD/OEM supply agreements are signed, creating a geopolitical premium above the commodity price. The current correction is a potential entry window: the structural deficit is unchanged, the Wave 2 export control suspension expires November 2026 (a known catalytic event), and consensus analyst models have not yet updated to the full defense-plus-AI demand picture.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "REMX",
+      "name": "VanEck Rare Earth/Strategic Metals ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0059,
+      "aum_m_usd": 580,
+      "replication": "physical",
+      "avg_spread_bps": 16,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Only liquid rare earth equity ETF globally. Holdings include MP Materials (largest US producer, mine-to-magnet, DoD contract), Lynas (largest ex-China, Mt. Weld Australia + Kalgoorlie refinery), Energy Fuels (US uranium/REE), Iluka Resources (monazite refinery, Australia), and China-domiciled processors (Shenghe Resources, China Northern Rare Earth — embedded China processing exposure). Tracks MVIS Global Rare Earth/Strategic Metals Index. Not UCITS — WARNING for Spanish/EU investor: not compliant with UCITS directive, no equivalent UCITS product with comparable AUM exists. AUM $580M — above $200M liquidity threshold. Spread 16bps — acceptable.",
+      "recommendation_tier": 1,
+      "limitations": "NOT UCITS — cannot be used in Spanish taxable accounts or ISA-equivalent wrappers without PRIIPs compliance. No UCITS equivalent with comparable liquidity exists as of 2026-06-05 — this is a known gap in the EU ETF market for this sector. Chinese processor holdings (~20-30% of fund) mean the ETF benefits from China export controls in mining names but is simultaneously exposed to Chinese regulatory risk in processor names — contradictory exposures within the same vehicle. High sector concentration — top 3 holdings likely >50%. Consider pairing with direct equity exposure to Lynas (LYSDY ADR) for cleaner non-China exposure."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "NdPr oxide spot price (Chinese domestic, USD/kg)",
+      "unit": "USD/kg",
+      "source": "Shanghai Metals Market (SMM), metal.com, rare-earth-mining.com monthly",
+      "current": 99.61,
+      "comment": "Primary price signal. Opened 2026 at ~$53/kg, peaked April at ~$139/kg, corrected to $99/kg in May. Consensus Q2 2026 range: $95-$115/kg. A sustained move above $120/kg reignites miner equity outperformance. Below $80/kg would challenge project economics for mid-tier ex-China projects."
+    },
+    {
+      "metric": "China heavy REE export license approvals (monthly volume)",
+      "unit": "tonnes approved vs applications",
+      "source": "China MofCOM monthly export data; Adamas Intelligence REE tracker",
+      "current": null,
+      "comment": "Most critical supply signal. Wave 2 export control suspension expires November 2026. A decline in approval rates for dysprosium/terbium licenses is the early warning of acute supply disruption. Monitor monthly. Data typically 6-8 week lag."
+    },
+    {
+      "metric": "MP Materials NdPr oxide production (quarterly)",
+      "unit": "metric tonnes quarterly",
+      "source": "MP Materials earnings (NYSE: MP)",
+      "current": 917,
+      "comment": "Q1 2026 record: 917 MT NdPr oxide (+63% YoY). On track for ~3,500-4,000 MT annualized. Watch commissioning of Mountain Pass heavy REE facility (targeted mid-2026): if dysprosium/terbium production begins on schedule, de-risks Wave 2 expiry impact on US defense supply."
+    },
+    {
+      "metric": "Lynas REO production (quarterly)",
+      "unit": "metric tonnes NdPr quarterly",
+      "source": "Lynas Rare Earths quarterly production reports (ASX: LYC)",
+      "current": null,
+      "comment": "Lynas is the largest ex-China producer. FY2026 consensus EPS estimate: $0.24/share (ending June 2026). First Samarium oxide production achieved March 2026 ahead of schedule — a milestone expanding Lynas' heavy REE credentials. Watch Kalgoorlie refinery ramp to nameplate."
+    },
+    {
+      "metric": "MIIT China annual REO production quota",
+      "unit": "tonnes REO annual quota",
+      "source": "China MIIT annual announcement (Q1 each year)",
+      "current": 270000,
+      "comment": "China sets production quotas annually. 2026 quota ~270,000 tonnes REO — constraint below theoretical installed capacity. An increase >10% from prior year would signal Chinese willingness to flood markets (bearish), a decrease signals tightening (bullish). This is the primary supply lever China retains."
+    },
+    {
+      "metric": "Western OEM long-term supply agreement signings",
+      "unit": "count of agreements and tenure",
+      "source": "Company press releases, CSIS, DoD contract database",
+      "current": null,
+      "comment": "Each new multi-year supply agreement signed by Toyota, GM, GE Vernova, Airbus, or US DoD with ex-China producers locks in demand floor and validates project economics. Accelerating pace of agreements in 2025-2026 (MP Materials DoD PPA, July 2025) is a leading indicator of structural re-rating. Count agreements signed in trailing 12M."
+    }
+  ],
+
+  "active_catalyst_ids": [
+    "struct_nato_rearmament"
+  ],
+
+  "historical_catalyst_performance": {
+    "summary": "Rare earth equities are historically the most explosive — and most mean-reverting — of any commodity sector. The 2010 episode (China Japan fishing dispute export ban) caused rare earth prices to rise 10x within 12 months: REMX (launched 2010) returned >300% from trough to peak in 2011 before collapsing -85% by 2013 as the WTO ruled China's quotas discriminatory and supply diversification occurred. The 2022 episode (Russia-Ukraine war + supply chain concerns) produced a more muted 40-60% REMX rally that faded within 8 months. The current 2025-2026 episode differs in three ways: (1) the supply bottleneck is processing, not mining — harder to fix with new projects; (2) demand is driven by structural EV/wind/defense tailwinds rather than fear alone; (3) Western governments are underwriting supply diversification via DoD contracts and EU Critical Raw Materials Act, creating a floor under ex-China project economics that did not exist in 2010. The key historical pattern: spikes driven purely by China supply restriction without matching demand growth reverse sharply once restrictions ease. The current episode combines both — making it more structurally durable, but the history of false dawns in this sector demands tight invalidation monitoring.",
+    "china_2010_embargo_peak_response_pct": 300,
+    "china_2010_embargo_reversal_pct": -85,
+    "russia_ukraine_2022_response_pct": 50,
+    "russia_ukraine_2022_reversal_months": 8
+  },
+
+  "risks": [
+    "China lifts/suspends export controls: the primary tail risk. If China grants general licenses for all REE categories (as it began doing selectively in late 2025 for Wave 1 elements), the geopolitical premium collapses. REMX could fall 30-40% on a comprehensive suspension announcement. Monitor: Wave 2 suspension expiry November 2026 — if extended again, bearish for the thesis; if allowed to expire and enforcement resumes, bullish.",
+    "Magnet substitution technology breakthrough: rare earth-free motor technologies (ferrite magnets, wound-field synchronous motors, axial flux designs) are at TRL 5-7 for automotive applications. Toyota and BMW have research programs. A commercial breakthrough enabling performance parity in EV traction motors without NdFeB would structurally reduce demand. 5-year probability: low but non-zero — the most underappreciated risk in analyst models.",
+    "NdPr price collapse below project economics: at NdPr below $60-70/kg, several tier-2 ex-China projects (Vital Metals, Rainbow Rare Earths, Arafura) become uneconomic and cancel/defer development — paradoxically tightening supply but signaling demand destruction. Watch: May 2026 correction took NdPr to $99/kg; a further 30-35% decline would test viability thresholds.",
+    "REMX China-domiciled holding exposure: approximately 20-30% of REMX AUM is in Chinese processor stocks (Shenghe Resources, China Northern Rare Earth Group, etc.). Any escalation of US-China financial decoupling (OFAC designations, NYSE delistings, MSCI exclusion) could cause forced selling in these holdings, dragging REMX despite strong performance in Western names. This is a fund-structure risk, not a sector-fundamentals risk.",
+    "MP Materials operational/geopolitical concentration: MP Materials is the single largest REMX holding and the only vertically integrated US producer. Mountain Pass sits in California's Mojave Desert — subject to state environmental regulation, water rights disputes, and potential community opposition as production scales. A production disruption or permitting setback would disproportionately impact REMX given its concentration.",
+    "Lynas Malaysia processing license dependency: Lynas processes rare earth concentrate at its Advanced Materials Plant (LAMP) in Kuantan, Malaysia. The operating license has faced periodic political challenges from Malaysian environmental groups and regulators. A non-renewal or forced shutdown would remove ~15% of global ex-China NdPr supply overnight — it is both a risk and a potential positive catalyst depending on direction of the licensing decision."
+  ],
+
+  "narrative_maturity": "emerging",
+  "narrative_trend": "increasing",
+  "narrative_notes": "Anchored against scoring_weights.yaml narrative_maturity_levels criteria. The rare earth supply chain thesis is present in specialist research (CSIS, Adamas Intelligence, WoodMac, IDTechEx), in government policy documents (US National Defense Authorization Act, EU Critical Raw Materials Act), and is now appearing in generalist financial media (FT, Bloomberg, Time Magazine published April 2026 on rare earths). However, it has NOT yet reached Goldman/JPM/Morgan Stanley generalist sector reports as a base-case investment thesis — it is framed as geopolitical risk rather than investable sector opportunity in mainstream sell-side. REMX AUM is $580M — above $500M threshold per the mainstream observable criteria — but the thesis framing remains specialist-driven rather than consumer ETF-driven. Classification: 'emerging' (score_equiv: 35) rather than 'mainstream' because: (1) no major bank has published a dedicated rare earth miners sector initiation in 2026; (2) retail ETF inflows are not yet accelerating on a FOMO basis; (3) the thesis requires explaining the processing bottleneck distinction, which is a non-trivial concept for generalist investors — unlike EU defense or AI where the narrative is immediately legible. Narrative trend is increasing: the China export control Wave 2 suspension expiry in November 2026 is a known upcoming catalyst that will drive incremental media coverage."
+}

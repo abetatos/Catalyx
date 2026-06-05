@@ -17,6 +17,7 @@ def init_all(data_dir: Path | None = None) -> None:
     from . import (
         catalyst_repo,
         sector_study_repo,
+        snapshot_repo,  # registers ScoreRun / SectorSnapshot / RankEvent / ReportRecord models
         structural_catalyst_repo,
         thesis_repo,
     )

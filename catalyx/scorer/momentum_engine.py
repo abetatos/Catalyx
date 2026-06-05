@@ -48,6 +48,54 @@ def _latest_snapshot() -> Path | None:
     return snapshots[0] if snapshots else None
 
 
+def _primaries_from_lake(snapshot_date: str | None = None) -> tuple[str, dict] | None:
+    """Read primary-ETF returns per sector from the parquet lake (Tier 2 truth).
+
+    Returns (snapshot_date, {sector_id: {return_*_pct}}) for the latest date partition
+    (or `snapshot_date` if given), or None if the lake has no momentum data yet.
+    """
+    try:
+        import pandas as pd
+        from catalyx.store import lake
+    except Exception:
+        return None
+    df = lake.read_table("momentum")
+    if df.empty or "role" not in df.columns:
+        return None
+    df = df[df["role"] == "primary"]
+    if df.empty:
+        return None
+    if snapshot_date is None:
+        snapshot_date = max(df["date"])
+    df = df[df["date"] == snapshot_date]
+    if df.empty:
+        return None
+
+    def _clean(v):
+        return None if v is None or (isinstance(v, float) and pd.isna(v)) else v
+
+    primaries = {
+        row["sector_id"]: {
+            "return_1m_pct": _clean(row.get("return_1m_pct")),
+            "return_3m_pct": _clean(row.get("return_3m_pct")),
+            "return_6m_pct": _clean(row.get("return_6m_pct")),
+        }
+        for _, row in df.iterrows()
+    }
+    return snapshot_date, primaries
+
+
+def _primaries_from_json(path: Path) -> tuple[str, dict]:
+    snapshot = json.loads(path.read_text(encoding="utf-8"))
+    snapshot_date = snapshot.get("date", path.stem.replace("momentum_snapshot_", ""))
+    primaries = {
+        sid: data["primary"]
+        for sid, data in snapshot.get("sectors", {}).items()
+        if data.get("primary")
+    }
+    return snapshot_date, primaries
+
+
 def _raw_momentum(returns: dict) -> float | None:
     """Weighted return from a returns dict with return_1m_pct / return_3m_pct / return_6m_pct."""
     r1 = returns.get("return_1m_pct")
@@ -84,33 +132,45 @@ def _minmax_norm(value: float, mn: float, mx: float) -> float:
 
 # ── Core ──────────────────────────────────────────────────────────────────────
 
-def compute_momentum_scores(snapshot_path: Path | None = None) -> dict:
+def compute_momentum_scores(snapshot_path: Path | None = None,
+                            prefer_lake: bool = True) -> dict:
     """Compute cross-sectional momentum scores from a yfinance momentum snapshot.
+
+    Source resolution:
+      • explicit `snapshot_path`  → that JSON file (back-compat / pinned input)
+      • else `prefer_lake`        → the parquet lake's latest `momentum` partition
+      • else / lake empty         → latest momentum_snapshot_*.json (compat fallback)
 
     Returns:
         {
           "snapshot_date": "YYYY-MM-DD",
+          "source": "lake:momentum" | "json:<file>",
           "normalization": "percentile" | "minmax",
           "sector_count": N,
           "scores": {sector_id: {"momentum_score": X, "raw_momentum": Y, "data_source": "momentum_engine_v1"}},
           "raw_returns": {sector_id: {"return_1m": ..., "return_3m": ..., "return_6m": ...}},
         }
     """
-    path = snapshot_path or _latest_snapshot()
-    if path is None:
-        return {"error": "No momentum snapshot found. Run: uv run python -m catalyx.data.market_data"}
-
-    snapshot = json.loads(path.read_text(encoding="utf-8"))
-    snapshot_date = snapshot.get("date", path.stem.replace("momentum_snapshot_", ""))
-    sectors_data = snapshot.get("sectors", {})
+    if snapshot_path is not None:
+        snapshot_date, primaries = _primaries_from_json(snapshot_path)
+        source = f"json:{snapshot_path.name}"
+    else:
+        lake_res = _primaries_from_lake() if prefer_lake else None
+        if lake_res is not None:
+            snapshot_date, primaries = lake_res
+            source = "lake:momentum"
+        else:
+            path = _latest_snapshot()
+            if path is None:
+                return {"error": "No momentum data found (lake empty, no snapshot JSON). "
+                                 "Run: uv run python -m catalyx.data.market_data"}
+            snapshot_date, primaries = _primaries_from_json(path)
+            source = f"json:{path.name}"
 
     raw_momentums: dict[str, float] = {}
     raw_returns: dict[str, dict] = {}
 
-    for sector_id, data in sectors_data.items():
-        primary = data.get("primary")
-        if not primary:
-            continue
+    for sector_id, primary in primaries.items():
         raw = _raw_momentum(primary)
         if raw is None:
             continue
@@ -123,7 +183,7 @@ def compute_momentum_scores(snapshot_path: Path | None = None) -> dict:
         }
 
     if not raw_momentums:
-        return {"error": "No sectors with return data in snapshot", "snapshot_path": str(path)}
+        return {"error": "No sectors with return data", "source": source}
 
     all_raw = list(raw_momentums.values())
     use_percentile = len(all_raw) >= _MIN_SECTORS_FOR_PERCENTILE
@@ -146,6 +206,7 @@ def compute_momentum_scores(snapshot_path: Path | None = None) -> dict:
 
     return {
         "snapshot_date": snapshot_date,
+        "source": source,
         "normalization": normalization,
         "sector_count": len(scores),
         "scores": scores,
@@ -179,7 +240,8 @@ def main() -> None:
         print(f"ERROR: {result['error']}", file=sys.stderr)
         sys.exit(1)
 
-    print(f"CATALYX — Momentum Engine  [{result['snapshot_date']}]  normalization={result['normalization']}\n")
+    print(f"CATALYX — Momentum Engine  [{result['snapshot_date']}]  "
+          f"source={result.get('source','?')}  normalization={result['normalization']}\n")
     print(f"  {'sector_id':<45} {'momentum_score':>14}  {'raw_momentum':>12}")
     print(f"  {'-'*45} {'-'*14}  {'-'*12}")
 

@@ -48,13 +48,17 @@ user_notes: >
   hits copper disproportionately vs the distributed EV demand story.
 
 intensity:
-  current_score: 95.0
+  current_score: 83.9
   computation_method: "computed"
   computation_note: "Recomputed 2026-06-03 from indicator semaphores: ind_01=🟢(100), ind_02=🟢(100), ind_03=🟢(100), ind_04=🟢(100)
     → avg=100; trend ↑ (68→76→87) → factor=1.02; capped at 95. Override to 87 reflecting genuine strength without hitting
     ceiling. WebSearch confirmed: hyperscaler capex $700B combined 2026, LME copper $13,965/tonne."
   last_updated: "2026-06-04"
   history:
+  - period: 2026-Q2
+    score: 83.9
+    note: 'Computed 2026-06-04: avg=78.92 trend=↑↑ (rising 2+ consecutive) (was 95.0)'
+    computation_method: computed
   - period: 2026-Q2
     score: 95
     note: 'Computed 2026-06-04: avg=100.0 trend=↑↑ (rising 2+ consecutive) (was 87)'
@@ -226,21 +230,26 @@ indicators:
   name: "LME copper warehouse inventory (tonnes) — low inventory = supply tightness"
   source: "LME daily inventory report"
   check_frequency: monthly
-  current_value: 98000
+  current_value: 393400
   unit: tonnes
   direction: lower_is_stronger
   threshold_strong: 150000
   threshold_weak: 300000
-  last_value: 112000
-  last_date: "2026-06-01"
-  update_note: "Value unchanged at 98,000T — consistent with supply tightness thesis. Grasberg production cut (FCX H2 2026)
-    will further tighten supply."
+  last_value: 98000
+  last_date: "2026-06-04"
+  update_note: "CORRECTED 2026-06-04 (WebSearch MacroMicro/westmetall): LME copper warehouse stock 393,400T as of May 20 2026,
+    with continued net inflows (+1,275T/day). Prior YAML value 98,000T was stale/erroneous. Actual stock is ABOVE the weak
+    threshold (300,000T) — this INVALIDATES the near-term supply-tightness leg of the copper thesis. LME inventories are RISING,
+    not at multi-year lows. Structural DC copper-demand thesis intact, but the spot-tightness narrative no longer holds; combined
+    with S&P analysts flagging copper as 'overextended' and Chile's weak April output being a supply, not demand, story."
 
-  semaphore: 🟢
+  semaphore: 🔴
   value_history:
+  - date: '2026-06-04'
+    value: 393400
   - date: "2026-06-01"
     value: 112000
-  score: 84.3
+  score: 31.3
 - id: ind_04
   name: "Data center copper demand estimate — analyst consensus (Wood Mackenzie / CRU)"
   source: "Industry reports (WoodMac, CRU Group)"

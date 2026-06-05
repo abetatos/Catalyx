@@ -120,12 +120,12 @@ etf_universe:
       currency: USD
       ucits: false
       ter: 0.0075
-      aum_m_usd: 410
+      aum_m_usd: 254
       replication: physical
       avg_spread_bps: 18
       recommendation_tier: 2
-      notes: "Includes commercial + defense space. High active risk (ARK management). Low AUM."
-      last_verified: "2026-06-01"
+      notes: "Includes commercial + defense space. High active risk (ARK management). Low AUM. AUM updated 2026-06-05 via WebSearch: ~$254M (was $410M 2026-06-01) — still above $200M floor; reconfirm at quarterly review."
+      last_verified: "2026-06-05"
       liquidity_warning: false
     - ticker: "UFO"
       name: "Procure Space ETF"
@@ -787,12 +787,12 @@ etf_universe:
       currency: USD
       ucits: true
       ter: 0.0035
-      aum_m_usd: 2400
+      aum_m_usd: 4250
       replication: physical
       avg_spread_bps: 8
       recommendation_tier: 2
-      notes: "UCITS. Includes TSMC + non-US names. More geographically diversified than SOXX."
-      last_verified: "2026-06-01"
+      notes: "UCITS. Includes TSMC + non-US names. More geographically diversified than SOXX. AUM updated 2026-06-05 via WebSearch: total cross-listing ~$4.25B (LSE line alone ~$1.4B); was $2.4B 2026-06-01. Share-class ambiguity — reconfirm at quarterly review."
+      last_verified: "2026-06-05"
 
   semiconductors_equipment:
     - ticker: "SOXQ"
@@ -819,6 +819,44 @@ etf_universe:
       recommendation_tier: 2
       notes: "Not an ETF. Single-name. Only company making EUV lithography. Track as sector proxy."
       last_verified: "2026-06-01"
+
+  semiconductors_memory:
+    - ticker: "DRAM"
+      name: "Roundhill Memory ETF (DRAM/HBM/NAND IDMs)"
+      exchange: NASDAQ
+      currency: USD
+      ucits: false
+      ter: 0.0065
+      aum_m_usd: 13880
+      replication: physical
+      avg_spread_bps: null
+      recommendation_tier: 3
+      notes: "Pure-play memory ETF, ticker DRAM (corrected from inferred 'MEMU'). Launched 2026-04-02 — fastest ETF launch in history ($6.5B in 27 trading days), AUM $13.88B by early June 2026. ~75% in SK Hynix + Samsung + Micron; also Kioxia, Sandisk, Seagate, WDC. ⚠ US-domiciled, NON-UCITS → generally NOT purchasable by EU retail under PRIIPs/KID rules. For a Spanish investor this is the key access constraint — no UCITS pure-play exists yet. Tier 3 until a UCITS wrapper appears."
+      last_verified: "2026-06-04"
+    - ticker: "SMH"
+      name: "VanEck Semiconductor ETF (Micron ~5% — partial proxy)"
+      exchange: NASDAQ
+      currency: USD
+      ucits: false
+      ter: 0.0035
+      aum_m_usd: 21000
+      replication: physical
+      avg_spread_bps: 2
+      recommendation_tier: 3
+      notes: "Proxy only. Micron ~5% weight; SK Hynix/Samsung absent (US-listed focus). Use for liquidity, not pure exposure."
+      last_verified: "2026-06-01"
+    - ticker: "EWY"
+      name: "iShares MSCI South Korea ETF (SK Hynix proxy)"
+      exchange: NYSE
+      currency: USD
+      ucits: false
+      ter: 0.0059
+      aum_m_usd: null
+      replication: physical
+      avg_spread_bps: null
+      recommendation_tier: 3
+      notes: "Indirect SK Hynix exposure via Korea index. Diluted by broad Korean equities. Proxy of last resort."
+      last_verified: "2026-06-04"
 
   ai_infrastructure_data_centers:
     - ticker: "AIPO"
@@ -1203,12 +1241,12 @@ etf_universe:
       currency: USD
       ucits: false
       ter: 0.0075
-      aum_m_usd: 410
+      aum_m_usd: 254
       replication: physical
       avg_spread_bps: 18
       recommendation_tier: 2
-      notes: "Only meaningful space ETF. Includes Boeing, LMT — not pure commercial space. Low AUM."
-      last_verified: "2026-06-01"
+      notes: "Only meaningful space ETF. Includes Boeing, LMT — not pure commercial space. Low AUM. AUM updated 2026-06-05 via WebSearch: ~$254M (was $410M 2026-06-01); reconfirm at quarterly review."
+      last_verified: "2026-06-05"
 
   longevity_biotech:
     - ticker: "No pure-play ETF"

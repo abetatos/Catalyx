@@ -44,9 +44,11 @@ uv run python -c "from catalyx.store import init_all; init_all()"
    Compare against the new thesis's primary catalyst:
    - If any open thesis shares the same primary structural catalyst: FLAG as correlated.
    - Compute: `combined_allocation = existing_open_pct + proposed_new_pct`
-   - If `combined_allocation > tier_ceiling` (Tier 2 = 8%, Tier 1 = 12%):
-     - **REDUCE proposed size** so combined ≤ ceiling, OR
-     - **BLOCK the thesis** if the user has not explicitly authorized exceeding the ceiling
+   - Read `correlated_catalyst_cap` from `scoring_weights.yaml` (`max_combined_pct`, default 0.20; `enforcement`, default "warn").
+   - If `combined_allocation > max_combined_pct`:
+     - **WARN** (this is a flexible cap, not a hard block): surface the breach to the user with the combined %, the shared catalyst, and the over-cap amount.
+     - Propose reducing the new size so combined ≤ cap, but let the user decide.
+     - Only refuse to draft if `enforcement == "block"`. Otherwise the user may authorize the override, recorded in `correlation_note`.
    - Always include `metadata.correlation_check` in the thesis JSON:
      ```json
      "correlation_check": {
@@ -57,7 +59,7 @@ uv run python -c "from catalyx.store import init_all; init_all()"
        "correlation_note": "<explanation>"
      }
      ```
-   - Do NOT draft a thesis where combined allocation exceeds ceiling without documenting the explicit override reason.
+   - A thesis whose combined allocation exceeds the cap may still be drafted (cap is flexible / "warn"), but MUST document the explicit override reason in `correlation_note`.
 
 3. Draft the thesis JSON following `schemas/thesis.json` exactly. All required fields must be populated.
 

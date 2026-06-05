@@ -1,0 +1,159 @@
+{
+  "$schema": "catalyx/schemas/sector_study.json",
+  "id": "study_water_infrastructure",
+  "schema_version": "1.2",
+  "sector_id": "water_infrastructure",
+  "sector_label": "Water — Infrastructure & Utilities",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "real_assets",
+    "adjacent_sectors": [
+      "infrastructure_core",
+      "grid_infrastructure_utilities",
+      "agriculture_soft_commodities",
+      "real_estate_logistics"
+    ],
+    "differentiation_note": "Water infrastructure is a regulated monopoly model operating on a physical scarcity constraint that is both structural and worsening — unlike toll roads or airports (infrastructure_core), where demand is cyclical and volume-driven, water utilities have captive demand that cannot be substituted and pricing power backed by regulatory compacts. The investment thesis here is not traffic growth or GDP sensitivity: it is the collision between aging pipes (US distribution networks lose ~30% of supply globally), a $2.1 trillion US replacement need identified by the AWWA in May 2026, and a new AI-era demand vector — hyperscale data centers consume 1–5 million gallons of water per day each for evaporative cooling, creating concentrated municipal stress in data-center corridors (Virginia, Texas, Arizona). This distinguishes water from grid_infrastructure_utilities (also AI-driven, but electron-delivery model) and from agriculture_soft_commodities (which is exposure to commodity prices and weather, not utility capex cycles). The desalination buildout adds a capital-intensive growth layer absent from conventional infrastructure sectors: Glenwood/LG Chem ($1B), Veolia ($1.75B) and Ecolab ($1.8B acquisitions in 2025 signal M&A cycle acceleration. Water equipment companies (Xylem, Pentair, Badger Meter) have software-monetized recurring revenue from smart metering and digital network management — a margin-expansion vector with no parallel in toll road or grid equipment businesses."
+  },
+
+  "demand_drivers": [
+    "AI data center water consumption: US hyperscale data centers projected to withdraw 150.4 billion gallons between 2025-2030 (equivalent to 4.6M households/year). US water-related capex for data centers forecast at $4.1B through 2030 (Bluefield Research). Cooling tower evaporation and chiller systems at a 100MW facility consume 1-5M gallons/day. Texas data center corridors already facing municipal supply strain (Corpus Christi $1B expansion underway).",
+    "Aging infrastructure replacement: AWWA May 2026 report quantifies US water infrastructure replacement needs at over $2.1 trillion. Water distribution networks lose ~30% of supply globally through leaks (AWWA 2026). Only ~half of US water utilities are currently funding asset renewal. IIJA allocated $50B over 5 years (~$8B/year through FY2026) for water infrastructure — but authorization expires Sept 30 2026 and reauthorization is contested.",
+    "Structural water scarcity: over 4 billion people face chronic water stress (UN 2026). World Economic Forum identifies water scarcity as top-5 global systemic risk. Goldman Sachs Asset Management 2026: 'secular theme will only gather strength as water stress, extreme weather, historical underinvestment and data center demand become more frequent.' $13.2T total investment required by 2040 (WEF); OECD/World Bank estimate $6.7T by 2030.",
+    "Desalination and water reuse buildout: energy-independent desalination and wastewater recycling scaling as climate-stressed regions decouple water supply from rainfall. Middle East AI data center buildout directly linked to desalinated water supply. Glenwood PE acquired LG Chem water solutions ($1B, 2025) for desalination and industrial treatment. Ecolab acquiring Ovivo Electronics ($1.8B, planned) for semiconductor-fab water treatment.",
+    "Smart metering and digital water networks: Xylem (XYL) Q1 2026 revenue $2.1B (+14% EPS YoY), full-year guidance $9.1-9.2B (+2-4% organic). Integration of Evoqua driving digital water management upsell. Badger Meter competing in smart water segment. Recurring software revenue provides multiple-expansion catalyst independent of infrastructure capex cycle.",
+    "EU mandatory data center water regulations: European Commission rolling out 2026 regulation requiring data center operators to meet minimum water-use performance standards, including location-specific reporting and non-potable water sourcing mandates. Creates compliance-driven equipment demand for Veolia, Xylem, and Pureflow-type operators.",
+    "Emerging market municipal build-out: EM urbanization requiring new water treatment and distribution systems from greenfield. India and Southeast Asia municipal water infrastructure investment accelerating as urban populations grow faster than supply capacity."
+  ],
+
+  "supply_constraints": [
+    "Water treatment engineering talent: specialized process engineers and hydrogeologists are scarce. The sector contracted during 2010-2020 underinvestment period. Lead times for project delivery have extended.",
+    "Permitting and regulatory complexity: new water infrastructure (dams, treatment plants, conveyance) faces multi-agency federal/state permitting in the US averaging 5-12 years. Desalination plants face additional environmental review for brine discharge.",
+    "Chemical supply dependency: water treatment requires chlorine, fluoride, coagulants, and specialty polymers. Supply chain disruptions post-COVID have eased but concentration in a few global producers creates vulnerability.",
+    "Capital scarcity for small utilities: the US has ~50,000 water systems, most serving <10,000 customers. These systems lack access to capital markets and depend entirely on federal SRF programs. IIJA expiry (Sept 2026) without reauthorization would sharply cut their replacement capex.",
+    "Energy cost input: water treatment and pumping is energy-intensive. At $0.12/kWh, a municipal plant's energy cost represents 30-40% of operating expenses. Electricity price increases compress utility margins without offsetting tariff increases.",
+    "Land and water rights: new water supply projects (reservoirs, desalination) require long-term water rights adjudication, particularly in the western US. Rights allocation disputes can delay or permanently block new supply."
+  ],
+
+  "technology_maturity": null,
+
+  "cycle_position": {
+    "assessment": "Early-stage secular re-rating; mid-cycle capex ramp",
+    "rationale": "Water infrastructure has been structurally underinvested for three decades — the average US water pipe is 45 years old and the renewal gap is now $2.1T. The sector is entering a multi-decade upgrade cycle that is policy-catalyzed (IIJA), AI-demand-accelerated (data center water stress), and climate-forced (desalination buildout in stressed regions). Unlike the grid sector which is mid-cycle in its AI buildout response, water is still early: PHO gained only ~5% YTD in H1 2026 vs double-digit returns for defense and AI-infra ETFs, suggesting the narrative is emerging but not yet crowded. Xylem Q1 2026 earnings beat confirms execution; Pentair guiding cautiously on residential recovery but expanding commercial. The main risk is IIJA expiry creating a fiscal cliff in H2 2026 — but private-side data center water capex is policy-independent and growing. Cycle position: early-to-mid re-rating, 3-7 year tailwind.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "WTRD.L",
+      "name": "Amundi (ex-Lyxor) MSCI Water ESG Screened UCITS ETF",
+      "exchange": "LSE",
+      "currency": "EUR",
+      "ter": 0.0060,
+      "aum_m_usd": 1100,
+      "replication": "physical",
+      "avg_spread_bps": 10,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "UCITS. EUR-denominated. Tracks MSCI World Water ESG Screened index — global water utilities, equipment, and treatment companies. Xylem, Veolia, American Water Works, Pentair, Danaher (water segment) are typical top holdings. Physical replication. Post-Lyxor/Amundi integration, fund continues as Amundi product. AUM $1.1B — above $200M liquidity threshold. Spread ~10bps — within 20bps tier-1 threshold. Best available UCITS vehicle for Spanish investor.",
+      "recommendation_tier": 1,
+      "limitations": "ESG screening may exclude some industrial water treatment companies on governance grounds. EUR-denominated on LSE — currency exposure to USD/EUR is embedded in underlying equity positions (multi-currency). AUM should be re-verified at entry: post-Amundi integration some share classes were merged. Last verified June 2026 from ETF database; confirm via Amundi website."
+    },
+    {
+      "ticker": "PHO",
+      "name": "Invesco Water Resources ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0060,
+      "aum_m_usd": 1800,
+      "replication": "physical",
+      "avg_spread_bps": 7,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Largest pure-play US water ETF by AUM. 37 holdings — concentrated. Tracks NASDAQ OMX US Water Index. Top holdings: Xylem, Veolia, Pentair, Watts Water Technologies, Rexnord. Mix of water utilities and equipment manufacturers. YTD 2026: ~+5% as of late January 2026 — underperforming AI-infra and defense YTD, suggesting narrative is emerging not crowded. $1.8B AUM — well above liquidity threshold. 7bps spread — excellent.",
+      "recommendation_tier": 1,
+      "limitations": "NOT UCITS — Spanish investor faces PRIIPs/KID access restrictions at most EU-regulated brokers. Best used only if broker supports non-UCITS US-listed ETFs. If UCITS access is required, use WTRD.L as primary."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "US IIJA water SRF reauthorization status",
+      "unit": "legislative status",
+      "source": "Congress.gov / National League of Cities",
+      "current": "Authorization expires Sept 30 2026; reauthorization bills in House and Senate as of May 2026",
+      "comment": "Binary catalyst. Reauthorization = $8B/year flow continues. Expiry = fiscal cliff for 50,000 small utilities. Monitor vote scheduling monthly."
+    },
+    {
+      "metric": "Xylem (XYL) revenue growth and order backlog",
+      "unit": "% organic growth YoY",
+      "source": "XYL quarterly earnings (EDGAR)",
+      "current": "Q1 2026: +2-4% organic full-year guidance, $9.1-9.2B revenue; EPS +14% YoY",
+      "comment": "Best single-name indicator for sector demand. Xylem has highest AI/smart-metering revenue exposure of any major water company. Order book leads revenue by 6-12 months."
+    },
+    {
+      "metric": "US data center water withdrawal intensity",
+      "unit": "billion gallons/year",
+      "source": "Bluefield Research / S&P Global Sustainable1",
+      "current": "150.4B gallons projected 2025-2030 cumulative; $4.1B capex commitment through 2030",
+      "comment": "Emerging demand vector. Accelerates as AI inference buildout scales. Track quarterly Bluefield updates."
+    },
+    {
+      "metric": "PHO ETF price return vs S&P 500 (relative performance)",
+      "unit": "% relative YTD",
+      "source": "Yahoo Finance / ETFdb.com",
+      "current": "~+5% YTD Jan 2026 (underperforming AI/defense); relative underperformance = unpriced narrative",
+      "comment": "Track as narrative crowding signal. When water starts outperforming broadly, narrative is going mainstream."
+    },
+    {
+      "metric": "AWWA water infrastructure funding gap vs actual public capex",
+      "unit": "USD billion",
+      "source": "AWWA annual report / EPA SRF data",
+      "current": "$2.1T total need identified (May 2026); current IIJA flow: $8B/year (0.4% of total need/year)",
+      "comment": "Structural underfunding persists even at IIJA levels. Gap = long-duration investment thesis."
+    },
+    {
+      "metric": "Desalination and water reuse M&A deal flow",
+      "unit": "USD billion deal value (rolling 12M)",
+      "source": "Bloomberg M&A / Water Finance & Management",
+      "current": "~$4.55B in 2025 (Veolia $1.75B + Glenwood/LG Chem $1B + Ecolab/Ovivo $1.8B planned)",
+      "comment": "Rising deal activity signals private capital entering structural buildout. Track as forward demand indicator for Xylem and Pentair equipment."
+    }
+  ],
+
+  "active_catalyst_ids": [],
+
+  "historical_catalyst_performance": {
+    "summary": "Water infrastructure ETFs have historically re-rated sharply on drought/scarcity events with a 2-6 month lag as market first interprets drought as a macro event before recognizing infrastructure investment implications. PHO 2015-2022 returns show the sector is strongly pro-cyclical in growth environments (+23.6% in 2017, +37.6% in 2019, +31.3% in 2021) and meaningfully negative in broad risk-off years (-15.3% in 2015, -14.9% in 2022). This means the sector behaves more like industrial equities than defensive utilities in market stress — an important portfolio construction note. The EU regulatory catalyst (mandatory data center water reporting, rolling out 2026) has no historical precedent to map returns onto, but the analog from GDPR/digital regulation compliance waves suggests 12-24 month pull-forward in equipment demand. The IRA/IIJA infrastructure spending wave (2022-2025) drove PHO YTD +5% in early 2026 — outperforming broad water history but lagging AI-infra, indicating the narrative has not yet attracted flows commensurate with fundamental rerating.",
+    "pho_2015_return_pct": -15.25,
+    "pho_2016_return_pct": 14.02,
+    "pho_2017_return_pct": 23.55,
+    "pho_2018_return_pct": -6.39,
+    "pho_2019_return_pct": 37.57,
+    "pho_2020_return_pct": 20.84,
+    "pho_2021_return_pct": 31.28,
+    "pho_2022_return_pct": -14.86,
+    "catalyst_type_responses": {
+      "drought_emergency_declaration": "Re-rates +8-15% in 3-6 months. Strongest for utilities (captive pricing power). Slower for equipment (RFP-to-order lag).",
+      "federal_infrastructure_bill_passage": "Front-loaded +5-10% on passage; sustained +15-20% over 18-24 months as SRF flows convert to orders.",
+      "interest_rate_peak_signal": "Utilities re-rate +10-20% on rate-peak signaling (duration asset repricing). Equipment companies neutral-to-positive (order book driven, not discount-rate sensitive).",
+      "data_center_expansion_cluster_announcement": "New catalyst class — no long history. Analog: industrial water treatment order inflections at brownfield semiconductor fab expansions drove Xylem +12-18% vs sector."
+    }
+  },
+
+  "risks": [
+    "IIJA expiry / fiscal cliff (Sept 30 2026): water SRF authorization expires and the White House FY2026 budget proposed a 31.5% cut to EPA Drinking Water and Clean Water SRFs. If reauthorization fails or is delayed, ~50,000 small US utilities lose their primary capital access mechanism. Negative for Xylem municipal order book in H2 2026 and 2027. Partially offset by private-side data center water capex, but municipal segment is ~45% of Xylem revenue.",
+    "Interest rate sensitivity of water utilities: regulated utilities (American Water Works, Essential Utilities, Veolia) are long-duration assets. Their regulated WACC-based returns compress when rates rise, and their stock prices behave like bonds in rate-shock environments. Water equipment companies (Xylem, Pentair) are less rate-sensitive but still correlated. If ECB or Fed resumes hiking, utilities re-rate down sharply.",
+    "Xylem/Evoqua integration execution risk: Xylem's 2023 acquisition of Evoqua ($7.5B) nearly doubled its size. Full-year 2026 is the critical integration year. Management tightened guidance in Q1 2026, suggesting execution is on track — but cost synergy miss or revenue dis-synergy would be a negative re-rating catalyst for the largest water infrastructure holding in PHO and WTRD.",
+    "Narrative crowding if AI/water nexus becomes consensus: the data center water demand thesis is currently emerging-to-mainstream. If Goldman Sachs, JPM, and Morgan Stanley simultaneously publish major water-as-AI-infrastructure reports (watch for these in H2 2026), the narrative crowding will compress forward returns. Monitor ETF inflow data (WTRD.L weekly AUM changes) as early warning.",
+    "Regulatory price cap compression: in the UK and EU, water utility regulators (Ofwat, national equivalents) periodically set allowed returns that can undershoot actual capital costs. Ofwat's PR24 determination (effective 2025-2030) set allowed equity returns below the cost of equity for some operators, compressing re-investment incentives. Similar political risk in France (Veolia) and Spain.",
+    "Desalination energy cost exposure: desalination is energy-intensive (3-10 kWh/m3 vs 0.2-0.4 for conventional treatment). A sustained electricity price spike in the Middle East or California would compress desalination operator margins and slow buildout. Links water infrastructure risk to energy commodity markets."
+  ],
+
+  "narrative_maturity": "emerging",
+  "narrative_trend": "increasing",
+  "narrative_notes": "Water infrastructure maps to the 'emerging' level: the water-scarcity structural thesis has been present in specialist research (WoodMac, BlueField, Goldman GSAM) and occasional FT/Bloomberg coverage since 2023, but has not yet broken into generalist sell-side base cases or attracted ETF inflows sufficient to signal crowding. The AI data center water demand angle is the new vector that is beginning to bridge specialist and generalist coverage (S&P Global, WSJ data center water stress articles in 2025-2026). Goldman Sachs Asset Management published a dedicated water-stress investment piece in Q1 2026, which is the most credible signal that the thesis is transitioning from specialist to mainstream. ETF AUM (WTRD $1.1B, PHO $1.8B) is well below the $5B+ levels that would indicate crowded flows. PHO YTD +5% (late Jan 2026) underperforming AI/defense — consistent with 'emerging' not 'mainstream'. Score equivalent: 35. Recommend upgrading to 'mainstream' if: (a) three or more bulge-bracket banks publish thematic water reports in the same quarter, or (b) WTRD AUM crosses $2B."
+}

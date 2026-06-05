@@ -1,0 +1,146 @@
+{
+  "$schema": "catalyx/schemas/sector_study.json",
+  "id": "study_robotics_automation",
+  "schema_version": "1.2",
+  "sector_id": "robotics_automation",
+  "sector_label": "Robotics & Industrial Automation",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "technology",
+    "adjacent_sectors": [
+      "drone_autonomous_systems",
+      "ai_infrastructure_data_centers",
+      "semiconductors_design",
+      "cloud_software_saas"
+    ],
+    "differentiation_note": "Robotics & Industrial Automation captures the physical integration layer — electromechanical systems (articulated arms, cobots, vision systems, motion-control PLCs) that automate factory, warehouse, and assembly-line tasks. This is fundamentally different from drone_autonomous_systems, which are mobile aerial/ground platforms for military, surveillance, or delivery use-cases and whose revenue is driven by defense procurement budgets and conflict doctrine rather than manufacturing capex and labor economics. It is also distinct from ai_infrastructure_data_centers: the latter is a real estate + power + networking play on training and inference compute demand, whereas robotics_automation monetizes through hardware unit sales, integration contracts, and aftermarket parts/maintenance at the factory floor — revenue recognizes when machines are installed, not when tokens are processed. Key companies (ABB Robotics, Fanuc, Keyence, Yaskawa, Kuka, Rockwell Automation) are capital-goods businesses with industrial cycle characteristics: order backlogs, book-to-bill ratios, and AISC-equivalent metrics differ structurally from the SaaS metrics of cloud_software_saas. The demand driver compression (labor cost inflation + reshoring + EV retooling + humanoid robots entering commercial pilots) creates a multi-cycle opportunity not present in adjacent sectors."
+  },
+
+  "demand_drivers": [
+    "Labor cost inflation: global manufacturing hourly wages have risen 25–40% in real terms in the US and EU since 2020, driven by post-COVID labor tightening and structural demographic decline in working-age populations across Germany, Japan, South Korea, and China. At US manufacturing wages of ~$23/hr (BLS 2026), a 6-axis robot arm with $80,000 capex and a 3-year payback replaces 1.5 shifts — the economics have crossed a decisive threshold. In Japan and Germany, where wage pressure is most acute, robot density (units per 10,000 workers) is already 399 and 371 respectively but continues to rise.",
+    "Reshoring/nearshoring of manufacturing: US CHIPS Act ($52B semiconductor subsidies), IRA manufacturing provisions (~$370B), and EU Chips Act (€43B) are funding factory construction in Arizona, Ohio, Texas, and Germany. These greenfield fabs and gigafactories are being built automation-first — without legacy labor agreements. Reshoring economics require high automation intensity to compete with Asian labor costs. New fab projects announced 2024–2026 represent an estimated $300B+ of direct manufacturing investment requiring robotic assembly and semiconductor cleanroom automation.",
+    "EV production line automation: EV assembly architecture differs substantially from ICE — battery pack handling (400–700 kg packs requiring millimeter-precision placement), laser welding, cell-to-pack bonding, and high-voltage cable routing all require purpose-built automation. Each new EV gigafactory (Tesla, BMW, Volkswagen, Hyundai) requires 500–2,000 new industrial robots per production line. Hyundai Motor Group announced $21B US investment 2025–2028, with $6B specifically allocated to robotics and AI automation in collaboration with Boston Dynamics. The automotive robotics market is projected to grow from $13.85B (2025) to $37.89B (2034) at 11.83% CAGR.",
+    "Humanoid robots entering commercial pilots: Figure AI's Figure 02 has run production shifts at BMW Spartanburg since mid-2025, supporting over 30,000 X3 vehicles and 90,000+ sheet-metal parts. Figure 03 pilot at BMW Leipzig is scheduled for summer 2026. Agility Robotics' Digit is deployed at Amazon logistics. Goldman Sachs forecasts humanoid robot market reaching $38B by 2035 (up from $6B prior forecast), with 250,000+ industrial shipments by 2030. Manufacturing costs have declined 40% faster than expected (~$30,000–150,000 per unit in 2026 vs $50,000–250,000 in 2024). This is an early-cycle catalyst that has not yet contributed material revenue to ETF holdings but is inflecting the valuation narrative.",
+    "AI-native automation: neural-network-based vision systems (Keyence, Cognex) and AI-driven motion planning (Fanuc's FIELD system, ABB's OmniCore platform) are collapsing robot programming complexity from weeks to hours. This removes the skilled-integrator bottleneck that historically capped adoption in SMEs. IFR estimates adoption rate in small-medium manufacturers is accelerating for the first time in a decade — a structural market expansion, not just replacement.",
+    "Defense and aerospace manufacturing: NATO rearmament drives increased production of armored vehicles, ammunition, artillery shells, and military aircraft — all highly automated assembly environments. Rheinmetall, KNDS, BAE Systems are all expanding automated manufacturing capacity. This adds a non-cyclical demand driver with multi-year government contract visibility."
+  ],
+
+  "supply_constraints": [
+    "Skilled automation integrators: the bottleneck in robot adoption is not hardware availability but the scarcity of qualified system integrators who can program, deploy, and maintain robotic cells. The US alone has an estimated shortfall of 80,000+ automation engineers. This constrains installation velocity even when hardware lead times shorten — a feature for ETF investors (deferred revenue becomes multi-year earnings visibility), but it limits near-term volume ramp.",
+    "Semiconductor components: industrial robots and precision vision systems are high-value consumers of FPGA, custom ASICs, and precision analog semiconductors (motion controllers). Supply chain disruptions in these components (as in 2021–2022) directly hit robot manufacturers' gross margins and delivery timelines. TSMC's leading-edge nodes are currently prioritized for AI accelerators — industrial MCU supply is in better shape but remains a watch item.",
+    "Power electronics and motors: servo motors, high-precision encoders, and power inverters require rare-earth permanent magnets (NdFeB). China controls ~90% of rare-earth processing; any supply disruption or export restriction would raise COGS for Japan/EU robot OEMs directly.",
+    "IP moats and standards lock-in: dominant players (Fanuc, ABB, Kuka/Midea, Yaskawa) compete on proprietary protocols and ecosystems that are expensive to replace — switching costs are high once a factory is standardized. This constrains new entrants but also limits pricing competition; margins for incumbents are structurally protected.",
+    "Geopolitical access: Kuka (owned by Midea, China) is effectively excluded from US government-funded fab and defense contracts under NDAA restrictions. EU debates on technology sovereignty may further restrict Chinese-owned automation suppliers. This bifurcates the addressable market for Western ETFs (ROBO, IQQR) which underweight Chinese robotics."
+  ],
+
+  "technology_maturity": null,
+
+  "cycle_position": {
+    "assessment": "Early-to-mid expansion phase — orders inflecting after 2023–2024 trough",
+    "rationale": "The robotics sector experienced a sharp destocking cycle in 2023–2024: post-COVID automation orders (placed in 2021–2022 at peak urgency) were cancelled or deferred as automotive customers (especially EV manufacturers) slowed factory buildouts amid demand disappointments. FANUC's orders fell ~20% from peak in FY2023. ABB Robotics margin compressed. The cycle bottomed in late 2024. The 2026 recovery is now confirmed: FANUC FY2026 net sales JPY 857B (+8% YoY), operating margin 21.4%; ABB Q1 2026 orders +32% YoY with $1.3B Q1 free cash flow record, full-year guidance raised to high-single to low-double digit revenue growth. Automotive and electronics segments are driving order recovery, with new demand vectors (humanoid, defense) providing an incremental layer above the traditional cycle. The sector is in early-expansion — backlog is building, margins are recovering but not yet at peak, and the humanoid inflection is 1–2 years from material ETF-level contribution. This is a better entry environment than 2021 (euphoria) or 2023 (uncertainty about EV cycle), though not the distressed trough of Q3 2024.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "FANUC quarterly orders (consolidated)",
+      "unit": "JPY billions",
+      "source": "FANUC quarterly earnings release (Tokyo Stock Exchange)",
+      "current": "~JPY 215B (Q4 FY2026 implied run rate)",
+      "comment": "Best single leading indicator for industrial robot demand globally. FANUC's factory automation and robot segments together represent ~30% of the global installed base. Recovery in 3-consecutive-quarter order trend = expansion confirmed."
+    },
+    {
+      "metric": "ABB Robotics & Discrete Automation order growth YoY",
+      "unit": "% change",
+      "source": "ABB quarterly investor relations, Zurich (SIX: ABBN)",
+      "current": "+32% YoY (Q1 2026)",
+      "comment": "Confirms broad manufacturing capex cycle recovery. Watch book-to-bill ratio — above 1.0 indicates backlog building."
+    },
+    {
+      "metric": "IFR World Robotics Report: annual unit shipments",
+      "unit": "thousands of units (industrial robots)",
+      "source": "International Federation of Robotics (IFR), annual report (October)",
+      "current": "~590,000 units (2024 estimate); IFR 2025 estimate pending",
+      "comment": "Structural growth metric. 2021 peak ~517k, 2022 ~553k, 2023 dip ~560k. Watch for 2025 data in October 2026 release. Target: >650k by 2026 confirms expansion cycle."
+    },
+    {
+      "metric": "Global industrial robotics market CAGR implied revenue",
+      "unit": "USD billions",
+      "source": "Multiple: Mordor Intelligence, Wissen Research, IndexBox",
+      "current": "~$54B (2026 estimate)",
+      "comment": "Market projected to reach $94B by 2031 at 11.7% CAGR. Use as context for sector TAM trajectory, not a trading signal."
+    },
+    {
+      "metric": "Humanoid robot commercial deployment count (public companies)",
+      "unit": "deployed units in active production environments",
+      "source": "Company earnings calls, press releases (Figure AI, Agility, Tesla, 1X)",
+      "current": "~500–2,000 units (all vendors combined, pilot/semi-commercial, mid-2026 estimate)",
+      "comment": "Key watch metric for the next-leg catalyst. Threshold: >10,000 units in commercial production = sector re-rating event. Currently pre-threshold. Tesla Optimus not yet in external commercial deployment as of April 2026."
+    },
+    {
+      "metric": "US manufacturing PMI (ISM) and Eurozone manufacturing PMI",
+      "unit": "index (>50 = expansion)",
+      "source": "ISM (US), S&P Global/Markit (EU), monthly",
+      "current": "US ISM Manufacturing ~49–51 range (May 2026); Eurozone PMI ~48–50",
+      "comment": "Short-term leading indicator for robot order intake. Robotics stocks typically lead PMI by 2–3 months. Watch for sustained PMI >51 to confirm capex cycle durability."
+    }
+  ],
+
+  "etf_analysis": [
+    {
+      "ticker": "IQQR.DE",
+      "name": "iShares Automation & Robotics UCITS ETF",
+      "exchange": "XETRA",
+      "currency": "USD",
+      "ter": 0.0040,
+      "aum_m_usd": 2900,
+      "replication": "physical",
+      "avg_spread_bps": 7,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "UCITS-compliant (IE00BYZK4552). Listed on XETRA as IQQR.DE, also trades as RBOT.L on LSE. Tracks the iSTOXX FactSet Automation & Robotics Index. Holdings span automation hardware (ABB, Keyence, Fanuc, Yaskawa), industrial software (Rockwell, Cognex), and semiconductor components used in robotic systems. Physical replication. USD-denominated — EUR/USD adds FX volatility for a EUR-base investor, but no UCITS EUR-hedged robotics ETF with comparable AUM exists. AUM of $2.9B (per etf_universe.yaml; verify current vs last_verified 2026-06-01). TER 0.40% — lowest among UCITS robotics ETFs.",
+      "recommendation_tier": 1,
+      "limitations": "USD-denominated despite UCITS wrapper — EUR investor bears unhedged FX exposure. No pure-play humanoid robot exposure (holdings are incumbent industrial OEMs, not Figure AI or 1X which are private). Top holdings are global large-caps with significant non-robotics revenue (ABB: ~30% of revenue from robotics; Keyence: automation is core but also has semiconductor/electronics test exposure). For a Spanish investor, IQQR.DE on XETRA is fully accessible and UCITS-compliant — PREFERRED vehicle."
+    },
+    {
+      "ticker": "ROBO",
+      "name": "ROBO Global Robotics & Automation Index ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0095,
+      "aum_m_usd": 1200,
+      "replication": "physical",
+      "avg_spread_bps": 10,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "NOT UCITS — US-domiciled ETF, subject to PRIIPs/KID restrictions for EU retail investors. Equal-weight methodology across ~80 holdings provides maximum diversification but can dilute pure-play exposure. Equal-weight means smaller-cap pure-play robotics companies (Cognex, Harmonic Drive, Hiwin) have same weight as ABB or Fanuc. Higher TER (0.95%) is a material drag vs IQQR. Contains US-listed robotics names not easily accessible via XETRA-traded UCITS ETFs.",
+      "recommendation_tier": 2,
+      "limitations": "NOT UCITS — generally NOT purchasable by EU retail investors under PRIIPs rules without explicit KID documentation from the issuer. Spanish broker access is restricted. Tier 2 only if broker grants non-UCITS access. TER of 0.95% is the highest in this peer group — long hold periods amplify cost drag. AUM $1.2B provides adequate liquidity."
+    }
+  ],
+
+  "risks": [
+    "Industrial cycle mean reversion: robotics demand is a capital-goods cycle. If global manufacturing PMI re-enters contraction (below 48) for 3+ consecutive months, robot order intake will reverse sharply as OEMs defer capex. The 2022–2024 destocking cycle saw FANUC operating profit fall 35% peak-to-trough. A US recession or hard landing in China would replicate this dynamic regardless of structural tailwinds.",
+    "EV demand disappointment cascading into auto robotics capex cuts: EV adoption has consistently missed consensus forecasts in 2024–2025 in Western markets (IEA revised 2030 forecast downward). Tesla, Volkswagen, and Ford have already deferred or cancelled specific EV factory expansions. New capex freezes would directly reduce robot order intake in automotive — historically 35–40% of industrial robot demand.",
+    "Humanoid robot hype vs reality gap: the market is pricing significant optionality for humanoid robots. If Tesla Optimus commercial rollout (expected late 2026) disappoints or if Figure/1X deployments reveal fundamental limitations in AI-driven autonomy at scale, sector multiple compression could be sharp. The gap between hardware capability and software autonomy is widely acknowledged; commercial scaling risk is non-trivial.",
+    "Chinese robotics competition and ETF exposure mismatch: China is aggressively scaling domestic robot production (GGII estimates China will account for 45%+ of global robot output by 2027). Western ETF holdings (IQQR, ROBO) are underweight Chinese robotics OEMs due to listing geography. If Chinese robotics companies (ESTUN, Inovance, GSK) capture global share at lower price points, incumbent Western OEMs' margin and volume assumptions are at risk. Kuka (Midea-owned) is excluded from US government contracts.",
+    "Interest rate sensitivity: capital-goods companies have elevated sensitivity to discount rate changes. If central banks reverse easing cycles (inflation re-acceleration scenario), the robotics sector's long-cycle revenue streams are worth materially less at higher rates. The 2022 precedent — ROBO ETF -34% as rates rose — is the stress scenario template.",
+    "Single-name concentration in IQQR: the iShares UCITS ETF has significant weight in a handful of large-cap industrials (ABB, Keyence, Fanuc are likely top 3 combined weight ~30–35%). These companies have revenues across non-robotics automation segments. A company-specific negative event (ABB Robotics margin miss, Keyence guidance cut on Korean/Taiwanese electronics weakness) creates tracking error vs the broader robotics theme."
+  ],
+
+  "narrative_maturity": "mainstream",
+  "narrative_trend": "increasing",
+  "narrative_notes": "Robotics and automation is a mainstream sell-side thesis in 2026. Goldman Sachs' 'Humanoid Robot: The AI Accelerant' report (2025) and the $38B market forecast have made humanoid robots a standard CNBC/Bloomberg talking point. Industrial automation has been a named ETF theme since ROBO launched in 2013 and IQQR in 2016. The reshoring + labor shortage narrative has been in mainstream financial media since 2022. However, the robotics sector has not reached the 'crowded' threshold: ETF AUM ($2.9B IQQR + $1.2B ROBO = ~$4.1B combined) is modest compared to AI semiconductors ($21B+ in SMH alone). COT positioning data does not show extreme robotics sector crowding. The humanoid robot sub-narrative is still 'emerging' (private companies, no direct ETF exposure) but the industrial automation parent thesis is squarely 'mainstream'. Per the multi-catalyst max rule in scoring_weights.yaml, the sector-level narrative_maturity takes the maximum active catalyst level. With AI capex (struct_ai_capex_supercycle, which intersects this sector) at 'crowded' per its own categorization, a case exists for 'crowded' — however, the intersection is indirect (AI capex drives automation adoption as a secondary effect, not the primary thesis for IQQR/ROBO holders). Conservative classification: 'mainstream' with 'increasing' trend, noting risk of re-rating to 'crowded' if humanoid robot ETFs launch and attract large retail inflows.",
+
+  "historical_catalyst_performance": {
+    "summary": "The ROBO ETF provides a clean 2013-2026 performance history for the industrial automation theme. Key episodes: (1) 2017–2018 bull run: ROBO +47% over 18 months driven by Industry 4.0 narrative and synchronized global manufacturing expansion — shows the sector can sharply outperform when both structural narrative AND cyclical PMI expansion align. (2) 2019 correction: ROBO -18% as US-China trade war froze manufacturing capex globally — confirms trade policy is the fastest-acting downside catalyst. (3) 2020–2021 COVID cycle: ROBO +75% peak-to-trough recovery as COVID accelerated automation adoption narrative and fiscal stimulus ignited manufacturing capex; equal to the best 18-month run on record. (4) 2022 rate-hike bear: ROBO -33.9% — capital goods with long-cycle revenue were repriced aggressively as discount rates rose; no fundamental deterioration but multiple compression drove the drawdown. This is the reference stress scenario for rate sensitivity. (5) 2023 recovery: ROBO +23.7%, RBOT.L +39.7% — showed rapid mean reversion once rate fears subsided and AI-driven automation demand narrative emerged. (6) 2024 trough: destocking cycle and EV disappointment caused order softness; sector underperformed broader tech by ~15pp. (7) 2025–2026 recovery: ABB Q1 2026 orders +32% YoY confirms cycle inflection. Pattern: robotics strongly outperforms in synchronous global manufacturing expansions and AI narrative tailwinds; sharply underperforms in rate-hike or manufacturing recession scenarios. Asymmetric positioning: enter near PMI troughs with structural catalyst confirmation."
+  },
+
+  "active_catalyst_ids": [
+    "struct_ai_capex_supercycle",
+    "struct_nato_rearmament"
+  ]
+}

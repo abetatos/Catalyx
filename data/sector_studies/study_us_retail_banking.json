@@ -1,0 +1,137 @@
+{
+  "id": "study_us_retail_banking",
+  "schema_version": "1.2",
+  "sector_id": "us_retail_banking",
+  "sector_label": "US Retail Banking",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+  "taxonomy": {
+    "parent_sector": "financials",
+    "adjacent_sectors": [
+      "eu_retail_banking",
+      "fintech_payments",
+      "asset_management",
+      "insurance_eu"
+    ],
+    "differentiation_note": "US retail banks (KRE/KBE universe: JPMorgan, Wells Fargo, BofA at large-cap end; KeyCorp, Regions, M&T, PNC at regional end) are governed by the Fed/OCC/FDIC regulatory tripartite, priced in USD, and carry material commercial real estate (CRE) loan books — a balance-sheet risk that EU retail banks largely avoided due to different lending cultures and tighter ECB-era LTV regulation. The primary earnings driver is the Fed funds rate acting on net interest margin (NIM), not the ECB deposit facility rate: a 25bps Fed cut mechanically compresses liability-sensitive NIM on a 6-18 month lag, whereas ECB cuts affect EU banks through an entirely separate transmission mechanism. Additionally, US regional banks have significant credit card portfolios (capital-one-style consumer lending is structurally absent in European retail banking), and US banks face stablecoin/fintech disruption at retail deposit level in a way that has no current EU equivalent given MiCA timelines."
+  },
+  "demand_drivers": [
+    "Federal Reserve rate cycle: Fed funds rate held at 3.50-3.75% as of April 2026 FOMC (8-4 split for hold); markets pricing no cuts through end-2026 and into 2027. Stable-high rate environment supports NIM expansion through deposit repricing lag — banks benefit as fixed-rate asset yields roll up faster than deposit costs in a hold environment. Industry NIM was 3.31% in Q1 2026, down 8bps QoQ but poised to stabilize if Fed holds.",
+    "Loan volume recovery: After 18 months of tightened lending standards, major regional banks (Regions, PNC, M&T, US Bancorp, KeyCorp, First Horizon) are projecting renewed CRE and commercial loan growth in 2026. Aggregate banking-industry net income reached $80.5B in Q1 2026 (+3.6% QoQ), reflecting volume-driven income alongside stable NIM.",
+    "Consumer credit card balances: Total US credit card balances stood at $1.252 trillion in Q1 2026 (down from $1.277T peak in Q4 2025 but structurally elevated). Rising balances with stable-or-improving delinquency support interest income for prime-oriented large banks. JPMorgan and Citigroup report delinquency near 2.3% — well-managed books benefiting from full-cycle credit filtering.",
+    "Deregulatory tailwind: S&P Global Ratings and Morningstar DBRS both issued 'Neutral-to-positive' 2026 sector outlooks citing regulatory relief under the current administration — reduced capital surcharges for mid-size banks, lighter-touch merger approvals, and Basel III Endgame re-negotiation that frees up buyback capacity. This is a structural earnings-per-share tailwind, not captured in NIM.",
+    "M&A and consolidation cycle: PwC and Deloitte flag a 'vibrant undercurrent' of small-bank M&A, accelerated by AI investment requirements and cost-efficiency pressures. Acquirers (larger regionals) gain deposit scale and cost synergies; targets realize book-value premiums. M&A activity drives re-rating of the KBE equal-weight universe.",
+    "AI-driven efficiency gains: Deloitte and IBM both identify AI adoption as a 2026 structural theme — banks reducing back-office headcount (2-4% cost saves) while improving fraud detection and credit underwriting. Cost-income ratios improving at early movers (JPM, BofA tech investment paying off), which widens the earnings gap between tech-invested large banks and under-investing regional peers."
+  ],
+  "supply_constraints": [
+    "CRE maturity wall 2026: Nearly $1 trillion in CRE loans mature in 2026, one-fifth office-related. Office delinquency has reached ~12% with vacancy rates exceeding GFC peaks in major metro markets. Regional banks hold $1.6 trillion in CRE loans collectively, with ~50% of regionals at CRE concentrations exceeding regulatory concern thresholds. Provision expense is rising — this is a balance-sheet drag, not a systemic event, but limits capital return and loan growth optionality.",
+    "Deposit cost stickiness: Despite the Fed hold, consumers continue migrating balances from non-interest-bearing checking into money market accounts and T-bills. Deposit beta on the repricing lag means cost of funds has not fully adjusted downward post-rate-peak. Smaller regionals with less diversified funding are more exposed than large banks with diversified wholesale access.",
+    "Capital requirement uncertainty: Basel III Endgame is re-negotiated but not finalized. Category III-IV banks (between $100B-$700B assets) face residual uncertainty on AOCI inclusion and operational risk capital. Until finalized, buyback capacity is conserved — a partial handcuff on shareholder return that limits re-rating.",
+    "Stablecoin and fintech deposit competition: IBM and Deloitte both flag stablecoins as an emerging 2026-2027 disruptive force on retail deposits, particularly for consumers who hold balances for payment purposes rather than savings. US regulatory clarity on stablecoins (via GENIUS Act debate) introduces a multi-year disruption overhang on deposit funding costs.",
+    "Talent and technology cost inflation: AI adoption requires simultaneous large-scale technology investment and workforce restructuring. Banks in transition carry dual-cost periods (legacy + new stack) before efficiency materializes — this limits near-term earnings upside for mid-size regionals without strong technology balance sheets."
+  ],
+  "cycle_position": {
+    "assessment": "Mid-cycle recovery with a CRE drag overhang — not early expansion, not late deterioration",
+    "rationale": "US retail banking exited the acute stress phase of 2023 (Silicon Valley Bank / Signature Bank deposit-run contagion) and has entered a stable mid-cycle environment. KRE has returned +7.91% YTD 2026 vs KBE +3.62%, indicating market preference for rate-sensitive regionals over large-cap banks as deposit repricing and NIM stability are priced as positives. Q1 2026 industry net income of $80.5B (+3.6% QoQ) confirms operational resilience. However, the sector is NOT in early expansion: the CRE maturity wall ($1T maturing loans in 2026, 12% office delinquency), K-shaped consumer credit, and stablecoin-disruption risk create a multi-quarter headwind. The Fed hold at 3.50-3.75% is the stabilizing force — a surprise cut scenario would compress NIM and re-rate the sector lower; a surprise hike would worsen CRE values. The most likely scenario (Fed on hold through end-2026 or one cut late 2026) supports a NIM plateau that is favorable but not expanding. Conviction: medium-high — the macro thesis is consensus, limiting alpha versus the market.",
+    "last_assessed": "2026-06-05"
+  },
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Federal Funds Rate (target range upper bound)",
+      "unit": "%",
+      "source": "Federal Reserve FOMC statement (www.federalreserve.gov)",
+      "current": "3.75",
+      "comment": "Fed held 3.50-3.75% at April 2026 FOMC (8-4 split). Markets pricing no cuts through end-2026. A surprise cut to <3.50% compresses NIM; a hike above 4.0% worsens CRE book. This is the single most important variable for the sector."
+    },
+    {
+      "metric": "Industry Net Interest Margin (NIM), all commercial banks",
+      "unit": "%",
+      "source": "FDIC Quarterly Banking Profile / FRED FRED series USNIM",
+      "current": "3.31",
+      "comment": "Q1 2026: 3.31%, down 8bps QoQ. Closely watch for stabilization or reversal. Regional banks with longer asset duration (community/savings banks) show wider NIMs (3.7-4.3%) but greater liability repricing risk."
+    },
+    {
+      "metric": "Credit Card Delinquency Rate (30+ days, all commercial banks)",
+      "unit": "%",
+      "source": "Federal Reserve FRED series DRCCLACBS / NY Fed Consumer Credit Panel",
+      "current": "2.9",
+      "comment": "Q1 2026: 2.9%, down from 3.2% peak (2024). Still 30bps above pre-pandemic baseline. K-shaped: JPM/C ~2.3%, Capital One ~4.5%, Synchrony ~4.8%. Track for reversal above 3.5% as the early-warning threshold for credit cycle turn."
+    },
+    {
+      "metric": "CRE Loan Delinquency Rate (office subtype)",
+      "unit": "%",
+      "source": "FDIC Quarterly Banking Profile / Trepp CRE data",
+      "current": "12.0",
+      "comment": "Office-CRE delinquency at ~12%, exceeding GFC levels. ~$200B in office CRE matures in 2026. Track quarterly for stabilization signals. A move above 15% would materially increase provision expense for regionals. Multifamily and industrial remain healthy."
+    },
+    {
+      "metric": "KRE 30-day realized volatility vs SPY",
+      "unit": "bps",
+      "source": "Market (ETF options chain / CBOE)",
+      "current": null,
+      "comment": "KRE beta to SPY is structurally ~1.2-1.4 during stress events. Track as risk indicator — a spike in KRE implied vol is an early warning of deposit-run or CRE-loss concerns. Was elevated in March 2023 crisis; currently normalized."
+    },
+    {
+      "metric": "Total Credit Card Balances Outstanding",
+      "unit": "USD trillion",
+      "source": "NY Fed Household Debt and Credit Report (quarterly)",
+      "current": "1.252",
+      "comment": "Q1 2026: $1.252T, down from $1.277T Q4 2025 peak. Rising balances support interest income for prime card issuers (JPM, BAC, WFC). A sustained decline below $1.1T signals consumer deleveraging which compresses fee/interest income."
+    }
+  ],
+  "etf_analysis": [
+    {
+      "ticker": "KBE",
+      "name": "SPDR S&P Bank ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0035,
+      "aum_m_usd": 1900,
+      "replication": "physical",
+      "avg_spread_bps": 4,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Equal-weight US banks including large-cap (JPM, BAC, WFC, C) AND regionals. Equal-weight methodology reduces concentration risk vs market-cap alternatives but creates non-trivial large-bank exposure. YTD 2026: +3.62% (underperforming KRE because large banks have less NIM-sensitivity to the Fed hold). AUM $1.9B — adequate liquidity for most position sizes.",
+      "recommendation_tier": 1,
+      "limitations": "NOT UCITS — not purchasable by EU retail investors under PRIIPs/KID rules without KID document. For a Spanish investor this is the primary access constraint. No UCITS equivalent with the same equal-weight US bank exposure exists. Must verify individual broker access. Use only if broker provides non-UCITS access (typically institutional accounts or non-EU brokerage)."
+    },
+    {
+      "ticker": "KRE",
+      "name": "SPDR S&P Regional Banking ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0035,
+      "aum_m_usd": 3100,
+      "replication": "physical",
+      "avg_spread_bps": 3,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Pure-play regional banking — excludes large-cap money-center banks (JPM, BAC, C, WFC). Tracks S&P Regional Banks Select Industry Index. AUM $3.1B, spread 3bps — the most liquid regional banking instrument. YTD 2026: +7.91%, substantially outperforming KBE. Higher NIM sensitivity to Fed hold (regionals are more asset-sensitive). Higher CRE exposure than KBE. Top holdings: KeyCorp, Regions Financial, Zions, M&T Bank, First Horizon, US Bancorp. This is the purer-play vehicle for the rate-cycle thesis.",
+      "recommendation_tier": 1,
+      "limitations": "NOT UCITS — same PRIIPs/KID restriction as KBE. Critical constraint for Spanish investors under MiFID/PRIIPs regime. No UCITS regional banking ETF with equivalent exposure currently exists in the EU market. EU investors seeking this exposure either use KBE/KRE via a non-EU brokerage account (Interactive Brokers, IBKR US) or accept a heavily diluted proxy via broad financials UCITS ETFs. Additionally: regional banking is a US-domestic cyclical sector with no EUR-hedged variant — EUR/USD vol adds 8-10% annualized tracking noise to a EUR-base investor's P&L."
+    }
+  ],
+  "active_catalyst_ids": [],
+  "historical_catalyst_performance": {
+    "summary": "US retail banking has three well-documented macro catalyst regimes: (1) Rate hiking cycles (2004-2006, 2015-2018, 2022-2023) — KRE outperformed broad market by 15-30% in early stages as NIM expanded, then underperformed as credit quality deteriorated in late cycle. (2) Rate-hold plateaus (2006-2007, 2019, 2023-2026) — sector historically stable to slightly outperforming as NIM stabilizes and credit quality stabilizes; consistent dividend/buyback yield provides floor. KRE performance during Fed holds has averaged +12-18% annually when no credit crisis materializes. (3) Rate cut cycles (2007-2008, 2019-2020, 2024-2025 partial) — NIM compression is the primary headwind; KRE underperformed SPY by 20-40% during cut cycles with associated credit deterioration. For CRE-specific shocks: March 2023 SVB/Signature event saw KRE fall -28% in 5 trading days, then recover ~60% of the drawdown within 90 days as systemic contagion was contained. The key lesson: regional bank selloffs driven by liquidity concerns (deposit runs) are sharper but shorter than those driven by credit cycle turns (2008-2009 analogue, which took 3 years to bottom). Current CRE exposure creates a credit-cycle risk more similar to 2007-2008 in structure, but severity is lower given: (a) office CRE is ~5-8% of total bank assets vs residential MBS at 20-30% in 2007, (b) DFAST stress testing has forced higher capital buffers, and (c) regionals are proactively extending/amending loans rather than marking to market.",
+    "fed_hold_regime_analogue": "Current regime (Fed at 3.50-3.75%, on hold, CRE stress, deregulation) most closely parallels 2006-H2 to 2007-H1: NIM plateau, M&A reactivating, credit stress isolated (office CRE now vs subprime then), regulatory relief narrative active. The key divergence: 2026 banks have 12-14% CET1 ratios vs 6-8% in 2006. The stress capacity is materially higher, reducing systemic risk but also limiting upside leverage.",
+    "catalyst_response_quantified": {
+      "unexpected_fed_cut_25bps": "Historical 1-month KRE response: -3 to -5% (NIM compression immediately priced in, before benefits from lower credit stress materialize over 6-12 months)",
+      "unexpected_fed_hike_25bps": "Historical 1-month KRE response: +2 to +4% (initial NIM-expansion pricing), then -5 to -10% over 3 months as CRE collateral values decline",
+      "cre_systemic_shock_office_default_wave": "Severe tail scenario: -20 to -35% in 60 days, partially recoverable if confined to office subtype (<15% of regionals' total loan books)",
+      "deregulation_capital_surcharge_relief": "Upside catalyst: +5 to +12% over 3-6 months if Basel III Endgame capital relief materializes with buyback acceleration"
+    }
+  },
+  "risks": [
+    "CRE office maturity cliff (2026): ~$200B in office-sector CRE loans mature in 2026 against a backdrop of 12% delinquency rates and vacancy rates above GFC peaks. If refinancing rates remain at current levels, distressed sales or defaults could require banks to increase provision expense by $30-50B industry-wide — compressing earnings for KRE-constituent regionals by an estimated 10-20% in aggregate.",
+    "Fed cut surprise (re-pricing NIM lower): If the Fed cuts 50bps or more in H2 2026 (e.g., triggered by labor market deterioration), asset repricing would immediately compress the NIM plateau. Liability-sensitive regionals with short-duration deposits would benefit but asset-sensitive regionals (longer loan books) would see a 10-20bps NIM decline within two quarters.",
+    "K-shaped consumer credit deterioration: The divergence between prime consumers (delinquency 2.3%) and non-prime (Synchrony 4.8%, Capital One 4.5%) is at multi-year extremes. If macroeconomic conditions deteriorate — particularly if unemployment rises above 5% — the non-prime segment could see delinquencies accelerate toward 6-8%, triggering charge-off cycles at banks with sub-prime card exposure. ETF-level impact would be diluted but sector sentiment would be negatively affected.",
+    "Stablecoin/fintech deposit disintermediation: GENIUS Act debate and USD-backed stablecoin proliferation creates a structural risk that retail payment deposits migrate off bank balance sheets onto blockchain rails. If 5-10% of retail checking balances migrate within 3-5 years, deposit funding cost for non-interest-bearing accounts increases structurally — a slow-moving but persistent NIM headwind not captured in 2026 consensus models.",
+    "Regulatory re-tightening post-leadership transition: Fed Chair transition post-Powell (May 2026 expiry) introduces policy uncertainty. If the new Chair adopts a more hawkish regulatory stance — higher GSIB surcharges, tighter CRE concentration limits, acceleration of Basel III Endgame — the deregulatory earnings-per-share premium currently priced by the market could unwind, re-rating the sector by -10 to -20%.",
+    "EUR/USD currency drag for Spanish investor: KRE and KBE are USD-denominated with no UCITS hedged variant. The EUR/USD rate introduces a secondary return driver entirely uncorrelated with the bank thesis. A 5% EUR appreciation vs USD reduces the EUR-denominated return by ~5 percentage points, independent of the underlying thesis. This is the dominant access/vehicle risk for the investor profile in this system."
+  ],
+  "narrative_maturity": "mainstream",
+  "narrative_notes": "US banking sector as a rates-driven investment thesis is firmly in mainstream territory. Goldman Sachs, JPMorgan, Morgan Stanley, S&P Global Ratings, Morningstar DBRS, and Deloitte have all published 2026 base-case sector outlooks with explicit NIM/rate-sensitivity frameworks. The KRE/KBE thesis (buy regionals in a Fed-hold environment) appears in Bloomberg daily financial commentary, ETF flow commentary (KRE is one of the most-discussed sector ETFs by AUM), and in mainstream retail investor media. Per the scoring_weights.yaml criteria: Goldman/JPM/MS publish base-case reports (criteria met), ETF AUM > $500M in theme (KRE $3.1B, criteria met). The sector has not yet reached 'crowded' because: (1) KRE YTD +7.91% is not a blow-off move; (2) positioning data does not show extreme COT or ETF-inflow acceleration; (3) the CRE risk creates genuine controversy about the outlook, preventing the one-directional consensus that defines 'crowded'. Narrative trend: stable — the rate-hold-supportive-for-banks thesis has been stable for 12+ months. Assigned 'mainstream' at score_equiv 60.",
+  "narrative_trend": "stable"
+}

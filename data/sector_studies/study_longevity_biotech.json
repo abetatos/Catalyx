@@ -1,0 +1,188 @@
+{
+  "$schema": "catalyx/schemas/sector_study.json",
+  "id": "study_longevity_biotech",
+  "schema_version": "1.2",
+  "sector_id": "longevity_biotech",
+  "sector_label": "Longevity & Anti-Aging Biotech",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "deep_tech",
+    "adjacent_sectors": ["biotech_drug_development", "genomics", "synthetic_biology"],
+    "differentiation_note": "Longevity biotech is distinct from biotech_drug_development in both therapeutic target and business model: general biotech develops drugs for specific diseases within existing FDA pathways (cancer, rare disease, CNS); longevity biotech targets the biological aging process itself — senolytics eliminate senescent cells that accumulate with age, epigenetic reprogramming attempts to reverse methylation clocks, and metabolic interventions target healthspan rather than a named disease. The FDA does not yet recognize 'aging' as a disease indication, which means longevity companies face a regulatory pathway problem that general biotech does not — creating a different risk profile and longer development horizon. It is also distinct from genomics (genomics_sequencing/CRISPR): genomics is an enabling technology used across many applications; longevity biotech is a specific therapeutic application domain where cell-state reversal, not sequence editing, is the primary mechanism — Altos Labs (epigenetic reprogramming), Unity Biotechnology (senolytics), and Retro Biosciences (GDF11/OSKM) would not qualify for a genomics ETF but are the core of longevity sector. Additionally, longevity biotech has a distinct demand structure — the primary buyer of longevity therapeutics is self-paying wealthy individuals, not insurance reimbursement systems, which creates a different commercialization path and pricing power ceiling than standard drug development."
+  },
+
+  "demand_drivers": [
+    "Aging demographic wealth concentration: the global 60+ population reaches 1.4 billion by 2030 (UN projections). High-net-worth individuals aged 55-75 are the primary self-pay target for longevity therapeutics — they have both the motivation (proximate mortality) and the means (wealth concentration in the baby boomer cohort). Median wealth of US households 55-64 is $364,270 vs $131,830 for 35-44. This demographic is price-insensitive for health interventions.",
+    "Private investment explosion: longevity biotech raised $8.49 billion across 325 deals in 2025, more than doubling from 2024, with Retro Biosciences ($1.8B valuation, May 2026), Altos Labs ($6.33B valuation, $3B initial raise), and NewLimit (Coinbase CEO Brian Armstrong) representing the leading private cohort. Billionaire-backed funding (Sam Altman, Jeff Bezos, Peter Thiel, Larry Ellison) provides long runway without public market pressure.",
+    "GLP-1 spillover into metabolic healthspan: GLP-1 receptor agonists (Ozempic/Wegovy/Zepbound) are being repositioned from obesity drugs to longevity drugs — Swiss Re models estimate GLP-1s could reduce US all-cause mortality 6.4% by 2045. Eli Lilly and Novo Nordisk have explicitly adopted 'healthspan extension' framing. This pulls general public and physician awareness toward metabolic aging biology and creates a bridging narrative between mainstream pharma and pure-play longevity research.",
+    "Big pharma institutional entry: Novartis launched its Diseases of Aging and Regenerative Medicine (DARe) division in 2026 explicitly targeting novel aging biology targets. Major pharma M&A activity totaled >$65B in 2025, with acquisitions increasingly targeting clinical-stage longevity-adjacent companies (senolytic, NAD+ pathway, mTOR inhibition). Pharma balance sheet money flowing into the sector provides acquisition premium support.",
+    "FDA biomarker pathway evolution: FDA and EMA have begun accepting sensor-derived and epigenetic-clock biomarkers as surrogate endpoints in aging trials (2025-2026). FDA announcement that a single pivotal trial (not two) should generally support approval reduces phase 3 capital requirements. These regulatory shifts reduce the timeline and capital burden for longevity companies, improving investability.",
+    "GLP-1 oral pill approval improving access: the oral GLP-1 approval and CMS/Medicare coverage expansion in 2026 (30M US projected users by 2030 at ~$185B market by 2033 per Grand View Research) is mainstreaming daily pharmaceutical intervention in metabolic aging — normalizing the concept of preventive longevity therapeutics for non-wealthy demographics and creating a downstream demand pull for more advanced longevity drugs."
+  ],
+
+  "supply_constraints": [
+    "No validated biological aging endpoint for regulatory approval: the FDA does not recognize chronological or biological aging as a disease, meaning longevity drugs must find proxy indications (macular degeneration, IPF, osteoarthritis, Alzheimer's biomarkers) to enter trials. This fragments the pipeline, slows development, and makes comparative effectiveness data scarce. Unity Biotechnology's senolytic failure in Phase II (macular degeneration) illustrates the challenge of using proxy endpoints.",
+    "Clinical trial design complexity: healthy aging trials require large populations (healthy people age slowly — small annual effect sizes), long follow-up periods (years to decades for healthspan endpoints), and high per-patient costs. Recruiting healthy 60+ participants is structurally harder than recruiting disease patients. Estimated 44% of longevity-focused biotech companies report difficulty obtaining IND approval for dedicated aging trials.",
+    "Delivery mechanism immaturity for epigenetic reprogramming: partial in vivo reprogramming using Yamanaka factors (OSKM) requires AAV vectors or mRNA delivery at doses/schedules that avoid teratoma formation. Delivery to aged tissue at therapeutic scale has not been demonstrated in humans. Altos Labs, Turn Biotechnologies, and NewLimit are each developing proprietary delivery solutions — this creates redundant R&D spend rather than platform leverage.",
+    "Human safety data gap: as of June 2026, no senolytic or epigenetic reprogramming therapeutic has received FDA market authorization. The field has abundant mouse-model data (lifespan extension well-documented in aged mice) but human translation failures are common in longevity biology. The gap between mouse model results and human clinical relevance is larger in aging research than in most drug categories.",
+    "Talent constraint: aging biologists with both bench expertise (epigenetics, telomere biology, mitochondrial function) and clinical development experience are extremely scarce. The field was an academic niche before 2018 and the training pipeline for industry-grade talent lags private investment by 5-8 years."
+  ],
+
+  "technology_maturity": {
+    "trl_level": 4,
+    "trl_description": "Technology validated in laboratory (TRL 4): Core mechanisms (senescent cell clearance, partial epigenetic reprogramming) validated in vitro and in multiple animal model systems. Human trials exist but are narrow-indication or safety-only Phase I. No Phase III completions in core longevity mechanisms as of June 2026.",
+    "gartner_hype_cycle_position": "peak_of_inflated_expectations",
+    "estimated_commercialization_horizon": "2030-2035 for first narrow-indication senolytics; 2035+ for systemic reprogramming",
+    "investability_note": "Investable via proxy ETFs only. No pure-play longevity ETF exists (see ETF gap flag below). The investable surface today is biotech ETFs with longevity-adjacent holdings (ARKG for genomics overlap, XBI for broad clinical-stage biotech, BTEC for UCITS access). True direct exposure requires individual stock selection (Insilico Medicine, Juvena Therapeutics, BioAge Labs) or private investment — neither accessible via UCITS ETF. Monitor for new thematic ETF launches: Indxx Global Longevity Thematic Index exists as an index with no tracking ETF of scale.",
+    "watch_triggers": [
+      "First FDA approval of a drug with a longevity/aging biology primary indication (not proxy disease)",
+      "First UCITS longevity-themed ETF launch with AUM > $200M",
+      "Phase III trial initiation by Altos Labs or Retro Biosciences in any indication",
+      "Senolytic Phase III success in a systemic aging endpoint (frailty index, multi-organ biomarker panel)",
+      "FDA formal designation of 'biological age reversal' as a valid drug development endpoint"
+    ]
+  },
+
+  "cycle_position": {
+    "assessment": "Hype cycle peak — private market froth, public proxy at mid-cycle",
+    "rationale": "The private longevity market is at peak-of-inflated-expectations: Retro Biosciences raised at $1.8B valuation (May 2026) with no approved product, Altos Labs at $6.33B valuation with pre-clinical data only, total private investment doubling YoY to $8.49B in 2025. This is classic peak-hype dynamics: celebrity/billionaire backers, exponential media coverage, aspirational valuations without revenue. However, the public-market proxy (XBI, ARKG) is in a different phase — biotech broadly is recovering from 2022-2024 downturn, XBI +35.9% in 2025, entering 2026 with real M&A and FDA approval momentum. For a trader accessing longevity via public ETFs, the relevant cycle is the broad biotech recovery cycle (mid-bull) not the private longevity hype cycle. The key question is whether any private longevity company IPOs in 2026-2027 with sufficient scale to move a sector ETF — that event would import private-market enthusiasm into public proxies.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "ETF_GAP_FLAG",
+      "name": "NO PURE-PLAY LONGEVITY ETF EXISTS — TAXONOMY GAP",
+      "exchange": "N/A",
+      "currency": "N/A",
+      "ter": 0,
+      "aum_m_usd": 0,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "CRITICAL GAP: As of June 2026, no dedicated longevity/anti-aging biotech ETF exists with meaningful AUM. The Indxx Global Longevity Thematic Index exists as an index but has no qualifying UCITS tracking product with AUM > $200M. A Spanish investor cannot get pure-play longevity exposure via a UCITS ETF. This is a taxonomy gap proposal trigger — monitor for new ETF launches.",
+      "recommendation_tier": 3,
+      "limitations": "This entry is a gap flag, not an investable product."
+    },
+    {
+      "ticker": "BTEC",
+      "name": "iShares Nasdaq US Biotechnology UCITS ETF (USD Acc)",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0035,
+      "aum_m_usd": 2800,
+      "replication": "physical",
+      "avg_spread_bps": 10,
+      "avg_daily_volume_m_usd": 12,
+      "top_10_concentration_pct": 0.52,
+      "characteristics": "UCITS-compliant. Best UCITS proxy for US biotech exposure, which contains the largest longevity-adjacent clinical-stage pipeline companies. Tracks Nasdaq Biotechnology Index (~200 holdings). Large-cap tilt: Amgen, Gilead, Regeneron, Vertex, Moderna. Does NOT have dedicated longevity holdings but captures broad biotech cycle. TER 0.35% is low for a thematic fund. AUM ~$2.8B qualifies as Tier 1 by UCITS standards.",
+      "recommendation_tier": 1,
+      "limitations": "UCITS-compliant. Not a longevity pure-play — large-caps dominate (top 10 = ~52%). Longevity content estimated <10% of portfolio. Captures biotech recovery cycle, not longevity-specific catalyst. Best available UCITS vehicle for European investor seeking broad biotech with longevity adjacency."
+    },
+    {
+      "ticker": "XBI",
+      "name": "SPDR S&P Biotech ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0035,
+      "aum_m_usd": 8130,
+      "replication": "physical",
+      "avg_spread_bps": 2,
+      "avg_daily_volume_m_usd": 350,
+      "top_10_concentration_pct": 0.18,
+      "characteristics": "Equal-weight S&P Biotech Index (~200 holdings). Best public-market proxy for clinical-stage longevity exposure because equal-weight methodology gives smaller clinical-stage companies same index weight as large-caps — longevity-adjacent small/mid caps are not diluted by Amgen or Gilead. XBI returned +35.9% in 2025; Clinical Trials ETF returned +63.7%. Extremely liquid: 2bps spread, $350M+ daily volume.",
+      "recommendation_tier": 1,
+      "limitations": "NOT UCITS — not directly accessible for Spanish investor without broker-level workaround (Interactive Brokers as professional client may allow, but standard UCITS restriction applies). Equal-weight amplifies volatility: higher beta than BTEC or IBB. Not longevity-specific — sector weighting reflects general small/mid biotech, not longevity thesis."
+    },
+    {
+      "ticker": "ARKG",
+      "name": "ARK Genomic Revolution ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0075,
+      "aum_m_usd": 1400,
+      "replication": "physical",
+      "avg_spread_bps": 8,
+      "avg_daily_volume_m_usd": 45,
+      "top_10_concentration_pct": 0.55,
+      "characteristics": "Actively managed by ARK Invest. Genomics-focused but includes aging-adjacent companies (CRISPR Therapeutics, Pacific Biosciences, Repligen). ARK explicitly covers epigenetic reprogramming and longevity themes in research. Highest thematic overlap with longevity compared to broad biotech ETFs. ~$1.4B AUM. TER 0.75% — elevated for ETF category.",
+      "recommendation_tier": 2,
+      "limitations": "NOT UCITS. Active management risk: ARK's concentrated bets have high tracking error and reputation volatility. TER 0.75% significantly above BTEC/XBI at 0.35%. AUM WARNING: $1.4B AUM is above the $200M threshold but below $2B — acceptable liquidity but not Tier 1. High concentration in top 10 (~55%) introduces single-name risk. ARK management style may diverge from longevity thesis over time."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Private longevity funding quarterly run-rate",
+      "unit": "USD billions (annualized)",
+      "source": "Longevity.Technology quarterly reports, CB Insights, Crunchbase",
+      "current": "~$8.5B annualized (2025 full year, 325 deals)",
+      "comment": "Doubling of private investment YoY (2024→2025) signals expanding institutional conviction. Watch for deceleration — if Q3/Q4 2026 deal count drops >20% QoQ, it signals end of private hype cycle. Retro Bio at $1.8B valuation (May 2026) is the current high-water mark."
+    },
+    {
+      "metric": "FDA longevity-adjacent NDA/BLA approvals",
+      "unit": "approvals per year",
+      "source": "FDA CDER approval database",
+      "current": "0 pure-play longevity approvals; 46 total biotech approvals in 2025",
+      "comment": "Key threshold event: first FDA approval of a drug in a longevity-related indication (not just proxy disease) would be a sector-defining catalyst. Monitor HATCH Act progress and FDA aging biomarker endpoint guidance updates in 2026."
+    },
+    {
+      "metric": "GLP-1 market size and penetration rate",
+      "unit": "USD billions market / millions users",
+      "source": "Grand View Research, J.P. Morgan GLP-1 tracker",
+      "current": "~30M projected US users by 2030; market ~$185B by 2033; Jefferies revised peak to $80B (down from $100B+)",
+      "comment": "GLP-1 growth drives longevity narrative mainstreaming. Watch for: (a) oral pill market share vs injectable, (b) Medicare/CMS reimbursement expansion scope, (c) long-term CV/mortality data from SURMOUNT-MMO trial — positive results would directly validate longevity framing."
+    },
+    {
+      "metric": "XBI price and YoY performance vs IBB (equal-weight vs large-cap spread)",
+      "unit": "price USD, % YoY",
+      "source": "market_data",
+      "current": null,
+      "comment": "REQUIRES LIVE DATA: run `uv run python -m catalyx.data.market_data --tickers XBI IBB`. XBI/IBB ratio above 1.1 signals small/mid cap biotech (where longevity companies cluster) outperforming large-caps. The 2025 +35.9% XBI return came largely from clinical-stage M&A and FDA approvals — the same dynamics that would benefit longevity IPO/acquisition targets."
+    },
+    {
+      "metric": "Number of longevity-adjacent IPOs or SPAC launches YTD",
+      "unit": "count",
+      "source": "IPO filings monitor (S-1/F-1 at SEC EDGAR), biotech IPO trackers",
+      "current": "0 major longevity pure-play IPO as of June 2026",
+      "comment": "The first longevity unicorn IPO (Retro Bio, Altos Labs, NewLimit) would be the most powerful public-market catalyst for the sector. A successful IPO at >$2B market cap would immediately enter large biotech indices, pulling XBI/BTEC exposure. Watch for S-1 filings from the leading privates."
+    },
+    {
+      "metric": "Altos Labs and Retro Biosciences Phase I/II trial results and enrollment pace",
+      "unit": "qualitative + enrollment count",
+      "source": "ClinicalTrials.gov, company press releases, STAT News longevity coverage",
+      "current": "Retro Bio: first human trial in Alzheimer's-related biology announced May 2026. Altos Labs: pre-IND stage, limited human safety data.",
+      "comment": "First human safety data from a pure-play epigenetic reprogramming trial will be the field's most important near-term catalyst. Positive Phase I safety in humans would trigger re-rating of all longevity-adjacent public equities. Failure or adverse event would set sector back 2-4 years in narrative maturity."
+    }
+  ],
+
+  "active_catalyst_ids": [],
+
+  "historical_catalyst_performance": {
+    "summary": "Longevity biotech has no direct public-market track record as a defined sector — no pure-play ETF existed to benchmark. The closest historical analogs are the broader biotech cycle (XBI) and genomics (ARKG). Key historical catalyst patterns observable in adjacent sectors: (1) FDA approval events in clinical-stage biotech have driven 30-70% sector moves in XBI over 2-4 week windows; the 2025 FDA approval wave (46 drugs) was the primary driver of XBI's +35.9% return. (2) Big pharma M&A events — the $65B+ M&A wave in 2024-2025 drove 20-30% average premium on acquisition targets and lifted the clinical-stage cohort. (3) Negative trial events (Unity Biotechnology UBX1325 Phase II failure) can cause 40-60% drawdowns in individual names within 24 hours and negative sentiment spillover to the sector for 4-8 weeks. (4) Billionaire/celebrity endorsement events (Sam Altman backing Retro Bio, Bezos + Thiel backing Unity) have historically created short-term momentum spikes (2-4 week windows) followed by consolidation — they are attention catalysts, not fundamental re-ratings. The longevity narrative has been in early-stage build for 3+ years without a clean public-market vehicle, meaning the first qualifying pure-play ETF launch will likely capture significant pent-up demand and could generate an initial flow-driven premium above fair value.",
+    "xbi_return_2025": 0.359,
+    "ibb_return_2025": 0.280,
+    "clinical_trials_etf_return_2025": 0.637,
+    "private_investment_2025_bn": 8.49,
+    "fda_approvals_2024": 50,
+    "fda_approvals_2025": 46,
+    "big_pharma_ma_spend_2024_2025_bn": 65
+  },
+
+  "risks": [
+    "Regulatory pathway does not exist for aging-as-indication: FDA does not recognize aging as a disease, forcing longevity companies to use proxy disease endpoints (macular degeneration, IPF, Alzheimer's biomarkers). Proxy endpoints may not reflect systemic longevity benefit, making pivotal trial design uncertain and approval probability lower than standard biotech. Until FDA creates a formal aging biology approval pathway, the sector's commercialization timeline is structurally uncertain. Approximately 44% of longevity biotech companies report difficulty obtaining IND approval for aging-focused trials.",
+    "Clinical trial translation failure: longevity effects well-documented in animal models (senolytics extend lifespan in aged mice by 15-35%) have not yet reliably translated to humans. Unity Biotechnology's senolytic UBX1325 failed its Phase II primary endpoint in diabetic macular edema — the flagship Western public senolytic company eventually delisted. Animal-to-human translation failure is the modal outcome in this space today, and the field has no human Phase III successes to anchor confidence.",
+    "Private market valuation inflation creates exit risk: Retro Bio at $1.8B with pre-clinical human data and Altos Labs at $6.33B with no product are valued on narrative, not fundamentals. If private market sentiment shifts — as it did in gene therapy circa 2020, mRNA post-COVID, and SPAC biotech 2022 — funding could dry up, clinical programs would slow, and the few public proxies would de-rate sharply. Private longevity companies would not IPO in a down-market, delaying the public exposure event.",
+    "No current UCITS pure-play vehicle: Spanish investor cannot access longevity directly. Current best proxy (BTEC) has <10% longevity content. An investor 'expressing the longevity thesis' via BTEC is largely expressing a broad biotech recovery thesis. Until a qualifying UCITS ETF launches, the allocation efficiency is poor — the investor bears the full execution cost of longevity research but only captures ~10% of the upside from a longevity-specific catalyst.",
+    "GLP-1 narrative saturation risk: the GLP-1 longevity spillover narrative is being widely adopted by Eli Lilly, Novo Nordisk, and mainstream financial media. Jefferies already revised its peak GLP-1 market estimate down from >$100B to $80B in 2026. If GLP-1 clinical outcomes data (especially long-term CV events) disappoint relative to current expectations, the entire metabolic healthspan narrative deflates and takes longevity biotech narrative maturity down with it.",
+    "Competition from general pharma: major pharma's institutional entry (Novartis DARe division, Pfizer senolytics program, Roche epigenetics) may eventually crowd out pure-play longevity startups through capital efficiency, regulatory relationships, and distribution. Large pharma may acquire the best longevity pipeline companies (as happened in oncology, rare disease, gene therapy) while allowing the pure-play sector to consolidate downward — a positive for M&A premium seekers but negative for dedicated longevity ETF development."
+  ],
+
+  "narrative_maturity": "emerging",
+  "narrative_trend": "increasing",
+  "narrative_notes": "Longevity biotech classifies as 'emerging' per scoring_weights.yaml criteria: the thesis is present in specialist research (Longevity.Technology, STAT News longevity coverage, Nature Aging) and starting to appear in generalist coverage (Newsweek longevity investing trends, Bloomberg occasional pieces on Altos/Retro), but does not yet meet 'mainstream' criteria. It is NOT in Goldman/JPMorgan/Morgan Stanley base-case sector coverage as an investable sector. No thematic ETF with AUM > $500M in pure-play longevity exists. The GLP-1-to-longevity bridging narrative is accelerating coverage frequency — 2026 health media is prominently featuring 'longevity generation' and 'healthspan extension' framing — but this remains lifestyle/wellness coverage, not equity sector research coverage. The sector is in the early 'emerging' phase: specialist researchers and billionaire VCs understand the thesis; generalist equity investors do not yet have a vehicle to express it. Narrative trend is clearly increasing: private investment doubled YoY, Retro Bio milestone announcement May 2026, pharma institutional entry. The sector will likely reach 'mainstream' when the first pure-play longevity IPO trades on public markets."
+}

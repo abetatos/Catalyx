@@ -65,14 +65,29 @@ def _clamp(value: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, value))
 
 
-def _indicator_values(ind: dict) -> list[float]:
+def _history_for_catalyst(catalyst_id) -> dict[str, list[dict]]:
+    """Indicator value-history from the parquet lake (Tier 2 truth), {ind_id: [{date,value}]}.
+    Returns {} when the lake has no history for this catalyst → callers fall back to YAML."""
+    if not catalyst_id:
+        return {}
+    try:
+        from catalyx.store import indicator_history
+        return indicator_history.history_for(catalyst_id)
+    except Exception:
+        return {}
+
+
+def _indicator_values(ind: dict, ext_history: list[dict] | None = None) -> list[float]:
     """All numeric observations for an indicator: value_history + current_value.
 
-    value_history entries are {date, value}; order does not matter for percentile.
-    The current value is always included so the percentile reflects where today sits.
+    `ext_history` (the lake's value_history for this indicator) takes precedence; when it
+    is None the deprecated inline YAML `value_history` is used as a fallback. Entries are
+    {date, value}; order does not matter for percentile. The current value is always
+    included so the percentile reflects where today sits.
     """
+    source = ext_history if ext_history is not None else (ind.get("value_history") or [])
     values: list[float] = []
-    for entry in ind.get("value_history") or []:
+    for entry in source:
         v = entry.get("value") if isinstance(entry, dict) else entry
         if isinstance(v, (int, float)):
             values.append(float(v))
@@ -119,14 +134,14 @@ def _fallback_score(value: float, ind: dict) -> float:
     return _ANCHOR_STRONG + (100.0 - _ANCHOR_STRONG) * (1.0 - math.exp(-_ABOVE_STRONG_DECAY * (x - 1.0)))
 
 
-def _indicator_score(ind: dict) -> float:
+def _indicator_score(ind: dict, ext_history: list[dict] | None = None) -> float:
     """Continuous [0, 100] score for one indicator. Percentile when enough history
     exists, else the saturating threshold fallback. No data → clamp floor."""
     cur = ind.get("current_value")
     if not isinstance(cur, (int, float)):
         return _IND_CLAMP_LO
 
-    sample = _indicator_values(ind)
+    sample = _indicator_values(ind, ext_history)
     if len(sample) >= _MIN_HISTORY_POINTS:
         raw = _percentile_score(float(cur), sample, ind["direction"])
     else:
@@ -143,8 +158,8 @@ def _color(score: float) -> str:
     return "🔴"
 
 
-def _scoring_mode(ind: dict) -> str:
-    return "percentile" if len(_indicator_values(ind)) >= _MIN_HISTORY_POINTS else "fallback"
+def _scoring_mode(ind: dict, ext_history: list[dict] | None = None) -> str:
+    return "percentile" if len(_indicator_values(ind, ext_history)) >= _MIN_HISTORY_POINTS else "fallback"
 
 
 # ── Trend (additive delta) ───────────────────────────────────────────────────
@@ -192,8 +207,11 @@ def compute_intensity(catalyst: dict) -> dict:
     breakdown = []
     scores_weighted: list[tuple[float, float]] = []  # (score, weight)
 
+    ext = _history_for_catalyst(catalyst.get("id"))  # lake value-history per indicator
+
     for ind in indicators:
-        score = _indicator_score(ind)
+        ext_h = ext.get(ind["id"])  # None → falls back to inline YAML value_history
+        score = _indicator_score(ind, ext_h)
         color = _color(score)
         weight = float(ind.get("indicator_weight") or 1.0)
         scores_weighted.append((score, weight))
@@ -207,8 +225,9 @@ def compute_intensity(catalyst: dict) -> dict:
             "direction": ind["direction"],
             "threshold_strong": ind["threshold_strong"],
             "threshold_weak": ind["threshold_weak"],
-            "scoring_mode": _scoring_mode(ind),
-            "history_points": len(_indicator_values(ind)),
+            "scoring_mode": _scoring_mode(ind, ext_h),
+            "history_points": len(_indicator_values(ind, ext_h)),
+            "history_source": "lake" if ext_h is not None else "yaml",
             "indicator_score": score,
             "color_computed": color,
             "color_stored": stored_color,

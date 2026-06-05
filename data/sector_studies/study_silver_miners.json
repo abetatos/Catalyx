@@ -1,0 +1,157 @@
+{
+  "$schema": "catalyx/schemas/sector_study.json",
+  "id": "study_silver_miners",
+  "schema_version": "1.2",
+  "sector_id": "silver_miners",
+  "sector_label": "Silver Miners",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "precious_metals",
+    "adjacent_sectors": ["silver_physical", "gold_miners", "royalty_streaming_metals", "copper_miners"],
+    "differentiation_note": "Silver miners ≠ silver_physical in the same way gold miners ≠ physical gold: equity miners carry operational leverage (a 10% silver price rise translates to 20-40% earnings growth at constant AISC), plus layered risks including mine geopolitics, cost base composition, and management quality. But the silver_miners sector has a structural complexity absent in gold_miners: approximately 70-75% of global silver production is byproduct output from lead/zinc/copper/gold mines, meaning most names labelled 'silver miners' — including several top holdings in SIL — cannot meaningfully increase silver production in response to price signals, because their silver output is dictated by base metal economics. True primary silver miners (First Majestic, Endeavour Silver, Coeur Mining) are rare, respond directly to silver price, and deliver the highest operational leverage; streaming names like Wheaton Precious Metals (WPM, the largest SIL component at ~22%) are technically royalty/streaming and belong thematically in royalty_streaming_metals, though they are historically classified here. Silver miners also differ from gold_miners in that silver's dual demand nature — ~60% industrial, ~40% monetary/investment — means the catalyst set is wider and more complex: a pure monetary environment can support gold while silver underperforms if industrial demand weakens (e.g., China slowdown), and conversely a solar buildout boom can support silver miners even in a risk-off environment."
+  },
+
+  "demand_drivers": [
+    "Solar PV fabrication is now the single largest annual silver demand segment: ~130-140 Moz in 2026 (up from ~100 Moz in 2022), representing ~15-17% of total annual demand (~820 Moz). Global solar PV additions are forecast at 665 GW in 2026. Each GW of crystalline silicon panels requires ~0.5 tonnes of silver paste for cell contacts and busbars — this demand is structural and growing.",
+    "Gold-silver ratio (GSR) mean reversion: the GSR compressed from >100 in March 2020 (COVID peak) to approximately 58-62:1 by June 2026, well below the 20-year average of ~70:1. Historically, when GSR is below 65 and gold is in a sustained bull market, silver miners outperform gold miners on a 6-12 month horizon as monetary demand for silver catches up. GSR at current levels supports the relative trade.",
+    "Silver price at structurally elevated levels: JPMorgan forecasts $81/oz average for 2026 (vs ~$29 average in 2023). At current spot ~$85-95/oz (June 2026 estimate, implied by reported 147% gain in 2025 from ~$26 2024-Q4 base), silver is generating historically wide AISC spreads for primary producers. PAAS Q1 2026 Silver Segment AISC was $6.63/oz (benefiting from by-product credits at high gold prices), implying cash margins of ~$75-85/oz for Q1.",
+    "Industrial applications beyond solar: silver is used in EVs (~0.5-1.0 oz per vehicle for electrical contacts, thermal management, brazing), 5G telecommunications equipment (connectors, antennas), and defense electronics (radar, missile guidance systems). Combined industrial demand is ~490-520 Moz/yr in 2026, providing a demand floor even if monetary investment flows reverse.",
+    "Structural multi-year supply deficit as price catalyst: the Silver Institute's World Silver Survey 2026 projects a 46.3 Moz deficit in 2026 — the sixth consecutive annual shortfall and the largest on record (up from 40.3 Moz in 2025, +15% YoY). Inventories on COMEX and LBMA have declined to approximately 136 Moz. Sustained deficits create episodic price squeezes that benefit primary producers most."
+  ],
+
+  "supply_constraints": [
+    "Byproduct production inelasticity: 70-75% of global silver (~590-615 Moz/yr) comes as byproduct of lead/zinc/copper/gold mining. These operations cannot increase silver output in response to silver price alone — production is dictated by base metal economics and mine plans. This means the silver supply curve is inelastic to silver price: when silver price rises, the only incremental supply response comes from the ~25-30% of primary producers, severely limiting supply elasticity.",
+    "Mexico grade decline and inventory drawdown: Mexico is the world's largest silver-producing country and has experienced decade-low ore grade output in 2025 due to declining grades in major producing regions. Some analyses project Mexico could run out of accessible high-grade silver deposits by mid-decade, with production declining structurally. This affects First Majestic (Santa Elena, San Dimas), Endeavour Silver (Guanacevi, Bolanitos), and Coeur (Palmarejo).",
+    "Peru operational risk: Peru produces approximately 130 Moz/yr of silver (~16% of global mine supply). Peru's Emergency Decree No. 003-2026 (national energy crisis) has introduced operational risk at a country level. Social conflict at major mines (Las Bambas, Antamina) periodically disrupts output. Peru also supplies ~50% of China's silver-bearing concentrate imports — disruptions have downstream effects on Chinese industrial demand.",
+    "Lead time for new primary silver mines: a primary silver mine from exploration discovery to first production takes 8-12 years and requires sustained high silver prices to justify the permitting and capital investment. With the deficits only emerging clearly in 2021-2022, no significant new primary mine capacity will be online before 2029-2031 even if sanctioned today.",
+    "AISC inflation: global average silver AISC is projected at ~$23.44/oz in 2026 (up from ~$18-19 in 2023), driven by energy, labor, and input cost inflation. At $85-95/oz silver, this still leaves wide margins, but the pace of AISC escalation (+20-25% in 3 years) is a risk if it continues. Primary producers with diversified cost structures and by-product credits (gold, zinc, lead) have managed this better than pure silver mines."
+  ],
+
+  "technology_maturity": null,
+
+  "cycle_position": {
+    "assessment": "Mid-cycle bull market — structural re-rating underway, primary producers not yet fully valued",
+    "rationale": "Silver miners are in the mid-phase of a bull market that began in late 2023, with SIL up ~120% over the trailing 12 months to May 2026 and ~12% YTD in 2026. Unlike gold miners (which the gold_miners study assessed as 'advanced bull market — re-rating substantially complete'), silver miners have lagged the silver spot move: silver surged 147% in 2025 while SIL's 12-month total return of ~121% implies partial — but not complete — equity re-rating. The SIL/PHAG.L ratio (silver miners vs physical silver ETF) remains historically low by the standards of prior silver bull markets (2010-2011: miners led physical by 2-3x; current cycle: miners have barely kept pace), suggesting the operational leverage re-rating is still underway. PAAS Q1 2026 AISC of $6.63/oz with cash margins implied at ~$75-80/oz represents earnings power that sell-side models are still catching up to. The mid-cycle assessment is supported by: (1) absolute price moves still below 2011 ATH in nominal terms for many names; (2) analyst estimate revisions accelerating but not yet exhausted; (3) ETF flows into SIL growing but AUM ($890M) still modest relative to GDX ($14.1B) — retail positioning not yet crowded.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "SIL",
+      "name": "Global X Silver Miners ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0065,
+      "aum_m_usd": 890,
+      "replication": "physical",
+      "avg_spread_bps": 14,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": 0.72,
+      "characteristics": "The only meaningful pure-play silver miners ETF globally. Tracks Solactive Global Silver Miners Total Return Index (39 holdings). Top holdings: WPM ~22%, PAAS ~12%, CDE ~8%, First Majestic ~7%, Endeavour Silver ~5%. High concentration: top 3 holdings ~42%. Note: WPM is technically a streaming company (royalty_streaming_metals) but classified here for convention.",
+      "recommendation_tier": 1,
+      "limitations": "WARNING: AUM $890M is below the $1B institutional threshold and well below the $200M minimum for a cautious position — size carefully. NOT UCITS: US-domiciled, restricted for Spanish retail investors under PRIIPs/KID rules without specific broker exemption. Spread at 14 bps is acceptable but monitor. High WPM/PAAS concentration means the ETF's performance is heavily influenced by two names. No UCITS equivalent currently available — this is the primary access constraint for EU investors. Use with reduced position sizing vs UCITS-available sectors."
+    },
+    {
+      "ticker": "SILJ",
+      "name": "Amplify Junior Silver Miners ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0069,
+      "aum_m_usd": 110,
+      "replication": "physical",
+      "avg_spread_bps": 28,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": 0.65,
+      "characteristics": "Junior and mid-tier silver miners. Higher beta than SIL — more primary silver exposure, more operational leverage. Holdings: First Majestic, Coeur Mining, Endeavour Silver, Hecla, Impact Silver. Better 'pure primary silver' exposure than SIL which is dominated by WPM streaming.",
+      "recommendation_tier": 3,
+      "limitations": "WARNING: AUM $110M — BELOW $200M LIQUIDITY THRESHOLD. WARNING: Spread ~28 bps — ABOVE 25 bps SPREAD THRESHOLD. NOT UCITS. Monitor only. Not suitable as primary vehicle for positions >€20k. Use only if very high conviction on junior miners specifically and after verifying spread on trading day."
+    },
+    {
+      "ticker": "AUCO.L",
+      "name": "L&G Gold Mining UCITS ETF (proxy)",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0065,
+      "aum_m_usd": 890,
+      "replication": "physical",
+      "avg_spread_bps": 12,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "UCITS-compliant precious metals miners. Primarily gold miners, but includes WPM (~8-10% weight) and some silver-exposed names. Impure proxy: ~10-15% silver exposure at best. The only practical UCITS ETF vehicle with any silver miner content. Use as partial hedge or allocation bridge while pure UCITS silver miner ETF does not exist.",
+      "recommendation_tier": 3,
+      "limitations": "WARNING: NOT a pure silver miner ETF — primarily gold miners. Use only as UCITS-accessible partial proxy. Silver exposure is diluted and indirect. Best used as a complement to physical silver (PHAG.L) to get some operational leverage without the UCITS access problem of SIL."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Silver spot price (USD/oz)",
+      "unit": "USD/oz",
+      "source": "market_data / LBMA",
+      "current": 88,
+      "comment": "ESTIMATED June 2026: ~$85-95/oz range (implied by 147% YTD 2025 gain from ~$26 base in late 2024, confirmed by JPMorgan $81/oz average forecast for full year 2026 and J.P. Morgan noting silver at multi-year highs). Key threshold: $80/oz is the new breakeven floor for institutional positioning; $100/oz is the psychologically significant next target. Verify current spot via Bloomberg or LBMA."
+    },
+    {
+      "metric": "Gold-silver ratio (GSR)",
+      "unit": "ratio (oz gold / oz silver)",
+      "source": "market_data",
+      "current": 60,
+      "comment": "UPDATED June 2026: ~58-62:1, down from >100 in March 2020 and from ~70-85 range in 2021-2024. Below the 20-year average of ~70:1. Historical pattern: sustained GSR below 65 in a gold bull market tends to produce silver miner outperformance (2010-2011: GSR compressed from 65 to 32, SIL returned ~+350% in that period). Current level supports continued relative outperformance. Critical watch: if GSR falls below 50, risk of mean reversion higher is elevated — that has historically been a silver peak signal."
+    },
+    {
+      "metric": "PAAS Silver Segment AISC (USD/oz silver)",
+      "unit": "USD/oz",
+      "source": "Pan American Silver quarterly earnings",
+      "current": 6.63,
+      "comment": "Q1 2026 ACTUAL: $6.63/oz — well below the $15.75-18.25/oz 2026 guidance range, driven by by-product credits from high gold prices and strong contribution from Juanicipio (low-cost). This is the best proxy for sector AISC with by-product credits applied. Cash margin implied at ~$79-82/oz at current spot. Monitor quarterly — if gold price falls, by-product credits shrink and AISC reverts toward guidance midpoint of ~$17/oz."
+    },
+    {
+      "metric": "Silver Institute annual supply deficit (Moz)",
+      "unit": "million ounces",
+      "source": "Silver Institute World Silver Survey 2026",
+      "current": 46.3,
+      "comment": "2026 projection: 46.3 Moz deficit (sixth consecutive annual shortfall, largest on record). Up from 40.3 Moz in 2025. COMEX + LBMA inventories estimated at ~136 Moz — equivalent to ~2 months of global industrial demand. If inventories fall below 100 Moz, episodic squeeze risk rises sharply."
+    },
+    {
+      "metric": "Solar PV annual silver demand (Moz)",
+      "unit": "million ounces",
+      "source": "Silver Institute / Wood Mackenzie",
+      "current": 130,
+      "comment": "2026 estimate: ~125-140 Moz (up from ~100 Moz in 2022). This is the fastest-growing demand driver and the one most likely to surprise to the upside. Watch for silver-free solar technology development (thrifting risk): PERC cell technology improvements could reduce silver paste consumption by 15-20% per GW installed. This is the primary structural demand risk for silver in the 5-year horizon."
+    },
+    {
+      "metric": "SIL AUM and weekly ETF flow",
+      "unit": "million USD",
+      "source": "Global X ETF website / ETFdb.com",
+      "current": 890,
+      "comment": "AUM $890M (last verified 2026-06-01). Monitor weekly for acceleration above $1.2B (crowding signal onset) or deceleration below $700M (positioning unwind). SIL flows are a leading indicator of retail silver miner positioning — institutional players use direct equities."
+    }
+  ],
+
+  "active_catalyst_ids": [
+    "struct_cb_gold_accumulation"
+  ],
+
+  "historical_catalyst_performance": {
+    "summary": "Silver miners (as proxied by SIL, which launched 2010) have shown consistent 3-5x leverage to physical silver during sustained bull moves but with significant lag and asymmetric drawdowns. Key historical episodes: (1) 2010-2011 Silver Bull (GSR 65→32): SIL returned approximately +350% while PHAG/SLV returned ~+175%; silver miners delivered the leverage premium in this period. (2) 2011-2016 Silver Bear (silver $50→$14): SIL fell approximately -85% vs silver spot -72% — miners amplify downside 1.2-1.5x in bear markets. (3) 2020 COVID Recovery (GSR 125→70 in 12 months): SIL returned +150% in 2020 while silver spot returned +47%; the miner leverage was intact but expressed itself in a rally from deeply oversold levels. (4) 2025 Silver Surge (+147% spot, +121% SIL trailing 12M): unusually, miners lagged the spot move — likely because the 2025 rally was primarily monetarily-driven (gold-following) and happened faster than earnings revisions could be digested. This lag represents unpriced operational leverage entering 2026. Key lessons: (a) the best entry for silver miners is when GSR is declining from >75, not after it has already compressed to <65; (b) AISC matters much less than for gold miners because primary silver margins are so wide at current prices; (c) the biggest risk is not a silver price reversal but a credit/liquidity event that causes forced selling of all risk assets simultaneously (2020 March, 2022 October).",
+    "avg_response_to_silver_10pct_move_pct": 0.22,
+    "avg_response_to_gsr_compression_from_75_pct": 0.45,
+    "sil_peak_drawdown_2011_2016_pct": -0.85
+  },
+
+  "risks": [
+    "UCITS access constraint — primary structural risk for a Spanish investor: SIL is not UCITS-compliant and is restricted under PRIIPs/KID rules for EU retail investors. No pure-play UCITS silver miners ETF exists. The practical vehicle set is: SIL (if broker allows non-UCITS access via professional investor classification), or individual direct equity positions in WPM/PAAS/First Majestic via equity market access. This is a real investability constraint that limits position sizing and liquidity.",
+    "Byproduct production cannot respond to silver price: 70-75% of global silver supply is inelastic to silver price, meaning supply deficits are structural but also that market dynamics are opaque — a silver price rally does not automatically improve margins for byproduct producers (who are price-takers on the commodity they care about: copper, lead, zinc). ETF investors get an average of primary and byproduct exposure.",
+    "Silver price mean reversion risk from thrifting and solar technology: crystalline silicon solar panel manufacturers are actively developing silver paste formulas that reduce silver consumption per GW installed. PERC, TOPCon, and HJT solar technologies use different amounts of silver. A breakthrough in silver-free solar contacts (thin copper or carbon-based alternatives) could remove the primary structural demand growth driver within 3-5 years. This is the bear case for solar silver demand.",
+    "Gold price correlation creates double dependency: at current SIL composition, ~22% of the ETF is Wheaton Precious Metals (WPM), which is primarily a gold/silver streaming company whose NAV is more correlated to gold (55% of revenues) than silver. If gold corrects while silver holds, WPM's underperformance drags SIL. The ETF is not a clean silver price play.",
+    "Mexico and Peru sovereign/operational risk: the two largest silver-producing countries both carry elevated operational risk in 2026 — Mexico from mine grade decline and resource nationalism, Peru from Emergency Decree 003-2026 energy crisis and ongoing social conflict. First Majestic (Mexico-heavy) and PAAS (Peru-heavy Gold Segment, with silver from Mexico) are most exposed. A major mine closure in either country would have an outsized impact on primary silver supply.",
+    "AISC inflation compounding: while current margins at $85-95/oz silver are wide, AISC has risen ~25% in three years. If silver prices consolidate (but don't fall) while AISC continues rising at 8-12% per year, margin compression begins in 2027-2028. This is particularly relevant for pure primary producers with no base-metal by-product credits to offset cost inflation."
+  ],
+
+  "narrative_maturity": "emerging",
+  "narrative_trend": "increasing",
+  "narrative_notes": "Silver miners sit at the 'emerging' level of narrative maturity as of June 2026. The silver bull market is mainstream coverage (silver spot at multi-year highs, silver ETF inflows reported by Bloomberg/CNBC, Silver Institute deficit cited widely), but the silver miners equity re-rating thesis — specifically the argument that SIL lags the spot move and that primary producers deserve a higher P/NAV multiple — is still present only in specialist precious metals research (SilverSeek, Metals Focus, Sprott commentary) and has not yet penetrated generalist sell-side reports or ETF product descriptions as a primary theme. The key observable test: Goldman/JPM/Morgan Stanley have published silver price forecasts ($81/oz avg: JPM) but have not yet published sector-wide silver miners P/NAV re-rating notes — when those appear, the thesis crosses into mainstream. SIL AUM at $890M is well below the $2B+ that would signal crowd positioning. Narrative_maturity is set to 'emerging' (score_equiv: 35), consistent with: specialist coverage present, occasional FT/Bloomberg mentions of silver deficit, but the equity miner thesis not yet the consensus framing in generalist sell-side. The monetary silver narrative (gold-follower) is slightly more mainstream; the industrial silver narrative (solar demand structural) is also mainstream — but the combination targeting miner equity re-rating is still emerging."
+}

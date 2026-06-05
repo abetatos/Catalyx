@@ -1,0 +1,195 @@
+{
+  "id": "study_cobalt_nickel",
+  "schema_version": "1.2",
+  "sector_id": "cobalt_nickel",
+  "sector_label": "Cobalt & Nickel — Battery Materials",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "battery_metals",
+    "adjacent_sectors": ["lithium_miners", "copper_miners", "rare_earth_miners", "steel_producers"],
+    "differentiation_note": "Cobalt and nickel serve distinct end-markets from lithium: cobalt is a cathode dopant in high-energy-density NMC/NCA chemistries (not present in LFP), making it acutely sensitive to the global NMC vs LFP battery chemistry mix, while nickel's primary demand anchor (~70% of consumption) remains stainless steel — a construction and manufacturing cycle story independent of EV adoption. Unlike lithium_miners (which are pure battery-chemistry plays with Chinese supply surplus as the key risk), cobalt is structurally dominated by a single sovereign producer (DRC, ~75% of global supply) whose export policy is the most powerful price lever in any battery metal market, creating a geopolitical overlay that lithium and copper do not have. Cobalt and nickel are therefore better understood as two sub-stories under one sector umbrella: cobalt = DRC policy + chemistry substitution, nickel = Indonesian oversupply + stainless steel cycle + battery premium dispute. Neither is equivalent to copper (electrification backbone, supply inelastic by geology, AI/data center demand dimension) nor rare earths (magnet-critical, China processing monopoly, defense applications)."
+  },
+
+  "demand_drivers": [
+    "EV battery cathode demand (NMC/NCA chemistries): NMC and NCA batteries require 15-25kg of cobalt per vehicle. In 2026, NMC still powers 80-90% of EVs sold in Europe and North America where range and cold-weather performance are critical. Total global EV production is growing ~23% YoY in 2025-2026, partially offsetting LFP share gains — absolute cobalt demand from batteries remains elevated even as share-of-chemistry falls.",
+    "LFP substitution headwind (structural, multi-year): LFP batteries reached >55% of global EV deployments in 2025, up from ~50% in 2024. China is effectively complete at 80%+ LFP penetration. McKinsey projects LFP at 47% global share by 2030. Each percentage point shift from NMC to LFP in the global EV fleet removes ~180 kt of annual cobalt cathode demand at steady state. This is the primary long-run demand compression risk.",
+    "Stainless steel (nickel primary demand, ~70% of total nickel consumption): China's 14M tonne stainless steel market is the dominant sink for nickel. In 2026, government infrastructure stimulus (pipeline modernization, municipal construction) is partially offsetting the continuing slump in private real estate. Stainless demand is expected to grow 2-3% in 2026 — slow but not negative, preventing a full price collapse.",
+    "Battery-grade nickel (Class 1 / NiSO4) for NMC cathode: Demand for high-purity nickel sulphate is growing but accounts for only ~15% of total nickel demand. Indonesian HPAL (high-pressure acid leach) capacity is expanding rapidly to serve this market, creating a Class 1 surplus that compresses battery-grade premiums over Class 2 nickel pig iron.",
+    "Aerospace and superalloys (cobalt, secondary demand): ~10% of cobalt demand goes to superalloy applications in jet turbines and industrial gas turbines. Defense aerospace ramp (NATO rearmament cycle) provides a non-battery, non-cyclical demand floor that is often overlooked in sell-side coverage focused on EV chemistry.",
+    "Hard metal and chemical applications (cobalt): ~8% of cobalt consumption in cemented carbide cutting tools and chemicals (catalysts, pigments). Slow but stable industrial floor demand."
+  ],
+
+  "supply_constraints": [
+    "DRC quota system (cobalt, dominant constraint): The DRC imposed an export ban in February 2025 and replaced it with strict annual quotas from October 2025. The 2026 quota is capped at 96,600 metric tonnes of cobalt hydroxide, down from unconstrained production of ~230,000 t in 2024. This supply curtailment of ~58% is the single most powerful factor in cobalt market tightness and creates a state-controlled price floor. Quotas are set through 2027. Additional compliance requirements (10% royalty prepayment within 48 hours, compliance certificates) have slowed actual exports even within quota limits.",
+    "DRC export quota operational implementation lag: Despite the quota system being in place since October 2025, Fastmarkets reports a 'massive' discrepancy between allocated quotas and actual exports due to regulatory compliance friction. Producers are stockpiling pending clarification. Physical supply to China is materially tighter than the headline 96,600 t quota suggests.",
+    "Indonesian nickel ore grade decline (nickel supply quality constraint): Despite Indonesia commanding ~60% of global nickel output, laterite ore grades are declining in established mining areas. New high-pressure acid leach (HPAL) capacity requires significant capex and has chronic ramp-up failures, limiting how quickly Class 1 nickel sulphate supply responds to price signals.",
+    "Indonesia mine suspension risk (nickel): The Indonesian government suspended several mines in 2025-2026 due to non-compliance with reclamation/post-mining guarantee requirements. The 2026 ore production quota was cut to 250-260 Mt from 379 Mt in 2025 — a 33% reduction. This is a deliberate policy intervention to manage price levels, not a geological constraint.",
+    "No Western cobalt mining capacity (geopolitical): Outside the DRC and Zambia, commercial-scale cobalt mine supply is negligible. Freeport's Tenke Fungurume (DRC), Glencore's Katanga, and China Molybdenum's operations are DRC-concentrated. Western supply chain diversification initiatives (US IRA, EU Critical Raw Materials Act) target cobalt but no new mine outside DRC will produce at scale before 2030.",
+    "Cobalt co-production dependency: ~98% of global cobalt is produced as a byproduct of copper mining (DRC) or nickel mining (Australia, Philippines). Supply does not respond independently to cobalt price — it follows the primary metal's production cycle. This structural inelasticity means cobalt supply cannot be switched on/off purely on cobalt economics."
+  ],
+
+  "cycle_position": {
+    "assessment": "Split cycle: cobalt in early recovery / tightening, nickel in structural oversupply with policy-induced floor",
+    "rationale": "Cobalt is in a policy-driven supply tightening that is overriding the structural LFP substitution headwind in the near term. Prices entered 2026 at ~$56,400/t ($25.53/lb), up from nine-year lows near $23,000/t in early 2025 — a ~145% recovery. The DRC quota system has engineered a deficit market for 2026-2027. However, this is a sovereign policy construct, not a geological constraint — it can reverse on political change or quota relaxation, and the underlying LFP substitution trend continuously erodes the demand base. Cobalt cycle position: early recovery, but structurally capped by chemistry transition. Nickel is a different picture: structural surplus of ~200,000-283,000 t persists (ING/INSG estimates) despite Indonesia's 2026 quota cut. Battery-grade nickel sulphate premiums have compressed as Indonesian HPAL floods the market. Prices are range-bound at $17,000-$18,800/t in Q1 2026, up from the $14,000-$16,000 range in 2025 but far below the $30,000+ peak of 2022. Goldman Sachs projects $17,200 average for 2026. Nickel cycle position: bottoming, with policy-driven stabilization but no fundamental demand catalyst to sustain a new up-cycle yet. The combined sector thesis is therefore asymmetric: cobalt has a clearer near-term catalyst (DRC quota enforcement creating deficits in H1 2026), while nickel requires either a major Indonesian policy tightening or a surprise acceleration in NMC battery demand to move structurally higher.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "LITM.L",
+      "name": "iShares Lithium & Battery Producers UCITS ETF",
+      "exchange": "LSE (also SIX as LITM.SW)",
+      "currency": "USD",
+      "ter": 0.0055,
+      "aum_m_usd": 64,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "UCITS-compliant ETF tracking the STOXX Global Lithium and Battery Producers Index. Holdings include lithium miners (Albemarle, SQM, Pilbara), battery manufacturers (Panasonic, CATL, LG Energy), and some nickel/cobalt exposure through diversified miners. DOES NOT provide pure cobalt or nickel exposure — cobalt and nickel companies may appear as small allocations within diversified battery-chain holdings. Best available UCITS vehicle for the cobalt_nickel sector due to total absence of pure-play alternatives. ETF_PROXY_QUALITY: POOR.",
+      "recommendation_tier": 2,
+      "limitations": "LIQUIDITY WARNING: AUM is only ~$64M — well below the $200M threshold. Spread data unavailable; likely wide given low AUM. NOT a pure-play cobalt or nickel ETF — dominated by lithium and battery cell manufacturers. For a Spanish investor this is the best accessible UCITS vehicle but position sizing must be conservative (treat as a 'monitor-only' vehicle for large allocations). Verify AUM and spread via iShares UK site before entry. UCITS: confirmed."
+    },
+    {
+      "ticker": "NIKL",
+      "name": "Sprott Nickel Miners ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0096,
+      "aum_m_usd": 45,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "The only US-listed ETF focused exclusively on nickel mining companies. Provides exposure to stainless steel and battery-grade nickel through miners including Norilsk Nickel, Vale's nickel division, Nickel Industries, and Wyloo Metals proxies. NOT UCITS — restricted for Spanish retail investors under PRIIPs/KID rules. Monitors as a reference instrument only.",
+      "recommendation_tier": 3,
+      "limitations": "NOT UCITS — inaccessible to Spanish retail investors. AUM ~$45M — LIQUIDITY WARNING. High TER at 0.96%. Pure nickel, no cobalt exposure. Use only if broker allows non-UCITS access. Not suitable as a primary ETF vehicle."
+    },
+    {
+      "ticker": "ION",
+      "name": "ProShares S&P Global Core Battery Metals ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0058,
+      "aum_m_usd": null,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Tracks the S&P Global Core Battery Metals Index, covering companies mining cobalt, lithium, AND nickel simultaneously. Broader coverage than NIKL, providing actual cobalt and nickel company exposure in a single vehicle. Key holdings likely include diversified miners with significant cobalt-nickel footprints (Glencore, Vale, Norilsk). NOT UCITS — US-domiciled. Most thematically aligned ETF to the cobalt_nickel sector thesis.",
+      "recommendation_tier": 3,
+      "limitations": "NOT UCITS — inaccessible to Spanish retail investors under PRIIPs/KID rules. AUM data unconfirmed (verify via ProShares). Despite being the most thematically appropriate vehicle, UCITS constraints make it unsuitable as primary vehicle. If UCITS exemption available through broker, evaluate AUM/spread before entry."
+    },
+    {
+      "ticker": "REMX",
+      "name": "VanEck Rare Earth/Strategic Metals ETF (proxy only)",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0059,
+      "aum_m_usd": 580,
+      "replication": "physical",
+      "avg_spread_bps": 16,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "POOR PROXY. Primarily a rare earth ETF (MP Materials, Lynas, Energy Fuels) with minimal cobalt/nickel exposure. Mentioned as last-resort proxy only. Does not track the cobalt/nickel thesis meaningfully — exposure to DRC cobalt or Indonesian nickel is negligible. NOT UCITS.",
+      "recommendation_tier": 3,
+      "limitations": "NOT UCITS. Very poor proxy for cobalt_nickel — the sector thesis (DRC quotas, NMC vs LFP, Indonesian supply) is not captured. Only included for completeness. Do not use as primary vehicle."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Cobalt spot price (CIF China, cobalt hydroxide)",
+      "unit": "USD/tonne",
+      "source": "Fastmarkets, LME",
+      "current": 56400,
+      "comment": "As of late April/early May 2026. Up from ~$23,000 trough (2025 lows). DRC quota system is primary driver. Watch for quota relaxation signals from ARECOMS."
+    },
+    {
+      "metric": "Nickel LME 3-month price",
+      "unit": "USD/tonne",
+      "source": "LME, Investing.com",
+      "current": 18000,
+      "comment": "Q1 2026 range: $17,000-$18,800/t. Goldman Sachs 2026 forecast: $17,200 average. Structural surplus keeps ceiling low without Indonesian quota shock."
+    },
+    {
+      "metric": "DRC cobalt actual exports vs quota utilization",
+      "unit": "metric tonnes hydroxide / % of 96,600t quota utilized",
+      "source": "Fastmarkets monthly DRC export data, ARECOMS",
+      "current": "significant shortfall vs quota — compliance friction slowing exports below the 96,600t ceiling",
+      "comment": "Key leading indicator for physical tightness. Discrepancy between allocated quota and actual exports indicates near-term physical supply shock. Monitor Fastmarkets monthly reports."
+    },
+    {
+      "metric": "LFP vs NMC/NCA global EV battery deployment share",
+      "unit": "% of total GWh deployed globally",
+      "source": "IEA Global EV Outlook (annual), BloombergNEF BNEF EV Battery Database",
+      "current": "LFP ~55% global 2025; ~80%+ in China; ~10-20% in Europe/North America",
+      "comment": "Structural demand destroyer for cobalt. If LFP penetration accelerates in premium European/US segments, cobalt demand outlook deteriorates. Track quarterly via BNEF."
+    },
+    {
+      "metric": "Indonesia nickel ore RKAB annual quota (Mt) and mine suspension count",
+      "unit": "Mt ore quota / # mines suspended",
+      "source": "Indonesian ESDM (Ministry of Energy & Mineral Resources), Argus Media",
+      "current": "2026 quota: 250-260 Mt (down 33% from 379 Mt in 2025); multiple suspensions active",
+      "comment": "Primary supply lever for nickel. Further suspensions bullish; quota reinstatement to 2025 levels bearish. Monitor Indonesian ESDM announcements quarterly."
+    },
+    {
+      "metric": "China NPI (Nickel Pig Iron) monthly production",
+      "unit": "kt NPI per month",
+      "source": "SMM (Shanghai Metals Market), Antaike",
+      "current": null,
+      "comment": "NPI undercuts Class 1 nickel in stainless steel applications, pressuring LME nickel price. High NPI output = continued price ceiling. Track monthly via SMM subscription."
+    },
+    {
+      "metric": "Glencore cobalt hydroxide production guidance (DRC operations)",
+      "unit": "kt cobalt hydroxide per year",
+      "source": "Glencore quarterly production reports",
+      "current": null,
+      "comment": "Glencore is the largest transparent cobalt producer. Guidance cuts = supply signal. Track at each quarterly production update (Jan, Apr, Jul, Oct)."
+    }
+  ],
+
+  "active_catalyst_ids": [],
+
+  "historical_catalyst_performance": {
+    "summary": "Cobalt and nickel have exhibited extreme boom-bust cycles with 2-4 year amplitude. Cobalt peaked at ~$82,000/t in March 2022 driven by EV battery demand euphoria, then collapsed 72% to ~$23,000/t by early 2025 as DRC production surged (CMOC capacity additions), Chinese NMC battery oversupply emerged, and LFP substitution accelerated. This mirrors the 2017-2018 cycle where cobalt ran from $24,000 to $95,000/t then crashed back to $26,000/t by 2019 on DRC supply glut. Nickel's 2022 spike was uniquely violent: a short squeeze on the LME in March 2022 sent prices above $100,000/t intraday (later cancelled) before normalizing around $30,000/t. Indonesian NPI and HPAL capacity additions then drove a sustained bear market to $14,000-$16,000/t by 2025 — a 53%+ peak-to-trough decline. Key historical lesson: positive catalysts in this sector (DRC export restriction, Indonesian quota cuts, NMC demand acceleration) produce sharp near-term rallies of 50-150%, but structural supply responses (new Indonesian HPAL, DRC quota relaxation, LFP substitution) arrive within 1-3 years and reliably terminate the cycle. ETF-level catalyst performance: the LIT ETF (Global X Lithium & Battery Tech, closest historical proxy for this sector) fell ~75% from its 2022 peak to mid-2024 trough as battery metals prices collapsed. Recovery since mid-2025 has been moderate (~30-40% off lows) driven by cobalt and DRC policy story. Battery metals as a sector category has significant reputational damage from the 2022-2024 crash among retail investors — a contrarian indicator.",
+    "key_catalyst_types": [
+      {
+        "catalyst": "DRC export restriction / quota imposition",
+        "historical_response": "Immediate 20-40% price spike on announcement; sustained tightness if enforcement holds (6-18 months); reversal risk when quotas are relaxed or other producers backfill",
+        "current_status": "ACTIVE — 96,600t quota in place through 2027; actual exports tracking well below quota ceiling due to compliance friction"
+      },
+      {
+        "catalyst": "Indonesian government mine quota cuts",
+        "historical_response": "1-3 month lag before price impact as inventories are drawn; sustained only if cuts are deep and sustained; historically reversed within 12-18 months as producers obtain compliance",
+        "current_status": "ACTIVE — 2026 quota at 250-260 Mt vs 379 Mt in 2025; Goldman Sachs raised nickel forecast 16% in February 2026 partly on this basis"
+      },
+      {
+        "catalyst": "EV battery chemistry transition (NMC to LFP acceleration)",
+        "historical_response": "Slow-moving structural headwind; rarely produces sharp price moves but consistently sets lower demand ceilings for cobalt; LFP surpassing NMC in global share (reached >50% in 2025) is a regime change, not a cycle — does not reverse",
+        "current_status": "ONGOING — LFP at 55%+ global share in 2025; European/US premium segments still NMC-dominant but LFP inroads in mid-range vehicles accelerating"
+      },
+      {
+        "catalyst": "Chinese EV production surge above expectations",
+        "historical_response": "Led the 2020-2022 rally; drove cobalt from $26,000 to $82,000; nickel from $12,000 to $30,000+; required sustained growth with NMC chemistry to move prices; not repeatable at same magnitude given LFP dominance in China",
+        "current_status": "NEUTRAL — China EV growth continues at ~23% YoY but almost entirely LFP; incremental cobalt demand from China EV growth is now minimal"
+      }
+    ]
+  },
+
+  "risks": [
+    "DRC quota relaxation or political reversal: The 2025-2026 cobalt price recovery is almost entirely a function of DRC government policy. A change in government, quota relaxation, or corruption-driven quota system failure would immediately release suppressed supply and crater prices. The DRC export ban 'backfired' (African Security Analysis report) by incentivizing stockpiling and artisanal bypass; the quota system faces similar implementation risks. This is the primary binary risk for the cobalt thesis.",
+    "LFP chemistry substitution acceleration into premium segments: The global vehicle market outside China still uses NMC/NCA at 80-90% share. If a major European or US automaker (Volkswagen, GM, Ford) announces a full fleet LFP transition, cobalt demand forecasts would require immediate structural revision downward. CATL's condensed battery, BYD's Blade LFP at extended range, and Freyr's US LFP Gigafactory are potential triggers. This risk does not require a sudden event — gradual penetration over 12-24 months can be equally damaging to the cobalt price thesis.",
+    "Indonesian nickel oversupply resumption: Indonesia's 2026 quota cuts have provided a near-term price floor, but the government has demonstrated willingness to reverse policy. HPAL capacity (Huayou Cobalt, GEM, Tsingshan) continues to expand — uninstalled but permitted capacity could re-enter the market within 6-12 months of policy reversal. The structural surplus of 200,000-288,000 t/yr (ING/INSG estimates) represents a potential supply overhang that caps any nickel rally.",
+    "ETF ACCESS RISK (structural, specific to Spanish investor): There is NO UCITS pure-play ETF for this sector. The only accessible UCITS vehicle (LITM.L) has just $64M AUM — below the minimum $200M threshold for a tier-1 recommendation. This means position sizing is mechanically constrained, bid-ask spreads are likely wide (30-60 bps estimated), and the proxy quality is poor (lithium and battery manufacturers dominate LITM holdings, not cobalt/nickel miners). This sector is effectively UNINVESTABLE via ETF for a UCITS-constrained investor at meaningful scale.",
+    "Chinese processing concentration (cobalt refining): China controls ~80% of global cobalt refining capacity. Even if DRC produces cobalt hydroxide under quota, the refined cobalt sulfate market is controlled by Chinese intermediaries (GEM, Huayou, CATL). Western buyers seeking battery-grade cobalt outside the Chinese supply chain face a structural premium or must accept Chinese counterparty risk. This creates an asymmetry: price spikes benefit Chinese processors disproportionately.",
+    "Recycling supply growth (cobalt): By 2030, cobalt recycling from end-of-life EV batteries is projected to supply 15-20% of total demand. This is a 4-5 year horizon risk but creates a secular supply addition independent of mining. Early recyclers (Li-Cycle, Redwood Materials, Umicore) are scaling capacity; higher cobalt prices accelerate the economics of recycling, creating a self-correcting ceiling on sustained price levels above $60,000-$70,000/t."
+  ],
+
+  "narrative_maturity": "emerging",
+  "narrative_trend": "increasing",
+  "narrative_notes": "Cobalt_nickel sector narrative is assessed as 'emerging' (score_equiv: 35) anchored to the scoring_weights.yaml criteria: 'Present in specialist research, starting to appear in generalist coverage.' The DRC quota story has appeared in Fastmarkets, Mining Technology, and INN (specialist). The LFP vs NMC chemistry shift is covered in BloombergNEF and IEA. However, cobalt and nickel are NOT receiving mainstream Bloomberg/CNBC/FT daily coverage in 2026 — that coverage was exhausted during the 2022 peak and subsequent crash. The post-crash narrative is one of 'battery metals are broken' (exhausted on the bearish side), and the recovery story is only now being picked up by specialists. Narrative is increasing (not stable) because the DRC policy story is novel and surprises the consensus that expected continued oversupply through 2026-2027. Note: the narrative_maturity for this sector applies to the RECOVERY/tightening thesis; the general 'EV battery metals' theme is arguably 'exhausted' (burned investors in 2022-2024), but the specific DRC quota mechanism as a catalyst is new and specialist-only — hence 'emerging' is the correct classification for the differentiated thesis. Maximum rule applied: the most mature active catalyst framing would be 'emerging' — not mainstream."
+}

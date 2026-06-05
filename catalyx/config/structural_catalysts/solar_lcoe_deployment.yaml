@@ -1,0 +1,274 @@
+# StructuralCatalyst: Solar LCOE Cost-Curve Decline + Policy-Driven Deployment Supercycle
+# schema_version: "1.3"
+# Update indicators: ind_01 quarterly (BloombergNEF LCOE), ind_02 monthly (EIA/SEIA additions),
+#   ind_03 quarterly (InfoLink/PV-Tech polysilicon), ind_04 quarterly (LevelTen PPA index).
+#
+# Double-counting guard vs struct_energy_transition_grid:
+#   struct_energy_transition_grid measures GRID BOTTLENECK severity (transformer lead times,
+#   EU grid investment, copper price). It treats solar as a SOURCE of grid load, not as the
+#   thesis target. This catalyst measures SOLAR DEPLOYMENT ECONOMICS: cost-curve decline,
+#   policy-driven installation volumes, and AI/datacenter PPA demand for new solar capacity.
+#   Zero indicator overlap. The two structurals are linked (compounding) but distinct.
+#   solar_energy feeds THIS structural only; grid_infrastructure_utilities feeds struct_energy_transition_grid only.
+#
+# Calibration anchor (Rule 3):
+#   Bootstrap score of 78 — similar to struct_cb_gold_accumulation (76.1 current).
+#   Rationale: Solar has strong underlying demand and cost-curve tailwinds comparable to
+#   CB gold accumulation, but the ITC cliff (July 4, 2026) introduces a near-term policy
+#   headwind that suppresses intensity below struct_ai_capex_supercycle (89.9) and well
+#   below struct_energy_transition_grid (95.0). The polysilicon oversupply crushes
+#   manufacturer margins (ind_03 bearish) while utility-scale additions are record-high
+#   (ind_02 bullish) — the bifurcated sector signal averages to a mid-high intensity.
+#   First update run of intensity_engine will replace this bootstrap with computed value.
+
+id: struct_solar_lcoe_deployment
+type: structural
+schema_version: "1.3"
+title: "Solar LCOE cost-curve decline + policy-driven utility-scale deployment supercycle"
+description: >
+  Solar photovoltaic deployment is in a structural acceleration driven by three compounding
+  forces: (1) Cost-curve decline — US utility-scale solar LCOE reached $39/MWh globally in
+  2025 (BloombergNEF), below the marginal cost of gas peakers in most US markets; BNEF
+  projects a further 30% LCOE decline by 2035 driven by module learning rates and
+  storage integration. Deployment is no longer subsidy-dependent at utility scale.
+  (2) AI/hyperscaler PPA demand — hyperscalers (Google, Microsoft, Amazon, Meta) have
+  restructured energy procurement from sustainability commitments to operational necessity:
+  Google signed >2.3 GW of solar PPAs in H1 2026 alone (TotalEnergies 1 GW Texas,
+  Clearway 1.17 GW, Enlight 200 MW Oklahoma). Gigawatt-scale physical-delivery PPAs
+  create a durable, policy-independent demand floor for utility-scale project developers.
+  (3) Policy-driven pipeline — US utility-scale solar is on track for 43.4 GW of
+  additions in 2026 (EIA, +60% YoY), the largest annual addition in US history, driven
+  by ITC front-loading ahead of the OBBBA July 4, 2026 construction-start cliff.
+  Globally, 698 GW of solar PV was added in 2025 (IEA), with total installed capacity
+  approaching 3 TW (2,974 GW end-2025). This structural spans: solar_energy (primary),
+  and is thematically linked to both struct_ai_capex_supercycle (hyperscaler PPA demand
+  source) and struct_energy_transition_grid (solar load is the primary driver of grid
+  interconnection congestion). Key near-term risk: ITC cliff post-July 4, 2026 causes
+  H2 2026 construction-start slowdown; Chinese manufacturer margin destruction (polysilicon
+  ~CNY 44/kg, below full cost for most producers) is a known headwind to the ETF but not
+  to utility-scale project developers who benefit from lower module input costs.
+
+created_at: "2026-06-05T12:00:00Z"
+created_by: user
+onset_period: "2023-Q1"
+onset_evidence: >
+  IRA enacted August 2022 established multi-decade ITC/PTC certainty; Q1 2023 utility-scale
+  solar additions in US crossed 5 GW/quarter for first time. BloombergNEF 2023 LCOE report:
+  US utility-scale solar hit sub-$40/MWh nationally for the first time. Both the policy
+  certainty and the cost-curve crossover below gas peakers materialized simultaneously.
+
+catalyst_type: climate_transition
+catalyst_subtype: solar_lcoe_ppa_deployment
+geography: [US, EU, CHN, GLOBAL]
+thematic_tags: [solar, lcoe, renewables, ppa, hyperscaler, ira, itc, polysilicon, energy_transition]
+
+user_rank: 4
+user_notes: >
+  Solar's primary ETF (RAYS.L for UCITS Spanish investors) is below the $200M AUM
+  liquidity warning threshold. Size positions carefully. The sector is bifurcated:
+  utility-scale project developers (positive cycle) vs Chinese polysilicon manufacturers
+  (margin destruction). TAN/RAYS blend both sub-segments. Pure-play thesis would require
+  FSLR (US thin-film, tariff-protected) or US project developer exposure — not currently
+  available as a clean UCITS ETF.
+
+intensity:
+  current_score: 78.0
+  last_updated: "2026-06-05"
+  computation_method: bootstrap
+  computation_note: >
+    Bootstrap estimate at creation. Calibrated relative to struct_cb_gold_accumulation (76.1
+    current) — solar has comparable underlying demand strength but faces a near-term policy
+    cliff (ITC July 4, 2026) and a bearish manufacturer sub-signal (polysilicon oversupply)
+    that together suppress intensity below struct_ai_capex_supercycle (89.9). Run
+    intensity_engine after first indicator updates to replace with computed value.
+  history:
+  - period: "2026-Q2"
+    score: 78
+    note: "Bootstrap at creation 2026-06-05. Anchor: similar to struct_cb_gold_accumulation (76.1). Bifurcated sector: utility-scale record additions (bullish) offset by ITC cliff and polysilicon oversupply (bearish)."
+    computation_method: bootstrap
+
+indicators:
+- id: ind_01
+  name: "US utility-scale solar LCOE (BloombergNEF global benchmark, fixed-axis)"
+  source: "BloombergNEF New Energy Outlook / LCOE Update (annual)"
+  source_url_template: "https://about.bnef.com/insights/clean-energy/"
+  check_frequency: quarterly
+  current_value: 39
+  unit: USD_per_MWh
+  direction: lower_is_stronger
+  threshold_strong: 45
+  threshold_weak: 60
+  last_value: 41
+  last_date: "2025-12-31"
+  update_note: >
+    BloombergNEF 2025 LCOE report: global benchmark fixed-axis solar LCOE $39/MWh.
+    Start of decade was ~$62/MWh. BNEF projects further 30% decline to ~$27/MWh by 2035.
+    Threshold_strong at $45/MWh reflects the gas-peaker marginal cost crossover level in most
+    US markets — below this, solar is competitive without subsidies. Threshold_weak at $60/MWh
+    reflects the level above which deployment requires policy support to be economically viable
+    at scale. Current $39/MWh is well below threshold_strong: deployment is now cost-driven,
+    not policy-driven, at the utility scale.
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 41
+  - date: "2024-12-31"
+    value: 45
+  - date: "2023-12-31"
+    value: 48
+  - date: "2022-12-31"
+    value: 52
+  - date: "2021-12-31"
+    value: 58
+  - date: "2020-12-31"
+    value: 63
+  score: null
+
+- id: ind_02
+  name: "US utility-scale solar capacity additions (annualized, GW)"
+  source: "EIA Preliminary Monthly Electric Generator Inventory / SEIA quarterly reports"
+  source_url_template: "https://www.eia.gov/todayinenergy/"
+  check_frequency: quarterly
+  current_value: 43.4
+  unit: GW_annual_us_utility_scale
+  direction: higher_is_stronger
+  threshold_strong: 25
+  threshold_weak: 10
+  last_value: 27.2
+  last_date: "2025-12-31"
+  update_note: >
+    EIA (February 2026): 43.4 GW utility-scale solar planned in 2026, 51% of total US new
+    power capacity additions (record 86 GW total). +60% YoY vs 27.2 GW in 2025.
+    More than 12 GW above 2024 (prior record 30.8 GW). Front-loading driven by ITC cliff
+    (must begin physical construction by July 4, 2026 for full 30% ITC). Threshold_strong
+    at 25 GW reflects the level at which solar becomes the dominant US capacity addition
+    type. Threshold_weak at 10 GW reflects the historical pre-IRA baseline (2019-2021 avg ~15 GW).
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 27.2
+  - date: "2024-12-31"
+    value: 30.8
+  - date: "2023-12-31"
+    value: 18.3
+  - date: "2022-12-31"
+    value: 13.7
+  - date: "2021-12-31"
+    value: 14.2
+  - date: "2020-12-31"
+    value: 10.5
+  score: null
+
+- id: ind_03
+  name: "China polysilicon spot price (CNY/kg) — inverse signal: lower price = developer tailwind, not structural strength"
+  source: "InfoLink / PV-Tech weekly polysilicon price tracker"
+  source_url_template: "https://www.pv-tech.org/"
+  check_frequency: monthly
+  current_value: 44.6
+  unit: CNY_per_kg
+  direction: higher_is_stronger
+  threshold_strong: 65
+  threshold_weak: 50
+  last_value: 50.0
+  last_date: "2026-03-17"
+  update_note: >
+    PV-Tech / PV-Magazine (April 2026): polysilicon prices sliding toward historical lows,
+    China Mono Premium assessed at CNY 44.58/kg as of March 17, 2026. Below full production
+    cost for most manufacturers (~CNY 65-70/kg cash cost; Siemens-process ranges CNY 34-45/kg).
+    Inventories exceeded 500,000 MT (well above 570k-600k MT early 2026 per sector study).
+    DIRECTION NOTE: this indicator is scored as higher_is_stronger for the structural catalyst
+    signal, NOT for manufacturer profitability. A recovery above CNY 65/kg signals supply
+    rationalization (positive for structural intensity: overcapacity is being absorbed) AND
+    confirms structural demand is strong enough to tighten supply. Current ~CNY 44/kg well
+    below threshold_weak (CNY 50/kg): supply rationalization has NOT occurred; this indicator
+    is the primary bearish input in the current intensity bootstrap. This sub-signal is a
+    headwind to the manufacturer sub-thesis but a tailwind for project developers (lower input
+    costs). The structural's mixed signal is resolved by the sector study's bifurcated analysis.
+  semaphore: 🔴
+  value_history:
+  - date: "2026-03-17"
+    value: 50.0
+  - date: "2026-01-01"
+    value: 55.0
+  - date: "2025-06-01"
+    value: 60.0
+  - date: "2025-01-01"
+    value: 68.0
+  - date: "2024-06-01"
+    value: 75.0
+  - date: "2024-01-01"
+    value: 85.0
+  - date: "2023-06-01"
+    value: 110.0
+  - date: "2023-01-01"
+    value: 145.0
+  score: null
+
+- id: ind_04
+  name: "North American utility-scale solar PPA price (USD/MWh, LevelTen Energy quarterly index)"
+  source: "LevelTen Energy PPA pricing index (quarterly)"
+  source_url_template: "https://leveltenenergy.com/"
+  check_frequency: quarterly
+  current_value: 60
+  unit: USD_per_MWh_ppa
+  direction: higher_is_stronger
+  threshold_strong: 55
+  threshold_weak: 40
+  last_value: 57
+  last_date: "2025-12-31"
+  update_note: >
+    LevelTen Energy Q1 2026: North American solar PPA prices rose 4.7% in Q1 2026 to
+    approximately $60-65/MWh range (sector study cites $55-65/MWh current; midpoint ~$60/MWh).
+    Rising PPA prices improve project developer IRRs directly. Threshold_strong at $55/MWh
+    reflects the level at which project NPVs are healthy at current financing costs (~5-6% WACC
+    for investment-grade developers). Threshold_weak at $40/MWh reflects breakeven NPV territory
+    given current construction and financing costs. The PPA price recovery from lows signals
+    tightening in power markets driven by AI load growth — this is the key demand-side indicator
+    for project developers and is independent of module cost dynamics.
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 57
+  - date: "2025-06-30"
+    value: 52
+  - date: "2024-12-31"
+    value: 48
+  - date: "2024-06-30"
+    value: 44
+  - date: "2023-12-31"
+    value: 41
+  - date: "2022-12-31"
+    value: 36
+  score: null
+
+deactivation_conditions:
+- id: deact_01
+  condition: >
+    LCOE reversal: US utility-scale solar LCOE rises above $55/MWh for two consecutive
+    quarterly observations (would indicate supply chain disruption or tariff shock large
+    enough to impair unsubsidized project economics).
+  action: review_required
+
+- id: deact_02
+  condition: >
+    ITC phase-out completion and PPA demand collapse: Section 48E/45Y ITC reaches 0% AND
+    North American PPA prices fall below $40/MWh for two consecutive quarters (would signal
+    that the AI/hyperscaler demand floor is insufficient to sustain project developer economics
+    without subsidies in the post-ITC regime).
+  action: full_deactivation
+
+- id: deact_03
+  condition: >
+    US utility-scale solar capacity additions fall below 15 GW annualized for two consecutive
+    quarters (would indicate that the post-ITC-cliff activity cliff is more severe than
+    projected and the AI/PPA demand floor has not offset the policy-driven pull-forward).
+  action: downgrade_to_weak
+
+linked_event_catalyst_ids: []
+linked_structural_catalyst_ids:
+  - struct_ai_capex_supercycle       # AI/hyperscaler PPA demand: the structural driver of gigawatt-scale solar procurement
+  - struct_energy_transition_grid    # Solar deployment is the primary source of grid interconnection congestion; the two trends are compounding
+
+narrative_maturity: "mainstream"
+status: active
+status_last_reviewed: "2026-06-05"

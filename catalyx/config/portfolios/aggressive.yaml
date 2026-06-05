@@ -1,0 +1,16 @@
+portfolio_id: aggressive
+name: Aggressive
+risk_profile: aggressive
+description: >
+  Wide, momentum-led book. Low composite floor, tolerates crowding (rides the trend),
+  many small positions with a tight per-position cap. Matches the investor's high risk
+  tolerance and catalyst/momentum tilt. Higher turnover expected.
+benchmark_etf: ACWI
+construction:
+  max_positions: 12
+  min_composite: 50
+  min_momentum: 30
+  max_crowding: 95
+  exclude_narrative_maturity: []
+  weighting: composite_proportional
+  max_position_pct: 12

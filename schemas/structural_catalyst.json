@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "catalyx/schemas/structural_catalyst.json",
-  "schema_version": "1.3",
+  "schema_version": "1.4",
   "title": "StructuralCatalyst",
   "description": "A secular, ongoing macro trend (not a discrete event). Validated by persistent indicators, not a single headline. Decays slowly over months/years.",
   "type": "object",
@@ -12,7 +12,7 @@
       "pattern": "^struct_[a-z0-9_]+$",
       "description": "Format: struct_keyword_keyword. Human-readable slug."
     },
-    "schema_version": { "type": "string", "const": "1.3" },
+    "schema_version": { "type": "string", "enum": ["1.4", "1.3"] },
     "type": { "type": "string", "const": "structural" },
     "title": { "type": "string" },
     "description": {
@@ -140,7 +140,8 @@
           },
           "value_history": {
             "type": "array",
-            "description": "Past observations of this indicator (excluding current_value), used for the empirical-percentile score once >= min_history_points accrue (scoring_weights.yaml indicator_scoring). The update skill appends a new entry on each observed value.",
+            "deprecated": true,
+            "description": "DEPRECATED (schema 1.4): externalized to the parquet lake at data/lake/indicators/indicator_history.parquet (catalyst_id, indicator_id, date, value, source). intensity_engine reads the lake first and only falls back to this inline array for catalysts not yet migrated. New observations go to the lake via catalyx.store.indicator_history.append_observation — do NOT append here. Kept one major version per the Schema Change Protocol.",
             "items": {
               "type": "object",
               "required": ["value"],

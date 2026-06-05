@@ -30,26 +30,73 @@ if sys.platform == "win32":
 console = Console(highlight=False)
 
 # Canonical sector → primary ETF tickers mapping.
-# Mirrors etf_universe.yaml recommendation_tier 1 and 2 picks.
-# Key = sector_id, value = list of tickers to fetch (first = preferred)
+# Mirrors etf_universe.yaml recommendation_tier 1/2 picks. First ticker = preferred
+# (used by momentum_engine as the PRIMARY); the rest are alternatives.
+#
+# Coverage goal (v1.6): every INVESTABLE sector in sector_taxonomy.yaml that has a
+# liquid, yfinance-reliable proxy. Tickers are curated for yfinance reliability —
+# US-listed where possible (richer history), .L/.DE only when that is the cleanest
+# proxy. Each ticker is unique across sectors so two sectors never share a momentum
+# series. Sectors deliberately OMITTED (no pure-play / illiquid yfinance proxy):
+#   royalty_streaming_metals, cobalt_nickel, insurance_eu, asset_management,
+#   private_equity_listed, real_estate_logistics, synthetic_biology, longevity_biotech,
+#   hydrogen_clean_fuels (HDRO/HDRO.L not resolvable in yfinance, poor proxy anyway).
+# Watch-only sectors (quantum_computing, nuclear_fusion, brain_computer_interface,
+#   advanced_materials_metamaterials) are excluded by definition — no investable ETF.
 SECTOR_TICKERS: dict[str, list[str]] = {
-    "grid_infrastructure_utilities": ["IQQH.DE", "GRID"],
-    "copper_miners":                 ["COPX", "COPX.L"],
+    # ── Defense ──────────────────────────────────────────────────────────────
     "eu_defense_prime_contractors":  ["EUDF.L", "DFEN.DE"],
-    "ai_infrastructure_data_centers":["WTAI", "BOTZ"],
-    "semiconductors_design":         ["SEMI.L", "SMH"],
-    "gold_physical":                 ["IGLN.L", "GLD"],
-    "gold_miners":                   ["GDX", "AUCO.L"],
-    "nuclear_energy":                ["NLR"],
-    "uranium_miners":                ["URNM", "URA"],
-    "silver_physical":               ["PHAG.L", "SLV"],
     "us_defense_prime_contractors":  ["ITA", "XAR"],
     "cybersecurity_defense":         ["CIBR", "BUG"],
-    "rare_earth_miners":             ["REMX"],
-    "lithium_miners":                ["LIT"],
+    "space_defense_satellite":       ["ROKT"],
+    "drone_autonomous_systems":      ["SHLD"],
+    # ── Energy ───────────────────────────────────────────────────────────────
+    "oil_majors_integrated":         ["XLE", "IUES.L"],
+    "oil_services_equipment":        ["OIH"],
+    "lng_natural_gas":               ["FCG"],
+    "nuclear_energy":                ["NLR"],
+    "uranium_miners":                ["URNM", "URA"],
     "solar_energy":                  ["TAN"],
     "wind_energy_offshore":          ["FAN"],
+    "grid_infrastructure_utilities": ["IQQH.DE", "GRID"],
+    # ── Precious metals ──────────────────────────────────────────────────────
+    "gold_physical":                 ["IGLN.L", "GLD"],
+    "gold_miners":                   ["GDX", "AUCO.L"],
+    "silver_physical":               ["PHAG.L", "SLV"],
     "silver_miners":                 ["SIL"],
+    # ── Industrial metals & battery materials ────────────────────────────────
+    "copper_miners":                 ["COPX", "COPX.L"],
+    "lithium_miners":                ["LIT"],
+    "rare_earth_miners":             ["REMX"],
+    "steel_producers":               ["SLX"],
+    "water_infrastructure":          ["PHO"],
+    "agriculture_soft_commodities":  ["MOO", "DBA"],
+    # ── Financials ───────────────────────────────────────────────────────────
+    "eu_retail_banking":             ["EXV1.DE", "EUFN"],
+    "us_retail_banking":             ["KRE", "KBE"],
+    "fintech_payments":              ["FINX"],
+    "crypto_infrastructure":         ["BTCE.DE"],
+    # ── Technology ───────────────────────────────────────────────────────────
+    "semiconductors_design":         ["SEMI.L", "SMH"],
+    "semiconductors_equipment":      ["ASML"],
+    "semiconductors_foundry":        ["TSM"],
+    "semiconductors_memory":         ["DRAM"],
+    "ai_infrastructure_data_centers":["WTAI", "BOTZ"],
+    "cloud_software_saas":           ["CLOU", "WCLD"],
+    "robotics_automation":           ["ROBO"],
+    "cybersecurity_commercial":      ["ISPY.L"],
+    # ── Healthcare ───────────────────────────────────────────────────────────
+    "biotech_drug_development":      ["XBI", "IBB"],
+    "medical_devices":               ["IHI"],
+    "genomics_precision_medicine":   ["ARKG"],
+    "pharma_large_cap":              ["IHE", "PPH"],
+    # ── Real assets & consumer ───────────────────────────────────────────────
+    "real_estate_data_centers":      ["SRVR"],
+    "infrastructure_core":           ["IFRA", "INFR.L"],
+    "luxury_goods":                  ["GLUX.SW"],
+    "consumer_india_em":             ["INDA", "NDIA.L"],
+    # ── Deep tech (investable) ───────────────────────────────────────────────
+    "space_commercial":              ["UFO"],
 }
 
 # Weights from scoring_weights.yaml momentum_period_weights
@@ -103,7 +150,14 @@ def fetch_metrics(ticker: str, period: str = "1y") -> dict | None:
         console.print(f"[yellow]WARN {ticker}: insufficient data[/yellow]")
         return None
 
-    closes = hist["Close"]
+    # Drop NaN closes BEFORE any return math. yfinance appends an empty bar for
+    # today's session when the exchange has not yet opened/settled (e.g. US ETFs
+    # fetched during European morning hours), making closes.iloc[-1] NaN and
+    # poisoning every return → momentum_score. Use only settled closes.
+    closes = hist["Close"].dropna()
+    if len(closes) < 5:
+        console.print(f"[yellow]WARN {ticker}: insufficient data after dropna[/yellow]")
+        return None
     current = float(closes.iloc[-1])
     high_52w = float(closes.max())
     low_52w = float(closes.min())
@@ -165,10 +219,14 @@ def run_snapshot(
             console.print(f"  Fetching {tkr}...", end=" ")
             metrics = fetch_metrics(tkr)
             if metrics:
+                # Newly-listed ETFs (e.g. DRAM, launched 2026) lack 3m/6m history → None.
+                # Format defensively so a short-history ticker doesn't crash the snapshot.
+                def _pct(v: float | None) -> str:
+                    return f"{v:+.1f}%" if v is not None else "n/a"
                 console.print(
                     f"[green]OK[/green] {metrics['current_price']:.2f} | "
-                    f"1m={metrics['return_1m_pct']:+.1f}% | "
-                    f"3m={metrics['return_3m_pct']:+.1f}% | "
+                    f"1m={_pct(metrics['return_1m_pct'])} | "
+                    f"3m={_pct(metrics['return_3m_pct'])} | "
                     f"score={metrics['momentum_score']}"
                 )
                 sector_results.append(metrics)
@@ -196,7 +254,65 @@ def run_snapshot(
     output_path.write_text(json.dumps(snapshot, indent=2, ensure_ascii=False))
     console.print(f"\n[bold green]Snapshot written → {output_path}[/bold green]")
 
+    # Dual-write to the parquet lake (Tier 2 truth). Skip ad-hoc custom-ticker runs:
+    # those have no sector mapping and would collide with the real daily partition.
+    if not tickers:
+        _write_lake_partition(snapshot)
+
     return snapshot
+
+
+def snapshot_to_rows(snapshot: dict) -> list[dict]:
+    """Flatten a nested momentum snapshot into one flat row per (sector_id, ticker, role).
+
+    This is the tabular shape the parquet lake stores: `momentum_engine` reconstructs
+    the primary-per-sector view from `role == "primary"` rows.
+    """
+    meta = {
+        "date": snapshot.get("date"),
+        "generated_at": snapshot.get("generated_at"),
+        "source": snapshot.get("source", "yfinance"),
+    }
+    rows: list[dict] = []
+    for sid, data in snapshot.get("sectors", {}).items():
+        primary = data.get("primary")
+        if primary:
+            rows.append({**meta, "sector_id": sid, "role": "primary", **primary})
+        for alt in data.get("alternatives", []) or []:
+            rows.append({**meta, "sector_id": sid, "role": "alternative", **alt})
+    return rows
+
+
+def _write_lake_partition(snapshot: dict) -> None:
+    """Dual-write the snapshot to the parquet lake (Tier 2 source of truth).
+
+    Best-effort during migration: wrapped so a parquet failure never breaks the
+    existing JSON pipeline. Once `momentum_engine` reads the lake by default, the
+    JSON write becomes the deprecated compatibility path.
+    """
+    rows = snapshot_to_rows(snapshot)
+    if not rows or not snapshot.get("date"):
+        return
+    try:
+        import pandas as pd
+        from catalyx.store import lake
+
+        df = pd.DataFrame(rows)
+        lake.append_partition("momentum", df, {"date": snapshot["date"]}, overwrite=True)
+        console.print(f"[dim]lake: momentum partition date={snapshot['date']} ({len(df)} rows)[/dim]")
+    except Exception as e:  # noqa: BLE001 — never let lake break the JSON pipeline
+        console.print(f"[yellow]WARN lake write skipped: {e}[/yellow]")
+
+
+def backfill_lake() -> int:
+    """Convert existing data/snapshots/momentum_snapshot_*.json into lake partitions."""
+    n = 0
+    for p in sorted(Path("data/snapshots").glob("momentum_snapshot_*.json")):
+        snap = json.loads(p.read_text(encoding="utf-8"))
+        snap.setdefault("date", p.stem.replace("momentum_snapshot_", ""))
+        _write_lake_partition(snap)
+        n += 1
+    return n
 
 
 def _print_table(results: list[dict]) -> None:
@@ -245,7 +361,16 @@ def main() -> None:
         "--no-table", action="store_true",
         help="Suppress the Rich table output."
     )
+    parser.add_argument(
+        "--backfill-lake", action="store_true",
+        help="Convert existing momentum_snapshot_*.json into lake parquet partitions and exit."
+    )
     args = parser.parse_args()
+
+    if args.backfill_lake:
+        n = backfill_lake()
+        console.print(f"[bold green]Backfilled {n} snapshot(s) into the lake[/bold green]")
+        return
 
     console.print("[bold cyan]CATALYX — Market Data Snapshot[/bold cyan]")
     console.print(f"Date: {date.today().isoformat()}\n")

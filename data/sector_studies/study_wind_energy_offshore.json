@@ -1,0 +1,114 @@
+{
+  "id": "study_wind_energy_offshore",
+  "schema_version": "1.2",
+  "sector_id": "wind_energy_offshore",
+  "sector_label": "Wind Energy — Offshore",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+  "taxonomy": {
+    "parent_sector": "energy",
+    "adjacent_sectors": [
+      "solar_energy",
+      "grid_infrastructure_utilities",
+      "hydrogen_clean_fuels",
+      "nuclear_energy"
+    ],
+    "differentiation_note": "Offshore wind is categorically distinct from solar energy in cost structure, geography, and policy leverage: projects are capital-intensive maritime infrastructure (LCOE dominated by CapEx at 70–80%), require specialised installation vessels and port facilities, and derive demand from national energy security targets rather than grid-parity economics. EU member-state offshore targets (111 GW by 2030) are legally binding commitments attached to specific sea zones, not generic renewable mandates — solar responds to utility procurement auctions, offshore wind responds to leasing rounds and contracts-for-difference that lock in power prices for 15–25 years. Offshore wind also differs materially from grid_infrastructure_utilities: grid companies (transmission/distribution) own regulated linear assets with inflation-linked revenues, while offshore wind developers own generation assets exposed to power-price risk, merchant tail risk after CfD expiry, and supply-chain concentration risk from a duopoly of turbine OEMs (Vestas + Siemens Gamesa post-GE Vernova exit from new orders). The interest-rate sensitivity profiles diverge sharply — grid companies refinance at short tenor on regulated RAB; offshore projects finance at project level with 20-year debt tranches where a 200bps rate move can alter LCOE by 25–40%."
+  },
+  "demand_drivers": [
+    "EU 111 GW offshore renewable target by 2030 (European Wind Charter, Dec 2023): 26 member states committed to binding national targets aggregating ~88 GW offshore wind, rising to 360 GW by 2050. WindEurope estimated Europe (incl. UK) on course to reach 58 GW total offshore capacity by 2026 — doubling from 2022 base of ~29 GW.",
+    "REPowerEU acceleration mandate: post-Ukraine energy independence policy added 10 GW to prior 2030 offshore targets and accelerated permit timelines via the EU Wind Power Package (2023). Member states required to designate offshore wind 'go-to areas' with 18-month maximum permitting duration.",
+    "Power-price floor from CfD/contracts-for-difference regimes in UK, Germany, Netherlands, Denmark, and France: CfD auction rounds (AR6 UK, SDE++ NL, CFD-based German EEG) provide 15-25 year price certainty that de-risks project financing regardless of spot power prices, making projects bankable even at high interest rates if strike prices are calibrated correctly. German offshore tender cleared at €58–72/MWh in 2025 rounds.",
+    "Grid electrification demand pull: European grid operators (Elia, National Grid, Amprion, TenneT) have announced combined offshore interconnector investment of >€30 billion to 2030 to connect planned North Sea and Baltic Sea wind clusters, creating a structural demand floor independent of power-price cycles.",
+    "Turbine platform maturation: 15–20 MW-class turbines (Vestas V236-15MW, Siemens Gamesa SG14-222DD) now commercially deployed, reducing number of units per project and installation vessel mobilisations by ~30% vs 8MW-class; this is beginning to normalise CapEx per GW after the 2022–2024 cost inflation surge."
+  ],
+  "supply_constraints": [
+    "OEM duopoly concentration: GE Vernova exited new offshore turbine orders in 2025 (Haliade-X programme wound down after persistent loss-making). Vestas and Siemens Gamesa now supply ~90% of EU offshore wind turbines. Siemens Gamesa (Siemens Energy subsidiary) posted Q1 FY2026 revenue of €2.36bn with a -9.4% margin (narrowed from -17.5% in Q1 FY2025); guided breakeven for FY2026. This OEM constraint caps annual turbine delivery capacity at approximately 15–18 GW/yr globally through 2027.",
+    "Installation vessel scarcity: heavy-lift jack-up vessels capable of handling 15+ MW turbines number fewer than 20 globally. New build vessels require 4–5 year lead times. DEME, Heerema, and Jan De Nul have significant order books through 2028–2029, limiting project FID acceleration.",
+    "Steel and rare earth bottlenecks: offshore wind turbines are permanent-magnet generators requiring rare earth elements (dysprosium, neodymium). Direct-drive designs (SG14 series) use more REE than geared designs. China controls ~85% of REE processing; geopolitical risk is structural.",
+    "Port infrastructure constraints: marshalling ports for 15–20 MW turbines require blade storage areas >350m in length and quayside crane lifts >1,500 tonne. Only 8–12 EU ports meet these specifications as of 2026; a further 15 are under expansion (Esbjerg, Bremerhaven, Flushing, Eemshaven).",
+    "Interest rate / WACC: offshore projects finance at project level (non-recourse) with 18–22% equity, 78–82% debt. At 5.5% Euribor + 150bps spread, project WACC is approximately 9–10% vs 4–5% in the 2019–2021 low-rate era. A 200bps rate increase raises LCOE by approximately 25–40%. The ECB hiking cycle in 2026 is a direct headwind: each 50bps hike increases the LCOE of an uncontracted project by approximately €5–8/MWh."
+  ],
+  "cycle_position": {
+    "assessment": "Early recovery — reset from distressed trough, not yet in full expansion",
+    "rationale": "Offshore wind entered a severe distress cycle in 2022–2024 driven by the simultaneous shock of: (1) 40–45% turbine price inflation (OEM cost recovery after years of below-cost bidding), (2) interest rate normalisation raising project-level WACC by 400–500bps, and (3) supply chain bottlenecks (steel, blades, vessels). The result was mass cancellation of US East Coast projects (Equinor, Avangrid, Orsted), two profit warnings from Orsted ending in DKK 28bn impairment, and a 28% downward revision to global 2030 ex-China offshore capacity forecasts. As of mid-2026: Orsted posted Q1 2026 revenue +33% YoY and tightened EBITDA guidance to above DKK 28bn — full-year dividend reinstatement targeted. Vestas reported Q1 2026 revenue of EUR 4bn with EBIT margin 3.2% and reaffirmed FY2026 guidance of EUR 20–22bn revenue at 6–8% EBIT margin. Site awards totalled only 17.2 GW in 2025 (down 78% from the 22–75 GW annual average of 2022–2024), but recovery signals for 2026 show up to 17.6 GW offtake and ~11.4 GW reaching FID. The sector is exiting the distress trough but the ECB hiking cycle in 2026 delays a clean expansion — projects require CfD strike prices 20–30% above 2021 levels to achieve viable returns. Assessment: early recovery / bottom-building, NOT momentum expansion. FAN ETF +24.9% YTD 2026 and +69.5% over 12 months suggests market has begun to price the recovery.",
+    "last_assessed": "2026-06-05"
+  },
+  "key_metrics_to_monitor": [
+    {
+      "metric": "EU offshore wind annual auction award (GW/year)",
+      "unit": "GW",
+      "source": "WindEurope / BNEF annual tracker",
+      "current": "17.2 GW awarded in 2025 (site tenders); 17.6 GW offtake targeted 2026",
+      "comment": "The annual auction cadence is the leading indicator for order books. Sub-15 GW/yr = sector contraction; above 20 GW/yr = expansion. Monitor WindEurope quarterly statistics."
+    },
+    {
+      "metric": "Siemens Gamesa quarterly EBIT margin (offshore segment)",
+      "unit": "% margin",
+      "source": "Siemens Energy quarterly reports",
+      "current": "-9.4% Q1 FY2026 (improving from -17.5% Q1 FY2025)",
+      "comment": "Breakeven at Gamesa is the OEM supply-chain normalisation signal. Sub-zero margins cap turbine production volume and delay order acceptance. Guided to reach breakeven FY2026."
+    },
+    {
+      "metric": "Vestas order intake",
+      "unit": "EUR bn / quarter",
+      "source": "Vestas quarterly reports",
+      "current": "EUR 5.2bn Q1 2026; backlog EUR 76.1bn",
+      "comment": "Order backlog is the forward revenue signal. EUR 76bn backlog provides ~3.5 years visibility. Monitor new order intake as a capex cycle indicator."
+    },
+    {
+      "metric": "Euribor 12-month rate",
+      "unit": "%",
+      "source": "ECB / Bloomberg",
+      "current": "~3.2–3.5% (estimate, 2026-Q2 ECB hiking cycle)",
+      "comment": "Direct project finance cost driver. Each +50bps adds ~€5–8/MWh to LCOE. Monitor ECB rate decisions closely — the hiking cycle in 2026 is the primary headwind for uncontracted project FIDs."
+    },
+    {
+      "metric": "UK CfD strike price cleared (AR-round)",
+      "unit": "GBP/MWh",
+      "source": "UK DESNZ CfD auction results",
+      "current": "AR6 2025: ~£73–80/MWh (3.5x above 2019 lows)",
+      "comment": "UK CfD clearing prices are the global benchmark for offshore wind project economics. A sustained fall in strike prices signals cost normalisation; rising clears indicate CfD calibration is supporting the sector despite WACC headwinds."
+    },
+    {
+      "metric": "Orsted annual EBITDA guidance",
+      "unit": "DKK bn",
+      "source": "Orsted company announcements",
+      "current": "FY2026 guidance: above DKK 28bn (vs DKK 25.1bn FY2025 actual)",
+      "comment": "Orsted is the bellwether pure-play operator. Its EBITDA recovery trajectory is the clearest indicator of sector fundamentals normalization. Dividend reinstatement in FY2026 is the visible confidence signal."
+    }
+  ],
+  "etf_analysis": [
+    {
+      "ticker": "FAN",
+      "name": "First Trust Global Wind Energy ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0060,
+      "aum_m_usd": 280,
+      "replication": "physical",
+      "avg_spread_bps": 18,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "The only pure-play global wind energy ETF available. Tracks ISE Clean Edge Global Wind Energy Index. Top holdings include Vestas Wind Systems, Siemens Gamesa/Siemens Energy, Orsted, Nordex, Energias de Portugal, Xinjiang Goldwind. YTD 2026: +24.9%; 12-month return: +69.5%; current price: ~$26. Predominantly European-listed companies (~60–65%) with Asia exposure (~15–20%). NOT UCITS — US-domiciled ETF, not directly purchasable under PRIIPs/KID rules by EU retail investors without a qualifying KID. For a Spanish investor this is the primary access constraint.",
+      "recommendation_tier": 1,
+      "limitations": "CRITICAL — NOT UCITS: FAN is a US-domiciled ETF (First Trust, NYSE). Under PRIIPs Regulation, EU retail investors cannot be sold non-UCITS packaged products without a Key Information Document (KID). Spanish brokers typically cannot facilitate FAN purchase for retail clients. AUM of $280M is BELOW the $200M liquidity threshold for 'comfortable' sizing, but above $200M — WARNING: at ~$280M AUM and 18bps spread this is a TIER-1 by default but should be sized with caution (max position ~2-3% of portfolio to avoid impact cost). No UCITS pure-play wind ETF with >$200M AUM exists as of 2026-06-05 — this is a structural gap in the UCITS product landscape. Nearest UCITS proxy: iShares Global Clean Energy (IQQH.DE, AUM $3.8bn) but it dilutes pure offshore wind exposure with solar and other clean energy."
+    }
+  ],
+  "active_catalyst_ids": [],
+  "historical_catalyst_performance": {
+    "summary": "Offshore wind equities have exhibited extreme sensitivity to interest rate regime changes — more than any other renewable energy sub-sector. During 2019–2021 (ultra-low rates): Orsted appreciated ~300% peak from IPO, FAN returned ~150%, driven by zero-rate project finance and aggressive corporate PPA demand. During 2022–2023 (Fed/ECB hiking cycle): FAN fell ~55% peak-to-trough; Orsted fell ~75% from 2021 highs; Siemens Gamesa required Siemens Energy bailout after multi-billion losses. The key lesson: the sector is a long-duration, high-fixed-cost infrastructure asset — equity behaves like 20-year government bonds with additional operating risk. The 2022–2023 drawdown was amplified by OEM losses (Vestas and Gamesa both posted negative EBIT margins), creating a 'double hit': rising discount rates AND collapsing earnings. The 2024–2026 recovery was triggered by: (1) CfD strike price resets 2–3x above 2021 levels restoring project returns, (2) OEM price recovery (turbine prices +40–45% from 2020 trough), and (3) Orsted rights issue (DKK 60bn) and workforce reduction restructuring. Recovery catalysts historically lag rate-peak by 12–18 months as project pipelines take time to re-contract. Policy mandates (EU Green Deal, REPowerEU, German Offshore Wind Act) have provided demand floor even during the distress period — no EU member state retreated from 2030 offshore targets despite rising costs."
+  },
+  "risks": [
+    "ECB hiking cycle in 2026 is the primary near-term headwind: each 50bps rate hike raises project-level LCOE by ~€5–8/MWh and tightens equity IRRs from already-thin ~8–10% project returns. An additional 100bps hike could halt FID activity for uncontracted projects, extending the recovery timeline by 12–18 months beyond current consensus.",
+    "US policy risk (Trump executive orders): BloombergNEF reduced US offshore wind deployment expectations from 39 GW to 6 GW by 2035 following stop-work directives and permit suspensions. FAN holds ~10–15% US-listed names (Equinor US arm, GE Vernova tail). Orsted recorded a $10M Q4 2025 impairment on Revolution Wind (Rhode Island) from Trump suspension orders. US policy remains a meaningful portfolio drag risk for any global wind ETF.",
+    "OEM duopoly fragility — Siemens Gamesa breakeven dependency: the entire European offshore supply chain now relies on two OEMs. If Siemens Gamesa fails to reach breakeven in FY2026 (guided), Siemens Energy may be forced into further capital support or exit decisions. A Gamesa supply-side withdrawal would be catastrophic for EU 2030 targets and create a 3–4 year installation bottleneck with no alternative supplier.",
+    "CfD auction 'empty round' risk: if CfD strike prices are set too low relative to OEM turbine pricing and WACC, developers submit no bids (as occurred in UK AR5 2023 where no offshore wind capacity was awarded). A repeat 'empty round' in Germany's SDE++ or UK AR7 would be a sector-negative catalyst triggering equity re-rating of developers.",
+    "Installation vessel bottleneck: the global heavy-lift fleet is fully booked through 2028. Any vessel incident, delay, or regulatory issue can cascade across multiple projects. Insurance costs for offshore installation vessels have risen ~30–40% since 2022, adding to project-level cost pressure.",
+    "Chinese OEM competition (longer-term threat): Mingyang Smart Energy and CSSC Offshore are deploying 16–22 MW class turbines in Chinese waters and actively tendering in Southeast Asia and potentially EU markets. If Chinese OEMs gain EU market access (geopolitical risk permitting), the OEM concentration risk flips to oversupply and price compression — positive for developers, negative for Vestas/Gamesa equities which dominate FAN."
+  ],
+  "narrative_maturity": "mainstream",
+  "narrative_trend": "decreasing",
+  "narrative_notes": "Offshore wind narrative peaked at 'crowded' in 2020–2021 (every major bank published multi-GW deployment forecasts, ESG flows poured into the sector, Orsted was valued at ~25x EBITDA). The 2022–2023 crisis severely damaged consensus confidence — the narrative shifted from ESG darling to 'structurally challenged.' In 2026, the sector has recovered to 'mainstream': Goldman Sachs, Morgan Stanley, and Wood Mackenzie publish active coverage; the theme appears in ETF product descriptions and energy transition reports; EU policy mandates ensure the sector is not ignored. However, the narrative is DECREASING in saturation — the 2023 crisis removed retail ETF inflow momentum, institutional ESG allocators have deprioritised offshore wind vs solar (cheaper, faster build) and storage. The sector does NOT currently qualify as 'crowded': FAN AUM ($280M) is well below the $500M threshold cited in scoring_weights.yaml 'mainstream' criteria; sell-side coverage is active but not dominant in daily financial media; COT positioning data on wind equities does not show extreme long positioning. Anchored: 'mainstream' per scoring_weights.yaml criteria ('Goldman/JPM/MS publish base-case reports. ETF AUM > $500M in theme') — partially met (sell-side coverage yes, ETF AUM below threshold at $280M). Score equivalent: 60 (mainstream level). Narrative trend decreasing from prior crowded peak, which is ALPHA POSITIVE — the sector is less consensus-crowded than 2021, creating potential for outperformance if rate cycle turns."
+}

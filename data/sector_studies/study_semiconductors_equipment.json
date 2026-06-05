@@ -1,0 +1,171 @@
+{
+  "id": "study_semiconductors_equipment",
+  "schema_version": "1.2",
+  "sector_id": "semiconductors_equipment",
+  "sector_label": "Semiconductors — Manufacturing Equipment (ASML, AMAT, Lam)",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "technology",
+    "adjacent_sectors": [
+      "semiconductors_design",
+      "semiconductors_foundry",
+      "semiconductors_memory",
+      "ai_infrastructure_data_centers"
+    ],
+    "differentiation_note": "Semiconductors equipment is the 'picks-and-shovels' layer of the semiconductor supply chain: these companies sell the capital machinery that ALL chip types — fabless designs, foundry output, memory IDMs — require to fabricate wafers. They do not own IP in chips nor do they operate fabs; their revenue therefore lags the AI/compute demand signal visible in semiconductors_design by 12–24 months, because tool orders translate to fab capacity months after the original chip demand inflection. ASML's monopoly on EUV lithography (and emerging High-NA EUV for sub-2nm nodes) represents a moat that has no peer: every leading-edge foundry globally — TSMC, Samsung Foundry, Intel Foundry — depends exclusively on ASML hardware for 5nm and below, a single-supplier constraint with no credible alternative on a 10-year horizon. This is structurally distinct from semiconductors_foundry (which is the customer, not the toolmaker), from semiconductors_design (which has zero fab capex exposure and is driven by IP royalties and design wins), and from semiconductors_memory (which has its own DRAM/NAND-specific toolset and memory-pricing cycle drivers). The equipment sector's revenue visibility comes from backlog, not book-to-bill; ASML's €38.8B backlog at end-2025 represents roughly 12 months of forward revenue locked in — a characteristic not shared by any adjacent sector."
+  },
+
+  "demand_drivers": [
+    "AI infrastructure capex supercycle: combined hyperscaler capex (Microsoft $80B, Google $75B, Amazon $100B+, Meta $60–65B) budgeted for 2026, ~$350B aggregate, growing 20–30% annually through 2028 per consensus — all requiring leading-edge logic and HBM fabrication tools.",
+    "WFE spending reaching a record $139B in 2026 per SEMI (vs $125.5B in 2025), with $156B projected in 2027 — a multi-year up-cycle, not a one-quarter bounce; WFE sub-segment growing +9.0% YoY in 2026.",
+    "TSMC capex guided at $38–42B for 2026 (Needham: $45B in 2026, $50B in 2027) for N2 and A16 node ramp — the highest-intensity lithography and deposition toolset purchases.",
+    "Memory WFE recovery: DRAM equipment sales projected to grow 15.1% in 2026 and NAND +12.7%, driven by HBM3E/HBM4 stack complexity requiring additional deposition, etch, and inspection tool layers per wafer.",
+    "Geopolitical reshoring capex: EU Chips Act mobilised €52B+ in public/private investment; Chips Act 2.0 targets €120B by 2035; ESMC Dresden (TSMC/Bosch/Infineon/NXP, €10B+) requires a full greenfield toolset purchase — new fab builds are the highest equipment intensity event in the industry.",
+    "High-NA EUV transition: ASML priced High-NA EUV systems at ~$370M each; initial production units entering chipmaker R&D lines in 2025–2026, with volume ramp at Intel Foundry first, TSMC from ~2029 (A10 node); each High-NA system sale is 3–5× the revenue of a standard EUV NXE:3800 unit.",
+    "China domestic WFE buffer: despite tightening US/Dutch export controls, China is projected to spend $47B on WFE in 2026 (~one-third of global total), with domestic vendors (NAURA, AMEC) growing but unable to address leading-edge needs — creating a bifurcated market where Western vendors retain advanced-node share even as mature-node China sales face compression."
+  ],
+
+  "supply_constraints": [
+    "ASML's EUV supply is physically constrained: the company produces roughly 60–70 EUV systems per year at Veldhoven; manufacturing complexity (100,000+ components, 1,500+ suppliers globally) limits rapid output scaling — ASML itself has guided that capacity expansion takes 3–5 years.",
+    "High-NA EUV ramp-up is bottlenecked by ASML's own production learning curve; each EXE:5200 system requires new optics assemblies built to sub-nanometer tolerances, and early yield on the production line is <5 units/year.",
+    "Skilled workforce scarcity: semiconductor equipment engineers (process, field service, applications) take 3–5 years to train; AMAT, LRCX, and KLAC all cite field service headcount as a constraint on how quickly installed equipment can be qualified at new fabs.",
+    "Critical materials — specialty gases (NF3, C4F8 for etch), photomasks (EUV pellicles require ruthenium or molybdenum substrates), and quartz components — face supply lags of 6–18 months when demand spikes.",
+    "Geopolitical export controls: the Dutch government restricts EUV and advanced DUV shipments to China; the US BIS Entity List and Entity List expansions in 2023–2025 constrain AMAT, LRCX, KLAC sales to Chinese leading-edge customers, removing a share of addressable market and adding compliance cost.",
+    "Long-lead-time supply chains: the average new fab takes 24–36 months from groundbreaking to first wafer-out; equipment must be ordered 12–18 months in advance, meaning demand signals are visible far in advance but revenue materialises slowly — a feature that smooths but also delays the equipment cycle."
+  ],
+
+  "cycle_position": {
+    "assessment": "Early-to-mid upcycle. Revenue is inflecting upward on AI and memory-driven orders; backlog is at record levels; the next cyclical peak is not expected before 2027–2028.",
+    "rationale": "SEMI's forecast of $139B WFE in 2026 (up from $125.5B in 2025) and $156B in 2027 confirms the upcycle is intact and broadening beyond AI logic into memory. AMAT raised its full-year equipment growth guide from >20% to >30% for calendar 2026 — a mid-cycle positive revision, not a peak revision. ASML's €38.8B backlog (end-2025) and Q1 2026 revenue of €8.8B point to 12+ months of already-booked revenue. The 2022–2023 downcycle saw WFE spending fall ~15–20% as consumer end-markets corrected; the subsequent recovery was led by AI (Nvidia-driven logic demand from TSMC) in 2024–2025, and is now broadening to memory (HBM ramp) and greenfield (CHIPS Act/EU reshoring fabs) in 2026–2027. We are in the expansion phase, not the overheating phase — inventory-to-sales ratios are normalised, not stretched. Crowding risk is real (equipment stocks are extensively covered) but the earnings-revision cycle is still upward, which typically keeps momentum positive for 6–12 months post-revision. Key watch signal for cycle peak: when TSMC or Samsung signals capex guidance reduction, which historically leads equipment revenue by ~2 quarters.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "WFE total market (SEMI bi-annual report)",
+      "unit": "USD_billion_annual",
+      "source": "SEMI.org press releases (June + November)",
+      "current": 139,
+      "comment": "2026 SEMI forecast: $139B (record). 2025 actual: $125.5B. 2027 projection: $156B. Monitor for mid-year guidance revision — upward revision mid-cycle is historically bullish for stocks 3–6 months forward."
+    },
+    {
+      "metric": "ASML net system sales bookings (quarterly)",
+      "unit": "EUR_billion_quarterly",
+      "source": "ASML earnings releases (Q1–Q4)",
+      "current": 8.8,
+      "comment": "Q1 2026: €8.8B total net sales. Record Q4 2025 bookings: €13.2B. Full-year 2026 guide: €36–40B. Watch for book-to-bill below 1.0 as a leading indicator of cycle rollover — not yet visible."
+    },
+    {
+      "metric": "Applied Materials equipment revenue growth (calendar year guide)",
+      "unit": "yoy_pct",
+      "source": "AMAT earnings call guidance",
+      "current": 30,
+      "comment": "Q2 2026 guide raised to >30% (from >20% in Q1). This is the most current read on near-term WFE momentum. Watch for guide cuts as the primary de-rating trigger."
+    },
+    {
+      "metric": "TSMC capital expenditure guidance",
+      "unit": "USD_billion_annual",
+      "source": "TSMC quarterly earnings",
+      "current": 38,
+      "comment": "TSMC guided $38–42B for 2026 (Needham estimate $45B). ~70% of TSMC capex flows to equipment. TSMC alone represents ~25–30% of global WFE demand. Any cut here propagates immediately to equipment names."
+    },
+    {
+      "metric": "High-NA EUV system shipments (ASML EXE:5200 series)",
+      "unit": "units_annual",
+      "source": "ASML annual report / earnings comments",
+      "current": null,
+      "comment": "ASML producing <5 High-NA units in 2025; target ~10–15 units in 2026. Priced at ~$370M each. TSMC delayed High-NA adoption to ~2029 (A10 node); Intel Foundry is first mover. This metric is the single best forward indicator of ASML's revenue per-unit trajectory."
+    },
+    {
+      "metric": "China WFE spending (SEMI/analyst estimates)",
+      "unit": "USD_billion_annual",
+      "source": "SEMI reports, UBS, Bernstein",
+      "current": 47,
+      "comment": "UBS estimates $47B China WFE in 2026. Export controls compress the addressable-market for US/Dutch vendors toward mature-node tools only. Monitor BIS Entity List expansions — each expansion directly reduces AMAT/LRCX/KLA China revenue."
+    },
+    {
+      "metric": "Hyperscaler combined capex (Microsoft + Google + Amazon + Meta)",
+      "unit": "USD_billion_quarterly",
+      "source": "Earnings transcripts (quarterly)",
+      "current": 87,
+      "comment": "Current value from ai_capex_supercycle ind_01: $87B quarterly. Above $60B threshold is strong. This is the root demand signal for leading-edge logic equipment; sustained growth here sustains TSMC and Samsung capex, which flows to equipment names with a 1–2 quarter lag."
+    }
+  ],
+
+  "etf_analysis": [
+    {
+      "ticker": "SOXX",
+      "name": "iShares Semiconductor ETF",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "ter": 0.0035,
+      "aum_m_usd": 12000,
+      "replication": "physical",
+      "avg_spread_bps": 2,
+      "avg_daily_volume_m_usd": 450,
+      "top_10_concentration_pct": 65,
+      "characteristics": "30-stock index covering the full semiconductor supply chain: fabless design (NVDA, AMD), equipment (AMAT, LRCX, KLAC, ASML-ADR ~15% combined equipment weight), foundry proxies, memory (MU), and analog/industrial (ADI, TXN). The equipment sub-thesis is accessible but diluted — pure equipment weight is ~15–18% of the fund. NOT UCITS — restricted for Spanish retail investors under PRIIPs/KID rules.",
+      "recommendation_tier": 3,
+      "limitations": "NOT UCITS. Equipment exposure is a minority of the fund (~15–18%); the dominant exposure is fabless design (NVDA ~8–12%, AMD ~9%), which has a different cycle and narrative (crowded AI semis thesis). A long SOXX position is primarily a bet on AI chip design, not equipment. Suitable only if broker allows non-UCITS access and investor accepts the design-vs-equipment dilution."
+    },
+    {
+      "ticker": "SEMI.L",
+      "name": "iShares MSCI Global Semiconductors UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0035,
+      "aum_m_usd": 2400,
+      "replication": "physical",
+      "avg_spread_bps": 8,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "UCITS. LSE-listed. Tracks MSCI ACWI Semiconductors Index — global scope includes ASML (Dutch-listed, meaningful weight ~8–10%), TSMC, Samsung as well as US names. Equipment names (ASML, AMAT, LRCX, KLAC) are estimated at 20–25% combined weight. This is the best accessible UCITS vehicle for a Spanish investor seeking semiconductor equipment exposure, but the thesis remains diluted by design and foundry names. AUM $2.4B — adequate liquidity. Spread 8bps — within CATALYX tier-1 threshold.",
+      "recommendation_tier": 2,
+      "limitations": "UCITS compliant — accessible for Spanish investor. Equipment sub-sector remains a minority (~20–25%) of the index. ASML has meaningful weight given its Euronext/NASDAQ dual listing and global index inclusion, but names like LRCX, KLAC, AMAT are capped by their US market caps. The broader fab cycle (TSMC ~15–18% weight) and memory (Samsung, SK Hynix if accessible) add useful correlated exposure but blur pure equipment alpha. Best available UCITS vehicle until a pure-play equipment ETF launches. Tier 2: preferred UCITS proxy."
+    },
+    {
+      "ticker": "NO_PURE_EQUIPMENT_ETF",
+      "name": "No pure-play semiconductor equipment ETF exists (UCITS or US)",
+      "exchange": "N/A",
+      "currency": "N/A",
+      "ter": null,
+      "aum_m_usd": null,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "CRITICAL GAP: As of 2026-06-05, no ETF (UCITS or US-domiciled) tracks a pure semiconductor equipment index. The sector is investable only via: (a) SEMI.L (UCITS, diluted — recommended Tier 2), (b) SOXX (non-UCITS, diluted — Tier 3), or (c) direct single-name equity in ASML (Euronext/NASDAQ, EUR-denominated on Euronext Amsterdam — the cleanest pure equipment proxy given EUV monopoly and ~40% equipment revenue from lithography alone). For a Spanish investor, ASML on Euronext Amsterdam is accessible without PRIIPS restrictions as it is an equity, not a UCITS/KIID-regulated fund product. A pure equipment ETF launch (e.g., Global X, VanEck, or HANetf targeting AMAT+LRCX+KLAC+ASML+ONTO+BESI) would be a material ETF access upgrade trigger. Monitor HANetf and Global X product pipelines.",
+      "recommendation_tier": 3,
+      "limitations": "Taxonomy gap flag: the absence of a pure-play equipment ETF is an investability constraint, not a thesis constraint. The thesis is sound; the vehicle is suboptimal. This gap should be re-evaluated quarterly. If a qualifying UCITS equipment ETF launches with AUM > $200M within 12 months, it would become the preferred Tier 1 vehicle and enable cleaner position sizing."
+    }
+  ],
+
+  "risks": [
+    "Export control escalation: additional US BIS restrictions on DUV/etch/deposition tools to China would reduce AMAT, LRCX, and KLA China revenues (China represented ~25–30% of each company's revenue before 2023 controls); a broad blanket ban (bipartisan Senate proposal active in 2026) could remove $8–12B from combined equipment revenues in the near term.",
+    "Hyperscaler capex cut risk: if Microsoft, Google, or Amazon guides capex meaningfully lower (>15% cut) in a single quarter, TSMC and Samsung capex would be revised lower 1–2 quarters later, triggering an equipment order cut. This is the most likely near-term cycle-ending event; currently not visible (Q2 2026 guidance remains at record levels).",
+    "TSMC High-NA EUV delay: TSMC publicly delayed High-NA EUV adoption to ~2029 (A10 node); this compresses ASML's premium High-NA revenue ramp and extends the existing NXE:3800 tool cycle, reducing ASML's per-tool revenue uplift in 2026–2028 relative to prior expectations.",
+    "Valuation: equipment names are trading at elevated forward P/E multiples (ASML ~35–40x forward, AMAT ~32x) reflecting the upcycle consensus. Any miss in quarterly bookings guidance, China revenue cut, or macro demand signal creates asymmetric de-rating risk from current levels.",
+    "Geopolitical concentration: TSMC's fabs in Taiwan represent ~90% of leading-edge (<5nm) capacity and purchase the bulk of ASML EUV tools; a Taiwan Strait escalation scenario would simultaneously reduce demand (TSMC capex freeze) and supply (equipment export ban), creating a dual shock with no clear hedge within the sector.",
+    "Domestic Chinese equipment vendors scaling: NAURA entered the global top-10 WFE vendors in 2024; AMEC, E-town, and Piotech are expanding into etch, CVD, and thermal processing at mature nodes. If Chinese vendors successfully address 28nm and older nodes domestically, the market loss for Western vendors in China would become structural rather than policy-driven, reducing addressable market by $10–15B annually by 2028.",
+    "Currency risk for EUR-base investor: ASML reports in EUR (favorable for Spanish investor); AMAT, LRCX, KLAC report in USD. SEMI.L is USD-denominated on LSE. A EUR/USD appreciation of >10% from current levels would compress returns on USD-denominated exposures."
+  ],
+
+  "active_catalyst_ids": [
+    "struct_ai_capex_supercycle",
+    "struct_copper_datacenter_demand"
+  ],
+
+  "historical_catalyst_performance": {
+    "summary": "Semiconductor equipment has historically been one of the highest-beta expressions of the semiconductor upcycle, typically outperforming fabless design names on the way up (due to operating leverage) but declining more sharply at cycle peaks. Key precedents: (1) 2020–2021 upcycle — SOXX (equipment-inclusive) returned ~72% vs S&P 500 +27%, with AMAT +130%, LRCX +120%, KLAC +95% as fab capacity build-out drove record WFE; equipment peaked 6–9 months after chip design stocks peaked, confirming the revenue-lag thesis. (2) 2022–2023 downcycle — WFE spending projected to fall 15–20% as consumer end-markets corrected; equipment names declined 30–50% peak-to-trough (LRCX -45%, AMAT -38%) while fabless names recovered faster on AI demand before equipment revenues caught up. (3) 2024–2025 AI recovery — equipment names recovered on TSMC N2 ramp and HBM toolset demand; ASML re-rated to record backlog on AI-driven fab spending, confirming the 12–24 month lag theory: Nvidia/TSMC AI demand from 2023 translated to equipment order inflections in late-2024. (4) Geopolitical catalysts: each major export control announcement (Oct 2022 BIS rules, Oct 2023 expansion, 2024 ASML Dutch DUV restrictions) caused 5–15% single-session declines in ASML and AMAT, with recoveries over 3–6 months as non-China demand absorbed the gap.",
+    "cycle_lag_note": "Revenue lag from chip design demand: 12–24 months. This means equipment names are later-cycle but provide a longer runway once the capex cycle is confirmed. Current AI-driven demand inflection started Q1 2023; equipment revenue inflection confirmed in late 2024; WFE cycle likely runs to 2027–2028 based on backlog and TSMC/Samsung multi-year node ramp schedules.",
+    "asml_euv_monopoly_premium": "ASML has historically commanded a monopoly premium (P/E 40–55x at cycle peaks) unavailable to diversified equipment vendors (AMAT, LRCX trade at 25–35x). This premium compresses in downturns but expands in upturns as investors price the moat. The High-NA transition, even delayed by TSMC, extends ASML's monopoly pricing power through at least 2030 on the roadmap.",
+    "reshoring_capex_new_regime": "The CHIPS Act / EU Chips Act reshoring wave is structurally different from prior cycles: government subsidies backstop fab construction risk, reducing the chance of greenfield projects being cancelled mid-build. Intel's CHIP Act fabs in Ohio/Arizona and ESMC in Dresden represent a new demand floor for equipment that did not exist in 2020–2021. Historically, equipment companies have never had such visibility on multi-year demand from government-backed projects."
+  },
+
+  "narrative_maturity": "crowded",
+  "narrative_notes": "Assigning 'crowded' (score_equiv: 80) per scoring_weights.yaml criteria. The semiconductor equipment thesis — specifically ASML EUV monopoly, AI fab capex, CHIPS Act reshoring — meets all observable criteria for 'crowded': (a) Goldman Sachs, JPMorgan, Morgan Stanley, and all major US banks publish base-case reports on WFE upcycle; (b) ASML is a routine Bloomberg/FT/WSJ headline; (c) both ASML and AMAT carry Strong Buy consensus with ~18% upside priced in; (d) SOXX/SMH AUM exceeds $30B+ combined; (e) narrative appears in thematic ETF descriptions, retail trading forums, and mainstream CNBC coverage. It does not yet meet 'exhausted' criteria because: earnings revisions are still positive (not reversing), P/E at 32–40x is elevated but not at historical maximum (ASML traded at 55x in 2021), and ETF flows are not yet clearly reversing. The AI infrastructure thesis is more crowded than the equipment-specific picks-and-shovels angle — sophisticated investors know the revenue-lag thesis gives equipment names a different entry timing than design names — but the overall sector narrative is undeniably mainstream-to-crowded. Maximum across active catalysts: struct_ai_capex_supercycle narrative = crowded. This is the binding constraint per multi-catalyst aggregation rule.",
+  "narrative_trend": "stable"
+}

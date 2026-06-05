@@ -509,3 +509,45 @@ conviction_tiers:
     label: "Exploratory"
     max_position_pct: 0.04
     description: "Interesting thesis but high uncertainty or limited prior data"
+
+# Correlated-catalyst combined allocation cap (portfolio concentration control)
+# DISTINCT from conviction_tiers above: those size a SINGLE position by conviction.
+# This caps the SUM of allocations across all open/draft theses that share the same
+# primary structural catalyst — because such theses rise and fall together
+# (e.g. copper_miners + grid_infrastructure both ride the AI-capex → power → metals complex).
+# FLEXIBLE BY DESIGN: enforcement is "warn", not a hard block. A draft that breaches the cap
+# is flagged and must carry an explicit `correlation_note` override, but is NOT prohibited.
+# Rationale (2026-06-05): the old design reused the Tier-2 single-position ceiling (8%) as the
+# combined cap, which was too low for a deliberately concentrated, few-sector portfolio.
+correlated_catalyst_cap:
+  max_combined_pct: 0.20      # combined allocation across theses sharing a primary catalyst
+  enforcement: "warn"          # "warn" = flag + require override note | "block" = prohibit
+
+# Crowding penalty derived from a sector study's narrative_maturity (added 2026-06-05)
+# Single source of truth — was hardcoded in the heatmap skill + ad-hoc scripts.
+# Higher maturity → more crowded → larger composite penalty (applied as 100 - crowding).
+crowding_from_maturity:
+  ignored: 10
+  emerging: 25
+  mainstream: 55
+  crowded: 75
+  exhausted: 90
+
+# Catalyst lifecycle — update & deprecation thresholds (added 2026-06-05)
+# governance: "auto" → the monthly review APPLIES these transitions itself and logs them
+# in the report (no per-transition prompt). History is NEVER deleted — status flips to
+# archived/dormant/invalidated and the object is retained.
+catalyst_lifecycle:
+  governance: "auto"                       # "auto" = apply + log | "ask" = prompt per transition
+  # --- Update triggers ---
+  event_driven_update_delta_pct: 0.10      # Step 0 live value differs >10% from YAML → force update this cycle (Rule 5 → action)
+  event_promote_to_structural_cycles: 3    # an event re-detected N cycles and not decaying → promote to structural
+  # --- Event deprecation ---
+  event_archive_strength_below: 20         # strength_decayed floor …
+  event_archive_priced_in_min: 0.75        # … AND priced_in ≥ this → status: archived
+  # event reversal (policy walked back) → status: invalidated immediately, with reason (manual)
+  # --- Structural deprecation ---
+  structural_dormant_intensity_below: 40   # intensity < this …
+  structural_dormant_consecutive_cycles: 2 # … for N consecutive review cycles → status: dormant
+  structural_dormant_if_exhausted: true    # OR narrative_maturity == "exhausted" → dormant
+  # dormant is reactivatable: if indicators repoint above threshold, status flips back to active

@@ -1,0 +1,127 @@
+{
+  "id": "study_consumer_india_em",
+  "schema_version": "1.2",
+  "sector_id": "consumer_india_em",
+  "sector_label": "Consumer — India & Emerging Market Middle Class",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+  "taxonomy": {
+    "parent_sector": "consumer",
+    "adjacent_sectors": ["luxury_goods", "infrastructure_core"],
+    "differentiation_note": "This sector targets mass-market and aspirational consumers in India and broader EM who are entering the middle class for the first time, driven by real wage gains, urbanization, and digital commerce adoption — the demand driver is structural volume growth at lower price points (FMCG, consumer durables, quick-service restaurants, digital payments), not discretionary premiumization. Luxury goods, by contrast, depend on UHNW and HNW wealth concentration in China/Europe and USD/CNY dynamics; the luxury cycle is inversely correlated with EM populism and regulatory risk, while India consumer benefits from it. A luxury goods correction in China can coincide with an acceleration in India consumer as wallet share shifts from aspirational luxury to value-for-money consumption, further cementing that these two sectors carry distinct risk-return profiles and should never be held as substitutes in a portfolio."
+  },
+  "demand_drivers": [
+    "India GDP per capita growing at 5.1% in real terms in 2026 (IMF), reaching ~$2,813 nominal — a per-capita income level historically associated with an inflection in discretionary spending on consumer durables, branded FMCG, and organised retail.",
+    "India's middle class (defined as households with $10-$100/day PPP) now accounts for ~31% of the population (~450 million people) and is expanding at 6.3% annually (OECD); the OECD projects India to surpass China in absolute middle-class population by 2030-35, representing the largest single cohort of first-time discretionary consumers globally.",
+    "Mobile internet penetration reached ~70% of population (962 million wireless users) as of January 2026, with 96.6% of users accessing via mobile device; 1.1 billion smartphones in use (+5.6% YoY), enabling rapid e-commerce and digital-payments adoption that reduces barriers to organised retail, particularly in Tier-2 and Tier-3 cities.",
+    "RBI delivered 125 bps of repo rate cuts in 2025 (repo rate at 5.25% as of Dec 2025), reducing EMI burdens on consumer durables and home financing; fiscal stimulus via GST 2.0 rationalisation and income tax relief (FY26 budget) directly boosts post-tax household disposable income, with consumption-linked sectors (autos, durables) flagged by analysts as primary beneficiaries.",
+    "India retail market is projected to reach $1.6 trillion by 2030 from ~$952 billion in 2024; Reliance Retail (20,000 stores, 77.4M sq ft) targeting Rs. 1,00,000 crore in annual FMCG revenues, signalling private capex commitment to the thesis; Reliance Retail Q3-FY26 net profit +2.1% YoY despite macro headwinds, demonstrating resilience.",
+    "Urbanisation wave expanding beyond the five largest metros: WEF estimates 500 new 'consumer cities' emerging by 2036, with 93% of urban consumption growth expected from Tier-2+ locations — a structural demand shift that broadens the TAM well beyond Mumbai/Delhi captureable by current ETFs."
+  ],
+  "supply_constraints": [
+    "Indian organised retail remains under-penetrated at ~13% of total retail (vs. 85%+ in the US), creating structural capacity gaps in cold-chain logistics, warehousing, and last-mile delivery that constrain near-term revenue per square foot improvements.",
+    "Skilled labour scarcity in manufacturing (electronics, consumer goods) limits import-substitution ramp; PLI (Production-Linked Incentive) schemes for mobile phones and white goods are ramping but face multi-year qualification periods before meaningfully displacing imports.",
+    "Rupee depreciation risk — INR has exhibited recurring periods of weakness against USD (INR/USD ~84 as of H1-2026); for a EUR-based investor the currency risk is amplified (USD/EUR + INR/USD), compressing real returns even when local-currency sector gains are strong.",
+    "Capital goods and intermediate inputs (semiconductors, specialty chemicals) that feed consumer electronics assembly remain heavily import-dependent, making consumer durables pricing sensitive to global supply chains and tariff regimes."
+  ],
+  "cycle_position": {
+    "assessment": "early_recovery",
+    "rationale": "India equities pulled back in late 2025 and early 2026 — INDA YTD -7.5%, NDIA.L YTD -11.4% as of late May 2026 — as foreign portfolio outflows, elevated global risk aversion, and profit-taking after a strong FY24-FY25 run compressed multiples. Nifty 50 P/E is now 20.2x (TTM consolidated), below its long-term average of 23.4x, placing valuations in the 'fair value to modest discount' range after a 12-18 month de-rating. This pullback coincides with the RBI easing cycle beginning to transmit through the economy (rate cuts already in place; lag typically 2-3 quarters to consumer credit and durables demand). The sector is in early recovery: multiples compressed, monetary tailwind building, earnings revisions stabilising (Reliance Retail Q3-FY26 beat consensus slightly), but foreign flows have not yet reversed. The entry point looks constructive on a 6-12 month horizon, contingent on INR stability and continuation of the domestic consumption policy impulse.",
+    "last_assessed": "2026-06-05"
+  },
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Nifty 50 trailing P/E ratio",
+      "unit": "ratio",
+      "source": "NSE India / Craytheon.com",
+      "current": 20.2,
+      "comment": "As of June 3 2026. Long-run average 23.4x. Current level below average = modest valuation support. Alert if reaccelerates above 24x (crowding signal)."
+    },
+    {
+      "metric": "RBI repo rate",
+      "unit": "percent",
+      "source": "Reserve Bank of India / ClearTax",
+      "current": 5.25,
+      "comment": "125 bps of cuts delivered in 2025. Next MPC meeting watch for signalling of further easing. Key transmission mechanism for consumer credit and durables demand."
+    },
+    {
+      "metric": "India GDP growth rate (fiscal year)",
+      "unit": "percent YoY",
+      "source": "World Bank South Asia Economic Update / IMF WEO",
+      "current": 7.6,
+      "comment": "World Bank estimate for FY2025-26. IMF projects 6.5% for CY2026. Moderation to 6.6% in FY2026-27 is base case. Sustained >6.5% is thesis-supportive."
+    },
+    {
+      "metric": "India mobile internet users",
+      "unit": "millions",
+      "source": "DataReportal Digital 2026: India / Statista",
+      "current": 962,
+      "comment": "+2.94% YoY. 400M 5G users (+9.6% YoY). Penetration ~70% of population. Key enabler of e-commerce and digital payments in Tier-2/3 cities."
+    },
+    {
+      "metric": "INR/USD exchange rate",
+      "unit": "INR per USD",
+      "source": "Bloomberg / RBI",
+      "current": 84.0,
+      "comment": "Approximate level H1-2026. Persistent INR weakness directly erodes EUR-denominated ETF returns. A EUR-based investor carries a dual FX risk (INR/USD + USD/EUR). Monitor weekly."
+    },
+    {
+      "metric": "INDA YTD total return",
+      "unit": "percent",
+      "source": "iShares / Yahoo Finance",
+      "current": -7.53,
+      "comment": "YTD as of ~May 29 2026. NDIA.L YTD -11.4% (USD-denominated). Divergence from INDA is partly FX drag. Negative YTD confirms de-rating phase; watch for inflection following RBI transmission."
+    }
+  ],
+  "etf_analysis": [
+    {
+      "ticker": "NDIA.L",
+      "name": "iShares MSCI India UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0065,
+      "aum_m_usd": 2100,
+      "replication": "physical",
+      "avg_spread_bps": 10,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "UCITS-compliant equivalent of INDA for EU/Spanish investors. Physical replication, AUM $2.1B (well above €200M liquidity threshold). TER 0.65% — marginally higher than INDA (0.64%) but immaterial. Spread ~10bps on LSE — acceptable. Tracks MSCI India Index (large/mid cap). Top holdings: Reliance Industries, HDFC Bank, Infosys, ICICI Bank, TCS. Broad India exposure — financial (~30%), IT (~15%), consumer (~13%), energy (~11%). Currency: USD-denominated on LSE; EU investor incurs INR→USD and USD→EUR double FX layer.",
+      "recommendation_tier": 1,
+      "limitations": "UCITS YES — tier 1 for a Spanish investor. USD-denominated (not EUR-hedged) — FX drag risk when USD weakens vs EUR. Broad market exposure dilutes pure consumer thesis (financial and IT are large weights). No consumer-pure UCITS alternative currently available with AUM >€200M."
+    },
+    {
+      "ticker": "INDA",
+      "name": "iShares MSCI India ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0064,
+      "aum_m_usd": 8900,
+      "replication": "physical",
+      "avg_spread_bps": 4,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Largest India ETF globally, AUM $8.9B, lowest spread (4bps), highest liquidity. Physical replication of MSCI India Index. TER 0.64%. Extremely deep secondary market. Same index as NDIA.L. NOT UCITS — unavailable for direct purchase by EU MiFID II retail investors. Usable by professional/institutional accounts.",
+      "recommendation_tier": 2,
+      "limitations": "NOT UCITS — cannot be used by Spanish retail investor under MiFID II. For reference benchmark and institutional use only. EU investors must use NDIA.L (Tier 1). Spread and AUM are superior to NDIA.L but regulatory ineligibility overrides liquidity advantage."
+    }
+  ],
+  "active_catalyst_ids": [],
+  "historical_catalyst_performance": {
+    "summary": "India equities (proxied by MSCI India / INDA) have historically shown strong positive responses to RBI easing cycles: the 2019-2020 rate cut cycle (repo from 6.5% to 4%) preceded a recovery that saw INDA gain ~55% from March 2020 trough to end-2021 as domestic consumption rebounded. However, the post-2021 period demonstrated that valuation risk is real — INDA de-rated significantly through 2022 as global rate hikes compressed EM multiples, and the 2025 pullback (-5% 1-year, -7.5% YTD in 2026) mirrors that dynamic. Structurally, MSCI India outperformed MSCI EM over 5 years (+35% vs ~flat for broad EM in USD terms as of May 2026), reflecting India's macro resilience vs. China headwinds. The consumer/discretionary sub-sectors within India typically lag the initial phase of market recovery (led by financials and IT) but outperform during sustained expansions when income-driven demand normalises. Historical pattern: RBI easing → 2-3 quarter lag → consumer credit growth → durables and retail revenue acceleration → consumer ETF outperformance. The post-COVID recovery (2021-2022) illustrated this clearly: Nifty Consumer Durables index outperformed Nifty 50 by ~18% in the 12 months following the RBI's accommodative pivot.",
+    "rbi_easing_cycle_response": "Historically +15-25% total return for MSCI India 12 months after RBI pivots to cuts, with consumer-linked sectors typically leading in Q2-Q3 of the cycle after initial financials-led bounce.",
+    "em_risk_off_drawdown": "India typically draws down 20-30% in USD terms during global EM risk-off episodes (2013 taper tantrum: -25%; 2022 rate shock: -18%). INR weakness amplifies drawdowns for EUR-based investors.",
+    "trade_war_sensitivity": "India benefits relative to China-heavy EM ETFs during US-China trade escalation — US tariff shifts to India manufacturing (PLI schemes) can be a positive catalyst that widens India's relative outperformance vs. broad EM."
+  },
+  "risks": [
+    "Valuation re-rating risk: despite the 2025-2026 pullback, India still trades at a significant premium to broad EM peers (Nifty 50 P/E 20.2x vs. MSCI EM ~12x). Any earnings miss vs. the 6.5-7.6% GDP growth consensus, or a global risk-off episode, can trigger a further multiple compression; India's premium has historically contracted 25-35% during EM stress periods.",
+    "FX double-drag for EUR investor: NDIA.L is USD-denominated; a EUR-based investor faces INR→USD conversion at the fund level and USD→EUR conversion at the portfolio level. If EUR strengthens vs. USD (as it did in early 2026 amid USD weakness), even positive local-currency returns can yield negative EUR returns. No liquid EUR-hedged India UCITS ETF currently exists.",
+    "Political/policy continuity risk: India's growth narrative is premised on continued pro-business, pro-consumption policy (Modi government PLI schemes, GST reform, digital infrastructure). An electoral upset or policy reversal (e.g., return of populist subsidies crowding out private consumption) would materially impair the structural thesis.",
+    "China macro contagion: India is often held as 'EM ex-China' relative value trade; if China's economy stabilises and capital flows return to Chinese equities, India can face mechanical outflows as EM portfolio managers rotate — even if India's fundamentals remain intact. This is a positioning risk, not a fundamental risk.",
+    "Consumer credit quality: 125bps of rate cuts have begun flowing into consumer lending; rapid credit expansion to first-time borrowers in Tier-2/3 cities (microfinance, consumer durables EMIs) carries NPL risk if rural income growth stalls due to monsoon failure or commodity price shocks (India imports ~80% of its crude oil).",
+    "ETF proxy impurity: both INDA and NDIA.L track broad MSCI India — financials (~30%) and IT (~15%) dominate, meaning consumer-specific performance is diluted. A dedicated India consumer ETF with acceptable UCITS/AUM/spread profile does not currently exist for EU investors, requiring investors to accept significant sector-mix dilution vs. the thesis."
+  ],
+  "narrative_maturity": "emerging",
+  "narrative_trend": "increasing",
+  "narrative_notes": "Classification rationale — 'emerging': The India structural growth / EM middle-class thesis is present in specialist research (Goldman Sachs India Equity Outlook, Morgan Stanley India Consumer reports, OECD middle class projections) and receives periodic Bloomberg/FT coverage, but it is NOT the dominant consensus trade in generalist sell-side. Sell-side base cases for EM in 2026 are dominated by China re-opening/recovery narratives and US rate cycle plays. India consumer is a second-tier theme — covered but not yet a universal overweight recommendation. The 2025-2026 drawdown has further reduced crowding: many tourist investors who entered the India growth trade in 2023-2024 have exited, reducing positioning. The 'emerging' level (score_equiv: 35) is consistent with: specialist banks (CLSA, Kotak) publish dedicated reports; India consumer appears in WEF global consumption projections; ETF AUM ($2.1B in NDIA.L, $8.9B in INDA) is above the $500M threshold but the narrative is not yet driving daily CNBC/Bloomberg rotation headlines. Not 'ignored' (too well-covered by specialists) and not 'mainstream' (not yet a generalist overweight consensus). Using the multi-catalyst aggregation rule from scoring_weights.yaml: no active structural catalyst is registered for this sector, so narrative_maturity is assessed directly from media/analyst saturation — 'emerging'."
+}

@@ -1,0 +1,157 @@
+{
+  "$schema": "catalyx/schemas/sector_study.json",
+  "id": "study_asset_management",
+  "schema_version": "1.2",
+  "sector_id": "asset_management",
+  "sector_label": "Asset Management — Listed",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "financials",
+    "adjacent_sectors": ["private_equity_listed", "us_retail_banking", "insurance_eu", "fintech_payments"],
+    "differentiation_note": "Listed asset managers (BlackRock, Amundi, Schroders, T. Rowe Price) earn revenues from management fees on third-party AUM — they do NOT deploy their own balance sheet into risk assets and therefore carry no credit risk, duration risk, or underwriting exposure. This is the central distinction from banks (which intermediate credit and have balance sheet risk) and from insurance companies (which have liability-driven balance sheets with embedded interest rate and actuarial risk). Against private_equity_listed, the distinction is equally sharp: listed PE firms (Blackstone, KKR, Apollo) earn management fees PLUS carried interest from deploying locked-up capital into illiquid alternatives, exposing them to vintage risk, fundraising cycle risk, and the realization environment; their revenues are lumpy and tied to transaction markets. Traditional asset managers earn recurring, high-visibility management fees on liquid, marked-to-market AUM — their P&L is structurally more stable but grows more slowly. The primary alpha drivers for traditional asset managers are (1) ETF and passive market share capture, (2) the shift into higher-fee alternative/private assets, and (3) operating leverage as AUM grows faster than costs — none of which apply to banking or PE in the same way."
+  },
+
+  "demand_drivers": [
+    "Global AUM growth via rising equity and bond markets: asset manager revenues are directly geared to the level of AUM, which is itself a function of market returns + net flows. The S&P 500 and global equity indices at or near all-time highs in H1 2026 provide a passive tailwind — even with zero net flows, revenues grow as markets appreciate. BlackRock AUM reached $13.89 trillion in Q1 2026, up from $11.58 trillion one year prior — a +20% YoY increase driven primarily by market appreciation and record ETF inflows.",
+    "Passive and ETF platform dominance: ETFs are taking structural market share from active funds. BlackRock's iShares and Amundi ETF platforms are the primary beneficiaries. In Q1 2026, Amundi attracted €24 billion of its record €32 billion net inflows through ETF and index solutions. BlackRock reported Q1 2026 revenue of $6.70 billion (+27% YoY) with performance fees from active ETFs explicitly cited by management as a growth driver. This structural shift to passive benefits the largest distributors at the expense of boutique active managers.",
+    "Alternative and private asset fee migration: alternative assets represent 18% of industry AUM but generate 57% of total revenues (Coalition Greenwich / Moody's 2026). This is the key revenue mix shift. As managers migrate AUM into private credit, infrastructure, and private equity (higher TER: 1.0–2.0% vs 0.05–0.50% for passive), revenue grows faster than AUM. Blackstone AUM hit $1.304 trillion in Q1 2026 (+12% YoY) with Fee Related Earnings +23% and Distributable Earnings +25%. Private markets are on track to generate >50% of total industry revenues by 2030.",
+    "Retail democratization of alternatives: regulators in the EU (ELTIF 2.0 framework, effective 2024) and US are progressively opening private market funds to retail and semi-institutional investors. This expands the addressable market for alternative products beyond institutional allocators. Amundi and Schroders are both building retail private asset products as their primary growth engine for the next 3-5 years.",
+    "Consolidation and scale advantages: the top 10 global managers are capturing a disproportionate share of new flows. BlackRock topped European brand rankings in 2026 (Broadridge Fund Brand 50), and BlackRock, Amundi, and JPMorgan AM combined attracted the majority of European ETF flows. Smaller active managers face existential pressure — this creates M&A consolidation flow (acquirers' AUM and fees grow inorganically). Schroders is in discussions for the Nuveen acquisition (Q1 2026 vote pending), which would add significant AUM and alternative capabilities.",
+    "Geopolitical allocation shifts (structural): US-China decoupling is prompting institutional allocators to diversify into European and emerging market asset managers as counterparty risk management. European asset managers (Amundi, Schroders, DWS) are benefiting from institutional mandates rebalancing away from US-domiciled managers at the margin. Not yet material but watch for sovereign wealth fund mandate shifts."
+  ],
+
+  "supply_constraints": [
+    "Fee compression is the dominant structural supply-side headwind: passive ETF TERs have compressed from ~30bps to 5-10bps in five years and are approaching zero for flagship products (BNP Paribas launched a 0.05% TER MSCI World ETF in 2026). Active fund TERs are also under pressure from performance-fee scrutiny and EU MiFID II cost transparency rules. Industry-wide: revenues grew only 0.2% in 2025 while costs rose 4.3%, causing an 8.1% decline in aggregate profits (Coalition Greenwich). Managers must grow AUM faster than fees compress to maintain revenue — a treadmill that favors scale.",
+    "Technology and distribution cost inflation: the race to build proprietary data platforms, risk analytics, and AI-driven active management requires sustained capex in talent and technology. BlackRock Aladdin is a competitive moat but also requires continuous investment. Smaller managers cannot afford comparable platforms, accelerating winner-take-most dynamics.",
+    "Talent retention in alternatives: private credit and infrastructure require highly specialized deal teams. Compensation in alternatives remains high despite broader financial sector moderation. Top talent can defect to join newly launched GP firms, taking relationships and deal flow. This is a binding constraint on how quickly traditional managers can build alternatives capabilities organically.",
+    "Regulatory burden (EU): SFDR (Sustainable Finance Disclosure Regulation), ESMA marketing rules, ELTIF structures, and MiFID II cost disclosures create compliance overhead that falls disproportionately on mid-size managers. The compliance moat favors the largest firms but adds unit costs for everyone.",
+    "Distribution channel concentration: in Europe, retail distribution is heavily intermediated by bank platforms (BNP, Deutsche Bank, Societe Generale). Managers without captive distribution (Amundi has Credit Agricole; Schroders does not) face margin pressure from distributor fees. This creates a structural advantage for bank-owned managers and a constraint for independent managers."
+  ],
+
+  "technology_maturity": null,
+
+  "cycle_position": {
+    "assessment": "Late expansion — benefiting from market-level tailwinds with visible fee compression headwinds; re-rating opportunity concentrated in alternative-asset managers and ETF platform operators",
+    "rationale": "Asset management stocks are in a late-expansion phase tied directly to equity market levels. With global equities near all-time highs (S&P 500, MSCI World), AUM is growing mechanically for all managers — even those with net outflows benefit from price appreciation. However, this creates a dangerous asymmetry: in the next equity bear market, AUM will contract, fees will compress further, and revenue will fall simultaneously. The investment case is strongest for managers with (a) large ETF/passive platforms (fee compression hits them least in absolute terms because TERs are already at floor), (b) high-fee alternatives AUM (Blackstone, KKR, Apollo), or (c) structural flow stories (consolidators). Pure traditional active managers face secular decline in their core business. Valuation: BlackRock trades at ~22x forward P/E (premium justified by ETF moat + Aladdin), Amundi at ~12x (discount vs global peers reflects lower alternatives exposure, French governance), Schroders at ~11x (deep discount — integration uncertainty, declining active AUM). The market is not pricing the alternatives shift generously — there is embedded alpha for managers who successfully execute the private-assets pivot. Key inflection: if Schroders completes the Nuveen acquisition, it would be a positive re-rating catalyst. BlackRock's Q1 2026 earnings beat (+31% op income) did not produce a material multiple expansion — the market appears to be treating it as cyclically elevated rather than structurally re-rated.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "etf_analysis": [
+    {
+      "ticker": "XFIN",
+      "name": "Xtrackers MSCI World Financials UCITS ETF",
+      "exchange": "XETRA",
+      "currency": "USD",
+      "ter": 0.0025,
+      "aum_m_usd": 1200,
+      "replication": "physical",
+      "avg_spread_bps": 10,
+      "avg_daily_volume_m_usd": 15.0,
+      "top_10_concentration_pct": 0.52,
+      "characteristics": "UCITS-compliant. Tracks MSCI World Financials index. Broad financials exposure — includes banks, insurance, diversified financials. Asset managers represent approximately 15-20% of the index weight. Not a pure-play on asset management — combined with banking and insurance. Best broad UCITS option for EU investor seeking financials including asset managers.",
+      "recommendation_tier": 2,
+      "limitations": "NOT a pure-play on asset management. Banks (JPMorgan, BAC, HSBC, BNP) dominate the index by market cap. Asset manager thesis is diluted by bank and insurance exposure. Use only if broad financials exposure is acceptable. AUM >$200M — passes liquidity screen."
+    },
+    {
+      "ticker": "GPZ",
+      "name": "VanEck Alternative Asset Manager ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0040,
+      "aum_m_usd": 124,
+      "replication": "physical",
+      "avg_spread_bps": 25,
+      "avg_daily_volume_m_usd": 2.5,
+      "top_10_concentration_pct": 0.75,
+      "characteristics": "First US-listed ETF providing targeted exposure to publicly-traded alternative asset managers. Tracks MarketVector Alternative Asset Managers Index (MVAALTTR). Holdings include Blackstone, Brookfield, KKR, Apollo, Ares, Blue Owl. 21 holdings. Launched June 2025. Pure-play on the alternatives fee revenue thesis.",
+      "recommendation_tier": 3,
+      "limitations": "WARNING: AUM $124M — below $200M liquidity threshold. Spread at ~25bps — at the warning threshold. NOT UCITS — cannot be held in EU-domiciled portfolios directly. Alternative asset managers only (Blackstone/KKR/Apollo) — excludes traditional managers (BlackRock liquid AUM, Amundi, Schroders). Very new fund (launched 2025) — limited track record. Consider USD hedging cost for EUR-based investor."
+    },
+    {
+      "ticker": "WFNS",
+      "name": "iShares MSCI World Financials Sector Advanced UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0025,
+      "aum_m_usd": 480,
+      "replication": "optimized_sampling",
+      "avg_spread_bps": 15,
+      "avg_daily_volume_m_usd": 8.0,
+      "top_10_concentration_pct": 0.48,
+      "characteristics": "UCITS-compliant iShares product. Tracks MSCI World Financials Advanced Select 20/35 Capped Index. Capping rules limit single-stock concentration. Includes diversified financials, insurance, and banks. Asset managers (BLK, Schroders, Amundi, T. Rowe, Invesco) represent ~20-25% of index by weight.",
+      "recommendation_tier": 2,
+      "limitations": "Not a pure-play on asset management — broad financials with bank and insurance exposure. AUM $480M passes threshold but is modest for an LSE-listed UCITS. Optimized sampling introduces minor tracking error. UCITS-compliant — suitable for EU investor. Best available UCITS option with direct MSCI methodology for Spanish portfolio."
+    }
+  ],
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "BlackRock AUM (quarterly)",
+      "unit": "USD trillion",
+      "source": "BlackRock quarterly earnings (SEC 8-K filing)",
+      "current": 13.89,
+      "comment": "Q1 2026: $13.89T, up from $11.58T one year prior (+20% YoY). The primary AUM benchmark for the sector. Year-end 2025 was ~$14T. Q1 sequential decline reflects March market volatility. Watch Q2 2026 earnings (July) for AUM recovery trajectory."
+    },
+    {
+      "metric": "Amundi AUM and net flows (quarterly)",
+      "unit": "EUR billion",
+      "source": "Amundi quarterly results (about.amundi.com)",
+      "current": 2398,
+      "comment": "Q1 2026: €2,398bn AUM (+6.7% YoY, all-time high). Net inflows €32bn — four-year high, 2x consensus. ETF/index solutions drove €24bn of flows. This is the leading European asset manager flow indicator. Strong inflows indicate European retail and institutional demand remains robust despite geopolitical uncertainty."
+    },
+    {
+      "metric": "Schroders AUM (quarterly)",
+      "unit": "GBP billion",
+      "source": "Schroders quarterly operational update (investegate.co.uk/LSE RNS)",
+      "current": 814.4,
+      "comment": "Q1 2026: £814.4bn total group AUM. Asset Management segment: £599.4bn with NNB of £(2.5)bn (net outflows from active equities). Wealth Management: £120.7bn (+£0.3bn NNB). Q1 March turmoil drove equity outflows. Monitor Q2 update for stabilization — Nuveen acquisition vote pending. If acquisition completes, AUM jumps significantly."
+    },
+    {
+      "metric": "Blackstone Distributable Earnings and Fee Related Earnings (quarterly)",
+      "unit": "USD billion",
+      "source": "Blackstone earnings release (commercialobserver.com / BX 8-K)",
+      "current": 1.55,
+      "comment": "Q1 2026 Fee Related Earnings: $1.55bn (+23% YoY). Total AUM: $1.304T (+12% YoY). Fee-earning AUM: $937.6bn. Infrastructure platform +41% YoY. FRE is the cleanest measure of alternatives earnings quality (excludes carried interest timing). Watch for deceleration if fundraising environment tightens in H2 2026."
+    },
+    {
+      "metric": "Industry active fund fee rates (basis points)",
+      "unit": "bps",
+      "source": "Coalition Greenwich / Morningstar annual fee survey",
+      "current": null,
+      "comment": "Fee compression indicator: global average active equity fund TER has declined ~3-5bps per year over the last decade. Passive/index TERs approaching 0 in flagship products (BNP Paribas MSCI World UCITS at 0.05%). Monitor for rate of compression acceleration — if active fund fees fall >5bps YoY, revenue growth becomes harder to sustain even with AUM growth."
+    },
+    {
+      "metric": "Monthly European ETF net flows (BlackRock market share)",
+      "unit": "EUR billion / market share %",
+      "source": "LSEG Lipper / Refinitiv monthly fund flows report",
+      "current": null,
+      "comment": "BlackRock February 2026: €19.86bn net inflows, year-to-date €36.10bn — commanding lead. Amundi: €5.37bn February. Schroders: €5.79bn. BlackRock ETF market share in Europe is the single best proxy for the structural passive shift benefiting the dominant manager. Watch for any deconcentration."
+    }
+  ],
+
+  "active_catalyst_ids": [],
+
+  "historical_catalyst_performance": {
+    "summary": "Listed asset managers are highly positively correlated with equity market levels (beta ~1.2-1.5 to S&P 500 for traditional managers, ~1.5-2.0 for alternative managers). Historical catalyst response patterns: (1) Bull market onset — asset managers outperform broad financials by 8-15% in the first 12 months of a new bull market as AUM appreciation drives multiple expansion and revenue momentum; (2) Rate normalization (falling rates) — mixed: helps equity valuations (AUM appreciation) but compresses money market and fixed income fee rates; net positive for equity-heavy managers, mixed for fixed income managers; (3) M&A announcements — acquirers typically sell off 5-8% on announcement as market prices dilution risk; targets re-rate +20-40% to acquisition premium; (4) Bear markets — asset managers typically fall 30-40% in a severe bear market as AUM contracts and performance fees evaporate; the alternatives segment is partially insulated (locked-up capital does not redeem) but mark-to-market still affects NAV and hence management fees; (5) Alternative asset fundraising supercycles — Blackstone, KKR, Apollo have historically re-rated 40-60% in the 12-18 months following the completion of a large flagship fund raise, as the management fee base locks in for 5-7 years.",
+    "correlation_to_sp500": 1.3,
+    "response_to_10pct_sp500_bull_pct": 0.15,
+    "response_to_10pct_sp500_bear_pct": -0.18,
+    "alts_manager_premium_to_traditional_multiple": "Blackstone/KKR/Apollo trade at 20-30x FRE vs 12-15x earnings for traditional managers — premium reflects locked-in fee streams and secular growth in private markets."
+  },
+
+  "risks": [
+    "AUM pro-cyclicality: asset manager revenues are directly tied to AUM levels, which in turn track equity and bond market levels. In a 20-30% equity bear market, AUM contracts by a similar magnitude — revenues fall in lockstep. Unlike banks (which earn NIM throughout the cycle) or insurers (which earn underwriting income), asset managers have almost no revenue diversification away from market levels. The 2022 correction was instructive: BlackRock revenues fell 10% while AUM fell 15% (flows partially offset market decline). A deeper correction would hit revenues harder.",
+    "Fee compression structural acceleration: the race to zero in passive fees is well underway (0.05% MSCI World UCITS in 2026). The risk is that active management fee compression accelerates faster than expected under MiFID II cost transparency and performance scrutiny — active equity TERs averaging 75-100bps today could fall to 50bps within 5 years, requiring 30-40% AUM growth just to maintain revenue. Managers with high active equity AUM concentration (Schroders, T. Rowe) face the most existential pressure from this risk.",
+    "Alternatives cycle risk: the current fundraising environment for private equity and private credit is strong but not immune to reversal. If institutional allocators become over-allocated to alternatives (denominator effect from public equity decline), fundraising stalls. Blackstone experienced this in 2022-2023 when BREIT redemptions created reputational and liquidity pressure. The risk is asymmetric: alternative manager valuations (20-30x FRE) imply continued fundraising success — any stumble produces outsized valuation de-rating.",
+    "Regulatory risk (EU / SFDR / ELTIF): the European regulatory framework for asset managers continues to evolve. SFDR sustainable finance disclosure requirements have forced costly fund reclassifications (Article 8/9 downgrades). ELTIF 2.0 provides a framework for retail alternatives but could be followed by more restrictive rules if retail investors suffer losses in illiquid products. Distribution regulations (MiFID II inducements rules) could disrupt bank distribution agreements that are critical for European managers (Amundi/Credit Agricole relationship).",
+    "Concentration and succession risk at key firms: BlackRock's valuation is partially a CEO premium (Larry Fink's personal brand). Schroders' ongoing management changes and integration risks from the potential Nuveen acquisition. Amundi's dependence on the Credit Agricole distribution relationship (~30% of AUM sourced through parent bank network). These firm-specific risks are diversifiable across the sector but dominate single-name performance.",
+    "ETF commoditization: as ETF TERs compress toward zero, the management fee business for passive products becomes structurally unprofitable at scale — revenue must shift to securities lending, data licensing (Aladdin), and distribution platform economics. BlackRock has navigated this successfully; smaller passive managers have not. The risk for the sector is that the ETF platform winner-take-most dynamic has already played out, leaving latecomers (who built ETF businesses after BlackRock's first-mover advantage) unable to generate adequate returns on their infrastructure investments."
+  ],
+
+  "narrative_maturity": "mainstream",
+  "narrative_trend": "stable",
+  "narrative_notes": "The asset management thesis — AUM growth + passive ETF dominance + alternatives shift — is a consensus view in sell-side research. Goldman, JPMorgan, and Morgan Stanley all publish regular asset manager sector notes covering fee compression, AUM trends, and the private markets shift. The alternatives sub-thesis (Blackstone/KKR/Apollo) has crossed into 'crowded' territory with frequent Bloomberg and CNBC coverage, but the broader listed asset management sector (Amundi, Schroders, T. Rowe) remains at mainstream without being crowded. Anchoring: the sector is clearly in the sell-side radar (Goldman AM sector coverage team, JPM Financial Institutions Group), ETF AUM on thematic financials ETFs is well above $500M (WFNS, XFIN, EUFN combined), and the alternatives pivot is featured in every major bank's 2026 outlook — all consistent with 'mainstream' per scoring_weights.yaml criteria. Narrative is not increasing (the theme has been mainstream since 2024) but also not decreasing — 'stable' is the correct trend. The sector does not meet 'crowded' criteria: it is not a top-10 hedge fund theme per se, and retail ETF inflows into listed-asset-manager-specific products remain modest (no dedicated UCITS pure-play ETF with meaningful AUM exists). For the alternatives sub-segment specifically (Blackstone/KKR), 'crowded' would be the more precise classification — but this sector study covers the broader listed asset management universe including traditional managers, so 'mainstream' is the appropriate aggregate level per the maximum rule in scoring_weights.yaml."
+}

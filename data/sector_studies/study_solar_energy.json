@@ -1,0 +1,144 @@
+{
+  "id": "study_solar_energy",
+  "schema_version": "1.2",
+  "sector_id": "solar_energy",
+  "sector_label": "Solar — Manufacturers & Project Developers",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "energy",
+    "adjacent_sectors": [
+      "grid_infrastructure_utilities",
+      "wind_energy_offshore",
+      "hydrogen_clean_fuels",
+      "silver_physical"
+    ],
+    "differentiation_note": "Solar manufacturers (panel, inverter, tracker) carry commodity-input risk — polysilicon/wafer pricing directly compresses or expands gross margins independent of electricity demand — while project developers (IPPs, yieldcos) are interest-rate-sensitive IRR plays driven by PPA pricing, land permitting, and interconnection queues. These two sub-segments can trade in opposite directions simultaneously: a polysilicon oversupply collapse (2025-2026) crushes Chinese module makers' margins while US utility-scale developers benefit from lower module procurement costs. This distinction does NOT exist in grid_infrastructure_utilities (regulated T&D monopolies with zero commodity-input exposure), nor in wind_energy_offshore (turbine supply chain is steel/rare-earths, not polysilicon; offshore requires Jones Act and port infrastructure). Within solar, First Solar (thin-film CdTe, US-manufactured) has an entirely different cost structure and tariff profile than polysilicon-based Chinese manufacturers, creating intra-sector divergence absent from other renewables. Silver is an adjacent input play (silver paste in PV cells accounts for ~10% of global silver demand) but silver physical tracks monetary/safe-haven demand, not solar installation volumes."
+  },
+
+  "demand_drivers": [
+    "US utility-scale solar capacity additions: 43.4 GW planned in 2026 (51% of total US new power capacity), a 60% increase year-over-year per EIA/SEIA — the largest annual addition in US history if realized.",
+    "Commercial and utility-scale ITC: Section 48E/45Y Investment Tax Credit remains at 30% for projects beginning construction before July 4, 2026 (OBBBA safe harbor); projects commencing 2026 still access 60% of credit if placed in service by December 31, 2027, sustaining a two-year pipeline build.",
+    "AI/hyperscaler corporate PPA demand: data center operators accounted for approximately 43% of all clean energy PPAs signed globally in 2024; gigawatt-scale commitments from Microsoft, Google, Amazon, and Meta are restructuring PPA terms toward physical delivery and grid-bypass certainty, supporting solar project developer IRRs.",
+    "EU mandatory solar buildout: EU Energy Performance of Buildings Directive mandates rooftop solar on all new/existing commercial and public buildings >250m² from 2026 onwards; EU solar capacity reached ~406 GW in 2025 with further growth mandated under Fit for 55.",
+    "Grid parity economics now structural: US utility-scale solar LCOE is $28-45/MWh (BloombergNEF 2026), below the marginal cost of gas peakers in most US markets — deployment is no longer subsidy-dependent at the utility scale.",
+    "Average North American solar PPA prices rose 4.7% in Q1 2026 (LevelTen Energy), reflecting tightening in power market pricing; rising PPA prices improve project developer returns without requiring higher installation volumes.",
+    "Domestic content premium: US-manufactured modules (FSLR thin-film, emerging US crystalline silicon fabs) command 10-15% price premium over imported modules due to domestic content bonus under remaining IRA provisions and tariffs of up to 143% on Southeast Asian imported panels."
+  ],
+
+  "supply_constraints": [
+    "Polysilicon global oversupply crisis: inventories reached 570,000-600,000 MT in early 2026, equivalent to roughly half a year of global module demand; prices fell below RMB 50/kg, below total production cost for most manufacturers (~65-70 RMB/kg cash cost) — structurally depressing Chinese manufacturer margins but benefiting downstream developers with lower module input costs.",
+    "China VAT export rebate abolition from April 1, 2026 adds ~$0.012-0.015/W to effective export cost for Chinese module producers, partially offsetting overcapacity pressure; Chinese PV module spot prices expected to remain ~$0.12/W in H2 2026.",
+    "US interconnection queue congestion: over 2,500 GW of projects in the US interconnection queue (FERC data) with median wait times of 5+ years; this is the primary practical constraint on US utility-scale project deployment timelines, not module supply.",
+    "Thin-film manufacturing scale constraint: First Solar is the sole large-scale US thin-film manufacturer; its ~10 GW/year US nameplate capacity cannot serve the full 43 GW US utility-scale demand, ensuring continued module import dependence despite tariffs.",
+    "Skilled labor shortages for installation: SEIA projects a need for 150,000+ new solar workers in the US by 2030; current installation capacity and permitting throughput is the limiting factor for residential and small commercial segments after the residential ITC expiration.",
+    "China restricting solar manufacturing equipment exports: Reuters reported China is considering limiting exports of advanced solar manufacturing equipment to the US, which would constrain US domestic fab expansion timelines beyond First Solar's existing capacity."
+  ],
+
+  "cycle_position": {
+    "assessment": "bifurcated_cycle — utility_scale_early_acceleration / residential_contraction / manufacturers_margin_trough",
+    "rationale": "The sector is in a bifurcated cycle that requires sub-segment separation to interpret correctly. Utility-scale project developers are in early-acceleration phase: record capacity additions (43.4 GW US in 2026), AI/hyperscaler PPA demand creating a new demand floor, and falling module costs boosting project IRRs. This is a genuine catalyst inflection with 12-24 months of runway before the ITC phase-down fully bites post-2027. By contrast, solar manufacturers (especially Chinese polysilicon-based) are in a margin trough: below-cost selling, negative gross margins at several Chinese producers, and inventory overhang of 300-316 GW equivalent — this is not a normal cyclical trough but a structural oversupply driven by Chinese state-backed overinvestment. The residential segment is in outright contraction: Section 25D ITC expired December 31, 2025, residential installations projected -18% in 2026. The ETF (TAN) blends all three: utility project developers (positive), manufacturers (negative for China-exposed, positive for FSLR), and residential installers (negative). TAN's ~74% trailing-12-month return through June 2026 reflects the utility-scale/hyperscaler narrative dominating; the manufacturer margin compression is a known but partially-priced risk. The investment thesis must isolate exposure: FSLR (US thin-film manufacturer, tariff-protected) vs Chinese module makers (margin destruction) vs project developers (positive cycle). A plain long-TAN position conflates these diverging sub-theses.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Polysilicon spot price (China)",
+      "unit": "CNY/kg",
+      "source": "PV-Tech weekly price tracker / InfoLink",
+      "current": "~50",
+      "comment": "Below full-cost for most producers (~65-70 CNY/kg cash cost). Recovery above 65 would signal supply rationalization and improve Chinese manufacturer margins. Floor indicator for the manufacturer sub-thesis."
+    },
+    {
+      "metric": "US utility-scale solar interconnection approvals",
+      "unit": "GW cleared per quarter",
+      "source": "FERC Form 860 / SEIA quarterly reports",
+      "current": "~8-10 GW/quarter",
+      "comment": "Queue clearance rate is the binding constraint on US deployment. Acceleration here is the single most important positive catalyst for project developers. Current 2,500+ GW backlog implies years of congestion."
+    },
+    {
+      "metric": "North American solar PPA price",
+      "unit": "USD/MWh",
+      "source": "LevelTen Energy PPA pricing index (quarterly)",
+      "current": "~55-65",
+      "comment": "Rose 4.7% in Q1 2026. Rising PPA prices improve developer project IRRs. Watch for inflection above 70/MWh (risk to demand destruction) or below 45/MWh (project NPVs go negative at current financing costs)."
+    },
+    {
+      "metric": "First Solar (FSLR) module backlog and booking rate",
+      "unit": "GW booked vs nameplate",
+      "source": "FSLR quarterly earnings call / SEC filings",
+      "current": "~75-80 GW backlog; Q1 2026 revenue $1.04B (+24% YoY), net income $347M ($3.22/diluted share)",
+      "comment": "FSLR is the primary pure-play US manufacturer proxy. Backlog is the leading indicator for revenue visibility; a backlog drawdown or pricing concessions signal demand softening."
+    },
+    {
+      "metric": "Section 48E/45Y ITC construction-start cutoff (OBBBA)",
+      "unit": "Date",
+      "source": "IRS / US Congress (OBBBA signed July 4, 2025)",
+      "current": "July 4, 2026 = 100% credit; 2026-start = 60%; 2027-start = 20%; 2028+ = 0%",
+      "comment": "Hard cliff July 4, 2026. Expect front-loaded construction starts in H1 2026 to capture full 30% ITC, creating a pull-forward followed by H2 2026 slowdown. The market may pre-price the cliff in Q2-Q3 2026."
+    },
+    {
+      "metric": "SolarEdge (SEDG) gross margin trend",
+      "unit": "%",
+      "source": "SEDG quarterly earnings",
+      "current": "24% (Q1 2026, sixth consecutive quarter of expansion; Q1 revenue $310.5M +42% YoY)",
+      "comment": "SEDG is the inverter/energy management proxy for non-module supply chain health. Six consecutive quarters of margin expansion signals stabilization in the European residential inverter market after the 2023-2024 channel correction."
+    }
+  ],
+
+  "etf_analysis": [
+    {
+      "ticker": "TAN",
+      "name": "Invesco Solar ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0069,
+      "aum_m_usd": 1800,
+      "replication": "physical",
+      "avg_spread_bps": 8,
+      "avg_daily_volume_m_usd": 85,
+      "top_10_concentration_pct": 62,
+      "characteristics": "Largest solar ETF by AUM ($1.8B). Tracks MAC Global Solar Energy Index. Mix of US manufacturers (FSLR ~16%), inverter makers (ENPH ~14%), project developers, and Chinese solar companies (Daqo, Canadian Solar). USD-denominated, US-domiciled. Trailing 12-month return ~74% through June 2026 driven by AI/hyperscaler PPA narrative and FSLR tariff premium. NOT UCITS — restricted for EU retail investors under PRIIPs/KID rules. The primary global benchmark for the sector but not directly accessible for a Spanish investor without broker KID override.",
+      "recommendation_tier": 1,
+      "limitations": "NOT UCITS — generally not directly purchasable by Spanish retail investors under PRIIPs regulations. US-domiciled. High concentration risk in FSLR + ENPH (~30% combined). The ETF internally conflicts in the current bifurcated cycle: US manufacturers (positive tariff/ITC thesis) vs Chinese manufacturers (margin destruction thesis) vs residential installers (ITC expired). Prefer for US broker access only; use RAYS.L for UCITS compliance."
+    },
+    {
+      "ticker": "RAYS.L",
+      "name": "Global X Solar UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0050,
+      "aum_m_usd": 190,
+      "replication": "physical",
+      "avg_spread_bps": 22,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "UCITS-compliant solar ETF — the only directly accessible vehicle for a Spanish investor. Lower TER than TAN (0.50% vs 0.69%). USD-denominated on LSE, adding EUR/USD FX exposure. Similar index composition to TAN (same manufacturer/developer blend). AUM $190M is BELOW the $200M liquidity warning threshold. Spread 22bps is approaching the 25bps warning level.",
+      "recommendation_tier": 2,
+      "limitations": "AUM $190M — BELOW $200M LIQUIDITY WARNING THRESHOLD. Spread 22bps approaching 25bps warning level — use limit orders only. USD-denominated on LSE adds EUR/USD volatility for EUR-base investors. No EUR-hedged variant available. This is the best (and only) available UCITS solar ETF for a Spanish investor; size positions carefully given the AUM constraint and liquidity risk in a sector drawdown scenario."
+    }
+  ],
+
+  "active_catalyst_ids": ["struct_solar_lcoe_deployment"],
+
+  "historical_catalyst_performance": {
+    "summary": "Solar sector ETFs have historically shown extreme sensitivity to policy catalysts, with response magnitude far exceeding sector fundamentals in both directions. IRA passage (August 2022): TAN +45% in 30 days — the single largest 1-month solar ETF move since inception, driven entirely by the prospect of multi-decade subsidy certainty. IRA sentiment reversal (2023 rates + implementation concerns): TAN -65% peak to trough over 18 months — proving the sector trades on policy optionality, not operating cash flows. Fed pivot (late 2023): partial recovery +30% as discount rates fell. OBBBA/IRA rollback risk (Trump re-election 2024 through OBBBA signature July 2025): TAN range-bound -15% to +5% for 18 months as the market priced uncertainty premium; resolution of the policy path (known ITC phase-down schedule) allowed re-rating to fundamentals. AI/hyperscaler PPA demand emergence (late 2025): TAN +74% trailing 12 months as a new, policy-independent demand driver was repriced — this is the structural shift that differentiates 2026 from the 2023 bear market. Key historical pattern: the sector front-runs policy changes by 3-6 months, over-extends in both directions, and mean-reverts toward project economics once the policy impact is known. The OBBBA ITC cliff (July 4, 2026) is the next identifiable policy-driven inflection: expect a construction-start rush in H1 2026 already visible in EIA data, followed by an H2 2026 slowdown that the market may pre-price in Q2-Q3 2026."
+  },
+
+  "risks": [
+    "ITC cliff effect post-July 4, 2026 (OBBBA): Commercial and utility-scale projects beginning construction after July 4, 2026 receive only 60% of the ITC (vs 100% for pre-deadline starts). This creates a hard activity cliff in H2 2026 as the front-loaded construction rush exhausts the near-term pipeline. The market historically pre-prices such policy inflections 3-6 months early, meaning the selloff window may be Q2-Q3 2026.",
+    "Chinese manufacturer margin destruction contagion: Polysilicon prices at RMB 30-50/kg (below full cost of ~65-70 RMB/kg) represent unsustainable below-cost selling at scale. A major Chinese manufacturer (Daqo, LONGi, JinkoSolar) forced into distressed restructuring or state bailout would cause a market re-pricing event in ETFs with Chinese solar exposure. TAN and RAYS both hold Chinese names; this tail risk is not fully priced as a discrete event.",
+    "China limiting solar manufacturing equipment exports: Reuters reported China may restrict exports of advanced solar manufacturing equipment to the US. If implemented, this constrains US domestic fab expansion beyond FSLR's existing capacity, reinforcing Chinese supply chain dependency and potentially triggering re-escalation in module tariffs — raising costs for US project developers without a domestic supply offset.",
+    "EU residential solar mandate execution risk: EU EPBD building-integrated solar mandates are legally binding but enforcement varies by member state. Permitting bottlenecks, grid integration constraints, and installer capacity shortages in Southern European markets (Spain, Italy) may delay the expected installation ramp, disappointing ETF-level revenue expectations for European-exposed installers within TAN/RAYS.",
+    "RAYS.L liquidity closure risk: AUM at $190M is below the $200M threshold. A sustained sector selloff (analogous to TAN -65% in 2022-2023) could trigger redemptions that further compress RAYS.L AUM, widen spreads above 30-40bps, and in an extreme scenario force ETF closure or merger — leaving the Spanish investor in the only accessible UCITS vehicle with no liquid exit at the worst moment.",
+    "Interest rate sensitivity of project developers: Solar IPPs and yieldcos are long-duration assets; their project IRRs are underwritten at specific financing costs. A 100bps rise in WACC reduces the NPV of a 25-year solar project by approximately 15-20%. The Fed's policy trajectory for late 2026/2027 is the most important macro input for the project developer sub-thesis, yet it is entirely exogenous to solar fundamentals."
+  ],
+
+  "narrative_maturity": "mainstream",
+
+  "narrative_trend": "increasing",
+
+  "narrative_notes": "Classified as 'mainstream' per scoring_weights.yaml criteria: the solar/clean energy thesis is consensus view in generalist sell-side — Goldman Sachs, JPMorgan, and Morgan Stanley all publish base-case solar outlook reports; TAN AUM at $1.8B well above the $500M ETF AUM observable criterion for 'mainstream'; the AI/hyperscaler PPA renewable narrative is named explicitly in ETF product descriptions and leads Bloomberg/FT clean energy coverage. Not yet 'crowded': retail inflows are not yet accelerating above institutional, there is no meaningful COT positioning data specific to solar (equity instrument, not commodity futures), and the thesis has genuine sub-segment differentiation (utility-scale vs residential vs manufacturers) that prevents the simple consensus crowding characterizing AI semiconductors. The narrative_trend is 'increasing' because the AI/hyperscaler PPA angle was 'emerging' in mid-2025 and reached 'mainstream' by mid-2026 — directional momentum is still adding coverage depth, particularly in European institutional research. Anchor comparison: less crowded than EU defense rearmament (also mainstream but with CNBC/retail ETF inflow acceleration), less crowded than AI semiconductors (crowded per scoring_weights.yaml example). The manufacturing-destruction sub-narrative (polysilicon oversupply) is 'emerging' in specialist press but has not reached 'mainstream' in generalist coverage, so it does not elevate the overall level."
+}

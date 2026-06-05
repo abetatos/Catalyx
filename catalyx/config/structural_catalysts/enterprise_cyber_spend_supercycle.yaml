@@ -1,0 +1,247 @@
+# StructuralCatalyst: Enterprise Cybersecurity Spend Supercycle
+# schema_version: "1.3"
+# Update indicators: quarterly (Gartner/IDC release, CRWD/ZS earnings) + monthly (ETF AUM flows, breach statistics)
+#
+# Decision rationale: STRUCTURAL, not event.
+# Enterprise security spending is compounding from three non-discretionary forces simultaneously:
+# (1) AI-generated threat surface expanding faster than defenses (IBM X-Force: 44% more exploitation attacks YoY),
+# (2) Regulatory mandates (NIS2 enforced Oct 2024, CMMC 2.0 phased in 2025-2026) creating contractual spend obligations,
+# (3) Platform consolidation wave locking 2-3 dominant vendors into multi-year ARR expansion cycles.
+# None of these three forces has a discrete "event" endpoint — they are self-reinforcing secular trends.
+# The momentum 92 in the sector study reflects the market moving on a thesis CATALYX has not encoded.
+
+id: struct_enterprise_cyber_spend_supercycle
+type: structural
+schema_version: "1.3"
+title: "Enterprise cybersecurity spend supercycle"
+description: >
+  Global enterprise cybersecurity spending is in a structural multi-year acceleration cycle driven
+  by three compounding forces: (1) AI-enabled threat surface expansion — IBM X-Force 2026 reports a
+  44% surge in exploitation of public-facing applications, adversarial AI cutting breakout times to
+  27 seconds, and 82.6% of phishing attacks now AI-generated, forcing enterprises to replace legacy
+  signature-based tools with behavioral AI platforms; (2) non-discretionary regulatory mandates —
+  EU NIS2 (enforcement active October 2024, first sanctions issued H1 2026, fines up to €10M or 2%
+  global turnover), US CMMC 2.0 (phased November 2025 through 2026), and SEC cyber disclosure rules
+  (2024) creating a compliance-driven spend floor that is decoupled from macro cycles; (3) platform
+  consolidation wave — enterprises collapsing multi-vendor point solutions into 2-3 dominant platforms
+  (CrowdStrike, Palo Alto Networks, Zscaler), driving ARR expansion via module cross-sell (CRWD: 49%
+  of customers on 6+ modules, ZS Zero Trust Everywhere customers 4x YoY). Unlike discretionary IT
+  spend, cybersecurity ARR renewals are structurally sticky (CRWD gross retention 97%), making this
+  cycle resilient to macro headwinds. Gartner estimates $240B in global enterprise security spend in
+  2026 (+12.5% YoY from $213B). CIBR ETF AUM has grown from $5.1B to $14.5B, confirming institutional
+  positioning is accelerating alongside the fundamental thesis.
+
+created_at: "2026-06-05T12:00:00Z"
+created_by: user
+onset_period: "2023-Q2"
+onset_evidence: >
+  Gartner mid-2023 first forecast crossing $160B in enterprise security spend. CrowdStrike Q2 FY24
+  ARR accelerated past $3B. NIS2 Directive formally adopted October 2022, transposition deadline
+  October 2024 — enterprises began compliance procurement cycles in mid-2023 as deadline approached.
+
+catalyst_type: technology_adoption
+catalyst_subtype: enterprise_security_platform_consolidation
+geography: [US, EU, GBR, APAC, GLOBAL]
+thematic_tags: [cybersecurity, enterprise_saas, ai_threat_surface, regulatory, platform_consolidation, zero_trust, arr_growth]
+
+user_rank: null
+user_notes: >
+  First structural catalyst encoded for cybersecurity_commercial. Sector had momentum 92 with no
+  registered catalyst — this closes the gap. Three indicators cover independent demand channels
+  (market spend, ARR as leading indicator, threat frequency as demand driver). Regulatory indicator
+  (ind_04) is qualitative but critical — NIS2 enforcement actions in 2026 are the first concrete
+  signal of compliance-driven procurement. AI Security ARR sub-segment (ind_05, ZS $400M ahead of
+  schedule) is the novel angle: AI-specific security spend is a NEW budget line, not a reallocation.
+
+intensity:
+  current_score: 86.0
+  computation_method: bootstrap
+  computation_note: >
+    Bootstrap at creation (2026-06-05). Anchor: stronger than struct_copper_datacenter_demand (83.9)
+    because cybersecurity demand is less commodity-constrained and has a regulatory mandate floor that
+    copper/data center lacks; weaker than struct_ai_capex_supercycle (89.9) because cybersecurity ARR
+    is a software renewal cycle (more stable but lower peak velocity than hyperscaler capex).
+    Indicators: ind_01 (Gartner $240B, +12.5% YoY, well above strong threshold of +10%) → saturating
+    fallback ~84; ind_02 (CRWD ARR $5.51B +24% + raised guidance, above strong threshold of +20%) → ~87;
+    ind_03 (IBM X-Force: 44% more attacks, dwell time 27s, above strong threshold of +30%) → ~88;
+    ind_04 (NIS2 enforcement active + first sanctions H1 2026 → strong) → ~82;
+    ind_05 (ZS AI Security ARR $400M, ahead of schedule → strong) → ~85.
+    Unweighted avg ≈ 85.2, flat trend (no prior period to compute delta) → 85.2 → round to 86.0.
+    Run /catalyx-update after first quarterly data update to switch to computed method.
+  last_updated: "2026-06-05"
+  history:
+  - period: "2026-Q2"
+    score: 86.0
+    note: "Bootstrap at catalyst creation. Anchored to struct_copper_datacenter_demand (83.9) and struct_ai_capex_supercycle (89.9). Run /catalyx-update post-Q2 earnings to compute."
+    computation_method: bootstrap
+
+narrative_maturity: mainstream
+# Rationale: Goldman/JPM/MS/Barclays all publish dedicated cybersecurity sector coverage with
+# base-case reports (scoring_weights.yaml 'mainstream' anchor: "Goldman/JPM/MS publish base-case reports").
+# CIBR ETF AUM >$14B (well above $500M threshold). Bloomberg near-daily coverage of CRWD/PANW.
+# NOT 'crowded' yet: AI threat escalation as a specific demand driver is not yet dominant in COT data,
+# ZS trades below 2021 ATH despite 25% ARR growth, and the 32% YTD CIBR run is strong but not parabolic.
+# Monitor transition to 'crowded' if: COT hedge fund net long in cyber names exceeds 2021 highs, OR
+# CNBC runs >3 cybersecurity-dedicated segments per week.
+
+indicators:
+- id: ind_01
+  name: "Global enterprise cybersecurity end-user spending (Gartner annual forecast)"
+  source: "Gartner Security & Risk Management forecast (published Q1 annually)"
+  source_url_template: "https://www.gartner.com/en/newsroom/press-releases/"
+  check_frequency: quarterly
+  current_value: 240
+  unit: USD_billion_annual
+  direction: higher_is_stronger
+  threshold_strong: 220
+  threshold_weak: 180
+  last_value: 213
+  last_date: "2025-07-29"
+  value_history:
+  - value: 213
+    date: "2025-07-29"
+  - value: 188
+    date: "2024-09-01"
+  - value: 168
+    date: "2023-09-01"
+  - value: 152
+    date: "2022-09-01"
+  update_note: "Gartner 2026 forecast: $240B (+12.5% YoY). IDC estimate ~$232B. Strong: above $220B. Threshold met."
+
+- id: ind_02
+  name: "CrowdStrike ARR YoY growth rate (sector leading indicator)"
+  source: "CrowdStrike quarterly earnings (SEC Form 8-K)"
+  source_url_template: "https://ir.crowdstrike.com/news-releases/"
+  check_frequency: quarterly
+  current_value: 0.24
+  unit: yoy_growth_rate
+  direction: higher_is_stronger
+  threshold_strong: 0.20
+  threshold_weak: 0.10
+  last_value: 0.22
+  last_date: "2026-03-01"
+  value_history:
+  - value: 0.22
+    date: "2026-03-01"
+  - value: 0.27
+    date: "2025-12-01"
+  - value: 0.29
+    date: "2025-09-01"
+  - value: 0.33
+    date: "2025-06-01"
+  update_note: >
+    Q1 FY27 (April 2026): CRWD ARR $5.51B +24% YoY. Net new ARR $256M +32% YoY.
+    FY27 net new ARR guidance raised by 520bps to 27.7% growth at midpoint.
+    Cross-sell: 49% of customers on 6+ modules, 34% on 7+, 24% on 8+.
+    Above threshold_strong (0.20). Use ZS ARR growth (25%) as corroborating signal.
+
+- id: ind_03
+  name: "AI-enabled cyberattack frequency and dwell-time compression (IBM X-Force / CrowdStrike GTR)"
+  source: "IBM X-Force Threat Intelligence Index (annual, February) + CrowdStrike Global Threat Report (annual)"
+  source_url_template: "https://www.ibm.com/reports/threat-intelligence"
+  check_frequency: quarterly
+  current_value: 44
+  unit: pct_yoy_increase_exploitation_attacks
+  direction: higher_is_stronger
+  threshold_strong: 30
+  threshold_weak: 10
+  last_value: 27
+  last_date: "2025-02-01"
+  value_history:
+  - value: 27
+    date: "2025-02-01"
+  - value: 18
+    date: "2024-02-01"
+  - value: 12
+    date: "2023-02-01"
+  update_note: >
+    IBM X-Force 2026 (published Feb 2026): 44% surge in exploitation of public-facing applications.
+    Fastest observed eCrime breakout: 27 seconds (avg 29 min). 82.6% of phishing AI-generated.
+    Supply chain compromises quadrupled since 2020. Adversarial AI creating new budget line for
+    AI-specific security (ZS AI Security ARR: $400M ahead of schedule). Threshold_strong met.
+
+- id: ind_04
+  name: "NIS2 enforcement maturity score (qualitative: 0=draft/1=transposed/2=first-enforcement/3=fines-issued)"
+  source: "ENISA (European Union Agency for Cybersecurity) + EC official communications"
+  source_url_template: "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+  check_frequency: quarterly
+  current_value: 2
+  unit: enforcement_stage_ordinal
+  direction: higher_is_stronger
+  threshold_strong: 2
+  threshold_weak: 1
+  last_value: 1
+  last_date: "2025-01-01"
+  value_history:
+  - value: 1
+    date: "2025-01-01"
+  - value: 0
+    date: "2024-01-01"
+  update_note: >
+    NIS2 enforcement stage = 2 (first enforcement actions issued H1 2026): Germany opened proceedings
+    for late incident notification, France issued formal warnings, Italy initiated sectoral inspections.
+    7 Member States referred to EU Court of Justice for failure to transpose.
+    First compliance audit deadline June 30 2026. Fines: up to €10M or 2% global turnover.
+    CMMC 2.0 Phase 1 active November 2025 (self-assessments); Phase 2+ ongoing through 2026.
+    At threshold_strong (value=2). Step-up to value=3 when first material fine (>€1M) is published.
+
+- id: ind_05
+  name: "Cybersecurity ETF AUM combined (CIBR + BUG, proxy for institutional positioning)"
+  source: "ETF Database / Bloomberg ETF flow data (monthly)"
+  source_url_template: "https://etfdb.com/etf/CIBR/"
+  check_frequency: monthly
+  current_value: 15390
+  unit: USD_million_combined_aum
+  direction: higher_is_stronger
+  threshold_strong: 10000
+  threshold_weak: 5000
+  last_value: 6000
+  last_date: "2025-01-01"
+  value_history:
+  - value: 6000
+    date: "2025-01-01"
+  - value: 5100
+    date: "2024-06-01"
+  - value: 4800
+    date: "2024-01-01"
+  - value: 4200
+    date: "2023-06-01"
+  update_note: >
+    CIBR AUM as of June 2026: $14.5B (grew from $5.1B). BUG AUM: ~$890M. Combined ~$15.39B.
+    CIBR 3-month net flows: $210.55M; 6-month: $261.99M; 1-year: $1.77B net inflows.
+    AUM tripling from ~$5B to $14.5B in ~18 months confirms institutional positioning is accelerating.
+    Well above threshold_strong ($10B). Monitor for reversal in monthly flows as crowding signal.
+
+deactivation_conditions:
+- id: deact_01
+  condition: >
+    Global enterprise cybersecurity spending growth decelerates below 5% YoY for two consecutive
+    Gartner annual forecasts (i.e., two annual data points below $240B × 1.05 growth threshold).
+  action: downgrade_to_weak
+
+- id: deact_02
+  condition: >
+    CrowdStrike ARR growth falls below 10% YoY for two consecutive quarters AND Zscaler ARR growth
+    falls below 10% YoY — signaling platform consolidation winner-takes-most dynamics have peaked
+    and the sector is in a mature harvest phase with limited growth reinvestment.
+  action: downgrade_to_weak
+
+- id: deact_03
+  condition: >
+    NIS2 Directive is formally suspended or substantially weakened by EU legislation (not just
+    delayed transposition), AND CMMC 2.0 program is cancelled or permanently waived by DoD.
+    Both must occur simultaneously — either regulation alone is insufficient to deactivate.
+  action: review_required
+
+- id: deact_04
+  condition: >
+    AI threat frequency growth reverses: IBM X-Force or equivalent annual report shows YoY decline
+    in exploitation attempts AND average eCrime breakout time increases above 60 minutes for two
+    consecutive annual reports — indicating AI-assisted offense has been neutralized by AI defense.
+  action: review_required
+
+linked_event_catalyst_ids: []
+linked_structural_catalyst_ids:
+- struct_ai_capex_supercycle    # AI capex expands attack surface (LLM workloads, model theft, prompt injection) → compounding demand
+status: active
+status_last_reviewed: "2026-06-05"

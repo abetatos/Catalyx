@@ -187,12 +187,74 @@ def compute_catalyst_alignment(
     if not structural_ids:
         return {"sector_id": sector_id, "error": "No active_catalyst_ids in sector study"}
 
-    # Load all active event catalysts once
+    # Load all active event catalysts once (also indexed by id for direct lookup)
     all_events = [e for e in _load_all_event_catalysts() if e.get("status") == "active"]
+    events_by_id = {e.get("id"): e for e in all_events}
+
+    # Which of the listed ids are real structural catalysts (have a YAML)?
+    # A direct event already linked to one of these is counted via the structural's
+    # confirm/contradict boost — it must NOT also contribute as a direct event.
+    present_structurals = {
+        sid for sid in structural_ids
+        if (_STRUCTURAL_DIR / f"{sid.removeprefix('struct_')}.yaml").exists()
+        or (_STRUCTURAL_DIR / f"{sid}.yaml").exists()
+    }
 
     structural_results = []
+    direct_event_results = []
 
     for sid in structural_ids:
+        # ── Direct event branch ──────────────────────────────────────────────
+        # An event catalyst listed directly in active_catalyst_ids hits the sector
+        # on its own (e.g. an `independent` event with no structural parent). It is
+        # NOT a structural — give it its own decayed-strength term in the aggregate.
+        struct_exists = (
+            (_STRUCTURAL_DIR / f"{sid.removeprefix('struct_')}.yaml").exists()
+            or (_STRUCTURAL_DIR / f"{sid}.yaml").exists()
+        )
+        if not struct_exists and (sid.startswith("cat_") or sid in events_by_id):
+            ev = events_by_id.get(sid)
+            if ev is None:
+                direct_event_results.append({
+                    "event_id": sid,
+                    "type": "direct_event",
+                    "error": f"Event not found or not active: {sid}",
+                    "modified_score": None,
+                })
+                continue
+            relation = ev.get("relation_to_structural", "independent")
+            # Dedup: if this event is already linked (related_catalyst_ids) to a
+            # structural that is ALSO present in this sector, it is counted via that
+            # structural's confirm/contradict boost — do not double-count it here.
+            related = ev.get("related_catalyst_ids") or []
+            if any(r in present_structurals for r in related):
+                direct_event_results.append({
+                    "event_id": sid,
+                    "type": "direct_event",
+                    "relation": relation,
+                    "modified_score": None,
+                    "note": "counted via linked structural (not double-counted)",
+                })
+                continue
+            strength = ev.get("strength_score", 0)
+            halflife = ev.get("decay_halflife_days", _DEFAULT_HALFLIFE)
+            detected = ev.get("detected_at") or ev.get("created_at", "")
+            decayed = _decayed_strength(strength, halflife, detected)
+            # A direct event contributes its decayed strength as a standalone signal.
+            # `contradicts` has no structural target in this context, so it is recorded
+            # but not aggregated (nothing to dampen).
+            contributes = relation in ("independent", "confirms")
+            direct_event_results.append({
+                "event_id": sid,
+                "type": "direct_event",
+                "relation": relation,
+                "strength_original": strength,
+                "strength_decayed": decayed,
+                "halflife_days": halflife,
+                "modified_score": round(decayed, 2) if contributes else None,
+            })
+            continue
+
         sc = _load_structural(sid)
         if sc is None:
             structural_results.append({
@@ -249,23 +311,45 @@ def compute_catalyst_alignment(
             "events": event_details,
         })
 
-    # Aggregate: max-anchored noisy-OR over modified scores (skip errored catalysts)
-    valid = [r["modified_score"] for r in structural_results if r.get("modified_score") is not None]
+    # Aggregate: max-anchored noisy-OR over modified scores (skip errored catalysts).
+    # Both structural scores AND direct-event scores enter the same pool.
+    valid = [
+        r["modified_score"]
+        for r in (structural_results + direct_event_results)
+        if r.get("modified_score") is not None
+    ]
     if not valid:
-        return {"sector_id": sector_id, "error": "No valid structural scores to aggregate", "breakdown": structural_results}
+        return {
+            "sector_id": sector_id,
+            "error": "No valid structural or event scores to aggregate",
+            "breakdown": structural_results,
+            "direct_events": direct_event_results,
+        }
 
     catalyst_alignment = _aggregate_alignment(valid)
 
-    # Dominant catalyst type: structural if no events, else event
-    has_events = any(r.get("events") for r in structural_results)
+    # Dominant catalyst type
+    has_linked_events = any(r.get("events") for r in structural_results)
+    has_direct_events = any(
+        r.get("modified_score") is not None for r in direct_event_results
+    )
+    has_structural = any(r.get("modified_score") is not None for r in structural_results)
+    if (has_linked_events or has_direct_events) and has_structural:
+        dominant_type = "event+structural"
+    elif has_direct_events and not has_structural:
+        dominant_type = "event"
+    else:
+        dominant_type = "structural"
 
     return {
         "sector_id": sector_id,
         "catalyst_alignment": catalyst_alignment,
-        "structural_count": len(valid),
-        "dominant_catalyst_type": "event+structural" if has_events else "structural",
+        "structural_count": sum(1 for r in structural_results if r.get("modified_score") is not None),
+        "direct_event_count": sum(1 for r in direct_event_results if r.get("modified_score") is not None),
+        "dominant_catalyst_type": dominant_type,
         "computed_at": date.today().isoformat(),
         "breakdown": structural_results,
+        "direct_events": direct_event_results,
     }
 
 
@@ -330,6 +414,17 @@ def main() -> None:
                     f"strength={ev['strength_original']}→{ev['strength_decayed']:.1f}  "
                     f"→ structural_score={ev['modified_structural_score']}"
                 )
+        for de in r.get("direct_events", []):
+            if "error" in de:
+                print(f"    {de['event_id']} (direct event): ERROR — {de['error']}")
+                continue
+            ms = de.get("modified_score")
+            ms_str = f"{ms:.1f}" if isinstance(ms, float) else "n/a (not aggregated)"
+            print(
+                f"    {de['event_id']} (direct {de['relation']} event): "
+                f"strength={de['strength_original']}→{de['strength_decayed']:.1f}  "
+                f"→ contributes={ms_str}"
+            )
         print()
 
     print("--- JSON output ---")

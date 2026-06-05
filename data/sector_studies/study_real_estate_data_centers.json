@@ -1,0 +1,112 @@
+{
+  "id": "study_real_estate_data_centers",
+  "schema_version": "1.2",
+  "sector_id": "real_estate_data_centers",
+  "sector_label": "Real Estate — Data Center REITs",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "real_estate",
+    "adjacent_sectors": [
+      "ai_infrastructure_data_centers",
+      "real_estate_logistics",
+      "grid_infrastructure_utilities",
+      "cloud_software_saas"
+    ],
+    "differentiation_note": "Real estate data center REITs (EQIX, DLR, IRM, CyrusOne) are landlords and property operators: they own the shell, power, and connectivity infrastructure and earn long-term lease income from tenants (hyperscalers, enterprises, neoclouds) who bring their own compute. The investment return is contractual rent cash flow with built-in escalators, priced as a real asset with a discount-rate sensitivity that is a first-order valuation driver — not a second-order consideration. This is fundamentally different from ai_infrastructure_data_centers (study_ai_infrastructure_data_centers), which captures the operators, equipment manufacturers, power delivery systems, and cooling technology companies whose revenue derives from hardware utilization, construction contracts, and energy services rather than rent. A GPU cluster company like Nvidia or a cooling system maker like Vertiv are never in a data center REIT — they sell to the tenants who lease from the REIT. The REIT's revenue model is also distinct from real_estate_logistics (industrial REITs like Prologis): logistics REITs earn rent per square foot in warehouses, with lease terms of 3-5 years and tenants driven by e-commerce volumes, whereas data center REITs earn rent per kilowatt (power capacity is the scarce commodity, not floor space), with 10-15 year leases at hyperscaler credit quality driven by AI compute demand. The power-per-square-meter density at a data center campus is 50-100x a logistics warehouse, making land, grid access, and power capacity the binding constraints — not location proximity to consumers."
+  },
+
+  "demand_drivers": [
+    "Hyperscaler AI capex at $725B in 2026 (+77% YoY) is the primary demand catalyst: Microsoft (~$190B), Amazon (~$200B), Alphabet (~$190B), Meta (~$145B) are all signing 10-15 year leases with data center REITs to secure pre-built, grid-connected capacity ahead of their own build pipeline. DLR signed a 200MW AI inference lease with a AA-rated hyperscaler in Charlotte in Q1 2026, the largest single lease in company history. Contracted backlog for major REITs extends through 2028, providing exceptional revenue visibility.",
+    "Supply-constrained pricing power: new data center capacity deliveries are gated by grid interconnection timelines (18-36 months from application to energisation), transformer lead times (60-100 weeks), and land permitting. Vacancy rates are at historic lows across all tier-1 markets (Northern Virginia, Dallas, Silicon Valley, London, Frankfurt, Singapore). Power-ready, grid-connected data center real estate commands unprecedented pricing premiums — DLR and EQIX are raising colocation rates 10-20% per contract renewal cycle.",
+    "Inference workload transition creates structurally higher and more persistent demand: AI inference (always-on, multi-tenant workloads) is replacing batch training jobs as the dominant use case in 2026. Inference requires co-location near end users (low-latency requirement) rather than centralized training clusters, increasing the demand for distributed data center footprints — directly advantaging EQIX's 260+ global colocation facilities versus hyperscaler-owned hyperscale builds.",
+    "Pre-leasing dynamics lock in revenue 2-3 years forward: the pre-leasing rate across DLR and EQIX's under-construction pipeline stands at ~61% as of Q1 2026 — operators are leasing space before concrete is poured. This is a structural shift from the 2015-2020 era when data center REITs relied on lease-up after completion. Forward revenue visibility is now comparable to regulated utilities.",
+    "Sovereign AI compute programs are additive to hyperscaler demand: UAE, Saudi Arabia ($100B+), France (€109B), UK, and EU member states require certified, regulated, and often EU-domiciled data center infrastructure for sovereign AI workloads — this demand is not easily satisfied by hyperscaler-owned facilities subject to US cloud sovereignty concerns, channeling it toward neutral colocation REITs like Equinix.",
+    "Neocloud operators (CoreWeave, Lambda, xAI, Crusoe) are rapidly becoming Tier 1 REIT tenants: these AI-native compute providers collectively represent $50-80B in annual infrastructure capex and are signing large multi-year leases with data center REITs as a faster path to scale than self-build. Their credit quality is improving as they raise equity and secure hyperscaler GPU resale agreements."
+  ],
+
+  "supply_constraints": [
+    "Power grid interconnection: the US has >3,000 GW of data center and clean energy projects pending grid connection, with average wait times of 5-7+ years in tier-1 markets. New data center campus development in Northern Virginia (the world's largest market) is effectively frozen for unconnected land — only companies with existing grid interconnection agreements (EQIX, DLR, QTS) can expand capacity in the near term. This constraint is a structural moat protecting incumbent REITs.",
+    "Large transformer and switchgear lead times: lead times for high-voltage power transformers (critical to energizing new data center campuses) now run 60-100+ weeks vs. 12-20 weeks historically. Even fully permitted, fully funded, and construction-ready data center projects cannot energize on schedule — ABB and Siemens Energy are running at maximum production capacity. This supply chain bottleneck limits competitive new supply for 24-36 months minimum.",
+    "Land with co-located grid access: suitable parcels near high-voltage transmission lines with available grid capacity command 200-400% premiums vs. 2023 prices. In Northern Virginia, the Ashburn corridor (Loudoun County) is functionally exhausted; geographic expansion to secondary markets (Phoenix, Salt Lake City, Columbus) adds 12-18 months to delivery timelines and requires establishing new power and fiber connectivity infrastructure.",
+    "Specialized construction and electrical labor: data center construction requires electricians with data center certifications, low-voltage specialists, and mechanical contractors with HVAC and cooling expertise. The US shortage is estimated at 50,000+ certified trades, with data center builders competing against industrial, EV factory, and utility-scale construction for the same workforce. Labor constraints are a key reason why pre-leased backlog cannot be immediately monetized.",
+    "Water access and environmental permitting for cooling: large data centers consume millions of gallons of water daily for evaporative cooling systems. Regulatory opposition in California, Arizona, and EU jurisdictions is delaying greenfield approvals — Dublin, Frankfurt, and Amsterdam have imposed temporary data center moratoriums in recent years. Liquid cooling transition reduces water consumption but requires higher upfront capex and specialized installation.",
+    "Capital market access for REIT expansion: REIT structure requires distributing 90% of taxable income as dividends, making REITs heavily reliant on equity and debt capital markets for growth capex. DLR raised its 2026 capex guidance to $3.5-4.0B and EQIX to ~$3B — both require continuing access to investment-grade debt markets. A credit market dislocation or significant interest rate spike (>100bps) would force capex reduction regardless of underlying demand."
+  ],
+
+  "cycle_position": {
+    "assessment": "Early-to-mid expansion: demand far exceeds deliverable supply; revenue backlog visible through 2028; REIT valuations recovering from 2023-2025 rate-induced compression.",
+    "rationale": "Data center REITs experienced a bifurcated 2023-2025: underlying AI demand fundamentals improved dramatically while valuations were compressed by rising interest rates (the REIT discount rate mechanism). By Q1 2026, the sector is in early-to-mid expansion with three concurrent tailwinds: (1) demand re-acceleration as hyperscaler capex surges +77% YoY to $725B; (2) lease pricing power increasing as supply constraints tighten (vacancy at historic lows, power-ready land exhausted in tier-1 markets); and (3) rate-induced valuation compression reversing as central banks maintain or begin cutting rates — REITs are up 22% YTD as of June 2026 vs. broader REIT index at +9.2%. Q1 2026 earnings confirmed the cycle thesis: EQIX posted 10% revenue growth to $2.444B with $1B+ quarterly AFFO (first time), 51% adjusted EBITDA margin, and record $378M in Q1 annualized gross bookings. DLR posted Core FFO/share of $2.04 vs. $1.77 a year ago (+15%), raised full-year guidance to $7.90-8.00/share (8% midpoint growth), and guided revenue to ~$6.6B for 2026. The pre-leasing rate of 61% for under-construction capacity means revenue is contracted well before it is recognized — this is more utility-like than cyclical. Primary risk to cycle continuation: a 100bp+ surprise rate increase re-applying discount rate pressure to REIT multiples before the demand story fully plays through. The cycle is not mature — fund manager positioning only returned positive in early 2026 after two years of underweight, indicating institutional re-entry is still in progress.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "EQIX annualized gross bookings (quarterly, management-reported)",
+      "unit": "USD million, annualized",
+      "source": "Equinix quarterly earnings press release",
+      "current": 378,
+      "comment": "Q1 2026 record of $378M in annualized gross bookings. This is the leading revenue indicator — bookings convert to recognized revenue 3-6 months after installation. Sustained above $300M/quarter signals structural demand; a decline below $250M would flag demand saturation. Source: Equinix IR."
+    },
+    {
+      "metric": "DLR Core FFO per share (quarterly)",
+      "unit": "USD per share",
+      "source": "Digital Realty quarterly earnings press release",
+      "current": 2.04,
+      "comment": "Q1 2026 Core FFO of $2.04/share (+15.3% YoY vs. $1.77 Q1 2025). Full-year 2026 guidance: $7.90-8.00/share (8% midpoint growth). Core FFO growth rate is the primary valuation driver for REIT multiple expansion. Source: DLR Q1 2026 8-K."
+    },
+    {
+      "metric": "EQIX Adjusted EBITDA margin",
+      "unit": "percentage",
+      "source": "Equinix quarterly earnings",
+      "current": 51,
+      "comment": "51% adjusted EBITDA margin in Q1 2026, up 300bps YoY. Operating leverage in REIT model: fixed-cost infrastructure (power, land, building) with lease-based revenue means margins expand as occupancy improves. A sustained margin above 50% signals healthy pricing power and utilization. Source: Equinix Q1 2026 8-K."
+    },
+    {
+      "metric": "Under-construction pipeline pre-lease rate (DLR primary indicator)",
+      "unit": "percentage pre-leased",
+      "source": "Digital Realty quarterly earnings supplemental",
+      "current": 61,
+      "comment": "61% of DLR's 1.2GW under-construction pipeline is pre-leased as of Q1 2026 (up 60% sequentially in MW volume). Pre-lease rate above 50% means risk-adjusted returns on development capex are high. A drop below 40% would signal speculative over-building. Source: DLR Q1 2026 supplemental."
+    },
+    {
+      "metric": "10-year US Treasury yield",
+      "unit": "percentage yield",
+      "source": "Federal Reserve / Bloomberg",
+      "current": null,
+      "comment": "First-order REIT valuation driver. Every 50bp change in long-term rates translates to approximately 5-10% change in REIT NAV via the discount rate mechanism. Data center REITs have partially decoupled from this sensitivity due to their growth profile (unlike traditional commodity REITs), but a rapid rate spike above current levels remains the primary portfolio risk. Monitor daily. No confirmed current figure — update from market data at next session."
+    },
+    {
+      "metric": "Tier-1 data center market vacancy rate (Northern Virginia, key markets)",
+      "unit": "percentage vacancy",
+      "source": "CBRE Data Center Outlook (semi-annual) / JLL Global Data Center Report",
+      "current": null,
+      "comment": "Historic lows reported across all tier-1 markets as of Q1 2026 (CBRE outlook confirms record-low vacancy). Vacancy rate is the primary pricing power signal: <5% vacancy gives landlords full rent escalation leverage. Rising vacancy would signal supply overshoot. Update from CBRE Q2 2026 report (expected July 2026)."
+    }
+  ],
+
+  "active_catalyst_ids": [
+    "struct_ai_capex_supercycle",
+    "struct_copper_datacenter_demand",
+    "cat_20260601_us_ai_chip_export_controls"
+  ],
+
+  "historical_catalyst_performance": {
+    "summary": "Data center REITs have historically served as a lagged, lower-beta expression of technology infrastructure cycles compared to semiconductor or software plays — benefiting from the same demand tailwinds but with a 12-24 month delay as leases are signed, built out, and recognized. In the 2010-2015 cloud transition cycle: EQIX gained +550% over 5 years (2010-2015) as AWS/Azure/GCP buildouts drove colocation demand; DLR gained +120% in the same period. These returns lagged Salesforce (+380%) on a 1-year horizon but exceeded it on a 5-year horizon, illustrating the 'slow start, long tail' pattern of REIT infrastructure cycles. In the 2022-2025 AI cycle: EQIX and DLR each fell 20-35% from 2022 peak to 2023 trough during the rate hiking cycle (discount rate compression), even as AI demand fundamentals improved — illustrating the dual-factor sensitivity (AI demand positive, rates negative). Recovery from the 2023 lows began in H2 2025 as rate expectations softened; by Q1 2026 EQIX is up +39% from its 2023 trough and DLR +47%. The DeepSeek R1 event (January 2025) caused a -12% intraday decline in EQIX/DLR (less than the -20% in Nvidia NVDA), and both fully recovered within 8 weeks as hyperscaler capex guidance was reaffirmed — confirming that lease-based contracted revenue is more resilient to AI narrative shocks than equipment-based revenue. The 2000 fiber buildout analogy is instructive as a tail risk: Worldcom and Level 3 collapsed when speculative demand (not committed leases) failed to materialize; today's hyperscaler 10-15 year lease contracts with EQIX and DLR represent committed demand at investment-grade credit — a structurally different risk profile. Key rate sensitivity historical calibration: the 2013 'taper tantrum' (10yr UST +130bps in 6 months) caused EQIX to drop -22% peak-to-trough before recovering; a similar rate shock today would be the primary historical analog for downside scenario planning."
+  },
+
+  "risks": [
+    "Interest rate re-acceleration: data center REITs carry significant floating-rate and fixed-rate debt to finance development capex ($3.5-4.0B at DLR, ~$3B at EQIX in 2026). A surprise 100bp+ rise in 10-year Treasury yields would compress REIT multiples via the discount rate mechanism, potentially reversing the 2026 re-rating even if underlying AI leasing demand remains intact. The sector de-couples partially from rate sensitivity when growth (FFO growth >10%) outpaces the cost of capital headwind, but this buffer is not unlimited. Historical analog: 2022-2023 saw 40-50% multiple compression on rate fears despite improving fundamentals.",
+    "Hyperscaler self-build strategy reducing third-party colocation: if Microsoft, Google, Amazon, and Meta accelerate owned-and-operated data center builds (own-versus-lease), REIT demand faces a structural headwind. Signs of this shift would appear as declining hyperscaler renewal rates or reduced pre-leasing activity with neutral colocation providers. EQIX's interconnection ecosystem (network-of-networks) provides some insulation as hyperscalers value the neutral connectivity fabric, but DLR is more exposed to direct lease-vs-build decisions by large tenants.",
+    "Tenant concentration risk: EQIX and DLR generate significant revenue from a small number of mega-tenants (Amazon, Microsoft, Google, Meta account for an estimated 20-30% of combined revenues). A lease non-renewal or credit event at any of these tenants would have outsized impact on vacancy rates and stock valuations. Concentration risk is elevated precisely because the AI capex surge has led REITs to maximize large-tenant lease penetration.",
+    "AI compute efficiency disruption reducing demand density: a step-change improvement in AI model efficiency (analogous to DeepSeek R1 but sustained and cross-model) would reduce the compute-per-inference requirement and therefore the power demand per workload. This would reduce the urgency of hyperscaler expansion timelines, softening new lease activity. Unlike the semiconductor sub-theme (where efficiency gains can kill demand entirely), REITs have a floor: existing workloads still require existing infrastructure even if growth slows.",
+    "Power cost inflation eroding tenant economics and lease renewals: data center operating costs are 40-60% electricity. A sustained rise in industrial electricity prices (driven by gas price spikes, carbon pricing, or grid upgrade costs passed through by utilities) compresses hyperscaler margins on cloud workloads and could prompt re-architecture toward more efficient facilities, reducing renewal rates for older, air-cooled data centers. EQIX and DLR are both investing in renewable energy PPAs to hedge this risk, but long-term PPAs carry their own basis risk.",
+    "UCITS access limitation for European investors: the only ETF in etf_universe.yaml for this sector (SRVR) is US-listed, NOT UCITS-compliant, meaning it is inaccessible or subject to PRIIPS restrictions for Spanish retail investors via standard EU-regulated brokers. No pure-play data center REIT UCITS ETF currently exists at scale. A Spanish investor must either: (a) access SRVR via a non-EU broker (Interactive Brokers, etc.), (b) use the broader real estate REIT UCITS products that include data centers as a sub-component alongside logistics and residential, or (c) buy individual EQIX/DLR shares directly. This structural access constraint limits position sizing relative to the thesis conviction level."
+  ],
+
+  "narrative_maturity": "mainstream",
+  "narrative_trend": "increasing",
+  "narrative_notes": "The data center REIT thesis is assessed at 'mainstream' (score_equiv: 60) rather than 'crowded' (80) as of June 2026, distinguishing it from the adjacent ai_infrastructure_data_centers sector which reached 'crowded'. The key evidence: (1) Goldman Sachs, JPMorgan, Jefferies have all published base-case REIT upgrade reports in H1 2026, with Jefferies analyst Jonathan Petersen specifically highlighting data center REITs as 2026 sector overweights — exactly the Goldman/JPM/MS base-case publication that the scoring_weights.yaml scoring_weights.yaml 'mainstream' definition specifies; (2) SRVR ETF AUM at $490M and up +20.9% YTD shows institutionalconviction is building but not yet at the 'retail ETF inflows accelerating' + 'Bloomberg/CNBC daily coverage' threshold for crowded; (3) The sector spent 2023-2025 largely out of favor due to rate sensitivity — institutional positioning only turned positive in early 2026, meaning the re-entry wave is in progress, not complete. The thesis that data centers are the AI picks-and-shovels real estate play is now consensus in specialist real estate and technology research, but retail investor awareness is still catching up (vs. GPU/Nvidia which is definitively crowded at the retail level). The narrative_trend is 'increasing' because: institutional re-weighting toward data center REITs from logistics REITs accelerated in Q1 2026; new thematic ETF products targeting the REIT angle are anticipated; and EQIX/DLR Q1 2026 earnings beats are generating positive estimate revisions that attract generalist coverage. Expected to reach 'crowded' within 2-3 quarters if earnings trajectory continues and a UCITS data-center-REIT-specific ETF launches in Europe."
+}

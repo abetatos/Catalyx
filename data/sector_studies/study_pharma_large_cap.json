@@ -1,0 +1,171 @@
+{
+  "id": "study_pharma_large_cap",
+  "schema_version": "1.2",
+  "sector_id": "pharma_large_cap",
+  "sector_label": "Large-Cap Pharma",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+  "taxonomy": {
+    "parent_sector": "healthcare",
+    "adjacent_sectors": [
+      "biotech_drug_development",
+      "medical_devices",
+      "genomics_precision_medicine"
+    ],
+    "differentiation_note": "Large-cap pharma (JNJ, LLY, PFE, ABBV, MRK, AZN, NVO) are mature, dividend-paying, cash-flow-generative businesses with diversified multi-drug portfolios spanning 10-50+ commercial products, multi-decade manufacturing infrastructure, and global sales forces. The financial risk profile centers on patent-cliff management (revenue step-downs when blockbusters lose exclusivity, offset by pipeline refill and M&A) and pricing policy exposure (IRA negotiation, MFN executive orders). This is structurally different from biotech_drug_development, where companies are clinical-stage (binary FDA approval events, no sustainable earnings, high idiosyncratic risk, and the primary return driver is either licensing/acquisition by large pharma or approval). Large-cap pharma trades on earnings visibility, dividend yield (2-4%), and pipeline breadth; clinical-stage biotech trades on probability of approval and TAM. Large-cap pharma also differs from genomics_precision_medicine (early-stage platform technologies, no near-term commercial scale) and medical_devices (different regulatory pathway, procedure-volume driven, less exposed to drug-pricing policy)."
+  },
+  "demand_drivers": [
+    "GLP-1/obesity drug wave: The total addressable market for obesity pharmacotherapy is estimated at 40M+ Medicare beneficiaries newly eligible from July 2026 (Medicare coverage expansion), plus existing commercial coverage. Eli Lilly's Zepbound/Mounjaro and Novo Nordisk's Wegovy/Ozempic together generated >$25B in 2025 GLP-1 revenues. The FDA-approved Wegovy HD (semaglutide 7.2mg, March 2026) showed 20.7% mean weight loss (STEP UP trial); Lilly's oral GLP-1 pill for obesity pending US approval in Q2 2026. 39 new GLP-1 molecules in development from 34 companies signal category expansion beyond LLY/NVO.",
+    "Pipeline breadth and late-stage oncology: Merck's Keytruda delivered $8.03B in Q1 2026 (+12% YoY) across 30+ approved indications; the subcutaneous reformulation provides lifecycle extension ahead of the IV formulation patent expiry in 2028. Pfizer launched ~20 pivotal oncology study starts across 2026 and its Seagen oncology portfolio grew +20% operationally in Q1 2026. Pipeline breadth (number of Phase 3 assets) is the primary valuation re-rating driver for large-cap names.",
+    "M&A as pipeline refill engine: Goldman Sachs predicted a record-breaking year for pharma/biotech M&A in 2026. Seven transactions in the last two weeks of March 2026 totalled $29B combined. Pfizer's $10B acquisition of Metsera (obesity biotech) is a direct response to GLP-1 competition. Merck executed three acquisitions each >$6B in 10 months targeting Keytruda LOE gap-fill. M&A is a structural demand driver — large-cap balance sheets (multi-billion FCF) continuously recycled into pipeline assets.",
+    "Aging demographics and chronic disease burden: The US over-65 population is projected to grow from 58M (2022) to 70M by 2030. Large-cap pharma's core franchise drugs (anticoagulants: Eliquis $13B+ annually; diabetes: Januvia/Ozempic class; oncology: Keytruda/Imfinzi) address conditions with rising population prevalence. Per-capita drug spending rises steeply after age 65 in OECD countries.",
+    "Biosimilar wave offset by biologics lifecycle management: Humira (AbbVie) lost exclusivity in 2023 and faced nine biosimilars; AbbVie responded with Skyrizi and Rinvoq, which together generated $17B+ in 2025 revenues, fully replacing Humira's revenue by 2025-end. This lifecycle management playbook (file reformulation, invest in follow-on immunology/oncology) is being replicated across the large-cap universe and represents a repeating demand driver for shares that successfully execute.",
+    "International market expansion — GLP-1 ex-US: Novo Nordisk launched Wegovy pill in the US on January 5, 2026 (strongest-ever GLP-1 volume launch; 2M+ prescriptions). First ex-US Wegovy pill launches expected H2 2026. Eli Lilly's oral tirzepatide approval in additional markets in 2026 would add material incremental revenue. Ex-US GLP-1 penetration is <5% of US levels, representing a multi-year demand expansion runway."
+  ],
+  "supply_constraints": [
+    "Manufacturing capacity bottleneck for injectable GLP-1s: Novo Nordisk and Eli Lilly have invested $20B+ combined since 2023 in fill-finish capacity expansion (NVO: Kalundborg and US expansions; LLY: Concord NC and Ireland facilities). Injectable supply remains the binding constraint on GLP-1 revenue growth; oral formulations (Wegovy pill, oral tirzepatide) partially relax this constraint but are still supply-limited in initial launch phases.",
+    "Patent cliff revenue gaps (2026-2030): Top-20 big pharma companies risk losing patents on drugs worth approximately $180B in combined revenue in 2027-2028. Key exposures: Eliquis US patents expire 2027-2029 (BMS/Pfizer; $13B+ annual revenue); Keytruda IV formulation patents expire 2028 (Merck; $29.5B revenue); Stelara LOE already under way (JNJ); Ibrance LOE approaching (Pfizer). These are supply constraints on the revenue line rather than manufacturing — no new drug from scratch can replace a $10B franchise within a 3-5 year window.",
+    "Drug pricing policy uncertainty (IRA + MFN): IRA drug price negotiation covers 10 drugs in 2026 (effective January 1, 2026) with 25 total by 2027 Maximum Fair Prices. The Trump MFN Executive Order (May 2025) directed HHS to set MFN price targets; 16 pharma companies including AbbVie, Merck, Pfizer, Lilly, NVO signed deals. The MFN initiative caps US prices at the lowest international reference price, compressing gross margins on high-revenue products in the medium term.",
+    "R&D productivity constraint: The cost of developing a new molecular entity to approval exceeds $2B on average and takes 10-15 years. Large-cap pipelines consist predominantly of me-too/follow-on molecules and reformulations; truly novel mechanisms (new biologics platforms, RNA therapeutics) increasingly come from biotech acquisitions at high premiums (e.g., Pfizer/Seagen $43B, Merck/Prometheus $10.8B). M&A competition for quality pipeline assets is intense, driving acquisition multiples up and limiting buy-side discipline.",
+    "Regulatory capacity and FDA PDUFA timeline risk: The FDA approved 55 new drugs in 2024 (down from 60+ in 2023). Ongoing FDA staffing reductions (DOGE-era cuts) introduce timeline uncertainty for NDA/BLA reviews; delays in approvals for pipeline drugs become supply constraints on the revenue runway."
+  ],
+  "cycle_position": {
+    "assessment": "Mid-cycle recovery with bifurcated sub-sector dynamics",
+    "rationale": "Large-cap pharma entered 2026 in recovery mode after three years of de-rating driven by IRA pricing concerns and COVID product roll-off (Pfizer/Moderna). As of June 2026: (1) IHE YTD +8.58% vs PPH YTD +0.02% — the divergence reflects IHE's US-heavy tilt (more LLY weight, minimal NVO drag from DKK weakness) vs PPH's more global mix including NVO. (2) JPMorgan rates large-cap biopharma 'Overweight' citing lower policy risk, solid fundamentals, and still-low valuations — sector PE is below the 5-year average despite earnings recovery. (3) GLP-1 names (LLY, NVO) trade at premium multiples (30-40x forward PE) reflecting structural growth; traditional large-cap names (PFE, JNJ, MRK ex-Keytruda) trade at 10-15x with high dividend yields (3-5%), reflecting terminal concern around patent cliffs. (4) M&A cycle is re-accelerating — record deal pace in early 2026 points to management confidence in cash-flow durability. Assessment: the sector is past the trough of the IRA de-rating cycle (bottomed mid-2024) and in active recovery, but not yet in a full re-rating phase given unresolved MFN implementation and upcoming patent cliffs (Keytruda 2028, Eliquis 2027-2029). Best positioned for mid-cycle, catalyst-driven returns on individual names with visible pipeline catalysts rather than a broad sector beta trade.",
+    "last_assessed": "2026-06-05"
+  },
+  "key_metrics_to_monitor": [
+    {
+      "metric": "GLP-1 prescription weekly volume (US) — Zepbound + Mounjaro (LLY) vs Wegovy + Ozempic (NVO)",
+      "unit": "Prescriptions per week (IQVIA weekly Rx data)",
+      "source": "IQVIA Symphony Health weekly prescriptions; LLY/NVO quarterly earnings",
+      "current": "Lilly pulling ahead; Wegovy pill 2M+ prescriptions since Jan 2026 launch — total market ~8-10M Rx/week",
+      "comment": "Primary growth driver and valuation anchor for the sector's two highest-weighted ETF names. Also watch supply shortage months — any shortage is a negative catalyst."
+    },
+    {
+      "metric": "IRA drug price negotiation — Maximum Fair Prices (MFP) effective dates and price levels",
+      "unit": "USD per unit; list of 25 negotiated drugs by 2027",
+      "source": "CMS Drug Price Negotiation Program announcements; HHS press releases",
+      "current": "10 drugs MFP effective Jan 1 2026 (round 1); 15 more MFPs set to become effective Jan 1 2027",
+      "comment": "Each new round expands pricing pressure scope. Watch for expansion to biologics beyond small molecules — structural long-term revenue ceiling risk."
+    },
+    {
+      "metric": "Keytruda (pembrolizumab) quarterly revenue and subcutaneous formulation approval timeline",
+      "unit": "USD billions per quarter",
+      "source": "Merck quarterly earnings (10-Q); FDA PDUFA action date for subQ formulation",
+      "current": "$8.03B Q1 2026 (+12% YoY); IV formulation patent expiry 2028; subQ LOE extended",
+      "comment": "Single largest revenue exposure in the sector. subQ reformulation is the Keytruda cliff mitigant — FDA approval timeline is binary and high-impact."
+    },
+    {
+      "metric": "Pharma sector forward P/E relative to S&P 500",
+      "unit": "P/E ratio (sector) / P/E ratio (SPX)",
+      "source": "FactSet Earnings Insight weekly; Bloomberg Healthcare sector consensus",
+      "current": "Large-cap pharma ex-LLY at ~13-15x forward, SPX ~22x — sector at 0.65x relative multiple, near 5-year lows for traditional names",
+      "comment": "Primary mean-reversion catalyst if IRA/MFN concerns peak. Watch for JPM/GS large-cap pharma upgrades as policy risk premia compress."
+    },
+    {
+      "metric": "Pharma/biotech M&A deal value (rolling 12-month)",
+      "unit": "USD billions, deal count",
+      "source": "Evaluate Pharma M&A tracker; FiercePharma deal coverage; BioPharma Dive",
+      "current": "$29B in last two weeks of March 2026 alone; Goldman Sachs forecasts record full-year 2026",
+      "comment": "Accelerating M&A compresses pipeline shortage risk. High M&A activity is a sentiment-positive catalyst for large-cap acquirers (demonstrates balance sheet strength) but margin-negative short-term."
+    },
+    {
+      "metric": "Patent cliff revenue at risk (2026-2030 cumulative LOE exposure)",
+      "unit": "USD billions at risk; % of current sector revenue",
+      "source": "EvaluatePharma LOE tracker; company guidance on LOE impact",
+      "current": "~$300B estimated patent loss 2025-2030 across top-20 pharma; Keytruda ($29.5B), Eliquis ($13B), Stelara ($9B), Ibrance ($5B) most exposed",
+      "comment": "Key risk monitoring signal — deteriorating pipeline cover vs LOE exposure = de-rating catalyst. Improving pipeline cover + M&A refill = re-rating signal."
+    }
+  ],
+  "etf_analysis": [
+    {
+      "ticker": "IHE",
+      "name": "iShares U.S. Pharmaceuticals ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0040,
+      "aum_m_usd": 610,
+      "replication": "physical",
+      "avg_spread_bps": 9,
+      "top_10_concentration_pct": 72,
+      "characteristics": "US-focused large-cap pharma. Top holdings: LLY, JNJ, PFE, ABBV, MRK, BMY, AMGN. Strong YTD 2026 (+8.58% as of May 29, 2026) driven by LLY weight. NOT UCITS — US-domiciled ETF, not accessible to Spanish retail investors under PRIIPs/KID rules without explicit broker access. AUM $610M is acceptable but below the $1B tier-1 threshold; spread 9bps is reasonable. Lower liquidity than broad healthcare ETFs.",
+      "recommendation_tier": 1,
+      "limitations": "NOT UCITS — restricted for Spanish investors under PRIIPs regulation. AUM $610M below tier-1 $1B threshold — use moderate position sizing. Heavy US-pharma tilt means minimal NVO/AZN/GSK/Roche exposure."
+    },
+    {
+      "ticker": "PPH",
+      "name": "VanEck Pharmaceutical ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0036,
+      "aum_m_usd": 440,
+      "replication": "physical",
+      "avg_spread_bps": 10,
+      "top_10_concentration_pct": 68,
+      "characteristics": "Global pharma — includes NVO, Roche, Novartis, AstraZeneca alongside US names. Lower TER (0.36%) than IHE. YTD 2026 essentially flat (+0.02% as of June 1, 2026) reflecting NVO drag (Novo Nordisk's DKK-denominated earnings faced currency headwinds). Lower AUM ($440M) and similar spread to IHE. NOT UCITS — same access restrictions apply for Spanish investors. Provides broader geographic exposure including European pharma (AZN, NVS, ROG).",
+      "recommendation_tier": 2,
+      "limitations": "NOT UCITS — restricted for Spanish investors under PRIIPs regulation. AUM $440M is below liquidity comfort threshold (flag: consider $200M minimum only). Very low YTD performance in 2026 vs IHE due to NVO weight and currency factors. Highly concentrated — top holding NVO alone is ~11%."
+    },
+    {
+      "ticker": "PHCS.L",
+      "name": "iShares MSCI World Health Care Sector UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0025,
+      "aum_m_usd": 3200,
+      "replication": "physical",
+      "avg_spread_bps": 7,
+      "top_10_concentration_pct": 58,
+      "characteristics": "UCITS healthcare sector ETF — best accessible vehicle for a Spanish investor seeking large-cap pharma exposure. Tracks MSCI World Health Care index. Top holdings: LLY, UNH, JNJ, ABBV, NVO, MRK — approximately 60% of the index is large-cap pharma, with the rest being managed care (UNH, CVS) and medical devices. Pure pharma exposure is diluted (~60%) but the AUM ($3.2B), TER (0.25%), and spread (7bps) make it tier-1 for UCITS-constrained investors. UCITS registered, EUR/USD available, accessible on LSE.",
+      "recommendation_tier": 1,
+      "limitations": "Not a pure large-cap pharma ETF — includes managed care (UNH ~9%) and medical devices (ABT, MDT ~8%). Dilutes the pharma patent-cliff and GLP-1 thesis by ~40%. Treat as a healthcare sector expression, not a pure large-cap pharma play. If IHE/PPH remain inaccessible to the investor, this is the default UCITS vehicle."
+    }
+  ],
+  "active_catalyst_ids": [],
+  "historical_catalyst_performance": {
+    "summary": "Large-cap pharma has exhibited three distinct historical catalyst response patterns: (1) Drug pricing policy events are strongly negative — the passage of the IRA in August 2022 triggered an immediate ~10-12% sector de-rating (IHE fell from ~$200 to ~$175 in 3 months); MFN executive order speculation in May 2025 caused a similar 6-8% drawdown before partial recovery. The sector consistently reprices downward when pricing power is structurally capped. (2) GLP-1 clinical data events are strongly positive but increasingly stock-specific — NVO's Wegovy STEP-1 Phase 3 results (June 2021) sent NVO ADR +18% in a single session and repriced the obesity drug category. LLY's SURMOUNT-1 tirzepatide results (2022) similarly triggered a 15% re-rating. GLP-1 catalysts now benefit the large-cap sector broadly but with declining marginal impact as the market has partially priced in the GLP-1 wave (consensus LLY PE ~38x, NVO ~25x). (3) FDA approvals for individual blockbusters cause stock-specific reactions (10-30% moves) but sector-level ETF moves are muted (<3%) unless the approval is from a top-5 ETF holding. Patent cliff events (Humira loss of exclusivity 2023) historically cause less damage than feared when management provides credible biosimilar offset guidance — ABBV fell ~15% on initial Humira cliff fears but recovered fully as Skyrizi/Rinvoq ramp became visible.",
+    "key_catalyst_types": [
+      {
+        "catalyst_type": "Drug pricing policy (IRA, MFN, executive orders)",
+        "typical_direction": "Negative",
+        "typical_magnitude_pct": "-6 to -15%",
+        "duration": "Weeks to months; permanent structural repricing for confirmed policies",
+        "notes": "The most reliable negative catalyst. Policy overhang compresses multiples; resolution or court injunctions trigger partial recovery."
+      },
+      {
+        "catalyst_type": "GLP-1 / obesity drug clinical data and approval",
+        "typical_direction": "Positive (LLY/NVO primary; sector secondary)",
+        "typical_magnitude_pct": "+5 to +20% for primary names; +1 to +5% sector ETF",
+        "duration": "Permanent re-rating if efficacy confirmed; fades within weeks if adoption slower than modeled",
+        "notes": "Increasingly priced in for Lilly and NVO. Next catalysts: oral GLP-1 approval (LLY), ex-US Wegovy launches, competitor data (AZN oraltirzepatide, Pfizer/Metsera pipeline)."
+      },
+      {
+        "catalyst_type": "Patent cliff and LOE materialization",
+        "typical_direction": "Initially negative; recovery when offset pipeline is credible",
+        "typical_magnitude_pct": "-10 to -20% on stock; -2 to -5% sector ETF at initial announcement",
+        "duration": "Multi-year overhang; recovers when analyst EPS revision bottoms",
+        "notes": "ABBV/Humira is the case study: maximum fear 2022-2023, then full recovery as lifecycle management worked. Watch Merck (Keytruda 2028) and BMS (Eliquis 2027-2029)."
+      },
+      {
+        "catalyst_type": "M&A announcement (large-cap acquirer)",
+        "typical_direction": "Negative to neutral short-term for acquirer; positive for sector sentiment",
+        "typical_magnitude_pct": "-1 to -5% acquirer; +20 to +50% target; sector neutral to +1%",
+        "duration": "Days to weeks; long-term positive if acquisition fills pipeline credibly",
+        "notes": "Record 2026 M&A pace is a positive sentiment catalyst for the sector as it signals confidence in future cash flows and pipeline strategy."
+      }
+    ]
+  },
+  "risks": [
+    "Keytruda patent expiry 2028 (Merck — systemic risk): Keytruda IV formulation's key patents expire in 2028. Keytruda represented $29.5B of Merck's 2025 revenue; without the subcutaneous reformulation becoming the standard of care, sell-side models assume 70-80% revenue erosion on this franchise by 2031. Merck's stock (~15% of PPH, ~8% of IHE) would face severe de-rating. The subcutaneous formulation is the mitigant but its FDA timeline is a binary risk event. If subQ approval is delayed or fails, Merck's pipeline cannot fill the gap on the required timeline.",
+    "MFN executive order and IRA expansion creating compounding pricing ceiling: The dual implementation of IRA round 2 (25 drugs by 2027 MFP) and the MFN TrumpRx.gov platform (launched Feb 2026) creates a compounding pricing constraint. If MFN is implemented via trade agreement mechanisms rather than individual company deals, it would set US prices at international reference levels — potentially compressing US pharma gross margins by 15-20% on affected products. Unlike IRA (limited to Medicare negotiations), MFN could apply to commercial market pricing. Legal challenge is ongoing; adverse court rulings would trigger a sharp sector re-rating.",
+    "GLP-1 competitive intensity — winner-takes-most risk for NVO: Eli Lilly has pulled ahead in the GLP-1 race (CNBC Feb 2026 reporting: 'Lilly's GLP-1 growth only getting started as Novo Nordisk braces for decline'). If Lilly's oral GLP-1 (pending FDA approval Q2 2026) is approved and its weight-loss profile matches or exceeds Wegovy pill, NVO faces structural market-share loss. NVO represents ~10% of PPH. A 20-25% NVO stock decline on competitive data would reduce PPH by ~2-2.5 percentage points — meaningful for a flat-YTD fund. Broader risk: if third-party entrants (AZN, Pfizer/Metsera, Amgen) gain significant share by 2027-2028, the GLP-1 premium valuations of LLY and NVO compress, impacting the sector's primary growth story.",
+    "FDA staffing and regulatory capacity deterioration: The 2025-2026 DOGE-era FDA staffing cuts have introduced approval timeline uncertainty. A new FDA approach links drug pricing considerations to approval decisions (Skadden 2026 report: 'New FDA Approach to Drug Prices Adds Uncertainty to Drug Approval Process'). Approval delays for pipeline drugs in Phase 3 would cause EPS estimate cuts and sector de-rating. This risk is difficult to quantify but is structurally new — the FDA has historically been insulated from political interference on individual approval decisions.",
+    "Patent cliff revenue gaps 2026-2029 with insufficient pipeline cover: The $300B in estimated revenue at risk from patent expirations 2025-2030 requires a comparable scale of new approvals and launches to maintain sector earnings stability. If M&A targets become scarce (few quality assets at reasonable prices), or if key Phase 3 pipeline failures occur at Merck, Pfizer, or BMS, the EPS trajectory turns negative and the sector's current forward PE (13-15x for traditional names) provides no multiple expansion room. This is a structural overhang, not a one-time event.",
+    "Currency risk for international exposure (PPH/PHCS): The sector's global players (NVO: DKK-denominated; AZN: GBP/USD; Roche: CHF; Novartis: CHF) create significant currency translation risk for EUR-based investors. NVO's 2026 earnings are reported in DKK; GLP-1 revenues are USD-denominated but earnings translated back to DKK for reporting. CHF strength (Roche, Novartis) would reduce EUR returns on PHCS. Spanish investors buying USD-denominated ETFs (IHE, PPH) carry USD/EUR risk on top of underlying equity risk — material given the EUR has strengthened in 2025-2026."
+  ],
+  "narrative_maturity": "mainstream",
+  "narrative_trend": "stable",
+  "narrative_notes": "Large-cap pharma as a sector is firmly in 'mainstream' narrative maturity. The GLP-1/obesity drug wave (the sector's dominant 2025-2026 growth theme) is consensus sell-side coverage — Goldman Sachs, JPMorgan, Morgan Stanley all publish base-case GLP-1 forecasts; dedicated obesity drug ETFs (OZEM) have launched; Bloomberg/CNBC run near-daily GLP-1 market share stories. The patent cliff narrative is equally mainstream — Keytruda 2028 and Eliquis 2027-2029 are in every pharma analyst model. By the scoring_weights.yaml anchor, 'mainstream' maps to observable criteria: Goldman/JPM/MS all publish base-case reports (confirmed), ETF AUM >$500M in theme (IHE+PPH ~$1B combined), and the thesis is named in ETF product descriptions. The narrative has NOT yet reached 'crowded' because: (1) sector valuations are still below 5-year average for traditional names (10-15x forward PE), suggesting incomplete positioning; (2) the IRA/MFN policy risk premium is still keeping some institutional capital on the sidelines; (3) JPMorgan's current 'Overweight' stance implies they see the thesis as under-positioned for the risk, not over-positioned. Narrative trend is 'stable' — no material change in media/analyst coverage intensity over the past 3 months. The GLP-1 coverage is now a routine quarterly beat-and-raise story rather than a new discovery."
+}

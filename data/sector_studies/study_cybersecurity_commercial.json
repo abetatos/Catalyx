@@ -1,0 +1,157 @@
+{
+  "id": "study_cybersecurity_commercial",
+  "schema_version": "1.2",
+  "sector_id": "cybersecurity_commercial",
+  "sector_label": "Commercial Cybersecurity (Enterprise B2B)",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "technology",
+    "adjacent_sectors": [
+      "cybersecurity_defense",
+      "cloud_software_saas",
+      "ai_infrastructure_data_centers"
+    ],
+    "differentiation_note": "Commercial cybersecurity is a pure enterprise SaaS model — revenue is ARR-driven, customers are Fortune 500 CISOs responding to breach risk and regulatory pressure (NIS2, CMMC 2.0, SEC disclosure rules), and pricing power is anchored to software renewal cycles rather than government budget appropriations. Cybersecurity_defense, by contrast, is driven by classified government and military contracts, is subject to ITAR/FedRAMP compliance hurdles, has very different procurement lead times (18-36 months vs enterprise sales cycles of 3-9 months), and is dominated by names like SAIC, Leidos, and Booz Allen rather than CrowdStrike or Palo Alto. The revenue recognition, customer churn, and catalyst dynamics are structurally separate: a DoD budget cut could compress cybersecurity_defense revenues without affecting commercial ARR, and vice versa — a wave of corporate ransomware incidents accelerates enterprise SaaS spending but is irrelevant to government contract renewals."
+  },
+
+  "demand_drivers": [
+    "Global enterprise cybersecurity spending projected to reach $240B in 2026 (Gartner), up 12.5% YoY from $213B in 2025 — enterprises now allocate 8-12% of total IT budgets to security, up from <6% four years ago.",
+    "Ransomware frequency: attacks now occur every 19 seconds globally (2026 data), affecting 76% of organizations annually; average ransom demand reached $2-3M; ransomware incidents jumped 149% in early 2025 driving urgent platform consolidation.",
+    "AI-driven threat escalation: 80% of phishing attacks now use AI-generated content; AI-enabled attack activity increased 72% in 2025; adversarial use of generative AI is compressing detection windows and forcing enterprises to upgrade legacy signature-based tools to behavioral/AI platforms (CRWD Falcon, PANW Cortex, ZS Zero Trust).",
+    "Platform consolidation wave: enterprise buyers collapsing multi-vendor point solutions into 2-3 dominant platforms to reduce complexity and cost. CrowdStrike Q1 FY27: 49% of customers have adopted 6+ modules, 34% adopted 7+, 24% adopted 8+ — cross-sell drives NRR expansion without new logo acquisition cost.",
+    "New regulatory mandates creating non-discretionary spend: EU NIS2 Directive (October 2024 enforcement), US CMMC 2.0 (mandatory for DoD contractors), SEC cyber disclosure rules (2024 effective), CIRCIA (critical infrastructure reporting) — compliance-driven demand is structurally different from discretionary IT spend and less sensitive to macro slowdowns.",
+    "AI infrastructure security: as hyperscalers expand LLM training and inference workloads, a new attack surface emerges around model theft, prompt injection, data poisoning, and AI supply chain. Zero-trust network access (ZTNA) and cloud-native application protection platforms (CNAPP) are the architectural response — CrowdStrike, Palo Alto, and Zscaler all lead here.",
+    "CrowdStrike Falcon outage recovery (July 2024) proved sector resilience: despite the largest IT outage in history, gross retention held at 97%; stock recovered >95% from post-outage trough, demonstrating that platform switching costs in enterprise cybersecurity are structurally high."
+  ],
+
+  "supply_constraints": [
+    "Cybersecurity talent shortage: 3.4M unfilled cybersecurity roles globally (ISC2 2025 estimate) — this acts as a demand amplifier for automated platforms (fewer analysts required with AI-assisted detection), but also limits the pace at which enterprises can implement and operationalize new tools.",
+    "Platform consolidation compresses vendor count: enterprises are moving toward 2-3 platform vendors, meaning the addressable market for second-tier point-solution vendors is structurally shrinking — only the top 5 (CRWD, PANW, FTNT, ZS, OKTA) are likely to benefit at scale.",
+    "Customer budget cycles: enterprise IT budgets are set annually; mid-year discretionary cuts can delay new platform deployments even if renewals are protected. Macro sensitivity is higher for new logo acquisition than for ARR renewals.",
+    "Integration complexity of large acquisitions: PANW's $25B CyberArk acquisition (closed February 2026) introduces integration risk, potential EPS dilution, and execution distraction — limits PANW's ability to deploy R&D into new threat vectors in the near term.",
+    "Sales cycle length: enterprise platform deals (7+ modules, $1M+ TCV) require CISO sign-off, legal, procurement, and board-level risk approval in some cases; average sales cycle 6-12 months constrains near-term revenue ramp despite strong pipeline."
+  ],
+
+  "cycle_position": {
+    "assessment": "Mid-cycle acceleration — not early cycle (thesis is mainstream, valuations elevated), but not late cycle (demand drivers structural, not cyclical; regulatory tailwinds are non-discretionary).",
+    "rationale": "The sector is 32% YTD (CIBR through early June 2026) after a post-outage reset in 2024. ARR growth at the three largest pure-plays is 24-26% YoY (CRWD $5.51B ARR +24%, ZS $3.525B ARR +25%, PANW NGS ARR ~$7.95B). Valuations are elevated: CRWD trades at 93x NTM P/E and 24x forward sales; PANW at 15x forward sales. The narrative is mainstream (Goldman/JPM publish base-case sector reports, ETF AUM >$5B in CIBR alone, Bloomberg daily coverage), which limits the mispricing opportunity but does not eliminate it — the AI threat amplification story is still underappreciated by generalist investors focused on AI semiconductors. The sector is not yet exhausted: earnings revisions are positive (ZS raised FY26 ARR guidance, CRWD raised FY27 net new ARR guidance by 520bps), consensus is not euphoric, and the incremental demand from AI-generated threat escalation represents a structural step-change in required security spend rather than a cyclical bump. Key cycle risk: if the macro deteriorates, new enterprise platform sales slow before renewals are affected — a 6-9 month warning sign before ARR deceleration.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Global enterprise cybersecurity spending (annual)",
+      "unit": "USD billions",
+      "source": "Gartner Security & Risk Management forecast (published annually Q1)",
+      "current": "240",
+      "comment": "2026 Gartner estimate $240B (+12.5% YoY from $213B in 2025). Watch for mid-year revision. Forrester estimates $200B+ — range $200-262B across forecasters."
+    },
+    {
+      "metric": "CrowdStrike ARR (Annual Recurring Revenue)",
+      "unit": "USD billions",
+      "source": "CRWD quarterly earnings (SEC Form 8-K)",
+      "current": "5.51",
+      "comment": "Q1 FY27 (April 2026): $5.51B ARR, +24% YoY. Net new ARR $256M, +32% YoY. Key leading indicator for sector growth rate. FY27 guidance raised 520bps at midpoint."
+    },
+    {
+      "metric": "Zscaler ARR",
+      "unit": "USD billions",
+      "source": "ZS quarterly earnings (SEC Form 8-K)",
+      "current": "3.525",
+      "comment": "Q3 FY26 (April 2026): $3.525B ARR, +25% YoY. Revenue $850.5M +25% YoY. Guidance raised to $3.740-3.749B FY26 ARR (+24%). Purest SASE/zero-trust proxy."
+    },
+    {
+      "metric": "Ransomware attack frequency",
+      "unit": "attacks per unit time",
+      "source": "Cybersecurity Ventures / Veeam Ransomware Trends Report / Recorded Future (annual)",
+      "current": "Every 19 seconds globally (2026)",
+      "comment": "76% of organizations affected annually. Average ransom demand $2-3M. 149% surge in early 2025. Frequency drives enterprise urgency to upgrade endpoint + XDR platforms."
+    },
+    {
+      "metric": "CIBR ETF YTD price return",
+      "unit": "percent",
+      "source": "Bloomberg / Yahoo Finance (daily)",
+      "current": "32",
+      "comment": "CIBR up ~32% YTD as of early June 2026; BUG up ~27% YTD. Outperforming S&P 500 materially. Monitor for divergence from ARR growth — premium compression risk if growth decelerates."
+    },
+    {
+      "metric": "NIS2 / CMMC 2.0 compliance enforcement timeline",
+      "unit": "qualitative milestone",
+      "source": "EU Agency for Cybersecurity (ENISA) / US DoD official guidance",
+      "current": "NIS2 enforcement active since October 2024; CMMC 2.0 phased in 2025-2026",
+      "comment": "Watch for enforcement actions or fine announcements — each headline accelerates compliance-driven procurement cycles. EU fines under NIS2 up to €10M or 2% global turnover."
+    }
+  ],
+
+  "etf_analysis": [
+    {
+      "ticker": "ISPY.L",
+      "name": "L&G Cyber Security UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0075,
+      "aum_m_usd": 2800,
+      "replication": "physical",
+      "avg_spread_bps": 9,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Europe's largest cybersecurity UCITS ETF by AUM ($2.8B as of 2026). Tracks the ISE Cyber Security UCITS Index. Holdings: CRWD, PANW, FTNT, ZS, OKTA, CHKP, VRNS, and broader digital security names. USD-denominated on LSE — adds EUR/USD exposure for Spanish investor. TER 0.75% is higher than US equivalents but competitive within UCITS cybersecurity options. UCITS-registered: accessible via Spanish broker without PRIIPs restrictions.",
+      "recommendation_tier": 1,
+      "limitations": "TER 0.75% is the highest among the three listed options; spread ~9bps is acceptable but slightly wider than CIBR (4bps). Tracks 'digital security' which includes some IT services/governance names alongside pure-play cybersecurity — slightly diluted vs CIBR's pure-play exposure. Note: the ETF universe lists ISPY.L as iShares Digital Security; the live ticker ISPY.L maps to the L&G Cyber Security UCITS ETF (AUM $2.8B) — verify broker ticker before execution."
+    },
+    {
+      "ticker": "CIBR",
+      "name": "First Trust NASDAQ Cybersecurity ETF",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "ter": 0.0060,
+      "aum_m_usd": 5100,
+      "replication": "physical",
+      "avg_spread_bps": 4,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Largest cybersecurity ETF globally by AUM ($5.1B). Tracks the Nasdaq CEA Cybersecurity Index. Top holdings: CRWD, PANW, FTNT, ZS, OKTA. Broadest pure-play coverage — includes IT services companies with significant cyber exposure (Accenture, Booz Allen) alongside pure-play software names. 4bps average spread — most liquid cybersecurity vehicle. NOT UCITS — US-domiciled, generally not accessible to EU retail investors under PRIIPs/KID rules without a professional investor exemption.",
+      "recommendation_tier": 2,
+      "limitations": "NOT UCITS — critical restriction for Spanish retail investor. Cannot be purchased through most Spanish brokers under PRIIPs. Only accessible if investor qualifies as professional (MiFID II Article 4(1)(10)) or broker provides KID workaround. If accessible: tier 1 on liquidity and AUM grounds. For standard retail access, ISPY.L is the preferred vehicle."
+    },
+    {
+      "ticker": "BUG",
+      "name": "Global X Cybersecurity ETF",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "ter": 0.0050,
+      "aum_m_usd": 890,
+      "replication": "physical",
+      "avg_spread_bps": 8,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Tracks the Indxx Cybersecurity Index. Focuses on pure-play cybersecurity companies deriving >50% of revenue from cyber — more concentrated and purer than CIBR (excludes diversified IT services). Top holdings: CRWD, PANW, ZS, OKTA, FTNT, SentinelOne. AUM $890M is adequate but below $1B liquidity preference. NOT UCITS — same PRIIPs restriction as CIBR.",
+      "recommendation_tier": 3,
+      "limitations": "NOT UCITS — inaccessible to Spanish retail under PRIIPs. Lower AUM than CIBR ($890M vs $5.1B) — acceptable but monitor. Despite lower TER (0.50% vs 0.60%), the UCITS restriction makes this inferior to ISPY.L for a Spanish investor. Useful as a benchmark and sector purity gauge since it excludes diversified IT services that dilute CIBR."
+    }
+  ],
+
+  "risks": [
+    "Valuation compression risk: CRWD trades at 93x NTM P/E and 24x forward sales as of June 2026 — among the highest in software. A deceleration in net new ARR growth from the current 32% trajectory (even to 20%) could trigger a 25-40% multiple compression in the leading names, dragging ETF NAV regardless of underlying business quality. This is the single largest near-term risk given the 32% YTD run.",
+    "Macro-driven new enterprise deal slippage: while ARR renewals are sticky (CRWD gross retention 97%), new platform deal closings are discretionary and extend to 6-12 month sales cycles. In a recession or CFO cost-cutting environment, new logo acquisition slows 6-9 months before ARR metrics reflect it — the signal arrives in pipeline data before earnings, creating a period of opaque risk.",
+    "Platform concentration and 'winner-takes-most' dynamics: consolidation in 2-3 platforms means smaller vendors (S-1, Varonis, Qualys) face structural revenue atrophy. CIBR and BUG hold some of these names — the platform bet is concentrated in the top 3-5 holdings (50-60% of AUM), and their continued pricing power is essential for ETF performance.",
+    "CrowdStrike Falcon operational risk redux: the July 2024 Falcon sensor update caused the largest IT outage in history (8.5M Windows devices). A repeat incident — however unlikely — could trigger a customer retention crisis at a much larger ARR base ($5.51B). CRWD is 12-18% of CIBR and BUG by weight; a CRWD-specific event would materially impact ETF NAV.",
+    "Geopolitical escalation creating dual risk: state-sponsored cyberattacks (Russia APT28, Lazarus Group, Volt Typhoon) increase demand for commercial defenses AND create operational disruption risk for cybersecurity vendors themselves — vendors managing classified threat intelligence for Western governments become high-value targets for adversarial disruption.",
+    "AI platform threat to legacy vendors: large cloud providers (Microsoft Defender, Google Chronicle, Amazon Security Lake) are bundling cybersecurity capabilities into existing cloud contracts at marginal cost, directly competing with standalone cybersecurity SaaS. Microsoft's integrated security stack is the most significant competitive overhang for mid-tier vendors."
+  ],
+
+  "narrative_maturity": "mainstream",
+
+  "narrative_trend": "increasing",
+
+  "narrative_notes": "Cybersecurity commercial is firmly mainstream per the scoring_weights.yaml criteria: Goldman Sachs, JPMorgan, Morgan Stanley, and Barclays all publish dedicated sector coverage with base-case reports; CIBR ETF AUM exceeds $5B; Bloomberg runs near-daily coverage of CRWD and PANW earnings; the 'AI-driven cyber threat' thesis appears in generalist financial media (WSJ, FT, CNBC). This maps directly to the 'mainstream' anchor example ('Goldman/JPM/MS publish base-case reports. ETF AUM > $500M in theme'). The narrative is not 'crowded' (score_equiv 80) despite the elevated coverage because: (1) AI threat escalation as a specific demand driver is not yet in COT data as a dominant hedge fund theme — it is in sector research but has not yet translated into the overt positioning crowding seen in AI semiconductors; (2) ZS trades well below its 2021 ATH despite 25% ARR growth, suggesting the generalist retail bid is not yet as extreme as in 2021; (3) CIBR YTD +32% is strong but not parabolic. Narrative trend is 'increasing' because the AI threat surface area is a novel angle being added to an existing mainstream thesis — the coverage rate is accelerating, not plateauing. Monitor for transition to 'crowded' if: COT data shows hedge fund net long positioning in cyber names exceeds 2021 highs, or CNBC devotes >3 segments/week to cybersecurity sector as a standalone theme.",
+
+  "historical_catalyst_performance": {
+    "summary": "Commercial cybersecurity ETFs have demonstrated a reliable 3-pattern response to their key catalyst types: (1) Major breach/ransomware events (Colonial Pipeline May 2021, Kaseya July 2021, SolarWinds aftermath): CIBR rallied 15-25% over 6-8 weeks following each major incident as enterprise procurement urgency spiked — the sector effectively benefits from the fear created by high-profile attacks on the share of the economy not yet protected. (2) Earnings accelerations with raised ARR guidance (CRWD post-FY26 recovery, ZS Q3 FY26): names with accelerating ARR and raised guidance have outperformed the XLK tech benchmark by 10-20% in the 3 months following the print. (3) Regulatory mandate catalysts (NIS2, CMMC 2.0 announcements): sector outperformed in the 60-90 day window around significant regulatory enforcement announcements, with the effect concentrated in European-exposed names and government-adjacent commercial players (PANW, CRWD Federal). Key failure mode: when a major vendor (CRWD July 2024) causes a systemic outage, the initial drawdown is severe (-25% in CRWD, -10% in CIBR within 30 days) but the recovery is rapid if customer retention holds — CRWD recovered >95% from its post-outage trough within 18 months, validating the platform switching cost thesis."
+  },
+
+  "active_catalyst_ids": ["struct_enterprise_cyber_spend_supercycle"]
+}

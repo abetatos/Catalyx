@@ -1,5 +1,6 @@
-# CATALYX Sector Taxonomy — v1.1
+# CATALYX Sector Taxonomy — v1.2
 # CANONICAL SOURCE: all sector_id values in the system must reference this file.
+# Changelog: v1.2 (2026-06-04) — promoted semiconductors_memory from gap_20260604_semiconductors_memory.
 # Rules:
 #   - Never use free-text sector names in application code. Always use sector_id.
 #   - investable: false → sector cannot be a Thesis target (watch-only mode)
@@ -366,6 +367,18 @@ sectors:
     etf_proxy_quality: poor
     demand_drivers: ["Leading-edge node demand", "Geopolitical risk (TSMC/Taiwan concentration)", "Reshoring subsidies (CHIPS Act, EU Chips Act)"]
     differentiation: "Capex-intensive, cyclical, geopolitically exposed. TSMC single-point-of-failure for global tech supply chain."
+
+  - id: semiconductors_memory
+    label: "Semiconductors — Memory IDMs (SK Hynix, Micron, Samsung — DRAM/HBM/NAND)"
+    parent: technology
+    investable: true
+    etf_proxy_quality: medium
+    demand_drivers:
+      - "HBM (High Bandwidth Memory) allocation for AI accelerators — Nvidia B200/H100 require HBM3E/HBM4"
+      - "DRAM/NAND bit-pricing cycle (AI server demand vs consumer weakness)"
+      - "HBM4 transition (2026) opening a new memory capex cycle"
+      - "Supply-concentrated oligopoly (Hynix ~55% / Samsung ~38% / Micron ~7% HBM share) with inelastic ramp"
+    differentiation: "Memory IDMs design AND manufacture commodity memory — distinct from fabless designers (semiconductors_design) they SUPPLY, and from foundries (semiconductors_foundry) that make others' designs. Cycle driven by memory bit-pricing + HBM allocation, not GPU compute or IP monetization. Geographic concentration in South Korea/Japan. Promoted from gap_20260604_semiconductors_memory (2026-06-04)."
 
   - id: ai_infrastructure_data_centers
     label: "AI Infrastructure — Data Centers, Cooling, Power"

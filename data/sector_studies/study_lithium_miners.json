@@ -1,0 +1,161 @@
+{
+  "id": "study_lithium_miners",
+  "schema_version": "1.2",
+  "sector_id": "lithium_miners",
+  "sector_label": "Lithium Miners & Processors",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+  "taxonomy": {
+    "parent_sector": "battery_metals",
+    "adjacent_sectors": ["copper_miners", "cobalt_nickel", "rare_earth_miners"],
+    "differentiation_note": "Lithium miners are a pure-play on battery chemistry demand — specifically the lithium-ion and lithium-iron-phosphate (LFP) cycle — where price is set by spot carbonate/hydroxide markets rather than LME-listed industrial metal contracts. Unlike copper miners, whose thesis is anchored in long-cycle electrification and AI data center infrastructure (multi-decade, low elasticity), lithium miners face a boom/bust supply cycle with a 2-3 year lag between price signal and new mine output, making them far more volatile: the 2021-2022 spike (lithium carbonate $10k → $80k/t) and the 2023-2024 collapse (back to $8k/t) compressed into 36 months. Unlike cobalt/nickel miners, where demand is being actively eroded by the chemistry shift from NMC to LFP cathodes, lithium demand grows regardless of which lithium-based chemistry wins — LFP actually consumes more lithium carbonate per kWh than NMC, so the shift away from nickel strengthens lithium demand while hollowing out cobalt. The investment thesis requires a firm view on the cycle position and the timing of deficit: entering too early in the supply glut phase destroyed capital in 2023-2024; the 2026 entry thesis is explicitly about the oversupply-to-deficit inflection."
+  },
+  "demand_drivers": [
+    "EV battery demand: global EV sales projected to exceed 25 million units in 2026 (up from ~17M in 2024), with lithium consumption from EVs representing approximately 70% of total demand. Lithium-ion remains the dominant battery technology in automotive, with no credible commercial alternative at scale by 2030.",
+    "Battery Energy Storage (BESS/ESS) — fastest-growing end-use segment: global BESS installations surpassed 300 GWh in 2025 (+51% YoY) and are forecast to exceed 450 GWh in 2026 (+43% YoY). BESS is now emerging as the structural demand floor independent of the EV cycle, driven by renewable grid integration and AI data center backup power requirements.",
+    "LFP chemistry shift INCREASES lithium demand: LFP surpassed NMC as the dominant EV battery chemistry in 2025 (>50% of global installations; >80% in China). LFP uses more lithium carbonate per kWh than NMC — counterintuitively, the 'cheaper battery' trend is lithium-bullish. Battery energy storage relies on LFP in >90% of deployments.",
+    "Supply curtailment creating deficit: the 2023-2024 glut (prices below production cost at ~$8,000/t) triggered broad output cuts — Australian spodumene operations reduced capacity, Jiangxi (China) permit cancellations reduced lepidolite output. S&P Global and BMI both confirm the market transitions from surplus to structural deficit in 2026, with demand forecast 13.5% YoY to 1.48M mt LCE vs supply growth of only 10% to 1.63M mt (nominal surplus, but structural tightness given demand quality).",
+    "Hyperscaler and grid capex driving stationary storage: the AI data center buildout (hyperscaler combined capex ~$700B in 2026) requires reliable backup power, of which utility-scale BESS is the fastest-to-deploy solution — driving incremental lithium demand outside the EV narrative.",
+    "Strategic supply security — government-driven demand floor: the US IRA and EU Critical Raw Materials Act (CRMA) mandate domestic/allied lithium processing, with offtake agreements and loans from DoE and EU funds providing non-market demand. Zimbabwe suspended raw mineral exports in February 2026, tightening upstream supply further."
+  ],
+  "supply_constraints": [
+    "Mine development lag: new hard-rock (spodumene) lithium mines take 5-10 years from discovery to production. Brine operations (Atacama, Argentina) take 4-7 years. The 2023-2024 capex freeze means no significant greenfield supply arrives before 2028.",
+    "Exploration budget collapse 2023-2024: lithium junior exploration spending fell 60-70% when prices dropped below $10k/t. The pipeline of projects that would supply 2027-2029 demand was never built. This inelastic supply response is the core of the deficit thesis.",
+    "Chinese lepidolite at political risk: China's low-cost lepidolite operations (Jiangxi province) face environmental permit reviews. BMI forecasts further curtailments. These are the operations that caused the 2023 price crash — their reduction is a key supply tightening driver.",
+    "Australia production reduction: Core Lithium suspended its Finniss project in early 2024, Pilbara Minerals and Allkem reduced output. Australian spodumene represents ~60% of hard-rock global supply — any sustained curtailment has outsized impact.",
+    "Zimbabwe export suspension: Zimbabwe's February 2026 ban on raw mineral/lithium concentrate exports removes a growing junior supply source from the market, adding near-term tightness.",
+    "Processing concentration: >85% of global lithium chemical (carbonate/hydroxide) processing capacity is in China. Non-Chinese miners (Albemarle, SQM, Livent/Arcadium now Rio Tinto) have limited hydroxide conversion capacity outside China, creating a structural premium for ex-China processed product.",
+    "Rio Tinto Arcadium integration risk: Rio Tinto's $6.7B acquisition of Arcadium Lithium (completed 2024) adds 200,000 t/yr LCE capacity by 2028 — the largest single supply addition on the horizon. Integration execution risk and timeline slippage could delay this supply, sustaining the deficit longer."
+  ],
+  "cycle_position": {
+    "assessment": "Early recovery / oversupply-to-deficit inflection",
+    "rationale": "The lithium price cycle bottomed in Q2-Q3 2025 at ~$8,000-9,000/t for lithium carbonate (China spot) — below the all-in cost of production for most Australian spodumene and Chinese lepidolite operations. Prices recovered sharply: +57% from June to November 2025, crossing $24,000/t in January 2026. As of late April 2026, lithium carbonate trades near $25,156/t and hydroxide near $24,569/t. The sector is in the early-recovery phase of the commodity cycle: (1) supply-side curtailments are in place; (2) demand is accelerating from BESS and continued EV growth; (3) the nominal 2026 surplus (S&P Global: supply 1.63M mt vs demand 1.48M mt LCE) masks structural tightness because Chinese spot inventory is depressed and project starts have been deferred. EV miner equities (LIT ETF) have returned +137% over the trailing 12 months as of early 2026, reflecting the price recovery. Analyst consensus (Baird, UBS, Scotiabank: ALB 'Outperform'; Zacks consensus: ALB EPS +217% YoY, SQM EPS +117% YoY) confirms sector re-rating. Risk: a false start — if Chinese lepidolite operations restart faster than expected, the recovery could stall before the structural deficit takes hold (est. 2027-2028). The current cycle is materially different from 2021-2022 in that BESS demand provides a second structural leg beyond EVs, reducing but not eliminating the volatility characteristic of this sector.",
+    "last_assessed": "2026-06-05"
+  },
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Lithium carbonate spot price (China, battery-grade)",
+      "unit": "USD/t",
+      "source": "Shanghai Metals Market (SMM), Fastmarkets, Trading Economics",
+      "current": 25156,
+      "comment": "As of April 20, 2026. Cycle bottom was ~$8,000-9,000/t in mid-2025. Breakeven for Australian spodumene ~$12,000-15,000/t, lepidolite ~$16,000-20,000/t. Above $20k = profitable for most producers."
+    },
+    {
+      "metric": "Lithium hydroxide monohydrate spot price",
+      "unit": "USD/t",
+      "source": "Fastmarkets, SMM",
+      "current": 24569,
+      "comment": "As of April 20, 2026. Hydroxide commands premium for high-nickel NMC; carbonate is the LFP spec. The carbonate/hydroxide spread is a signal of chemistry demand shift direction."
+    },
+    {
+      "metric": "Global EV sales monthly run-rate",
+      "unit": "million units/month (annualized)",
+      "source": "EV-Volumes, Rho Motion, BloombergNEF",
+      "current": "~2.1M/month (annualized ~25M for 2026)",
+      "comment": "Critical leading indicator for lithium demand. China (~60% of global EV sales) data from CPCA monthly. A sustained slowdown in China EV growth would be the primary demand shock risk."
+    },
+    {
+      "metric": "BESS global installations quarterly",
+      "unit": "GWh installed",
+      "source": "Wood Mackenzie, BloombergNEF, S&P Global",
+      "current": "315+ GWh total 2025; forecast 450+ GWh 2026",
+      "comment": "Fastest-growing lithium demand segment. A deceleration here would signal that the second demand leg is not materializing as expected — the key upside risk if it accelerates."
+    },
+    {
+      "metric": "Albemarle (ALB) realized lithium price per kg",
+      "unit": "USD/kg",
+      "source": "ALB quarterly earnings (10-Q/10-K)",
+      "current": "~$12-14/kg as of Q1 2026 (estimated from pricing environment)",
+      "comment": "Albemarle is the largest pure-play Western lithium producer. Its realized price is the best proxy for contracted vs spot dynamics. Compare to SMM spot for spread analysis."
+    },
+    {
+      "metric": "China lepidolite production volume",
+      "unit": "kt LCE/quarter",
+      "source": "SMM, Fastmarkets, Benchmark Mineral Intelligence",
+      "current": "Reduced post-curtailment; estimated 30-40% below 2023 peak",
+      "comment": "Key upside-risk metric for the supply deficit thesis. If Jiangxi lepidolite restarts aggressively above $20k/t carbonate, it could front-run the deficit. Monitor permit issuance."
+    }
+  ],
+  "active_catalyst_ids": [],
+  "historical_catalyst_performance": {
+    "summary": "Lithium miners are the highest-beta major commodity sector in response to their primary catalyst (lithium price), exhibiting 3-5x price leverage to spot moves — higher than gold miners' typical 2-3x leverage to gold. The 2021-2022 cycle is the benchmark: lithium carbonate rose ~800% from $8,000/t to $80,000/t peak (Nov 2022), and LIT ETF returned approximately +400% peak-to-trough over 2020-2022. The collapse from Nov 2022 to mid-2023 (carbonate -75% from peak) drove LIT down ~70% — demonstrating that the leverage is symmetric and brutal on the downside. The 2023-2024 bear market was driven by supply overcorrection (Chinese lepidolite buildout) meeting demand deceleration (EV growth slower than expected in Europe/US, Chinese NEV subsidy restructuring). Key historical pattern: miners lead spot prices by 3-6 months at cycle turns because equity markets reprice expected earnings before physical supply/demand clears. The current 2025-2026 recovery in equities (LIT +137% trailing 12M) is running ahead of the physical surplus resolution, consistent with this pattern. Precedent for the 2026 thesis: in the 2020-2021 entry window, buying miners at the bottom of the cycle (when carbonate was $6,000-8,000/t) before BESS and EV demand accelerated produced 5-10x returns in 18-24 months. The 2026 entry thesis is structurally similar but with lower expected upside given higher starting prices ($25k/t vs $8k/t) — the analog is more like a 2-3x opportunity in equities if the deficit scenario materializes.",
+    "ev_demand_catalyst": "First clear evidence that global EV sales would surpass 5M annual units (2021 Q3) preceded the LIT peak by ~6 months — miners moved before the physical market cleared. Catalyst type: demand inflection, non-consensus.",
+    "supply_cut_catalyst": "Q3 2025 production curtailments by Australian and Chinese producers (triggered by sub-cost prices) drove spot recovery of +57% in 5 months. Miner equities anticipated this 2-3 months earlier.",
+    "acquisition_catalyst": "Rio Tinto's $6.7B Arcadium acquisition announcement (October 2024) triggered a sector-wide re-rating, validating the tier-1 asset quality thesis and signaling major mining consolidation. Arcadium shareholders received ~90% premium.",
+    "price_collapse_risk": "The 2022-2023 collapse demonstrated that lithium miners have no price support floor from physical offtake the way gold miners have from safe-haven demand. In a true glut, these equities can lose 70-80% of value. Risk is asymmetric: upside bounded by demand, downside bounded only by balance sheet."
+  },
+  "etf_analysis": [
+    {
+      "ticker": "LITM.L",
+      "name": "iShares Lithium & Battery Producers UCITS ETF",
+      "exchange": "LSE (also LITM.AS on Euronext Amsterdam)",
+      "currency": "USD",
+      "ter": 0.0055,
+      "aum_m_usd": 74.6,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "UCITS-compliant BlackRock ETF tracking the STOXX Global Lithium and Battery Producers Index. 65 holdings including TDK, Albemarle, CATL, LG Chem. Covers miners + compounds manufacturers + battery producers — not a pure-play miner vehicle. YTD return +47.1% as of May 28, 2026. ISIN: IE000WDG5795.",
+      "recommendation_tier": 1,
+      "limitations": "WARNING — AUM of $74.6M is BELOW the $200M threshold (liquidity_warning: true). Spread data not confirmed — verify before entry. Fund launched recently (post-2022); limited track record. The battery-producer weighting (CATL, LG Chem) dilutes pure-play miner leverage to lithium price; expect lower beta to carbonate spot than LIT. Best available UCITS option for a Spanish investor given no pure-play UCITS miner ETF exists."
+    },
+    {
+      "ticker": "LIT",
+      "name": "Global X Lithium & Battery Tech ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0075,
+      "aum_m_usd": 1400,
+      "replication": "physical",
+      "avg_spread_bps": 9,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Largest lithium ETF by AUM ($1.4B). Mix of lithium miners (Albemarle, SQM, Livent) and battery manufacturers (CATL, Panasonic, Samsung SDI). NOT UCITS — restricted for Spanish retail investors under PRIIPs rules. Trailing 12-month return: +137.6% as of early 2026. Represents the benchmark for lithium sector performance.",
+      "recommendation_tier": 2,
+      "limitations": "NOT UCITS — not directly purchasable by Spanish retail investors without PRIIPs KID. Must check broker-specific access. Battery manufacturer weighting means this is not a pure lithium miner play — a CATL/Samsung SDI earnings miss can drag returns independent of lithium price. AUM adequate, spread acceptable."
+    },
+    {
+      "ticker": "BATT",
+      "name": "Amplify Lithium & Battery Technology ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0059,
+      "aum_m_usd": 420,
+      "replication": "physical",
+      "avg_spread_bps": 14,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Broader battery technology coverage than LIT — includes miners, chemical processors, and battery manufacturers. Lower TER than LIT. YTD +17.94% as of February 28, 2026. NOT UCITS.",
+      "recommendation_tier": 3,
+      "limitations": "NOT UCITS — same PRIIPs access constraint as LIT for Spanish investors. Even broader battery value chain exposure than LIT, reducing lithium price purity. Use only if broker allows non-UCITS and pure-play miner exposure is not available."
+    },
+    {
+      "ticker": "LITP",
+      "name": "Sprott Lithium Miners ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0065,
+      "aum_m_usd": 50.5,
+      "replication": "physical",
+      "avg_spread_bps": null,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Pure-play lithium miners ETF tracking Nasdaq Sprott Lithium Miners Index (NSLITP). 37 issuers as of March 31, 2026. Weighted market cap $108.6B. Most focused miner exposure of available vehicles. NOT UCITS.",
+      "recommendation_tier": 3,
+      "limitations": "WARNING — AUM of $50.5M is BELOW the $200M threshold (liquidity_warning: true). Spread not confirmed. NOT UCITS. Despite being the most 'pure-play' miner ETF, the small AUM creates execution and exit risk for any meaningful position. Monitor for AUM growth — if it crosses $200M and remains non-UCITS, it becomes viable for broker-specific access only."
+    }
+  ],
+  "risks": [
+    "Supply restart risk — Chinese lepidolite re-entry: if carbonate prices sustain above $20,000/t for more than 2 quarters, Chinese lepidolite operators (Jiangxi province) will restart capacity. These operations have very low fixed costs and can re-enter the market quickly, potentially re-flooding supply before the structural deficit materializes. This is the #1 bull-case killer and the reason BMI forecasts only moderate prices ($17,000/t average for 2026) despite current spot at $25,000/t.",
+    "Rio Tinto / Arcadium 200,000 t/yr supply addition (2028): Rio Tinto's planned expansion to 200,000+ tonnes LCE/yr from Arcadium's tier-1 assets represents the largest greenfield supply addition in the pipeline. If delivered on schedule and without cost overrun, this alone could flip a 2027-2028 deficit back toward surplus. Scale: global demand in 2026 is ~1.48M mt LCE; this addition is ~13% of that.",
+    "LFP chemistry risk to hydroxide vs carbonate spread: while LFP adoption INCREASES total lithium demand, it shifts the product mix toward carbonate (LFP spec) and away from hydroxide (NMC spec). Miners/processors with hydroxide-heavy product mix (Albemarle Kemerton hydroxide plant) face product mix headwinds if the market does not rebalance. Hydroxide traded at a modest discount to carbonate in early 2026 — watch this spread.",
+    "Chinese battery export controls — geopolitical supply-chain fragmentation: China controls >85% of lithium chemical processing and >90% of LFP cathode production. Export restrictions on battery cells or precursors (following rare earth export control precedent from 2023-2024) could disrupt Western EV supply chains, potentially dampening demand growth in non-China markets while stimulating Western domestic investment in processing.",
+    "EV demand growth deceleration in Europe and US: European EV demand remains policy-dependent (EV mandate enforcement, charging infrastructure, incentive structures). If European OEM adoption lags and China subsidies are restructured, the demand growth rate supporting the deficit thesis could be 10-15% lower than consensus, extending the surplus period. Monitor monthly CPCA/ACEA data.",
+    "LIT / LITM ETF composition risk — battery manufacturers as noise: both primary ETF vehicles (LIT and LITM) include significant weighting in battery manufacturers (CATL, LG Chem, Panasonic). These companies can report disappointing earnings independent of lithium price (overcapacity in cells, margin pressure from OEM pricing power), dragging ETF returns even during a positive lithium price environment. A pure-play UCITS miners vehicle does not yet exist."
+  ],
+  "narrative_maturity": "emerging",
+  "narrative_trend": "increasing",
+  "narrative_notes": "Classified as 'emerging' per scoring_weights.yaml narrative_maturity_levels criteria. The lithium rebound thesis is present in specialist research (BMI, Fastmarkets, S&P Global Commodity Insights, Sprott) and beginning to appear in generalist coverage (Nasdaq.com, Motley Fool, Kiplinger articles on lithium rebound in early 2026). However, it does NOT yet meet the 'mainstream' threshold: Goldman/JPM/MS have not published base-case sector upgrade reports on lithium as a primary sector call, and ETF AUM (LIT: $1.4B) reflects pre-crash positioning rather than fresh inflows to the rebound thesis. The 2021-2022 thesis was 'crowded' at peak; the 2026 re-entry is still in the 'emerging' phase — most retail and generalist institutional investors remain underweight after the 2023-2024 trauma. This is alpha-positive: the thesis is not yet priced into positioning. Note that 'emerging' is the MAXIMUM across all active catalysts per multi-catalyst aggregation rule — no active structural catalyst has been registered for lithium_miners in this system yet; active_catalyst_ids is empty pending /catalyx-scan confirmation."
+}

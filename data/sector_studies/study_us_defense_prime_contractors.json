@@ -1,0 +1,157 @@
+{
+  "id": "study_us_defense_prime_contractors",
+  "schema_version": "1.2",
+  "sector_id": "us_defense_prime_contractors",
+  "sector_label": "US Defense — Prime Contractors",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "defense",
+    "adjacent_sectors": [
+      "eu_defense_prime_contractors",
+      "cybersecurity_defense",
+      "space_defense_satellite",
+      "drone_autonomous_systems"
+    ],
+    "differentiation_note": "US prime contractors (Lockheed Martin, RTX, Northrop Grumman, General Dynamics) are USD-denominated, operate under US Federal Acquisition Regulations (FAR/DFARS), and are primarily funded by the DoD discretionary budget plus the Foreign Military Sales (FMS) program — a channel with no EU equivalent at this scale. Their order books are driven by congressional appropriations cycles (not parliamentary budget laws), and their earnings are heavily weighted toward long-cycle, cost-plus prime programs (F-35, B-21, Columbia-class submarines) that have no direct counterpart in European procurement. EU prime contractors (Rheinmetall, Leonardo, Airbus Defence) are EUR-denominated, benefit from European sovereign defense realignment and the NATO 3.5%/5% GDP mandates primarily as a demand story for European-built platforms — they do not bid on US DoD prime contracts. US primes also carry a structural FMS franchise: they exported $104B in FY2025 arms sales, dwarfing any EU peer. A rising NATO spending commitment is a tailwind for EU primes but is largely separate from US DoD budget dynamics — the US defense budget increase is driven by US FY2027 domestic requests ($1.15T base + $350B reconciliation), not NATO percentage commitments."
+  },
+
+  "demand_drivers": [
+    "US DoD FY2026 total funding reached approximately $1.0 trillion ($838.7B appropriations act + $150B reconciliation 'One Big Beautiful Bill'). The FY2027 request is even larger: ~$1.15T base discretionary + $350B additional reconciliation, with the modernization account (procurement + RDT&E) totaling ~$760B — the largest in US history if enacted.",
+    "Foreign Military Sales (FMS): FY2025 total transferred defense articles and services reached $104.38B. Q1 2026 alone saw over $45B in FMS approvals, 81% directed at Middle Eastern allies, driven by active combat operations requiring replenishment and new platform sales (F-35s, Patriot batteries, THAAD, Hellfire missiles).",
+    "Record backlog across primes: LMT $186.4B (Q1 2026), RTX $271B (record high, $109B defense portion), NOC $96B, GD $188.4B book-to-bill 2:1. Combined prime contractor backlog exceeds $740B — representing 3-5 years of forward revenue visibility with minimal volume risk.",
+    "Geopolitical escalation cycle driving demand across multiple theaters simultaneously: Ukraine replenishment requirements (munitions, air defense), Middle East active FMS ($45B Q1 2026), Indo-Pacific deterrence build-up (submarines, long-range missiles), and NATO burden-sharing creating allied nation orders for US platforms.",
+    "Structural modernization programs with multi-decade revenue runways: F-35 (production Lots 18-19, $24.3B contract for 296 aircraft, international orders from 16+ nations), B-21 Raider bomber (NOC prime), Columbia-class nuclear submarine program (GD Bath Iron Works), NGAD next-generation fighter concept studies.",
+    "NATO 3.5% GDP floor (2028) and 5% total defense target (2035) indirectly drives US prime demand through allied procurement: US platform interoperability requirements mean many NATO members buying advanced systems (F-35, Patriots, Chinooks) come directly to US primes via FMS."
+  ],
+
+  "supply_constraints": [
+    "Industrial base bottlenecks in munitions and missile components: solid rocket motor supply, energetic materials, and microelectronics for precision guidance have constrained production ramp across Raytheon (RTX), L3Harris, and Aerojet Rocketdyne. Pentagon investments in Defense Production Act Title III partially address this but ramp takes 2-4 years.",
+    "Skilled workforce shortage: defense manufacturing requires security-cleared workers (Sensitive Compartmented Information, SAP clearances). Clearance backlogs averaged 600-900 days in 2025-2026. Workforce attrition at shipyards (Huntington Ingalls, GD Bath) constrains submarine and destroyer production rates.",
+    "Engine supply chain (RTX Pratt & Whitney F135): all 123 F135 engines delivered in 2024 were behind schedule by an average of 238 days. RTX is investing $200M in capacity expansion (Columbus, GA — 7th forging press, +30% engine disk output) but full relief not expected until 2028. This directly gates LMT F-35 delivery rates.",
+    "Titanium and specialty alloys supply concentration: F-22/F-35 airframe titanium sourcing has been partially dependent on Russian supply chains historically. Post-2022 sanctions increased costs and lead times for titanium forgings, forcing qualification of alternative suppliers.",
+    "Long program timelines: new platform programs (B-21, Next Generation Air Dominance) require 5-10 year development cycles before revenue contribution is significant. Revenue backfill relies on sustaining existing programs through multi-year procurement contracts.",
+    "DOGE and acquisition reform scrutiny: Pentagon DOGE unit reviewing 400,000+ contracts. FY2026 identified ~$11B in 'efficiency' targets. While net defense spending is rising, contract structure reforms and acquisition streamlining create near-term uncertainty for contractors dependent on cost-plus fee structures."
+  ],
+
+  "cycle_position": {
+    "assessment": "Expansion — Early Structural Super-Cycle",
+    "rationale": "US defense is in the early innings of a multi-year structural expansion, not a late-cycle peak. The FY2027 request of $1.5T and modernization account of $760B have never been seen in peacetime. Record backlogs across all four major primes (combined $740B+) provide 3-5 year revenue visibility. FMS demand is being pulled by active conflicts (Middle East replenishment $45B in Q1 2026 alone) and NATO allied acquisition. However, the super-cycle framing is tempered by two realities: (1) valuations already reflect significant optimism — ITA/XAR are up only ~2-3% YTD 2026 on a market-cap basis, meaning price has already run hard from 2022-2025 on the first catalyst leg; (2) DOGE-driven efficiency scrutiny adds acquisition process risk in the near term. The strongest risk-adjusted setup is in backlog-heavy primes with long-cycle programs (NOC B-21, LMT F-35 international, GD submarines) where revenue is contractually secured and not contingent on new awards. RTX stands apart due to its 50/50 commercial/defense split — it benefits from both defense budget expansion AND commercial aviation recovery, making its $271B backlog the most diversified quality in the sector.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "DoD procurement + RDT&E appropriations (annual)",
+      "unit": "USD billions",
+      "source": "DoD Comptroller / Congressional Budget Office",
+      "current": "~$500B (FY2026 base) + $430B reconciliation package pending",
+      "comment": "FY2027 base modernization request $760B total (base + reconciliation). Watch Senate reconciliation vote — failure reduces to base $510B, still a high level."
+    },
+    {
+      "metric": "FMS approvals (quarterly)",
+      "unit": "USD billions",
+      "source": "Defense Security Cooperation Agency (DSCA) / State Department",
+      "current": "$45B+ in Q1 2026",
+      "comment": "Q1 2026 was exceptionally high (Middle East active). Sustainable run rate is $25-35B/quarter. Watch for Middle East ceasefire agreements that could reduce emergency replenishment."
+    },
+    {
+      "metric": "Combined prime contractor backlog (LMT + RTX defense + NOC + GD)",
+      "unit": "USD billions",
+      "source": "Quarterly earnings releases",
+      "current": "~$740B (LMT $186B + RTX defense $109B + NOC $96B + GD $188B)",
+      "comment": "Book-to-bill above 1.5x signals continued backlog growth. GD reported 2.0x in Q1 2026 — the strongest signal. Backlog is the primary leading indicator for 2-4 year revenue."
+    },
+    {
+      "metric": "F-35 delivery rate (annual aircraft)",
+      "unit": "units/year",
+      "source": "Lockheed Martin quarterly earnings / JPO reports",
+      "current": "~130-140 per year (constrained by Pratt & Whitney F135 engine delays)",
+      "comment": "Pratt & Whitney engine delays averaging 238 days per unit. Full rate production target is ~156/year. Until F135 constraint is resolved (2028), this caps LMT F-35 revenue realization."
+    },
+    {
+      "metric": "RTX defense backlog (excluding commercial aviation)",
+      "unit": "USD billions",
+      "source": "RTX quarterly earnings",
+      "current": "$109B defense (of $271B total backlog, Q1 2026)",
+      "comment": "Watch split between Raytheon Intelligence & Space (missile defense, electronics) vs Pratt & Whitney (engines). Missile systems backlog is the purest defense spending proxy."
+    },
+    {
+      "metric": "DOGE contract terminations / Pentagon efficiency savings (cumulative)",
+      "unit": "USD billions",
+      "source": "DoD Comptroller / Breaking Defense analysis",
+      "current": "~$11B identified in FY2026 budget; 390 contracts terminated/adjusted to date",
+      "comment": "Net effect is small vs $1T budget but creates uncertainty on smaller services contracts. Watch for extension to major weapon system programs — currently only administrative/IT contracts affected."
+    }
+  ],
+
+  "etf_analysis": [
+    {
+      "ticker": "ITA",
+      "name": "iShares U.S. Aerospace & Defense ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0040,
+      "aum_m_usd": 6200,
+      "replication": "physical",
+      "avg_spread_bps": 3,
+      "top_10_concentration_pct": 72,
+      "characteristics": "Largest and most liquid US defense ETF by AUM. Market-cap weighted: top holdings LMT (~17%), RTX (~17%), NOC (~11%), GD (~9%), TransDigm (~7%). High concentration in the four major primes. YTD 2026: +2.35%. AUM $6.2B, spread 3bps — excellent liquidity. WARNING: NOT UCITS — not accessible to Spanish retail investors under PRIIPs/MiFID II KIID rules via standard EU broker. Verify with your specific broker whether professional investor status unlocks access.",
+      "recommendation_tier": 1,
+      "limitations": "NOT UCITS — accessibility restriction for Spanish retail investors under PRIIPs regulation. High concentration in top 4 primes (LMT/RTX/NOC/GD account for ~55%): performance is essentially a large-cap prime contractors portfolio, not a diversified defense basket. TransDigm inclusion (~7%) adds commercial aerospace component dilution. Requires USD account."
+    },
+    {
+      "ticker": "XAR",
+      "name": "SPDR S&P Aerospace & Defense ETF",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "ter": 0.0035,
+      "aum_m_usd": 1800,
+      "replication": "physical",
+      "avg_spread_bps": 5,
+      "top_10_concentration_pct": 55,
+      "characteristics": "Equal-weight methodology — reduces LMT/RTX concentration vs ITA. Lower TER (35bps vs 40bps). AUM $1.8B, spread 5bps — adequate liquidity. YTD 2026: +2.96%, outperforming ITA. Equal-weighting provides better exposure to mid-cap names (HEICO, HEI, Curtiss-Wright, Moog) that are supply-chain critical but underrepresented in market-cap indices. WARNING: NOT UCITS — same accessibility restriction as ITA for Spanish retail investors.",
+      "recommendation_tier": 2,
+      "limitations": "NOT UCITS — PRIIPs restriction. Equal-weight means frequent rebalancing and higher transaction costs embedded in tracking error. Mid-cap inclusion reduces pure-play prime exposure (the thesis here is specifically about prime contractors). AUM smaller than ITA — use with adequate position sizing. Requires USD account."
+    }
+  ],
+
+  "risks": [
+    "UCITS access gap — THE PRIMARY EXECUTION RISK FOR A SPANISH INVESTOR: Neither ITA nor XAR is UCITS-registered. There is no liquid UCITS ETF providing pure-play US defense prime contractor exposure as of June 2026. The closest UCITS alternatives (EUDF.L, DFEN.DE) provide EU prime contractor exposure, NOT US prime contractor exposure — they are a different sector thesis. This means the thesis can be theorized but not cleanly executed within standard Spanish broker UCITS constraints without using a professional investor account or offshore structure.",
+    "FY2027 reconciliation bill risk: The $350B additional defense reconciliation package (bringing total to $1.5T) requires Senate passage. Reconciliation requires 51 votes but faces deficit hawk opposition. If the bill fails, the DoD reverts to the base $838B — still high, but below consensus buy-side estimates. This is the single largest near-term catalyst for estimate revisions.",
+    "DOGE and acquisition reform: Pentagon DOGE unit has identified $11B in FY2026 'efficiency' targets and is reviewing 400,000+ contracts. While net defense spending is rising, structural shifts toward commercial-like procurement and fixed-price contracts squeeze prime contractor margins. Cost-plus fee revenue — historically the highest-margin component — faces compression as DoD pushes performance-based arrangements.",
+    "F-35 / Pratt & Whitney engine supply chain constraint: All 123 F135 engines delivered in 2024 were late by an average 238 days. RTX's remediation investment is not fully online until 2028. This caps LMT's F-35 delivery rate at ~130-140/year vs full-rate target of ~156, directly limiting Lockheed's near-term revenue realization on its largest program.",
+    "Geopolitical normalization / de-escalation risk: The FMS boom (Q1 2026: $45B) is partly driven by active Middle East conflict replenishment. A ceasefire or conflict de-escalation removes the emergency replenishment cycle, potentially halving FMS approvals back to baseline (~$25B/quarter). The structural NATO-driven demand would remain, but the urgency premium in the stock prices would re-rate lower.",
+    "Valuation: US defense primes are not cheap. ITA trades at approximately 23-25x forward earnings (June 2026) vs the S&P 500 at ~21x. The premium is justified by backlog visibility and earnings quality, but it leaves limited margin of safety for budget disappointments or execution stumbles. The sector has already re-rated from ~14x (pre-2022) — much of the multiple expansion is behind us.",
+    "Analyst model revision for earnings vs. backlog conversion: Large backlogs are priced in; what matters is the rate at which backlog converts to recognized revenue. Supply chain bottlenecks (engines, munitions, workforce) mean book-to-bill > 1.5x does not translate proportionally to near-term EPS growth. Analysts revising burn-through assumptions downward could compress multiples even with backlog growth."
+  ],
+
+  "narrative_maturity": "crowded",
+  "narrative_trend": "stable",
+  "narrative_notes": "US defense is a 'crowded' narrative by the scoring_weights.yaml criteria. The defense spending thesis has been in Bloomberg/CNBC/FT daily coverage since early 2022 (post-Ukraine invasion). The NATO spending commitment story, record backlogs, and FMS boom are consensus sell-side views — Goldman Sachs, JPMorgan, Morgan Stanley all have overweight ratings on defense primes with multi-year EPS upgrade cycles as base case. The ITA ETF reached $6.2B AUM on consistent inflows. The 'crowded' designation (score_equiv: 80) does NOT mean the thesis is wrong — it means alpha from the consensus narrative is largely captured, and incremental upside requires either (a) a new non-consensus catalyst (b) FY2027 reconciliation package beating expectations, or (c) FMS surprise. Narrative trend is 'stable' — coverage is high but not accelerating to the point of 'exhausted'. A secondary, less-crowded angle exists: mid-cap defense suppliers (HEICO, Curtiss-Wright, TransDigm) have less analyst saturation and direct supply chain leverage to the same backlog.",
+
+  "historical_catalyst_performance": {
+    "summary": "US defense primes historically exhibit a characteristic asymmetric response pattern to geopolitical catalysts: sharp initial gains on escalation (1-2 weeks), followed by consolidation as the event is 'priced in', then sustained multi-year outperformance driven by the actual budget cycle that follows. Post-9/11: LMT +38%, NOC +42%, RTX/Raytheon +24% over 12 months while the S&P fell -24.8% — the strongest illustration of defense as a negative-beta crisis play. The 2003 Iraq invasion saw the S&P 500 gain 26.7% in the first year, with defense leading. The 2022 Ukraine invasion repeated this playbook: EU and US defense ETFs (ITA, EUDF.L) were among the first sectors to respond. The budget-cycle pattern matters more than the catalyst event: after 9/11, DoD spending rose from 3.5% to 5.7% of GDP by 2010 over 9 years — that multi-year ramp is what produced the compounding contractor earnings growth, not the single event. The current cycle shows the same structure: the Ukraine catalyst (2022) initiated the ramp; the structural budget expansion (FY2026-2027) is the sustaining force. Key risk from history: defense stocks underperformed during sequestration (2013-2016, Budget Control Act) — a reminder that congressional budget process failures are as powerful a headwind as geopolitical events are a tailwind. The current DOGE scrutiny echoes sequestration risk but at a smaller scale.",
+    "post_9_11_12m": {
+      "LMT_return_pct": 38,
+      "NOC_return_pct": 42,
+      "RTX_return_pct": 24,
+      "SP500_return_pct": -24.8,
+      "note": "12-month returns post-9/11 (Sept 2001 - Sept 2002 approximate)"
+    },
+    "post_ukraine_invasion_2022": {
+      "note": "ITA gained approximately +15% in the 3 months following Feb 24, 2022 vs S&P -8%. Both EU and US defense ETFs were among the best-performing sectors in 2022 overall."
+    },
+    "sequestration_2013_2016": {
+      "note": "Budget Control Act sequestration caps caused ITA to underperform the S&P by approximately 12-18% from 2013-2015 as DoD budgets were constrained. The primary lesson: congressional budget process risk is a structural headwind that can override geopolitical tailwinds."
+    }
+  },
+
+  "active_catalyst_ids": [
+    "struct_nato_rearmament",
+    "cat_20260603_nato_defense_gdp",
+    "cat_20260603_nato_hague_5pct_gdp"
+  ]
+}

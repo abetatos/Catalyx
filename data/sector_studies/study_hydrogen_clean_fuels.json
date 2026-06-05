@@ -1,0 +1,156 @@
+{
+  "id": "study_hydrogen_clean_fuels",
+  "schema_version": "1.2",
+  "sector_id": "hydrogen_clean_fuels",
+  "sector_label": "Hydrogen & Clean Fuels",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+
+  "taxonomy": {
+    "parent_sector": "energy",
+    "adjacent_sectors": [
+      "grid_infrastructure_utilities",
+      "solar_energy",
+      "wind_energy_offshore",
+      "nuclear_energy",
+      "lng_natural_gas"
+    ],
+    "differentiation_note": "Hydrogen & Clean Fuels is a cross-cutting industrial-gas and fuel technology play, NOT an electricity generation or transmission story. Unlike grid_infrastructure_utilities (which monetises kilowatt-hours through regulated wires and transformers), hydrogen companies derive value from the production, compression, storage, and distribution of a molecular fuel — the capex cycle, electrolyser learning curves, and offtake contract dynamics are entirely different. Unlike solar or wind (whose marginal revenue tracks the power price stack), hydrogen projects sell at a $/kg contract price that is decoupled from short-term electricity markets; the feedstock IS electricity (for green hydrogen), meaning the sector is simultaneously upstream of the power market and downstream of the renewables build-out. Differentiation from LNG/natural gas is also material: blue and green hydrogen producers sit in a decarbonisation overlay on existing industrial gas markets (refining, ammonia, steel) where demand is mandated by regulation rather than driven by cyclical energy demand; carbon intensity verification (IRA 45V, EU RFNBO rules) is a compliance differentiator absent in the LNG supply chain."
+  },
+
+  "demand_drivers": [
+    "Industrial decarbonisation mandates — EU Fit for 55 requires 10 Mt/year domestic green hydrogen production and 10 Mt imports by 2030; current EU production is ~0.15 Mt/year (as of 2026-Q1), implying a ~65x scaling requirement over 4 years; the gap drives equipment procurement urgency.",
+    "IRA Section 45V production tax credit — up to $3.00/kg for hydrogen with lifecycle emissions <0.45 kg CO2e/kg, making best-in-class US projects cash-positive unsubsidised; GlobalData counts 40+ FID-ready North American projects in 2026; 45V creates durable demand for electrolysers, compressors, and fuel-cell stacks.",
+    "Heavy transport fuel switching — Volvo on-road testing of hydrogen combustion-engine (H2-ICE) heavy trucks announced April 2026, targeting commercial European launch before 2030; EU CO2 standards for heavy-duty vehicles (55% cut by 2030 vs 2019) require zero-emission pathways for long-haul where battery weight is prohibitive; hydrogen is one of two viable decarbonisation routes (alongside e-fuels) for >300km commercial transport.",
+    "Green steel and ammonia offtake agreements — German steel sector (ArcelorMittal, ThyssenKrupp) signed long-term green hydrogen offtake contracts in 2025-2026; fertiliser producers (Yara, CF Industries) piloting green ammonia requiring dedicated hydrogen supply; these industrial anchor contracts reduce project financing risk materially.",
+    "EU Hydrogen Bank auction funding — two rounds totalling EUR 1.9 billion disbursed in 2024; a further round targeted for 2026-H2; each auction clears at ~€0.50–0.80/kg subsidy premium, pulling forward commercial production economics by 3-5 years vs unsubsidised greenfield.",
+    "Low-Carbon Fuels Delegated Act (November 2025) — provided regulatory clarity for non-RFNBO hydrogen (including blue hydrogen) that had been stalling European project financing; removed key compliance uncertainty for offtake contracts, expected to unblock EUR 4-6 billion in deferred European investment in 2026."
+  ],
+
+  "supply_constraints": [
+    "Electrolyser manufacturing capacity — global installed electrolyser capacity as of 2026 is 50-80 GW nameplate but utilisation is low (<30% on a production-hours basis); the constraint is not nameplate capacity but bankable long-term offtake contracts, which remain scarce because hydrogen demand mandates are not yet price-linked to carbon markets.",
+    "Green hydrogen cost gap — unsubsidised green hydrogen costs $2.50-$5.00/kg in 2026; natural gas-derived grey hydrogen costs $0.80-$1.50/kg; without carbon pricing above ~$120/tonne CO2e or IRA-equivalent subsidies, most industrial buyers prefer grey hydrogen; the 3-5x cost gap is the central supply-side constraint on demand conversion.",
+    "Electrolyser component supply chain — PEM electrolysers require platinum-group metals (iridium in particular) with very limited global mine supply; alkaline electrolysers require nickel; no substitute exists at scale; a rapid multi-GW buildout would face PGM bottlenecks similar to early-2020s lithium constraints.",
+    "Hydrogen transport infrastructure — dedicated hydrogen pipelines are nascent (first 525 km of German H2 backbone targeted for 2025 completion; first 30 km of Dutch backbone broke ground October 2024); in the interim, hydrogen must be compressed, liquefied, or converted to ammonia/LOHC for long-distance transport — each conversion step adds 20-40% cost penalty.",
+    "Certification and additionality rules — IRA 45V and EU RFNBO hourly-matching requirements demand proof that electrolyser power is sourced from dedicated or additionally-contracted renewable capacity; this additionality constraint excludes grid electricity (even in high-renewable-penetration markets), limiting production sites to those with co-located renewable generation."
+  ],
+
+  "technology_maturity": {
+    "trl_level": 7,
+    "trl_description": "Core electrolyser and fuel-cell stack technologies are at TRL 7-8 (system demonstrated in operational environment at pilot-to-commercial scale). Green hydrogen at utility scale (>100 MW) is TRL 6-7 — early commercial projects exist but cost targets are not yet achieved without subsidies. H2-ICE heavy transport is TRL 6 (Volvo on-road testing 2026).",
+    "gartner_hype_cycle_position": "trough_of_disillusionment",
+    "estimated_commercialization_horizon": "Green hydrogen at cost parity with grey hydrogen (without carbon price): ~2032-2035 in best-cost regions (MENA, Australia). European/US: 2035-2040 without continued subsidies. Heavy transport commercial scale: 2028-2032.",
+    "investability_note": "Sector is investable TODAY via ETF proxies (HDRO, HTWO), but liquidity is poor and pure-play coverage is thin. Most ETF holdings are diversified equipment makers or industrial conglomerates with partial hydrogen exposure. Direct pure-play names (Plug Power, ITM Power, Nel, Ballard) are high-beta, pre-positive-cash-flow, and require individual stock conviction. ETF proxy quality rated POOR — no vehicle captures the sector cleanly.",
+    "etf_proxy_quality": "poor",
+    "watch_triggers": [
+      "Green hydrogen spot price sustainably below $2.00/kg in at least two major producing regions (signals cost parity tipping point approaching).",
+      "First 1 GW+ single electrolyser project to reach FID and financial close with no government grant dependency.",
+      "EU mandatory green hydrogen quota legally binding on industrial buyers (currently indicative target only) — this converts regulatory aspiration into demand obligation.",
+      "H2-ICE or fuel-cell heavy truck commercial volume orders above 10,000 units/year from a major OEM."
+    ]
+  },
+
+  "cycle_position": {
+    "assessment": "Trough of the Hype Cycle — structural build-out underway beneath the noise, but near-term revenue disappointment persists",
+    "rationale": "Hydrogen sector ETFs are rebounding strongly in 2026 (HDRO +81.9% YTD as of June 1, HTWO +17.2% YTD as of February) from multi-year lows, but this recovery is concentrated in the most restructured names (Plug Power +22% revenue Q1 2026, targeting positive EBITDAS Q4 2026; Ballard revenue +26% YoY with margin improvement). The cycle is not a fresh bull phase — it is a trough-to-recovery transition where the weakest operators have already been eliminated (Defiance HDRO US closed April 2025 from AUM collapse) and the survivors are demonstrating cost discipline. Key cycle indicators: (1) 40 projects revised timelines during Q1 2026, confirming capital discipline over scale-chasing; (2) IRA 45V finalised rules reducing uncertainty; (3) EU Low-Carbon Fuels Delegated Act November 2025 unblocking EU financing. The sector is in a 'show me' phase — regulatory clarity is present but execution track record is < 2 years. Assign cycle_position = early recovery from trough with high execution risk. Not a momentum sector in 2026-H1; the recovery is asymmetric — individual companies will diverge sharply based on offtake contracts.",
+    "last_assessed": "2026-06-05"
+  },
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "Green hydrogen spot/contract price (EU hub, USD/kg)",
+      "unit": "USD/kg",
+      "source": "IRENA Hydrogen Market Report; S&P Global Platts H2 Price Assessment",
+      "current": "2.80",
+      "comment": "Best-in-class EU projects with EU Hydrogen Bank subsidy reaching ~$2.00-2.50/kg in 2026. Unsubsidised floor is $3.50-5.00/kg. Watch for any sustained move below $2.00 as inflection signal."
+    },
+    {
+      "metric": "Global low-emissions hydrogen production (Mt/year)",
+      "unit": "Mt/year",
+      "source": "IEA Global Hydrogen Review (annual)",
+      "current": "1.0",
+      "comment": "IEA estimates ~1 Mt clean hydrogen in 2025 vs 100 Mt total global demand. FID-committed capacity points to 4.2 Mt by 2030. Scale of gap relative to EU 20 Mt target is the core market size signal."
+    },
+    {
+      "metric": "Plug Power revenue growth (QoQ, as proxy for US hydrogen economy pace)",
+      "unit": "% YoY",
+      "source": "Plug Power quarterly earnings (PLUG)",
+      "current": 22,
+      "comment": "Q1 2026: +22% YoY to $163.5M. Targeting positive EBITDAS Q4 2026. A proxy for US green hydrogen demand conversion from policy to commercial purchase. GAAP gross margin still -13% — not yet cash-generative."
+    },
+    {
+      "metric": "EU Hydrogen Bank auction clearing price (EUR/kg subsidy premium)",
+      "unit": "EUR/kg",
+      "source": "European Commission / Innovation Fund press releases",
+      "current": "0.65",
+      "comment": "Two rounds completed in 2024 at ~EUR 1.9B total. Next round targeted 2026-H2. Clearing price trend indicates competitiveness of EU projects vs subsidy requirement."
+    },
+    {
+      "metric": "Electrolyser project FID count (global, rolling 12M)",
+      "unit": "count",
+      "source": "IEA Hydrogen Projects Database; BloombergNEF",
+      "current": null,
+      "comment": "GlobalData: 40 projects revised timelines in Q1 2026. Watch FID count vs deferral rate as leading indicator of future production capacity. Deferral rate above 30% is a negative signal."
+    },
+    {
+      "metric": "IRA 45V tax credit utilisation (approved applications, Mt H2 equivalent)",
+      "unit": "Mt H2 equivalent approved",
+      "source": "US IRS / DOE Loan Programs Office announcements",
+      "current": null,
+      "comment": "North America now hosts >90% of global low-carbon hydrogen capacity post-FID. 45V rule finalisation in 2024-2025 removed the regulatory uncertainty that had blocked applications. Monitor approval rate as indicator of US buildout velocity."
+    }
+  ],
+
+  "etf_analysis": [
+    {
+      "ticker": "HDRO",
+      "name": "VanEck Hydrogen Economy UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0055,
+      "aum_m_usd": 219.4,
+      "replication": "physical",
+      "avg_spread_bps": 30,
+      "avg_daily_volume_m_usd": 1.2,
+      "top_10_concentration_pct": 58,
+      "characteristics": "UCITS-compliant. LSE-listed. Tracks Solactive Hydrogen Economy Index — ~30 holdings across electrolysers (ITM Power, Nel, ThyssenKrupp nucera), fuel cells (Ballard, Bloom Energy), and industrial-gas infrastructure (Air Products, Linde). YTD 2026 return: +81.9% as of June 1. AUM $219.4M as of June 1 2026 — recently crossed $200M threshold after ETF recovery from 2024-2025 lows. TER 0.55%.",
+      "recommendation_tier": 1,
+      "limitations": "WARNING — AUM only recently crossed $200M ($219M as of 2026-06-01); was below $200M for most of 2024-2025 (AUM had collapsed in prior years). Spread estimated at ~30bps — likely above 25bps warning threshold on low-volume days; verify live spread before entry. Sector concentration is thin: many holdings are small-cap pre-profit names; top-10 weighting ~58%. The YTD +81.9% return (2026) is driven partly by short-covering and mean reversion rather than fundamental progress — momentum is unreliable as an entry signal for this sector. Best available UCITS vehicle for this sector but treat as Tier 1 only within a small exploratory position ceiling (conviction tier 3 max). No equivalent XETRA-listed UCITS ETF with better AUM/spread profile exists."
+    },
+    {
+      "ticker": "HTWO",
+      "name": "L&G Hydrogen Economy UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0049,
+      "aum_m_usd": 406,
+      "replication": "physical",
+      "avg_spread_bps": 22,
+      "avg_daily_volume_m_usd": 2.8,
+      "top_10_concentration_pct": 52,
+      "characteristics": "UCITS-compliant. LSE-listed (also available on Borsa Italiana as HTWO.MI). ISIN IE00BMYDM794. Tracks Solactive Hydrogen Economy Index variant — 27 holdings. Broader sector coverage than HDRO across production (electrolysers), distribution, and utilisation (fuel cells, H2-ICE). AUM ~$406-607M (Yahoo Finance shows $406M NAV; TipRanks shows $607M as of June 3 2026 — gap may reflect share-class consolidation). TER 0.49%. YTD 2026: +17.2% as of February (partial year data). Lower-beta recovery than HDRO due to broader holdings.",
+      "recommendation_tier": 1,
+      "limitations": "AUM data inconsistency between sources ($406M vs $607M) — verify directly on L&G/JustETF before sizing. Spread ~22bps is below the 25bps warning level but only marginally — still elevated vs liquid large-cap ETFs. Best UCITS option for a Spanish investor seeking Borsa Italiana access (HTWO.MI, EUR-hedged liquidity may be better). Same fundamental caveat as HDRO: holdings are pre-profit small/mid caps; proxy quality for the sector theme is POOR — significant dilution from industrial-gas conglomerate exposure. Available on XETRA-equivalent Borsa Italiana listing; preferable to HDRO for EUR-denominated accounts."
+    }
+  ],
+
+  "active_catalyst_ids": [],
+
+  "historical_catalyst_performance": {
+    "summary": "The hydrogen sector has historically shown extreme binary sensitivity to two catalyst types: (1) POLICY CATALYSTS — subsidy announcements and regulatory clarity produce sharp 30-80% multi-week rallies in hydrogen ETFs (e.g., HTWO rallied ~45% in the 6 weeks following Biden Administration IRA passage in August 2022; EU Green Deal hydrogen targets in 2021 drove HDRO-equivalent names +60-80% from October 2020 to February 2021 peak). These rallies consistently overshoot as retail and momentum capital piles in, then correct 40-70% as execution timelines slip. (2) EARNINGS DISAPPOINTMENTS — pre-revenue hydrogen companies (Plug Power, Nel, ITM) that miss quarterly guidance or revise production timelines trigger sharp sector-wide drawdowns; Plug Power's 2023 going-concern disclosure caused a ~40% single-day drop in HDRO and sympathy declines in all sector names. Key historical pattern: sector bottoms form when the weakest operators fail or liquidate (Defiance HDRO US closed April 2025), survivors demonstrate revenue traction, and IRA/EU subsidy rule clarification removes regulatory uncertainty. The 2026 recovery has followed this exact pattern: post-2024 liquidation washout → survivor margin improvement (Ballard +37pp gross margin YoY) → policy clarity (45V rules, Low-Carbon Fuels Act Nov 2025) → ETF mean-reversion rally. Historical lesson: entering hydrogen on policy announcements alone (without offtake confirmation) has a poor hit rate. Strongest entries have been on confirmed commercial offtake contracts from industrial anchors (green steel, green ammonia) as these convert regulatory aspiration to cash-backed demand."
+  },
+
+  "risks": [
+    "IRA 45V political risk — the Section 45V production tax credit is the primary US demand catalyst; any Republican Congressional action to limit, rescind, or narrow the 45V credit (additionality rules, income phase-outs) would immediately defer 90%+ of planned US low-carbon hydrogen FIDs. North America hosts >90% of global post-FID low-carbon capacity, making the US legislative environment the single largest binary risk to sector earnings in 2026-2028.",
+    "Green hydrogen cost curve stagnation — unsubsidised green hydrogen has not declined along projected learning curves; best-in-class costs remain $2.00-2.50/kg vs 2025 projections of $1.50-2.00/kg, due to slower-than-expected electrolyser scale manufacturing and above-forecast renewable electricity costs; if the cost curve does not reach sub-$2.00/kg by 2028, industrial offtake demand will fail to materialise beyond subsidised anchor contracts.",
+    "Demand mandate execution gap — EU 10 Mt/year domestic production target for 2030 requires current EU production to scale 65x in 4 years; with only ~0.15 Mt/year operational in 2026 and 40+ projects deferring timelines in Q1 2026, a significant shortfall is near-certain; when the EU formally acknowledges the 2030 gap (expected 2027), it may downgrade targets, removing the urgency premium currently embedded in sector valuations.",
+    "ETF proxy quality is structurally poor — HDRO and HTWO hold diversified conglomerates (Air Products, Linde, Siemens Energy) alongside pure-play electrolysers; in a sector-specific catalyst environment, the ETF will underperform direct stock selection by a wide margin; conversely, the conglomerate weighting provides a cushion if pure-plays disappoint but implies a structural ceiling on ETF alpha from a hydrogen-specific thesis.",
+    "Electrolyser technology displacement risk — solid-oxide electrolysers (SOEC) promise 30% higher efficiency than PEM/alkaline but require high-temperature inputs; if industrial waste-heat integration accelerates SOEC commercialisation (post-2028), it would render current PEM electrolyser investments partially stranded, affecting ITM Power, Nel, and ThyssenKrupp nucera — all major HDRO/HTWO holdings.",
+    "Competition from blue hydrogen and e-fuels — the EU Low-Carbon Fuels Delegated Act (November 2025) explicitly legitimised blue hydrogen (natural gas + CCS) for non-RFNBO demand categories; if blue hydrogen projects scale faster than green (lower capex, existing gas infrastructure), demand for electrolysers does not grow at projected rates; similarly, synthetic e-fuels produced from existing power infrastructure compete with hydrogen in the heavy-transport segment."
+  ],
+
+  "narrative_maturity": "emerging",
+  "narrative_trend": "increasing",
+  "narrative_notes": "Classified as 'emerging' per scoring_weights.yaml narrative_maturity_levels. Observable criteria: the green hydrogen thesis appears regularly in specialist research (Wood Mackenzie, BNEF, IEA Global Hydrogen Review) and is referenced in IRA/EU policy discourse, but it has NOT reached the Goldman/JPM/MS mainstream sell-side base-case threshold. Hydrogen-specific ETF AUM ($219M-$607M combined) is far below the $500M+ threshold that signals mainstream positioning. Bloomberg/FT coverage is still catalyst-driven rather than continuous. The 2026 ETF mean-reversion rally has increased media attention, pushing the narrative from 'ignored' toward 'emerging', but retail ETF inflows have not yet accelerated. Key distinction from 'mainstream': the thesis remains specialist-driven; most generalist sell-side analysts cover hydrogen as a footnote within clean-energy sector notes rather than as a standalone sector. Narrative trend is 'increasing' — the Volvo H2-ICE announcement (April 2026), Plug Power Q1 revenue beat (+22%), and Ballard margin recovery are adding credibility signals that were absent in 2024-2025. Score equivalent: 35 (emerging)."
+}

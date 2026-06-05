@@ -2,9 +2,9 @@
   "$schema": "catalyx/schemas/thesis.json",
   "id": "thesis_20260603_copper_miners_datacenter_alpha",
   "schema_version": "1.2",
-  "version": 3,
+  "version": 4,
   "created_at": "2026-06-03T21:00:00Z",
-  "last_modified_at": "2026-06-04T12:30:00Z",
+  "last_modified_at": "2026-06-04T18:00:00Z",
   "status": "open",
 
   "catalyst": {
@@ -40,8 +40,8 @@
     "amount_invested_eur": 1000,
     "sizing_method": "conviction_tier",
     "conviction_tier": 2,
-    "position_size_pct_portfolio": 0.06,
-    "position_size_rationale": "Tier 2 ceiling is 8% but entering at 6% for three reasons: (1) catalyst_alignment is strong (89/100) but momentum and crowding_risk are unquantified — no real-time ETF data yet; (2) China PMI is an orthogonal risk that could overwhelm the DC narrative in the short term regardless of fundamental validity; (3) no prior data in the system for copper miners theses — first trade, conservative. Add to 8% if Q2 hyperscaler earnings confirm AI capex above guidance (July-August 2026)."
+    "position_size_pct_portfolio": 0.035,
+    "position_size_rationale": "ENTERED at 6% (€1,000) on 2026-06-04 (Tier 2 ceiling 8%). RECALIBRATED to 3.5% target by monthly review 2026-06-04 — a partial REDUCE, not a full exit. Two reasons: (1) The near-term supply-tightness leg broke — asm_02 is breaching (LME stock 393,400t vs the 200,000t monitoring line; inv_03's 350,000t review_and_reduce threshold crossed on the latest reading). The structural DC-copper-demand thesis is intact, but the spot-scarcity support is gone, so the position no longer warrants top-of-tier sizing. (2) Portfolio correlation: this position plus the open grid thesis (4%) jointly ride the AI→power→copper complex and summed to 10%, breaching the Tier-2 8% combined ceiling. Trimming copper 6%→3.5% brings the complex to 7.5% (≤8%). ACTION FOR USER: sell ~42% of the 4COP position (~€420 of the ~€1,000), leaving ~€580 ≈ 3.5%. Re-add toward 6% only if (a) LME inventories resume falling below 200kt AND (b) Q2 hyperscaler earnings (Jul-Aug 2026) confirm AI capex above guidance."
   },
 
   "assumptions": [
@@ -59,7 +59,8 @@
       "measurability": "Source: LME daily warehouse inventory report (public, free). Compute 4-week rolling average monthly. Falsified by: 4-week rolling average exceeds 200,000 tonnes for 8 consecutive weeks. Rationale: inventory rising above 200k signals either supply normalization or demand destruction — both undermine the supply-tightness argument that supports the price floor.",
       "monitoring_source": "market_data",
       "check_frequency": "monthly",
-      "current_status": "monitoring"
+      "current_status": "monitoring",
+      "status_note": "⚠ BREACHING (monthly review 2026-06-04): LME copper warehouse stock = 393,400t as of 2026-05-20 with positive net inflows (+1,275t/day), per MacroMicro/westmetall. This is ~2x the 200,000t monitoring line and ABOVE the inv_03 review_and_reduce threshold (350,000t). The prior project value of 98,000t ('multi-year lows') was erroneous. Strict falsification of this assumption requires the 4-week rolling average to stay >200,000t for 8 consecutive weeks — currently week 1/8, so status remains 'monitoring' per its own rule, NOT yet 'invalidated'. But the near-term supply-tightness leg the thesis leaned on is gone: inventories are rising, not scarce. Combined with S&P analysts flagging copper as 'overextended', this triggers the partial reduction recorded in entry.position_size_rationale."
     },
     {
       "id": "asm_03",
@@ -110,7 +111,8 @@
       "triggered": false,
       "triggered_at": null,
       "stop_price_level": 350000,
-      "stop_price_ticker": "LME_COPPER_INVENTORY"
+      "stop_price_ticker": "LME_COPPER_INVENTORY",
+      "review_note": "PENDING 4-WEEK CONFIRMATION (2026-06-04): latest single LME reading 393,400t (2026-05-20) is above the 350,000t threshold, but the condition specifies a 4-week rolling average which is not yet computed from a single data point. Not flipping 'triggered' to true on one print. However, given the magnitude (+12% above threshold) and positive inflows, the monthly review applies the review_and_reduce action pre-emptively: trim copper 6%→3.5% (see entry.position_size_rationale). Re-check the 4-week average at the next monthly cycle; if confirmed >350kt, set triggered=true."
     },
     {
       "id": "inv_04",

@@ -1,0 +1,147 @@
+{
+  "id": "study_luxury_goods",
+  "schema_version": "1.2",
+  "sector_id": "luxury_goods",
+  "sector_label": "Luxury Goods — Hard & Soft",
+  "created_at": "2026-06-05",
+  "last_updated": "2026-06-05",
+  "study_type": "full",
+  "taxonomy": {
+    "parent_sector": "consumer",
+    "adjacent_sectors": ["consumer_india_em", "real_estate_logistics", "infrastructure_core"],
+    "differentiation_note": "Luxury goods is driven by UHNW wealth concentration and Chinese high-net-worth consumer sentiment, not by the EM middle-class income growth or urbanisation that powers consumer_india_em. The marginal buyer of LVMH handbags or Richemont watches is a household with >$10M net worth whose spending is insensitive to labour income but highly sensitive to equity/property wealth effects and aspirational brand scarcity — dynamics entirely absent in the Indian middle-class consumer ETF (INDA/NDIA). Adjacent to general consumer discretionary, luxury goods also differs structurally from that category by pricing power: average selling prices in hard luxury (Hermes Birkin: >€10k; Patek Philippe Nautilus: >€30k) are set by artificial supply scarcity, not cost inputs, giving the sector near-zero substitution elasticity and a completely different inflationary pass-through mechanism."
+  },
+  "demand_drivers": [
+    "Chinese mainland luxury repatriation: 65% of Chinese luxury consumption occurred on-mainland in 2025 (up from ~35% pre-pandemic), driven by government incentives for domestic spending and reduced cross-border travel arbitrage. Bain projects modest mainland growth in 2026 after a 3-5% contraction in 2025, which itself followed an 18-20% collapse in 2024 — implying a very low base for H2 2026 recovery.",
+    "Global UHNW wealth creation: the UHNWI population grew 9.4% YoY to ~250,000 individuals in 2025, with total net worth reaching $59.8 trillion (+6.7% YoY as of June 2025). US UHNWI population added 41% of all new entrants globally, supported by equity market gains. Indian UHNWI cohort grew 63% and is forecast +27% by 2031, providing a new structural demand base beyond China.",
+    "Currency tailwind building: USD/CNY expected to decline to 6.80 by Q4 2026 (yuan appreciation ~2.8%), reducing the price gap between mainland and overseas purchases and incentivising domestic Chinese luxury consumption. A weaker USD vs EUR also narrows the cross-Atlantic arbitrage for US buyers purchasing European brands.",
+    "Americas momentum as bridge market: LVMH posted +3% organic growth in North America in Q1 2026 and Hermes reported +17% Americas growth in Q1 2026 at constant FX. The US consumer — underpinned by strong equity wealth effects from the 2025 bull market — is acting as a partial offset to sluggish China and APAC.",
+    "Hard luxury resilience vs soft luxury bifurcation: Richemont (hard luxury — watches, jewellery) delivered FY2026 sales of EUR 22.4 billion (+11% at constant FX, +5% actual), significantly outperforming Kering (soft luxury). Consumers trading down within luxury are concentrating on fewer, higher-quality hard luxury items with better resale value — a structural demand shift within the sector.",
+    "Quiet luxury aesthetic shift: JPMorgan notes Chinese HNW consumers moving toward understated, logo-minimal pieces over ostentatious branding, benefiting heritage brands (Hermes, Richemont, Brunello Cucinelli) over entry-level accessible-luxury (Kering's Gucci, Burberry). This intra-sector bifurcation creates alpha for brand-selective positioning."
+  ],
+  "supply_constraints": [
+    "Artificial scarcity as a moat: Hermes deliberately limits Birkin production to maintain multi-year waitlists. Patek Philippe enforces strict dealer allocation. This is a managed supply constraint, not a capacity constraint — production can be expanded but brands choose not to, creating durable pricing power.",
+    "Craftsperson and atelier bottlenecks: high-end leather goods (Hermes), watches (Swiss manufactures), and couture require skilled artisans trained over 5-10 years. The pool of master craftspeople is geographically concentrated (Vallee de Joux for watchmaking; the Ile de France and Italian ateliers for leather and fashion) and cannot be rapidly scaled.",
+    "Raw material specialisation: exotic leathers (crocodile, ostrich), specific gemstones, and Swiss movements face genuine supply limits. CITES regulations constrain exotic leather sourcing. Coloured gemstone supply (rubies, sapphires) is geographically concentrated (Burma, Sri Lanka) and subject to ESG-linked regulatory restrictions.",
+    "European production base exposure to EUR strength: manufacturing costs are EUR-denominated while a significant share of revenues is USD/CNY-priced, compressing margins when EUR appreciates. Hermes Q1 2026 revenue declined 1% at actual rates despite +6% organic growth, with EUR 290M of FX drag.",
+    "Distribution scarcity — selective retail network: top brands control distribution through mono-brand boutiques in premium locations. The real estate scarcity of prime retail (Bond Street London, Avenue Montaigne Paris, Plaza 66 Shanghai) caps the rate at which new doors can be opened and limits competitor entry."
+  ],
+  "cycle_position": {
+    "assessment": "Mid-cycle recovery from a demand trough — early innings of a China rebound, not a new bull leg",
+    "rationale": "Luxury goods entered 2026 in a protracted correction that began in mid-2024, when Chinese mainland demand collapsed 18-20% and the post-pandemic demand boom fully unwound. Q1 2026 data shows the sector at an inflection: Richemont delivered strong FY2026 (+11% constant FX), Hermes maintained revenue quality (+6% organic), and LVMH held 1% organic growth despite Middle East headwinds — but momentum ETF data (GLUX.SW: -5.71% 3M, -3.76% 6M, momentum_score 45.7) confirms the equity market has not yet re-rated the sector for recovery. The China signal is cautiously positive (3Q 2025 bottoming, Bain projecting modest 2026 growth) but the US tariff risk — estimated at -150bps margin drag on LVMH Fashion & Leather — creates near-term ceiling pressure. The cycle position is: trough passed at the fundamental level, equity re-rating not yet confirmed, making this a late-early-to-early-mid recovery phase with optionality rather than a confirmed bull market entry.",
+    "last_assessed": "2026-06-05"
+  },
+  "key_metrics_to_monitor": [
+    {
+      "metric": "LVMH Fashion & Leather Goods organic revenue growth YoY",
+      "unit": "percent",
+      "source": "LVMH quarterly revenue release (April/July/October/January)",
+      "current": "1% (Q1 2026, below consensus of 1.5%)",
+      "comment": "Best single proxy for sector health. Organic strips currency noise. Watch for re-acceleration above 5% as the China recovery confirmation signal."
+    },
+    {
+      "metric": "Hermes Americas organic revenue growth",
+      "unit": "percent",
+      "source": "Hermes quarterly revenue releases",
+      "current": "+17% Q1 2026 at constant FX",
+      "comment": "Americas is the swing market while China recovers. Strong performance here validates the UHNW equity-wealth-driven thesis."
+    },
+    {
+      "metric": "Richemont Jewellery Maisons sales growth YoY constant FX",
+      "unit": "percent",
+      "source": "Richemont annual/half-year results (Cartier + Van Cleef)",
+      "current": "Part of FY2026 group +11% constant FX",
+      "comment": "Hard luxury leading indicator. Jewellery is less cyclical than fashion and signals UHNW purchasing intent 1-2 quarters ahead."
+    },
+    {
+      "metric": "China mainland personal luxury goods market growth",
+      "unit": "percent YoY",
+      "source": "Bain & Company China Luxury Study (semi-annual)",
+      "current": "-3% to -5% full-year 2025; early 2026 modestly positive",
+      "comment": "Single most important macro signal for the sector. Watch for two consecutive quarters of positive growth to declare trough confirmed."
+    },
+    {
+      "metric": "USD/CNY exchange rate",
+      "unit": "CNY per USD",
+      "source": "ECB / Bloomberg FX",
+      "current": "~7.25 (June 2026, CNY gently appreciating toward 6.80 by Q4 2026 per MUFG forecast)",
+      "comment": "CNY appreciation narrows mainland vs overseas price gap, increasing domestic luxury consumption — a direct demand tailwind."
+    },
+    {
+      "metric": "GLUX.SW / LUXE.PA momentum score (ETF cross-sectional percentile)",
+      "unit": "score 0-100",
+      "source": "CATALYX momentum_snapshot (yfinance)",
+      "current": "45.7 (GLUX.SW, 2026-06-04) — below median",
+      "comment": "Equity re-rating not yet confirmed. A sustained move above 60 on the 3M return would signal institutional re-positioning into the sector ahead of China confirmation."
+    }
+  ],
+  "etf_analysis": [
+    {
+      "ticker": "LUXE.PA",
+      "name": "Amundi S&P Global Luxury UCITS ETF",
+      "exchange": "EURONEXT",
+      "currency": "EUR",
+      "ter": 0.0025,
+      "aum_m_usd": 1400,
+      "replication": "physical",
+      "avg_spread_bps": 8,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "UCITS. EUR-denominated — natural hedge for a EUR-based Spanish investor. Tracks S&P Global Luxury Index. Top holdings: LVMH, Hermes, Kering, Richemont, Ferrari, Moncler. Physical replication, lowest TER in the luxury ETF universe at 0.25%. AUM €1.4B is well above the €200M UCITS liquidity threshold. Spread of 8bps is within the <20bps tier-1 threshold. This is the recommended primary vehicle for this sector.",
+      "recommendation_tier": 1,
+      "limitations": "S&P Global Luxury index includes Ferrari and some auto components which dilute pure luxury goods exposure. Index rebalances may lag emerging brand momentum. EUR denomination means no currency translation risk for a Spanish investor but also no USD carry."
+    },
+    {
+      "ticker": "GLUX.SW",
+      "name": "Xtrackers MSCI World Consumer Discretionary UCITS ETF",
+      "exchange": "SIX",
+      "currency": "USD",
+      "ter": 0.0025,
+      "aum_m_usd": 890,
+      "replication": "physical",
+      "avg_spread_bps": 12,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "UCITS. Listed on SIX Swiss Exchange. AUM ~$890M — above liquidity threshold. However, this ETF tracks the MSCI World Consumer Discretionary index, which is a broader category including home improvement, media, and general retail alongside luxury. Not a pure luxury play. Momentum snapshot from CATALYX pipeline (2026-06-04): price $202.3, return_1m +6.38%, return_3m -5.71%, return_6m -3.76%, momentum_score 45.7.",
+      "recommendation_tier": 2,
+      "limitations": "Not pure luxury — significant non-luxury consumer discretionary dilution (Amazon, Tesla, Home Depot) within the MSCI consumer discretionary index. Use LUXE.PA instead for sector-specific positioning. USD denomination introduces EUR/USD FX risk for Spanish investors. Only use as a secondary or if LUXE.PA liquidity is insufficient."
+    }
+  ],
+  "active_catalyst_ids": [],
+  "historical_catalyst_performance": {
+    "summary": "Luxury goods equities have historically exhibited two dominant catalyst patterns: (1) China demand reopening/recovery events and (2) global UHNW wealth creation cycles tied to equity market bull runs. During China's 2023 post-COVID reopening, European luxury names (LVMH, Hermes, Richemont) rallied 30-50% in H1 2023 as analysts priced a demand surge; however, the actual recovery was less strong than anticipated, leading to a partial reversal. This pattern of 'buy the catalyst, sell the confirmation' is consistent — the equity market re-rates ahead of earnings confirmation, creating a narrow optimal entry window. During the 2008-2009 recession, luxury suffered 30-40% equity declines in line with general equities but recovered faster than average as UHNW wealth rebounded with equity markets. The sector shows correlation to the MSCI World of ~0.75 in risk-off regimes but decouples to the upside during China-specific recovery catalysts where the MSCI World is broadly flat. The 2024 luxury bear market (LVMH -30% peak-to-trough) was entirely China-demand-driven and confirms that China is the dominant idiosyncratic catalyst — more influential than interest rates, recession fears, or Western consumer confidence.",
+    "key_catalyst_types": [
+      {
+        "catalyst": "China demand recovery / reopening",
+        "historical_response": "LVMH +47% (Feb–Jun 2023) on China reopening; subsequent partial reversal when actual numbers disappointed consensus. Pattern: re-rate on expectation, correct on delivery gap.",
+        "lead_lag": "Equity markets price 2-3 months ahead of fundamental confirmation — momentum entry before official statistics are the signal"
+      },
+      {
+        "catalyst": "UHNW wealth creation cycle (equity bull market)",
+        "historical_response": "Luxury outperforms MSCI World by 10-15pp in sustained equity bull markets (2012-2015, 2017-2021). The 2021 peak saw Hermes +80% in 24 months driven by US/EU wealth effects.",
+        "lead_lag": "Approximately concurrent — luxury equities track equity wealth effects with 0-1 quarter lag"
+      },
+      {
+        "catalyst": "CNY appreciation cycle",
+        "historical_response": "CNY appreciation (2017, 2020-2021) correlated with stronger mainland luxury consumption as domestic pricing became more competitive vs overseas. Each 5% CNY appreciation historically contributed ~2-3pp uplift in mainland revenue.",
+        "lead_lag": "FX effect materialises over 1-2 quarters as pricing resets; equity markets price it within weeks of a visible FX trend"
+      },
+      {
+        "catalyst": "Recession / consumer confidence collapse",
+        "historical_response": "Ultra-luxury (Hermes, Richemont) proved more resilient than accessible luxury (Kering/Gucci, Burberry) in 2022-2024 downturn. Hermes maintained positive organic growth through the cycle while Kering faced double-digit revenue declines. Intra-sector differentiation matters more than sector-level allocation in downturns.",
+        "lead_lag": "Accessible luxury leads the decline; ultra-luxury lags it and recovers faster"
+      }
+    ]
+  },
+  "risks": [
+    "US tariff escalation on EU luxury imports: Trump's transatlantic tariffs are estimated to create a -150bps margin drag on LVMH Fashion & Leather in 2026, with potential further escalation if EU-US trade negotiations break down. The US represented ~25% of LVMH total revenues (~EUR 17B) and has been the bridge growth market while China recovered — any material tariff shock attacks the sector's only strong demand engine simultaneously.",
+    "China recovery fails to materialise or re-accelerates slowly: despite Bain's modest 2026 growth projection, Chinese luxury demand remains fragile. A renewed property market shock, a deterioration in consumer confidence, or continued 'quiet quitting' of luxury consumption by Chinese millennials (favouring experiences over goods) could extend the demand drought into 2027. The 2024 collapse (-18-20%) showed that consensus chronically over-estimates Chinese luxury recovery velocity.",
+    "EUR strength versus USD and CNY: EUR appreciation compresses margins on European-manufactured goods sold in USD/CNY markets. Hermes already absorbed EUR 290M of FX drag in Q1 2026 (-7% FX impact) despite +6% organic growth. A continued EUR bull run driven by ECB policy divergence or US fiscal concerns would structurally erode reported earnings for the EUR-reporting luxury conglomerates.",
+    "Middle East geopolitical disruption: LVMH cited a -1pp organic growth impact from the Middle East conflict in Q1 2026. The Gulf states (UAE, Saudi Arabia, Qatar) represent a material and fast-growing luxury market; any escalation of regional instability dampens travel retail and local consumption simultaneously.",
+    "Narrative and positioning crowding: despite weak earnings momentum, luxury goods remain a heavily analysed, widely held sector in global consumer discretionary funds and European large-cap allocations. Any ETF-driven de-allocation from European equities disproportionately hits luxury (LVMH alone is ~12% of the CAC 40). The sector is not contrarian — narrative_maturity is 'mainstream' and the China recovery thesis has been widely written about since 2023.",
+    "Intra-sector brand dilution risk (accessible vs ultra-luxury): Kering (Gucci, Saint Laurent, Bottega Veneta) faces structural brand fatigue after Gucci's recent redesign mis-steps, with full-year 2025 revenues declining. Investors holding a broad luxury ETF (LUXE.PA) have unintended exposure to accessible-luxury underperformers alongside ultra-luxury compounders. The ETF cannot express the intra-sector bifurcation — single-stock selection is required for full alpha capture."
+  ],
+  "narrative_maturity": "mainstream",
+  "narrative_trend": "stable",
+  "narrative_notes": "Luxury goods is a mainstream narrative. Goldman Sachs, JPMorgan, BNP Paribas, and Morgan Stanley all publish explicit luxury sector outlooks; BNP Paribas Equity Research projects 6% organic sales growth for the luxury market in 2026 as a consensus base case. The China recovery thesis has been present in sell-side research since early 2023 — nearly 3 years of active coverage — and is now the standard framing in generalist financial media (Bloomberg, FT, CNBC). LUXE.PA AUM of ~EUR 1.4B confirms meaningful ETF assets are already allocated to the theme. The sector does not reach 'crowded' because ETF inflows are not accelerating (GLUX.SW momentum_score 45.7, below median) and consensus has been repeatedly disappointed, reducing the momentum-chasing dynamic. The China-recovery narrative is specific to luxury and differs from a general consumer discretionary thesis, keeping it in 'mainstream' rather than 'exhausted'. Score equivalent: 60 (mainstream anchored per scoring_weights.yaml narrative_maturity_levels)."
+}
