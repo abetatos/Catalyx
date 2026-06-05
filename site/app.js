@@ -39,10 +39,20 @@ async function loadLake(db) {
   }
 }
 
+function sqlLiteral(v) {
+  if (v === null || v === undefined) return 'NULL';
+  if (typeof v === 'number') return String(v);
+  return "'" + String(v).replace(/'/g, "''") + "'";  // safe: values come from controlled dropdowns
+}
 async function q(sql, params) {
-  const stmt = params ? await conn.prepare(sql) : null;
-  const res = stmt ? await stmt.query(...params) : await conn.query(sql);
-  if (stmt) await stmt.close();
+  // Inline literals instead of prepared statements — DuckDB-WASM's prepare/bind path
+  // is brittle (it was silently breaking the parameterised queries: sector, holdings, lineage).
+  let finalSQL = sql;
+  if (params && params.length) {
+    let i = 0;
+    finalSQL = sql.replace(/\?/g, () => sqlLiteral(params[i++]));
+  }
+  const res = await conn.query(finalSQL);
   return res.toArray().map((r) => Object.fromEntries(
     res.schema.fields.map((f) => [f.name, normalize(r[f.name])])));
 }
