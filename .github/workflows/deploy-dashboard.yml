@@ -2,7 +2,8 @@ name: Deploy CATALYX dashboard
 
 # Builds the Evidence.dev static site (dashboard/) from the committed score-history
 # parquet (data/history/*.parquet) and publishes it to GitHub Pages.
-# Enable once: repo Settings → Pages → Source = "GitHub Actions".
+# configure-pages (enablement: true) enables Pages automatically on first run, so no
+# manual Settings → Pages step is needed.
 
 on:
   push:
@@ -20,7 +21,7 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -42,14 +43,21 @@ jobs:
 
       # Project Pages serve under /<repo>, so the site must be built with that base path.
       # The committed config has no basePath (so local `npm run dev` stays at root).
+      # Block scalar (|) is required: the appended text contains ": " which is invalid in a plain YAML scalar.
       - name: Set base path for project Pages
-        run: printf '\ndeployment:\n  basePath: /Catalyx\n' >> evidence.config.yaml
+        run: |
+          printf '\ndeployment:\n  basePath: /Catalyx\n' >> evidence.config.yaml
 
       - name: Ingest parquet sources
         run: npm run sources
 
       - name: Build static site
         run: npm run build
+
+      - name: Configure Pages (enables it on first run)
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
