@@ -44,6 +44,14 @@
     .card .big { font-size:22px; font-variant-numeric:tabular-nums; }
     .card .lbl { color:var(--muted); font-size:12px; }
     svg .axis { stroke:var(--border); } svg text { fill:var(--muted); font-size:10px; }
+    .md { background:var(--panel); border:1px solid var(--border); border-radius:8px;
+          padding:18px 24px; line-height:1.65; max-width:900px; }
+    .md h1,.md h2,.md h3 { border-bottom:1px solid var(--border); padding-bottom:5px; margin-top:22px; }
+    .md h1 { font-size:20px; } .md h2 { font-size:17px; } .md h3 { font-size:15px; }
+    .md code { background:#21262d; padding:1px 5px; border-radius:4px; font-size:12px; }
+    .md pre { background:#0b0f14; padding:12px; border-radius:6px; overflow:auto; }
+    .md table { margin:12px 0; } .md a { color:var(--accent); }
+    .md blockquote { border-left:3px solid var(--border); margin:10px 0; padding:2px 14px; color:var(--muted); }
   </style>
 </head>
 <body>
@@ -54,8 +62,11 @@
   </header>
   <nav id="tabs">
     <button data-tab="ranking" class="active">Ranking</button>
-    <button data-tab="sector">Sector history</button>
+    <button data-tab="catalysts">Catalizadores</button>
+    <button data-tab="studies">Sector studies</button>
+    <button data-tab="reports">Runs e informes</button>
     <button data-tab="portfolios">Carteras</button>
+    <button data-tab="sector">Sector history</button>
     <button data-tab="moves">Rank moves</button>
     <button data-tab="lineage">Lineage</button>
     <button data-tab="sql">SQL</button>
@@ -67,12 +78,44 @@
       <div id="ranking-out"></div>
     </section>
 
+    <section class="panel" id="panel-catalysts">
+      <h2>Catalizadores</h2>
+      <p class="hint">Estructurales (tendencias seculares, con sus indicadores) y de evento. Toda la info del parquet/config.</p>
+      <div class="row">
+        <label>Estructural: <select id="cat-select"></select></label>
+        <span id="cat-meta" class="hint"></span>
+      </div>
+      <div id="cat-detail"></div>
+      <h2 style="margin-top:24px">Indicadores — historia (lake)</h2>
+      <p class="hint">Serie temporal de los indicadores de este catalizador (tabla <code>indicator_history</code>).</p>
+      <div id="cat-history"></div>
+      <h2 style="margin-top:24px">Catalizadores de evento</h2>
+      <div id="cat-events"></div>
+    </section>
+
+    <section class="panel" id="panel-studies">
+      <h2>Sector studies</h2>
+      <p class="hint">Análisis bottom-up por sector (narrative_maturity, tesis, ETFs, riesgos).</p>
+      <div class="row"><label>Sector: <select id="study-select"></select></label></div>
+      <div id="study-detail"></div>
+    </section>
+
+    <section class="panel" id="panel-reports">
+      <h2>Runs e informes</h2>
+      <p class="hint">Cada run de scoring + el informe de texto que produjo (heatmap/dashboard).</p>
+      <div class="row"><label>Run: <select id="run-select"></select></label></div>
+      <div id="run-meta"></div>
+      <div id="report-out" class="md"></div>
+    </section>
+
     <section class="panel" id="panel-sector">
       <h2>Evolución de un sector</h2>
       <div class="row">
         <label>Sector: <select id="sector-select"></select></label>
       </div>
       <div id="sector-out"></div>
+      <h3 style="font-size:13px;color:var(--muted);margin-top:18px">Narrativa (último run con estudio)</h3>
+      <div id="sector-narrative" class="md"></div>
     </section>
 
     <section class="panel" id="panel-portfolios">

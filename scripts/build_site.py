@@ -18,6 +18,8 @@ import shutil
 import sys
 from pathlib import Path
 
+import yaml
+
 from catalyx.store import lake
 
 _ROOT = Path(__file__).parents[1]
@@ -25,6 +27,33 @@ _SITE = _ROOT / "site"
 _DIST = _ROOT / "dist"
 _LAKE = _ROOT / "data" / "lake"
 _STATIC = ("index.html", "app.js")
+
+# Tier-1 documents (config/JSON) surfaced read-only in the dashboard alongside the lake.
+_STRUCTURAL_CAT = _ROOT / "catalyx" / "config" / "structural_catalysts"
+_EVENT_CAT = _ROOT / "data" / "catalysts"
+_STUDIES = _ROOT / "data" / "sector_studies"
+_THESES = _ROOT / "data" / "theses"
+
+
+def _bake_docs(dist: Path) -> dict:
+    """Bundle the Tier-1 documents into docs.json so the page can show the full picture:
+    structural + event catalysts, sector studies, theses. Small (KB each) — one fetch."""
+    docs: dict[str, list] = {"catalysts_structural": [], "catalysts_event": [],
+                             "studies": [], "theses": []}
+    for f in sorted(_STRUCTURAL_CAT.glob("*.yaml")):
+        try:
+            docs["catalysts_structural"].append(yaml.safe_load(f.read_text(encoding="utf-8")))
+        except Exception:  # noqa: BLE001
+            pass
+    for src, key in ((_EVENT_CAT, "catalysts_event"), (_STUDIES, "studies"), (_THESES, "theses")):
+        if src.exists():
+            for f in sorted(src.glob("*.json")):
+                try:
+                    docs[key].append(json.loads(f.read_text(encoding="utf-8")))
+                except Exception:  # noqa: BLE001
+                    pass
+    (dist / "docs.json").write_text(json.dumps(docs, ensure_ascii=False), encoding="utf-8")
+    return {k: len(v) for k, v in docs.items()}
 
 
 def build(dist: Path = _DIST) -> dict:
@@ -54,7 +83,8 @@ def build(dist: Path = _DIST) -> dict:
         manifest[table] = urls
 
     (dist / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    return {"tables": len(manifest), "parquet_files": total, "dist": str(dist)}
+    docs = _bake_docs(dist)
+    return {"tables": len(manifest), "parquet_files": total, "docs": docs, "dist": str(dist)}
 
 
 def main() -> None:
@@ -62,6 +92,7 @@ def main() -> None:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     r = build()
     print(f"Built {r['dist']}: {r['parquet_files']} parquet across {r['tables']} tables")
+    print(f"  docs.json: {r['docs']}")
     print("Preview: python -m http.server -d dist 8000  ->  http://localhost:8000")
 
 
