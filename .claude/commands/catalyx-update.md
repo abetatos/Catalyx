@@ -35,11 +35,8 @@ Examples:
      --write-back --period "<current_quarter e.g. 2026-Q2>"
    ```
    Show the output to the user. The engine prints computed_score, stored_score, Δ, and the per-indicator breakdown. No manual arithmetic needed.
-9. Resync the DB:
-   ```bash
-   uv run python -m catalyx.store.structural_catalyst_repo sync
-   ```
-10. Print a one-line summary: `<catalyst_id> — ind_<id>: <old_value> → <new_value> | intensity: <old_score> → <new_score>`
+9. Print a one-line summary: `<catalyst_id> — ind_<id>: <old_value> → <new_value> | intensity: <old_score> → <new_score>`
+   (Editing the YAML is the only write path — `structural_catalyst_repo summary`/`get` read it directly. No DB resync.)
 
 ---
 
@@ -50,12 +47,8 @@ Examples:
    If not, print the valid values and stop.
 3. Read `catalyx/config/scoring_weights.yaml` `narrative_maturity_levels` section and confirm the chosen level fits the observable criteria. State your reasoning in one sentence.
 4. Update `narrative_maturity` in the YAML and `status_last_reviewed` to today.
-5. Write the YAML file.
-6. Resync the DB:
-   ```
-   uv run python -m catalyx.store.structural_catalyst_repo sync
-   ```
-7. Print: `<catalyst_id> — narrative_maturity updated: <old> → <new>`
+5. Write the YAML file. (That is the only write path — no DB resync; the repo reads the YAML directly.)
+6. Print: `<catalyst_id> — narrative_maturity updated: <old> → <new>`
 
 ## Rules
 
@@ -64,4 +57,4 @@ Examples:
 - Always shift `current_value → last_value` AND append the prior observation to `value_history` before writing the new `current_value`. Do not lose the prior value — `value_history` is what makes the percentile score possible.
 - If the new value crosses a `deactivation_conditions` threshold, print a warning: ⚠ DEACTIVATION CONDITION APPROACHING: [condition text].
 - Update `status_last_reviewed` on every call, even if no status changes.
-- Always run `structural_catalyst_repo sync` after writing the YAML, so the DB is current within the session.
+- The YAML is the source of truth — there is no DB to resync; `structural_catalyst_repo summary`/`get` read it directly.

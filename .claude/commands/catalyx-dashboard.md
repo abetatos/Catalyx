@@ -4,14 +4,9 @@ Generate the CATALYX Catalyst Dashboard report from current data files.
 
 ## Steps
 
-0. Rebuild DB index:
-   ```
-   uv run python -c "from catalyx.store import init_all; init_all()"
-   ```
-
 1. Read `CLAUDE.md` to confirm schema versions and scoring rules.
 
-2. Load structural catalysts from DB:
+2. Load structural catalysts (read directly from the YAML files):
    ```
    uv run python -m catalyx.store.structural_catalyst_repo summary
    ```
@@ -20,7 +15,7 @@ Generate the CATALYX Catalyst Dashboard report from current data files.
    uv run python -m catalyx.store.structural_catalyst_repo get <id>
    ```
 
-3. Load event catalysts from DB:
+3. Load event catalysts (read directly from the JSON files):
    ```
    uv run python -m catalyx.store.catalyst_repo summary
    ```

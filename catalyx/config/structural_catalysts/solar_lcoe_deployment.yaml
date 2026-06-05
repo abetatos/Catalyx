@@ -1,25 +1,25 @@
-# StructuralCatalyst: Solar LCOE Cost-Curve Decline + Policy-Driven Deployment Supercycle
-# schema_version: "1.3"
-# Update indicators: ind_01 quarterly (BloombergNEF LCOE), ind_02 monthly (EIA/SEIA additions),
-#   ind_03 quarterly (InfoLink/PV-Tech polysilicon), ind_04 quarterly (LevelTen PPA index).
-#
-# Double-counting guard vs struct_energy_transition_grid:
-#   struct_energy_transition_grid measures GRID BOTTLENECK severity (transformer lead times,
-#   EU grid investment, copper price). It treats solar as a SOURCE of grid load, not as the
-#   thesis target. This catalyst measures SOLAR DEPLOYMENT ECONOMICS: cost-curve decline,
-#   policy-driven installation volumes, and AI/datacenter PPA demand for new solar capacity.
-#   Zero indicator overlap. The two structurals are linked (compounding) but distinct.
-#   solar_energy feeds THIS structural only; grid_infrastructure_utilities feeds struct_energy_transition_grid only.
-#
-# Calibration anchor (Rule 3):
-#   Bootstrap score of 78 — similar to struct_cb_gold_accumulation (76.1 current).
-#   Rationale: Solar has strong underlying demand and cost-curve tailwinds comparable to
-#   CB gold accumulation, but the ITC cliff (July 4, 2026) introduces a near-term policy
-#   headwind that suppresses intensity below struct_ai_capex_supercycle (89.9) and well
-#   below struct_energy_transition_grid (95.0). The polysilicon oversupply crushes
-#   manufacturer margins (ind_03 bearish) while utility-scale additions are record-high
-#   (ind_02 bullish) — the bifurcated sector signal averages to a mid-high intensity.
-#   First update run of intensity_engine will replace this bootstrap with computed value.
+# StructuralCatalyst: Solar LCOE Cost-Curve Decline + Policy-Driven Deployment Supercycle
+# schema_version: "1.3"
+# Update indicators: ind_01 quarterly (BloombergNEF LCOE), ind_02 monthly (EIA/SEIA additions),
+#   ind_03 quarterly (InfoLink/PV-Tech polysilicon), ind_04 quarterly (LevelTen PPA index).
+#
+# Double-counting guard vs struct_energy_transition_grid:
+#   struct_energy_transition_grid measures GRID BOTTLENECK severity (transformer lead times,
+#   EU grid investment, copper price). It treats solar as a SOURCE of grid load, not as the
+#   thesis target. This catalyst measures SOLAR DEPLOYMENT ECONOMICS: cost-curve decline,
+#   policy-driven installation volumes, and AI/datacenter PPA demand for new solar capacity.
+#   Zero indicator overlap. The two structurals are linked (compounding) but distinct.
+#   solar_energy feeds THIS structural only; grid_infrastructure_utilities feeds struct_energy_transition_grid only.
+#
+# Calibration anchor (Rule 3):
+#   Bootstrap score of 78 — similar to struct_cb_gold_accumulation (76.1 current).
+#   Rationale: Solar has strong underlying demand and cost-curve tailwinds comparable to
+#   CB gold accumulation, but the ITC cliff (July 4, 2026) introduces a near-term policy
+#   headwind that suppresses intensity below struct_ai_capex_supercycle (89.9) and well
+#   below struct_energy_transition_grid (95.0). The polysilicon oversupply crushes
+#   manufacturer margins (ind_03 bearish) while utility-scale additions are record-high
+#   (ind_02 bullish) — the bifurcated sector signal averages to a mid-high intensity.
+#   First update run of intensity_engine will replace this bootstrap with computed value.
 
 id: struct_solar_lcoe_deployment
 type: structural
@@ -61,7 +61,6 @@ catalyst_type: climate_transition
 catalyst_subtype: solar_lcoe_ppa_deployment
 geography: [US, EU, CHN, GLOBAL]
 thematic_tags: [solar, lcoe, renewables, ppa, hyperscaler, ira, itc, polysilicon, energy_transition]
-
 user_rank: 4
 user_notes: >
   Solar's primary ETF (RAYS.L for UCITS Spanish investors) is below the $200M AUM
@@ -72,9 +71,9 @@ user_notes: >
   available as a clean UCITS ETF.
 
 intensity:
-  current_score: 78.0
+  current_score: 71.1
   last_updated: "2026-06-05"
-  computation_method: bootstrap
+  computation_method: computed
   computation_note: >
     Bootstrap estimate at creation. Calibrated relative to struct_cb_gold_accumulation (76.1
     current) — solar has comparable underlying demand strength but faces a near-term policy
@@ -82,6 +81,10 @@ intensity:
     that together suppress intensity below struct_ai_capex_supercycle (89.9). Run
     intensity_engine after first indicator updates to replace with computed value.
   history:
+  - period: '2026-06-05'
+    score: 71.1
+    note: 'Computed 2026-06-05: avg=71.08 trend=→ (flat — insufficient history) (was 78.0)'
+    computation_method: computed
   - period: "2026-Q2"
     score: 78
     note: "Bootstrap at creation 2026-06-05. Anchor: similar to struct_cb_gold_accumulation (76.1). Bifurcated sector: utility-scale record additions (bullish) offset by ITC cliff and polysilicon oversupply (bearish)."
@@ -92,7 +95,7 @@ indicators:
   name: "US utility-scale solar LCOE (BloombergNEF global benchmark, fixed-axis)"
   source: "BloombergNEF New Energy Outlook / LCOE Update (annual)"
   source_url_template: "https://about.bnef.com/insights/clean-energy/"
-  check_frequency: quarterly
+  check_frequency: annual
   current_value: 39
   unit: USD_per_MWh
   direction: lower_is_stronger
@@ -122,7 +125,7 @@ indicators:
     value: 58
   - date: "2020-12-31"
     value: 63
-  score: null
+  score: 92.9
 
 - id: ind_02
   name: "US utility-scale solar capacity additions (annualized, GW)"
@@ -135,7 +138,7 @@ indicators:
   threshold_strong: 25
   threshold_weak: 10
   last_value: 27.2
-  last_date: "2025-12-31"
+  last_date: "2026-02-01"
   update_note: >
     EIA (February 2026): 43.4 GW utility-scale solar planned in 2026, 51% of total US new
     power capacity additions (record 86 GW total). +60% YoY vs 27.2 GW in 2025.
@@ -157,7 +160,7 @@ indicators:
     value: 14.2
   - date: "2020-12-31"
     value: 10.5
-  score: null
+  score: 92.9
 
 - id: ind_03
   name: "China polysilicon spot price (CNY/kg) — inverse signal: lower price = developer tailwind, not structural strength"
@@ -202,7 +205,7 @@ indicators:
     value: 110.0
   - date: "2023-01-01"
     value: 145.0
-  score: null
+  score: 5.6
 
 - id: ind_04
   name: "North American utility-scale solar PPA price (USD/MWh, LevelTen Energy quarterly index)"
@@ -215,7 +218,7 @@ indicators:
   threshold_strong: 55
   threshold_weak: 40
   last_value: 57
-  last_date: "2025-12-31"
+  last_date: "2026-03-31"
   update_note: >
     LevelTen Energy Q1 2026: North American solar PPA prices rose 4.7% in Q1 2026 to
     approximately $60-65/MWh range (sector study cites $55-65/MWh current; midpoint ~$60/MWh).
@@ -239,7 +242,7 @@ indicators:
     value: 41
   - date: "2022-12-31"
     value: 36
-  score: null
+  score: 92.9
 
 deactivation_conditions:
 - id: deact_01
@@ -266,8 +269,8 @@ deactivation_conditions:
 
 linked_event_catalyst_ids: []
 linked_structural_catalyst_ids:
-  - struct_ai_capex_supercycle       # AI/hyperscaler PPA demand: the structural driver of gigawatt-scale solar procurement
-  - struct_energy_transition_grid    # Solar deployment is the primary source of grid interconnection congestion; the two trends are compounding
+- struct_ai_capex_supercycle         # AI/hyperscaler PPA demand: the structural driver of gigawatt-scale solar procurement
+- struct_energy_transition_grid      # Solar deployment is the primary source of grid interconnection congestion; the two trends are compounding
 
 narrative_maturity: "mainstream"
 status: active

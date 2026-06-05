@@ -218,12 +218,11 @@ __marimo__/
 .streamlit/secrets.toml
 
 # CATALYX — runtime data excluded from version control
-# Tier 3 (rebuildable query cache): SQLite is derived from the parquet lake — never the source of truth.
-data/catalyx.db
+# Legacy SQLite cache (removed from the codebase; ignore any stray local .db files).
 data/*.db
-data/catalyx.db-journal
-data/catalyx.db-wal
-data/catalyx.db-shm
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
 
 # Tier 2 (data lake): data/lake/**/*.parquet IS committed to git on purpose.
 # Append-only + partitioned → immutable files, git stores each once (no bloat). See docs/PLAN_lake_dvc_serving.md.

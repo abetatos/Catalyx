@@ -1,29 +1,30 @@
-"""Storage and retrieval for Thesis and ClosedThesis objects.
+"""Read/query helpers for Thesis and ClosedThesis objects.
+
+The JSON files in data/theses/ are the source of truth (Tier 1). This module reads
+them and prints digests for skill context — there is no database. Writing the JSON
+file IS the registration; no import step.
+
+A Thesis JSON carries an `id`; a ClosedThesis JSON carries a `thesis_id`.
 
 Callable from skills via:
     python -m catalyx.store.thesis_repo <command> [args]
 
 Commands:
-    init                     Create database tables
-    import-dir <dir>         Import all JSON files from a directory
-    import-file <file>       Import a single JSON file
     summary                  Open theses + YTD tax snapshot for Claude context
     get <id>                 Print full JSON for one record
-    set-status <id> <status> Update thesis status
+    set-status <id> <status> Update thesis status IN THE JSON FILE
     tax-snapshot             YTD realized gains and tax liability
 """
 from __future__ import annotations
 
 import json
 import sys
-from datetime import date, datetime, timezone
+from datetime import date
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import Column, Date, Float, Integer, String, Text
-from sqlalchemy.types import JSON
-
-from .db import Base, get_session, init_db as _init_db
+_REPO_ROOT = Path(__file__).parents[2]
+_THESES_DIR = _REPO_ROOT / "data" / "theses"
 
 # Spanish CGT brackets 2026 (progressive, no short/long distinction)
 _TAX_BRACKETS = [
@@ -34,154 +35,82 @@ _TAX_BRACKETS = [
 ]
 
 
-# ── Models ────────────────────────────────────────────────────────────────────
+# ── File access ───────────────────────────────────────────────────────────────
 
-class Thesis(Base):
-    """Active investment thesis. Maps to schemas/thesis.json."""
-    __tablename__ = "theses"
-
-    id = Column(String(100), primary_key=True)
-    schema_version = Column(String(10), nullable=False)
-    version = Column(Integer, nullable=False, default=1)
-    status = Column(String(40), nullable=False)
-    sector_id = Column(String(80))
-    catalyst_event_id = Column(String(80))
-    catalyst_type = Column(String(20))         # event | structural
-    primary_etf = Column(String(20))
-    conviction_tier = Column(Integer)
-    position_size_pct = Column(Float)
-    entry_price_limit = Column(Float)
-    created_at = Column(String(30))
-    raw_data = Column(JSON, nullable=False)
+def _load_all() -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    if not _THESES_DIR.exists():
+        return out
+    for f in sorted(_THESES_DIR.glob("*.json")):
+        try:
+            out.append(json.loads(f.read_text(encoding="utf-8")))
+        except Exception:  # noqa: BLE001
+            continue
+    return out
 
 
-class ClosedThesis(Base):
-    """Closed thesis with P&L and attribution. Maps to schemas/closed_thesis.json."""
-    __tablename__ = "closed_theses"
-
-    thesis_id = Column(String(100), primary_key=True)
-    schema_version = Column(String(10), nullable=False)
-    closed_at = Column(String(30))
-    close_reason = Column(String(40))
-    sector_id = Column(String(80))
-    primary_etf = Column(String(20))
-    holding_days = Column(Integer)
-    gross_return_pct = Column(Float)
-    gross_pnl_eur = Column(Float)
-    net_pnl_eur = Column(Float)
-    tax_liability_eur = Column(Float)
-    matrix_cell = Column(String(20))           # confirmed | bad_luck | lucky | avoided_future
-    right_reason_score = Column(Float)
-    raw_data = Column(JSON, nullable=False)
+def _is_closed(data: dict[str, Any]) -> bool:
+    return "thesis_id" in data
 
 
-# ── CRUD ──────────────────────────────────────────────────────────────────────
-
-def upsert_thesis(data: dict[str, Any]) -> Thesis:
-    session = get_session()
-    try:
-        row = session.get(Thesis, data["id"]) or Thesis()
-        row.id = data["id"]
-        row.schema_version = data.get("schema_version", "1.1")
-        row.version = data.get("version", 1)
-        row.status = data["status"]
-        row.sector_id = data.get("sector", {}).get("sector_id")
-        row.catalyst_event_id = data.get("catalyst", {}).get("catalyst_event_id")
-        row.catalyst_type = data.get("catalyst", {}).get("catalyst_type")
-        row.primary_etf = data.get("vehicle", {}).get("primary_etf")
-        row.conviction_tier = data.get("entry", {}).get("conviction_tier")
-        row.position_size_pct = data.get("entry", {}).get("position_size_pct_portfolio")
-        row.entry_price_limit = data.get("entry", {}).get("entry_price_limit")
-        row.created_at = data.get("created_at")
-        row.raw_data = data
-        session.merge(row)
-        session.commit()
-        return row
-    finally:
-        session.close()
+def _theses() -> list[dict[str, Any]]:
+    return [d for d in _load_all() if not _is_closed(d)]
 
 
-def upsert_closed(data: dict[str, Any]) -> ClosedThesis:
-    session = get_session()
-    try:
-        row = session.get(ClosedThesis, data["thesis_id"]) or ClosedThesis()
-        row.thesis_id = data["thesis_id"]
-        row.schema_version = data.get("schema_version", "1.1")
-        row.closed_at = data.get("closed_at")
-        row.close_reason = data.get("close_reason")
-        row.sector_id = data.get("thesis_snapshot", {}).get("sector", {}).get("sector_id")
-        row.primary_etf = data.get("execution", {}).get("etf_ticker")
-        row.holding_days = data.get("execution", {}).get("holding_days")
-        row.gross_return_pct = data.get("pnl", {}).get("gross_return_pct")
-        row.gross_pnl_eur = data.get("pnl", {}).get("gross_pnl_eur")
-        row.net_pnl_eur = data.get("pnl", {}).get("net_pnl_eur")
-        row.tax_liability_eur = data.get("pnl", {}).get("tax_liability_eur")
-        row.matrix_cell = data.get("scores", {}).get("matrix_cell")
-        row.right_reason_score = data.get("scores", {}).get("right_reason_score")
-        row.raw_data = data
-        session.merge(row)
-        session.commit()
-        return row
-    finally:
-        session.close()
+def _closed() -> list[dict[str, Any]]:
+    return [d for d in _load_all() if _is_closed(d)]
 
 
-def upsert_from_json_file(path: Path) -> str:
-    data = json.loads(path.read_text(encoding="utf-8"))
-    if "thesis_id" in data:        # ClosedThesis
-        upsert_closed(data)
-        return data["thesis_id"]
-    else:                          # Thesis
-        upsert_thesis(data)
-        return data["id"]
-
-
-def import_from_directory(directory: Path) -> int:
-    files = list(directory.glob("*.json"))
-    for f in files:
-        upsert_from_json_file(f)
-    return len(files)
+def _find_file(record_id: str) -> Path | None:
+    direct = _THESES_DIR / f"{record_id}.json"
+    if direct.exists():
+        return direct
+    if not _THESES_DIR.exists():
+        return None
+    for f in _THESES_DIR.glob("*.json"):
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+        except Exception:  # noqa: BLE001
+            continue
+        if data.get("id") == record_id or data.get("thesis_id") == record_id:
+            return f
+    return None
 
 
 def get_thesis(id: str) -> dict[str, Any] | None:
-    session = get_session()
-    try:
-        row = session.get(Thesis, id) or session.get(ClosedThesis, id)
-        return row.raw_data if row else None
-    finally:
-        session.close()
+    for data in _load_all():
+        if data.get("id") == id or data.get("thesis_id") == id:
+            return data
+    return None
 
 
 def set_status(id: str, status: str) -> bool:
-    session = get_session()
-    try:
-        row = session.get(Thesis, id)
-        if row is None:
-            return False
-        row.status = status
-        row.raw_data = {**row.raw_data, "status": status}
-        session.commit()
-        return True
-    finally:
-        session.close()
+    """Update the status field in the thesis JSON file on disk. Returns True if found."""
+    path = _find_file(id)
+    if path is None:
+        return False
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["status"] = status
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return True
 
+
+# ── Tax snapshot ──────────────────────────────────────────────────────────────
 
 def ytd_tax_snapshot() -> dict[str, Any]:
     """Compute YTD realized gains and Spanish CGT tax liability from closed theses."""
     current_year = date.today().year
-    session = get_session()
-    try:
-        closed = (
-            session.query(ClosedThesis)
-            .filter(ClosedThesis.closed_at.like(f"{current_year}%"))
-            .all()
-        )
-    finally:
-        session.close()
+    closed = [
+        c for c in _closed()
+        if str(c.get("closed_at", "")).startswith(str(current_year))
+    ]
 
-    total_gains = sum(r.gross_pnl_eur or 0.0 for r in closed)
-    total_tax = sum(r.tax_liability_eur or 0.0 for r in closed)
-    total_net = sum(r.net_pnl_eur or 0.0 for r in closed)
+    def _pnl(c: dict[str, Any], key: str) -> float:
+        return float((c.get("pnl", {}) or {}).get(key) or 0.0)
+
+    total_gains = sum(_pnl(c, "gross_pnl_eur") for c in closed)
+    total_tax = sum(_pnl(c, "tax_liability_eur") for c in closed)
+    total_net = sum(_pnl(c, "net_pnl_eur") for c in closed)
 
     # Determine current marginal bracket
     marginal = 0.19
@@ -202,27 +131,26 @@ def ytd_tax_snapshot() -> dict[str, Any]:
     }
 
 
+# ── Summary ───────────────────────────────────────────────────────────────────
+
 def active_summary() -> str:
-    session = get_session()
-    try:
-        open_theses = (
-            session.query(Thesis)
-            .filter(Thesis.status.in_(["draft", "open"]))
-            .order_by(Thesis.created_at.desc())
-            .all()
-        )
-        closed = session.query(ClosedThesis).count()
-    finally:
-        session.close()
+    open_theses = [t for t in _theses() if t.get("status") in ("draft", "open")]
+    open_theses.sort(key=lambda t: t.get("created_at") or "", reverse=True)
+    closed_count = len(_closed())
 
     lines = [f"Open/Draft Theses ({len(open_theses)}):"]
     if open_theses:
         for t in open_theses:
-            size = f"{t.position_size_pct*100:.0f}%" if t.position_size_pct else "?%"
-            limit = f"entry_limit={t.entry_price_limit}" if t.entry_price_limit else "no_entry_limit"
+            entry = t.get("entry", {}) or {}
+            sector_id = (t.get("sector", {}) or {}).get("sector_id")
+            pct = entry.get("position_size_pct_portfolio")
+            tier = entry.get("conviction_tier")
+            limit_val = entry.get("entry_price_limit")
+            size = f"{pct*100:.0f}%" if isinstance(pct, (int, float)) else "?%"
+            limit = f"entry_limit={limit_val}" if limit_val is not None else "no_entry_limit"
             lines.append(
-                f"  {t.id:<55} sector={t.sector_id or '?':<35} "
-                f"tier={t.conviction_tier or '?'}  size={size}  [{t.status}]  {limit}"
+                f"  {t.get('id', '?'):<55} sector={sector_id or '?':<35} "
+                f"tier={tier or '?'}  size={size}  [{t.get('status', '?')}]  {limit}"
             )
     else:
         lines.append("  (none)")
@@ -230,7 +158,7 @@ def active_summary() -> str:
     snap = ytd_tax_snapshot()
     lines += [
         "",
-        f"Closed Theses: {closed} total  |  YTD ({snap['year']}): {snap['closed_count']} closed",
+        f"Closed Theses: {closed_count} total  |  YTD ({snap['year']}): {snap['closed_count']} closed",
         f"  Realized gains: EUR {snap['realized_gains_eur']:,.2f}",
         f"  Tax paid:        EUR {snap['tax_paid_eur']:,.2f}",
         f"  Net P&L:         EUR {snap['net_pnl_eur']:,.2f}",
@@ -247,16 +175,10 @@ def _cli() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-    parser = argparse.ArgumentParser(description="Catalyx thesis repository")
+    parser = argparse.ArgumentParser(
+        description="Catalyx thesis reader (file-backed; JSON is the source of truth)"
+    )
     sub = parser.add_subparsers(dest="cmd", required=True)
-
-    sub.add_parser("init")
-
-    p_dir = sub.add_parser("import-dir")
-    p_dir.add_argument("directory")
-
-    p_file = sub.add_parser("import-file")
-    p_file.add_argument("file")
 
     sub.add_parser("summary")
     sub.add_parser("tax-snapshot")
@@ -270,15 +192,7 @@ def _cli() -> None:
 
     args = parser.parse_args()
 
-    if args.cmd == "init":
-        _init_db()
-        print("Database initialised.")
-    elif args.cmd == "import-dir":
-        n = import_from_directory(Path(args.directory))
-        print(f"Imported {n} file(s) from {args.directory}")
-    elif args.cmd == "import-file":
-        print(f"Imported: {upsert_from_json_file(Path(args.file))}")
-    elif args.cmd == "summary":
+    if args.cmd == "summary":
         print(active_summary())
     elif args.cmd == "tax-snapshot":
         print(json.dumps(ytd_tax_snapshot(), indent=2))

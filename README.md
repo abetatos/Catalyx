@@ -10,6 +10,11 @@
   Detect catalysts early · Score sectors systematically · Measure if you were right for the right reasons
 </p>
 
+<p align="center">
+  <a href="https://abetatos.github.io/Catalyx/"><strong>▶ Live dashboard — abetatos.github.io/Catalyx</strong></a><br/>
+  <sub>Static DuckDB-WASM site reading the committed parquet lake in-browser (no backend)</sub>
+</p>
+
 ---
 
 ## What CATALYX does
@@ -140,35 +145,25 @@ Why this matters: a rumour (strength 10) and an official announcement (strength 
 
 ### Structural catalyst intensity — how it's computed
 
-LLMs produce unstable numbers. Structural catalyst intensity is **computed from observable indicator semaphores**, never free-assigned:
+LLMs produce unstable numbers. Structural catalyst intensity is **computed from observable
+indicators on a continuous [0,100] scale**, never free-assigned and never bucketed:
 
 ```
-Each indicator has thresholds → classified as:
-  🟢 Green (above threshold_strong) = 100 points
-  🟡 Yellow (between thresholds)    =  65 points
-  🔴 Red    (below threshold_weak)  =  20 points
+Step 1: score each indicator to a continuous [0,100]
+  - if it has enough history (≥ min_history_points): its empirical PERCENTILE within
+    its own value_history (where does today sit vs its past?)
+  - otherwise: a saturating threshold curve — weak→~50, strong→~80, asymptoting to 100
+    far above strong (no hard 100/65/20 jumps)
+  The 🟢/🟡/🔴 colour is now display-only, a label derived FROM the score (not the input).
 
-Step 1: score each indicator semaphore
-Step 2: indicator_avg = mean of all semaphore scores
-Step 3: trend factor from history (last 2 quarters)
-  ↑↑ rising 2+ periods  → × 1.05
-  ↑  rising 1 period    → × 1.02
-  →  flat               → × 1.00
-  ↓  falling 1 period   → × 0.97
-  ↓↓ falling 2+ periods → × 0.93
-Step 4: intensity = round(indicator_avg × trend_factor, 1)
-        capped at [10, 95]
+Step 2: indicator_avg = mean of the continuous indicator scores
+Step 3: trend_delta from recent history (rising adds, falling subtracts)
+Step 4: intensity = round(clamp(indicator_avg + trend_delta, 10, 95), 1)
 ```
 
-Example — `struct_cb_gold_accumulation` (central bank gold buying):
-```
-  WGC quarterly purchases > 200T  → 🟢 100
-  IMF reserve composition shift   → 🟡  65
-  COT managed money net long      → 🟢 100
-  indicator_avg = 88.3
-  history: 79 → 84 (1 period rising) → trend_factor = 1.02
-  intensity = round(88.3 × 1.02, 1) = 90.1
-```
+Indicator `value_history` lives in the parquet lake (`data/lake/indicators/`), externalized from
+the YAMLs. `intensity_engine` reads it to compute the percentile; the YAML keeps only the latest
+value. Run `/catalyx-update` after any indicator change — it recomputes intensity algorithmically.
 
 ---
 
@@ -336,9 +331,10 @@ STEP 3 — /catalyx-sector-study            Bottom-up analysis per sector.
   ▼
 STEP 4 — /catalyx-dashboard               Catalyst-level view.
   │       Catalyst dashboard               Shows all active structural + event
-  │                                        catalysts ranked by display_priority.
-  │                                        display_priority = algorithmic_score
-  │                                                         × user_rank_multiplier
+  │                                        catalysts ranked by algorithmic_score
+  │                                        (the computed intensity). user_rank is
+  │                                        only a tie-breaker among near-equals —
+  │                                        never a score multiplier.
   ▼
 STEP 5 — /catalyx-heatmap                 Sector-level view.
   │       Sector heatmap                   Calls sector_scorer for each sector:
@@ -406,7 +402,7 @@ Claude (interface + intelligence layer)   Python (deterministic backbone)
 ────────────────────────────────────────  ──────────────────────────────────────
 Conversational thesis formulation         Scoring formulas (no session drift)
 News analysis & catalyst detection        Market data fetching (yfinance)
-Assumption critique and discussion        DB reads/writes (SQLAlchemy + SQLite)
+Assumption critique and discussion        File + parquet-lake reads/writes
 Monthly review orchestration              Tax computation (Spanish CGT brackets)
 Qualitative judgment (sector narrative)   Attribution decomposition math
 Narrative maturity classification         Event decay calculation
@@ -435,13 +431,40 @@ Claude reads scores → formats heatmap → adds qualitative analysis
 |---|---|---|
 | `catalyx.data.market_data` | `uv run python -m catalyx.data.market_data` | yfinance ETF prices → momentum snapshot |
 | `catalyx.data.flow_data` | `uv run python -m catalyx.data.flow_data [--write]` | shares_outstanding × NAV → flow_confirmation [0–100] |
-| `catalyx.scorer.intensity_engine` | `uv run python -m catalyx.scorer.intensity_engine --all [--write-back]` | Indicator semaphores → structural catalyst intensity |
+| `catalyx.scorer.intensity_engine` | `uv run python -m catalyx.scorer.intensity_engine --all [--write-back]` | Continuous indicator scores → structural catalyst intensity |
 | `catalyx.scorer.catalyst_scorer` | `uv run python -m catalyx.scorer.catalyst_scorer <sector_id>` | confirms/contradicts/independent formula + decay → catalyst_alignment |
 | `catalyx.scorer.momentum_engine` | `uv run python -m catalyx.scorer.momentum_engine` | Cross-sectional percentile rank → momentum_score |
 | `catalyx.scorer.sector_scorer` | `uv run python -m catalyx.scorer.sector_scorer <sector_id> [--all]` | Full composite score (orchestrates all scorers) |
 | `catalyx.execution.tax_engine` | `uv run python -m catalyx.execution.tax_engine --gain N [--ytd-prior N]` | Spanish CGT 2026 progressive brackets |
+| `catalyx.execution.portfolio` | `uv run python -m catalyx.execution.portfolio build-all` | Model portfolios = (score_run × strategy) → lake `portfolio_holding` |
+| `catalyx.execution.nav_engine` | `uv run python -m catalyx.execution.nav_engine model <strategy> --backtest-days 180` | Buy-and-hold NAV vs SPY (model + real) → "¿batimos mercado?" |
+| `catalyx.execution.trade_logger` | `uv run python -m catalyx.execution.trade_logger log <portfolio_id>` | Real-money trades (thesis+run lineage) → net positions + P&L |
 | `catalyx.attribution.thesis_scorer` | `uv run python -m catalyx.attribution.thesis_scorer <path.json>` | right_reason_score from ClosedThesis |
-| `catalyx.store.catalyst_repo` | `python -m catalyx.store.catalyst_repo summary` | CRUD + summary for CatalystEvent / TaxonomyGapProposal |
+| `catalyx.store.lake` / `lake_query` | `uv run python -m catalyx.store.lake_query ranking` | Parquet lake (Tier 2 truth) + DuckDB read-path |
+| `catalyx.store.snapshot_repo` | `uv run python -m catalyx.store.snapshot_repo record` | Score-run history over the lake (record / history / validate) |
+| `catalyx.store.catalyst_repo` | `python -m catalyx.store.catalyst_repo summary` | File-backed reader/digest for CatalystEvent / TaxonomyGapProposal |
+
+---
+
+## Storage — two tiers, no database
+
+```
+Tier 1 (git, hand-edited)     JSON/YAML documents: catalysts, theses, sector studies,
+                              structural catalysts, configs, schemas, reports. The skill
+                              interface — the *_repo modules read these files directly.
+
+Tier 2 (git, parquet lake)    Computed time-series: momentum/flow snapshots, score runs,
+                              sector snapshots, rank events, indicator history, portfolios.
+                              Append-only, partitioned, committed to git. Queried via DuckDB
+                              (the same SQL runs in DuckDB-WASM in the browser dashboard).
+```
+
+There is **no SQLite / no SQLAlchemy** — it was removed once the parquet lake became the source
+of truth. CATALYX runs permanently as a **skill on the Claude Code session** (its credits +
+WebSearch); it does not host its own LLM, API, or relational DB.
+
+The live dashboard reads the committed lake in-browser via DuckDB-WASM (no backend):
+**https://abetatos.github.io/Catalyx/** (`site/` + `scripts/build_site.py`, deployed by Actions).
 
 ---
 
@@ -503,40 +526,22 @@ Non-EUR ETF returns are converted at the execution-date exchange rate.
 
 ## Roadmap
 
+CATALYX stays a **skill on the Claude Code session — permanently.** It does not evolve into a
+self-hosted LLM/API product: the intelligence is Claude Code (its credits + WebSearch), the
+backbone is deterministic Python over a parquet lake. So there is no Typer-CLI-for-the-user, no
+`anthropic`/`openai` client, no FastAPI, and no Postgres migration on the roadmap.
+
 ```
-Phase 0.5 — Current    Skill-based pipeline. Claude as interface.
-                        Python handles data, storage, market fetching, scoring.
-                        Skills call Python modules. Conversational thesis loop.
+Now (permanent)        Skill-based pipeline. Claude Code as interface + intelligence.
+                        Python: scoring, parquet lake, market fetching, tax, portfolios, NAV.
+                        Live dashboard on GitHub Pages (DuckDB-WASM over the committed lake).
 
-Phase 1 — Next         Full Python CLI via Typer. Alembic migrations.
-                        Every schema object produced and stored.
-                        At least one closed thesis with attribution.
-
-Phase 2 — Planned      APScheduler for entry monitoring (price alerts on thesis entry).
-                        FastAPI layer. Postgres migration (connection-string swap only).
-                        Structural catalyst monitor: flag when indicators cross thresholds.
-
-Phase 3 — Planned      XGBoost on closed thesis data.
-                        Bayesian prior hit rate per catalyst-sector pair.
-                        Catalyst novelty filtering via sentence-transformers embeddings.
-
-Phase 4 — Planned      Historical catalyst reconstruction (GDELT, CFTC COT archive).
-                        Walk-forward validation. Strict no-look-ahead constraint.
+Future (Python only — no DB, no self-hosted LLM)
+                        valuation_engine + return_decomposer (attribution).
+                        ML feedback loop on closed theses (XGBoost / Bayesian priors;
+                          catalyst novelty via local sentence-transformers embeddings).
+                        Backtesting: GDELT / CFTC COT, walk-forward, strict no-look-ahead.
 ```
-
----
-
-## Model versions (pinned — never use aliases)
-
-| Use case | Model ID |
-|---|---|
-| Thesis drafting, deep analysis | `claude-opus-4-8` |
-| Sector scoring rationale, monitoring | `claude-sonnet-4-6` |
-| Bulk news classification | `claude-haiku-4-5-20251001` |
-| OpenAI analysis | `gpt-4o-2024-08-06` |
-| OpenAI bulk classification | `gpt-4o-mini-2024-07-18` |
-
-All LLM calls log: model_id, prompt_tokens, completion_tokens, timestamp, calling_function → `llm_log` table in SQLite.
 
 ---
 

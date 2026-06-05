@@ -1,16 +1,13 @@
-"""Read-replica storage for StructuralCatalyst objects (source of truth: YAML files).
+"""Read/query helpers for StructuralCatalyst objects.
 
-The YAML files in catalyx/config/structural_catalysts/ remain the source of truth.
-This repo imports them into the DB for queryable access from skills.
-
-After any /catalyx-update that modifies a YAML, re-sync with:
-    python -m catalyx.store.structural_catalyst_repo sync
+The YAML files in catalyx/config/structural_catalysts/ are the source of truth (Tier 1).
+This module reads them and prints digests for skill context — there is no database, and
+no sync step: editing the YAML is the only write path.
 
 Callable from skills via:
     python -m catalyx.store.structural_catalyst_repo <command> [args]
 
 Commands:
-    sync [--dir <dir>]  Re-import all YAML files (default: catalyx/config/structural_catalysts)
     summary             Compact summary for Claude context
     get <id>            Print full YAML content as JSON for one record
 """
@@ -22,98 +19,52 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from sqlalchemy import Column, Float, Integer, String, Text
-from sqlalchemy.types import JSON
 
-from .db import Base, get_session, init_db as _init_db
-
-_DEFAULT_YAML_DIR = Path(__file__).parents[2] / "catalyx" / "config" / "structural_catalysts"
+_YAML_DIR = Path(__file__).parents[2] / "catalyx" / "config" / "structural_catalysts"
 
 
-# ── Model ─────────────────────────────────────────────────────────────────────
+# ── File access ───────────────────────────────────────────────────────────────
 
-class StructuralCatalyst(Base):
-    """Read-replica of structural_catalysts/*.yaml. Never write — sync from YAML only."""
-    __tablename__ = "structural_catalysts"
-
-    id = Column(String(80), primary_key=True)       # struct_<keyword>
-    title = Column(String(200))
-    catalyst_type = Column(String(50))
-    status = Column(String(20), nullable=False)     # active | weakening | deactivated
-    intensity_score = Column(Float)                 # intensity.current_score
-    narrative_maturity = Column(String(20))         # ignored | emerging | mainstream | crowded | exhausted
-    user_rank = Column(Integer)
-    raw_data = Column(JSON, nullable=False)         # full parsed YAML as dict
-
-
-# ── Import ────────────────────────────────────────────────────────────────────
-
-def _parse_yaml(path: Path) -> dict[str, Any]:
-    return yaml.safe_load(path.read_text(encoding="utf-8"))
-
-
-def upsert_from_yaml(path: Path) -> str:
-    data = _parse_yaml(path)
-    session = get_session()
-    try:
-        row = session.get(StructuralCatalyst, data["id"]) or StructuralCatalyst()
-        row.id = data["id"]
-        row.title = data.get("title")
-        row.catalyst_type = data.get("catalyst_type")
-        row.status = data.get("status", "active")
-        row.intensity_score = data.get("intensity", {}).get("current_score")
-        row.narrative_maturity = data.get("narrative_maturity")
-        row.user_rank = data.get("user_rank")
-        row.raw_data = data
-        session.merge(row)
-        session.commit()
-        return row.id
-    finally:
-        session.close()
-
-
-def sync_from_directory(directory: Path | None = None) -> int:
-    """Re-import all YAML files. Call after any /catalyx-update."""
-    dir_ = directory or _DEFAULT_YAML_DIR
-    files = list(dir_.glob("*.yaml"))
-    for f in files:
-        upsert_from_yaml(f)
-    return len(files)
+def _load_all() -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    if not _YAML_DIR.exists():
+        return out
+    for f in sorted(_YAML_DIR.glob("*.yaml")):
+        try:
+            data = yaml.safe_load(f.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                out.append(data)
+        except Exception:  # noqa: BLE001
+            continue
+    return out
 
 
 def get_catalyst(id: str) -> dict[str, Any] | None:
-    session = get_session()
-    try:
-        row = session.get(StructuralCatalyst, id)
-        return row.raw_data if row else None
-    finally:
-        session.close()
+    for data in _load_all():
+        if data.get("id") == id:
+            return data
+    return None
 
+
+# ── Summary ───────────────────────────────────────────────────────────────────
 
 def active_summary() -> str:
-    session = get_session()
-    try:
-        rows = (
-            session.query(StructuralCatalyst)
-            .filter(StructuralCatalyst.status != "deactivated")
-            .order_by(StructuralCatalyst.intensity_score.desc())
-            .all()
-        )
-    finally:
-        session.close()
+    rows = [r for r in _load_all() if r.get("status") != "deactivated"]
+    rows.sort(key=lambda r: (r.get("intensity", {}) or {}).get("current_score") or 0, reverse=True)
 
     lines = [f"Structural Catalysts ({len(rows)}):"]
     if rows:
         for r in rows:
-            rank = f"rank={r.user_rank}" if r.user_rank else "unranked"
-            maturity = r.narrative_maturity or "?"
-            intensity = f"{r.intensity_score:.0f}" if r.intensity_score else "?"
+            rank = f"rank={r['user_rank']}" if r.get("user_rank") else "unranked"
+            maturity = r.get("narrative_maturity") or "?"
+            isc = (r.get("intensity", {}) or {}).get("current_score")
+            intensity = f"{isc:.0f}" if isinstance(isc, (int, float)) else "?"
             lines.append(
-                f"  {r.id:<45} intensity={intensity:<6} [{r.status}]  "
+                f"  {r.get('id', '?'):<45} intensity={intensity:<6} [{r.get('status', 'active')}]  "
                 f"{rank}  maturity={maturity}"
             )
-            if r.title:
-                lines.append(f"    -> {r.title}")
+            if r.get("title"):
+                lines.append(f"    -> {r['title']}")
     else:
         lines.append("  (none)")
 
@@ -128,13 +79,10 @@ def _cli() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-    parser = argparse.ArgumentParser(description="Catalyx structural catalyst repository (read-replica)")
+    parser = argparse.ArgumentParser(
+        description="Catalyx structural catalyst reader (file-backed; YAML is the source of truth)"
+    )
     sub = parser.add_subparsers(dest="cmd", required=True)
-
-    sub.add_parser("init")
-
-    p_sync = sub.add_parser("sync", help="Re-import all YAMLs into DB")
-    p_sync.add_argument("--dir", default=None, help="Override YAML directory")
 
     sub.add_parser("summary")
 
@@ -143,14 +91,7 @@ def _cli() -> None:
 
     args = parser.parse_args()
 
-    if args.cmd == "init":
-        _init_db()
-        print("Database initialised.")
-    elif args.cmd == "sync":
-        d = Path(args.dir) if args.dir else None
-        n = sync_from_directory(d)
-        print(f"Synced {n} structural catalyst(s) from YAML.")
-    elif args.cmd == "summary":
+    if args.cmd == "summary":
         print(active_summary())
     elif args.cmd == "get":
         record = get_catalyst(args.id)

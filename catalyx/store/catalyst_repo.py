@@ -1,236 +1,107 @@
-"""Storage and retrieval for CatalystEvent and TaxonomyGapProposal objects.
+"""Read/query helpers for CatalystEvent and TaxonomyGapProposal objects.
+
+The JSON files in data/catalysts/ and data/taxonomy_proposals/ are the source of
+truth (Tier 1). This module just reads them and prints digests for skill context —
+there is no database. Writing the JSON file IS the registration; no import step.
 
 Callable from skills via:
     python -m catalyx.store.catalyst_repo <command> [args]
 
 Commands:
-    init                     Create database tables
-    import-dir <dir>         Import all JSON files from a directory
-    import-file <file>       Import a single JSON file
     summary                  Compact summary for Claude context (active only)
     get <id>                 Print full JSON for one record
-    set-status <id> <status> Update status field
+    set-status <id> <status> Update the status field IN THE JSON FILE
 """
 from __future__ import annotations
 
 import json
 import sys
-from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import Column, Date, Float, Integer, String, Text
-from sqlalchemy.types import JSON
-
-from .db import Base, get_session, init_db as _init_db
-
-
-# ── Models ────────────────────────────────────────────────────────────────────
-
-class CatalystEvent(Base):
-    """Discrete, timestamped macro event. Maps to schemas/catalyst_event.json."""
-    __tablename__ = "catalyst_events"
-
-    id = Column(String(80), primary_key=True)
-    schema_version = Column(String(10), nullable=False)
-    catalyst_type = Column(String(50), nullable=False)
-    catalyst_subtype = Column(String(50))
-    description = Column(Text, nullable=False)
-    magnitude = Column(String(20))
-    strength_score = Column(Float)
-    novelty_score = Column(Integer)
-    consensus_surprise = Column(Float)
-    is_priced_in_estimate = Column(Float)
-    relation_to_structural = Column(String(20))
-    status = Column(String(20), nullable=False, default="active")
-    geography = Column(JSON)
-    tags = Column(JSON)
-    related_catalyst_ids = Column(JSON)
-    created_at = Column(String(30))   # ISO 8601 string — timezone-aware, no SQLite datetime quirks
-    detected_at = Column(String(30))
-    expires_at = Column(Date)
-    decay_halflife_days = Column(Float)
-    user_rank = Column(Integer)
-    user_notes = Column(Text)
-    raw_data = Column(JSON, nullable=False)  # full original JSON — source of truth for round-trips
+_REPO_ROOT = Path(__file__).parents[2]
+_CATALYSTS_DIR = _REPO_ROOT / "data" / "catalysts"
+_GAPS_DIR = _REPO_ROOT / "data" / "taxonomy_proposals"
 
 
-class TaxonomyGapProposal(Base):
-    """Emerging theme not yet in sector_taxonomy.yaml. Maps to schemas/taxonomy_gap_proposal.json."""
-    __tablename__ = "taxonomy_gap_proposals"
+# ── File access ───────────────────────────────────────────────────────────────
 
-    id = Column(String(80), primary_key=True)
-    schema_version = Column(String(10), nullable=False)
-    status = Column(String(30), nullable=False)
-    first_detected = Column(Date, nullable=False)
-    last_seen = Column(Date)
-    signal_count = Column(Integer, nullable=False, default=1)
-    label_inferred = Column(String(200))
-    parent_sector_inferred = Column(String(50))
-    investability_assessment = Column(String(50))
-    proposed_sector_id = Column(String(80))
-    promoted_date = Column(Date)
-    rejection_reason = Column(Text)
-    evidence = Column(JSON)           # array — queryable detail lives in raw_data
-    raw_data = Column(JSON, nullable=False)
+def _load_dir(directory: Path) -> list[dict[str, Any]]:
+    """Parse every *.json in a directory. Skips unparseable files."""
+    out: list[dict[str, Any]] = []
+    if not directory.exists():
+        return out
+    for f in sorted(directory.glob("*.json")):
+        try:
+            out.append(json.loads(f.read_text(encoding="utf-8")))
+        except Exception:  # noqa: BLE001 — a malformed file shouldn't break the digest
+            continue
+    return out
 
 
-# ── CRUD ──────────────────────────────────────────────────────────────────────
-
-def upsert_catalyst(data: dict[str, Any]) -> CatalystEvent:
-    """Insert or replace a CatalystEvent from its JSON dict."""
-    session = get_session()
-    try:
-        row = session.get(CatalystEvent, data["id"]) or CatalystEvent()
-        row.id = data["id"]
-        row.schema_version = data.get("schema_version", "1.1")
-        row.catalyst_type = data["catalyst_type"]
-        row.catalyst_subtype = data.get("catalyst_subtype")
-        row.description = data["description"]
-        row.magnitude = data.get("magnitude")
-        row.strength_score = data.get("strength_score")
-        row.novelty_score = data.get("novelty_score")
-        row.consensus_surprise = data.get("consensus_surprise")
-        row.is_priced_in_estimate = data.get("is_priced_in_estimate")
-        row.relation_to_structural = data.get("relation_to_structural")
-        row.status = data.get("status", "active")
-        row.geography = data.get("geography", [])
-        row.tags = data.get("tags", [])
-        row.related_catalyst_ids = data.get("related_catalyst_ids", [])
-        row.created_at = data.get("created_at")
-        row.detected_at = data.get("detected_at")
-        row.decay_halflife_days = data.get("decay_halflife_days")
-        row.user_rank = data.get("user_rank")
-        row.user_notes = data.get("user_notes")
-        row.raw_data = data
-
-        if expires := data.get("expires_at"):
-            row.expires_at = date.fromisoformat(expires) if isinstance(expires, str) else expires
-
-        session.merge(row)
-        session.commit()
-        return row
-    finally:
-        session.close()
-
-
-def upsert_gap(data: dict[str, Any]) -> TaxonomyGapProposal:
-    """Insert or replace a TaxonomyGapProposal from its JSON dict."""
-    session = get_session()
-    try:
-        row = session.get(TaxonomyGapProposal, data["id"]) or TaxonomyGapProposal()
-        row.id = data["id"]
-        row.schema_version = data.get("schema_version", "1.0")
-        row.status = data["status"]
-        row.signal_count = data.get("signal_count", 1)
-        row.label_inferred = data.get("label_inferred")
-        row.parent_sector_inferred = data.get("parent_sector_inferred")
-        row.investability_assessment = data.get("investability_assessment")
-        row.proposed_sector_id = data.get("proposed_sector_id")
-        row.rejection_reason = data.get("rejection_reason")
-        row.evidence = data.get("evidence", [])
-        row.raw_data = data
-
-        row.first_detected = date.fromisoformat(data["first_detected"])
-        if last := data.get("last_seen"):
-            row.last_seen = date.fromisoformat(last)
-        if promoted := data.get("promoted_date"):
-            row.promoted_date = date.fromisoformat(promoted)
-
-        session.merge(row)
-        session.commit()
-        return row
-    finally:
-        session.close()
-
-
-def upsert_from_json_file(path: Path) -> str:
-    """Import a single JSON file. Returns the record id."""
-    data = json.loads(path.read_text(encoding="utf-8"))
-    record_id: str = data["id"]
-    if record_id.startswith("cat_"):
-        upsert_catalyst(data)
-    elif record_id.startswith("gap_"):
-        upsert_gap(data)
-    else:
-        raise ValueError(f"Unrecognised ID prefix in {path}: {record_id}")
-    return record_id
-
-
-def import_from_directory(directory: Path) -> int:
-    """Import all *.json files from a directory. Returns count imported."""
-    files = list(directory.glob("*.json"))
-    for f in files:
-        upsert_from_json_file(f)
-    return len(files)
+def _find_file(record_id: str) -> Path | None:
+    """Locate the JSON file backing a record id (by filename, then by `id` field)."""
+    for directory in (_CATALYSTS_DIR, _GAPS_DIR):
+        direct = directory / f"{record_id}.json"
+        if direct.exists():
+            return direct
+    for directory in (_CATALYSTS_DIR, _GAPS_DIR):
+        for f in directory.glob("*.json") if directory.exists() else []:
+            try:
+                if json.loads(f.read_text(encoding="utf-8")).get("id") == record_id:
+                    return f
+            except Exception:  # noqa: BLE001
+                continue
+    return None
 
 
 def get_catalyst(id: str) -> dict[str, Any] | None:
-    session = get_session()
-    try:
-        row = session.get(CatalystEvent, id)
-        return row.raw_data if row else None
-    finally:
-        session.close()
+    for data in _load_dir(_CATALYSTS_DIR):
+        if data.get("id") == id:
+            return data
+    return None
 
 
 def get_gap(id: str) -> dict[str, Any] | None:
-    session = get_session()
-    try:
-        row = session.get(TaxonomyGapProposal, id)
-        return row.raw_data if row else None
-    finally:
-        session.close()
+    for data in _load_dir(_GAPS_DIR):
+        if data.get("id") == id:
+            return data
+    return None
 
 
 def set_status(id: str, status: str) -> bool:
-    """Update status on a CatalystEvent or TaxonomyGapProposal. Returns True if found."""
-    session = get_session()
-    try:
-        row = session.get(CatalystEvent, id) or session.get(TaxonomyGapProposal, id)
-        if row is None:
-            return False
-        row.status = status
-        row.raw_data = {**row.raw_data, "status": status}
-        session.commit()
-        return True
-    finally:
-        session.close()
+    """Update the status field in the JSON file on disk. Returns True if found."""
+    path = _find_file(id)
+    if path is None:
+        return False
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["status"] = status
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return True
 
+
+# ── Summary ───────────────────────────────────────────────────────────────────
 
 def active_summary() -> str:
-    """Compact summary of active records for Claude context consumption.
-
-    Designed to replace reading N JSON files in skill context: one call returns
-    a ~30-token-per-row digest instead of ~150 tokens per file.
-    """
-    session = get_session()
-    try:
-        catalysts = (
-            session.query(CatalystEvent)
-            .filter(CatalystEvent.status == "active")
-            .order_by(CatalystEvent.strength_score.desc())
-            .all()
-        )
-        gaps = (
-            session.query(TaxonomyGapProposal)
-            .filter(TaxonomyGapProposal.status.notin_(["promoted", "rejected"]))
-            .order_by(TaxonomyGapProposal.first_detected.desc())
-            .all()
-        )
-    finally:
-        session.close()
+    """Compact summary of active records for Claude context consumption."""
+    catalysts = [c for c in _load_dir(_CATALYSTS_DIR) if c.get("status", "active") == "active"]
+    catalysts.sort(key=lambda c: c.get("strength_score") or 0, reverse=True)
+    gaps = [g for g in _load_dir(_GAPS_DIR) if g.get("status") not in ("promoted", "rejected")]
+    gaps.sort(key=lambda g: g.get("first_detected") or "", reverse=True)
 
     lines: list[str] = []
 
     lines.append(f"Active CatalystEvents ({len(catalysts)}):")
     if catalysts:
         for c in catalysts:
-            priced = f"priced_in={c.is_priced_in_estimate:.2f}" if c.is_priced_in_estimate is not None else "priced_in=?"
-            strength = f"strength={c.strength_score:.0f}" if c.strength_score else "strength=?"
+            pi = c.get("is_priced_in_estimate")
+            priced = f"priced_in={pi:.2f}" if isinstance(pi, (int, float)) else "priced_in=?"
+            ss = c.get("strength_score")
+            strength = f"strength={ss:.0f}" if isinstance(ss, (int, float)) else "strength=?"
+            subtype = c.get("catalyst_subtype") or "?"
             lines.append(
-                f"  {c.id:<45} {c.catalyst_type}/{c.catalyst_subtype or '?':<35} "
-                f"{strength}  {priced}  [{c.status}]"
+                f"  {c.get('id', '?'):<45} {c.get('catalyst_type', '?')}/{subtype:<35} "
+                f"{strength}  {priced}  [{c.get('status', 'active')}]"
             )
     else:
         lines.append("  (none)")
@@ -239,14 +110,14 @@ def active_summary() -> str:
     lines.append(f"Taxonomy gap proposals ({len(gaps)}):")
     if gaps:
         for g in gaps:
-            etf = g.raw_data.get("etf_candidates", {})
+            etf = g.get("etf_candidates", {}) or {}
             etf_note = etf.get("pure_play_ticker") or "no pure-play ETF"
             lines.append(
-                f"  {g.id:<45} [{g.status}]  signals={g.signal_count}"
-                f"  first={g.first_detected}  ETF: {etf_note}"
+                f"  {g.get('id', '?'):<45} [{g.get('status', '?')}]  signals={g.get('signal_count', 1)}"
+                f"  first={g.get('first_detected', '?')}  ETF: {etf_note}"
             )
-            if g.label_inferred:
-                lines.append(f"    -> {g.label_inferred}")
+            if g.get("label_inferred"):
+                lines.append(f"    -> {g['label_inferred']}")
     else:
         lines.append("  (none)")
 
@@ -263,43 +134,23 @@ def _cli() -> None:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
     parser = argparse.ArgumentParser(
-        description="Catalyx catalyst repository — callable from skills",
+        description="Catalyx catalyst reader (file-backed; JSON is the source of truth)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     sub = parser.add_subparsers(dest="cmd", required=True)
-
-    sub.add_parser("init", help="Create database tables")
-
-    p_dir = sub.add_parser("import-dir", help="Import all JSON files from a directory")
-    p_dir.add_argument("directory", help="Path to directory containing JSON files")
-
-    p_file = sub.add_parser("import-file", help="Import a single JSON file")
-    p_file.add_argument("file", help="Path to JSON file")
 
     sub.add_parser("summary", help="Print compact active-record summary (for Claude context)")
 
     p_get = sub.add_parser("get", help="Print full JSON for one record by ID")
     p_get.add_argument("id")
 
-    p_status = sub.add_parser("set-status", help="Update status field on a record")
+    p_status = sub.add_parser("set-status", help="Update status field in the JSON file")
     p_status.add_argument("id")
     p_status.add_argument("status")
 
     args = parser.parse_args()
 
-    if args.cmd == "init":
-        _init_db()
-        print("Database initialised.")
-
-    elif args.cmd == "import-dir":
-        n = import_from_directory(Path(args.directory))
-        print(f"Imported {n} file(s) from {args.directory}")
-
-    elif args.cmd == "import-file":
-        record_id = upsert_from_json_file(Path(args.file))
-        print(f"Imported: {record_id}")
-
-    elif args.cmd == "summary":
+    if args.cmd == "summary":
         print(active_summary())
 
     elif args.cmd == "get":
@@ -313,7 +164,7 @@ def _cli() -> None:
         if not set_status(args.id, args.status):
             print(f"Not found: {args.id}", file=sys.stderr)
             sys.exit(1)
-        print(f"Updated {args.id} → status={args.status}")
+        print(f"Updated {args.id} -> status={args.status}")
 
 
 if __name__ == "__main__":

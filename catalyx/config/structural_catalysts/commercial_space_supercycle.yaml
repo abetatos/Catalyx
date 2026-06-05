@@ -1,12 +1,12 @@
-# StructuralCatalyst: Commercial Space Revenue Supercycle
-# schema_version: "1.3"
-# Update indicators: monthly (Starlink subscriber data, ETF flows) + quarterly (earnings: RKLB, PL, SpaceX post-IPO)
-#
-# Granularity note: DISTINCT from struct_nato_rearmament.
-# commercial_space is driven by private-sector subscription economics, launch unit cost curves,
-# and SpaceX IPO-driven institutional capital formation — NOT government defense program cycles.
-# space_defense_satellite (fed by struct_nato_rearmament) is driven by DoD/USSF appropriations,
-# SDA constellation contracts, and classified program awards. Revenue mechanisms are orthogonal.
+# StructuralCatalyst: Commercial Space Revenue Supercycle
+# schema_version: "1.3"
+# Update indicators: monthly (Starlink subscriber data, ETF flows) + quarterly (earnings: RKLB, PL, SpaceX post-IPO)
+#
+# Granularity note: DISTINCT from struct_nato_rearmament.
+# commercial_space is driven by private-sector subscription economics, launch unit cost curves,
+# and SpaceX IPO-driven institutional capital formation — NOT government defense program cycles.
+# space_defense_satellite (fed by struct_nato_rearmament) is driven by DoD/USSF appropriations,
+# SDA constellation contracts, and classified program awards. Revenue mechanisms are orthogonal.
 
 id: struct_commercial_space_supercycle
 type: structural
@@ -46,8 +46,7 @@ catalyst_type: technology_adoption
 catalyst_subtype: commercial_space_revenue_maturation
 geography: [US, GLOBAL, EU, APAC]
 thematic_tags: [commercial_space, satellite_broadband, launch_economy, spacex_ipo, earth_observation, newspace]
-
-user_rank: null
+user_rank:
 user_notes: >
   First commercial space structural catalyst in the system. ETF compliance constraint: no UCITS
   pure-play space ETF available as of June 2026 — UFO and ROKT are US-listed non-UCITS only.
@@ -58,8 +57,8 @@ user_notes: >
   months if SpaceX IPO generates sustained institutional analyst coverage.
 
 intensity:
-  current_score: 82.0
-  computation_method: bootstrap
+  current_score: 86.7
+  computation_method: computed
   computation_note: >
     Bootstrap 2026-06-05. Three indicators: ind_01 (Starlink subscribers 10M vs strong=8M),
     ind_02 (SpaceX launch cadence 140-156/yr vs strong=100), ind_03 (commercial space backlog
@@ -77,6 +76,10 @@ intensity:
     formula's 92.9 output. Run intensity_engine --write-back after first quarterly data update.
   last_updated: "2026-06-05"
   history:
+  - period: '2026-06-05'
+    score: 86.7
+    note: 'Computed 2026-06-05: avg=86.67 trend=→ (flat — insufficient history) (was 82.0)'
+    computation_method: computed
   - period: "2026-Q2"
     score: 82.0
     note: >
@@ -87,7 +90,6 @@ intensity:
     computation_method: bootstrap
 
 narrative_maturity: "emerging"
-
 indicators:
 - id: ind_01
   name: "Starlink active subscribers (millions)"
@@ -114,8 +116,8 @@ indicators:
     value: 4.0
   - date: "2025-12-01"
     value: 9.0
-  score: null
-  semaphore: null
+  score: 85.9
+  semaphore: 🟢
 
 - id: ind_02
   name: "SpaceX annual Falcon 9 / commercial orbital launch cadence (annualized)"
@@ -128,7 +130,7 @@ indicators:
   threshold_strong: 100
   threshold_weak: 60
   last_value: 130
-  last_date: "2025-12-31"
+  last_date: "2026-06-04"
   update_note: >
     66 Falcon launches through June 4 2026; annualized pace ~148-156/yr (Shotwell guided
     "140-145 ish"). 2025 actual: 165 launches. Each incremental launch deepens SpaceX's
@@ -146,8 +148,8 @@ indicators:
     value: 134
   - date: "2025-12-31"
     value: 165
-  score: null
-  semaphore: null
+  score: 75.0
+  semaphore: 🟡
 
 - id: ind_03
   name: "Commercial space sector aggregate backlog (USD billions, NOAA Office of Space Commerce)"
@@ -160,7 +162,7 @@ indicators:
   threshold_strong: 300
   threshold_weak: 150
   last_value: 380
-  last_date: "2025-12-31"
+  last_date: "2026-06-01"
   update_note: >
     Commercial space backlog crossed $500B in June 2026 (NOAA / 24/7 Wall St., 2026-06-01).
     Spans satellite operators, launch providers, and EO companies with multi-year order books.
@@ -174,8 +176,8 @@ indicators:
     value: 320
   - date: "2025-12-31"
     value: 380
-  score: null
-  semaphore: null
+  score: 92.1
+  semaphore: 🟢
 
 - id: ind_04
   name: "UFO ETF AUM (USD millions) — proxy for institutional capital formation in commercial space"
@@ -188,7 +190,7 @@ indicators:
   threshold_strong: 500
   threshold_weak: 200
   last_value: 376
-  last_date: "2026-04-30"
+  last_date: "2026-05-31"
   update_note: >
     UFO crossed $1B AUM in late May 2026, driven by SpaceX IPO pre-positioning. NASA ETF
     (TEMA) launched March 2026 and crossed $2.58B in 37 trading days — fastest ETF
@@ -204,8 +206,8 @@ indicators:
     value: 250
   - date: "2026-03-31"
     value: 376
-  score: null
-  semaphore: null
+  score: 93.7
+  semaphore: 🟢
 
 deactivation_conditions:
 - id: deact_01
@@ -234,8 +236,8 @@ deactivation_conditions:
 
 linked_event_catalyst_ids: []
 linked_structural_catalyst_ids:
-- struct_ai_capex_supercycle    # AI capex drives data relay satellite demand + SpaceX Starlink enterprise contracts
-- struct_nato_rearmament        # NATO rearmament drives EO analytics demand for Planet Labs / Maxar; dual-use overlap
+- struct_ai_capex_supercycle    # AI capex drives data relay satellite demand + SpaceX Starlink enterprise contracts
+- struct_nato_rearmament        # NATO rearmament drives EO analytics demand for Planet Labs / Maxar; dual-use overlap
 
 status: active
 status_last_reviewed: "2026-06-05"

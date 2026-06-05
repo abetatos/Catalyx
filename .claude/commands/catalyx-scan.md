@@ -7,16 +7,6 @@ Scan for macro catalysts and emerging investment themes. Runs two sequential pas
 
 ---
 
-## Step 0 — Rebuild DB index
-
-```
-uv run python -c "from catalyx.store import init_all; init_all()"
-```
-
-This imports all JSON files written since the last session into the DB. Takes <1 second. Always run first.
-
----
-
 ## Pass 1 — Discovery Pass
 
 **Goal:** Find investment themes the taxonomy doesn't know about yet. No taxonomy file is read in this pass.
@@ -88,7 +78,7 @@ Read config files (source of truth):
 - `catalyx/config/catalyst_taxonomy.yaml` — valid catalyst_type and catalyst_subtype values
 - `catalyx/config/sector_taxonomy.yaml` — sector IDs for tagging
 
-Load runtime data from DB (replaces reading individual JSON/YAML files):
+Load runtime data via the repo summaries (one digest instead of reading individual JSON/YAML files):
 ```
 uv run python -m catalyx.store.catalyst_repo summary
 uv run python -m catalyx.store.structural_catalyst_repo summary
@@ -139,15 +129,8 @@ Only create a CatalystEvent file if `strength_score ≥ 55`. Below that, mention
 
 For each qualifying event, write to `data/catalysts/cat_YYYYMMDD_<keyword>.json` following `schemas/catalyst_event.json`. Set `status: "active"`.
 
-After writing each file, import it into the DB immediately so it is queryable within this session:
-```
-uv run python -m catalyx.store.catalyst_repo import-file data/catalysts/<filename>.json
-```
-
-Similarly for any TaxonomyGapProposal written in Pass 1:
-```
-uv run python -m catalyx.store.catalyst_repo import-file data/taxonomy_proposals/<filename>.json
-```
+The JSON file IS the registration — `catalyst_repo summary` / `get` read `data/catalysts/` and
+`data/taxonomy_proposals/` directly, so a file written this session is queryable immediately. No import step.
 
 ---
 

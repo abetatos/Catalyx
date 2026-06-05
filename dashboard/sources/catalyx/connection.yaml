@@ -1,7 +1,0 @@
-name: catalyx
-type: duckdb
-# In-memory DuckDB. Each .sql file in this folder becomes a queryable table
-# `catalyx.<filename>`, populated from the parquet exported by:
-#   uv run python -m catalyx.store.snapshot_repo export
-options:
-  filename: ":memory:"

@@ -1,9 +1,9 @@
 """Parquet data lake — the durable, append-only source of truth (Tier 2).
 
 This is the primitive every time-series / computed-numeric table is built on. It
-replaces the old model where SQLite was the truth and parquet a throwaway export
-(see docs/PLAN_lake_dvc_serving.md). Now: parquet IS the truth, committed to git;
-SQLite becomes a rebuildable query cache (Tier 3).
+replaced the old model where SQLite was the truth and parquet a throwaway export
+(see docs/PLAN_lake_dvc_serving.md). Now: parquet IS the truth, committed to git.
+SQLite has been removed entirely — the lake is the only persistent store.
 
 Physical model — one logical table = a folder of partition files:
 
@@ -169,7 +169,7 @@ def connect(lake_dir: Path | None = None):
 # ── Seed from the legacy data/history exports ────────────────────────────────
 
 def seed_from_history(lake_dir: Path | None = None) -> dict[str, int]:
-    """One-off: migrate the flat data/history/*.parquet (SQLite exports) into the
+    """One-off: migrate the legacy flat data/history/*.parquet exports into the
     partitioned lake. Split the run-keyed tables by run_id. Idempotent (overwrite)."""
     written: dict[str, int] = {}
     for name in ("score_run", "sector_snapshot", "rank_event", "report"):

@@ -48,13 +48,17 @@ user_notes: >
   hits copper disproportionately vs the distributed EV demand story.
 
 intensity:
-  current_score: 83.9
+  current_score: 75.9
   computation_method: "computed"
   computation_note: "Recomputed 2026-06-03 from indicator semaphores: ind_01=🟢(100), ind_02=🟢(100), ind_03=🟢(100), ind_04=🟢(100)
     → avg=100; trend ↑ (68→76→87) → factor=1.02; capped at 95. Override to 87 reflecting genuine strength without hitting
     ceiling. WebSearch confirmed: hyperscaler capex $700B combined 2026, LME copper $13,965/tonne."
-  last_updated: "2026-06-04"
+  last_updated: "2026-06-05"
   history:
+  - period: '2026-06-05'
+    score: 75.9
+    note: 'Computed 2026-06-05: avg=78.92 trend=↓ (falling 1 period) (was 83.9)'
+    computation_method: computed
   - period: 2026-Q2
     score: 83.9
     note: 'Computed 2026-06-04: avg=78.92 trend=↑↑ (rising 2+ consecutive) (was 95.0)'

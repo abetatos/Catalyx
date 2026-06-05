@@ -10,33 +10,36 @@ The order below is mandatory. Each step provides data that the next step require
 Do NOT run heatmap before sector studies. Do NOT run thesis review before the dashboard.
 
 ```
-Step 0:  Macro & Geopolitical Context (WebSearch — always first)
-Step 1:  Catalyst Scan (Pass 1: Discovery → gaps | Pass 2: Classification → events)
-Step 2:  Structural Catalyst Updates → refresh stale indicators
-Step 3:  Sector Studies → refresh priority sectors (BEFORE heatmap)
-Step 4:  Catalyst Dashboard
-Step 5:  Sector Heatmap (requires updated sector studies)
-Step 6:  Open Thesis Reviews
-Step 7:  Portfolio Correlation Check  ← MUST run before any thesis draft decision
-Step 8:  Tax Snapshot
-Step 9:  Thesis Draft Decision  ← uses Step 5 heatmap + Step 6 reviews + Step 7 correlation
-Step 10: Stale Indicators Check
-Step 11: Watch-Only Trigger Progress
-Step 12: Taxonomy Gap Review → contextualize each pending proposal, then ASK the user (promote/reject/defer)
+Step 0:   Macro & Geopolitical Context (WebSearch — always first)
+Step 1:   Catalyst Scan (Pass 1: Discovery → gaps | Pass 2: Classification → events)
+Step 1.5: Freshness & Lifecycle GATE (stale-indicator audit + catalyst lifecycle)  ← BEFORE scoring
+Step 2:   Structural Catalyst Updates → refresh the indicators flagged stale in 1.5
+Step 3:   Sector Studies → refresh priority sectors (BEFORE heatmap)
+Step 4:   Catalyst Dashboard
+Step 5:   Sector Heatmap (requires updated sector studies)
+Step 6:   Open Thesis Reviews
+Step 7:   Portfolio Correlation Check  ← MUST run before any thesis draft decision
+Step 8:   Tax Snapshot
+Step 9:   Thesis Draft Decision  ← uses Step 5 heatmap + Step 6 reviews + Step 7 correlation
+Step 11:  Watch-Only Trigger Progress
+Step 12:  Taxonomy Gap Review → contextualize each pending proposal, then ASK the user (promote/reject/defer)
 ```
+
+> **Why 1.5 runs BEFORE scoring (fixed 2026-06-05):** the stale-indicator audit and the
+> catalyst lifecycle (archive spent / dormant weak catalysts) were previously Step 10 — AFTER
+> the heatmap recorded the run. That meant the run scored `catalyst_alignment` on un-pruned,
+> stale catalyst state (e.g. sectors ranking top-10 on indicators 100–500 days old, or a
+> fully-priced-in event still contributing near-full strength). Freshness must GATE the
+> scoring, not trail it: prune/refresh first, then score on clean state. The old "Step 10"
+> body now lives under the "Step 1.5" heading below.
 
 ---
 
 ## Steps
 
-### Step 0 — DB Rebuild + Macro & Geopolitical Context
+### Step 0 — Macro & Geopolitical Context
 
-First, rebuild the DB index from all JSON files written since the last session:
-```
-uv run python -c "from catalyx.store import init_all; init_all()"
-```
-
-Then run WebSearch for macro context (BEFORE reading any YAML files):
+Run WebSearch for macro context (BEFORE reading any YAML files):
 
 Run these WebSearch queries BEFORE reading any YAML or JSON files. The project files contain
 data from last month — the web searches establish what is TRUE TODAY.
@@ -107,13 +110,10 @@ sectors without a structural catalyst — uranium, silver, lithium, etc. — are
 old (already fresh this cycle). Study everything else. This naturally rotates coverage and
 avoids paying to re-study a sector analyzed days ago.
 
-Build the work list:
-```
-uv run python -c "from catalyx.store import init_all; init_all()"
-```
-Then list investable sectors and their study freshness:
+Build the work list — list investable sectors and their study freshness:
 ```
 uv run python -m catalyx.scorer.sector_scorer --universe --json   # gives the full investable sector_id list
+uv run python -m catalyx.store.sector_study_repo stale --days 7    # which studies are stale/missing
 ```
 For each investable sector_id whose study is missing or > 7 days old, run a sector study.
 
@@ -123,13 +123,9 @@ them out across background subagents (Agent tool, `subagent_type: general-purpos
 follow `.claude/commands/catalyx-sector-study.md` for its assigned sector(s) and Write the
 JSON to `data/sector_studies/study_<sector_id>.json`.
 
-> ⚠ **Subagents cannot run shell commands** (Bash/PowerShell are blocked in subagent
-> sessions). They Write the study JSON fine, but the DB import (`sector_study_repo
-> import-file`) must be run from THIS session. After all agents finish, batch-import:
-> ```
-> uv run python -m catalyx.store.sector_study_repo import-dir data/sector_studies
-> ```
-> (Use `import-dir` if available; otherwise loop `import-file` over each new study.)
+> Subagents Write the study JSON directly into `data/sector_studies/`. That file IS the
+> registration — `sector_study_repo summary`/`get`/`stale` read the directory directly, so no
+> import step is needed (there is no database).
 
 **Cost note:** a single sonnet sector study runs ≈ 45–50k tokens / 6 WebSearches /
 ~3–3.5 min wall-clock. Studying the full ~46-sector universe is a material spend — fan out
@@ -210,11 +206,8 @@ uv run python -m catalyx.store.thesis_repo summary
 uv run python -m catalyx.store.thesis_repo tax-snapshot
 ```
 
-If the DB is not current (new closed theses written this session):
-```
-uv run python -m catalyx.store.thesis_repo import-dir data/theses
-uv run python -m catalyx.store.thesis_repo tax-snapshot
-```
+`tax-snapshot` reads the closed-thesis JSON in `data/theses/` directly, so any file written this
+session is already included — no import step.
 
 Show: total realized gains, tax paid YTD, current marginal bracket, estimated full-year tax if open theses close at current mark-to-market.
 If no closed theses: state YTD gains = 0.
@@ -245,19 +238,38 @@ After presenting all context blocks, use the **AskUserQuestion** tool — one qu
 
 ---
 
-### Step 10 — Catalyst Lifecycle (stale indicators + auto-deprecation)
+### Step 1.5 — Freshness & Lifecycle GATE (stale indicators + auto-deprecation)
+
+> **Runs BEFORE scoring (was Step 10).** This is the freshness gate: audit + prune the
+> catalyst state HERE so Steps 2–5 score on clean data. Stale-flagged indicators feed
+> straight into Step 2 (refresh them); archived/dormant catalysts drop out of
+> `catalyst_alignment` before the heatmap/run in Step 5 is recorded. Running this after the
+> run (the old order) baked stale/spent catalysts into the recorded scores.
 
 Read `catalyst_lifecycle` from `scoring_weights.yaml` for the thresholds and `governance` mode.
 
-**10a. Stale indicators.** For each structural catalyst, for each indicator:
-- Compute: days since `last_date` vs `check_frequency`
-- Flag if overdue: daily > 3 days, weekly > 10 days, monthly > 40 days, quarterly > 95 days
-- List all overdue in a single table (this step catches what Step 2 might have missed)
+**1.5a. Stale indicators.** Run the deterministic audit (do NOT eyeball dates):
+```
+uv run python -m catalyx.scorer.freshness          # pretty table of overdue indicators
+uv run python -m catalyx.scorer.freshness --json   # machine-readable list for Step 2
+```
+It computes days-since-`last_date` against the indicator's **native cadence** — thresholds:
+daily > 3, weekly > 10, monthly > 40, quarterly > 95, **semiannual > 200, annual > 400**. The
+annual/semiannual tiers exist because indicators sourced from annual reports (Gartner, IBM
+X-Force, BloombergNEF, NATO annual report) legitimately print one value per year — auditing them
+at the quarterly 95-day threshold flags them ~9 months early (false positive, fixed 2026-06-05).
 
-**10b. Auto-deprecation (governance: "auto" → apply + log; "ask" → prompt per transition).**
+- `check_frequency` is the single source of truth for cadence. A row marked `⚠mislabel`
+  (cadence not in the tier list) means the YAML's `check_frequency` is wrong — **fix the YAML**.
+- `last_date` = the date the `current_value` was observed (the data-point date from the
+  `update_note`), NOT the date of the previous value in `value_history`. A current value entered
+  with a stale `last_date` is the other false-positive source — fix it when you spot it.
+- **Feed every overdue row into Step 2** — it is a refresh target before scoring.
+
+**1.5b. Auto-deprecation (governance: "auto" → apply + log; "ask" → prompt per transition).**
 History is NEVER deleted — only the `status` field flips. Evaluate every active catalyst:
 
-- **Event → `archived`:** if `strength_decayed < event_archive_strength_below` AND `priced_in ≥ event_archive_priced_in_min`. The event is spent and fully absorbed.
+- **Event → `archived`:** if `strength_decayed < event_archive_strength_below` AND `priced_in ≥ event_archive_priced_in_min`. The event is spent and fully absorbed. `strength_decayed` comes from `catalyst_scorer._decayed_strength`, which (fixed 2026-06-05) anchors decay on the event's OCCURRENCE date (`event_date` → date parsed from the `cat_YYYYMMDD_…` id → `detected_at` fallback), not on when we registered it — so late-registered events decay from when they actually happened.
 - **Event → `invalidated`:** if Step 0/1 found the event reversed (policy walked back). Set `invalidation_reason`. Immediate, regardless of decay.
 - **Structural → `dormant`:** if `intensity.current_score < structural_dormant_intensity_below` for `structural_dormant_consecutive_cycles` consecutive reviews, OR `narrative_maturity == "exhausted"`. Reactivatable — if indicators repoint above threshold next cycle, flip back to `active`.
 - **Event → promote to structural:** if the same event has been re-detected for `event_promote_to_structural_cycles` consecutive cycles and is not decaying (the underlying is ongoing) → draft a structural catalyst from it.
@@ -278,7 +290,7 @@ For each sector with `watch_only: true`:
 
 ### Step 12 — Taxonomy Gap Review
 
-Load all gap proposals from DB:
+Load all gap proposals (file-backed reads):
 ```
 uv run python -m catalyx.store.catalyst_repo summary
 ```

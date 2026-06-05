@@ -6,18 +6,13 @@ Usage: `/catalyx-sector-study <sector_id>`
 
 ## Steps
 
-0. Rebuild DB index:
-   ```
-   uv run python -c "from catalyx.store import init_all; init_all()"
-   ```
-
 1. Read config files:
    - `CLAUDE.md` — sector_id validation rules
    - `schemas/sector_study.json` — all required fields
    - `catalyx/config/sector_taxonomy.yaml` — entry for `<sector_id>`
    - `catalyx/config/etf_universe.yaml` — ETF entries for `<sector_id>`
 
-   Load runtime data from DB:
+   Load runtime data via the repo readers:
    ```
    uv run python -m catalyx.store.structural_catalyst_repo summary
    uv run python -m catalyx.store.sector_study_repo get study_<sector_id>
@@ -52,12 +47,8 @@ Usage: `/catalyx-sector-study <sector_id>`
 
 8. If updating an existing study: preserve `created_at`, update `last_updated` to today. Only overwrite fields that have changed.
 
-9. Import the study into the DB so it is queryable within this session:
-   ```
-   uv run python -m catalyx.store.sector_study_repo import-file data/sector_studies/study_<sector_id>.json
-   ```
-
 9. After writing, print a one-paragraph summary: sector position in cycle, strongest active catalyst, most important risk, best ETF vehicle.
+   (The written JSON is the source of truth — `sector_study_repo summary`/`get`/`stale` read `data/sector_studies/` directly. No import step.)
 
 ## Rules
 

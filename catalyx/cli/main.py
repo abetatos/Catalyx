@@ -24,7 +24,8 @@ _MODULE_CLIS: list[tuple[str, str]] = [
     ("catalyx.scorer.sector_scorer", "Composite SectorSnapshot score (orchestrator)"),
     ("catalyx.execution.tax_engine", "Spanish CGT 2026 progressive brackets"),
     ("catalyx.attribution.thesis_scorer", "right_reason_score from a ClosedThesis"),
-    ("catalyx.store.catalyst_repo", "Catalyst / taxonomy-gap DB CRUD (summary, init)"),
+    ("catalyx.store.catalyst_repo", "Catalyst / taxonomy-gap reader (summary, get, set-status)"),
+    ("catalyx.store.snapshot_repo", "Score-run history over the parquet lake (record, history, validate)"),
 ]
 
 

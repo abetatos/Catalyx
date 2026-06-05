@@ -25,12 +25,16 @@ Todo se monta sobre un único sustrato: un **data lake parquet append-only, vers
 |---|---|---|---|---|
 | **1 — Fuente** | config YAML, JSON schemas, documentos de inteligencia (theses, sector_studies, catalysts, structural_catalysts, taxonomy_proposals), **configs de cartera**, reports `.md` | YAML / JSON / MD | **git** | Editado a mano |
 | **2 — Data lake** | series temporales y numéricos computados: momentum/flow snapshots, score_run / sector_snapshot / rank_event, indicator value_history, **portfolio nav/holding/trade**, forward-returns | **parquet append-only, particionado** | **git directo** (parquet commiteado al repo) | Inmutable (append, nunca overwrite) |
-| **3 — Caché de consulta** | `catalyx.db` | SQLite | **gitignored** | Reconstruible desde Tier 2 |
 
-**Cambio clave — parquet-first:** hoy SQLite es la verdad y el parquet un export. Se **invierte**.
-El lake parquet es la verdad durable y versionable; SQLite pasa a ser una caché reconstruible
-(`lake rebuild`). Reproducir un análisis pasado = `git checkout <commit>` (código **y** datos
-viajan juntos en el mismo commit), sin depender de un `.db` efímero de una sola máquina.
+> **Actualización (2026-06-05): solo DOS tiers.** El Tier 3 era una caché SQLite (`catalyx.db`)
+> reconstruible desde el lake. Se **eliminó del todo** — nunca fue fuente de verdad, y su única
+> tabla propia (`llm_log`) quedó obsoleta al confirmar que CATALYX no aloja un LLM propio (es una
+> skill sobre la sesión de Claude Code). Hoy: Tier 1 (ficheros) + Tier 2 (lake parquet). Sin DB.
+
+**Cambio clave — parquet-first:** el lake parquet es la **única** verdad durable y versionable.
+Los `*_repo.py` leen los documentos Tier 1 directamente; los computados se leen/escriben vía
+`catalyx.store.lake`. Reproducir un análisis pasado = `git checkout <commit>` (código **y** datos
+viajan juntos en el mismo commit), sin depender de ningún `.db` efímero de una sola máquina.
 
 **Por qué parquet directo en git y no DVC:** los datos son KB–MB y cadencia mensual, lejísimos de
 cualquier límite de GitHub. El miedo al *bloat* de binarios en git lo neutraliza el diseño
@@ -72,8 +76,8 @@ data/
 │       └── forward_returns.parquet
 │
 ├── catalysts/  sector_studies/  theses/  taxonomy_proposals/   # ← SIN CAMBIOS (git, Tier 1)
-├── reports/                                                     # ← SIN CAMBIOS (git, Tier 1)
-└── catalyx.db                                                   # ← gitignored, reconstruible (Tier 3)
+└── reports/                                                     # ← SIN CAMBIOS (git, Tier 1)
+#   (catalyx.db / SQLite: ELIMINADO 2026-06-05 — ya no existe Tier 3)
 
 catalyx/config/
 ├── portfolios/                            # ← NUEVO (Tier 1, git, versionado por config_version)
@@ -213,8 +217,8 @@ de mayor impacto; D/E habilitan performance+lineage; F publica.
 - Config YAML, schemas, documentos JSON (theses/studies/catalysts), reports `.md` → git, paths intactos
 - `structural_catalysts/` se queda en `config/`
 - El contrato de las skills `uv run python -m catalyx.*` no cambia — solo cambia dónde persisten los módulos
-- Postgres futuro (Phase 2) es ortogonal: reemplazaría a SQLite como caché vía connection-string swap,
-  sin tocar el lake
+- ~~Postgres futuro (Phase 2)~~ **descartado (2026-06-05):** existía para escalar la capa relacional
+  SQLite; al eliminar SQLite del todo, no hay nada que migrar. CATALYX es skill-permanente sobre Claude Code.
 
 ## 9. Riesgos / gotchas
 - **Bloat de git:** neutralizado por el diseño append-only particionado (archivos inmutables → git los
@@ -229,7 +233,7 @@ de mayor impacto; D/E habilitan performance+lineage; F publica.
 ## Decisiones tomadas (2026-06-05)
 - Versionado: **parquet directo en git** (commiteado al repo; append-only particionado evita bloat).
   DVC descartado por innecesario al tamaño actual y porque complicaba el deploy a Pages
-- Fuente de verdad: **parquet-first** (invertir; SQLite pasa a caché)
+- Fuente de verdad: **parquet-first** (SQLite eliminado del todo el 2026-06-05; dos tiers, sin DB)
 - Carteras: **modelo + real, comparadas**
 - Página: **GitHub Pages + DuckDB-WASM estático** (público, sin backend, deploy vía Actions)
 - Alcance de esta sesión: **solo el plan** (sin implementar)

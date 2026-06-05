@@ -8,19 +8,14 @@ invisible — the goal is full-universe coverage every cycle.
 
 ## Steps
 
-0. Rebuild DB index:
-   ```
-   uv run python -c "from catalyx.store import init_all; init_all()"
-   ```
-
 1. Read `CLAUDE.md` for scoring methodology and rules.
 
-2. Read config files (source of truth, not in DB):
+2. Read config files (the Tier-1 source of truth):
    - `catalyx/config/sector_taxonomy.yaml` — all sector IDs and metadata
    - `catalyx/config/scoring_weights.yaml` — composite formula and weights
    - `catalyx/config/etf_universe.yaml` — ETF options per sector
 
-   Load runtime data from DB:
+   Load runtime data via the repo summaries (read the JSON/YAML documents directly):
    ```
    uv run python -m catalyx.store.structural_catalyst_repo summary
    uv run python -m catalyx.store.catalyst_repo summary
@@ -122,17 +117,15 @@ invisible — the goal is full-universe coverage every cycle.
     uv run python -m catalyx.store.snapshot_repo record --notes "monthly heatmap"
     uv run python -m catalyx.store.snapshot_repo register-report data/reports/heatmap_YYYYMMDD.md --type heatmap
     ```
-    Both commands write through to the parquet lake (data/lake/scores/, committed to git) — the
-    durable source of truth. SQLite is just a cache; rebuild it any time with
-    `uv run python -m catalyx.store.snapshot_repo rebuild`. (The old `export` to data/history/ is
-    deprecated — the lake replaces it.)
+    Both commands write to the parquet lake (data/lake/scores/, committed to git) — the durable,
+    only source of truth (there is no database).
 
     `record` writes one `sector_snapshot` per sector (scores + rank + primary ETF + the per-sector
     narrative block as `rationale_md`), tags the run with the `scoring_version` (hash of
     scoring_weights.yaml), and derives `rank_event` rows vs the previous run (which sectors
     entered/exited the top-N, how far each moved). It uses the SAME composite as the heatmap
     (crowding from `narrative_maturity` via `crowding_from_maturity` in scoring_weights.yaml), so
-    the DB and the report never diverge. To check whether past rankings predicted returns, run
+    the lake and the report never diverge. To check whether past rankings predicted returns, run
     `uv run python -m catalyx.store.snapshot_repo validate` (needs ≥2 runs separated in time).
 
 ## Rules

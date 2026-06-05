@@ -36,6 +36,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 import sys
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -88,6 +89,8 @@ def _decayed_strength(strength: float, halflife_days: float, detected_at: str) -
     """Apply exponential decay: strength × exp(-ln2/halflife × days_elapsed)."""
     try:
         detected = datetime.fromisoformat(detected_at.replace("Z", "+00:00"))
+        if detected.tzinfo is None:  # date-only anchors (e.g. parsed "2026-02-28") are naive
+            detected = detected.replace(tzinfo=timezone.utc)
         now = datetime.now(timezone.utc)
         days = (now - detected).total_seconds() / 86400
     except (ValueError, AttributeError):
@@ -96,6 +99,29 @@ def _decayed_strength(strength: float, halflife_days: float, detected_at: str) -
         return strength
     remaining = math.exp(-math.log(2) / halflife_days * days)
     return round(strength * remaining, 2)
+
+
+def _anchor_date(ev: dict) -> str:
+    """Decay anchor = when the event OCCURRED, not when we registered it.
+
+    Bug fix (2026-06-05): decay was anchored on `detected_at`, so a late-registered
+    event under-counted elapsed time and stayed artificially strong. Example:
+    `cat_20260228_hormuz_closure` (event 2026-02-28, priced_in 1.0) carried
+    `detected_at=2026-06-04` → it decayed as if ~1 day old (92/100) instead of
+    ~97 days old (~31/100), keeping a spent, fully-priced-in event near full force.
+
+    Precedence: explicit `event_date` → date parsed from the catalyst id
+    (`cat_YYYYMMDD_...`, the canonical event date) → `detected_at`/`created_at`.
+    """
+    ed = ev.get("event_date")
+    if ed:
+        return str(ed)
+    cid = ev.get("id") or ev.get("catalyst_id") or ""
+    m = re.search(r"(\d{8})", str(cid))
+    if m:
+        d = m.group(1)
+        return f"{d[:4]}-{d[4:6]}-{d[6:]}"
+    return ev.get("detected_at") or ev.get("created_at", "")
 
 
 # ── Interaction formulas ───────────────────────────────────────────────────────
@@ -238,7 +264,7 @@ def compute_catalyst_alignment(
                 continue
             strength = ev.get("strength_score", 0)
             halflife = ev.get("decay_halflife_days", _DEFAULT_HALFLIFE)
-            detected = ev.get("detected_at") or ev.get("created_at", "")
+            detected = _anchor_date(ev)
             decayed = _decayed_strength(strength, halflife, detected)
             # A direct event contributes its decayed strength as a standalone signal.
             # `contradicts` has no structural target in this context, so it is recorded
@@ -284,7 +310,7 @@ def compute_catalyst_alignment(
         for ev in related_events:
             strength = ev.get("strength_score", 0)
             halflife = ev.get("decay_halflife_days", _DEFAULT_HALFLIFE)
-            detected = ev.get("detected_at") or ev.get("created_at", "")
+            detected = _anchor_date(ev)
             decayed = _decayed_strength(strength, halflife, detected)
             relation = ev.get("relation_to_structural", "independent")
             modified = _apply_interaction(base_score, decayed, relation)

@@ -31,12 +31,16 @@ user_notes: >
   Key differentiation: CB demand is sovereign-driven, price-insensitive, not reversible quickly.
 
 intensity:
-  current_score: 76.1
+  current_score: 72.1
   computation_method: "computed"
   computation_note: "Computed 2026-06-03: semaphores ind_01=🟢(100), ind_02=🟡(65), ind_03=🟢(100) → avg=88.3; trend ↑ (79→90
     vs Q1) → factor=1.02; result=90.1→90. ind_01 updated 290→315T (Q2 2026 WGC data)."
-  last_updated: "2026-06-04"
+  last_updated: "2026-06-05"
   history:
+  - period: '2026-06-05'
+    score: 72.1
+    note: 'Computed 2026-06-05: avg=79.13 trend=↓↓ (falling 2+ consecutive) (was 76.1)'
+    computation_method: computed
   - period: 2026-Q2
     score: 76.1
     note: 'Computed 2026-06-04: avg=79.13 trend=↓ (falling 1 period) (was 81.1)'

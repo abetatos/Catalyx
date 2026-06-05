@@ -7,14 +7,6 @@ Usage:
 - `/catalyx-thesis review <thesis_id>` — review an open thesis against current data and news
 - `/catalyx-thesis close <thesis_id>` — close a thesis and compute ClosedThesis with attribution
 
-## Step 0 — Rebuild DB index (all sub-commands)
-
-```
-uv run python -c "from catalyx.store import init_all; init_all()"
-```
-
----
-
 ## draft <sector_id>
 
 1. Read config files:
@@ -24,7 +16,7 @@ uv run python -c "from catalyx.store import init_all; init_all()"
    - `catalyx/config/etf_universe.yaml` — ETF options for `<sector_id>`
    - `catalyx/config/scoring_weights.yaml` — conviction tiers
 
-   Load runtime data from DB:
+   Load runtime data (file-backed reads):
    ```
    uv run python -m catalyx.store.sector_study_repo get study_<sector_id>
    uv run python -m catalyx.store.structural_catalyst_repo summary
@@ -34,7 +26,7 @@ uv run python -c "from catalyx.store import init_all; init_all()"
 2. Identify the PRIMARY structural catalyst driving this sector. State why it is not yet priced in (what the market is missing). If you cannot state a specific mispricing, the thesis should not be drafted — flag this to the user.
 
 2.5. **PORTFOLIO CORRELATION CHECK — mandatory before drafting.**
-   Load open and draft theses from DB:
+   Load open and draft theses (file-backed reads):
    ```
    uv run python -m catalyx.store.thesis_repo summary
    ```
@@ -85,24 +77,21 @@ uv run python -c "from catalyx.store import init_all; init_all()"
 
 8. Set `status: "draft"`. The user must change to `"open"` after reviewing.
 
-9. Write to `data/theses/thesis_YYYYMMDD_<sector_id>_<keyword>.json`.
+9. Write to `data/theses/thesis_YYYYMMDD_<sector_id>_<keyword>.json`. The written JSON IS the
+   registration — it appears in `thesis_repo summary` immediately (the repo reads `data/theses/`
+   directly). No import step.
 
-10. Import the new thesis into the DB so it appears in `thesis_repo summary` within this session:
-    ```
-    uv run python -m catalyx.store.thesis_repo import-file data/theses/<thesis_id>.json
-    ```
-
-11. After writing, present a structured critique prompt: list the 3 most debatable decisions in the thesis and ask the user to validate them before opening.
+10. After writing, present a structured critique prompt: list the 3 most debatable decisions in the thesis and ask the user to validate them before opening.
 
 ---
 
 ## review <thesis_id>
 
-1. Load thesis from DB:
+1. Load thesis (file-backed reads):
    ```
    uv run python -m catalyx.store.thesis_repo get <thesis_id>
    ```
-2. Load referenced structural catalyst from DB:
+2. Load referenced structural catalyst (file-backed reads):
    ```
    uv run python -m catalyx.store.structural_catalyst_repo get <catalyst_id>
    ```
@@ -143,7 +132,7 @@ uv run python -c "from catalyx.store import init_all; init_all()"
 
 ## close <thesis_id>
 
-1. Load thesis from DB:
+1. Load thesis (file-backed reads):
    ```
    uv run python -m catalyx.store.thesis_repo get <thesis_id>
    ```

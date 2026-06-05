@@ -33,7 +33,7 @@ Claude (interface + intelligence)          Python (deterministic backbone)
 ─────────────────────────────────          ───────────────────────────────
 - Conversational thesis formulation        - Scoring formulas (no LLM drift)
 - News analysis & catalyst detection       - Market data fetching (yfinance)
-- Assumption critique and discussion       - DB reads/writes (SQLAlchemy)
+- Assumption critique and discussion       - File + parquet-lake reads/writes
 - Monthly review orchestration             - Tax computation (Spanish CGT)
 - Qualitative judgment (sector narrative)  - Attribution decomposition
 - Output formatting for the user           - Event decay calculation
@@ -64,32 +64,30 @@ Structural catalysts are the floor signal. Event catalysts are the spike. Both c
 
 ## Development Phases & Version Stacks
 
-### Phase 0.5 — Skill + Python Data Layer (current)
-**Goal:** Claude remains the conversational interface and intelligence layer. Python handles deterministic computation, data storage, and market data fetching. Skills call Python modules via `uv run python -m catalyx.*`.
-**Architecture principle:** Python = infrastructure (formulas, DB, fetching). Claude = reasoning, analysis, thesis formulation, discussion.
+### Phase 0.5 — Skill + Python Data Layer (current, and PERMANENT model)
+**Goal:** Claude remains the conversational interface and intelligence layer, running as a **skill on the Claude Code session** (leveraging its credits + WebSearch). Python handles deterministic computation, data storage, and market data fetching. Skills call Python modules via `uv run python -m catalyx.*`. **This is not a stepping stone toward a self-hosted LLM/API** — see the roadmap note below.
+**Architecture principle:** Python = infrastructure (formulas, parquet lake, fetching). Claude = reasoning, analysis, thesis formulation, discussion. There is **no database** — persistence is files (Tier 1) + the parquet lake (Tier 2).
 
 | Component | Tool |
 |---|---|
-| News scanning | Claude WebSearch |
+| News scanning | Claude WebSearch (Claude Code session) |
 | Thesis drafting | Claude (conversational + Write to JSON) |
 | Market data / momentum | `catalyx/data/market_data.py` (yfinance) |
 | Deterministic scoring formulas | Python modules callable from skills |
-| Storage | SQLite `data/catalyx.db` via SQLAlchemy + JSON files in `data/` |
-| P&L / tax | Manual (tax_engine.py next) |
+| Storage | JSON/YAML documents in `data/` + `catalyx/config/` (Tier 1) + parquet lake `data/lake/` (Tier 2). No DB. |
+| P&L / tax | `catalyx/execution/tax_engine.py` (Spanish CGT) |
 | Scheduling | CronCreate (limited) |
 
-**Claude model:** `claude-sonnet-4-6` (current session model)
-**No pinned LLM API yet — this phase uses the Claude Code session directly.**
+**Claude model:** whatever the Claude Code session runs (Opus/Sonnet). No self-hosted LLM/API client — the session IS the LLM.
 
 ### Python infrastructure already built (Phase 0.5)
 
 | Module | Path | What it does |
 |---|---|---|
-| DB + LLM log | `catalyx/store/db.py` | SQLAlchemy engine, Base, `LLMLog` table, `init_db()` |
-| Catalyst repo | `catalyx/store/catalyst_repo.py` | CRUD for `CatalystEvent` + `TaxonomyGapProposal`. CLI: `python -m catalyx.store.catalyst_repo summary` |
-| Sector study repo | `catalyx/store/sector_study_repo.py` | CRUD for `SectorStudy` objects |
-| Thesis repo | `catalyx/store/thesis_repo.py` | CRUD for `Thesis` + `ClosedThesis` |
-| Structural catalyst repo | `catalyx/store/structural_catalyst_repo.py` | CRUD for `StructuralCatalyst` |
+| Catalyst reader | `catalyx/store/catalyst_repo.py` | File-backed reader for `CatalystEvent` + `TaxonomyGapProposal` (reads `data/catalysts/` + `data/taxonomy_proposals/`). CLI: `python -m catalyx.store.catalyst_repo {summary,get,set-status}` |
+| Sector study reader | `catalyx/store/sector_study_repo.py` | File-backed reader for `SectorStudy` (reads `data/sector_studies/`). CLI: `{summary,get,stale}` |
+| Thesis reader | `catalyx/store/thesis_repo.py` | File-backed reader for `Thesis` + `ClosedThesis` (reads `data/theses/`); `tax-snapshot` computes YTD CGT from closed theses. CLI: `{summary,get,set-status,tax-snapshot}` |
+| Structural catalyst reader | `catalyx/store/structural_catalyst_repo.py` | File-backed reader for `StructuralCatalyst` (reads `config/structural_catalysts/*.yaml`). CLI: `{summary,get}` |
 | Market data | `catalyx/data/market_data.py` | yfinance ETF momentum fetcher. CLI: `uv run python -m catalyx.data.market_data` → `data/snapshots/momentum_snapshot_YYYYMMDD.json` |
 | Intensity engine | `catalyx/scorer/intensity_engine.py` | Compute `intensity.current_score` from indicator semaphores. CLI: `uv run python -m catalyx.scorer.intensity_engine --all [--write-back]` |
 | Catalyst scorer | `catalyx/scorer/catalyst_scorer.py` | v1.3/v1.4 confirms/contradicts/independent formula + event decay → `catalyst_alignment`. CLI: `uv run python -m catalyx.scorer.catalyst_scorer <sector_id>` |
@@ -105,94 +103,44 @@ Structural catalysts are the floor signal. Event catalysts are the spike. Both c
 | NAV engine | `catalyx/execution/nav_engine.py` | **Fase D.2.** Buy-and-hold NAV series (indexed 100) from holdings — model OR real — vs benchmark (**SPY/S&P500**). `holdings_nav` (newly-listed/short-history ETFs → held as cash, never poison the series), `compute_model_nav(--backtest-days N)` = trailing backtest answering "¿batimos mercado?", `compute_real_nav` → lake `portfolio_nav`. CLI: `… nav_engine {model,real,show}`. |
 | Trade logger | `catalyx/execution/trade_logger.py` | **Fase D.2.** Real-money leg: `log_trade` (carries `thesis_id`+`run_id` lineage) → lake `portfolio_trade`; `real_holdings` reduces the log to net positions (qty, avg EUR cost, realized P&L) that feed nav_engine. EUR only. CLI: `… trade_logger {log,holdings,trades} <portfolio_id>`. |
 | Lake query | `catalyx/store/lake_query.py` | **Fase E.** Unified DuckDB read-path over the lake — the day-to-day query layer and the data foundation for the GitHub-Pages dashboard (DuckDB-WASM runs the same SQL in-browser). Read-only, defensive (empty table → empty result). `sector_history` / `latest_ranking` / `rank_moves` / `portfolio_compare` / `portfolio_holdings` / `lineage_for_trade` / `sql`. CLI: `… lake_query {ranking,sector,moves,portfolios,holdings,lineage,sql}`. `snapshot_repo` read queries (history/runs/events) now read the lake too. |
-| Dashboard (Pages) | `site/` + `scripts/build_site.py` + `.github/workflows/pages.yml` | **Fase F.** Static **DuckDB-WASM** dashboard — reads the committed parquet lake in-browser (no backend, no DVC). Tabs: ranking, sector history, model portfolios, rank moves, lineage, SQL console. `build_site.py` bakes parquet + `manifest.json` into `dist/`; the workflow builds + deploys to Pages on push to `main`. **Live: https://abetatos.github.io/Catalyx/** Preview locally: `uv run python scripts/build_site.py && python -m http.server -d dist 8000`. (Replaces the earlier Evidence.dev `dashboard/` — its workflow was removed.) |
+| Dashboard (Pages) | `site/` + `scripts/build_site.py` + `.github/workflows/pages.yml` | **Fase F.** Static **DuckDB-WASM** dashboard — reads the committed parquet lake in-browser (no backend, no DVC). Tabs: ranking, sector history, model portfolios, rank moves, lineage, SQL console. `build_site.py` bakes parquet + `manifest.json` into `dist/`; the workflow builds + deploys to Pages on push to `main`. **Live: https://abetatos.github.io/Catalyx/** Preview locally: `uv run python scripts/build_site.py && python -m http.server -d dist 8000`. (Replaced the earlier Evidence.dev `dashboard/`, now deleted — its workflow was already removed.) |
 
-**Storage architecture — three tiers (parquet-first).** See `docs/PLAN_lake_dvc_serving.md`.
-- **Tier 1 (git, hand-edited):** config YAML, schemas, and the JSON *documents* skills Read/Write directly (sector_studies, theses, catalysts, taxonomy_proposals). These stay JSON forever — they are the skill interface. Never migrated.
-- **Tier 2 (parquet lake, git):** all computed time-series — momentum/flow snapshots, score_run/sector_snapshot/rank_event, indicator history, portfolios. Durable, versioned, queryable. Claude never Reads parquet directly — skills get tabular data via a Python CLI emitting JSON to stdout.
-- **Tier 3 (gitignored, rebuildable):** `data/catalyx.db`. A query cache derived from the lake. Rebuild any time: `uv run python -m catalyx.store.snapshot_repo rebuild`.
+**Storage architecture — two tiers (parquet-first, no database).** See `docs/PLAN_lake_dvc_serving.md`.
+- **Tier 1 (git, hand-edited):** config YAML, schemas, and the JSON *documents* skills Read/Write directly (sector_studies, theses, catalysts, taxonomy_proposals). These stay JSON forever — they are the skill interface. The `*_repo.py` modules read these files directly and print digests; writing a file IS the registration (no import step).
+- **Tier 2 (parquet lake, git):** all computed time-series — momentum/flow snapshots, score_run/sector_snapshot/rank_event, indicator history, portfolios. Durable, versioned, queryable. Claude never Reads parquet directly — skills get tabular data via a Python CLI emitting JSON to stdout (`lake_query`, `snapshot_repo`).
 
-During migration, the snapshot writers keep a **compat JSON** alongside the parquet (`momentum_engine` reads the lake by default; `--snapshot path.json` forces JSON). The old `snapshot_repo export` to `data/history/` is **deprecated** — the partitioned lake replaces it.
-
-**DB location:** `data/catalyx.db` (SQLite). URL override via `CATALYX_DB_URL` env var.
-**Init command:** `uv run python -m catalyx.store.catalyst_repo init`
+**SQLite was removed entirely (2026-06-05).** It used to be a Tier-3 query cache, but it was never the source of truth (the files and the lake are), and the `llm_log` table it carried is obsolete now that there is no self-hosted LLM. Reads/writes of computed series go through `catalyx.store.lake`. There is no `CATALYX_DB_URL`, no `init`, no SQLAlchemy.
 
 **Skills call Python modules** using `uv run python -m catalyx.<module> <command>` via Bash tool. This is the integration model — not a separate CLI for the user, but Python as a deterministic backend that skills invoke.
 
 ---
 
-### Phase 1 — Python CLI (next)
-**Goal:** Full working pipeline loop via `catalyx` CLI. Every schema object produced and stored. At least one closed thesis with attribution.
+> **Direction decision (2026-06-05):** CATALYX stays a **skill on the Claude Code session
+> — permanently.** It deliberately does NOT evolve into a self-hosted LLM product. The
+> intelligence layer is Claude Code (its credits + WebSearch); the deterministic backbone is
+> Python. Consequently the following are **off the roadmap, not "later"**: any `anthropic`/
+> `openai` API client, an `llm_client.py`, the `llm_log` table, a Typer CLI built for an
+> end-user, FastAPI, and the Postgres migration (its only purpose was scaling a relational DB
+> we no longer have). What remains legitimately future is **pure deterministic Python + ML on
+> our own closed-thesis data** — none of which needs a self-hosted LLM.
 
-**Python version: 3.12**
+### Future work — deterministic Python only (no self-hosted LLM)
+**Python version: 3.12.** Runtime deps are tracked in `pyproject.toml` (yfinance, pandas, pyarrow,
+duckdb, jsonschema, pyyaml, ruamel-yaml, httpx, rich). Add a dependency only when a module needs it.
 
-| Package | Version | Role |
-|---|---|---|
-| `anthropic` | `>=0.40` | Claude API client |
-| `openai` | `>=1.40` | Classification and bulk LLM tasks |
-| `pydantic` | `>=2.7` | Schema validation (v2 only — no v1 compat) |
-| `typer` | `>=0.12` | CLI framework |
-| `rich` | `>=13.7` | CLI output tables and formatting |
-| `sqlalchemy` | `>=2.0` | ORM (async-compatible) |
-| `alembic` | `>=1.13` | DB migrations |
-| `yfinance` | `>=0.2.40` | Market data (prices, ETF metadata) |
-| `httpx` | `>=0.27` | Async HTTP (news, flow data) |
-| `jsonschema` | `>=4.22` | JSON Schema validation against `schemas/` |
-| `python-dotenv` | `>=1.0` | Env var loading |
+- **Scoring completeness:** `valuation_engine` (still manual today), `flow_engine` formalized,
+  `return_decomposer` (attribution → lake `validation/`).
+- **Thesis lifecycle helpers:** assumption/invalidation monitors that re-check a thesis's data
+  sources (the *checking* is deterministic; the *judgement* stays with Claude in the skill).
+- **Feedback loop (ML on closed theses):** `xgboost` / `scikit-learn` on `ClosedThesis` data →
+  Bayesian prior hit-rate per catalyst-sector pair. Catalyst novelty filtering via local
+  `sentence-transformers` embeddings (`all-MiniLM-L6-v2`, no API cost). All offline, on our lake.
+- **Backtesting:** historical catalyst reconstruction (GDELT, CFTC COT archive), walk-forward
+  validation. **Critical constraint:** detection in backtest must use only data available at
+  signal time — no look-ahead.
 
-**Storage:** SQLite via SQLAlchemy. Never use SQLite-specific syntax (`ROWID`, `PRAGMA`) in application code — the Phase 2 Postgres migration must be a connection-string swap only.
-
-**Claude models (pinned — never use aliases):**
-
-| Use case | Model ID |
-|---|---|
-| Thesis drafting, deep analysis | `claude-opus-4-8` |
-| Sector scoring rationale, monitoring | `claude-sonnet-4-6` |
-| Bulk news classification | `claude-haiku-4-5-20251001` |
-
-**OpenAI models (pinned — never use aliases like `"gpt-4o"`):**
-
-| Use case | Model ID |
-|---|---|
-| Thesis drafting (compare/backup) | `gpt-4o-2024-08-06` |
-| Bulk news classification | `gpt-4o-mini-2024-07-18` |
-
-**Every LLM call must log:** model_id, prompt_tokens, completion_tokens, timestamp, calling_function. Table: `llm_log` in SQLite.
-
----
-
-### Phase 2 — Automation + ML Foundation
-**Python:** 3.12
-
-| Package | Version | Role |
-|---|---|---|
-| `sentence-transformers` | `>=2.7` | Catalyst novelty filtering (embedding distance) |
-| `fastapi` | `>=0.111` | API layer over CLI |
-| `apscheduler` | `>=3.10` | Background scheduling (scanner, monitor) |
-| `psycopg2-binary` | `>=2.9` | Postgres adapter (Phase 2 DB migration) |
-
-**Embedding model:** `all-MiniLM-L6-v2` (local, no API cost, sufficient for novelty filtering)
-
-**New modules:** `scanner/structural_monitor.py`, `sector_study/`, `data/flow_data.py` (iShares API), `data/cot_data.py` (CFTC parser)
-
----
-
-### Phase 3 — ML Scoring
-**Python:** 3.12
-
-| Package | Version | Role |
-|---|---|---|
-| `xgboost` | `>=2.0` | Catalyst strength prediction |
-| `scikit-learn` | `>=1.5` | Feature pipelines, Bayesian update |
-| `numpy` | `>=2.0` | Numerical ops |
-| `pandas` | `>=2.2` | Data manipulation |
-| `optuna` | `>=3.6` | Hyperparameter optimization |
-
----
-
-### Phase 4 — Backtesting
-**New dependency:** GDELT API (historical news), COT historical archive (CFTC)
-**Critical constraint:** Catalyst detection in backtest must use only data available at signal time. No look-ahead.
+These are additive Python modules behind the same `uv run python -m catalyx.*` skill contract.
+None of them changes the conversational interface or reintroduces a database.
 
 ---
 
@@ -247,24 +195,19 @@ catalyx/
 │   │   ├── flow_data.py               ← shares_outstanding × NAV → flow_confirmation  ✅
 │   │   ├── cot_data.py                ← (planned — CFTC COT parser)
 │   │   ├── news_adapter.py            ← (planned)
-│   │   ├── cb_calendar.py             ← (planned)
-│   │   └── llm_client.py              ← (planned — Anthropic+OpenAI, logs all calls)
-│   ├── store/
-│   │   ├── db.py                      ← SQLAlchemy engine + LLMLog  ✅
-│   │   ├── catalyst_repo.py           ← CatalystEvent + TaxonomyGapProposal CRUD  ✅
-│   │   ├── sector_study_repo.py       ← SectorStudy CRUD  ✅
-│   │   ├── structural_catalyst_repo.py← StructuralCatalyst CRUD  ✅
-│   │   ├── thesis_repo.py             ← Thesis + ClosedThesis CRUD  ✅
-│   │   ├── snapshot_repo.py           ← (planned)
-│   │   ├── trade_repo.py              ← (planned)
-│   │   └── prior_repo.py              ← (planned — CatalystSectorPrior table)
+│   │   └── cb_calendar.py             ← (planned)
+│   ├── store/                         ← no DB — file readers + parquet lake
+│   │   ├── lake.py                    ← parquet lake (Tier 2 source of truth)  ✅
+│   │   ├── lake_query.py              ← DuckDB read-path over the lake  ✅
+│   │   ├── catalyst_repo.py           ← CatalystEvent + TaxonomyGapProposal file reader  ✅
+│   │   ├── sector_study_repo.py       ← SectorStudy file reader  ✅
+│   │   ├── structural_catalyst_repo.py← StructuralCatalyst file reader  ✅
+│   │   ├── thesis_repo.py             ← Thesis + ClosedThesis file reader + tax-snapshot  ✅
+│   │   ├── snapshot_repo.py           ← score-run history over the lake  ✅
+│   │   ├── indicator_history.py       ← indicator value_history in the lake  ✅
+│   │   └── prior_repo.py              ← (planned — CatalystSectorPrior, ML feedback loop)
 │   ├── cli/
-│   │   ├── main.py                    ← Phase 0.5 stub (lists module CLIs)  ✅
-│   │   ├── cmd_scan.py                ← (planned)
-│   │   ├── cmd_score.py               ← (planned)
-│   │   ├── cmd_thesis.py              ← (planned)
-│   │   ├── cmd_trade.py               ← (planned)
-│   │   └── cmd_feedback.py            ← (planned)
+│   │   └── main.py                    ← stub listing module CLIs (no unified user CLI by design)  ✅
 │   └── config/
 │       ├── sector_taxonomy.yaml       ← CANONICAL: all sector IDs live here  ✅
 │       ├── catalyst_taxonomy.yaml     ← Catalyst types and subtypes enum  ✅
@@ -286,8 +229,8 @@ catalyx/
 │   ├── closed_thesis.json             ✅
 │   └── taxonomy_gap_proposal.json     ← Discovery Pass output  ✅
 ├── data/                              ← Runtime data  ✅
-│   ├── catalysts/  snapshots/  theses/  sector_studies/  taxonomy_proposals/  reports/  ✅
-│   └── catalyx.db                     ← SQLite (gitignored)  ✅
+│   ├── catalysts/  theses/  sector_studies/  taxonomy_proposals/  reports/  ✅  (Tier 1, git)
+│   └── lake/                          ← parquet lake (Tier 2, git): scores/snapshots/portfolios  ✅
 ├── tests/
 │   ├── unit/
 │   │   ├── test_tax_engine.py         ← bracket + carry-forward edge cases  ✅
@@ -315,12 +258,12 @@ This section tells Claude which files to read before working on each area. **Alw
 | Structural catalysts | `catalyx/config/structural_catalysts/<relevant>.yaml` + `schemas/structural_catalyst.json` |
 | Tax engine or P&L | `docs/SPEC_v1.1.md` §Tax section — Spanish CGT brackets are progressive, no short/long term distinction |
 | ETF selection logic | `catalyx/config/etf_universe.yaml` — check TER, AUM, replication type, spread |
-| CLI commands | `catalyx/cli/main.py` (Phase 0.5 stub today; `cmd_*.py` are Phase 1, not built) |
-| LLM integration | _(planned)_ `catalyx/data/llm_client.py` — all calls must go through this, pinned model IDs only. **Not built yet** — Phase 0.5 uses the Claude Code session directly |
-| Feedback loop / priors | `schemas/closed_thesis.json` → `CatalystSectorPrior` table _(planned)_ `store/prior_repo.py` (not built yet) |
+| CLI commands | `catalyx/cli/main.py` (stub listing the module CLIs — there is no unified user CLI by design) |
+| LLM / intelligence | The Claude Code session itself (its credits + WebSearch). There is no self-hosted LLM client — never add one. |
+| Feedback loop / priors | `schemas/closed_thesis.json` → `CatalystSectorPrior` _(planned, ML on closed theses — no LLM)_ `store/prior_repo.py` (not built yet) |
 | Taxonomy gaps / discovery | `schemas/taxonomy_gap_proposal.json` + `data/taxonomy_proposals/*.json` |
-| DB schema / SQLAlchemy models | `catalyx/store/db.py` (Base, LLMLog) then the relevant `*_repo.py` |
-| Catalyst DB operations (read/write/query) | `catalyx/store/catalyst_repo.py` — has CLI: `python -m catalyx.store.catalyst_repo summary` |
+| Parquet lake / computed series | `catalyx/store/lake.py` (write/read primitive) + `catalyx/store/lake_query.py` (DuckDB read-path) |
+| Catalyst / thesis / study reads | the file-backed `*_repo.py` — e.g. `python -m catalyx.store.catalyst_repo summary` (reads `data/`, no DB) |
 | Scoring formulas (computing, not config) | `catalyx/config/scoring_weights.yaml` + the relevant `catalyx/scorer/*.py` |
 | Market data / momentum snapshot | `catalyx/data/market_data.py` — run to produce `data/snapshots/momentum_snapshot_YYYYMMDD.json` |
 
@@ -355,7 +298,7 @@ When `sector_taxonomy.yaml` is modified (sector added, removed, or field changed
 
 **ETF flow data:** Use shares_outstanding × NAV, NOT total AUM. AUM conflates price appreciation with net flows. iShares API provides shares_outstanding directly.
 
-**LLM model IDs:** Always pin exact version strings. Never use aliases (`"gpt-4o"`, `"claude-opus"` etc.). Model silently updates → classification drift → corrupt training data.
+**LLM model IDs:** N/A — there is no self-hosted LLM. The intelligence layer is the Claude Code session; CATALYX never makes pinned API calls of its own and stores no model IDs. Do not reintroduce an API client.
 
 **Crowding risk** is a scoring penalty, not a reward. High crowding subtracts from composite score.
 
@@ -528,18 +471,18 @@ Manual reminder of what that skill does:
 - [x] Spanish CGT tax model (spec only)
 - [x] Return attribution decomposition method (spec only)
 - [x] User catalyst ranking system
-- [x] Phase 0/1/2/3/4 roadmap with pinned model versions
+- [x] Roadmap reframed: permanent skill-on-Claude-Code model (no self-hosted LLM/API/Postgres)
 - [x] Phase 0.5 workflow documented (generate → critique → improve loop)
 - [x] Signal-first architecture: Discovery Pass in `/catalyx-scan` (Pass 1 market-led, Pass 2 taxonomy-led)
 - [x] `TaxonomyGapProposal` schema — tracks emerging themes not in taxonomy
 - [x] Monthly taxonomy gap review step (Step 12) in `/catalyx-monthly-review`
-- [x] `catalyx/store/db.py` — SQLAlchemy engine, `LLMLog` table, `init_db()`
-- [x] `catalyx/store/catalyst_repo.py` — CRUD + CLI for `CatalystEvent` and `TaxonomyGapProposal`
-- [x] `catalyx/store/sector_study_repo.py` — CRUD for `SectorStudy`
-- [x] `catalyx/store/thesis_repo.py` — CRUD for `Thesis` + `ClosedThesis`
-- [x] `catalyx/store/structural_catalyst_repo.py` — CRUD for `StructuralCatalyst`
+- [x] `catalyx/store/lake.py` + `lake_query.py` — parquet lake (Tier 2 source of truth) + DuckDB read-path
+- [x] `catalyx/store/catalyst_repo.py` — file-backed reader/CLI for `CatalystEvent` and `TaxonomyGapProposal`
+- [x] `catalyx/store/sector_study_repo.py` — file-backed reader for `SectorStudy`
+- [x] `catalyx/store/thesis_repo.py` — file-backed reader for `Thesis` + `ClosedThesis` + `tax-snapshot`
+- [x] `catalyx/store/structural_catalyst_repo.py` — file-backed reader for `StructuralCatalyst`
 - [x] `catalyx/data/market_data.py` — yfinance ETF momentum fetcher with fixed formula
-- [x] `data/catalyx.db` — SQLite DB initialized and present
+- [x] SQLite removed entirely — persistence is files (Tier 1) + parquet lake (Tier 2)
 - [x] `catalyx/scorer/intensity_engine.py` — `intensity.current_score` from semaphores, `--write-back` to YAML (ruamel.yaml preserves format)
 - [x] `catalyx/scorer/catalyst_scorer.py` — `catalyst_alignment` per sector: confirms/contradicts/independent formula with exponential decay
 
@@ -568,10 +511,11 @@ Manual reminder of what that skill does:
 - [x] `catalyx/execution/tax_engine.py` — Spanish CGT 2026 brackets (19/21/23/27%), incremental + YTD. CLI: `uv run python -m catalyx.execution.tax_engine --gain N [--ytd-prior N --loss N]`
 - [x] `catalyx/attribution/thesis_scorer.py` — `right_reason_score` formula. CLI: `uv run python -m catalyx.attribution.thesis_scorer <path.json> [--all]`
 
-### Phase 1 (Python required — infrastructure completion)
+### Future (Python only — no DB, no self-hosted LLM)
 - [x] `catalyx/data/flow_data.py` → flow_confirmation scores from ETF shares_outstanding × price. Baseline snapshot written 2026-06-04. Week-over-week delta activates from next run.
-- [ ] Alembic migrations scaffold → `alembic init alembic/` + first migration from current models
-- [ ] `catalyx/cli/` Typer commands (wraps Python modules for direct terminal use)
+- [ ] `valuation_engine` (valuation_relative still manual) + `return_decomposer` → lake `validation/`
+- [ ] ML feedback loop on closed theses (`prior_repo`, xgboost/sklearn — offline, no LLM)
+- [ ] Backtesting harness (GDELT/COT, strict no-look-ahead)
 
 ---
 
@@ -582,8 +526,8 @@ Manual reminder of what that skill does:
 
 | Date | File | Version | Change |
 |---|---|---|---|
+| 2026-06-05 | `catalyx/store/{db.py removed, __init__.py, *_repo.py, snapshot_repo.py, lake.py}` + `pyproject.toml` + `.gitignore` + `cli/main.py` + docs (CLAUDE/README/PLAN/CHANGELOG) + all `.claude/commands/*.md` | v2.6 | **SQLite removed entirely + roadmap reframed to skill-permanent.** Decision (user): CATALYX stays a **skill on the Claude Code session** (credits + WebSearch) — no self-hosted LLM/API, no Postgres. SQLite was never a source of truth (files = Tier 1, lake = Tier 2) and its only own table `llm_log` was an empty Phase-1 placeholder, now obsolete → **deleted `db.py`/SQLAlchemy**. The 4 Tier-1 `*_repo.py` became **file-backed readers** (`summary`/`get`/`set-status`/`tax-snapshot`/`stale` read the JSON/YAML directly; writing a file IS the registration — no import/sync/rebuild/init). `snapshot_repo` repointed its last 3 SQL uses (prev-run lookup, register-report, validate) to the lake; dropped `rebuild`/`export`/cache models. Deps pruned (sqlalchemy, alembic, datasette, typer, pydantic, anthropic/openai extra). Storage is now **two tiers, no DB**. Skills updated (removed Step-0 "rebuild DB" + all import/sync calls). 82 tests green. |
 | 2026-06-05 | `catalyx/execution/portfolio.py` + `nav_engine.py` + `config/portfolios/*` (4 strategies) + `site/*` (redesign) + `catalyx-monthly-review.md` (Step 5b) | v2.5 | **Portfolio strategies + market comparison + dashboard redesign.** Portfolios are now 4 distinct **strategies** (momentum/conviction/equal/low_crowding) — replaces the 3 risk profiles that produced near-identical weights; each holding records `entry_price`. `nav_engine` gained `--backtest-days` (trailing backtest of current holdings vs **SPY**) → all 4 beat the market over 180d (momentum +41.9% vs SPY +11.4%). Fixed `holdings_nav` so newly-listed ETFs (no window history) are held as cash instead of poisoning the whole series via row-wise dropna. **Dashboard v3:** light/clean theme (was dark), cards + progress bars + sparklines (catalysts show indicator score-bars + history sparklines; portfolios show NAV-vs-SPY sparkline + "batimos mercado"), studies as structured docs (no raw JSON), event-catalyst summary fixed (was reading the wrong field → now `description`). Consolidated the duplicate dev run. Monthly-review Step 5b builds portfolios + NAV. 82 tests green. |
 | 2026-06-05 | `site/index.html` + `site/app.js` (new) + `scripts/build_site.py` (new) + `.github/workflows/pages.yml` (new) | v2.4 | **Fase F — DuckDB-WASM dashboard, LIVE on GitHub Pages.** Static site reads the committed parquet lake in-browser (no backend): ranking, sector history, model portfolios, rank moves, lineage, SQL console. `build_site.py` bakes parquet + manifest into `dist/`; Actions deploys to **https://abetatos.github.io/Catalyx/** on push. Replaced the prior Evidence.dev `dashboard/` (removed `deploy-dashboard.yml` — both were deploying to the same Pages URL). Fixes during bring-up: tz-safe `substr(snapshot_at::VARCHAR,1,10)` (lake mixes tz-aware/naive timestamps → `CAST … AS DATE` fails in DuckDB), `portfolio_nav` guard (graceful when no NAV yet), and inlined SQL literals instead of DuckDB-WASM prepared statements (bind path was breaking the parameterised tabs). Committed scoped to self-contained files; tree WIP untouched. |
 | 2026-06-05 | `catalyx/store/lake_query.py` (new) + `snapshot_repo.py` (reads → lake) | v2.3 | **Fase E — unified DuckDB read-path.** `lake_query`: read-only analytical queries over the lake (the page's data layer; DuckDB-WASM will run the same SQL in-browser) — `sector_history`, `latest_ranking`, `rank_moves`, `portfolio_compare`, `portfolio_holdings`, `lineage_for_trade` (trade → run → reports + snapshot), ad-hoc `sql`. Defensive: empty table → empty result. `snapshot_repo.history/list_runs/rank_events` repointed from SQLite to the lake (parquet-first reads complete; SQLite now only a cache + external-tool surface). Verified on the real lake (ranking, sector history, portfolio aggregates). 5 new tests, 82 total green. |
 | 2026-06-05 | `catalyx/execution/nav_engine.py` (new) + `trade_logger.py` (new) + `schemas/thesis.json` (1.3) + `lake.py` | v2.2 | **Fase D.2 — NAV-over-time + real-money log + lineage.** `nav_engine`: buy-and-hold NAV series (indexed 100) from holdings — model or real — vs benchmark; price source injectable (yfinance default) → lake `portfolio_nav` (one file/portfolio). `trade_logger`: real trades (with `thesis_id`+`run_id` lineage) → `portfolio_trade`; `real_holdings` derives net positions + realized P&L feeding the same NAV math, so model-vs-real curves are comparable (execution alpha). Thesis schema 1.2→1.3 (enum-tolerant): `metadata.lineage` (origin_run_id/report/heatmap_rank) → trade→thesis→run_id→report+snapshot is one join. End-to-end verified on real yfinance prices (67-pt real NAV). 8 new tests, 77 total green. |
-| 2026-06-05 | `catalyx/execution/portfolio.py` (new) + `schemas/portfolio.json` (new) + `config/portfolios/{conservative,balanced,aggressive}.yaml` (new) | v2.1 | **Fase D.1 — model portfolios by risk profile.** Deterministic, network-free: a portfolio = `(score_run × risk_config)`. `build_model_holdings` reads lake `sector_snapshot`, applies the profile (filter on composite/momentum/crowding/narrative → dedupe-by-ETF → top-N → composite-proportional weights water-filled under `max_position_pct`), persists to lake `portfolio_holding` (partition portfolio_id+run_id) tagged with `config_version` (md5 of the profile). 3 profiles built from the current run show clean risk separation (conservative drops all `crowded` AI/semis → 5 emerging/mainstream names @ ~20%; aggressive rides them → 12 @ ~8%). 7 new tests, 69 total green. NAV-over-time + real-money trades + thesis/trade lineage = next. |
