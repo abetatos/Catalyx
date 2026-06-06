@@ -333,7 +333,8 @@ function drawSecTable() {
   const head = `<th data-sort="rank">#${arrow('rank')}</th><th data-sort="sector_id">sector${arrow('sector_id')}</th>`
     + SEC_COLS.map((c) => `<th class="num" data-sort="${c.k}" title="${c.tip}">${c.label}${arrow(c.k)}</th>`).join('')
     + `<th data-sort="crowding_risk" title="crowding (from narrative maturity) — lower is better">crowding${arrow('crowding_risk')}</th>`
-    + `<th data-sort="regime_state" title="noise-vs-regime state">regime${arrow('regime_state')}</th><th title="rank move vs previous run">Δ</th>`;
+    + `<th data-sort="regime_state" title="noise-vs-regime state">regime${arrow('regime_state')}</th><th title="rank move vs previous run">Δ</th><th></th>`;
+  const chevron = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
   const body = rows.map((s) => `<tr data-sid="${s.sector_id}" class="${s.sector_id === curSector ? 'sel' : ''}">
       <td class="lbl">${s.rank}</td>
       <td><b>${s.sector_id}</b> <span class="pill b">${s.primary_etf || '—'}</span></td>
@@ -341,7 +342,8 @@ function drawSecTable() {
       <td>${crowdLabel(s.crowding_risk)}</td>
       <td>${regimePill(s.regime_state)}</td>
       <td>${moveBadge(s.sector_id)}</td>
-    </tr>`).join('') || `<tr><td colspan="${SEC_COLS.length + 5}" class="lbl" style="padding:14px">no match</td></tr>`;
+      <td class="go" title="open sector report">${chevron}</td>
+    </tr>`).join('') || `<tr><td colspan="${SEC_COLS.length + 6}" class="lbl" style="padding:14px">no match</td></tr>`;
   $('sec-table').innerHTML = `<div class="cmp"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`
     + `<p class="hint" style="margin-top:8px">Cell colour: <b style="color:var(--green)">green</b> high · <b style="color:var(--amber)">amber</b> mid · <b style="color:var(--red)">red</b> low (higher = better for all shown). <b>crowding</b> low is better. <code>valuation</code> hidden — it is a neutral placeholder (50) until <code>valuation_engine</code> is built.</p>`;
   $('sec-table').querySelector('thead').onclick = (ev) => {

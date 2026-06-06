@@ -133,6 +133,10 @@
     .cmp .score { display:inline-block; min-width:34px; padding:4px 9px; border-radius:9px; color:#fff;
                   font-variant-numeric:tabular-nums; text-align:center; font-size:12px; line-height:1.1;
                   box-shadow:0 1px 1px rgba(27,31,36,.12); }
+    .cmp td.go { text-align:center; color:var(--muted); width:30px; }
+    .cmp td.go svg { display:block; margin:0 auto; transition:transform .1s; }
+    .cmp tbody tr:hover td.go { color:var(--accent); }
+    .cmp tbody tr:hover td.go svg { transform:translateX(2px); }
 
     /* ── responsive ── */
     @media (max-width:900px) {
