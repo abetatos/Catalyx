@@ -54,6 +54,14 @@ Work happens on `release/<name>` (or a feature branch). To release:
    ```
    git push origin main --follow-tags
    ```
+8. **Publish the GitHub Release** (named, with notes) — the tag alone only shows its one-line
+   annotation; the Release is what renders the full notes on GitHub:
+   ```
+   gh release create vX.Y.Z --verify-tag \
+     --title "vX.Y.Z — <title>" --notes-from-tag
+   ```
+   `--notes-from-tag` reuses the annotated-tag body, so write the tag message as the full notes
+   (or use `--notes-file` pointing at the `## vX.Y.Z` CHANGELOG section). Requires `gh auth login`.
 
 `main` is the line of releases; every tag points at a merge commit. Release-prep branches
 (`release/*`) can be deleted after the merge.
