@@ -180,3 +180,34 @@ def crowding_from_maturity() -> dict:
     Single source of truth — previously hardcoded in the heatmap skill prose and in
     ad-hoc scripts (drift risk). Higher maturity → more crowded → bigger composite penalty."""
     return _section("crowding_from_maturity", _CROWDING_FROM_MATURITY_DEFAULT)
+
+
+# ── Entry-timing overlay (entry_timing) ──────────────────────────────────────
+
+_ENTRY_TIMING_DEFAULT = {
+    "lookback_days": 90,
+    "rsi_period": 14,
+    "rsi_overbought": 70,
+    "rsi_oversold": 30,
+    "ma_stretch_window": 20,
+    "stretch_overbought_pct": 8.0,
+    "vol_ratio_window_short": 10,
+    "vol_ratio_window_long": 90,
+    "vol_ratio_elevated": 1.5,
+    "short_trend_window": 5,
+    "drawdown_local_high_window": 20,
+    "stabilization_up_closes": 2,
+    "stabilization_reclaim_ma": 5,
+    "overhang_window_days": 21,
+    "overhang_magnitudes": ["high", "extreme"],
+    "overhang_min_strength": 60,
+    "market_tension_ticker": "^VIX",
+    "benchmark": "SPY",
+}
+
+
+def entry_timing() -> dict:
+    """Thresholds for the execution-timing overlay (entry_timing.py): RSI bounds, MA-stretch,
+    realized-vol ratio, stabilization rule, and the near-term event-overhang window. NOT part of
+    the composite — this is a recommend-only timing layer. See scoring_weights.yaml `entry_timing`."""
+    return _section("entry_timing", _ENTRY_TIMING_DEFAULT)
