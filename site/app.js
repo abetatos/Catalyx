@@ -303,10 +303,16 @@ const SEC_COLS = [
   { k: 'momentum', label: 'momentum', tip: 'Cross-sectional price-momentum percentile' },
   { k: 'flow_confirmation', label: 'flow', tip: 'ETF net-flow confirmation (shares × NAV)' },
 ];
+// continuous vivid heatmap: red (low) → amber → green (high)
+function heatColor(v) {
+  const t = Math.max(0, Math.min(100, v)) / 100;
+  const h = t * 132;                 // 0=red → 132=green
+  const s = 68, l = 30 + 14 * (1 - Math.abs(t - 0.5) * 2); // a touch lighter mid-range
+  return `hsl(${h.toFixed(0)} ${s}% ${l.toFixed(0)}%)`;
+}
 function heatCell(v, bold) {
-  if (v == null || v === '') return '<td class="lbl" style="text-align:right">—</td>';
-  const c = v >= 66 ? '26,127,55' : v >= 40 ? '154,103,0' : '207,34,46';
-  return `<td style="background:rgba(${c},.13);text-align:right;font-variant-numeric:tabular-nums${bold ? ';font-weight:700' : ''}">${num(v, 0)}</td>`;
+  if (v == null || v === '') return '<td style="text-align:center"><span class="lbl">—</span></td>';
+  return `<td style="text-align:center"><span class="score" style="background:${heatColor(v)}${bold ? ';font-weight:700;min-width:40px' : ''}">${num(v, 0)}</span></td>`;
 }
 function crowdLabel(v) {
   if (v == null) return '<span class="lbl">—</span>';
