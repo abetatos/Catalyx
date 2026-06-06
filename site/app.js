@@ -16,6 +16,9 @@ const MARKED_URL = 'https://cdn.jsdelivr.net/npm/marked@12/+esm';
 
 const $ = (id) => document.getElementById(id);
 const status = (m) => { const s = $('status'); if (s) s.textContent = m; };
+// Cache-busting token injected by build_site (window.__BUILD__) — appended to every
+// fetched asset so index.html, app.js, the JSON and the parquet always load as one set.
+const V = (typeof window !== 'undefined' && window.__BUILD__) ? ('?v=' + window.__BUILD__) : '';
 
 let OV = {};
 let DOCS = { catalysts_structural: [], catalysts_event: [], studies: [], theses: [] };
@@ -38,13 +41,13 @@ async function ensureDuckDB() {
     const db = new duckdb.AsyncDuckDB(new duckdb.ConsoleLogger(), worker);
     await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
     URL.revokeObjectURL(workerURL);
-    const manifest = await (await fetch('manifest.json')).json();
+    const manifest = await (await fetch('manifest.json' + V)).json();
     conn = await db.connect();
     for (const [table, files] of Object.entries(manifest)) {
       const names = [];
       for (const f of files) {
         const name = f.replaceAll('/', '_');
-        await db.registerFileURL(name, new URL(f, document.baseURI).href, duckdb.DuckDBDataProtocol.HTTP, false);
+        await db.registerFileURL(name, new URL(f + V, document.baseURI).href, duckdb.DuckDBDataProtocol.HTTP, false);
         names.push(`'${name}'`);
       }
       if (!names.length) continue;
@@ -693,8 +696,8 @@ function route() {
   status('loading data…');
   try {
     const [ov, docs] = await Promise.all([
-      fetch('overview.json').then((r) => r.json()),
-      fetch('docs.json').then((r) => r.json()).catch(() => DOCS),
+      fetch('overview.json' + V).then((r) => r.json()),
+      fetch('docs.json' + V).then((r) => r.json()).catch(() => DOCS),
     ]);
     OV = ov; DOCS = docs;
     CUR_RUN = OV.latest_run_id; CUR_DATA = OV.latest || { ranking: [], rank_moves: [], holdings: {} };

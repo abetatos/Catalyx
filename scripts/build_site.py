@@ -303,9 +303,23 @@ def build(dist: Path = _DIST) -> dict:
         shutil.rmtree(dist)
     dist.mkdir(parents=True)
 
+    # Cache-busting token: index.html, app.js and the JSON/parquet it fetches must always
+    # load as one coherent set. Without this, GitHub Pages can serve a fresh index.html with
+    # a stale cached app.js (or vice-versa) → the DOM contract mismatches and sections blank.
+    # The token versions every reference so a new deploy invalidates them together.
+    token = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
     for name in _STATIC:
         src = _SITE / name
-        if src.exists():
+        if not src.exists():
+            continue
+        if name == "index.html":
+            html = src.read_text(encoding="utf-8")
+            html = html.replace(
+                '<script type="module" src="app.js"></script>',
+                f'<script>window.__BUILD__="{token}";</script>\n'
+                f'  <script type="module" src="app.js?v={token}"></script>')
+            (dist / name).write_text(html, encoding="utf-8")
+        else:
             shutil.copy(src, dist / name)
 
     manifest: dict[str, list[str]] = {}
