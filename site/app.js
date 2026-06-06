@@ -143,11 +143,6 @@ function lineChart(series, dates, o = {}) {
   const legend = series.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:14px"><span style="width:16px;height:3px;background:${s.color};display:inline-block;border-radius:2px"></span><span class="lbl">${s.label}</span></span>`).join('');
   return `<svg width="100%" viewBox="0 0 ${W} ${H}" style="max-width:${W}px;display:block">${grid}${xlab}${paths}</svg><div style="margin-top:8px">${legend}</div>`;
 }
-// mini colored bar + value, for table cells (0–100 score)
-function cellBar(v, invert) {
-  const color = invert ? ((v >= 66) ? 'var(--red)' : (v >= 40) ? 'var(--amber)' : 'var(--green)') : undefined;
-  return `<div class="mini">${bar(v || 0, 100, color)}<span class="v">${num(v, 0)}</span></div>`;
-}
 
 // ── run state ───────────────────────────────────────────────────────────────────
 const runMeta = (rid) => (OV.runs || []).find((r) => r.run_id === rid) || {};
@@ -299,11 +294,25 @@ function renderOverview() {
 }
 
 // ── SECTORS (full comparison table + study + history, run-aware) ─────────────────
+// Heatmap columns (higher = better). valuation_relative is intentionally omitted — it is a
+// hardcoded 50 placeholder until valuation_engine exists, so a column of identical 50s only
+// adds noise. crowding is shown as a categorical label (it derives from narrative_maturity).
 const SEC_COLS = [
-  { k: 'composite', label: 'composite' }, { k: 'catalyst_alignment', label: 'catalyst' },
-  { k: 'momentum', label: 'momentum' }, { k: 'flow_confirmation', label: 'flow' },
-  { k: 'valuation_relative', label: 'valuation' }, { k: 'crowding_risk', label: 'crowding', invert: true },
+  { k: 'composite', label: 'composite', bold: true, tip: 'Blend used for the ranking (higher = better)' },
+  { k: 'catalyst_alignment', label: 'catalyst', tip: 'How strongly active catalysts support the sector' },
+  { k: 'momentum', label: 'momentum', tip: 'Cross-sectional price-momentum percentile' },
+  { k: 'flow_confirmation', label: 'flow', tip: 'ETF net-flow confirmation (shares × NAV)' },
 ];
+function heatCell(v, bold) {
+  if (v == null || v === '') return '<td class="lbl" style="text-align:right">—</td>';
+  const c = v >= 66 ? '26,127,55' : v >= 40 ? '154,103,0' : '207,34,46';
+  return `<td style="background:rgba(${c},.13);text-align:right;font-variant-numeric:tabular-nums${bold ? ';font-weight:700' : ''}">${num(v, 0)}</td>`;
+}
+function crowdLabel(v) {
+  if (v == null) return '<span class="lbl">—</span>';
+  const [cls, txt] = v >= 66 ? ['r', 'high'] : v >= 40 ? ['a', 'medium'] : ['g', 'low'];
+  return `<span class="pill ${cls}" title="crowding risk ${num(v, 0)} (from narrative maturity)">${txt}</span>`;
+}
 let SEC_FILTER = '', curSector = null, SEC_SORT = { k: 'rank', dir: 1 };
 function drawSecTable() {
   const f = SEC_FILTER.toLowerCase();
@@ -316,16 +325,19 @@ function drawSecTable() {
   });
   const arrow = (col) => SEC_SORT.k === col ? `<span class="ar">${SEC_SORT.dir > 0 ? '▲' : '▼'}</span>` : '';
   const head = `<th data-sort="rank">#${arrow('rank')}</th><th data-sort="sector_id">sector${arrow('sector_id')}</th>`
-    + SEC_COLS.map((c) => `<th class="num" data-sort="${c.k}" title="${c.label}">${c.label}${arrow(c.k)}</th>`).join('')
-    + `<th data-sort="regime_state">regime${arrow('regime_state')}</th><th>Δ</th>`;
+    + SEC_COLS.map((c) => `<th class="num" data-sort="${c.k}" title="${c.tip}">${c.label}${arrow(c.k)}</th>`).join('')
+    + `<th data-sort="crowding_risk" title="crowding (from narrative maturity) — lower is better">crowding${arrow('crowding_risk')}</th>`
+    + `<th data-sort="regime_state" title="noise-vs-regime state">regime${arrow('regime_state')}</th><th title="rank move vs previous run">Δ</th>`;
   const body = rows.map((s) => `<tr data-sid="${s.sector_id}" class="${s.sector_id === curSector ? 'sel' : ''}">
       <td class="lbl">${s.rank}</td>
       <td><b>${s.sector_id}</b> <span class="pill b">${s.primary_etf || '—'}</span></td>
-      ${SEC_COLS.map((c) => `<td>${cellBar(s[c.k], c.invert)}</td>`).join('')}
+      ${SEC_COLS.map((c) => heatCell(s[c.k], c.bold)).join('')}
+      <td>${crowdLabel(s.crowding_risk)}</td>
       <td>${regimePill(s.regime_state)}</td>
       <td>${moveBadge(s.sector_id)}</td>
-    </tr>`).join('') || `<tr><td colspan="${SEC_COLS.length + 4}" class="lbl" style="padding:14px">no match</td></tr>`;
-  $('sec-table').innerHTML = `<div class="cmp"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+    </tr>`).join('') || `<tr><td colspan="${SEC_COLS.length + 5}" class="lbl" style="padding:14px">no match</td></tr>`;
+  $('sec-table').innerHTML = `<div class="cmp"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`
+    + `<p class="hint" style="margin-top:8px">Cell colour: <b style="color:var(--green)">green</b> high · <b style="color:var(--amber)">amber</b> mid · <b style="color:var(--red)">red</b> low (higher = better for all shown). <b>crowding</b> low is better. <code>valuation</code> hidden — it is a neutral placeholder (50) until <code>valuation_engine</code> is built.</p>`;
   $('sec-table').querySelector('thead').onclick = (ev) => {
     const th = ev.target.closest('th[data-sort]'); if (!th) return;
     const col = th.dataset.sort;
@@ -372,9 +384,10 @@ function selectSector(sid) {
         <div style="text-align:right"><div class="lbl">composite</div><div class="big" style="color:${scoreColor(row.composite || 0)}">${num(row.composite, 0)}</div></div>
       </div>
       <div style="margin-top:14px;display:grid;gap:8px">
-        <div class="barrow" style="grid-template-columns:130px 1fr 40px"><span class="lbl">momentum</span>${bar(row.momentum || 0)}<span class="v">${num(row.momentum, 0)}</span></div>
         <div class="barrow" style="grid-template-columns:130px 1fr 40px"><span class="lbl">catalyst align</span>${bar(row.catalyst_alignment || 0)}<span class="v">${num(row.catalyst_alignment, 0)}</span></div>
-        <div class="barrow" style="grid-template-columns:130px 1fr 40px"><span class="lbl">crowding risk</span>${bar(row.crowding_risk || 0, 100, (row.crowding_risk || 0) >= 66 ? 'var(--red)' : (row.crowding_risk || 0) >= 40 ? 'var(--amber)' : 'var(--green)')}<span class="v">${num(row.crowding_risk, 0)}</span></div>
+        <div class="barrow" style="grid-template-columns:130px 1fr 40px"><span class="lbl">momentum</span>${bar(row.momentum || 0)}<span class="v">${num(row.momentum, 0)}</span></div>
+        <div class="barrow" style="grid-template-columns:130px 1fr 40px"><span class="lbl">flow</span>${bar(row.flow_confirmation || 0)}<span class="v">${num(row.flow_confirmation, 0)}</span></div>
+        <div class="barrow" style="grid-template-columns:130px 1fr"><span class="lbl">crowding</span><span>${crowdLabel(row.crowding_risk)} <span class="lbl">(${num(row.crowding_risk, 0)})</span></span></div>
       </div>
       ${chips.length ? `<h3>Linked</h3><div class="chips">${chips.join('')}</div>` : ''}
       <h3>Score history (all runs)</h3><div id="sec-hist"><p class="hint">loading…</p></div>
