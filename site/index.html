@@ -109,6 +109,28 @@
     .listpane .item .nm { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12.5px; }
     .chips { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
 
+    /* ── sub-tabs ── */
+    .subtabs { display:flex; gap:2px; margin:0 0 16px; border-bottom:1px solid var(--border); }
+    .subtabs button { background:none; border:none; border-bottom:2px solid transparent; padding:9px 16px;
+                      cursor:pointer; color:var(--muted); font:inherit; font-weight:500; }
+    .subtabs button:hover { color:var(--fg); }
+    .subtabs button.active { color:var(--accent); border-bottom-color:var(--accent); }
+
+    /* ── comparison table ── */
+    .cmp { background:var(--panel); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); overflow:hidden; }
+    .cmp table { width:100%; border-collapse:collapse; font-size:12.5px; }
+    .cmp th { position:sticky; top:42px; background:var(--panel); cursor:pointer; user-select:none;
+              white-space:nowrap; color:var(--muted); font-weight:600; padding:9px 10px; border-bottom:1px solid var(--border); text-align:left; }
+    .cmp th.num, .cmp td.num { text-align:left; }
+    .cmp th:hover { color:var(--accent); }
+    .cmp th .ar { font-size:9px; }
+    .cmp td { padding:6px 10px; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .cmp tr { cursor:pointer; }
+    .cmp tbody tr:hover { background:var(--track); }
+    .cmp tr.sel { background:var(--accent-soft); }
+    .cmp .mini { display:grid; grid-template-columns:1fr 26px; gap:6px; align-items:center; min-width:74px; }
+    .cmp .mini .v { text-align:right; color:var(--muted); font-variant-numeric:tabular-nums; }
+
     /* ── responsive ── */
     @media (max-width:900px) {
       body { grid-template-columns:1fr; }
@@ -164,29 +186,27 @@
     <!-- ── SECTORS ── -->
     <section class="section" id="s-sectors">
       <h1 class="head">Sectors</h1>
-      <p class="sub">Ranking, bottom-up study, score history and links to the catalysts, thesis and
-        portfolios behind each sector — unified. Pick a sector on the left.</p>
+      <p class="sub">All sectors with every score dimension side by side — click a column header to
+        sort, click a row to open its study, history and links. Composite = the blend the ranking uses.</p>
       <div class="row"><input id="sec-search" placeholder="Filter sectors…" style="width:280px" /></div>
-      <div class="split">
-        <div class="listpane" id="sec-list"></div>
-        <div id="sec-detail"></div>
-      </div>
+      <div id="sec-table"></div>
+      <div id="sec-detail" style="margin-top:22px"></div>
     </section>
 
     <!-- ── CATALYSTS ── -->
     <section class="section" id="s-catalysts">
       <h1 class="head">Catalysts &amp; theses</h1>
-      <p class="sub">The <i>why</i> behind the rankings. Structural catalysts are the floor signal;
-        event catalysts are the spike. Each lists the sectors it drives. Open theses below.</p>
-      <h2>Structural catalysts</h2>
+      <p class="sub">The <i>why</i> behind the rankings. Structural catalysts are the floor signal,
+        event catalysts the spike, and theses the positions built on them. Pick a tab, then an item.</p>
+      <div class="subtabs" id="cat-subtabs">
+        <button data-kind="structural" class="active">Structural</button>
+        <button data-kind="event">Event</button>
+        <button data-kind="thesis">Theses</button>
+      </div>
       <div class="split">
         <div class="listpane" id="cat-list"></div>
         <div id="cat-detail"></div>
       </div>
-      <h2>Event catalysts</h2>
-      <div id="cat-events" class="grid"></div>
-      <h2>Theses</h2>
-      <div id="cat-theses" class="grid"></div>
     </section>
 
     <!-- ── PORTFOLIOS ── -->

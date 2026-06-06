@@ -107,6 +107,44 @@ function tableHTML(rows, opts = {}) {
   }).join('') + '</tr>').join('');
   return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
 }
+// Render any value (scalar / object / array) as readable HTML — never "[object Object]".
+function fmtMeta(v) {
+  if (v == null || v === '') return '';
+  if (Array.isArray(v)) return '<ul>' + v.map((x) => `<li>${fmtMeta(x)}</li>`).join('') + '</ul>';
+  if (typeof v === 'object') {
+    return Object.entries(v).filter(([, val]) => val != null && val !== '')
+      .map(([k, val]) => `<div style="margin:2px 0"><span class="lbl">${escapeHtml(k.replace(/_/g, ' '))}:</span> ${fmtMeta(val)}</div>`).join('');
+  }
+  return escapeHtml(String(v));
+}
+// A line chart with axes (fixed 0–100 scale, gridlines, x date ticks, legend).
+function lineChart(series, dates, o = {}) {
+  const n = dates.length;
+  if (n < 2) return '<p class="hint">Only one run so far — no trend to chart yet.</p>';
+  const W = o.w || 560, H = o.h || 210, padL = 28, padR = 12, padT = 10, padB = 28;
+  const X = (i) => padL + (i / (n - 1)) * (W - padL - padR);
+  const Y = (v) => padT + (1 - v / 100) * (H - padT - padB);
+  let grid = '';
+  [0, 25, 50, 75, 100].forEach((g) => {
+    const y = Y(g);
+    grid += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="1"/>`
+      + `<text x="${padL - 5}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--muted)">${g}</text>`;
+  });
+  const ticks = [...new Set([0, Math.floor((n - 1) / 2), n - 1])];
+  const xlab = ticks.map((i) => `<text x="${X(i).toFixed(1)}" y="${H - 9}" text-anchor="middle" font-size="9" fill="var(--muted)">${dates[i]}</text>`).join('');
+  const paths = series.map((s) => {
+    const d = s.values.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v || 0).toFixed(1)).join(' ');
+    const dots = s.values.map((v, i) => `<circle cx="${X(i).toFixed(1)}" cy="${Y(v || 0).toFixed(1)}" r="2" fill="${s.color}"/>`).join('');
+    return `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2"/>${dots}`;
+  }).join('');
+  const legend = series.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:14px"><span style="width:16px;height:3px;background:${s.color};display:inline-block;border-radius:2px"></span><span class="lbl">${s.label}</span></span>`).join('');
+  return `<svg width="100%" viewBox="0 0 ${W} ${H}" style="max-width:${W}px;display:block">${grid}${xlab}${paths}</svg><div style="margin-top:8px">${legend}</div>`;
+}
+// mini colored bar + value, for table cells (0–100 score)
+function cellBar(v, invert) {
+  const color = invert ? ((v >= 66) ? 'var(--red)' : (v >= 40) ? 'var(--amber)' : 'var(--green)') : undefined;
+  return `<div class="mini">${bar(v || 0, 100, color)}<span class="v">${num(v, 0)}</span></div>`;
+}
 
 // ── run state ───────────────────────────────────────────────────────────────────
 const runMeta = (rid) => (OV.runs || []).find((r) => r.run_id === rid) || {};
@@ -137,7 +175,7 @@ async function getRunData(rid) {
   if (RUNCACHE[rid]) return RUNCACHE[rid];
   await ensureDuckDB();
   const ranking = tables.has('sector_snapshot') ? await q(
-    `SELECT sector_id, rank, composite, momentum, catalyst_alignment, crowding_risk, narrative_maturity, primary_etf, regime_state
+    `SELECT sector_id, rank, composite, catalyst_alignment, momentum, flow_confirmation, valuation_relative, crowding_risk, narrative_maturity, primary_etf, regime_state
      FROM sector_snapshot WHERE run_id = ? ORDER BY rank`, [rid]) : [];
   const rank_moves = tables.has('rank_event') ? await q(
     `SELECT sector_id, event_type, from_rank, to_rank, delta FROM rank_event WHERE run_id = ? ORDER BY abs(coalesce(delta,99)) DESC`, [rid]) : [];
@@ -257,28 +295,58 @@ function renderOverview() {
   $('ov-moves').innerHTML = movesHtml;
 }
 
-// ── SECTORS (ranking + study + history, run-aware) ──────────────────────────────
-let SEC_FILTER = '', curSector = null;
-function drawSecList() {
+// ── SECTORS (full comparison table + study + history, run-aware) ─────────────────
+const SEC_COLS = [
+  { k: 'composite', label: 'composite' }, { k: 'catalyst_alignment', label: 'catalyst' },
+  { k: 'momentum', label: 'momentum' }, { k: 'flow_confirmation', label: 'flow' },
+  { k: 'valuation_relative', label: 'valuation' }, { k: 'crowding_risk', label: 'crowding', invert: true },
+];
+let SEC_FILTER = '', curSector = null, SEC_SORT = { k: 'rank', dir: 1 };
+function drawSecTable() {
   const f = SEC_FILTER.toLowerCase();
-  const rows = runRanking().filter((s) => !f || s.sector_id.toLowerCase().includes(f));
-  $('sec-list').innerHTML = rows.map((s) => `
-    <a class="item" data-sid="${s.sector_id}" href="#/sectors/${s.sector_id}">
-      <span class="rk">${s.rank}</span><span class="nm">${s.sector_id}</span>
-      <span style="display:flex;gap:6px;align-items:center"><span class="v lbl">${num(s.composite, 0)}</span>${moveBadge(s.sector_id)}</span>
-    </a>`).join('') || '<div class="item"><span class="nm lbl">no match</span></div>';
-  highlightSector();
+  let rows = runRanking().filter((s) => !f || s.sector_id.toLowerCase().includes(f));
+  const k = SEC_SORT.k, dir = SEC_SORT.dir;
+  rows = rows.slice().sort((a, b) => {
+    const av = a[k], bv = b[k];
+    if (av == null) return 1; if (bv == null) return -1;
+    return (av < bv ? -1 : av > bv ? 1 : 0) * dir;
+  });
+  const arrow = (col) => SEC_SORT.k === col ? `<span class="ar">${SEC_SORT.dir > 0 ? '▲' : '▼'}</span>` : '';
+  const head = `<th data-sort="rank">#${arrow('rank')}</th><th data-sort="sector_id">sector${arrow('sector_id')}</th>`
+    + SEC_COLS.map((c) => `<th class="num" data-sort="${c.k}" title="${c.label}">${c.label}${arrow(c.k)}</th>`).join('')
+    + `<th data-sort="regime_state">regime${arrow('regime_state')}</th><th>Δ</th>`;
+  const body = rows.map((s) => `<tr data-sid="${s.sector_id}" class="${s.sector_id === curSector ? 'sel' : ''}">
+      <td class="lbl">${s.rank}</td>
+      <td><b>${s.sector_id}</b> <span class="pill b">${s.primary_etf || '—'}</span></td>
+      ${SEC_COLS.map((c) => `<td>${cellBar(s[c.k], c.invert)}</td>`).join('')}
+      <td>${regimePill(s.regime_state)}</td>
+      <td>${moveBadge(s.sector_id)}</td>
+    </tr>`).join('') || `<tr><td colspan="${SEC_COLS.length + 4}" class="lbl" style="padding:14px">no match</td></tr>`;
+  $('sec-table').innerHTML = `<div class="cmp"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+  $('sec-table').querySelector('thead').onclick = (ev) => {
+    const th = ev.target.closest('th[data-sort]'); if (!th) return;
+    const col = th.dataset.sort;
+    // default direction: rank/sector ascending, score columns descending
+    if (SEC_SORT.k === col) SEC_SORT.dir *= -1;
+    else SEC_SORT = { k: col, dir: (col === 'rank' || col === 'sector_id') ? 1 : -1 };
+    drawSecTable();
+  };
+  $('sec-table').querySelector('tbody').onclick = (ev) => {
+    const tr = ev.target.closest('tr[data-sid]'); if (!tr) return;
+    selectSector(tr.dataset.sid);
+    $('sec-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 }
-function highlightSector() { document.querySelectorAll('#sec-list .item').forEach((el) => el.classList.toggle('sel', el.dataset.sid === curSector)); }
 function renderSectors(id) {
-  const inp = $('sec-search'); inp.value = SEC_FILTER; inp.oninput = (e) => { SEC_FILTER = e.target.value; drawSecList(); };
-  drawSecList();
+  const inp = $('sec-search'); inp.value = SEC_FILTER; inp.oninput = (e) => { SEC_FILTER = e.target.value; drawSecTable(); };
+  drawSecTable();
   if (id) selectSector(id);
   else if (curSector && rankingRow(curSector)) selectSector(curSector);
-  else $('sec-detail').innerHTML = '<p class="hint">Pick a sector from the list.</p>';
+  else $('sec-detail').innerHTML = '<p class="hint">Click a sector row above to see its study, history and links.</p>';
 }
 function selectSector(sid) {
-  curSector = sid; highlightSector();
+  curSector = sid;
+  document.querySelectorAll('#sec-table tr[data-sid]').forEach((el) => el.classList.toggle('sel', el.dataset.sid === sid));
   const row = rankingRow(sid) || {};
   const study = studyFor(sid);
   const th = thesisForSector(sid);
@@ -315,61 +383,99 @@ function selectSector(sid) {
 }
 function renderStudyMeta(s) {
   const parts = []; const dl = [];
-  for (const k of ['study_type', 'cycle_position', 'technology_maturity', 'narrative_maturity', 'analyst_narrative_score', 'narrative_trend', 'last_updated'])
-    if (s[k] != null && s[k] !== '') dl.push(`<div class="barrow" style="grid-template-columns:170px 1fr"><span class="lbl">${k}</span><span>${escapeHtml(String(s[k]))}</span></div>`);
+  // plain scalars → compact key/value rows
+  for (const k of ['study_type', 'narrative_maturity', 'analyst_narrative_score', 'narrative_trend', 'last_updated'])
+    if (s[k] != null && s[k] !== '' && typeof s[k] !== 'object')
+      dl.push(`<div class="barrow" style="grid-template-columns:170px 1fr"><span class="lbl">${k.replace(/_/g, ' ')}</span><span>${escapeHtml(String(s[k]))}</span></div>`);
   if (dl.length) parts.push(dl.join(''));
+  // object-valued fields (cycle_position, technology_maturity, …) → block with assessment text
+  for (const k of ['cycle_position', 'technology_maturity']) {
+    const v = s[k]; if (v == null || v === '') continue;
+    if (typeof v === 'object') {
+      const text = v.assessment || v.note || v.summary;
+      parts.push(`<h3>${k.replace(/_/g, ' ')}</h3>` + (text ? `<div class="md">${md(String(text))}</div>` : `<div>${fmtMeta(v)}</div>`));
+    } else parts.push(`<h3>${k.replace(/_/g, ' ')}</h3><div>${escapeHtml(String(v))}</div>`);
+  }
   for (const k of ['demand_drivers', 'supply_constraints', 'risks', 'key_metrics_to_monitor']) {
     const v = s[k];
-    if (Array.isArray(v) && v.length) parts.push(`<h3>${k.replace(/_/g, ' ')}</h3><ul>${v.map((x) => `<li>${escapeHtml(typeof x === 'object' ? JSON.stringify(x) : String(x))}</li>`).join('')}</ul>`);
+    if (Array.isArray(v) && v.length) parts.push(`<h3>${k.replace(/_/g, ' ')}</h3><ul>${v.map((x) => `<li>${fmtMeta(x)}</li>`).join('')}</ul>`);
   }
   return parts.join('');
 }
 async function loadSectorHistory(sid) {
   try {
-    const rows = await q(`SELECT run_id, substr(CAST(snapshot_at AS VARCHAR),1,10) AS date, rank, composite, momentum, catalyst_alignment, crowding_risk
+    const rows = await q(`SELECT substr(CAST(snapshot_at AS VARCHAR),1,10) AS date, composite, momentum, catalyst_alignment, crowding_risk
       FROM sector_snapshot WHERE sector_id = ? ORDER BY run_id`, [sid]);
     if (curSector !== sid) return;
     const el = $('sec-hist'); if (!el) return;
-    if (rows.length < 2) { el.innerHTML = tableHTML(rows); return; }
-    const sp = spark([{ values: rows.map((r) => r.composite), color: 'var(--accent)' }, { values: rows.map((r) => r.momentum), color: '#8b949e' }], { w: 360, h: 56 });
-    el.innerHTML = `<div>${sp} <span class="lbl">composite (blue) · momentum (grey), ${rows.length} runs</span></div>` + tableHTML(rows);
+    el.innerHTML = lineChart([
+      { label: 'composite', values: rows.map((r) => r.composite), color: 'var(--accent)' },
+      { label: 'catalyst align', values: rows.map((r) => r.catalyst_alignment), color: 'var(--green)' },
+      { label: 'momentum', values: rows.map((r) => r.momentum), color: '#8b949e' },
+      { label: 'crowding risk', values: rows.map((r) => r.crowding_risk), color: 'var(--red)' },
+    ], rows.map((r) => r.date), { w: 560, h: 210 });
   } catch (e) { const el = $('sec-hist'); if (el) el.innerHTML = `<div class="err">${(e && e.message) || e}</div>`; }
 }
 
-// ── CATALYSTS & THESES (current state — not run-versioned) ──────────────────────
-let catBuilt = false, curCat = null;
-function buildCatalysts() {
-  $('cat-list').innerHTML = (DOCS.catalysts_structural || []).map((c) => `
-    <a class="item" data-cid="${c.id}" href="#/catalysts/${c.id}">
-      <span class="nm">${escapeHtml(c.title || c.id)}</span>
-      <span class="v" style="color:${scoreColor((c.intensity || {}).current_score || 0)};font-weight:600">${(c.intensity || {}).current_score ?? '—'}</span>
+// ── CATALYSTS & THESES (sub-tabbed: structural / event / thesis, all rich) ──────
+let CAT_KIND = 'structural', curCat = null, catWired = false;
+const structuralDoc = (id) => (DOCS.catalysts_structural || []).find((c) => c.id === id);
+const eventDoc = (id) => (DOCS.catalysts_event || []).find((c) => c.id === id);
+const thesisDoc = (id) => (DOCS.theses || []).find((t) => t.id === id);
+function catKindOf(id) {
+  if (structuralDoc(id)) return 'structural';
+  if (eventDoc(id)) return 'event';
+  if (thesisDoc(id)) return 'thesis';
+  return null;
+}
+function catItems(kind) {
+  if (kind === 'event') return (DOCS.catalysts_event || []).map((c) => ({ id: c.id, label: c.id, score: c.strength_score }));
+  if (kind === 'thesis') return (DOCS.theses || []).map((t) => ({ id: t.id, label: t.id, status: t.status }));
+  return (DOCS.catalysts_structural || []).map((c) => ({ id: c.id, label: c.title || c.id, score: (c.intensity || {}).current_score }));
+}
+function buildCatList() {
+  document.querySelectorAll('#cat-subtabs button').forEach((b) => b.classList.toggle('active', b.dataset.kind === CAT_KIND));
+  $('cat-list').innerHTML = catItems(CAT_KIND).map((it) => `
+    <a class="item" data-cid="${encodeURIComponent(it.id)}" href="#/catalysts/${encodeURIComponent(it.id)}">
+      <span class="nm">${escapeHtml(it.label)}</span>
+      ${it.score != null ? `<span class="v" style="color:${scoreColor(it.score)};font-weight:600">${it.score}</span>`
+        : it.status ? `<span class="pill ${it.status === 'open' ? 'g' : ''}">${it.status}</span>` : ''}
     </a>`).join('') || '<div class="item"><span class="nm lbl">(none)</span></div>';
-  $('cat-events').innerHTML = (DOCS.catalysts_event || []).map((e) => `<div class="card">
-    <div class="lbl">${e.id} <span class="pill">${e.catalyst_type || ''}</span></div>
-    <div style="margin:8px 0;font-size:13px">${escapeHtml((e.description || '').slice(0, 240))}${(e.description || '').length > 240 ? '…' : ''}</div>
-    <div class="lbl">strength ${e.strength_score ?? '—'} · novelty ${e.novelty_score ?? '—'} · <span class="pill">${e.status || ''}</span></div>
-  </div>`).join('') || '<p class="hint">(no events)</p>';
-  $('cat-theses').innerHTML = (DOCS.theses || []).map((t) => {
-    const sid = (t.sector || {}).sector_id, cid = (t.catalyst || {}).catalyst_event_id;
-    return `<div class="card">
-      <div class="lbl">${t.id} <span class="pill ${t.status === 'open' ? 'g' : ''}">${t.status || ''}</span></div>
-      <div style="margin:8px 0;font-size:13px">${escapeHtml(((t.catalyst || {}).catalyst_summary || '').slice(0, 220))}…</div>
-      <div class="lbl">${sid ? 'sector ' + sectorLink(sid) : ''} ${(t.vehicle || {}).primary_etf ? '· <span class="pill b">' + t.vehicle.primary_etf + '</span>' : ''} ${cid ? '· catalyst ' + link('catalysts', cid, cid) : ''}</div>
-    </div>`;
-  }).join('') || '<p class="hint">(no theses)</p>';
-  catBuilt = true;
+  document.querySelectorAll('#cat-list .item').forEach((el) => el.classList.toggle('sel', decodeURIComponent(el.dataset.cid) === curCat));
 }
 function renderCatalysts(id) {
-  if (!catBuilt) buildCatalysts();
-  const first = (DOCS.catalysts_structural || [])[0];
-  selectCatalyst(id || curCat || (first && first.id));
+  if (!catWired) {
+    $('cat-subtabs').addEventListener('click', (ev) => {
+      const b = ev.target.closest('button'); if (!b) return;
+      CAT_KIND = b.dataset.kind; curCat = null; buildCatList();
+      const items = catItems(CAT_KIND); selectCat(items[0] && items[0].id);
+    });
+    catWired = true;
+  }
+  if (id) { const k = catKindOf(id); if (k) CAT_KIND = k; }
+  buildCatList();
+  const items = catItems(CAT_KIND);
+  selectCat(id || curCat || (items[0] && items[0].id));
 }
-function selectCatalyst(cid) {
-  curCat = cid;
-  document.querySelectorAll('#cat-list .item').forEach((el) => el.classList.toggle('sel', el.dataset.cid === cid));
-  const c = catalystDoc(cid);
-  if (!c) { $('cat-detail').innerHTML = '<p class="hint">Select a catalyst.</p>'; return; }
-  const sectors = sectorsForCatalyst(cid), ths = thesesForCatalyst(cid);
+function selectCat(id) {
+  curCat = id;
+  document.querySelectorAll('#cat-list .item').forEach((el) => el.classList.toggle('sel', decodeURIComponent(el.dataset.cid) === id));
+  const kind = catKindOf(id);
+  const el = $('cat-detail');
+  if (kind === 'structural') el.innerHTML = structuralDetailHTML(structuralDoc(id));
+  else if (kind === 'event') el.innerHTML = eventDetailHTML(eventDoc(id));
+  else if (kind === 'thesis') el.innerHTML = thesisDetailHTML(thesisDoc(id));
+  else el.innerHTML = '<p class="hint">Select an item.</p>';
+}
+function catHeader(idLine, title, rightLabel, rightVal, rightColor) {
+  return `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px">
+    <div><div class="lbl">${idLine}</div><div style="font-size:18px;font-weight:650;margin-top:2px">${escapeHtml(title)}</div></div>
+    ${rightVal != null ? `<div style="text-align:right"><div class="lbl">${rightLabel}</div><div class="big" style="color:${rightColor || 'inherit'}">${rightVal}</div></div>` : ''}
+  </div>`;
+}
+function structuralDetailHTML(c) {
+  if (!c) return '<p class="hint">Select a catalyst.</p>';
+  const sectors = sectorsForCatalyst(c.id), ths = thesesForCatalyst(c.id);
   const intn = (c.intensity || {}).current_score;
   const inds = (c.indicators || []).map((i) => `
     <div style="margin:10px 0;padding:11px 13px;border:1px solid var(--border);border-radius:9px">
@@ -377,16 +483,58 @@ function selectCatalyst(cid) {
         <span style="color:${scoreColor(i.score || 0)};font-weight:600">${i.score ?? '—'}</span></div>
       ${bar(i.score || 0)}<div class="lbl" style="margin-top:6px">value: <b>${i.current_value ?? '—'}</b> ${i.unit || ''}</div>
     </div>`).join('');
-  $('cat-detail').innerHTML = `<div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px">
-      <div><div class="lbl">${c.id} · ${c.catalyst_type || ''} · ${c.status || ''}</div>
-        <div style="font-size:18px;font-weight:650;margin-top:2px">${escapeHtml(c.title || c.id)}</div></div>
-      ${intn != null ? `<div style="text-align:right"><div class="lbl">intensity</div><div class="big" style="color:${scoreColor(intn)}">${intn}</div></div>` : ''}
-    </div>
+  return `<div class="card">
+    ${catHeader(`${c.id} · ${c.catalyst_type || 'structural'} · ${c.status || ''}`, c.title || c.id, 'intensity', intn ?? null, scoreColor(intn || 0))}
     <div class="md" style="margin-top:8px">${md(c.description || '')}</div>
     ${sectors.length ? `<h3>Drives sectors</h3><div class="chips">${sectors.map(sectorLink).join('')}</div>` : ''}
-    ${ths.length ? `<h3>Theses</h3><div class="chips">${ths.map((t) => `<span class="pill ${t.status === 'open' ? 'g' : ''}">${t.id}</span>`).join('')}</div>` : ''}
+    ${ths.length ? `<h3>Theses</h3><div class="chips">${ths.map((t) => link('catalysts', t.id, t.id)).join('')}</div>` : ''}
     ${inds ? `<h3>Indicators</h3>${inds}` : ''}</div>`;
+}
+function eventDetailHTML(e) {
+  if (!e) return '<p class="hint">Select a catalyst.</p>';
+  const sectors = sectorsForCatalyst(e.id);
+  const related = (e.related_catalyst_ids || []);
+  const chips = [];
+  if (e.novelty_score != null) chips.push(`<span class="pill">novelty ${e.novelty_score}</span>`);
+  if (e.magnitude) chips.push(`<span class="pill" title="magnitude">${escapeHtml(String(e.magnitude))}</span>`);
+  if (e.relation_to_structural) chips.push(`<span class="pill ${e.relation_to_structural === 'contradicts' ? 'r' : 'g'}">${e.relation_to_structural}</span>`);
+  if (e.is_priced_in_estimate != null) chips.push(`<span class="pill" title="priced-in estimate">priced-in ${e.is_priced_in_estimate}</span>`);
+  if (e.consensus_surprise) chips.push(`<span class="pill" title="consensus surprise">${escapeHtml(String(e.consensus_surprise))}</span>`);
+  if (e.decay_halflife_days) chips.push(`<span class="pill" title="decay half-life">½-life ${e.decay_halflife_days}d</span>`);
+  if (e.geography) chips.push(`<span class="pill">${escapeHtml(String(e.geography))}</span>`);
+  return `<div class="card">
+    ${catHeader(`${e.id} · ${e.catalyst_type || 'event'}${e.catalyst_subtype ? ' / ' + e.catalyst_subtype : ''} · ${e.status || ''}`, e.id, 'strength', e.strength_score ?? null, scoreColor(e.strength_score || 0))}
+    <div class="md" style="margin-top:8px">${md(e.description || '')}</div>
+    <h3>Signal</h3><div class="chips">${chips.join('') || '<span class="lbl">—</span>'}</div>
+    ${related.length ? `<h3>Related catalysts</h3><div class="chips">${related.map((r) => link('catalysts', r, r)).join('')}</div>` : ''}
+    ${sectors.length ? `<h3>Drives sectors</h3><div class="chips">${sectors.map(sectorLink).join('')}</div>` : ''}
+    ${e.detected_at || e.expires_at ? `<div class="lbl" style="margin-top:10px">detected ${e.detected_at ? String(e.detected_at).slice(0, 10) : '—'}${e.expires_at ? ' · expires ' + String(e.expires_at).slice(0, 10) : ''}</div>` : ''}
+  </div>`;
+}
+function thesisDetailHTML(t) {
+  if (!t) return '<p class="hint">Select a thesis.</p>';
+  const sid = (t.sector || {}).sector_id, cid = (t.catalyst || {}).catalyst_event_id;
+  const v = t.vehicle || {}, en = t.entry || {};
+  const headLinks = [];
+  if (sid) headLinks.push('sector ' + sectorLink(sid));
+  if (cid) headLinks.push('catalyst ' + link('catalysts', cid, cid));
+  if (v.primary_etf) headLinks.push(`<span class="pill b">${v.primary_etf}</span>`);
+  const sec = (title, html) => html ? `<h3>${title}</h3>${html}` : '';
+  const entryChips = [];
+  if (en.conviction_tier) entryChips.push(`<span class="pill">conviction tier ${en.conviction_tier}</span>`);
+  if (en.position_size_pct_portfolio) entryChips.push(`<span class="pill">size ${en.position_size_pct_portfolio}%</span>`);
+  if (en.entry_price_limit) entryChips.push(`<span class="pill">limit ${en.entry_price_limit}</span>`);
+  if (en.trigger_type) entryChips.push(`<span class="pill">${escapeHtml(String(en.trigger_type))}</span>`);
+  return `<div class="card">
+    ${catHeader(`${t.id} · thesis`, t.id, 'status', null)}
+    <div style="margin-top:2px"><span class="pill ${t.status === 'open' ? 'g' : ''}">${t.status || ''}</span> ${headLinks.join(' · ')}</div>
+    ${sec('Catalyst', (t.catalyst || {}).catalyst_summary ? `<div class="md">${md(t.catalyst.catalyst_summary)}</div>` : '')}
+    ${sec('Sector rationale', (t.sector || {}).rationale ? `<div class="md">${md(t.sector.rationale)}</div>` : '')}
+    ${sec('Vehicle', v.vehicle_selection_rationale ? `<div class="md">${md(v.vehicle_selection_rationale)}</div>` : '')}
+    ${sec('Entry', (entryChips.length ? `<div class="chips">${entryChips.join('')}</div>` : '') + (en.trigger_description ? `<div class="md">${md(en.trigger_description)}</div>` : ''))}
+    ${sec('Assumptions', Array.isArray(t.assumptions) && t.assumptions.length ? `<ul>${t.assumptions.map((a) => `<li>${fmtMeta(a)}</li>`).join('')}</ul>` : '')}
+    ${sec('Invalidation conditions', Array.isArray(t.invalidation_conditions) && t.invalidation_conditions.length ? `<ul>${t.invalidation_conditions.map((a) => `<li>${fmtMeta(a)}</li>`).join('')}</ul>` : '')}
+  </div>`;
 }
 
 // ── PORTFOLIOS ─────────────────────────────────────────────────────────────────
