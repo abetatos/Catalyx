@@ -1,0 +1,40 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20260605_ai_capex_peak_scare",
+  "schema_version": "1.2",
+  "type": "event",
+  "created_at": "2026-06-06T09:00:00Z",
+  "detected_at": "2026-06-06T09:00:00Z",
+  "event_date": "2026-06-05T00:00:00Z",
+  "source": {
+    "type": "news_article",
+    "url": "https://www.thestreet.com/stock-market-today/stock-market-today-dow-jones-sp-500-nasdaq-updates-june-05-2026",
+    "publication": "TheStreet / CNBC / Bloomberg",
+    "published_at": "2026-06-05T21:00:00Z"
+  },
+  "catalyst_type": "corporate_event",
+  "catalyst_subtype": "ai_capex_guidance_miss",
+  "description": "On 2026-06-05 US equities sold off hard: S&P 500 -2.64% (7,383.74), Nasdaq -4.18% — the worst day since April 2025, ~$1T of market cap wiped. The trigger was Broadcom's failure to raise its AI chip outlook (reported Wed night), which broke the 'every quarter AI guidance ratchets higher' narrative and dragged the whole semiconductor + memory complex down (info tech -2.9%). A compounding macro leg: a much stronger-than-expected May jobs report (172k vs ~88k expected) pushed the 10Y yield above 4.5% on renewed Fed-tightening fears, accelerating a rotation OUT of long-duration tech into defensives (staples, healthcare, utilities). This is the first registered catalyst that CONTRADICTS the AI capex supercycle: it is a warning shot on the *rate of acceleration*, not a deactivation — actual hyperscaler capex guidance was not cut (deactivation_conditions on struct_ai_capex_supercycle require >30% YoY guidance drop for two consecutive quarters, which has NOT occurred).",
+  "geography": ["USA", "GLOBAL"],
+  "magnitude": "high",
+  "novelty_score": 80,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": true,
+    "nov_02_new_sector": false,
+    "nov_03_new_source": true,
+    "nov_04_changes_rate": true,
+    "nov_05_consensus_surprise_gt50": true
+  },
+  "strength_score": 76,
+  "consensus_surprise": 0.7,
+  "is_priced_in_estimate": 0.50,
+  "relation_to_structural": "contradicts",
+  "decay_halflife_days": 30,
+  "related_catalyst_ids": ["struct_ai_capex_supercycle"],
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": null,
+  "user_rank": 1,
+  "user_notes": "EXPERIMENT CATALYST (exp_2026_06_05_ai_selloff) — added to stress-test pipeline resilience to a risk-off shock that contradicts our single largest structural thesis. Models the 2026-06-05 AI/semiconductor selloff. Relation 'contradicts' (not 'invalidated') is deliberate: Broadcom missed the EXPECTATION of an upgrade, but no actual capex cut occurred, so the structural deactivation_conditions are not met. Short half-life (30d) reflects a sentiment/positioning shock vs a structural break. If subsequent hyperscaler prints confirm a real capex deceleration, escalate: raise strength + extend half-life, or open a StructuralCatalyst deactivation review. is_priced_in 0.50 — the one-day drop priced the sentiment; the 'is AI capex peaking?' question is unresolved.",
+  "tags": ["ai", "semiconductors", "selloff", "broadcom", "capex_peak", "risk_off", "yields", "jobs_report", "rotation", "experiment"]
+}

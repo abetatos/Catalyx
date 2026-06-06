@@ -17,6 +17,8 @@ Step 2:   Structural Catalyst Updates → refresh the indicators flagged stale i
 Step 3:   Sector Studies → refresh priority sectors (BEFORE heatmap)
 Step 4:   Catalyst Dashboard
 Step 5:   Sector Heatmap (requires updated sector studies)
+Step 5b:  Model Portfolios + NAV vs S&P500 (after the run is recorded)
+Step 5c:  Opportunities & Rotation (regime watch + dislocation lens — recommendations, not trades)
 Step 6:   Open Thesis Reviews
 Step 7:   Portfolio Correlation Check  ← MUST run before any thesis draft decision
 Step 8:   Tax Snapshot
@@ -170,6 +172,30 @@ done
 
 Report in the summary: each strategy's return and whether it beat SPY (`vs_benchmark_pct`).
 Strategies live in `catalyx/config/portfolios/*.yaml`; NAV math/benchmark in `nav_engine.py`.
+
+---
+
+### Step 5c — Opportunities & Rotation (regime watch + dislocation lens)
+
+This is **step 12 of the `catalyx-heatmap` skill** — run it here (the run is recorded, so
+`regime_state` is in the lake) and surface its findings in the monthly report. **Recommendations
+for your judgement, never auto-trades.** Python computes the facts; you make the calls.
+
+```bash
+uv run python -m catalyx.scorer.catalyst_scorer --all --json   # regime_state + persistence dossier per sector
+uv run python -m catalyx.thesis.structural_monitor --all       # fundamentals health (flags degrading → breaking)
+uv run python -m catalyx.scorer.dislocation --window 5 --json  # opportunities (panic dips) + diversifiers (rotation)
+```
+
+- **Regime watch.** `contested` = watch only (no action); a single `clustered_one_shock` development
+  is noise. Escalate to a regime call ONLY when `review_recommended` (dispersed multiples) OR a
+  structural is `degrading` — then WebSearch the macro context and decide. Time-independent: same
+  verdict at any cadence.
+- **Opportunities.** Sectors that fell hard but are `intact` + catalyst-confirmed and whose drop is
+  mostly CONTAGION (low `idiosyncratic_pct`) → panic dips. WebSearch each to rule out a hidden cause
+  behind the idiosyncratic residual before treating it as an entry.
+- **Diversifiers.** Healthy sectors with LOW correlation to the stressed cluster → where to rotate
+  without re-buying the same correlated bet.
 
 ---
 
@@ -356,6 +382,19 @@ Write consolidated monthly review to `data/reports/monthly_review_YYYYMMDD.md`:
 ## 4. Sector Heatmap
 [Link to heatmap_YYYYMMDD.md + ranking changes vs last month]
 
+## 4b. Opportunities & Rotation  (recommendations — not trades)
+**Regime watch** (only non-`intact` sectors)
+| Sector | Regime | Persistence (n · span · clustered?) | Read |
+|---|---|---|---|
+
+**Opportunities** (fell hard · intact · catalyst-confirmed · contagion-driven)
+| Sector | Drawdown % | Contagion % / Idiosyncratic % | catalyst_alignment | Verdict |
+|---|---|---|---|---|
+
+**Diversifiers** (healthy · low correlation to the stressed cluster)
+| Sector | Composite | Corr to stressed | Note |
+|---|---|---|---|
+
 ## 5. Open Theses
 | Thesis | Days open | Assumptions (N/N ok) | Action |
 |---|---|---|---|
@@ -407,3 +446,4 @@ Print to chat: "Monthly review complete. Key findings: [3 bullets]. Full report:
 - **Portfolio correlation check (Step 7) is a prerequisite for any draft decision (Step 9).** Never propose a new thesis without first checking combined allocation against open theses sharing the same primary structural catalyst.
 - **Step 9 actively asks the user per draft candidate** (AskUserQuestion: Draft now / Wait / Skip) after presenting a context block for each. Never draft a thesis without an explicit answer. The `correlated_catalyst_cap` (default 20%, `enforcement: warn`) is a FLEXIBLE warning — a breach is surfaced and requires an override note, but does not by itself block a draft.
 - **AI SCORING RULE:** Never assign `intensity.current_score` manually. Always recompute from indicator semaphores using the formula in `scoring_weights.yaml`. If a user_override is needed, document the reason in `computation_note`.
+- **Regime / opportunities (Step 5c) are recommendations, never auto-trades, and never move portfolio weights.** A `contested` sector keeps its full score and weight — it is a watch flag. The pipeline reacts to PERSISTENCE (dispersed developments or measured fundamental degradation), not to a single event, and the escalation + buy/rotate decisions are the user's. "Two consecutive-day drops confirm nothing."

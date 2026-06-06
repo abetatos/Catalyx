@@ -1,0 +1,146 @@
+# StructuralCatalyst: Japan monetary normalization & yen carry-trade unwind risk
+# schema_version: "1.4"
+# WATCH-ONLY systemic-risk monitor. NOT linked to any sector study → it does NOT boost any
+# sector's catalyst_alignment. Its job is to be MONITORED: structural_monitor evaluates its
+# indicators, and if they escalate (persist/corroborate) it feeds a risk-off / rotation
+# recommendation (the regime-discrimination design), not a sector tailwind.
+# Update indicators: BoJ meetings (~8/yr), weekly for JGB/positioning, monthly for CPI.
+
+id: struct_japan_carry_unwind
+type: structural
+schema_version: "1.4"
+title: "Japan monetary normalization & yen carry-trade unwind risk"
+description: >
+  After decades of zero/negative rates, the Bank of Japan is normalizing policy (ended NIRP +
+  yield-curve-control in 2024, hiking since). Japan is the world's funding currency: a multi-
+  trillion-USD yen carry trade (borrow cheap JPY → buy higher-yielding global risk assets) is
+  built on that cheap funding, and Japan is the largest foreign holder of US Treasuries. As the
+  BoJ hikes and JGB yields rise, two systemic channels open: (1) the carry trade can unwind
+  violently — forced deleveraging across global risk assets, as the Aug-2024 episode showed
+  (Nikkei −12% single day, global volatility spike); (2) rising JGB yields pull Japanese capital
+  home, draining demand for USTs and pressuring global duration. This is structural, not episodic:
+  it is the multi-year exit from the longest ultra-loose regime in modern finance. It is modeled
+  as a WATCH/tail risk — a broad risk-off trigger — not a sector tailwind.
+
+created_at: "2026-06-06T09:00:00Z"
+created_by: user
+onset_period: "2024-Q1"
+onset_evidence: >
+  BoJ ended negative interest rate policy and yield-curve control in March 2024 (first hike since
+  2007). The Aug-2024 yen carry unwind (Nikkei −12% on 2024-08-05, global VIX spike) demonstrated
+  the systemic transmission channel. By mid-2026 the policy rate reached 0.75% and the 10Y JGB
+  yield passed 2.6% — the most advanced point of the normalization.
+
+catalyst_type: monetary_policy
+catalyst_subtype: boj_normalization_carry_unwind
+geography: [JPN, USA, GLOBAL]
+thematic_tags: [japan, boj, yen, carry_trade, jgb, treasuries, systemic_risk, monetary, risk_off]
+
+user_rank: 1
+user_notes: >
+  WATCH-ONLY (added 2026-06-06). User-flagged systemic risk: Japan could be the source of the next
+  global risk-off via a carry-trade unwind + UST repatriation. Deliberately NOT linked to any
+  sector study — it must not inflate any sector's score. Its escalation is meant to trigger a
+  defensive / low-correlation rotation RECOMMENDATION (regime-discrimination design), reviewed
+  monthly. ind_03 (CFTC JPY positioning) is a PLACEHOLDER pending the first COT pull — verify
+  before trusting. Rule 5: re-check all values via WebSearch each review (BoJ meeting outcomes,
+  JGB yield, CPI). Anchor: latent risk, intensity should sit below a confirmed live uptrend like
+  struct_nato_rearmament (~71) unless an unwind is actually in motion.
+
+intensity:
+  current_score: 68.1
+  computation_method: computed
+  computation_note: "Computed 2026-06-06 by intensity_engine: avg=68.1 (JGB above strong, CPI near strong, rate + positioning moderate), trend flat (insufficient history). Elevated-but-latent — no active unwind. Recompute via /catalyx-update each review."
+  last_updated: "2026-06-06"
+  history:
+  - period: "2026-Q2"
+    score: 68.1
+    note: "Created as a watch-only systemic-risk monitor. BoJ 0.75% (~80% odds of a June-16 hike), 10Y JGB ~2.66% (above strong), core CPI forecast 2.8%. Normalization advanced; no active unwind."
+    computation_method: computed
+
+indicators:
+- id: ind_01
+  name: "BoJ policy rate (uncollateralized overnight call rate target)"
+  source: "Bank of Japan policy statements"
+  source_url_template: "https://www.boj.or.jp/en/mopo/mpmdeci/"
+  check_frequency: monthly
+  current_value: 0.75
+  unit: percent
+  direction: higher_is_stronger
+  threshold_strong: 1.5
+  threshold_weak: 0.25
+  last_value: 0.5
+  last_date: "2026-04-28"
+  semaphore: "🟡"
+  update_note: "Held at 0.75% on 2026-04-28; ~80% market-implied probability of a hike at the 2026-06-16 meeting. Highest in 30 years."
+  value_history:
+  - date: "2026-04-28"
+    value: 0.75
+- id: ind_02
+  name: "10-year JGB yield"
+  source: "JBMA / Tradingeconomics"
+  source_url_template: "https://tradingeconomics.com/japan/government-bond-yield"
+  check_frequency: weekly
+  current_value: 2.66
+  unit: percent
+  direction: higher_is_stronger
+  threshold_strong: 2.5
+  threshold_weak: 1.0
+  last_value: 2.0
+  last_date: "2026-06-05"
+  semaphore: "🟢"
+  update_note: "~2.66% early June 2026 — already above the strong threshold. Rising JGB yields = UST repatriation pressure + normalization signal."
+  value_history:
+  - date: "2026-06-05"
+    value: 2.66
+- id: ind_03
+  name: "CFTC JPY net non-commercial positioning (carry-trade size proxy, net short, k contracts)"
+  source: "CFTC Commitments of Traders (COT)"
+  source_url_template: "https://www.cftc.gov/dea/futures/financial_lf.htm"
+  check_frequency: weekly
+  current_value: 40
+  unit: thousands_contracts_net_short
+  direction: higher_is_stronger
+  threshold_strong: 90
+  threshold_weak: 30
+  last_value: 40
+  last_date: "2026-06-06"
+  semaphore: "🟡"
+  update_note: "PLACEHOLDER — not yet pulled from COT. Larger net-short JPY = bigger carry 'powder keg' = more unwind risk. Verify before trusting (Rule 5)."
+  value_history:
+  - date: "2026-06-06"
+    value: 40
+- id: ind_04
+  name: "Japan core CPI (ex-fresh-food) YoY"
+  source: "Statistics Bureau of Japan / BoJ Outlook"
+  source_url_template: "https://www.stat.go.jp/english/data/cpi/"
+  check_frequency: monthly
+  current_value: 2.8
+  unit: yoy_pct
+  direction: higher_is_stronger
+  threshold_strong: 3.0
+  threshold_weak: 2.0
+  last_value: 1.9
+  last_date: "2026-04-28"
+  semaphore: "🟡"
+  update_note: "BoJ raised its core inflation forecast to 2.8% (from 1.9%) at the April assessment — sustained above-target inflation is the force keeping the BoJ on the hiking path."
+  value_history:
+  - date: "2026-04-28"
+    value: 2.8
+
+deactivation_conditions:
+- id: deact_01
+  condition: "BoJ cuts the policy rate (or re-eases) at two consecutive meetings — normalization aborted."
+  action: downgrade_to_weak
+- id: deact_02
+  condition: "10Y JGB yield sustained below 1.0% AND core CPI below 1.5% YoY for two consecutive quarters (deflation/easing returns)."
+  action: review_required
+- id: deact_03
+  condition: "A disorderly carry unwind actually materializes (e.g. USD/JPY moves >10% in a week with a Nikkei drawdown >15%) — the tail event fires; spawn an EventCatalyst and re-assess this watch."
+  action: review_required
+
+linked_event_catalyst_ids: []
+linked_structural_catalyst_ids: []
+narrative_maturity: "emerging"
+status: active
+status_last_reviewed: "2026-06-06"

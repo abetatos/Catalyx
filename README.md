@@ -17,6 +17,25 @@
 
 ---
 
+## Contents
+
+- [What CATALYX does](#what-catalyx-does)
+- [The full pipeline](#the-full-pipeline)
+- [The catalyst model — two types, not one](#the-catalyst-model--two-types-not-one)
+- [Sector scoring in detail](#sector-scoring-in-detail)
+- [Thesis structure](#thesis-structure)
+- [Closing a thesis — attribution decomposition](#closing-a-thesis--attribution-decomposition)
+- [How updates work — the monthly cycle](#how-updates-work--the-monthly-cycle)
+- [Granularity — why it matters](#granularity--why-it-matters)
+- [Architecture — permanent hybrid model](#architecture--permanent-hybrid-model)
+- [Python modules (callable from skills)](#python-modules-callable-from-skills)
+- [Storage — two tiers, no database](#storage--two-tiers-no-database)
+- [Spanish CGT — tax model](#spanish-cgt--tax-model)
+- [Current state](#current-state)
+- [Roadmap](#roadmap)
+
+---
+
 ## What CATALYX does
 
 Most investment platforms track what happened. CATALYX tracks **whether your reasoning was correct**.
@@ -435,6 +454,8 @@ Claude reads scores → formats heatmap → adds qualitative analysis
 | `catalyx.scorer.catalyst_scorer` | `uv run python -m catalyx.scorer.catalyst_scorer <sector_id>` | confirms/contradicts/independent formula + decay → catalyst_alignment |
 | `catalyx.scorer.momentum_engine` | `uv run python -m catalyx.scorer.momentum_engine` | Cross-sectional percentile rank → momentum_score |
 | `catalyx.scorer.sector_scorer` | `uv run python -m catalyx.scorer.sector_scorer <sector_id> [--all]` | Full composite score (orchestrates all scorers) |
+| `catalyx.thesis.structural_monitor` | `uv run python -m catalyx.thesis.structural_monitor [--all]` | Noise-vs-regime fundamentals gate → `regime_state` (intact/contested/breaking) |
+| `catalyx.scorer.dislocation` | `uv run python -m catalyx.scorer.dislocation [--window 5]` | Price-vs-fundamentals gap: opportunities (panic dips) + diversifiers (rotation), one corr/beta engine |
 | `catalyx.execution.tax_engine` | `uv run python -m catalyx.execution.tax_engine --gain N [--ytd-prior N]` | Spanish CGT 2026 progressive brackets |
 | `catalyx.execution.portfolio` | `uv run python -m catalyx.execution.portfolio build-all` | Model portfolios = (score_run × strategy) → lake `portfolio_holding` |
 | `catalyx.execution.nav_engine` | `uv run python -m catalyx.execution.nav_engine model <strategy> --backtest-days 180` | Buy-and-hold NAV vs SPY (model + real) → "¿batimos mercado?" |
@@ -497,6 +518,12 @@ Non-EUR ETF returns are converted at the execution-date exchange rate.
 | `struct_ai_capex_supercycle` | AI infrastructure capex — hyperscaler build-out | 89 | 2 (×1.20) |
 | `struct_energy_transition_grid` | Grid as binding constraint of energy transition | 82 | 3 (×1.00) |
 | `struct_copper_datacenter_demand` | AI datacenter copper demand mispriced by market | 78 | 2 (×1.20) |
+| `struct_japan_carry_unwind` ⚠ watch | Japan/BoJ normalization + yen carry-trade unwind (systemic risk) | 68 | 1 |
+
+> ⚠ **watch-only:** `struct_japan_carry_unwind` is a *systemic-risk monitor*, not a sector tailwind.
+> It is **not linked to any sector** (does not boost any score); `structural_monitor` watches its
+> indicators (BoJ rate, 10Y JGB, carry positioning, core CPI) and, if they escalate, it drives a
+> risk-off / low-correlation rotation **recommendation** — see `docs/DESIGN_catalyst_regime_discrimination.md`.
 
 ### Recent event catalysts (5)
 
@@ -521,6 +548,41 @@ Non-EUR ETF returns are converted at the execution-date exchange rate.
 |---|---|---|---|---|
 | `thesis_20260603_copper_miners_datacenter_alpha` | copper_miners | COPX.L | 2 | 6% |
 | `thesis_20260603_grid_infrastructure_utilities_bindingconstraint` | grid_infrastructure_utilities | IQQH.DE | 2 | 4% |
+
+### Model portfolio performance — ¿batimos al mercado?
+
+Buy-and-hold backtest of each strategy's current holdings vs **SPY**, via
+`nav_engine model <strategy> --backtest-days N` (as of 2026-06-06).
+
+**Trailing 180 days (2025-12-08 → 2026-06-06, SPY +8.5%) — the edge:**
+
+| Strategy | Return | vs SPY |
+|---|---|---|
+| `momentum` | **+35.4%** | **+26.9** |
+| `equal_weight` | +32.5% | +24.0 |
+| `conviction` | +32.0% | +23.5 |
+| `low_crowding` | +24.9% | +16.4 |
+
+All four beat the market over the medium term — the momentum tilt pays in a trending tape.
+
+**Stress window — 2026-06-05 AI selloff (S&P −2.64%, 5d window) — the fragility:**
+
+| Strategy | Return | vs SPY |
+|---|---|---|
+| `low_crowding` | −5.2% | −2.4 |
+| `momentum` | −6.2% | −2.8 |
+| `equal_weight` | −6.3% | −2.8 |
+| `conviction` | −6.4% | −2.8 |
+
+In a risk-off all four **underperform the index by ~2.8pts** and cluster within 1.3pts of each
+other — the same AI/cyclical bet, four times over. Diversification across strategies is
+illusory when the market sells the whole momentum cluster. Full analysis + resilience scorecard:
+[experiments/exp_2026-06-05_ai_selloff.md](experiments/exp_2026-06-05_ai_selloff.md).
+
+> The number that matters is not the return — it is the **return minus SPY**. A book that beats
+> the market in the trend and lags it in the drawdown is doing exactly what a momentum tilt does;
+> the open question (tracked in [experiments/](experiments/)) is whether a risk-off overlay can
+> keep the upside while cutting the −2.8pt drawdown gap.
 
 ---
 

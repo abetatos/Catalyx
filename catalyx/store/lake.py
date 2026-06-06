@@ -64,6 +64,8 @@ TABLES: dict[str, tuple[str, list[str]]] = {
     "portfolio_trade":    ("portfolio/trade",            ["portfolio_id"]),
     # validation / forward returns (grows; unpartitioned)
     "forward_returns":    ("validation/forward_returns", []),
+    # dislocation lens (opportunities + diversifiers) — one materialization per run
+    "dislocation":        ("analysis/dislocation",       ["run_id"]),
 }
 
 

@@ -139,6 +139,7 @@ def record_run(top_n: int = 10, notes: str | None = None,
         r = score_sector(sid, crowding_risk=crowd,
                          momentum_snapshot_path=momentum_snapshot_path)
         sb = r["score_breakdown"]
+        cat_detail = r.get("catalyst_detail") or {}
         rows.append({
             "sector_id": sid,
             "composite": r["composite"],
@@ -151,6 +152,9 @@ def record_run(top_n: int = 10, notes: str | None = None,
             "has_study": 1 if maturity is not None else 0,
             "primary_etf": _primary_etf(sid),
             "rationale_md": _rationale_md(sid),
+            # noise-vs-regime annotation (intact/contested/breaking). Additive — does not
+            # affect composite. See docs/DESIGN_catalyst_regime_discrimination.md.
+            "regime_state": cat_detail.get("regime_state", "intact"),
         })
 
     # Rank by composite descending
@@ -395,6 +399,7 @@ def _write_run_to_lake(run_id, run_at, version, git_commit, momentum_snapshot,
         "flow_confirmation": r["flow_confirmation"], "valuation_relative": r["valuation_relative"],
         "crowding_risk": r["crowding_risk"], "narrative_maturity": r["narrative_maturity"],
         "has_study": r["has_study"], "primary_etf": r["primary_etf"], "rationale_md": r["rationale_md"],
+        "regime_state": r["regime_state"],
     } for r in rows]
     lake.append_partition("sector_snapshot", pd.DataFrame(snap_rows),
                           {"run_id": run_id}, overwrite=True)

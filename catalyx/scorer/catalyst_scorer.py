@@ -44,6 +44,7 @@ from pathlib import Path
 import yaml
 
 from catalyx.config import weights
+from catalyx.thesis import structural_monitor as sm
 
 _REPO_ROOT = Path(__file__).parents[2]
 _STRUCTURAL_DIR = _REPO_ROOT / "catalyx" / "config" / "structural_catalysts"
@@ -320,6 +321,7 @@ def compute_catalyst_alignment(
                 "strength_original": strength,
                 "strength_decayed": decayed,
                 "halflife_days": halflife,
+                "event_date": detected,
                 "modified_structural_score": modified,
             })
 
@@ -330,11 +332,30 @@ def compute_catalyst_alignment(
         else:
             modified_score = base_score
 
+        # Regime state: fundamental gate (indicator health) + TIME-INDEPENDENT persistence gate.
+        # Persistence = DISTINCT contradicting developments that are still live (decayed strength
+        # ≥ τ) AND within the calendar window — counted from event timestamps, not across runs, so
+        # the verdict is the same whether the analysis runs daily/weekly/monthly. A lone live
+        # contradict → `contested`; `breaking` needs corroboration (indicators) or a 2nd distinct
+        # development before the first decays. See docs/DESIGN_catalyst_regime_discrimination.md.
+        monitor = sm.evaluate_structural(sc)
+        contradicts = [e for e in event_details if e["relation"] == "contradicts"]
+        live_windowed = [e for e in contradicts
+                         if e["strength_decayed"] >= sm.TAU_EVT
+                         and sm.within_window(e.get("event_date"))]
+        n_live = len({e["event_id"] for e in live_windowed})
+        regime_state = sm.classify_structural(monitor["degrading"], n_live)
+        persistence = sm.persistence_evidence(live_windowed)
+
         structural_results.append({
             "structural_id": sid,
             "base_score": base_score,
             "modified_score": modified_score,
             "events": event_details,
+            "regime_state": regime_state,
+            "degrading": monitor["degrading"],
+            "persistence": persistence,   # contextual dossier for Claude's escalation judgement
+            "monitor": monitor,
         })
 
     # Aggregate: max-anchored noisy-OR over modified scores (skip errored catalysts).
@@ -354,6 +375,25 @@ def compute_catalyst_alignment(
 
     catalyst_alignment = _aggregate_alignment(valid)
 
+    # Sector regime state: worst state among the structurals that materially drive the
+    # alignment (within MATERIAL_MARGIN of the anchor). Additive annotation only — it does
+    # NOT change catalyst_alignment, so no effect on the composite formula / scoring_version.
+    anchor = max(valid)
+    material_structs = [r for r in structural_results
+                        if r.get("modified_score") is not None
+                        and r["modified_score"] >= anchor - sm.MATERIAL_MARGIN]
+    sector_regime = sm.sector_state(
+        [r for r in structural_results if r.get("modified_score") is not None],
+        anchor,
+    )
+    # Advisory: does any material driver warrant a closer look in the monthly review? (dispersed
+    # multiple developments, or measured fundamental degradation). NOT a verdict — routes Claude's
+    # attention; the escalation decision stays with Claude + the user.
+    sector_review = any(
+        (r.get("persistence") or {}).get("review_recommended") or r.get("regime_state") == "breaking"
+        for r in material_structs
+    )
+
     # Dominant catalyst type
     has_linked_events = any(r.get("events") for r in structural_results)
     has_direct_events = any(
@@ -370,6 +410,8 @@ def compute_catalyst_alignment(
     return {
         "sector_id": sector_id,
         "catalyst_alignment": catalyst_alignment,
+        "regime_state": sector_regime,
+        "regime_review_recommended": sector_review,
         "structural_count": sum(1 for r in structural_results if r.get("modified_score") is not None),
         "direct_event_count": sum(1 for r in direct_event_results if r.get("modified_score") is not None),
         "dominant_catalyst_type": dominant_type,
@@ -388,6 +430,7 @@ def _format_result(r: dict) -> str:
     score_str = f"{score:.1f}" if score is not None else "N/A"
     return (
         f"  {r['sector_id']:<40} catalyst_alignment={score_str}  "
+        f"[{r.get('regime_state', 'intact')}]  "
         f"({r.get('structural_count', 0)} structural, "
         f"type={r.get('dominant_catalyst_type', '?')})"
     )
@@ -433,7 +476,8 @@ def main() -> None:
             base = sc.get("base_score", "?")
             mod = sc.get("modified_score", "?")
             delta = f"  Δ={mod - base:+.1f}" if isinstance(mod, float) and isinstance(base, float) else ""
-            print(f"    {sc['structural_id']}: base={base}  modified={mod}{delta}")
+            state = sc.get("regime_state", "intact")
+            print(f"    {sc['structural_id']}: base={base}  modified={mod}{delta}  [{state}]")
             for ev in sc.get("events", []):
                 print(
                     f"      {ev['event_id']}: {ev['relation']}  "

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -71,14 +71,15 @@
   <header>
     <h1>CATALYX</h1>
     <span class="sub">sector ETF dashboard · parquet lake · DuckDB-WASM</span>
-    <span id="status">cargando…</span>
+    <span id="status">loading…</span>
   </header>
   <nav id="tabs">
     <button data-tab="ranking" class="active">Ranking</button>
-    <button data-tab="catalysts">Catalizadores</button>
+    <button data-tab="catalysts">Catalysts</button>
     <button data-tab="studies">Sector studies</button>
-    <button data-tab="reports">Runs e informes</button>
-    <button data-tab="portfolios">Carteras</button>
+    <button data-tab="reports">Runs &amp; reports</button>
+    <button data-tab="portfolios">Portfolios</button>
+    <button data-tab="opportunities">Opportunities</button>
     <button data-tab="sector">Sector history</button>
     <button data-tab="moves">Rank moves</button>
     <button data-tab="lineage">Lineage</button>
@@ -86,71 +87,88 @@
   </nav>
   <main>
     <section class="panel active" id="panel-ranking">
-      <h2>Ranking del último run</h2>
-      <p class="hint">Sectores por composite. Barra = composite, número = momentum.</p>
+      <h2>Latest run ranking</h2>
+      <p class="hint">Sectors by composite. Bar = composite, number = momentum.</p>
       <div id="ranking-out"></div>
     </section>
 
     <section class="panel" id="panel-catalysts">
-      <h2>Catalizadores</h2>
-      <p class="hint">Estructurales con sus indicadores (barra = score, sparkline = historia del lake) y de evento.</p>
-      <div class="row"><label>Estructural: <select id="cat-select"></select></label></div>
+      <h2>Catalysts</h2>
+      <p class="hint">Structural catalysts with their indicators (bar = score, sparkline = lake history) and event catalysts.</p>
+      <div class="row"><label>Structural: <select id="cat-select"></select></label></div>
       <div id="cat-detail"></div>
-      <h3>Catalizadores de evento</h3>
+      <h3>Event catalysts</h3>
       <div id="cat-events" class="grid"></div>
     </section>
 
     <section class="panel" id="panel-studies">
       <h2>Sector studies</h2>
-      <p class="hint">Análisis bottom-up por sector.</p>
+      <p class="hint">Bottom-up analysis per sector.</p>
       <div class="row"><label>Sector: <select id="study-select"></select></label></div>
       <div id="study-detail"></div>
     </section>
 
     <section class="panel" id="panel-reports">
-      <h2>Runs e informes</h2>
-      <p class="hint">Cada run de scoring + el informe de texto que produjo.</p>
+      <h2>Runs &amp; reports</h2>
+      <p class="hint">Each scoring run + the text report it produced.</p>
       <div class="row"><label>Run: <select id="run-select"></select></label></div>
       <div id="run-meta" class="grid" style="margin-bottom:16px"></div>
       <div id="report-out" class="md"></div>
     </section>
 
     <section class="panel" id="panel-portfolios">
-      <h2>Carteras — 4 estrategias vs S&amp;P500</h2>
-      <p class="hint">Backtest trailing de las holdings actuales. ¿Batimos mercado? Sparkline: cartera (azul) vs SPY (gris).</p>
+      <h2>Portfolios — 4 strategies vs S&amp;P500</h2>
+      <p class="hint">Trailing backtest of current holdings. Did we beat the market? Sparkline: portfolio (blue) vs SPY (grey).</p>
       <div id="pf-cards" class="grid"></div>
-      <h3>Holdings de la estrategia</h3>
-      <div class="row"><label>Estrategia: <select id="pf-select"></select></label></div>
+      <h3>Strategy holdings</h3>
+      <div class="row"><label>Strategy: <select id="pf-select"></select></label></div>
       <div id="holdings-out"></div>
     </section>
 
+    <section class="panel" id="panel-opportunities">
+      <h2>Opportunities &amp; Rotation</h2>
+      <p class="hint">The price-vs-fundamentals gap, for deployment. <b>Opportunities</b> = fell hard but
+        fundamentals <span class="pill g">intact</span> + catalyst-confirmed and the drop is mostly
+        <b>contagion</b> (it fell <i>with</i> the tape, its thesis didn't break) — a panic dip. A large
+        idiosyncratic residual is a red flag to investigate, not a buy. <b>Diversifiers</b> = healthy
+        sectors with LOW correlation to the stressed cluster (where to rotate without re-buying the
+        same bet). <b>Recommendations for judgement — never auto-trades.</b></p>
+      <div id="opp-meta"></div>
+      <h3>Opportunities — panic dips (intact · catalyst-confirmed · contagion-driven)</h3>
+      <div id="opp-out"></div>
+      <h3>Diversifiers — rotation targets (low correlation to the stressed cluster)</h3>
+      <div id="div-out"></div>
+      <h3>Regime watch — non-intact sectors (watch only; escalation is a human call)</h3>
+      <div id="regime-out"></div>
+    </section>
+
     <section class="panel" id="panel-sector">
-      <h2>Evolución de un sector</h2>
+      <h2>Sector evolution</h2>
       <div class="row"><label>Sector: <select id="sector-select"></select></label></div>
       <div id="sector-out"></div>
-      <h3>Narrativa (último run con estudio)</h3>
+      <h3>Narrative (latest run with a study)</h3>
       <div id="sector-narrative" class="md"></div>
     </section>
 
     <section class="panel" id="panel-moves">
-      <h2>Cambios de ranking (último run)</h2>
+      <h2>Rank changes (latest run)</h2>
       <div id="moves-out"></div>
     </section>
 
     <section class="panel" id="panel-lineage">
-      <h2>Trazabilidad de una decisión</h2>
+      <h2>Decision lineage</h2>
       <div class="row"><label>Trade: <select id="trade-select"></select></label></div>
       <div id="lineage-out"></div>
     </section>
 
     <section class="panel" id="panel-sql">
-      <h2>Consola SQL</h2>
-      <p class="hint">Read-only sobre las vistas del lake. Ej: <code>SELECT * FROM sector_snapshot LIMIT 10</code></p>
+      <h2>SQL console</h2>
+      <p class="hint">Read-only over the lake views. E.g.: <code>SELECT * FROM sector_snapshot LIMIT 10</code></p>
       <textarea id="sql-input">SELECT sector_id, rank, composite, momentum, primary_etf
 FROM sector_snapshot
 WHERE run_id = (SELECT max(run_id) FROM sector_snapshot)
 ORDER BY rank LIMIT 20;</textarea>
-      <div class="row"><button class="btn" id="sql-run">Ejecutar</button></div>
+      <div class="row"><button class="btn" id="sql-run">Run</button></div>
       <div id="sql-out"></div>
     </section>
   </main>

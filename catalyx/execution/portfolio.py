@@ -134,10 +134,36 @@ def _latest_run_id(df) -> str | None:
 
 def build_model_holdings(portfolio_id: str, run_id: str | None = None,
                          profile: dict | None = None, persist: bool = True,
-                         lake_dir: Path | None = None) -> dict:
-    """Build a model portfolio's holdings from a score_run's sector_snapshot. Deterministic."""
+                         lake_dir: Path | None = None, risk_overlay: bool = True) -> dict:
+    """Build a model portfolio's holdings from a score_run's sector_snapshot. Deterministic.
+
+    `risk_overlay`: enables the (OPT-IN) noise-vs-regime weight actions. By DEFAULT these are
+    inert (haircut 0, no exclusion) — the regime_state is only carried onto holdings for the
+    monthly review (flag-only). When configured in the profile YAML:
+      - `exclude_breaking: true` → `breaking` sectors dropped from selection (a healthy sector
+        takes the slot). Default off — `breaking` is surfaced as a *recommendation*, not auto-acted.
+      - `contested_haircut: 0..1` → trims `contested` weights; `contested_action: redistribute`
+        (to healthy names) or `cash` (gross-down). exp_2026-06-05 A/B: redistribute barely helps a
+        broad risk-off, cash helps more but costs edge — so both are opt-in, not default.
+    See docs/DESIGN_catalyst_regime_discrimination.md. `--no-overlay` forces everything off.
+    """
     profile = profile or load_profile(portfolio_id)
     c = profile["construction"]
+    overlay = profile.get("risk_overlay", {}) or {}
+    # DEFAULT = flag-only: the regime signal is carried onto holdings for the monthly review,
+    # but it does NOT move weights. exp_2026-06-05 A/B showed acting on `contested` (a one-off,
+    # possibly-reverting event) barely helps drawdown and costs edge — and it contradicts the
+    # project's monthly/conviction objective. A sector only warrants action when it goes
+    # `breaking` (persistent + fundamentally corroborated), and even then as a *recommendation*
+    # to the human, not an auto-trade. The haircut/exclude machinery below is OPT-IN: set
+    # `risk_overlay.contested_haircut` / `exclude_breaking` in the profile YAML to enable it.
+    contested_haircut = float(overlay.get("contested_haircut", 0.0))
+    exclude_breaking = bool(overlay.get("exclude_breaking", False))
+    # how the freed `contested` weight is handled:
+    #   redistribute → goes to the healthy names (gross unchanged) — cheap but, per exp_2026-06-05,
+    #                  near-useless in a broad risk-off (reshuffles a correlated cluster)
+    #   cash         → becomes cash (gross-down) — the variant that actually cuts the drawdown
+    contested_action = str(overlay.get("contested_action", "redistribute"))
 
     df = lake.read_table("sector_snapshot", lake_dir=lake_dir)
     if df.empty:
@@ -147,6 +173,10 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
     df = df[df["run_id"] == run_id].copy()
     if df.empty:
         return {"portfolio_id": portfolio_id, "error": f"run_id {run_id} not in lake"}
+    # regime_state column is additive (older runs lack it) — default to intact
+    if "regime_state" not in df.columns:
+        df["regime_state"] = "intact"
+    df["regime_state"] = df["regime_state"].fillna("intact")
 
     # 1. filters
     df = df[df["composite"] >= c["min_composite"]]
@@ -156,6 +186,9 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
     if excl:
         df = df[~df["narrative_maturity"].isin(excl)]
     df = df[df["primary_etf"].notna()]
+    # regime overlay: drop `breaking` sectors (permanent rotation) before selection
+    if risk_overlay and exclude_breaking:
+        df = df[df["regime_state"] != "breaking"]
 
     # 2. select + 3. dedupe by ETF + top N — ranked by the STRATEGY's signal.
     weighting = c["weighting"]                       # momentum | composite | equal
@@ -175,7 +208,21 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
         scores = [float(x) for x in df["momentum"]]
     else:  # composite (conviction, low_crowding)
         scores = [float(x) for x in df["composite"]]
+    # regime overlay: haircut the WEIGHTING score of `contested` sectors (not their ranking, so
+    # they stay selected — only de-risked). water_fill then redistributes the freed weight to the
+    # healthy names (or to cash at the cap). Reversible: unwinds as the contradict decays.
+    states = list(df["regime_state"])
+    veto_on = risk_overlay and contested_haircut > 0
+    if veto_on and contested_action == "redistribute":
+        scores = [s * (1.0 - contested_haircut) if st == "contested" else s
+                  for s, st in zip(scores, states)]
     weights = water_fill(scores, float(c["max_position_pct"]) / 100.0)
+    if veto_on and contested_action == "cash":
+        # gross-down: trim contested FINAL weights; the freed weight stays as cash (not
+        # redistributed). exp_2026-06-05 A/B: this is what actually cuts a broad-risk-off
+        # drawdown — redistribution merely reshuffles within a correlated momentum cluster.
+        weights = [w * (1.0 - contested_haircut) if st == "contested" else w
+                   for w, st in zip(weights, states)]
 
     entry_prices = _entry_prices(lake_dir)
     cfg_ver = config_version(portfolio_id)
@@ -195,12 +242,14 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
             "momentum": float(r["momentum"]),
             "crowding_risk": float(r["crowding_risk"]),
             "narrative_maturity": r.get("narrative_maturity"),
+            "regime_state": r.get("regime_state", "intact"),
             "weight_pct": round(w * 100.0, 2),
             "entry_price": entry_prices.get(r["sector_id"]),
             "built_at": built_at,
         })
 
     cash_pct = round(100.0 - sum(x["weight_pct"] for x in rows), 2)
+    n_contested = sum(1 for x in rows if x.get("regime_state") == "contested")
 
     if persist:
         import pandas as pd
@@ -209,7 +258,8 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
                               overwrite=True, lake_dir=lake_dir)
 
     return {"portfolio_id": portfolio_id, "run_id": run_id, "config_version": cfg_ver,
-            "positions": len(rows), "cash_pct": cash_pct, "holdings": rows}
+            "positions": len(rows), "cash_pct": cash_pct, "overlay": risk_overlay,
+            "contested": n_contested, "holdings": rows}
 
 
 def show_holdings(portfolio_id: str, run_id: str | None = None, lake_dir: Path | None = None) -> dict:
@@ -232,13 +282,17 @@ def _print_holdings(res: dict) -> None:
     if res.get("error"):
         print(f"  {res['portfolio_id']}: {res['error']}")
         return
+    overlay_str = ""
+    if res.get("overlay") is not None:
+        overlay_str = f"  overlay={'on' if res['overlay'] else 'OFF'}  contested={res.get('contested', 0)}"
     print(f"  {res['portfolio_id']}  run={res.get('run_id')}  "
           f"cfg={res.get('config_version','?')}  positions={res.get('positions', len(res['holdings']))}"
-          + (f"  cash={res['cash_pct']}%" if res.get('cash_pct') is not None else ""))
-    print(f"    {'#':<3}{'sector_id':<34}{'etf':<10}{'wt%':>7}{'comp':>7}{'mom':>7}  maturity")
+          + (f"  cash={res['cash_pct']}%" if res.get('cash_pct') is not None else "")
+          + overlay_str)
+    print(f"    {'#':<3}{'sector_id':<34}{'etf':<10}{'wt%':>7}{'comp':>7}{'mom':>7}  {'maturity':<11}regime")
     for h in res["holdings"]:
         print(f"    {h['rank_in_portfolio']:<3}{h['sector_id']:<34}{str(h['primary_etf']):<10}"
-              f"{h['weight_pct']:>7}{h['composite']:>7.1f}{h['momentum']:>7.1f}  {h.get('narrative_maturity')}")
+              f"{h['weight_pct']:>7}{h['composite']:>7.1f}{h['momentum']:>7.1f}  {str(h.get('narrative_maturity')):<11}{h.get('regime_state','intact')}")
 
 
 def main() -> None:
@@ -252,6 +306,7 @@ def main() -> None:
     b.add_argument("portfolio_id")
     b.add_argument("--run-id", default=None)
     b.add_argument("--no-persist", action="store_true")
+    b.add_argument("--no-overlay", action="store_true", help="Disable the regime risk-overlay (veto off)")
     sub.add_parser("build-all", help="Build every profile from the latest run")
     s = sub.add_parser("show", help="Show a portfolio's latest holdings")
     s.add_argument("portfolio_id")
@@ -265,7 +320,8 @@ def main() -> None:
                   f"min_comp={c['min_composite']:<4} cap={c['max_position_pct']}%  cfg={config_version(pid)}")
     elif args.cmd == "build":
         _print_holdings(build_model_holdings(args.portfolio_id, run_id=args.run_id,
-                                             persist=not args.no_persist))
+                                             persist=not args.no_persist,
+                                             risk_overlay=not args.no_overlay))
     elif args.cmd == "build-all":
         for pid in list_profiles():
             _print_holdings(build_model_holdings(pid))
