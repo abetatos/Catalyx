@@ -178,6 +178,41 @@ def _bake_overview(dist: Path) -> dict:
                 ov["latest_holdings"] = {"run_id": r["run_id"], "by_pid": h}
                 break
 
+        # ── per-run summary: WHAT changed at each run (movers, top-N entries/exits, new
+        #    catalysts in the window) so the runs timeline tells a story, not just a date.
+        #    Computed at build time from full rankings; only the small digest is shipped.
+        if runs and has("sector_snapshot"):
+            run_rank = {}
+            for rr in runs:
+                rid = rr["run_id"]
+                run_rank[rid] = {x["sector_id"]: x["rank"]
+                                 for x in q(f"SELECT sector_id, rank FROM sector_snapshot WHERE run_id = '{rid}'")}
+            events = []
+            if _EVENT_CAT.exists():
+                for f in sorted(_EVENT_CAT.glob("*.json")):
+                    try:
+                        d = json.loads(f.read_text(encoding="utf-8"))
+                        events.append({"id": d.get("id", f.stem),
+                                       "date": (d.get("detected_at") or d.get("created_at") or "")[:10]})
+                    except Exception:  # noqa: BLE001
+                        pass
+            for i, rr in enumerate(runs):
+                cur = run_rank.get(rr["run_id"], {})
+                prev_run = runs[i + 1] if i + 1 < len(runs) else None
+                pv = run_rank.get(prev_run["run_id"], {}) if prev_run else {}
+                movers = sorted(((s, pv[s] - rk) for s, rk in cur.items() if s in pv and pv[s] != rk),
+                                key=lambda x: -abs(x[1]))
+                up = [{"sector_id": s, "delta": d} for s, d in movers if d > 0][:3]
+                down = [{"sector_id": s, "delta": d} for s, d in movers if d < 0][:3]
+                entered = [s for s, rk in cur.items() if rk <= 10 and (s not in pv or pv[s] > 10)] if pv else []
+                exited = [s for s, rk in pv.items() if rk <= 10 and (s not in cur or cur[s] > 10)] if pv else []
+                new_cats = []
+                if prev_run:
+                    lo, hi = prev_run["ts"][:10], rr["ts"][:10]
+                    new_cats = [e["id"] for e in events if e["date"] and lo < e["date"] <= hi]
+                rr["summary"] = {"movers_up": up, "movers_down": down,
+                                 "entered": entered[:5], "exited": exited[:5], "new_catalysts": new_cats}
+
         # ── portfolios: NAV series + risk metrics + construction methodology (current) ──
         cfgs = _portfolio_configs()
         ov["portfolios"] = []

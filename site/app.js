@@ -6,8 +6,13 @@
 // run_id partition and the result is cached). This keeps overview.json bounded no matter how many
 // runs accrue. WASM also backs the per-sector history chart and per-run reports. Hash-routed
 // (#/section/id) so every cross-link is shareable.
-import * as duckdb from 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.29.0/+esm';
-import { marked } from 'https://cdn.jsdelivr.net/npm/marked@12/+esm';
+//
+// CRITICAL: both heavy/3rd-party modules (duckdb-wasm ~MBs, marked) are loaded LAZILY via
+// dynamic import(), never as static top-level imports — a static import of a slow/failing CDN
+// module would block the WHOLE module from executing, blanking the precomputed first paint.
+// The first paint must run on overview.json/docs.json alone, with zero external module deps.
+const DUCKDB_URL = 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.29.0/+esm';
+const MARKED_URL = 'https://cdn.jsdelivr.net/npm/marked@12/+esm';
 
 const $ = (id) => document.getElementById(id);
 const status = (m) => { const s = $('status'); if (s) s.textContent = m; };
@@ -26,6 +31,7 @@ async function ensureDuckDB() {
   if (conn) return conn;
   if (!dbPromise) dbPromise = (async () => {
     status('booting DuckDB-WASM…');
+    const duckdb = await import(/* @vite-ignore */ DUCKDB_URL);
     const bundle = await duckdb.selectBundle(duckdb.getJsDelivrBundles());
     const workerURL = URL.createObjectURL(new Blob([`importScripts("${bundle.mainWorker}");`], { type: 'text/javascript' }));
     const worker = new Worker(workerURL);
@@ -62,7 +68,12 @@ async function q(sql, params) {
 
 // ── visual helpers ─────────────────────────────────────────────────────────────
 function escapeHtml(s) { return String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
-function md(t) { try { return marked.parse(t || ''); } catch (e) { return '<pre>' + escapeHtml(t || '') + '</pre>'; } }
+// marked is loaded lazily (best-effort). Until it resolves — or if the CDN fails — md()
+// degrades to escaped, whitespace-preserving text. It never blocks the first paint.
+let marked = null;
+import(/* @vite-ignore */ MARKED_URL).then((m) => { marked = m.marked; reRenderForMarked(); }).catch(() => {});
+function reRenderForMarked() { try { if (LAST && RENDER[LAST.section]) RENDER[LAST.section](LAST.id); } catch (e) { /* ignore */ } }
+function md(t) { if (!marked) return '<pre style="white-space:pre-wrap;font:inherit;background:none;border:none;padding:0">' + escapeHtml(t || '') + '</pre>'; try { return marked.parse(t || ''); } catch (e) { return escapeHtml(t || ''); } }
 function err(where, e) { console.error(e); const el = $(where); if (el) el.innerHTML = `<div class="err">${(e && e.message) || e}</div>`; }
 function scoreColor(v) { return v >= 66 ? 'var(--green)' : v >= 40 ? 'var(--amber)' : 'var(--red)'; }
 function num(v, d = 1) { return (v === null || v === undefined || v === '') ? '—' : (Number.isInteger(v) ? v : Number(v).toFixed(d)); }
@@ -140,15 +151,21 @@ async function getRunData(rid) {
 }
 async function setRun(rid) {
   if (!rid || !runMeta(rid).run_id) return;
-  const sw = $('run-switch'); if (sw && sw.value !== rid) sw.value = rid;
   if (rid !== OV.latest_run_id) status('loading run ' + rid + '…');
   CUR_DATA = await getRunData(rid);
   CUR_RUN = rid;
-  const m = runMeta(rid);
-  $('run-note').innerHTML = `${rid === OV.latest_run_id ? '<b>latest</b> · ' : ''}${m.sector_count || '—'} sectors`
-    + (m.notes ? `<br/>${escapeHtml((m.notes || '').slice(0, 80))}` : '');
+  renderRunCurrent(rid);
   status('ready');
   applyRoute(LAST.section, LAST.id);
+}
+function renderRunCurrent(rid) {
+  const m = runMeta(rid);
+  const isLatest = rid === OV.latest_run_id;
+  const el = $('run-current'); if (!el) return;
+  el.innerHTML = `
+    <div class="rc-date">${m.ts || rid} ${isLatest ? '<span class="pill g">latest</span>' : '<span class="pill a">historical</span>'}</div>
+    <div class="rc-meta">${m.sector_count || '—'} sectors${m.notes ? '<br/>' + escapeHtml((m.notes || '').slice(0, 70)) : ''}</div>
+    <a href="#/data">Browse all runs →</a>`;
 }
 
 // ── cross-link graph (from docs.json) ───────────────────────────────────────────
@@ -458,17 +475,30 @@ async function renderLineage() {
 }
 
 // ── DATA (runs catalogue + report, lazy) ────────────────────────────────────────
+function runDigest(s) {
+  if (!s) return '';
+  const parts = [];
+  (s.new_catalysts || []).forEach((c) => parts.push(`<span class="pill b" title="new catalyst in this window">+ ${c}</span>`));
+  (s.entered || []).forEach((x) => parts.push(`<span class="pill g" title="entered top-10">▲ ${x}</span>`));
+  (s.exited || []).forEach((x) => parts.push(`<span class="pill r" title="dropped out of top-10">▼ ${x}</span>`));
+  (s.movers_up || []).forEach((m) => parts.push(`<span class="pill" title="climbed ${m.delta}"><span class="pos">▲${m.delta}</span> ${m.sector_id}</span>`));
+  (s.movers_down || []).forEach((m) => parts.push(`<span class="pill" title="fell ${-m.delta}"><span class="neg">▼${-m.delta}</span> ${m.sector_id}</span>`));
+  return parts.length ? `<div class="chips" style="margin-top:8px">${parts.join('')}</div>`
+    : '<div class="lbl" style="margin-top:6px">No ranking changes vs the previous run.</div>';
+}
 async function renderData() {
   const runs = OV.runs || [];
-  $('data-runs').innerHTML = runs.map((r) => `
+  $('data-runs').innerHTML = runs.map((r, i) => `
     <div class="card ${r.run_id === CUR_RUN ? 'sel' : ''}" style="margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
-        <div>
+        <div style="min-width:0">
           <div style="font-weight:600">${r.ts} ${r.run_id === OV.latest_run_id ? '<span class="pill g">latest</span>' : ''} ${r.run_id === CUR_RUN ? '<span class="pill b">viewing</span>' : ''}</div>
           <div class="lbl">${r.run_id} · ${r.sector_count} sectors · scoring ${(r.scoring_version || '').slice(0, 8)} · git ${r.git_commit || '—'}</div>
           <div style="margin-top:6px;font-size:13px">${escapeHtml(r.notes || '')}</div>
+          <div class="lbl" style="margin-top:8px;text-transform:uppercase;letter-spacing:.5px;font-size:10px">What changed ${i + 1 < runs.length ? 'vs ' + runs[i + 1].ts.slice(0, 10) : '(first run)'}</div>
+          ${runDigest(r.summary)}
         </div>
-        <button class="btn" data-run="${r.run_id}">View this run</button>
+        <button class="btn" data-run="${r.run_id}" style="white-space:nowrap">${r.run_id === CUR_RUN ? '✓ viewing' : 'View this run'}</button>
       </div>
     </div>`).join('') || '<p class="hint">No runs.</p>';
   $('data-runs').onclick = (ev) => { const b = ev.target.closest('button[data-run]'); if (b) setRun(b.dataset.run); };
@@ -510,12 +540,7 @@ function route() {
     OV = ov; DOCS = docs;
     CUR_RUN = OV.latest_run_id; CUR_DATA = OV.latest || { ranking: [], rank_moves: [], holdings: {} };
     const g = $('gen'); if (g && OV.generated_at) g.textContent = 'built ' + OV.generated_at.slice(0, 16).replace('T', ' ');
-    // run switcher
-    $('run-switch').innerHTML = (OV.runs || []).map((r) => `<option value="${r.run_id}">${r.ts}${r.run_id === OV.latest_run_id ? ' (latest)' : ''}</option>`).join('');
-    $('run-switch').value = CUR_RUN || '';
-    $('run-switch').addEventListener('change', (e) => setRun(e.target.value));
-    const m = runMeta(CUR_RUN);
-    $('run-note').innerHTML = `<b>latest</b> · ${m.sector_count || '—'} sectors` + (m.notes ? `<br/>${escapeHtml((m.notes || '').slice(0, 80))}` : '');
+    renderRunCurrent(CUR_RUN);
     status('ready · historical runs load on demand');
   } catch (e) { status('error'); console.error(e); }
   if (!location.hash) location.hash = '#/overview';

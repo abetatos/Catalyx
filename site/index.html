@@ -31,9 +31,11 @@
     .navlink .ic { width:18px; text-align:center; font-size:15px; }
     .navsep { margin:10px 8px 4px; font-size:10px; letter-spacing:.8px; text-transform:uppercase; color:var(--muted); }
     .runbar { padding:8px 8px 12px; margin-bottom:6px; border-bottom:1px solid var(--border); }
-    .runbar label { display:block; font-size:10px; letter-spacing:.6px; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
-    .runbar select { width:100%; font-size:12px; padding:6px 8px; }
-    .runbar .note { font-size:10.5px; color:var(--muted); margin-top:5px; line-height:1.4; }
+    .runbar > label { display:block; font-size:10px; letter-spacing:.6px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+    .runcard { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:9px 11px; }
+    .runcard .rc-date { font-weight:600; font-size:12.5px; }
+    .runcard .rc-meta { font-size:10.5px; color:var(--muted); margin-top:3px; line-height:1.45; }
+    .runcard a { font-size:11px; display:inline-block; margin-top:7px; }
     aside footer { margin-top:auto; padding:12px 8px 0; font-size:11px; color:var(--muted); line-height:1.5; }
     #status { color:var(--accent); }
 
@@ -123,9 +125,8 @@
   <aside>
     <div class="brand"><h1>CATALYX</h1><span>sector ETF intelligence</span></div>
     <div class="runbar">
-      <label for="run-switch">Viewing run</label>
-      <select id="run-switch"></select>
-      <div class="note" id="run-note"></div>
+      <label>Viewing run</label>
+      <div class="runcard" id="run-current"></div>
     </div>
     <a class="navlink" data-route="overview"><span class="ic">◧</span> Overview</a>
     <a class="navlink" data-route="sectors"><span class="ic">▦</span> Sectors</a>
