@@ -203,6 +203,8 @@ function renderOverview() {
   const m = runMeta(CUR_RUN);
   $('ov-runbadge').innerHTML = m.run_id
     ? `Run <b>${m.run_id}</b> · ${m.ts} · ${m.sector_count} sectors${CUR_RUN === OV.latest_run_id ? ' · <span class="pill g">latest</span>' : ' · <span class="pill a">historical view</span>'}`
+      + (m.notes ? `<br/><span style="color:var(--muted)">${escapeHtml(m.notes)}</span>` : '')
+      + `<div class="lbl" style="margin-top:8px;text-transform:uppercase;letter-spacing:.5px;font-size:10px">What changed this run</div>${runDigest(m.summary)}`
     : 'No scoring run yet.';
 
   $('ov-portfolios').innerHTML = (OV.portfolios || []).map(portfolioCard).join('') || '<p class="hint">No NAV yet.</p>';
@@ -478,13 +480,22 @@ async function renderLineage() {
 function runDigest(s) {
   if (!s) return '';
   const parts = [];
-  (s.new_catalysts || []).forEach((c) => parts.push(`<span class="pill b" title="new catalyst in this window">+ ${c}</span>`));
+  (s.new_catalysts || []).forEach((c) => {
+    const cid = typeof c === 'string' ? c : c.id;
+    const rel = (c && typeof c === 'object' && c.relation_to_structural) ? ` (${c.relation_to_structural})` : '';
+    parts.push(`<span class="pill b" title="new event catalyst detected in this run's window">+ ${cid}${rel}</span>`);
+  });
   (s.entered || []).forEach((x) => parts.push(`<span class="pill g" title="entered top-10">▲ ${x}</span>`));
   (s.exited || []).forEach((x) => parts.push(`<span class="pill r" title="dropped out of top-10">▼ ${x}</span>`));
-  (s.movers_up || []).forEach((m) => parts.push(`<span class="pill" title="climbed ${m.delta}"><span class="pos">▲${m.delta}</span> ${m.sector_id}</span>`));
-  (s.movers_down || []).forEach((m) => parts.push(`<span class="pill" title="fell ${-m.delta}"><span class="neg">▼${-m.delta}</span> ${m.sector_id}</span>`));
+  (s.movers_up || []).forEach((m) => parts.push(`<span class="pill" title="climbed ${m.delta} ranks"><span class="pos">▲${m.delta}</span> ${m.sector_id}</span>`));
+  (s.movers_down || []).forEach((m) => parts.push(`<span class="pill" title="fell ${-m.delta} ranks"><span class="neg">▼${-m.delta}</span> ${m.sector_id}</span>`));
+  const reg = s.regime || {};
+  if (reg.contested) parts.push(`<span class="pill a" title="sectors with a live contradiction (regime contested)">${reg.contested} contested</span>`);
+  if (reg.breaking) parts.push(`<span class="pill r" title="sectors breaking (permanent rotation)">${reg.breaking} breaking</span>`);
+  const b = s.breadth;
+  if (b) parts.push(`<span class="pill" title="composite breadth vs previous run (mean Δ ${b.mean_delta})"><span class="pos">▲${b.up}</span>/<span class="neg">▼${b.down}</span> breadth</span>`);
   return parts.length ? `<div class="chips" style="margin-top:8px">${parts.join('')}</div>`
-    : '<div class="lbl" style="margin-top:6px">No ranking changes vs the previous run.</div>';
+    : '<div class="lbl" style="margin-top:6px">No material change vs the previous run.</div>';
 }
 async function renderData() {
   const runs = OV.runs || [];
