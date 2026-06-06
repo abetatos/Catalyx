@@ -22,6 +22,7 @@ from pathlib import Path
 import yaml
 
 from catalyx.store import lake
+from catalyx.store import movement_repo
 
 _ROOT = Path(__file__).parents[1]
 _SITE = _ROOT / "site"
@@ -92,6 +93,45 @@ def _series_metrics(navs: list) -> dict | None:
         "sharpe": round(mean / sd * math.sqrt(252), 2) if sd else None,
         "max_drawdown_pct": round(mdd * 100, 1),
     }
+
+
+def _mark_to_market(positions: dict | None) -> dict | None:
+    """Mark the real book against its AVG COST using last market prices (best-effort yfinance).
+
+    The NAV curve measures performance since the entry DATE (market-relative); it does NOT show
+    your unrealized P&L vs what you PAID. This marks each holding (qty × last_price − invested_eur)
+    so the Positions page shows the actual drawdown vs cost. Offline/failed fetch → left unmarked.
+    Assumes the price is in the same currency as amount_eur (true for the EUR-listed vehicles held).
+    """
+    if not positions or not positions.get("holdings"):
+        return positions
+    try:
+        import yfinance as yf
+    except Exception:  # noqa: BLE001
+        return positions
+    mv_total = 0.0
+    ok = False
+    for h in positions["holdings"]:
+        try:
+            hist = yf.Ticker(h["etf"]).history(period="5d", auto_adjust=True)["Close"].dropna()
+            if hist.empty:
+                continue
+            last = float(hist.iloc[-1])
+            mv = round(h["qty"] * last, 2)
+            h["last_price"] = round(last, 4)
+            h["market_value_eur"] = mv
+            h["unrealized_eur"] = round(mv - h["invested_eur"], 2)
+            h["unrealized_pct"] = round((mv / h["invested_eur"] - 1) * 100, 2) if h["invested_eur"] else None
+            mv_total += mv
+            ok = True
+        except Exception:  # noqa: BLE001 — a single bad ticker never breaks the book
+            continue
+    if ok:
+        inv = positions.get("total_invested_eur") or 0.0
+        positions["market_value_eur"] = round(mv_total, 2)
+        positions["unrealized_eur"] = round(mv_total - inv, 2)
+        positions["unrealized_pct"] = round((mv_total / inv - 1) * 100, 2) if inv else None
+    return positions
 
 
 def _portfolio_configs() -> dict:
@@ -166,8 +206,18 @@ def _bake_overview(dist: Path) -> dict:
         ov["latest"] = {"ranking": [], "rank_moves": [], "holdings": {}}
         ov["prev_ranking"] = []
         if latest_rid and has("sector_snapshot"):
+            # NULL-safe optional columns: the flow_proxy_* fields exist only in partitions recorded
+            # after that feature landed. Selecting a non-existent column would throw → the defensive
+            # q() would blank the whole ranking. So emit `NULL AS col` for any column not present.
+            try:
+                ss_cols = set(con.execute("SELECT * FROM sector_snapshot LIMIT 0").fetchdf().columns)
+            except Exception:  # noqa: BLE001
+                ss_cols = set()
+            opt = lambda c: c if c in ss_cols else f"NULL AS {c}"  # noqa: E731
             ov["latest"]["ranking"] = q(
                 "SELECT sector_id, rank, composite, catalyst_alignment, momentum, flow_confirmation, "
+                f"{opt('flow_data_quality')}, {opt('flow_source')}, {opt('flow_proxy_ticker')}, {opt('flow_proxy_used')}, "
+                f"{opt('flow_carried_from')}, {opt('flow_volume_cmf')}, {opt('flow_window_days')}, {opt('flow_days_covered')}, "
                 "crowding_risk, narrative_maturity, primary_etf, regime_state "
                 f"FROM sector_snapshot WHERE run_id = '{latest_rid}' ORDER BY rank")
             ov["latest"]["rank_moves"] = q(
@@ -226,36 +276,82 @@ def _bake_overview(dist: Path) -> dict:
                     "new_catalysts": new_cats, "regime": None, "breadth": None,
                 }
 
-        # ── portfolios: NAV series + risk metrics + construction methodology (current) ──
+        # ── portfolios: prefer the LIVE walk-forward track record (mode='live') as the headline;
+        # the mode='backtest' rows are a HYPOTHETICAL reference shown only until live history accrues
+        # (the live curve starts at track_record inception and grows one run at a time).
         cfgs = _portfolio_configs()
+        try:
+            from catalyx.config import weights as _w
+            inception = _w.track_record_inception()
+        except Exception:  # noqa: BLE001
+            inception = None
+        ov["track_inception"] = inception
         ov["portfolios"] = []
         if has("portfolio_nav"):
             for row in q("SELECT DISTINCT portfolio_id FROM portfolio_nav ORDER BY portfolio_id"):
                 pid = row["portfolio_id"]
-                series = q(
-                    "SELECT date, nav, benchmark_nav, return_pct, vs_benchmark_pct, benchmark_etf, kind "
+                rows = q(
+                    "SELECT date, nav, benchmark_nav, return_pct, vs_benchmark_pct, benchmark_etf, kind, mode "
                     f"FROM portfolio_nav WHERE portfolio_id = '{pid}' ORDER BY date"
                 )
-                if not series:
+                if not rows:
                     continue
-                last = series[-1]
+                kind = rows[-1].get("kind")
+                live = [r for r in rows if r.get("mode") == "live"]
+                ref = [r for r in rows if r.get("mode") != "live"]   # backtest/forward (+ real has mode null)
+                is_live = len(live) >= 2                              # a real curve needs ≥2 points
+                shown = live if is_live else (ref or live)
+                if not shown:
+                    continue
+                last = shown[-1]
                 cfg = cfgs.get(pid, {})
+                track_mode = "real" if kind == "real" else ("live" if is_live else "accruing")
                 ov["portfolios"].append({
                     "portfolio_id": pid,
                     "name": cfg.get("name", pid),
                     "description": (cfg.get("description") or "").strip(),
                     "construction": cfg.get("construction"),
-                    "kind": last.get("kind"),
+                    "kind": kind,
+                    "track_mode": track_mode,             # live | accruing | real
+                    "inception": inception,
+                    "live_points": len(live),
+                    # while 'accruing', the curve shown is the hypothetical backtest (flag it as such)
+                    "is_reference_curve": track_mode == "accruing",
                     "return_pct": last.get("return_pct"),
                     "vs_benchmark_pct": last.get("vs_benchmark_pct"),
                     "benchmark_etf": last.get("benchmark_etf"),
-                    "metrics": _series_metrics([s["nav"] for s in series]),
-                    "bench_metrics": _series_metrics([s["benchmark_nav"] for s in series]),
-                    "n_days": len(series),
-                    "nav": _downsample([s["nav"] for s in series]),
-                    "benchmark_nav": _downsample([s["benchmark_nav"] for s in series]),
+                    "metrics": _series_metrics([s["nav"] for s in shown]),
+                    "bench_metrics": _series_metrics([s["benchmark_nav"] for s in shown]),
+                    "n_days": len(shown),
+                    "nav": _downsample([s["nav"] for s in shown]),
+                    "benchmark_nav": _downsample([s["benchmark_nav"] for s in shown]),
                 })
-            ov["portfolios"].sort(key=lambda p: (p.get("return_pct") is None, -(p.get("return_pct") or 0)))
+            # `catalyx` (the flagship composite book) is ALWAYS pinned first; the rest by return desc.
+            ov["portfolios"].sort(key=lambda p: (
+                p.get("portfolio_id") != "catalyx", p.get("return_pct") is None, -(p.get("return_pct") or 0)))
+
+        # ── real book (Positions page): the actual money, treated like a portfolio but kept SEPARATE
+        # from the model strategies. NAV/metrics come from the kind='real' portfolio_nav row; the
+        # holdings + movements + catalyst exposure are derived from the Tier-1 movement files.
+        ov["positions_book"] = next((p for p in ov["portfolios"] if p.get("kind") == "real"), None)
+        ov["portfolios"] = [p for p in ov["portfolios"] if p.get("kind") != "real"]
+        try:
+            ov["positions"] = _mark_to_market(movement_repo.positions())
+            ov["catalyst_ledger"] = movement_repo.catalyst_ledger()
+        except Exception:  # noqa: BLE001 — never let a movement read break the build
+            ov["positions"], ov["catalyst_ledger"] = None, []
+
+        # rotation targets ANCHORED to the real book's holdings (healthy sectors least correlated
+        # to what you already own) — computed by dislocation --anchor-sectors → portfolio_rotation.
+        ov["positions_rotation"] = None
+        if has("portfolio_rotation"):
+            meta = q("SELECT max(run_id) AS run_id FROM portfolio_rotation")
+            rid = meta[0]["run_id"] if meta and meta[0].get("run_id") is not None else None
+            if rid:
+                ov["positions_rotation"] = q(
+                    "SELECT sector_id, primary_etf, composite, mean_corr_to_stressed AS corr_to_book, "
+                    f"diversifier_score FROM portfolio_rotation WHERE run_id = '{rid}' "
+                    "AND lens = 'diversifier' ORDER BY diversifier_score DESC")
 
         # ── dislocation lens (opportunities / diversifiers / regime watch) ──
         ov["dislocation"] = None
@@ -286,6 +382,29 @@ def _bake_overview(dist: Path) -> dict:
                         f"composite FROM dislocation WHERE run_id = '{run_id}' AND regime_state <> 'intact' "
                         "ORDER BY regime_state, drawdown_pct"),
                 }
+
+        # ── entry-timing overlay (micro-tension + event overhang, recommend-only) ──
+        # The timing answers WHEN to enter — it only makes sense ATTACHED to a sector you might
+        # act on (a dislocation opportunity OR a fundamentals pick from the ranking). So we bake it
+        # as a by_sector MAP for the whole run (every assessed sector, not just the caveated ones):
+        # the Overview merges it INTO each opportunity ticket, and the sector detail shows it too.
+        ov["entry_timing"] = None
+        if has("entry_timing"):
+            meta = q("SELECT max(run_id) AS run_id FROM entry_timing")
+            run_id = meta[0]["run_id"] if meta and meta[0].get("run_id") is not None else None
+            if run_id is not None:
+                m = q("SELECT DISTINCT as_of, vix, vix_5d_change, spy_5d_pct "
+                      f"FROM entry_timing WHERE run_id = '{run_id}'")
+                rows = q(
+                    "SELECT sector_id, primary_etf, micro_timing_state, tension_score, rsi_14, "
+                    "stretch_vs_ma20_pct, vol_ratio_10_90, return_5d_pct, drawdown_from_20d_high_pct, "
+                    "stabilizing, suggested_verdict, wait_until, has_upcoming_overhang, "
+                    "nearest_overhang_id, nearest_overhang_date, nearest_overhang_days_until "
+                    f"FROM entry_timing WHERE run_id = '{run_id}'")
+                ov["entry_timing"] = {
+                    "run_id": run_id, "meta": (m or [None])[0],
+                    "by_sector": {r["sector_id"]: r for r in rows},
+                }
     finally:
         con.close()
 
@@ -295,6 +414,7 @@ def _bake_overview(dist: Path) -> dict:
         "latest_ranking": len((ov.get("latest") or {}).get("ranking") or []),
         "portfolios": len(ov.get("portfolios") or []),
         "dislocation": bool(ov.get("dislocation")),
+        "entry_timing": len((ov.get("entry_timing") or {}).get("by_sector") or {}),
     }
 
 

@@ -23,6 +23,7 @@ import sys
 from datetime import date, datetime, timezone
 from pathlib import Path
 
+from catalyx.config import weights as weights_cfg
 from catalyx.store import lake
 
 _NAV_TABLE = "portfolio_nav"
@@ -90,6 +91,33 @@ def holdings_nav(holdings: list[dict], prices, base: float = 100.0) -> list[dict
         d = ts.date().isoformat() if hasattr(ts, "date") else str(ts)
         out.append({"date": d, "nav": round(float(v), 4)})
     return out
+
+
+# ── Persistence (mode-scoped) ────────────────────────────────────────────────
+
+def _persist_nav_rows(portfolio_id: str, mode: str | None, rows: list[dict],
+                      lake_dir: Path | None = None) -> None:
+    """Write NAV rows for ONE portfolio, replacing only its (portfolio_id, mode) slice so the
+    backtest, live, forward and real curves for that portfolio coexist instead of clobbering
+    each other. The partition is keyed by {portfolio_id}, so the written frame must contain
+    ONLY this portfolio's rows (all its modes) — never other portfolios' (that would duplicate
+    them across partition files on read). `mode=None` (real book) replaces the no-mode slice."""
+    import pandas as pd
+
+    new = pd.DataFrame(rows)
+    existing = lake.read_table(_NAV_TABLE, lake_dir=lake_dir)
+    keep = pd.DataFrame()
+    if not existing.empty and "portfolio_id" in existing.columns:
+        mine = existing[existing["portfolio_id"] == portfolio_id]
+        if not mine.empty:
+            m = mine.get("mode") if "mode" in mine.columns else None
+            drop = (m.isna() if mode is None else (m == mode)) if m is not None else (mode is None)
+            keep = mine[~drop] if hasattr(drop, "__len__") else (mine.iloc[0:0] if drop else mine)
+    combined = pd.concat([keep, new], ignore_index=True) if not keep.empty else new
+    if combined.empty:
+        return
+    lake.append_partition(_NAV_TABLE, combined, {"portfolio_id": portfolio_id},
+                          overwrite=True, lake_dir=lake_dir)
 
 
 # ── Model-portfolio NAV ──────────────────────────────────────────────────────
@@ -161,13 +189,112 @@ def compute_model_nav(portfolio_id: str, run_id: str | None = None, as_of: str |
         })
 
     if persist and rows:
-        import pandas as pd
-        lake.append_partition(_NAV_TABLE, pd.DataFrame(rows), {"portfolio_id": portfolio_id},
-                              overwrite=True, lake_dir=lake_dir)
+        _persist_nav_rows(portfolio_id, mode, rows, lake_dir=lake_dir)
 
     last = rows[-1] if rows else None
     return {"portfolio_id": portfolio_id, "run_id": run_id, "start": start, "end": end,
             "points": len(rows), "benchmark": benchmark,
+            "last_nav": last["nav"] if last else None,
+            "last_return_pct": last["return_pct"] if last else None,
+            "last_vs_benchmark_pct": last["vs_benchmark_pct"] if last else None,
+            "series": rows}
+
+
+def _runs_with_holdings(portfolio_id: str, since: str | None, lake_dir: Path | None):
+    """Runs that have holdings for this portfolio, on/after `since` (inception). Collapses
+    multiple same-day runs to the LATEST run that day (intra-day recomputes aren't real
+    rebalances). Returns [(run_date, run_id)] ascending by date."""
+    from catalyx.execution import portfolio as pf
+
+    df = lake.read_table(pf._HOLDING_TABLE, lake_dir=lake_dir)
+    if df.empty or "portfolio_id" not in df.columns:
+        return []
+    df = df[df["portfolio_id"] == portfolio_id]
+    if df.empty:
+        return []
+    by_day: dict[str, str] = {}
+    for rid in sorted(df["run_id"].dropna().unique()):
+        d = _run_date(rid)
+        if not d or (since and d < since):
+            continue
+        by_day[d] = rid                      # later run_id wins for the day (sorted asc)
+    return sorted(by_day.items())
+
+
+def compute_live_nav(portfolio_id: str, inception: str | None = None, as_of: str | None = None,
+                     price_fn=None, persist: bool = True, lake_dir: Path | None = None) -> dict:
+    """Walk-forward, no-look-ahead track record (mode='live').
+
+    Each score_run on/after inception is a rebalance point. For consecutive runs k → k+1, the
+    holdings ACTUALLY chosen at run_k are valued over [date_k, date_{k+1}] with real prices and
+    the segment return is CHAINED onto the running NAV; the latest run accrues to today. Unlike
+    `mode=backtest` (today's holdings projected backwards — hypothetical), this only ever uses
+    holdings that were live in each interval, so it is a genuine forward equity curve.
+
+    Persisted with mode='live' (the `backtest` rows are left untouched, kept for reference).
+    """
+    from catalyx.execution import portfolio as pf
+
+    price_fn = price_fn or yfinance_prices
+    inception = inception or weights_cfg.track_record_inception()
+    runs = _runs_with_holdings(portfolio_id, inception, lake_dir)
+    if not runs:
+        return {"portfolio_id": portfolio_id,
+                "error": f"no holdings on/after inception {inception!r} — build portfolios first"}
+
+    try:
+        benchmark = pf.load_profile(portfolio_id).get("benchmark_etf")
+    except FileNotFoundError:
+        benchmark = None
+
+    # one price pull for the whole window + every ETF ever held, then slice per segment.
+    holdings_by_run = {rid: pf.show_holdings(portfolio_id, run_id=rid, lake_dir=lake_dir).get("holdings", [])
+                       for _, rid in runs}
+    end = as_of or date.today().isoformat()
+    start = runs[0][0]
+    all_etfs = {h.get("primary_etf") for hs in holdings_by_run.values() for h in hs if h.get("primary_etf")}
+    tickers = list(dict.fromkeys(list(all_etfs) + ([benchmark] if benchmark else [])))
+    prices = price_fn(tickers, start, end)
+
+    running = 100.0
+    chained: list[dict] = []
+    for i, (d_k, rid) in enumerate(runs):
+        seg_end = runs[i + 1][0] if i + 1 < len(runs) else end
+        seg_px = prices.loc[d_k:seg_end] if prices is not None and len(prices) else prices
+        seg = holdings_nav(holdings_by_run[rid], seg_px)     # indexed 100 at d_k
+        if not seg:
+            continue
+        for j, pt in enumerate(seg):
+            if i > 0 and j == 0:
+                continue                                      # boundary dup with prev segment's last point
+            chained.append({"date": pt["date"], "nav": round(running * pt["nav"] / 100.0, 4)})
+        running = running * seg[-1]["nav"] / 100.0
+
+    # benchmark: a single continuous buy-and-hold over the whole window (directly comparable)
+    bench = holdings_nav([{"etf": benchmark, "weight_pct": 100.0}], prices) if benchmark else []
+    bench_by_date = {b["date"]: b["nav"] for b in bench}
+
+    computed_at = datetime.now(timezone.utc)
+    rows = []
+    for p in chained:
+        bnav = bench_by_date.get(p["date"])
+        rows.append({
+            "portfolio_id": portfolio_id, "kind": "model", "mode": "live", "run_id": runs[-1][1],
+            "config_version": None, "date": p["date"], "nav": p["nav"],
+            "return_pct": round(p["nav"] - 100.0, 4),
+            "benchmark_etf": benchmark, "benchmark_nav": bnav,
+            "vs_benchmark_pct": round(p["nav"] - bnav, 4) if bnav is not None else None,
+            "computed_at": computed_at,
+        })
+
+    if persist:
+        # persist even when empty → clears any stale live slice (e.g. an earlier inception)
+        _persist_nav_rows(portfolio_id, "live", rows, lake_dir=lake_dir)
+
+    last = rows[-1] if rows else None
+    return {"portfolio_id": portfolio_id, "mode": "live", "inception": inception,
+            "rebalances": len(runs), "start": start, "end": end, "points": len(rows),
+            "benchmark": benchmark,
             "last_nav": last["nav"] if last else None,
             "last_return_pct": last["return_pct"] if last else None,
             "last_vs_benchmark_pct": last["vs_benchmark_pct"] if last else None,
@@ -204,7 +331,7 @@ def compute_real_nav(portfolio_id: str, start: str | None = None, as_of: str | N
     for p in port:
         bnav = bench_by_date.get(p["date"])
         rows.append({
-            "portfolio_id": portfolio_id, "kind": "real", "run_id": None,
+            "portfolio_id": portfolio_id, "kind": "real", "mode": None, "run_id": None,
             "config_version": None, "date": p["date"], "nav": p["nav"],
             "return_pct": round(p["nav"] - 100.0, 4),
             "benchmark_etf": benchmark, "benchmark_nav": bnav,
@@ -213,9 +340,7 @@ def compute_real_nav(portfolio_id: str, start: str | None = None, as_of: str | N
         })
 
     if persist and rows:
-        import pandas as pd
-        lake.append_partition(_NAV_TABLE, pd.DataFrame(rows), {"portfolio_id": portfolio_id},
-                              overwrite=True, lake_dir=lake_dir)
+        _persist_nav_rows(portfolio_id, None, rows, lake_dir=lake_dir)
 
     last = rows[-1] if rows else None
     return {"portfolio_id": portfolio_id, "kind": "real", "start": start, "end": end,
@@ -247,6 +372,10 @@ def main() -> None:
     m.add_argument("--as-of", default=None)
     m.add_argument("--backtest-days", type=int, default=None,
                    help="Trailing backtest window (e.g. 180) — current holdings vs market over last N days")
+    lv = sub.add_parser("live", help="Walk-forward track record (chains each run's holdings from inception)")
+    lv.add_argument("portfolio_id")
+    lv.add_argument("--inception", default=None, help="Override inception date (default: config track_record.yaml)")
+    lv.add_argument("--as-of", default=None)
     rl = sub.add_parser("real", help="Compute the real book's NAV from the movement files")
     rl.add_argument("portfolio_id")
     rl.add_argument("--start", default=None)
@@ -267,6 +396,18 @@ def main() -> None:
         vsb_str = f"{vsb:+}" if vsb is not None else "n/a"
         ret_str = f"{ret:+}%" if ret is not None else "n/a (no price data)"
         print(f"  {r['portfolio_id']}  {r['start']} → {r['end']}  ({r['points']} pts)")
+        print(f"  last NAV={r['last_nav']}  return={ret_str}  vs {r['benchmark']}={vsb_str}")
+    elif args.cmd == "live":
+        r = compute_live_nav(args.portfolio_id, inception=args.inception, as_of=args.as_of)
+        if r.get("error"):
+            print(f"  {args.portfolio_id}: {r['error']}")
+            return
+        vsb = r["last_vs_benchmark_pct"]
+        ret = r["last_return_pct"]
+        vsb_str = f"{vsb:+}" if vsb is not None else "n/a"
+        ret_str = f"{ret:+}%" if ret is not None else "n/a (no price data)"
+        print(f"  {r['portfolio_id']} (live)  inception={r['inception']}  rebalances={r['rebalances']}  "
+              f"{r['start']} → {r['end']}  ({r['points']} pts)")
         print(f"  last NAV={r['last_nav']}  return={ret_str}  vs {r['benchmark']}={vsb_str}")
     elif args.cmd == "real":
         r = compute_real_nav(args.portfolio_id, start=args.start, as_of=args.as_of,

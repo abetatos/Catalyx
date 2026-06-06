@@ -14,3 +14,9 @@ construction:
   exclude_narrative_maturity: [exhausted]
   weighting: composite
   max_position_pct: 16
+  # Conviction sizing (overrides global portfolio_weighting): the flagship book expresses the
+  # ranking in the WEIGHTS, not just the selection. softmax over z-normalized composite spreads
+  # the narrow score band (≈65–74) into dispersed weights; the deadband caps tax-churn.
+  weighting_transform: softmax
+  sharpness: 0.25
+  rebalance_deadband_pct: 1.0

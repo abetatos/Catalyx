@@ -1,5 +1,9 @@
 // CATALYX dashboard — Fase F v5 (entity-centric, cross-linked, run-aware, precompute-bounded).
 //
+// ⚠ LANGUAGE RULE: ALL user-facing copy in the dashboard (this file's strings + comments,
+//   site/index.html, scripts/build_site.py baked text) MUST be in ENGLISH. The user works in
+//   Spanish in chat, but the dashboard is English-only. Don't leak Spanish into rendered text.
+//
 // Boot: render the LATEST run from precomputed overview.json + docs.json with ZERO DuckDB-WASM.
 // The whole page can be switched to any historical run via the sidebar selector — the latest run
 // is baked, every OTHER run is loaded ON DEMAND from the parquet lake (DuckDB-WASM reads just that
@@ -89,6 +93,22 @@ function num(v, d = 1) { return (v === null || v === undefined || v === '') ? '�
 function signed(v, d = 1) { if (v === null || v === undefined) return '—'; return (v >= 0 ? '+' : '') + num(v, d); }
 function maturityPill(m) { const c = { emerging: 'b', mainstream: 'a', crowded: 'r', exhausted: 'r' }[m] || ''; return m ? `<span class="pill ${c}">${m}</span>` : ''; }
 function regimePill(s) { if (!s) return ''; const c = { intact: 'g', contested: 'a', breaking: 'r' }[s] || ''; return `<span class="pill ${c}">${s}</span>`; }
+// ── entry-timing helpers (the execution WINDOW — recommend-only) ──
+function timingFor(sid) { const t = OV.entry_timing; return (t && t.by_sector && t.by_sector[sid]) || null; }
+const VERDICT_LABEL = { enter_now: 'enter now', scale_in: 'scale-in', wait_stabilize: 'wait — unstable', wait_event: 'wait — event' };
+function verdictPill(t) {
+  if (!t) return '';
+  const v = t.suggested_verdict, c = { enter_now: 'g', scale_in: 'a', wait_stabilize: 'r', wait_event: 'r' }[v] || '';
+  const lbl = (VERDICT_LABEL[v] || v) + (v === 'wait_event' && t.wait_until ? ' @' + t.wait_until : '');
+  return `<span class="pill ${c}" title="entry timing">${lbl}</span>`;
+}
+function statePill(t) { if (!t) return ''; const c = { calm: 'g', stabilizing: 'a', stretched: 'a', falling_unstable: 'r' }[t.micro_timing_state] || ''; return `<span class="pill ${c}">${t.micro_timing_state}</span>`; }
+// one-line facts behind the timing verdict, incl. a near-term event overhang if any
+function timingFacts(t) {
+  if (!t) return '';
+  const oh = t.has_upcoming_overhang ? ` · <span class="neg">⚠ ${t.nearest_overhang_id} in ${t.nearest_overhang_days_until}d</span>` : '';
+  return `RSI ${num(t.rsi_14, 0)} · vol×${num(t.vol_ratio_10_90, 2)} · 5d ${num(t.return_5d_pct)}% · drawdown ${num(t.drawdown_from_20d_high_pct)}%${t.stabilizing ? ' · stabilizing' : ''}${oh}`;
+}
 function bar(v, max = 100, color) { const p = Math.max(0, Math.min(100, (v / max) * 100)); return `<div class="bar"><i style="width:${p}%;background:${color || scoreColor(v)}"></i></div>`; }
 // a labelled colored metric bar: [label] [bar] [value]
 function metricBar(v, opts = {}) {
@@ -179,7 +199,7 @@ async function getRunData(rid) {
   if (RUNCACHE[rid]) return RUNCACHE[rid];
   await ensureDuckDB();
   const ranking = tables.has('sector_snapshot') ? await q(
-    `SELECT sector_id, rank, composite, catalyst_alignment, momentum, flow_confirmation, crowding_risk, narrative_maturity, primary_etf, regime_state
+    `SELECT sector_id, rank, composite, catalyst_alignment, momentum, flow_confirmation, flow_data_quality, flow_source, flow_proxy_ticker, flow_proxy_used, flow_carried_from, flow_volume_cmf, flow_window_days, flow_days_covered, crowding_risk, narrative_maturity, primary_etf, regime_state
      FROM sector_snapshot WHERE run_id = ? ORDER BY rank`, [rid]) : [];
   const rank_moves = tables.has('rank_event') ? await q(
     `SELECT sector_id, event_type, from_rank, to_rank, delta FROM rank_event WHERE run_id = ? ORDER BY abs(coalesce(delta,99)) DESC`, [rid]) : [];
@@ -229,12 +249,18 @@ const sectorLink = (sid) => link('sectors', sid, sid);
 const pfName = (pid) => ((OV.portfolios || []).find((p) => p.portfolio_id === pid) || {}).name || pid;
 
 // ── OVERVIEW ─────────────────────────────────────────────────────────────────
+// label the book's tracking mode: a genuine live curve vs the hypothetical backtest while accruing
+function trackPill(p) {
+  if (p.track_mode === 'live') return `<span class="pill g" title="walk-forward live track record since ${p.inception}">live</span>`;
+  if (p.track_mode === 'accruing') return `<span class="pill a" title="live track record starts ${p.inception}; showing the hypothetical backtest until it accrues">accruing</span>`;
+  return '';
+}
 function portfolioCard(p) {
   const beat = (p.vs_benchmark_pct ?? 0) >= 0;
   const sp = spark([{ values: p.nav, color: 'var(--accent)' }, { values: p.benchmark_nav, color: '#8b949e' }], { w: 230, h: 44 });
   const m = p.metrics || {};
   return `<a class="card click ${p.portfolio_id === curPf ? 'sel' : ''}" href="#/portfolios/${p.portfolio_id}">
-    <div class="lbl">${escapeHtml(p.name || p.portfolio_id)}</div>
+    <div class="lbl">${escapeHtml(p.name || p.portfolio_id)} ${trackPill(p)}</div>
     <div class="big ${(p.return_pct ?? 0) >= 0 ? 'pos' : 'neg'}">${signed(p.return_pct)}%</div>
     <div style="margin:6px 0">${sp}</div>
     <div class="lbl">vs ${p.benchmark_etf || 'SPY'} <span class="pill ${beat ? 'g' : 'r'}">${signed(p.vs_benchmark_pct)}pp</span></div>
@@ -262,27 +288,31 @@ function renderOverview() {
       <span class="lbl" style="text-align:right">›</span>
     </a>`).join('') + '</div>';
 
-  // alerts (dislocation = current snapshot; contextualized with the sector's standing)
+  // alerts — ONE unified ticket per opportunity sector: dislocation (WHY/IS-IT-CHEAP) + regime +
+  // entry-timing (WHEN). Timing lives INSIDE each ticket (a separate list repeated the same sectors).
+  // Full per-sector timing for every sector lives on the dedicated Timing page.
   const d = OV.dislocation;
   let alerts = '';
   if (d) {
-    const opp = (d.opportunities || []).slice(0, 5);
+    const opp = (d.opportunities || []).slice(0, 6);
     if (opp.length) alerts += `<h3 style="margin-top:0">Opportunities — panic dips</h3>
-      <p class="hint" style="margin:-2px 0 8px">Fell hard but fundamentals intact & catalyst-confirmed. <b>catalyst-alignment</b> = how strongly the sector's active catalysts still support it (0–100).</p>`
+      <p class="hint" style="margin:-2px 0 10px">Fell hard but fundamentals intact & catalyst-confirmed. The chip is <i>when</i> to enter — click for <a href="#/timing">full timing →</a>.</p>`
       + opp.map((o) => {
-        const rr = rankingRow(o.sector_id) || {};
-        return `<a class="rowlink" style="display:block;text-decoration:none;color:inherit;padding:6px" href="#/sectors/${o.sector_id}">
-          <div style="display:flex;justify-content:space-between"><b>${o.sector_id}</b> <span class="neg">${num(o.drawdown_pct)}%</span></div>
-          <div class="lbl">rank #${rr.rank ?? '—'} · composite ${num(rr.composite, 0)} · catalyst-alignment ${num(o.catalyst_alignment, 0)}/100 ${regimePill(rr.regime_state)}</div>
+        const t = timingFor(o.sector_id);
+        const r5 = t && t.return_5d_pct != null ? t.return_5d_pct : o.drawdown_pct;  // the −5D% move
+        return `<a class="rowlink" style="display:flex;justify-content:space-between;align-items:center;gap:8px;text-decoration:none;color:inherit;padding:8px 6px;border-top:1px solid var(--border)" href="#/timing/${o.sector_id}">
+          <span class="nm"><b>${o.sector_id}</b> <span class="pill b">${o.primary_etf || '—'}</span></span>
+          <span style="display:flex;gap:8px;align-items:center;flex-shrink:0"><span class="neg">${num(r5)}% 5d</span> ${verdictPill(t)}</span>
         </a>`;
       }).join('');
-    const reg = (d.regime || []);
-    if (reg.length) alerts += '<h3>Regime watch — non-intact</h3>' + reg.map((g) => `
-      <a class="rowlink barrow" style="grid-template-columns:minmax(120px,1fr) auto 64px;text-decoration:none;color:inherit" href="#/sectors/${g.sector_id}">
-        <span class="nm">${g.sector_id}</span>${regimePill(g.regime_state)}
-        <span class="v neg">${num(g.drawdown_pct)}%</span></a>`).join('');
+    const div = (d.diversifiers || []).slice(0, 4);
+    if (div.length) alerts += '<h3>Diversifiers — rotation targets</h3>'
+      + '<p class="hint" style="margin:-2px 0 8px">Healthy & LOW correlation to the stressed cluster — where to rotate without re-buying the same bet.</p>'
+      + div.map((g) => `<a class="rowlink barrow" style="grid-template-columns:minmax(120px,1fr) 56px 64px;text-decoration:none;color:inherit" href="#/sectors/${g.sector_id}">
+        <span class="nm">${g.sector_id} <span class="pill b">${g.primary_etf || '—'}</span></span>
+        <span class="v">ρ ${num(g.mean_corr_to_stressed, 2)}</span><span class="v">${num(g.composite, 0)}</span></a>`).join('');
   }
-  $('ov-alerts').innerHTML = alerts ? `<div class="card">${alerts}</div>` : '<p class="hint">No dislocation analysis yet.</p>';
+  $('ov-alerts').innerHTML = alerts ? `<div class="card">${alerts}</div>` : '<p class="hint">No dislocation / timing analysis yet.</p>';
 
   // biggest movers this run (computed from prev-run deltas — independent of rank_event)
   const pm = prevRankMap();
@@ -308,7 +338,7 @@ const SEC_COLS = [
   { k: 'composite', label: 'composite', bold: true, tip: 'Blend used for the ranking (higher = better)' },
   { k: 'catalyst_alignment', label: 'catalyst', tip: 'How strongly active catalysts support the sector' },
   { k: 'momentum', label: 'momentum', tip: 'Cross-sectional price-momentum percentile' },
-  { k: 'flow_confirmation', label: 'flow', tip: 'ETF net-flow confirmation (shares × NAV)' },
+  { k: 'flow_confirmation', label: 'flow', tip: 'ETF net share-flow (creation/redemption), as a moving average over the last 7 days. ᴾ = real flow via same-theme proxy ETF; ↻ = carried from last reading; ⚠ = NOT real flow, price+volume approximation; ~ = no reading (neutral 50)' },
 ];
 // continuous vivid heatmap: red (low) → amber → green (high)
 function heatColor(v) {
@@ -325,6 +355,52 @@ function crowdLabel(v) {
   if (v == null) return '<span class="lbl">—</span>';
   const [cls, txt] = v >= 66 ? ['r', 'high'] : v >= 40 ? ['a', 'medium'] : ['g', 'low'];
   return `<span class="pill ${cls}" title="crowding risk ${num(v, 0)} (from narrative maturity)">${txt}</span>`;
+}
+// ── flow provenance: flag when flow_confirmation is a proxy or a no-data placeholder
+//    rather than a clean own-vehicle reading (see catalyx/data/flow_data.py FLOW_PROXY).
+function flowMark(row) {
+  const dq = row.flow_data_quality;
+  if (dq === 'computed') return '';
+  const src = row.flow_source ? ` [${row.flow_source}]` : '';
+  if (dq === 'proxy_computed') {
+    const tk = row.flow_proxy_ticker || 'proxy';
+    return `<sup style="color:var(--accent,#3b82f6);font-weight:700;cursor:help" title="Real share-flow via sibling ETF ${tk}${src} — the tradeable vehicle exposes no share data">ᴾ</sup>`;
+  }
+  if (dq === 'carried') {
+    const from = row.flow_carried_from ? ` (from ${String(row.flow_carried_from).slice(0, 10)})` : '';
+    return `<sup style="color:var(--accent,#3b82f6);font-weight:700;cursor:help" title="Carried forward${from} — no fresh reading this run (market closed), last genuine value reused">↻</sup>`;
+  }
+  if (dq === 'volume_proxy') {
+    // small red symbol — distinct (NOT real flow, a price+volume proxy) but unobtrusive
+    const cmf = row.flow_volume_cmf != null ? ` (CMF ${(+row.flow_volume_cmf).toFixed(2)})` : '';
+    return `<sup style="color:var(--red,#dc2626);font-weight:700;cursor:help" title="⚠ NOT real flow — price+volume approximation${cmf} (no share data from any source). Diverges from true creation/redemption; treat with caution.">⚠</sup>`;
+  }
+  // 'estimated' OR null/undefined → neutral 50, not a real reading
+  return '<sup style="color:var(--amber);font-weight:700;cursor:help" title="No flow reading available — neutral 50 placeholder, not a real value">~</sup>';
+}
+function flowHeatCell(s) {
+  const v = s.flow_confirmation;
+  if (v == null || v === '') return '<td style="text-align:center"><span class="lbl">—</span></td>';
+  return `<td style="text-align:center"><span class="score" style="background:${heatColor(v)}">${num(v, 0)}</span>${flowMark(s)}</td>`;
+}
+function flowProvNote(row) {
+  const dq = row.flow_data_quality;
+  if (dq === 'computed') return '';
+  let msg;
+  if (!dq || dq === 'estimated')
+    msg = '⚠ no flow reading available — shown as a neutral <b>50</b> placeholder, not a real value';
+  else if (dq === 'carried') {
+    const from = row.flow_carried_from ? ` from <b>${String(row.flow_carried_from).slice(0, 10)}</b>` : '';
+    msg = `↻ carried forward${from} — this run had no fresh reading (market closed → no share data), so the last genuine value is reused (a closed market has no new flow)`;
+  } else if (dq === 'volume_proxy') {
+    const cmf = row.flow_volume_cmf != null ? ` (raw CMF ${(+row.flow_volume_cmf).toFixed(2)})` : '';
+    msg = `<b style="color:var(--red,#dc2626)">⚠ NOT real flow</b> — price+volume approximation${cmf}: no share-count data from any source (yfinance/stockanalysis/iShares), so Chaikin Money Flow stands in. It DIVERGES from true creation/redemption — treat with caution and review the sources`;
+  } else {
+    const tk = row.flow_proxy_ticker || 'proxy';
+    const src = row.flow_source ? ` [${row.flow_source}]` : '';
+    msg = `ᴾ real share-flow via sibling <b>${tk}</b>${src} — the tradeable vehicle exposes no share data, so the same-theme proxy stands in`;
+  }
+  return `<div class="hint" style="grid-column:1/-1;margin-top:-2px">${msg}</div>`;
 }
 let SEC_FILTER = '', curSector = null, SEC_SORT = { k: 'rank', dir: 1 };
 function drawSecTable() {
@@ -345,14 +421,14 @@ function drawSecTable() {
   const body = rows.map((s) => `<tr data-sid="${s.sector_id}" class="${s.sector_id === curSector ? 'sel' : ''}">
       <td class="lbl">${s.rank}</td>
       <td><b>${s.sector_id}</b> <span class="pill b">${s.primary_etf || '—'}</span></td>
-      ${SEC_COLS.map((c) => heatCell(s[c.k], c.bold)).join('')}
+      ${SEC_COLS.map((c) => c.k === 'flow_confirmation' ? flowHeatCell(s) : heatCell(s[c.k], c.bold)).join('')}
       <td>${crowdLabel(s.crowding_risk)}</td>
       <td>${regimePill(s.regime_state)}</td>
       <td>${moveBadge(s.sector_id)}</td>
       <td class="go" title="open sector report">${chevron}</td>
     </tr>`).join('') || `<tr><td colspan="${SEC_COLS.length + 6}" class="lbl" style="padding:14px">no match</td></tr>`;
   $('sec-table').innerHTML = `<div class="cmp"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`
-    + `<p class="hint" style="margin-top:8px">Cell colour: <b style="color:var(--green)">green</b> high · <b style="color:var(--amber)">amber</b> mid · <b style="color:var(--red)">red</b> low (higher = better for all shown). <b>crowding</b> low is better. <code>valuation</code> was removed from the model (schema 1.2) — it never moved the ranking and no price-derived metric earned its weight.</p>`;
+    + `<p class="hint" style="margin-top:8px">Cell colour: <b style="color:var(--green)">green</b> high · <b style="color:var(--amber)">amber</b> mid · <b style="color:var(--red)">red</b> low (higher = better for all shown). <b>crowding</b> low is better. On <b>flow</b>: plain = real share-flow · <sup style="color:var(--accent,#3b82f6);font-weight:700">ᴾ</sup> = real flow via same-theme proxy ETF · <sup style="color:var(--accent,#3b82f6);font-weight:700">↻</sup> = carried from last reading (market closed) · <sup style="color:var(--red,#dc2626);font-weight:700">⚠</sup> = NOT real flow, price+volume approximation (review) ·<sup style="color:var(--amber);font-weight:700">~</sup> = no reading, neutral 50. <code>valuation</code> was removed from the model (schema 1.2) — it never moved the ranking and no price-derived metric earned its weight.</p>`;
   $('sec-table').querySelector('thead').onclick = (ev) => {
     const th = ev.target.closest('th[data-sort]'); if (!th) return;
     const col = th.dataset.sort;
@@ -401,9 +477,13 @@ function selectSector(sid) {
       <div style="margin-top:14px;display:grid;gap:8px">
         <div class="barrow" style="grid-template-columns:130px 1fr 40px"><span class="lbl">catalyst align</span>${bar(row.catalyst_alignment || 0)}<span class="v">${num(row.catalyst_alignment, 0)}</span></div>
         <div class="barrow" style="grid-template-columns:130px 1fr 40px"><span class="lbl">momentum</span>${bar(row.momentum || 0)}<span class="v">${num(row.momentum, 0)}</span></div>
-        <div class="barrow" style="grid-template-columns:130px 1fr 40px"><span class="lbl">flow</span>${bar(row.flow_confirmation || 0)}<span class="v">${num(row.flow_confirmation, 0)}</span></div>
+        <div class="barrow" style="grid-template-columns:130px 1fr 40px"><span class="lbl">flow${flowMark(row)}</span>${bar(row.flow_confirmation || 0)}<span class="v">${num(row.flow_confirmation, 0)}</span></div>
+        ${flowProvNote(row)}
         <div class="barrow" style="grid-template-columns:130px 1fr"><span class="lbl">crowding</span><span>${crowdLabel(row.crowding_risk)} <span class="lbl">(${num(row.crowding_risk, 0)})</span></span></div>
       </div>
+      ${(() => { const t = timingFor(sid); return t ? `<h3>Entry timing <span class="lbl" style="text-transform:none;letter-spacing:0">— when to enter (<a href="#/timing">all sectors →</a>)</span></h3>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px">${verdictPill(t)} ${statePill(t)}</div>
+        <div class="lbl">${timingFacts(t)}</div>` : ''; })()}
       ${chips.length ? `<h3>Linked</h3><div class="chips">${chips.join('')}</div>` : ''}
       <h3>Score history (all runs)</h3><div id="sec-hist"><p class="hint">loading…</p></div>
     </div>
@@ -446,6 +526,116 @@ async function loadSectorHistory(sid) {
       { label: 'crowding risk', values: rows.map((r) => r.crowding_risk), color: 'var(--red)' },
     ], rows.map((r) => r.date), { w: 560, h: 210 });
   } catch (e) { const el = $('sec-hist'); if (el) el.innerHTML = `<div class="err">${(e && e.message) || e}</div>`; }
+}
+
+// ── ENTRY TIMING (dedicated page — full per-sector detail, sortable) ──────────────
+let TIM_FILTER = '', TIM_CAVEAT = false, TIM_SORT = { k: 'opp', dir: 1 }, timWired = false;
+// sectors flagged as dislocation opportunities (panic dips worth buying) → float to the top
+function oppScores() { const m = {}; ((OV.dislocation || {}).opportunities || []).forEach((o, i) => { m[o.sector_id] = o.opportunity_score != null ? o.opportunity_score : (1e6 - i); }); return m; }
+// two opportunity classes in the timing table:
+//   'dip'    = a dislocation panic dip (fell hard, intact, catalyst-confirmed, composite floor)
+//   'strong' = NOT a dip, but high composite AND calm timing → a clean "buy-ready" entry (scores
+//              high on our strategy with no near-term tension). The user wanted these marked too.
+const STRONG_COMPOSITE = 66;   // green zone — "scores high on our strategy"
+function oppClass(r, opp) {
+  if (r.sector_id in opp) return 'dip';
+  if ((r.composite || 0) >= STRONG_COMPOSITE && r.micro_timing_state === 'calm'
+      && !r.has_upcoming_overhang) return 'strong';
+  return null;
+}
+const TIM_COLS = [
+  { k: 'tension_score', label: 'tension', tip: 'higher = more tense to enter now (0–100)' },
+  { k: 'rsi_14', label: 'RSI', tip: 'Wilder RSI(14): >70 overbought (chasing), <30 oversold (knife)' },
+  { k: 'vol_ratio_10_90', label: 'vol×', tip: '10d / 90d realized-vol ratio (>1.5 = elevated tension)' },
+  { k: 'stretch_vs_ma20_pct', label: 'stretch%', tip: '% distance from the 20-day MA' },
+  { k: 'return_5d_pct', label: '5d%', tip: '5-day return' },
+  { k: 'drawdown_from_20d_high_pct', label: 'draw%', tip: 'drawdown from the 20-day high' },
+];
+const _CHEV = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+function timingRows() { const t = OV.entry_timing; return (t && t.by_sector) ? Object.values(t.by_sector) : []; }
+function renderTiming(id) {
+  if (id) TIM_FILTER = id;  // deep-linked from an opportunity card → focus that sector
+  const t = OV.entry_timing, m = (t && t.meta) || {};
+  $('timing-market').innerHTML = !t ? '' : [
+    ['VIX', m.vix != null ? num(m.vix, 1) : '—', m.vix_5d_change != null ? `Δ5d ${signed(m.vix_5d_change, 1)}` : 'volatility'],
+    ['S&P 500', m.spy_5d_pct != null ? signed(m.spy_5d_pct) + '%' : '—', '5-day · market backdrop'],
+    ['as of', m.as_of || '—', t ? t.run_id : ''],
+  ].map(([l, v, s]) => `<div class="card"><div class="lbl">${l}</div><div class="big">${v}</div><div class="lbl">${s}</div></div>`).join('');
+  if (!timWired) {
+    const si = $('tim-search'), cb = $('tim-caveat');
+    if (si) si.oninput = (e) => { TIM_FILTER = e.target.value; drawTimTable(); };
+    if (cb) cb.onchange = (e) => { TIM_CAVEAT = e.target.checked; drawTimTable(); };
+    timWired = true;
+  }
+  const si = $('tim-search'), cb = $('tim-caveat'); if (si) si.value = TIM_FILTER; if (cb) cb.checked = TIM_CAVEAT;
+  drawTimTable();
+}
+function drawTimTable() {
+  if (!OV.entry_timing) { $('timing-table').innerHTML = '<p class="hint">No timing run yet — run <code>entry_timing --all</code> in the heatmap pipeline.</p>'; return; }
+  const f = TIM_FILTER.toLowerCase();
+  const opp = oppScores();
+  // attach the sector's composite (the full blend) so it sorts/shows next to the opportunity flag —
+  // the combined score is the philosophy anchor: a dip only matters if we'd own the sector at all.
+  let rows = timingRows()
+    .map((r) => ({ ...r, composite: (rankingRow(r.sector_id) || {}).composite }))
+    .filter((r) => (!f || r.sector_id.toLowerCase().includes(f)) && (!TIM_CAVEAT || r.micro_timing_state !== 'calm'));
+  const k = TIM_SORT.k, dir = TIM_SORT.dir;
+  if (k === 'opp') {
+    // THREE tiers: dislocation dips → strong+calm (buy-ready) → the rest; WITHIN each tier by
+    // composite desc (the philosophy anchor). dir just toggles (dir=-1 reverses the whole list).
+    const tier = (r) => ({ dip: 0, strong: 1 }[oppClass(r, opp)] ?? 2);
+    rows = rows.slice().sort((a, b) => {
+      const ta = tier(a), tb = tier(b);
+      if (ta !== tb) return ta - tb;
+      return (b.composite || 0) - (a.composite || 0);
+    });
+    if (dir < 0) rows.reverse();
+  } else {
+    rows = rows.slice().sort((a, b) => { const av = a[k], bv = b[k]; if (av == null) return 1; if (bv == null) return -1; return (av < bv ? -1 : av > bv ? 1 : 0) * dir; });
+  }
+  const arrow = (c) => TIM_SORT.k === c ? `<span class="ar">${TIM_SORT.dir > 0 ? '▲' : '▼'}</span>` : '';
+  const head = `<th data-sort="sector_id">sector${arrow('sector_id')}</th>`
+    + `<th class="num" data-sort="composite" title="composite — the full blend (catalyst + momentum + flow + crowding). Our philosophy anchor: a dip is only an opportunity if the combined score is one we'd own.">composite${arrow('composite')}</th>`
+    + `<th data-sort="opp" title="dislocation opportunity — fell hard but intact & catalyst-confirmed AND composite above the floor (panic dip). These float to the top.">opp${arrow('opp')}</th>`
+    + `<th data-sort="micro_timing_state">state${arrow('micro_timing_state')}</th>`
+    + `<th data-sort="suggested_verdict">verdict${arrow('suggested_verdict')}</th>`
+    + TIM_COLS.map((c) => `<th class="num" data-sort="${c.k}" title="${c.tip}">${c.label}${arrow(c.k)}</th>`).join('')
+    + `<th title="near-term event overhang (discrete catalyst in the window)">overhang</th><th></th>`;
+  const mkt = (OV.entry_timing && OV.entry_timing.meta) || {};
+  const oppCell = (cls, r) => cls === 'dip'
+    ? '<span class="pill g" title="dislocation opportunity — panic dip">opportunity</span>'
+    : cls === 'strong'
+      // substantiate the claim with the raw micro-numbers (not a bald "buy-ready") + the macro
+      // backdrop — a calm ETF in a risk-off tape still warrants a human check, so the verdict is a
+      // suggestion, not a vetted call.
+      ? `<span class="pill b" title="high composite (${num(r.composite, 0)}) + calm micro-timing: RSI ${num(r.rsi_14, 0)}, ${signed(r.stretch_vs_ma20_pct, 1)}% vs MA20, vol× ${num(r.vol_ratio_10_90, 2)} — not extended. Suggests buy-ready; verify backdrop (VIX ${mkt.vix != null ? num(mkt.vix, 1) : '—'}, S&P 5d ${mkt.spy_5d_pct != null ? signed(mkt.spy_5d_pct, 1) + '%' : '—'}).">strong · calm</span>`
+      : '<span class="lbl">—</span>';
+  const edge = (cls) => cls === 'dip' ? ' style="box-shadow:inset 3px 0 0 var(--green)"'
+    : cls === 'strong' ? ' style="box-shadow:inset 3px 0 0 var(--accent)"' : '';
+  const body = rows.map((r) => { const cls = oppClass(r, opp); return `<tr data-sid="${r.sector_id}"${edge(cls)}>
+      <td><b>${r.sector_id}</b> <span class="pill b">${r.primary_etf || '—'}</span></td>
+      <td class="num"><b style="color:${scoreColor(r.composite || 0)}">${num(r.composite, 0)}</b></td>
+      <td>${oppCell(cls, r)}</td>
+      <td>${statePill(r)}</td>
+      <td>${verdictPill(r)}</td>
+      <td class="num">${num(r.tension_score, 0)}</td>
+      <td class="num">${num(r.rsi_14, 0)}</td>
+      <td class="num">${num(r.vol_ratio_10_90, 2)}</td>
+      <td class="num">${num(r.stretch_vs_ma20_pct)}</td>
+      <td class="num ${r.return_5d_pct < 0 ? 'neg' : ''}">${num(r.return_5d_pct)}</td>
+      <td class="num neg">${num(r.drawdown_from_20d_high_pct)}</td>
+      <td>${r.has_upcoming_overhang ? `<span class="pill r" title="${r.nearest_overhang_date || ''}">⚠ ${r.nearest_overhang_id} · ${r.nearest_overhang_days_until}d</span>` : '<span class="lbl">—</span>'}</td>
+      <td class="go" title="open sector detail">${_CHEV}</td>
+    </tr>`; }).join('') || '<tr><td colspan="13" class="lbl" style="padding:14px">no match</td></tr>';
+  $('timing-table').innerHTML = `<div class="cmp"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+  $('timing-table').querySelector('thead').onclick = (ev) => {
+    const th = ev.target.closest('th[data-sort]'); if (!th) return; const col = th.dataset.sort;
+    if (TIM_SORT.k === col) TIM_SORT.dir *= -1; else TIM_SORT = { k: col, dir: (col === 'sector_id' || col === 'opp') ? 1 : -1 };
+    drawTimTable();
+  };
+  $('timing-table').querySelector('tbody').onclick = (ev) => {
+    const tr = ev.target.closest('tr[data-sid]'); if (!tr) return; location.hash = '#/sectors/' + tr.dataset.sid;
+  };
 }
 
 // ── CATALYSTS & POSITIONS (sub-tabbed: structural / event / movement, all rich) ──
@@ -570,6 +760,106 @@ function movementDetailHTML(m) {
   </div>`;
 }
 
+// ── POSITIONS (the real book — its own page, portfolio-style + full ledger) ──────
+function renderPositions() {
+  const pos = OV.positions || { holdings: [], total_invested_eur: 0, realized_eur: 0 };
+  const book = OV.positions_book;                 // kind='real' portfolio_nav (NAV + metrics)
+  const led = OV.catalyst_ledger || [];
+  const movs = (DOCS.movements || []).slice().sort((a, b) => String(b.executed_at).localeCompare(String(a.executed_at)));
+  const inv = pos.total_invested_eur || 0;
+  const m = (book && book.metrics) || {}, bm = (book && book.bench_metrics) || {};
+  const mc = (l, v, cls, sub) => `<div class="card"><div class="lbl">${l}</div><div class="big ${cls || ''}">${v}</div>${sub ? `<div class="lbl">${sub}</div>` : ''}</div>`;
+  const beat = (book && (book.vs_benchmark_pct ?? 0) >= 0);
+
+  // ── summary strip — headline is MARK-TO-MARKET vs cost (your real unrealized P&L), not the
+  //    entry-date-indexed NAV (which is ~flat for a young book and never marks against avg cost) ──
+  const mv = pos.market_value_eur;            // qty × last price, summed (best-effort fetch)
+  const up = pos.unrealized_eur, upct = pos.unrealized_pct;
+  const cards = [mc('invested', '€' + num(inv, 0), '', `${pos.holdings.length} position${pos.holdings.length === 1 ? '' : 's'}`)];
+  if (mv != null) {
+    cards.push(mc('current value', '€' + num(mv, 0), (up ?? 0) >= 0 ? 'pos' : 'neg', signed(upct) + '% vs cost'));
+    cards.push(mc('unrealized P&L', (up >= 0 ? '+' : '−') + '€' + num(Math.abs(up), 0), up >= 0 ? 'pos' : 'neg', 'marked at last close'));
+  } else {
+    cards.push(mc('current value', '—', '', 'price fetch unavailable'));
+  }
+  cards.push(mc('realized P&L', '€' + num(pos.realized_eur, 0), (pos.realized_eur ?? 0) >= 0 ? 'pos' : 'neg', 'closed legs'));
+  if (book && book.vs_benchmark_pct != null) cards.push(mc('vs ' + (book.benchmark_etf || 'SPY'), signed(book.vs_benchmark_pct) + 'pp', beat ? 'pos' : 'neg', beat ? 'beating market' : 'below market · since inception'));
+  $('pos-summary').innerHTML = cards.join('');
+
+  // ── NAV vs SPY ──
+  $('pos-nav').innerHTML = (book && book.nav && book.nav.length > 1)
+    ? `<div class="card"><div class="lbl" style="margin-bottom:6px">Book NAV vs ${book.benchmark_etf || 'SPY'} — indexed 100 · ${book.n_days}d ${book.n_days < 5 ? '<span class="pill a">young book</span>' : ''}</div>${spark([{ values: book.nav, color: 'var(--accent)' }, { values: book.benchmark_nav, color: '#8b949e' }], { w: 600, h: 90 })}</div>`
+    : '<p class="hint">NAV curve appears once the book has ≥2 daily points. Buy-and-hold from entry; ETFs without yfinance history are held as cash.</p>';
+
+  // ── holdings (marked to market vs avg cost) ──
+  const hrows = (pos.holdings || []).map((h) => `<tr data-sid="${h.sector_id}">
+      <td><b>${h.sector_id}</b> <span class="pill b">${h.etf}</span></td>
+      <td class="num">${num(h.qty)}</td>
+      <td class="num">€${num(h.invested_eur, 0)}</td>
+      <td class="num">${num(h.avg_cost, 2)}</td>
+      <td class="num">${h.last_price != null ? num(h.last_price, 2) : '—'}</td>
+      <td class="num">${h.market_value_eur != null ? '€' + num(h.market_value_eur, 0) : '—'}</td>
+      <td class="num ${(h.unrealized_eur ?? 0) >= 0 ? 'pos' : 'neg'}">${h.unrealized_eur != null ? (h.unrealized_eur >= 0 ? '+' : '−') + '€' + num(Math.abs(h.unrealized_eur), 0) + ' (' + signed(h.unrealized_pct) + '%)' : '—'}</td>
+      <td class="num">${num(h.weight_pct)}%</td>
+      <td class="go">${_CHEV}</td>
+    </tr>`).join('') || '<tr><td colspan="9" class="lbl" style="padding:14px">no open positions</td></tr>';
+  $('pos-holdings').innerHTML = `<div class="cmp"><table><thead><tr>
+      <th>position</th><th class="num">qty</th><th class="num">invested</th><th class="num">avg cost</th>
+      <th class="num">last</th><th class="num">mkt value</th><th class="num">unrealized P&L</th>
+      <th class="num">weight</th><th></th></tr></thead><tbody>${hrows}</tbody></table></div>`;
+  $('pos-holdings').querySelector('tbody').onclick = (ev) => { const tr = ev.target.closest('tr[data-sid]'); if (tr) location.hash = '#/sectors/' + tr.dataset.sid; };
+
+  // ── movements (buys & sells) — references catalyst(s) + dates, no catalyst detail duplicated ──
+  const actCls = (a) => a === 'open' ? 'g' : (a === 'close' || a === 'trim') ? 'r' : '';
+  const mrows = movs.map((mv) => {
+    const v = mv.vehicle || {}, sc = mv.score_context || {};
+    const cats = (mv.attribution || []).map((a) =>
+      `<a class="pill b" style="text-decoration:none" href="#/catalysts/${encodeURIComponent(a.catalyst_id)}">${a.catalyst_id} ${Math.round((a.weight || 0) * 100)}%</a>`).join(' ');
+    const score = [sc.composite != null ? `comp ${num(sc.composite, 0)}` : '', sc.rank != null ? `#${sc.rank}` : '',
+      sc.regime_state ? sc.regime_state : ''].filter(Boolean).join(' · ');
+    return `<tr>
+      <td>${String(mv.executed_at || '').slice(0, 10)}</td>
+      <td><span class="pill ${actCls(mv.action)}">${mv.action}</span></td>
+      <td><a href="#/sectors/${mv.sector_id}" style="color:inherit"><b>${mv.sector_id}</b></a> <span class="pill b">${v.etf || ''}</span></td>
+      <td class="num">€${num(mv.amount_eur, 0)}</td>
+      <td class="num">${num(mv.qty)} @ ${num(mv.price, 2)}</td>
+      <td>${mv.conviction ? `<span class="pill">${mv.conviction}</span> ` : ''}${mv.trigger ? `<span class="pill">${mv.trigger}</span>` : ''}</td>
+      <td>${cats || '<span class="lbl">—</span>'}</td>
+      <td class="lbl">${score || '—'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="8" class="lbl" style="padding:14px">no movements yet</td></tr>';
+  $('pos-movements').innerHTML = `<div class="cmp"><table><thead><tr>
+      <th>date</th><th>action</th><th>position</th><th class="num">amount</th><th class="num">qty @ price</th>
+      <th>tags</th><th>catalyst(s)</th><th>score@entry</th></tr></thead><tbody>${mrows}</tbody></table></div>`;
+
+  // ── catalyst exposure (the ledger) ──
+  const lrows = led.map((l) => `<tr>
+      <td><a href="#/catalysts/${encodeURIComponent(l.catalyst_id)}" style="color:inherit"><b>${l.catalyst_id}</b></a></td>
+      <td class="num">€${num(l.invested_eur, 0)}</td>
+      <td class="num">${num(inv ? l.invested_eur / inv * 100 : 0, 0)}%</td>
+      <td>${(l.sectors || []).map(sectorLink).join(', ')}</td>
+      <td class="num">${l.n_movements}</td>
+    </tr>`).join('') || '<tr><td colspan="5" class="lbl" style="padding:14px">no catalyst attribution yet</td></tr>';
+  $('pos-catalysts').innerHTML = `<div class="cmp"><table><thead><tr>
+      <th>catalyst</th><th class="num">invested</th><th class="num">% of book</th><th>sectors</th>
+      <th class="num">movements</th></tr></thead><tbody>${lrows}</tbody></table></div>`;
+
+  // ── rotation targets (anchored to the book's holdings) ──
+  const rot = OV.positions_rotation || [];
+  const rrows = rot.map((d) => `<tr data-sid="${d.sector_id}">
+      <td><b>${d.sector_id}</b> <span class="pill b">${d.primary_etf || '—'}</span></td>
+      <td class="num"><b style="color:${scoreColor(d.composite || 0)}">${num(d.composite, 0)}</b></td>
+      <td class="num">${num(d.corr_to_book, 2)}</td>
+      <td class="num">${num(d.diversifier_score, 0)}</td>
+      <td class="go">${_CHEV}</td>
+    </tr>`).join('') || '<tr><td colspan="5" class="lbl" style="padding:14px">no rotation run yet — run dislocation --anchor-sectors with your holdings</td></tr>';
+  $('pos-rotation').innerHTML = `<div class="cmp"><table><thead><tr>
+      <th>sector</th><th class="num">composite</th><th class="num">corr to book</th>
+      <th class="num">fit score</th><th></th></tr></thead><tbody>${rrows}</tbody></table></div>`;
+  const rt = $('pos-rotation').querySelector('tbody');
+  if (rt) rt.onclick = (ev) => { const tr = ev.target.closest('tr[data-sid]'); if (tr) location.hash = '#/sectors/' + tr.dataset.sid; };
+}
+
 // ── PORTFOLIOS ─────────────────────────────────────────────────────────────────
 let curPf = null, lineageBuilt = false;
 function holdingsForRun(pid) {
@@ -612,8 +902,17 @@ function selectPortfolio(pid) {
       ${metricBar(r.composite)}${metricBar(r.momentum)}
     </div>`).join('');
 
+  const trackLine = p.track_mode === 'live'
+    ? `live track record · since ${p.inception} · vs ${p.benchmark_etf || 'SPY'} · ${p.n_days || '—'}d`
+    : p.track_mode === 'accruing'
+      ? `live track record · since ${p.inception} · <b>accruing</b> · vs ${p.benchmark_etf || 'SPY'}`
+      : `${p.kind || ''} · vs ${p.benchmark_etf || 'SPY'} · ${p.n_days || '—'}d backtest`;
+  const accruingNote = p.track_mode === 'accruing'
+    ? `<p class="hint" style="margin:-6px 0 14px">⏳ The live walk-forward curve starts at inception (${p.inception}) and grows one run at a time — not enough history yet. The chart below is the <b>hypothetical single-snapshot backtest</b> (today's holdings projected back), kept for reference only until the live record accrues.</p>`
+    : '';
   $('pf-detail').innerHTML = `
-    <h2 style="margin-top:0">${escapeHtml(p.name || pid)} <span class="lbl" style="font-weight:400">${p.kind || ''} · vs ${p.benchmark_etf || 'SPY'} · ${p.n_days || '—'}d backtest</span></h2>
+    <h2 style="margin-top:0">${escapeHtml(p.name || pid)} ${trackPill(p)} <span class="lbl" style="font-weight:400">${trackLine}</span></h2>
+    ${accruingNote}
     <div class="strip">
       ${mc('total return', signed(p.return_pct) + '%', (p.return_pct ?? 0) >= 0 ? 'pos' : 'neg')}
       ${mc('vs ' + (p.benchmark_etf || 'SPY'), signed(p.vs_benchmark_pct) + 'pp', beat ? 'pos' : 'neg', beat ? 'beat market' : 'below market')}
@@ -706,7 +1005,7 @@ async function renderData() {
 }
 
 // ── router ──────────────────────────────────────────────────────────────────────
-const RENDER = { overview: renderOverview, sectors: renderSectors, catalysts: renderCatalysts, portfolios: renderPortfolios, data: renderData };
+const RENDER = { overview: renderOverview, sectors: renderSectors, timing: renderTiming, catalysts: renderCatalysts, positions: renderPositions, portfolios: renderPortfolios, data: renderData };
 function applyRoute(section, id) {
   LAST = { section, id };
   document.querySelectorAll('.navlink').forEach((el) => el.classList.toggle('active', el.dataset.route === section));

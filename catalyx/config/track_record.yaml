@@ -1,0 +1,18 @@
+# CATALYX — Track record inception
+#
+# The FORWARD, no-look-ahead track record starts here. Before this date there is no
+# point-in-time portfolio history — CATALYX evolves run to run, so projecting today's
+# holdings backwards (the `mode=backtest` curve) is HYPOTHETICAL, never a track record.
+#
+# From inception onward, every score_run is a rebalance point: nav_engine.compute_live_nav
+# values each run's actual holdings over [run_k, run_{k+1}] with real prices and CHAINS the
+# segments → a genuine walk-forward equity curve (see catalyx/execution/nav_engine.py).
+#
+# Read via catalyx.config.weights.track_record_inception().
+inception_date: "2026-06-05"
+inception_release: "v1.0"
+note: >
+  Inception anchored to the first REAL position (Friday 2026-06-05) so the theoretical model
+  portfolios and the real book are compared from the SAME day vs SPY. Live track record (model
+  portfolios vs SPY) accrues forward from here, one score_run = one rebalance point. Any NAV
+  dated before this is the hypothetical single-snapshot backtest, kept for reference only.

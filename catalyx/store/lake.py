@@ -69,6 +69,10 @@ TABLES: dict[str, tuple[str, list[str]]] = {
     "forward_returns":    ("validation/forward_returns", []),
     # dislocation lens (opportunities + diversifiers) — one materialization per run
     "dislocation":        ("analysis/dislocation",       ["run_id"]),
+    # entry-timing overlay (micro-tension + event overhang) — one materialization per run
+    "entry_timing":       ("analysis/entry_timing",      ["run_id"]),
+    # portfolio rotation: diversifiers anchored to the REAL book's holdings (not the stressed cluster)
+    "portfolio_rotation": ("analysis/portfolio_rotation", ["run_id"]),
 }
 
 

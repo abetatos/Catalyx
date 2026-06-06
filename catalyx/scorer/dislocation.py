@@ -119,6 +119,7 @@ def analyze(run_id: str | None = None, lookback_days: int = 90, window_days: int
             benchmark: str = _BENCHMARK, drawdown_threshold: float = -3.0,
             min_catalyst_alignment: float = 70.0, min_composite: float = 55.0,
             max_diversifier_corr: float = 0.5, persist: bool = False,
+            anchor_sectors: list[str] | None = None,
             price_fn=None, lake_dir: Path | None = None) -> dict:
     """Compute both lenses from one correlation/beta engine. Returns a JSON-able dict.
 
@@ -174,21 +175,32 @@ def analyze(run_id: str | None = None, lookback_days: int = 90, window_days: int
             "composite": round(s["composite"], 1),
         })
 
-    # ── OPPORTUNITY lens: fell hard + intact + catalyst confirmed ────────────
+    # ── OPPORTUNITY lens: fell hard + intact + catalyst confirmed + composite floor ──
+    # The composite floor (min_composite) is non-negotiable to our philosophy: a panic dip is only
+    # an opportunity if the sector is one we'd actually own on the FULL blend (catalyst + momentum +
+    # flow + crowding). A high catalyst_alignment alone — with weak momentum/flow or heavy crowding
+    # dragging the composite down — is NOT a buy; flagging it would contradict the model's ranking.
     opportunities = []
     for r in rows:
         if (r["drawdown_pct"] <= drawdown_threshold and r["regime_state"] == "intact"
-                and r["catalyst_alignment"] >= min_catalyst_alignment):
+                and r["catalyst_alignment"] >= min_catalyst_alignment
+                and r["composite"] >= min_composite):
             r2 = dict(r)
             r2["opportunity_score"] = round(abs(r["drawdown_pct"]) * (r["catalyst_alignment"] / 100.0), 1)
             opportunities.append(r2)
     opportunities.sort(key=lambda x: x["opportunity_score"], reverse=True)
 
-    # ── DIVERSIFIER lens: healthy + low correlation to the stressed cluster ──
-    stressed = {r["sector_id"] for r in rows if r["regime_state"] in ("contested", "breaking")}
-    if not stressed and rows:  # no regime stress → use the worst-drawdown quartile as the cluster
-        cut = sorted(r["drawdown_pct"] for r in rows)[max(0, len(rows) // 4 - 1)]
-        stressed = {r["sector_id"] for r in rows if r["drawdown_pct"] <= cut}
+    # ── DIVERSIFIER lens: healthy + low correlation to the reference cluster ──
+    # Default cluster = the STRESSED sectors (regime / worst-drawdown) → "where to rotate when the
+    # market is selling X". If `anchor_sectors` is given (e.g. the real book's holdings), the cluster
+    # is THOSE sectors → "where to rotate so I'm not re-buying what I already own" (portfolio rotation).
+    if anchor_sectors:
+        stressed = set(anchor_sectors) & {r["sector_id"] for r in rows}
+    else:
+        stressed = {r["sector_id"] for r in rows if r["regime_state"] in ("contested", "breaking")}
+        if not stressed and rows:  # no regime stress → use the worst-drawdown quartile as the cluster
+            cut = sorted(r["drawdown_pct"] for r in rows)[max(0, len(rows) // 4 - 1)]
+            stressed = {r["sector_id"] for r in rows if r["drawdown_pct"] <= cut}
     etf_by_sector = {r["sector_id"]: r["primary_etf"] for r in rows}
     stressed_etfs = [etf_by_sector[s] for s in stressed if s in etf_by_sector]
 
@@ -213,8 +225,11 @@ def analyze(run_id: str | None = None, lookback_days: int = 90, window_days: int
     mkt_window_pct = round(mkt_window * 100, 2) if mkt_window is not None else None
 
     if persist and rows and used_run:
+        # anchored (portfolio) rotation goes to its own table so it never overwrites the
+        # market-wide dislocation run the heatmap/overview consume.
+        table = "portfolio_rotation" if anchor_sectors else "dislocation"
         _persist_lake(used_run, window_days, benchmark, mkt_window_pct,
-                      rows, opportunities, diversifiers, lake_dir)
+                      rows, opportunities, diversifiers, lake_dir, table=table)
 
     return {
         "run_id": used_run, "window_days": window_days, "lookback_days": lookback_days,
@@ -228,8 +243,8 @@ def analyze(run_id: str | None = None, lookback_days: int = 90, window_days: int
 
 
 def _persist_lake(run_id, window_days, benchmark, market_window_pct, rows, opportunities,
-                  diversifiers, lake_dir) -> None:
-    """One flat row per analyzed sector → lake table `dislocation` (overwrite per run)."""
+                  diversifiers, lake_dir, table: str = "dislocation") -> None:
+    """One flat row per analyzed sector → lake `table` (overwrite per run)."""
     import pandas as pd
 
     opp_by = {o["sector_id"]: o for o in opportunities}
@@ -253,7 +268,7 @@ def _persist_lake(run_id, window_days, benchmark, market_window_pct, rows, oppor
             "diversifier_score": d.get("diversifier_score") if d else None,
             "mean_corr_to_stressed": d.get("mean_corr_to_stressed") if d else None,
         })
-    lake.append_partition("dislocation", pd.DataFrame(recs), {"run_id": run_id},
+    lake.append_partition(table, pd.DataFrame(recs), {"run_id": run_id},
                           overwrite=True, lake_dir=lake_dir)
 
 
@@ -270,12 +285,16 @@ def main() -> None:
     p.add_argument("--benchmark", default=_BENCHMARK)
     p.add_argument("--drawdown", type=float, default=-3.0, help="min drawdown%% to flag (negative)")
     p.add_argument("--no-persist", action="store_true", help="do not write the dislocation lake table")
+    p.add_argument("--anchor-sectors", default=None,
+                   help="comma-separated sector_ids to anchor rotation to (e.g. the real book's "
+                        "holdings) → diversifiers low-correlated to THOSE; writes table portfolio_rotation")
     p.add_argument("--json", action="store_true")
     args = p.parse_args()
 
+    anchor = [s.strip() for s in args.anchor_sectors.split(",")] if args.anchor_sectors else None
     r = analyze(run_id=args.run_id, lookback_days=args.lookback, window_days=args.window,
                 benchmark=args.benchmark, drawdown_threshold=args.drawdown,
-                persist=not args.no_persist)
+                persist=not args.no_persist, anchor_sectors=anchor)
     if args.json:
         print(json.dumps(r, indent=2, ensure_ascii=False))
         return

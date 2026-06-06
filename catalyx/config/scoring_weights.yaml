@@ -518,6 +518,44 @@ conviction_tiers:
     max_position_pct: 0.04
     description: "Interesting thesis but high uncertainty or limited prior data"
 
+# ─────────────────────────────────────────────────────────────────────────────
+# PORTFOLIO WEIGHTING — conviction sizing (added 2026-06-06)
+# ─────────────────────────────────────────────────────────────────────────────
+# Problem this fixes: weighting a portfolio PROPORTIONAL to the absolute composite
+# produced near-identical weights, because the top composites live in a narrow, high
+# band (e.g. 74.0 → 65.4 across 10 sectors, ratio 1.13 → weights 10.7% → 9.4%). The
+# "brutal analysis" (a real ranking) was thrown away by the sizing.
+#
+# Fix: separate the SELECTION/RANKING signal (still `weighting` per profile) from the
+# magnitude TRANSFORM. The transform maps the raw score → a weight, BEFORE the water_fill
+# cap. Single source of truth here; a profile's `construction` may override per book.
+#
+#   transform:
+#     proportional  → weight ∝ raw score (legacy; kept for momentum/equal/low_crowding)
+#     softmax       → z = (raw − mean)/std ; weight ∝ exp(sharpness · z)
+#                     The z-NORMALIZATION is the stability fix: `sharpness` means "std-devs
+#                     of tilt", so it keeps its meaning even if the composite band compresses
+#                     further next month (a raw-score softmax would silently change dispersion).
+#                     Monotonic → never reorders the ranking, only the magnitudes. std==0 → equal.
+#
+#   sharpness: dispersion dial for softmax. Higher = more concentrated in the leaders.
+#     Calibrated so the top/bottom weight ratio lands ≈ 2–2.5x on the current composite
+#     spread (well clear of the unstable low-temperature regime). Tunable.
+#
+#   rebalance_deadband_pct: turnover guard. On rebuild, if a sector's NEW target weight
+#     differs from the weight it ALREADY holds (previous run) by less than this many points,
+#     keep the held weight (no trade). Suppresses tax-churn (Spanish CGT) from tiny composite
+#     wiggles, independent of the transform. 0 disables. No previous run → not applied.
+# These are the GLOBAL defaults; a profile's `construction` overrides any key per book.
+# Default transform is `proportional` (back-compat: momentum/low_crowding/equal keep their
+# shape). The flagship `catalyx` book opts into `softmax` in its profile YAML. The deadband
+# applies to ALL model books (the turnover/CGT guard the user asked for in both legs).
+portfolio_weighting:
+  transform: proportional       # proportional | softmax  (catalyx.yaml overrides → softmax)
+  sharpness: 0.25               # exp(sharpness · z); ≈2–2.5x top/bottom on the current spread
+                                # (z-range ≈ ±1.8 → ratio ≈ exp(0.25·3.3) ≈ 2.3x before the cap)
+  rebalance_deadband_pct: 1.0   # |target − held| < this (pp) → keep held (no trade)
+
 # Correlated-catalyst combined allocation cap (portfolio concentration control)
 # DISTINCT from conviction_tiers above: those size a SINGLE position by conviction.
 # This caps the SUM of allocations across all open/draft theses that share the same
@@ -572,7 +610,9 @@ catalyst_lifecycle:
 # Thresholds live here (single source of truth, no LLM drift); the module computes facts and
 # a suggested verdict, and Claude makes the final enter/scale/wait call in the skill.
 entry_timing:
-  lookback_days: 90          # daily-close window pulled from yfinance for the micro-tension math
+  lookback_days: 150         # CALENDAR days pulled from yfinance (~107 trading days) — must comfortably
+                             # exceed vol_ratio_window_long (90 trading-day returns) so the vol regime
+                             # is computable; the short signals (RSI14/MA20/drawdown) need far less.
   rsi_period: 14
   rsi_overbought: 70         # RSI ≥ this → chasing an extended move (mean-reversion risk)
   rsi_oversold: 30           # RSI ≤ this → falling knife (oversold, not yet stabilized)
@@ -581,6 +621,18 @@ entry_timing:
   vol_ratio_window_short: 10 # realized-vol short window (days)
   vol_ratio_window_long: 90  # realized-vol long window (days)
   vol_ratio_elevated: 1.5    # short_vol / long_vol ≥ this → elevated tension
+  # ── Borderline / "warm" band (v2.15) ───────────────────────────────────────
+  # The hard lines above (RSI≥70 AND stretch≥8%) used to BOTH be required for "stretched".
+  # That let a name sitting JUST under every line on MULTIPLE axes at once (e.g. RSI 68.9 +
+  # stretch +7.75% + vol 1.31 — cybersecurity_commercial on 2026-06-06) read as "calm →
+  # enter_now" when it was plainly extended/chasing. Fix: "stretched" now fires on EITHER hard
+  # line, OR when ≥ borderline_min_axes of these softer "warm" axes trip together — being on the
+  # edge of overbought AND extended AND vol-rising simultaneously IS a chasing setup. Single warm
+  # axis (e.g. high vol in a selloff) does NOT → it routes to the falling/stabilizing branch.
+  rsi_warm: 65               # RSI ≥ this (but < rsi_overbought) = a warm upside-extension axis
+  stretch_warm_pct: 6.0      # stretch ≥ this% above MA20 (but < stretch_overbought_pct) = warm
+  vol_ratio_warm: 1.2        # vol ratio ≥ this (but < vol_ratio_elevated) = warm
+  borderline_min_axes: 2     # ≥ this many warm axes at once → "stretched" (chasing cluster)
   short_trend_window: 5      # return window for the short-term trend read
   drawdown_local_high_window: 20  # local-high lookback for drawdown_from_local_high
   # Stabilization = the discriminator between "good dip to buy" and "knife still falling".

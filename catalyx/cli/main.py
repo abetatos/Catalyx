@@ -22,6 +22,7 @@ _MODULE_CLIS: list[tuple[str, str]] = [
     ("catalyx.scorer.catalyst_scorer", "catalyst_alignment per sector (confirms/contradicts)"),
     ("catalyx.scorer.momentum_engine", "Cross-sectional momentum percentile rank"),
     ("catalyx.scorer.sector_scorer", "Composite SectorSnapshot score (orchestrator)"),
+    ("catalyx.scorer.entry_timing", "Entry-timing overlay (micro-tension + event overhang, recommend-only)"),
     ("catalyx.execution.tax_engine", "Spanish CGT 2026 progressive brackets"),
     ("catalyx.store.movement_repo", "Movements → positions + catalyst ledger (summary, positions, ledger, ingest)"),
     ("catalyx.store.catalyst_repo", "Catalyst / taxonomy-gap reader (summary, get, set-status)"),

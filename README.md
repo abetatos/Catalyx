@@ -23,9 +23,9 @@
 - [The full pipeline](#the-full-pipeline)
 - [The catalyst model — two types, not one](#the-catalyst-model--two-types-not-one)
 - [Sector scoring in detail](#sector-scoring-in-detail)
-- [Thesis structure](#thesis-structure)
-- [Closing a thesis — attribution decomposition](#closing-a-thesis--attribution-decomposition)
-- [How updates work — the monthly cycle](#how-updates-work--the-monthly-cycle)
+- [Movement structure](#movement-structure)
+- [Closing a position — attribution decomposition](#closing-a-position--attribution-decomposition)
+- [How updates work — the review cycle](#how-updates-work--the-review-cycle)
 - [Granularity — why it matters](#granularity--why-it-matters)
 - [Architecture — permanent hybrid model](#architecture--permanent-hybrid-model)
 - [Python modules (callable from skills)](#python-modules-callable-from-skills)
@@ -46,16 +46,15 @@ It works in four stages:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  1. DETECT         │  2. SCORE          │  3. THESIS         │  4. CLOSE    │
+│  1. DETECT         │  2. SCORE          │  3. MOVE           │  4. CLOSE    │
 │                    │                    │                    │              │
-│  Find macro        │  Map catalysts     │  Write a           │  Decompose   │
-│  catalysts before  │  to granular       │  structured,       │  what drove  │
-│  they are priced   │  sectors.          │  falsifiable       │  the return. │
-│  in.               │  Rank by           │  bet with          │  Update      │
-│                    │  composite score.  │  explicit exit     │  priors.     │
-│  WebSearch +       │  Python formula    │  conditions.       │              │
-│  Catalyst YAMLs    │  (no LLM drift)    │  Machine-readable  │  Feedback    │
-│                    │                    │  JSON              │  loop        │
+│  Find macro        │  Map catalysts     │  Allocate €X       │  Decompose   │
+│  catalysts before  │  to granular       │  attributed to     │  what drove  │
+│  they are priced   │  sectors.          │  catalyst(s), with │  the return. │
+│  in.               │  Rank by           │  optional stops +  │  Update      │
+│                    │  composite score.  │  assumptions.      │  priors.     │
+│  WebSearch +       │  Python formula    │  Machine-readable  │  Feedback    │
+│  Catalyst YAMLs    │  (no LLM drift)    │  Movement JSON     │  loop        │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -75,45 +74,45 @@ It works in four stages:
    For each sector: compute composite score from 5 dimensions.
    Python formula — no free-floating LLM numbers.
 
-   composite = catalyst_alignment × 0.30
-             + momentum           × 0.25
-             + flow_confirmation  × 0.20
-             + valuation_relative × 0.15
-             + (100 − crowding)   × 0.10
+   composite = catalyst_alignment × 0.35
+             + momentum           × 0.29
+             + flow_confirmation  × 0.24
+             + (100 − crowding)   × 0.12
 
    Output: SectorSnapshot (ranked list of sectors).
         │
         ▼
-   THESIS FORMULATION
+   MOVEMENT (capital allocation)
    ─────────────────────────────────────────────────────
-   Only after heatmap confirms sector rank.
-   Machine-readable JSON with: sector, ETF, catalyst, entry params,
-   explicit assumptions (each testable), invalidation conditions,
-   expected return, time horizon, conviction tier → position size.
-   Output: Thesis JSON in data/theses/
+   €X attributed directly to catalyst(s) via weighted attribution[],
+   with an action (open/add/trim/close), a trigger, a conviction, and a
+   point-in-time score_context. Optional machine-checkable risk_discipline
+   (assumptions + invalidation/stops) carries the falsifiable discipline.
+   Output: Movement JSON in data/movements/
         │
         ▼
    EXECUTION
    ─────────────────────────────────────────────────────
-   Log trades. Track P&L gross and net of Spanish CGT.
+   Net positions derived from movements. P&L gross and net of Spanish CGT.
    Monitor: assumption status · catalyst decay · invalidation triggers.
-   Output: Trade log, tax snapshot (YTD brackets).
+   Output: Positions (net book), tax snapshot (YTD brackets).
         │
         ▼
    ATTRIBUTION
    ─────────────────────────────────────────────────────
+   The catalyst is the unit of the track record (catalyst_ledger).
    At close: decompose the return into 4 components.
    - Catalyst alpha: return attributable to the specific catalyst
    - Sector beta: sector moved but not from this catalyst
    - Market beta: broad market move dragged the sector
    - Timing luck: residual / unexplained
-   Output: ClosedThesis JSON with right_reason_score.
+   Output: catalyst_ledger — P&L by catalyst ("which catalysts won").
         │
         ▼
    FEEDBACK LOOP
    ─────────────────────────────────────────────────────
-   ClosedThesis → prior hit rate per catalyst-sector pair.
-   Next time a similar catalyst fires, priors inform conviction tier.
+   Closed movements → prior hit rate per catalyst-sector pair.
+   Next time a similar catalyst fires, priors inform conviction.
    Output: CatalystSectorPrior table (Phase 3).
 ```
 
@@ -194,24 +193,25 @@ The heatmap ranks sectors by composite score. Every dimension has a fixed comput
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  DIMENSION           WEIGHT  HOW IT'S COMPUTED                          │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  catalyst_alignment   30%    Formula: structural × event interaction    │
+│  catalyst_alignment   35%    Formula: structural × event interaction    │
 │                              (confirms / contradicts / independent)     │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  momentum             25%    Cross-sectional percentile rank            │
+│  momentum             29%    Cross-sectional percentile rank            │
 │                              across 17+ sectors (yfinance)              │
 │                              raw = 1m×0.20 + 3m×0.45 + 6m×0.35         │
 │                              Bottom sector = 0, top sector = 100        │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  flow_confirmation    20%    ETF shares_outstanding × NAV, week-over-   │
+│  flow_confirmation    24%    ETF shares_outstanding × NAV, week-over-   │
 │                              week delta → normalized [0–100]            │
 │                              Note: AUM conflates price with net flows   │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  valuation_relative   15%    Analyst model vs current price             │
-│                              (manual input, quarterly update)           │
-├─────────────────────────────────────────────────────────────────────────┤
-│  crowding_risk        10%    INVERTED: high crowding → penalizes score  │
+│  crowding_risk        12%    INVERTED: high crowding → penalizes score  │
 │                              Based on narrative_maturity enum + COT     │
 └─────────────────────────────────────────────────────────────────────────┘
+
+(valuation_relative was removed from the composite in schema 1.2 — it was a constant-50
+ placeholder that only diluted the live dimensions; a backtest showed no price-derived
+ 4th dimension earns the weight. Its 0.15 was redistributed proportionally to the four above.)
 ```
 
 ### Narrative maturity — categorical, not numeric
@@ -233,54 +233,61 @@ Example: AI semiconductors (2025–2026) → `crowded`. AI datacenter copper dem
 
 ---
 
-## Thesis structure
+## Movement structure
 
-A thesis is not a trade idea. It is a falsifiable machine-readable claim:
+The primary capital unit is a **Movement**: €X attributed directly to catalyst(s), not a
+heavyweight obligatory thesis. The catalyst becomes the unit of the track record — movements
+accumulate P&L against the catalysts they are attributed to. The falsifiable discipline survives
+as an **optional, machine-checkable `risk_discipline`** block (assumptions + invalidation/stops):
+write it for core positions, skip it for small satellite moves.
 
 ```json
 {
-  "thesis_id":        "thesis_20260603_copper_miners_datacenter_alpha",
-  "sector_id":        "copper_miners",
-  "primary_etf":      "COPX.L",
-  "catalyst":         "AI datacenter copper demand mispriced by market",
-  "conviction_tier":  2,
-  "position_pct":     0.06,
+  "id":          "mov_20260604_copper_miners_datacenter_alpha",
+  "executed_at": "2026-06-04T00:00:00Z",
+  "action":      "open",
+  "sector_id":   "copper_miners",
+  "vehicle":     { "etf": "4COP", "currency": "USD" },
+  "amount_eur":  1000.0, "qty": 16.26, "price": 61.5, "fees": 0.0,
 
-  "assumptions": [
-    {
-      "id": "asm_01",
-      "text": "Hyperscaler capex exceeds $700B in 2026",
-      "data_source": "AWS/Azure/GCP quarterly earnings",
-      "falsification": "CapEx guidance cut >15% in any two major hyperscalers"
-    }
+  "attribution": [
+    { "catalyst_id": "struct_copper_datacenter_demand", "weight": 1.0 }
   ],
+  "trigger":    "new_catalyst",
+  "conviction": "medium",
 
-  "invalidation_conditions": [
-    "LME copper price falls below $11,000 for 10+ days",
-    "Goldman/JPM revise copper 12m target below $12,000"
-  ],
+  "score_context": { "run_id": null, "composite": 70.9, "catalyst_alignment": 89.0 },
 
-  "entry": { "price_limit": 90.0, "currency": "USD" },
-  "time_horizon_weeks": 36,
-  "expected_return_pct": 40
+  "risk_discipline": {
+    "invalidation": [
+      { "id": "inv_01", "condition": "LME copper closes below $11,000/t for 10 trading days",
+        "severity": "full_exit", "source": "market_data" }
+    ],
+    "assumptions": [
+      { "id": "asm_01", "statement": "Hyperscaler AI capex stays above $60B/quarter",
+        "monitoring_source": "earnings_data", "check_frequency": "quarterly" }
+    ]
+  }
 }
 ```
 
-Every assumption has a **specific data source** and a **specific falsification condition**. Vague assumptions ("copper demand stays strong") are rejected at creation time.
+`action × trigger × conviction` covers every case: a small escalation add, a deliberate
+reconsideration open, a stop-hit close. Every assumption has a **specific data source** and a
+**specific falsification condition**. Vague assumptions ("copper demand stays strong") are rejected.
 
-### Conviction tiers → position sizing
+### Conviction → position sizing
 
 ```
-Tier 1  │  Max 12%  │  Strong catalyst + fresh signal + crowding low + prior hit rate > 65%
-Tier 2  │  Max  8%  │  Good catalyst + some momentum + acceptable crowding
-Tier 3  │  Max  4%  │  Interesting but high uncertainty or no prior data
+high    │  Max 12%  │  Strong catalyst + fresh signal + crowding low + prior hit rate > 65%
+medium  │  Max  8%  │  Good catalyst + some momentum + acceptable crowding
+small   │  Max  4%  │  Interesting but high uncertainty or no prior data
 ```
 
 ---
 
-## Closing a thesis — attribution decomposition
+## Closing a position — attribution decomposition
 
-At close, returns are not just recorded — they are decomposed:
+At close, returns are not just recorded — they are decomposed (Phase 2 `return_decomposer`):
 
 ```
 Total return P&L
@@ -314,9 +321,12 @@ Only a high `right_reason_score` + repeated hit rate on the same catalyst type b
 
 ---
 
-## How updates work — the monthly cycle
+## How updates work — the review cycle
 
-Every month, the pipeline runs in a fixed order. Each step provides data the next step requires.
+`/catalyx-review` runs the analytical pipeline in a fixed order (periodic, or `event:<catalyst_id>`
+when a catalyst fires). Each step provides data the next step requires. **The review only
+recommends — it never trades.** Operating is separate and anytime: `/catalyx-open` and
+`/catalyx-close`.
 
 ```
 STEP 0 — Macro context                    WebSearch first, BEFORE reading any file.
@@ -362,16 +372,16 @@ STEP 5 — /catalyx-heatmap                 Sector-level view.
   │                                        sectors with stale/missing studies rank
   │                                        with penalty. Full composite score.
   ▼
-STEP 6 — /catalyx-thesis review           For each open thesis:
-  │       Review open theses              - WebSearch each assumption data source
-  │                                       - Update assumption_status (holding/weakening/broken)
-  │                                       - Flag broken invalidation conditions
-  │                                       - Concrete recommendation: hold / exit / reduce
+STEP 6 — Open position reviews            For each open movement:
+  │       (inside /catalyx-review)        - WebSearch each risk_discipline assumption source
+  │                                       - Update assumption status (holding/weakening/violated)
+  │                                       - Check invalidation/stops + driving-catalyst regime
+  │                                       - Concrete recommendation: hold / add / reduce / exit
   ▼
-STEP 7 — /catalyx-thesis draft            Only AFTER heatmap confirms sector rank.
-  │       Draft new thesis                Full schema: sector, ETF, assumptions,
-  │       (if opportunity identified)     entry params, falsification conditions.
-  │                                       Portfolio correlation check before opening.
+STEP 9 — Position-open recommendations     Only AFTER heatmap confirms sector rank.
+  │       (inside /catalyx-review)        Top-5 sectors with no open position → context
+  │                                       block + correlation check. RECOMMENDS only;
+  │                                       opening is the user's via /catalyx-open.
   ▼
 STEP 12 — Taxonomy Gap Review             Review data/taxonomy_proposals/*.json
           Promote or reject gaps          from Step 1 Discovery pass.
@@ -457,10 +467,9 @@ Claude reads scores → formats heatmap → adds qualitative analysis
 | `catalyx.thesis.structural_monitor` | `uv run python -m catalyx.thesis.structural_monitor [--all]` | Noise-vs-regime fundamentals gate → `regime_state` (intact/contested/breaking) |
 | `catalyx.scorer.dislocation` | `uv run python -m catalyx.scorer.dislocation [--window 5]` | Price-vs-fundamentals gap: opportunities (panic dips) + diversifiers (rotation), one corr/beta engine |
 | `catalyx.execution.tax_engine` | `uv run python -m catalyx.execution.tax_engine --gain N [--ytd-prior N]` | Spanish CGT 2026 progressive brackets |
-| `catalyx.execution.portfolio` | `uv run python -m catalyx.execution.portfolio build-all` | Model portfolios = (score_run × strategy) → lake `portfolio_holding` |
-| `catalyx.execution.nav_engine` | `uv run python -m catalyx.execution.nav_engine model <strategy> --backtest-days 180` | Buy-and-hold NAV vs SPY (model + real) → "¿batimos mercado?" |
-| `catalyx.execution.trade_logger` | `uv run python -m catalyx.execution.trade_logger log <portfolio_id>` | Real-money trades (thesis+run lineage) → net positions + P&L |
-| `catalyx.attribution.thesis_scorer` | `uv run python -m catalyx.attribution.thesis_scorer <path.json>` | right_reason_score from ClosedThesis |
+| `catalyx.execution.portfolio` | `uv run python -m catalyx.execution.portfolio build-all` | Model portfolios = (score_run × strategy) → lake `portfolio_holding`. Conviction sizing: softmax over the z-normalized score + rebalance deadband (`portfolio_weighting` config) |
+| `catalyx.execution.nav_engine` | `uv run python -m catalyx.execution.nav_engine live <strategy>` | **Live** walk-forward track record (chains each run's holdings from inception, no look-ahead) — the headline. `model … --backtest-days N` = hypothetical backtest reference; `real` = real book. All vs SPY |
+| `catalyx.store.movement_repo` | `uv run python -m catalyx.store.movement_repo {positions,ledger,ingest}` | Movements → net positions + catalyst_ledger (P&L by catalyst); point-in-time score_context ingest (no look-ahead) |
 | `catalyx.store.lake` / `lake_query` | `uv run python -m catalyx.store.lake_query ranking` | Parquet lake (Tier 2 truth) + DuckDB read-path |
 | `catalyx.store.snapshot_repo` | `uv run python -m catalyx.store.snapshot_repo record` | Score-run history over the lake (record / history / validate) |
 | `catalyx.store.catalyst_repo` | `python -m catalyx.store.catalyst_repo summary` | File-backed reader/digest for CatalystEvent / TaxonomyGapProposal |
@@ -470,7 +479,7 @@ Claude reads scores → formats heatmap → adds qualitative analysis
 ## Storage — two tiers, no database
 
 ```
-Tier 1 (git, hand-edited)     JSON/YAML documents: catalysts, theses, sector studies,
+Tier 1 (git, hand-edited)     JSON/YAML documents: catalysts, movements, sector studies,
                               structural catalysts, configs, schemas, reports. The skill
                               interface — the *_repo modules read these files directly.
 
@@ -539,50 +548,59 @@ Non-EUR ETF returns are converted at the execution-date exchange rate.
 
 | Sector | Composite score | Notes |
 |---|---|---|
-| `grid_infrastructure_utilities` | 74.5 | Thesis in draft |
-| `copper_miners` | 70.9 | Thesis in draft, entry price needs recalibration |
+| `grid_infrastructure_utilities` | 74.5 | Open position |
+| `copper_miners` | 70.9 | Open position |
 
-### Open theses (2 drafts, not yet opened)
+### Open positions (2 movements, real book €1,500)
 
-| Thesis | Sector | ETF | Tier | Size |
+| Movement | Sector | ETF | Amount | Attributed catalyst(s) |
 |---|---|---|---|---|
-| `thesis_20260603_copper_miners_datacenter_alpha` | copper_miners | COPX.L | 2 | 6% |
-| `thesis_20260603_grid_infrastructure_utilities_bindingconstraint` | grid_infrastructure_utilities | IQQH.DE | 2 | 4% |
+| `mov_20260604_copper_miners_datacenter_alpha` | copper_miners | 4COP | €1,000 | `struct_copper_datacenter_demand` (1.0) |
+| `mov_20260604_grid_infrastructure_utilities_bindingconstraint` | grid_infrastructure_utilities | IQQH.DE | €500 | `struct_energy_transition_grid` (0.7) · `struct_ai_capex_supercycle` (0.3) |
 
-### Model portfolio performance — ¿batimos al mercado?
+Both bought on the dip 2026-06-04, full positions, no rebalance. Catalyst ledger:
+copper-DC €1,000 · energy-transition €350 · ai-capex €150.
 
-Buy-and-hold backtest of each strategy's current holdings vs **SPY**, via
-`nav_engine model <strategy> --backtest-days N` (as of 2026-06-06).
+### Model portfolio performance — track record vs hypothetical backtest
 
-**Trailing 180 days (2025-12-08 → 2026-06-06, SPY +8.5%) — the edge:**
+> ⚠️ **The real track record starts at inception (2026-06-05) and accrues forward.** Everything
+> dated before that is a **hypothetical backtest, not a track record** — it takes *today's* holdings
+> and projects them backwards, which assumes the system would have picked the same sectors months
+> ago. It would NOT have: CATALYX re-ranks every run, and that evolution isn't in the backtest. So
+> the trailing numbers below are an *illustration of the current book's factor exposure*, not proof
+> of edge. The honest curve is the **live, walk-forward** one (`nav_engine live <strategy>`): it
+> chains each run's ACTUAL holdings from inception, no look-ahead, and is the headline on the
+> dashboard. Until it accrues a few runs it is near-flat — that is correct, not a bug.
+
+**Hypothetical backtest — trailing 180 days (2025-12-08 → 2026-06-06, SPY +8.5%), current holdings projected back:**
 
 | Strategy | Return | vs SPY |
 |---|---|---|
 | `momentum` | **+35.4%** | **+26.9** |
 | `equal_weight` | +32.5% | +24.0 |
-| `conviction` | +32.0% | +23.5 |
+| `catalyx` | +32.5% | +24.0 |
 | `low_crowding` | +24.9% | +16.4 |
 
-All four beat the market over the medium term — the momentum tilt pays in a trending tape.
+Read as factor exposure, not edge: the momentum tilt looks best *in a trending tape with hindsight-selected holdings*.
 
-**Stress window — 2026-06-05 AI selloff (S&P −2.64%, 5d window) — the fragility:**
+**Hypothetical stress window — 2026-06-05 AI selloff (S&P −2.64%, 5d window) — the fragility:**
 
 | Strategy | Return | vs SPY |
 |---|---|---|
 | `low_crowding` | −5.2% | −2.4 |
 | `momentum` | −6.2% | −2.8 |
 | `equal_weight` | −6.3% | −2.8 |
-| `conviction` | −6.4% | −2.8 |
+| `catalyx` | −6.4% | −2.8 |
 
 In a risk-off all four **underperform the index by ~2.8pts** and cluster within 1.3pts of each
 other — the same AI/cyclical bet, four times over. Diversification across strategies is
 illusory when the market sells the whole momentum cluster. Full analysis + resilience scorecard:
 [experiments/exp_2026-06-05_ai_selloff.md](experiments/exp_2026-06-05_ai_selloff.md).
 
-> The number that matters is not the return — it is the **return minus SPY**. A book that beats
-> the market in the trend and lags it in the drawdown is doing exactly what a momentum tilt does;
-> the open question (tracked in [experiments/](experiments/)) is whether a risk-off overlay can
-> keep the upside while cutting the −2.8pt drawdown gap.
+> The number that matters is not the backtest return — it is the **live return minus SPY**, measured
+> forward from inception. A book that beats the market in the trend and lags it in the drawdown is
+> doing exactly what a momentum tilt does; the open question (tracked in [experiments/](experiments/))
+> is whether a risk-off overlay can keep the upside while cutting the −2.8pt drawdown gap.
 
 ---
 
@@ -599,10 +617,12 @@ Now (permanent)        Skill-based pipeline. Claude Code as interface + intellig
                         Live dashboard on GitHub Pages (DuckDB-WASM over the committed lake).
 
 Future (Python only — no DB, no self-hosted LLM)
-                        valuation_engine + return_decomposer (attribution).
-                        ML feedback loop on closed theses (XGBoost / Bayesian priors;
+                        return_decomposer (attribution) + catalyst_ledger metrics report.
+                        ML feedback loop on closed movements (XGBoost / Bayesian priors;
                           catalyst novelty via local sentence-transformers embeddings).
-                        Backtesting: GDELT / CFTC COT, walk-forward, strict no-look-ahead.
+                        Rebalance simulator (cost + Spanish CGT aware); backtesting:
+                          GDELT / CFTC COT, walk-forward, strict no-look-ahead.
+                        (valuation_engine was DROPPED — valuation_relative left the composite.)
 ```
 
 ---

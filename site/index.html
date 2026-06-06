@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- ⚠ LANGUAGE RULE: all user-facing dashboard copy MUST be English (see site/app.js header). -->
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -159,7 +160,9 @@
     </div>
     <a class="navlink" data-route="overview"><span class="ic">◧</span> Overview</a>
     <a class="navlink" data-route="sectors"><span class="ic">▦</span> Sectors</a>
-    <a class="navlink" data-route="catalysts"><span class="ic">◆</span> Catalysts &amp; positions</a>
+    <a class="navlink" data-route="timing"><span class="ic">⏱</span> Entry timing</a>
+    <a class="navlink" data-route="catalysts"><span class="ic">◆</span> Catalysts</a>
+    <a class="navlink" data-route="positions"><span class="ic">€</span> Positions</a>
     <a class="navlink" data-route="portfolios"><span class="ic">◔</span> Portfolios</a>
     <div class="navsep">Advanced</div>
     <a class="navlink" data-route="data"><span class="ic">⛁</span> Runs &amp; data</a>
@@ -200,15 +203,46 @@
       <div id="sec-detail" style="margin-top:22px"></div>
     </section>
 
+    <!-- ── ENTRY TIMING ── -->
+    <section class="section" id="s-timing">
+      <h1 class="head">Entry timing</h1>
+      <p class="sub">The execution <i>window</i> for every sector — <b>when</b> to enter a position you've
+        already decided on (by fundamentals or as a dislocation opportunity). Separate from the composite:
+        it never moves a score, only flags whether <i>now</i> is tense. Recommend-only.</p>
+      <div id="timing-market" class="strip"></div>
+      <div class="card" style="margin:4px 0 18px;padding:12px 16px">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span class="pill g">opportunity</span>
+          <b style="font-size:13px">What is an opportunity?</b></div>
+        <p class="hint" style="margin:0">A sector flagged by the <b>dislocation</b> engine: <b>it fell hard but its
+          fundamentals are still intact</b> (regime <span class="pill g">intact</span>) and its catalyst is still
+          confirmed, <b>and the drop is mostly contagion</b> — dragged down by the market (β·market), not by anything
+          specific to its thesis. In other words: <i>"the tide sold it, the thesis didn't break"</i> → a <b>panic dip</b>
+          worth buying. This is distinct from <b>timing</b>: dislocation says <i>whether</i> it's worth it; timing (the
+          columns here) says <i>when</i> to enter. That's why they sit at the top with a green border — but even as an
+          opportunity, the verdict can still say <b>wait</b> if it hasn't stabilized yet.</p>
+      </div>
+      <div class="row">
+        <input id="tim-search" placeholder="Filter sectors…" style="width:280px" />
+        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)">
+          <input type="checkbox" id="tim-caveat" style="width:auto" /> only sectors with a caveat (hide <i>enter now</i>)
+        </label>
+      </div>
+      <div id="timing-table"></div>
+      <p class="hint" style="margin-top:14px">Default order: <b>opportunities first</b>, then the rest by tension.
+        Click any column to re-sort. Verdict: <b>enter now</b> = calm, no objection · <b>scale-in</b> = a
+        dip that's turning (enter in tranches) · <b>wait — unstable</b> = a falling knife, no base yet · <b>wait — event</b>
+        = a near-term catalyst (event_date) could move it. A <span class="neg">⚠ overhang</span> is that discrete event.</p>
+    </section>
+
     <!-- ── CATALYSTS ── -->
     <section class="section" id="s-catalysts">
-      <h1 class="head">Catalysts &amp; positions</h1>
+      <h1 class="head">Catalysts</h1>
       <p class="sub">The <i>why</i> behind the rankings. Structural catalysts are the floor signal,
-        event catalysts the spike, and positions (movements) the capital built on them. Pick a tab, then an item.</p>
+        event catalysts the spike. Pick a tab, then an item. (The capital built on them lives in
+        <a href="#/positions">Positions</a>.)</p>
       <div class="subtabs" id="cat-subtabs">
         <button data-kind="structural" class="active">Structural</button>
         <button data-kind="event">Event</button>
-        <button data-kind="movement">Positions</button>
       </div>
       <div class="split">
         <div class="listpane" id="cat-list"></div>
@@ -216,15 +250,66 @@
       </div>
     </section>
 
+    <!-- ── POSITIONS (the real book) ── -->
+    <section class="section" id="s-positions">
+      <h1 class="head">Positions</h1>
+      <p class="sub">Your <b>real book</b> — actual money. Treated like a portfolio: buys/sells, weights,
+        realized P&amp;L and volatility vs SPY. Each movement just <b>references its catalyst(s)</b> (click to
+        open) and dates — no duplicated catalyst detail.</p>
+      <div class="card" style="margin-bottom:16px;border-left:3px solid var(--accent)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+          <b style="font-size:13px">Real money — skin in the game</b>
+          <span class="pill g">live capital</span>
+        </div>
+        <p class="hint" style="margin:0 0 10px">Actual positions in my own account, not a backtest — the
+          point is to validate the approach for real, not on paper.</p>
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-radius:8px;background:#fff8c5">
+          <span class="pill a" style="flex-shrink:0;margin-top:1px">⚠ entry by design</span>
+          <p class="hint" style="margin:0;color:var(--fg)">Entry timing was
+            <b style="color:var(--amber)">deliberately bad</b>: I opened into the <b>2026-06-05 selloff</b>
+            (fundamentals intact, falling tape), so the book <b>starts underwater on purpose</b>. The test
+            is whether the thesis pays off from a poor entry — a test of the <b>approach</b>, not of luck.</p>
+        </div>
+      </div>
+      <div id="pos-summary" class="strip"></div>
+      <div id="pos-nav" style="margin:14px 0"></div>
+      <h2>Holdings</h2>
+      <div id="pos-holdings"></div>
+      <h2>Movements — buys &amp; sells</h2>
+      <p class="hint">Newest first. The <span class="pill b">catalyst</span> chips link to the catalyst that
+        justified the trade; <code>score@entry</code> is the point-in-time snapshot (no look-ahead).</p>
+      <div id="pos-movements"></div>
+      <h2>Catalyst exposure</h2>
+      <p class="hint">How the book's capital splits across catalysts (by movement attribution weights) — no
+        catalyst double-counted. This is the track record each catalyst is building.</p>
+      <div id="pos-catalysts"></div>
+      <h2>Rotation targets</h2>
+      <p class="hint">Healthy, high-composite sectors with the <b>lowest correlation to what you already
+        own</b> — where to add next so you diversify the book instead of doubling the same bet. From the
+        dislocation correlation engine (90d yfinance returns) anchored to your holdings, not the metrics alone.</p>
+      <div id="pos-rotation"></div>
+    </section>
+
     <!-- ── PORTFOLIOS ── -->
     <section class="section" id="s-portfolios">
       <h1 class="head">Portfolios</h1>
-      <p class="sub">Four deterministic strategies, buy-and-hold NAV vs <b>SPY</b>. Click a strategy to
+      <p class="sub">Four deterministic strategies, tracked vs <b>SPY</b>. Click a strategy to
         see its holdings; each holding links back to the sector.</p>
+      <div class="card" style="margin-bottom:16px;padding:12px 16px;border-left:3px solid var(--amber)">
+        <b style="font-size:13px">📐 Theoretical exercise</b>
+        <p class="hint" style="margin:4px 0 0">These books are <b>hypothetical</b>: you "buy" each
+          strategy's recommendations at inception (the same Friday I opened my first real position,
+          2026-06-05) and the weights <b>re-balance to the recommendation each run</b>. <b>No real
+          buy/sell prices, no fees, no taxes</b> — just NAV vs SPY from day 0. SPY is fetched and the
+          whole curve is persisted run by run. The live curve grows one market day at a time; until it
+          has ≥2 points each book is marked <span class="pill a">accruing</span> and shows the
+          hypothetical backtest for reference. (Your <a href="#/positions">real book</a> is the
+          actual-money counterpart.)</p>
+      </div>
       <div id="pf-cards" class="strip"></div>
       <div id="pf-detail" style="margin-top:22px"></div>
       <h2>Decision lineage</h2>
-      <p class="hint">Trace a real trade back to the run + reports that justified it (loads on demand).</p>
+      <p class="hint">Trace a real movement back to the run + reports that justified it (loads on demand).</p>
       <div id="pf-lineage"></div>
     </section>
 

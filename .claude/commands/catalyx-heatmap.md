@@ -133,7 +133,7 @@ invisible — the goal is full-universe coverage every cycle.
     the lake and the report never diverge. To check whether past rankings predicted returns, run
     `uv run python -m catalyx.store.snapshot_repo validate` (needs ≥2 runs separated in time).
 
-12. **Regime watch + Opportunities & Rotation (recommendations, NEVER auto-trades).**
+12. **Regime watch + Opportunities & Rotation + Entry timing (recommendations, NEVER auto-trades).**
 
     Runs AFTER `record` (step 11) so `regime_state` is in the lake. Python computes the facts; the
     escalation and buy/rotate calls are yours (the hybrid model). See
@@ -162,10 +162,24 @@ invisible — the goal is full-universe coverage every cycle.
     - **DIVERSIFIERS** — healthy sectors with LOW correlation to the stressed cluster: where to
       rotate so you are not re-buying the same correlated bet (fixes "illusory diversification").
 
-    **c.** Write an **"Opportunities & Rotation"** section into the heatmap report:
+    **c. Entry timing (the execution window — complementary to dislocation's *whether*)** — for the
+    top-ranked + opportunity sectors, the *when* to enter:
+    ```bash
+    uv run python -m catalyx.scorer.entry_timing --all --json   # micro-tension + overhangs; --all persists the lake `entry_timing` table (run_id) → dashboard Overview
+    ```
+    - `micro_timing_state` + `suggested_verdict`: `falling_unstable` ⇒ `wait_stabilize` (knife not
+      based), `stretched` ⇒ overbought/extended, `stabilizing` ⇒ `scale_in`, `calm` ⇒ no objection.
+    - **Event overhang** ⇒ `wait_event`: a discrete CatalystEvent with an `event_date` in the window
+      (e.g. a peer mega-IPO whose flow could dump the read-across name). The module surfaces the
+      fact; the adverse-vs-bullish call is yours (WebSearch the event). Reconcile with dislocation:
+      a dip with intact fundamentals is a reason to *want* it, but don't deploy full size into
+      unresolved tension — wait to base, scale in, or wait past the event.
+
+    **d.** Write an **"Opportunities & Rotation"** section into the heatmap report:
     - Regime watch: `sector · regime_state · persistence note (n developments · span · clustered?) · your read`
     - Opportunities: `sector · drawdown% · contagion% vs idiosyncratic% · catalyst_alignment · VERDICT (buy-watch / investigate / pass)`
     - Diversifiers: `sector · composite · corr-to-stressed · note`
+    - Entry timing: `sector · micro_timing_state · RSI/vol/5d% · event overhang? · suggested_verdict`
     Everything is a recommendation for the user — nothing here is an instruction to trade.
 
 ## Rules
@@ -174,7 +188,7 @@ invisible — the goal is full-universe coverage every cycle.
 - Never recommend an ETF without stating TER, AUM, UCITS status, and spread.
 - The non-obvious finding section is mandatory for each top-5 sector. If the reason a sector ranks high is obvious, the analysis adds no value.
 - If two adjacent sectors score similarly, explain the differentiation explicitly.
-- **Pre-calibration banner is mandatory.** The composite score weights (0.30/0.25/0.20/0.15/0.10) are uncalibrated — they require N > 50 closed theses to validate. Until then, all composite scores carry calibration uncertainty. Include this notice at the top of every heatmap report and at the top of every ranking table: `⚠ PRE-CALIBRATION: weights unvalidated (0 closed theses). Scores indicate relative ordering, not precise conviction levels.`
+- **Pre-calibration banner is mandatory.** The composite score weights (catalyst 0.35 / momentum 0.29 / flow 0.24 / crowding 0.12) are uncalibrated — they require N > 50 closed positions to validate. Until then, all composite scores carry calibration uncertainty. Include this notice at the top of every heatmap report and at the top of every ranking table: `⚠ PRE-CALIBRATION: weights unvalidated (0 closed positions). Scores indicate relative ordering, not precise conviction levels.`
 - **Regime / opportunity outputs (step 12) are RECOMMENDATIONS for human judgement, never auto-trades.** Python computes the facts (`regime_state`, the persistence dossier, the contagion-vs-idiosyncratic split, correlations); the escalation call (`contested` → regime change?) and the buy/rotate call are yours, made with WebSearch macro context. A `contested` sector keeps its full score and weight — it is a flag to watch, not an action. Only `breaking` (measured fundamental degradation) warrants a rotation recommendation.
 
 ## Output format

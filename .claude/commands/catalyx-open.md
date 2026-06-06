@@ -53,6 +53,29 @@ Usage:
    user (combined %, shared catalyst, breach amount) and record the override reason in
    `risk_discipline.note`. Only refuse if `enforcement == "block"`.
 
+5.5. **Entry-timing gate (recommend-only — answers "¿es buen momento o espero un poco?").** This is
+   the micro execution window, SEPARATE from the fundamental decision (the composite/dislocation
+   already said you want the sector). Run:
+   ```
+   uv run python -m catalyx.scorer.entry_timing <sector_id>
+   ```
+   It returns, from yfinance (no LLM drift): a `micro_timing_state`
+   (`calm` / `stretched` / `falling_unstable` / `stabilizing`), the facts behind it (RSI, stretch
+   vs MA20, vol regime, 5d return, drawdown), the market backdrop (^VIX + SPY 5d), any near-term
+   **event overhangs** (discrete CatalystEvents with an `event_date` inside the window — e.g. a peer
+   mega-IPO whose flow could dump the read-across name), and a `suggested_verdict`
+   (`enter_now` / `scale_in` / `wait_stabilize` / `wait_event`).
+   - **The verdict is advisory, not a block.** Present it to the user with one line of reasoning.
+   - **You make the direction call on overhangs.** The module surfaces the *fact* that a near-term
+     event touches the sector; whether it is an adverse whale-dump risk or a bullish spike is YOUR
+     judgement — WebSearch the event before deciding (e.g. SpaceX IPO date, lock-up, allocation).
+   - **Reconcile with dislocation:** a correction with intact fundamentals is a reason to BUY
+     (dislocation opportunity lens), but entry_timing says don't deploy full size into UNRESOLVED
+     tension — `falling_unstable` → wait for it to base; `stabilizing` → `scale_in` (enter in
+     tranches); `wait_event` → wait past the discrete event. Offer the user: enter now / scale in /
+     wait, and let them decide (this can also justify a smaller `conviction`/`amount_eur` now with a
+     planned add later).
+
 6. **Vehicle.** Pick the ETF with best AUM + spread (UCITS preferred for the Spanish investor). If
    no UCITS option has AUM > $200M, flag it.
 

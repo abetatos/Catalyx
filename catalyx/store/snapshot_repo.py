@@ -212,12 +212,23 @@ def record_run(top_n: int = 10, notes: str | None = None,
                          momentum_snapshot_path=momentum_snapshot_path)
         sb = r["score_breakdown"]
         cat_detail = r.get("catalyst_detail") or {}
+        flow_detail = r.get("flow_detail") or {}
         rows.append({
             "sector_id": sid,
             "composite": r["composite"],
             "catalyst_alignment": sb["catalyst_alignment"],
             "momentum": sb["momentum"],
             "flow_confirmation": sb["flow_confirmation"],
+            # flow provenance — so the dashboard can flag a proxy/low-quality flow number
+            # rather than a silent neutral 50. See catalyx/data/flow_data.py FLOW_PROXY.
+            "flow_data_quality": flow_detail.get("data_quality"),
+            "flow_source": flow_detail.get("flow_source"),
+            "flow_proxy_ticker": flow_detail.get("flow_proxy_ticker"),
+            "flow_proxy_used": bool(flow_detail.get("flow_proxy_used", False)),
+            "flow_carried_from": flow_detail.get("carried_from"),
+            "flow_volume_cmf": flow_detail.get("volume_cmf"),
+            "flow_window_days": flow_detail.get("flow_window_days"),
+            "flow_days_covered": flow_detail.get("flow_days_covered"),
             "crowding_risk": sb["crowding_risk"],
             "narrative_maturity": maturity,
             "has_study": 1 if maturity is not None else 0,
@@ -525,6 +536,14 @@ def _write_run_to_lake(run_id, run_at, version, git_commit, momentum_snapshot,
         "sector_id": r["sector_id"], "rank": r["rank"], "composite": r["composite"],
         "catalyst_alignment": r["catalyst_alignment"], "momentum": r["momentum"],
         "flow_confirmation": r["flow_confirmation"],
+        "flow_data_quality": r["flow_data_quality"],
+        "flow_source": r["flow_source"],
+        "flow_proxy_ticker": r["flow_proxy_ticker"],
+        "flow_proxy_used": r["flow_proxy_used"],
+        "flow_carried_from": r["flow_carried_from"],
+        "flow_volume_cmf": r["flow_volume_cmf"],
+        "flow_window_days": r["flow_window_days"],
+        "flow_days_covered": r["flow_days_covered"],
         "crowding_risk": r["crowding_risk"], "narrative_maturity": r["narrative_maturity"],
         "has_study": r["has_study"], "primary_etf": r["primary_etf"], "rationale_md": r["rationale_md"],
         "regime_state": r["regime_state"],

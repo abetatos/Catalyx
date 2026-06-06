@@ -1,14 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "catalyx/schemas/sector_snapshot.json",
-  "schema_version": "1.2",
+  "schema_version": "1.3",
   "title": "SectorSnapshot",
   "description": "A sector's composite score at a point in time. The output of the Scorer module. One per sector per scoring run.",
   "type": "object",
   "required": ["id", "schema_version", "sector_id", "sector_label", "snapshot_at", "investable", "scores", "active_catalyst_ids"],
   "properties": {
     "id": { "type": "string", "pattern": "^snap_[0-9]{8}_[a-z0-9_]+$" },
-    "schema_version": { "type": "string", "const": "1.2" },
+    "schema_version": { "type": "string", "const": "1.3" },
     "sector_id": { "type": "string", "description": "Must be a valid sector_id from sector_taxonomy.yaml." },
     "sector_label": { "type": "string" },
     "parent_sector": { "type": "string" },
@@ -50,6 +50,43 @@
         "catalyst_alignment_structural_component": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
         "momentum": { "type": "number", "minimum": 0, "maximum": 100 },
         "flow_confirmation": { "type": "number", "minimum": 0, "maximum": 100 },
+        "flow_data_quality": {
+          "type": ["string", "null"],
+          "enum": ["computed", "proxy_computed", "carried", "volume_proxy", "estimated", null],
+          "description": "Provenance of flow_confirmation (schema 1.3), best→worst cascade. 'computed' = tradeable vehicle's reported sharesOutstanding delta (true net creation/redemption); 'proxy_computed' = a same-theme sibling ETF's shares delta stood in because the UCITS vehicle exposes none (see flow_proxy_ticker); 'carried' = no fresh share reading this run (market closed) so the last genuine value was reused (see flow_carried_from); 'volume_proxy' = no share-based flow available, so a price+volume money-flow APPROXIMATION (Chaikin Money Flow over ~20 sessions) was used (see volume_cmf) — buying/selling pressure, a leading proxy for fund flow, NOT true creation/redemption; 'estimated' = even OHLCV unavailable → neutral 50 (should be rare). A totalAssets-derived basis is never used (it re-injects price)."
+        },
+        "flow_carried_from": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "When flow_data_quality is 'carried', the snapshot date of the last genuine reading that was reused. Null otherwise."
+        },
+        "volume_cmf": {
+          "type": ["number", "null"],
+          "minimum": -1,
+          "maximum": 1,
+          "description": "When flow_data_quality is 'volume_proxy', the raw Chaikin Money Flow (~[-1,1]) the approximation was derived from. Null otherwise."
+        },
+        "flow_window_days": {
+          "type": ["integer", "null"],
+          "description": "Trailing window flow_confirmation is computed over (7 days). flow_confirmation is a moving average of the daily flow rate across this window, so it is smooth and comparable whether the pipeline runs daily or monthly."
+        },
+        "flow_days_covered": {
+          "type": ["integer", "null"],
+          "description": "How many of the last flow_window_days days had an interpolated daily-rate from stored snapshots (data sufficiency for the moving average)."
+        },
+        "flow_source": {
+          "type": ["string", "null"],
+          "enum": ["yfinance", "stockanalysis", "ishares", "cmf", null],
+          "description": "Which data source produced the flow signal (schema 1.3). Cascade yfinance → stockanalysis → ishares for real share counts; 'cmf' = the price+volume approximation fallback (treat with caution). See catalyx/data/flow_data.py."
+        },
+        "flow_proxy_ticker": {
+          "type": ["string", "null"],
+          "description": "The sibling ETF the flow signal was read from when the tradeable vehicle exposes no flow data. Equals the execution ticker when no proxy was used. See catalyx/data/flow_data.py SECTOR_FLOW_TICKERS."
+        },
+        "flow_proxy_used": {
+          "type": "boolean",
+          "description": "True when flow_confirmation came from flow_proxy_ticker rather than the execution vehicle."
+        },
         "valuation_relative": {
           "type": ["number", "null"],
           "minimum": 0,

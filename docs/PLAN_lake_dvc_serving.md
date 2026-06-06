@@ -110,9 +110,9 @@ simultáneamente código + fórmula + dataset.
 
 **Workflow mensual:**
 ```
-# tras /catalyx-monthly-review (el pipeline añade particiones al lake)
-git add data/lake data/catalysts data/theses data/reports catalyx/config/portfolios
-git commit -m "Monthly review 2026-07"
+# tras /catalyx-review (el pipeline añade particiones al lake)
+git add data/lake data/catalysts data/movements data/reports catalyx/config/portfolios
+git commit -m "Review 2026-07"
 ```
 **Reproducir:** `git checkout <commit>` (código y datos juntos, sin pasos extra).
 

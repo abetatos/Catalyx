@@ -179,13 +179,27 @@ Carteras tab (4 strategies + "¿batimos mercado?").
 # build the 4 strategy portfolios from the latest run → lake portfolio_holding (records entry_price)
 uv run python -m catalyx.execution.portfolio build-all
 
-# trailing-backtest NAV of current holdings vs SPY (last 180 days) → lake portfolio_nav
-for p in momentum conviction equal_weight low_crowding; do
+for p in catalyx momentum equal_weight low_crowding; do
+  # reference: trailing-backtest of CURRENT holdings vs SPY (hypothetical — shown only until live accrues)
   uv run python -m catalyx.execution.nav_engine model "$p" --backtest-days 180
+  # the headline: LIVE walk-forward track record — chains each run's ACTUAL holdings from
+  # track_record.yaml inception (no look-ahead). Run AFTER the backtest (live merges, backtest overwrites).
+  uv run python -m catalyx.execution.nav_engine live "$p"
 done
 ```
 
+The **live** curve is the real track record (`mode='live'`): it starts empty at inception and grows
+one run at a time, so each review adds a rebalance point. The dashboard shows the live curve once it
+has ≥2 points; until then it labels the book *accruing* and shows the backtest for reference only.
 Report in the summary: each strategy's return and whether it beat SPY (`vs_benchmark_pct`).
+
+**Portfolio rotation targets (real book).** Derive the held sectors from the real positions and
+compute diversifiers ANCHORED to them (healthy, least-correlated to what you already own → where to
+add next without doubling the same bet). Persists the `portfolio_rotation` lake table → Positions page.
+```bash
+held=$(uv run python -m catalyx.store.movement_repo positions | python -c "import sys,json;print(','.join(sorted({h['sector_id'] for h in json.load(sys.stdin)['holdings']})))")
+uv run python -m catalyx.scorer.dislocation --anchor-sectors "$held"
+```
 Strategies live in `catalyx/config/portfolios/*.yaml`; NAV math/benchmark in `nav_engine.py`.
 
 ---
@@ -200,6 +214,7 @@ for your judgement, never auto-trades.** Python computes the facts; you make the
 uv run python -m catalyx.scorer.catalyst_scorer --all --json   # regime_state + persistence dossier per sector
 uv run python -m catalyx.thesis.structural_monitor --all       # fundamentals health (flags degrading → breaking)
 uv run python -m catalyx.scorer.dislocation --window 5 --json  # opportunities (panic dips) + diversifiers (rotation)
+uv run python -m catalyx.scorer.entry_timing --all --json      # entry-timing overlay (micro-tension + event overhang)
 ```
 
 - **Regime watch.** `contested` = watch only (no action); a single `clustered_one_shock` development
@@ -211,6 +226,14 @@ uv run python -m catalyx.scorer.dislocation --window 5 --json  # opportunities (
   behind the idiosyncratic residual before treating it as an entry.
 - **Diversifiers.** Healthy sectors with LOW correlation to the stressed cluster → where to rotate
   without re-buying the same correlated bet.
+- **Entry timing (the *when*, complementary to dislocation's *whether*).** For each top-ranked /
+  opportunity sector, read `entry_timing`: a `micro_timing_state` + `suggested_verdict`. Flag any
+  high-ranked sector with bad near-term timing — `falling_unstable` (knife not yet based →
+  `wait_stabilize`), `stretched` (overbought/extended), or an **event overhang** (`wait_event`: a
+  discrete CatalystEvent with an `event_date` in the window — e.g. a peer mega-IPO whose flow could
+  dump the read-across name). The module surfaces the fact; the adverse-vs-bullish call on an
+  overhang is yours (WebSearch). `stabilizing` → `scale_in`; `calm` → no timing objection. This is
+  a recommendation about the execution window, never a trade and never a change to the composite.
 
 ---
 
@@ -282,10 +305,11 @@ Based on heatmap (Step 5), position reviews (Step 6), and exposure check (Step 7
 ```
 ### <sector_id>   [heatmap rank: #N | composite: X]
 - **Why it ranks:** dominant catalyst(s) + their alignment, and momentum (flag if parabolic — high rank ≠ entry point).
-- **Crowding / timing:** narrative_maturity and what it implies for entering now vs waiting.
+- **Crowding:** narrative_maturity and what it implies (crowded/exhausted ⇒ less edge left).
+- **Entry timing (Step 5c `entry_timing`):** `micro_timing_state` + `suggested_verdict`, and any event overhang. This is the EXECUTION-window read, separate from crowding — e.g. `falling_unstable` ⇒ wait to base, `wait_event` ⇒ a discrete catalyst is in the window. If `scale_in`, suggest a smaller first tranche.
 - **Best ETF (UCITS):** ticker, TER, AUM, UCITS status, spread. Flag AUM < $200M.
 - **Exposure fit:** proposed size, shared catalyst with existing exposure, `combined_exposure` vs `max_combined_pct` (Step 7). If ⚠ OVER-CAP, state the breach amount — flexible warning, the user may authorize it.
-- **Recommendation:** Open now / Wait (bad timing) / Skip — with one line of reasoning.
+- **Recommendation:** Open now / Wait (bad timing) / Skip — with one line of reasoning (cite the entry_timing verdict when it is the reason to wait).
 ```
 
 After presenting all context blocks, use the **AskUserQuestion** tool — one question per candidate
@@ -425,6 +449,10 @@ Write consolidated monthly review to `data/reports/monthly_review_YYYYMMDD.md`:
 **Diversifiers** (healthy · low correlation to the stressed cluster)
 | Sector | Composite | Corr to stressed | Note |
 |---|---|---|---|
+
+**Entry timing** (execution window for top-ranked / candidate sectors — recommend-only)
+| Sector | State | RSI / vol / 5d% | Event overhang? | Suggested verdict |
+|---|---|---|---|---|
 
 ## 5. Open Positions
 | Sector | Days open | Assumptions (N/N holding) | Driving catalyst regime | Action |

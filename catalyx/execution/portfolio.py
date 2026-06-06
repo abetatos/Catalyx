@@ -34,6 +34,7 @@ from pathlib import Path
 
 import yaml
 
+from catalyx.config import weights as weights_cfg
 from catalyx.store import lake
 
 _REPO_ROOT = Path(__file__).parents[2]
@@ -100,6 +101,34 @@ def water_fill(scores: list[float], max_w: float) -> list[float]:
     return weights
 
 
+def conviction_transform(raw: list[float], transform: str, sharpness: float) -> list[float]:
+    """Map raw ranking scores → relative weighting scores BEFORE the water_fill cap.
+
+    Separates the magnitude shape from the selection signal so a narrow, high score band
+    (e.g. composites 65–74) still produces dispersed weights instead of near-equal ones.
+
+      proportional → returns `raw` unchanged (weight ∝ raw).
+      softmax      → z = (raw − mean)/std ; returns exp(sharpness · z). The z-NORMALIZATION
+                     makes `sharpness` mean "std-devs of tilt", so the dispersion keeps its
+                     meaning even if the band compresses next run (a raw-score softmax would
+                     silently change). Monotonic → never reorders the ranking. std≈0 (all
+                     scores equal) → falls back to equal (returns all 1.0).
+    """
+    import math
+
+    n = len(raw)
+    if n == 0:
+        return []
+    if transform != "softmax":
+        return list(raw)
+    mean = sum(raw) / n
+    var = sum((x - mean) ** 2 for x in raw) / n
+    std = math.sqrt(var)
+    if std < 1e-9:
+        return [1.0] * n
+    return [math.exp(sharpness * (x - mean) / std) for x in raw]
+
+
 # ── Build ────────────────────────────────────────────────────────────────────
 
 def _entry_prices(lake_dir: Path | None = None) -> dict:
@@ -130,6 +159,40 @@ def _latest_run_id(df) -> str | None:
         return None
     ids = [r for r in df["run_id"].dropna().unique()]
     return max(ids) if ids else None
+
+
+def _held_weights(portfolio_id: str, before_run_id: str, lake_dir: Path | None = None) -> dict:
+    """{sector_id: weight_pct} of the most recent holdings strictly BEFORE `before_run_id`
+    for this portfolio. The held book the deadband compares against. {} if none."""
+    df = lake.read_table(_HOLDING_TABLE, lake_dir=lake_dir)
+    if df.empty or "portfolio_id" not in df.columns:
+        return {}
+    df = df[(df["portfolio_id"] == portfolio_id) & (df["run_id"] < before_run_id)]
+    if df.empty:
+        return {}
+    prev = max(df["run_id"].dropna().unique())
+    df = df[df["run_id"] == prev]
+    return {r["sector_id"]: float(r["weight_pct"]) for _, r in df.iterrows()}
+
+
+def apply_deadband(targets: list[float], held: list[float | None], deadband_pct: float) -> list[float]:
+    """Turnover guard: where a target weight is within `deadband_pct` points of the weight
+    already held, keep the held weight (no trade); otherwise take the target. Renormalize so
+    the total is unchanged (preserves the cash level). Suppresses tax-churn from tiny score
+    wiggles. `held[i]` is None for a position not previously held (no deadband → take target).
+    `deadband_pct` ≤ 0 disables.
+    """
+    if deadband_pct <= 0:
+        return list(targets)
+    total = sum(targets)
+    kept = [
+        h if (h is not None and abs(t - h) < deadband_pct) else t
+        for t, h in zip(targets, held)
+    ]
+    s = sum(kept)
+    if s <= 1e-9:
+        return list(targets)
+    return [k * total / s for k in kept]
 
 
 def build_model_holdings(portfolio_id: str, run_id: str | None = None,
@@ -216,6 +279,15 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
     if veto_on and contested_action == "redistribute":
         scores = [s * (1.0 - contested_haircut) if st == "contested" else s
                   for s, st in zip(scores, states)]
+    # conviction sizing: shape the raw ranking scores BEFORE the cap, so a narrow score band
+    # (e.g. composites 65–74) still produces dispersed weights. `equal` keeps flat scores (std≈0
+    # → softmax falls back to equal anyway). Per-book override of the global portfolio_weighting.
+    pw = weights_cfg.portfolio_weighting()
+    transform = str(c.get("weighting_transform", pw.get("transform", "proportional")))
+    sharpness = float(c.get("sharpness", pw.get("sharpness", 0.25)))
+    deadband = float(c.get("rebalance_deadband_pct", pw.get("rebalance_deadband_pct", 0.0)))
+    if weighting != "equal":
+        scores = conviction_transform(scores, transform, sharpness)
     weights = water_fill(scores, float(c["max_position_pct"]) / 100.0)
     if veto_on and contested_action == "cash":
         # gross-down: trim contested FINAL weights; the freed weight stays as cash (not
@@ -223,6 +295,15 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
         # drawdown — redistribution merely reshuffles within a correlated momentum cluster.
         weights = [w * (1.0 - contested_haircut) if st == "contested" else w
                    for w, st in zip(weights, states)]
+
+    # turnover guard: keep weights within `deadband` points of what's already held (prev run),
+    # so tiny score wiggles don't trigger taxable rebalances. No prior run → no-op.
+    if deadband > 0:
+        held_map = _held_weights(portfolio_id, run_id, lake_dir=lake_dir)
+        if held_map:
+            held = [held_map.get(r["sector_id"]) for _, r in df.iterrows()]
+            pct = apply_deadband([w * 100.0 for w in weights], held, deadband)
+            weights = [p / 100.0 for p in pct]
 
     entry_prices = _entry_prices(lake_dir)
     cfg_ver = config_version(portfolio_id)

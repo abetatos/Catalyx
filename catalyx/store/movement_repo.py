@@ -86,6 +86,14 @@ def positions(movements_dir: Path | None = None) -> dict:
             p["qty"] += qty
             p["invested_eur"] += eur
         elif m["action"] in _SELL_ACTIONS:
+            # Guard against a sell with no (or insufficient) prior position: a stray trim/close
+            # would otherwise book the full proceeds as realized P&L against a zero cost basis
+            # and leave a negative qty that abs() later mistakes for an open short. Cap the sold
+            # qty at what is held and warn — these files are hand-authored, so this is bad input.
+            if qty - p["qty"] > 1e-9:
+                print(f"[movement_repo] WARNING {m.get('id')}: {m['action']} of {qty} {etf} "
+                      f"exceeds held qty {p['qty']:.6f} — capping to held.", file=sys.stderr)
+                qty = p["qty"]
             avg = (p["invested_eur"] / p["qty"]) if p["qty"] else 0.0
             cost = avg * qty
             p["realized_eur"] += eur - cost

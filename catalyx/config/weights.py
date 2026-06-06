@@ -182,10 +182,49 @@ def crowding_from_maturity() -> dict:
     return _section("crowding_from_maturity", _CROWDING_FROM_MATURITY_DEFAULT)
 
 
+# ── Portfolio weighting (portfolio.build_model_holdings) ─────────────────────
+
+_PORTFOLIO_WEIGHTING_DEFAULT = {
+    "transform": "proportional",
+    "sharpness": 0.25,
+    "rebalance_deadband_pct": 1.0,
+}
+
+
+def portfolio_weighting() -> dict:
+    """Conviction-sizing config: `transform` (proportional|softmax), `sharpness` (softmax
+    dispersion dial), `rebalance_deadband_pct` (turnover guard). Single source of truth;
+    a portfolio profile's `construction` may override any of these per book. See
+    scoring_weights.yaml `portfolio_weighting`."""
+    return _section("portfolio_weighting", _PORTFOLIO_WEIGHTING_DEFAULT)
+
+
+# ── Track record inception (nav_engine live curve) ───────────────────────────
+
+_TRACK_RECORD_PATH = _WEIGHTS_PATH.with_name("track_record.yaml")
+
+
+@lru_cache(maxsize=1)
+def track_record() -> dict:
+    """Inception anchor for the FORWARD (live, no-look-ahead) track record. Read from
+    catalyx/config/track_record.yaml — versioned so the start date is traceable to a
+    release. Keys: `inception_date` (YYYY-MM-DD), `inception_release`. Empty if absent."""
+    try:
+        return yaml.safe_load(_TRACK_RECORD_PATH.read_text(encoding="utf-8")) or {}
+    except FileNotFoundError:
+        return {}
+
+
+def track_record_inception() -> str | None:
+    """Inception date (YYYY-MM-DD) for the live track record, or None if not set."""
+    d = track_record().get("inception_date")
+    return str(d) if d else None
+
+
 # ── Entry-timing overlay (entry_timing) ──────────────────────────────────────
 
 _ENTRY_TIMING_DEFAULT = {
-    "lookback_days": 90,
+    "lookback_days": 150,
     "rsi_period": 14,
     "rsi_overbought": 70,
     "rsi_oversold": 30,
@@ -209,5 +248,5 @@ _ENTRY_TIMING_DEFAULT = {
 def entry_timing() -> dict:
     """Thresholds for the execution-timing overlay (entry_timing.py): RSI bounds, MA-stretch,
     realized-vol ratio, stabilization rule, and the near-term event-overhang window. NOT part of
-    the composite — this is a recommend-only timing layer. See scoring_weights.yaml `entry_timing`."""
+    the composite — a recommend-only timing layer. See scoring_weights.yaml `entry_timing`."""
     return _section("entry_timing", _ENTRY_TIMING_DEFAULT)

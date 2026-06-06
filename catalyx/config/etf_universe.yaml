@@ -998,6 +998,18 @@ etf_universe:
       notes: "Lower TER than CIBR. Similar exposure."
       last_verified: "2026-06-01"
     - ticker: "ISPY.L"
+      name: "L&G Cyber Security UCITS ETF"
+      exchange: LSE
+      currency: USD
+      ucits: true
+      ter: 0.0069
+      aum_m_usd: 1600
+      replication: physical
+      avg_spread_bps: 9
+      recommendation_tier: 1
+      notes: "CORRECTED 2026-06-06: ISPY (ISIN IE00BYPLS672) is the L&G Cyber Security UCITS ETF (was mislabelled as iShares). Same fund as USPY (Frankfurt/Xetra line) — only the listing/currency differs. NOT the same as iShares LOCK (IE00BG0J4C88), a different fund/index. Both UCITS, accessible to a Spanish investor."
+      last_verified: "2026-06-06"
+    - ticker: "LOCK.L"
       name: "iShares Digital Security UCITS ETF"
       exchange: LSE
       currency: USD
@@ -1006,9 +1018,9 @@ etf_universe:
       aum_m_usd: 1600
       replication: physical
       avg_spread_bps: 9
-      recommendation_tier: 1
-      notes: "UCITS cybersecurity. Best EU option. Includes broader digital security."
-      last_verified: "2026-06-01"
+      recommendation_tier: 2
+      notes: "Added 2026-06-06: the actual iShares cyber/digital-security UCITS ETF (ISIN IE00BG0J4C88). Different index/holdings from L&G ISPY. Use if you specifically want the iShares exposure."
+      last_verified: "2026-06-06"
 
   # ═══════════════════════════════════════════════
   # HEALTHCARE
