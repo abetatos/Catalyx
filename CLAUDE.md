@@ -71,7 +71,7 @@ Structural catalysts are the floor signal. Event catalysts are the spike. Both c
 | Component | Tool |
 |---|---|
 | News scanning | Claude WebSearch (Claude Code session) |
-| Thesis drafting | Claude (conversational + Write to JSON) |
+| Position opening (movements) | Claude via `/catalyx-open` (conversational + Write to `data/movements/*.json`) |
 | Market data / momentum | `catalyx/data/market_data.py` (yfinance) |
 | Deterministic scoring formulas | Python modules callable from skills |
 | Storage | JSON/YAML documents in `data/` + `catalyx/config/` (Tier 1) + parquet lake `data/lake/` (Tier 2). No DB. |
@@ -86,7 +86,7 @@ Structural catalysts are the floor signal. Event catalysts are the spike. Both c
 |---|---|---|
 | Catalyst reader | `catalyx/store/catalyst_repo.py` | File-backed reader for `CatalystEvent` + `TaxonomyGapProposal` (reads `data/catalysts/` + `data/taxonomy_proposals/`). CLI: `python -m catalyx.store.catalyst_repo {summary,get,set-status}` |
 | Sector study reader | `catalyx/store/sector_study_repo.py` | File-backed reader for `SectorStudy` (reads `data/sector_studies/`). CLI: `{summary,get,stale}` |
-| Thesis reader | `catalyx/store/thesis_repo.py` | File-backed reader for `Thesis` + `ClosedThesis` (reads `data/theses/`); `tax-snapshot` computes YTD CGT from closed theses. CLI: `{summary,get,set-status,tax-snapshot}` |
+| Movement reader | `catalyx/store/movement_repo.py` | **Thesis→Movement (2026-06-06).** File-backed reader for `Movement` (reads `data/movements/*.json`, Tier-1 truth). Derives `positions()` (net book per ETF — same shape the old trade_logger fed nav_engine) + `catalyst_ledger()` (P&L attributed per catalyst by `attribution[].weight`). `ingest` backfills point-in-time `score_context` (score_run as-of `executed_at`, no look-ahead) + write-throughs a `movement` mirror + time-versioned `catalyst_performance` to the lake. CLI: `{summary,get,positions,ledger,ingest}`. See `docs/PLAN_movement_restructure.md`. |
 | Structural catalyst reader | `catalyx/store/structural_catalyst_repo.py` | File-backed reader for `StructuralCatalyst` (reads `config/structural_catalysts/*.yaml`). CLI: `{summary,get}` |
 | Market data | `catalyx/data/market_data.py` | yfinance ETF momentum fetcher. CLI: `uv run python -m catalyx.data.market_data` → `data/snapshots/momentum_snapshot_YYYYMMDD.json` |
 | Intensity engine | `catalyx/scorer/intensity_engine.py` | Compute `intensity.current_score` from indicator semaphores. CLI: `uv run python -m catalyx.scorer.intensity_engine --all [--write-back]` |
@@ -96,15 +96,13 @@ Structural catalysts are the floor signal. Event catalysts are the spike. Both c
 | Sector scorer | `catalyx/scorer/sector_scorer.py` | Composite formula orchestrator: calls catalyst_scorer + momentum_engine → full SectorSnapshot scores. CLI: `uv run python -m catalyx.scorer.sector_scorer <sector_id> [--flow N --val N --crowd N]` |
 | Dislocation lens | `catalyx/scorer/dislocation.py` | **Price-vs-fundamentals gap for capital deployment.** One corr/beta engine (yfinance 90d), two lenses: **opportunity** (fell hard + `intact` + catalyst-confirmed + drop is mostly *contagion* β·market, low idiosyncratic residual → panic dip to buy) and **diversifier** (healthy, LOW correlation to the stressed cluster → rotation target). Python computes the decomposition; the BUY/ROTATE call is Claude's. CLI: `uv run python -m catalyx.scorer.dislocation [--window 5 --lookback 90]` |
 | Tax engine | `catalyx/execution/tax_engine.py` | Spanish CGT 2026 progressive brackets (19/21/23/27%). Incremental + YTD computation. CLI: `uv run python -m catalyx.execution.tax_engine --gain N [--ytd-prior N --loss N]` |
-| Thesis scorer | `catalyx/attribution/thesis_scorer.py` | `right_reason_score` formula from ClosedThesis. CLI: `uv run python -m catalyx.attribution.thesis_scorer <path.json>` |
 | Flow data | `catalyx/data/flow_data.py` | ETF shares_outstanding × NAV → `flow_confirmation [0–100]`. Writes to `data/snapshots/flow_snapshot_YYYYMMDD.json`. Week-over-week delta requires prior snapshot. CLI: `uv run python -m catalyx.data.flow_data [--write]` |
 | History backfill | `catalyx/data/backfill_history.py` | Writes indicator history to the **lake** (yfinance for market-priced indicators + cited note values) so the percentile path activates. No longer touches YAMLs. CLI: `uv run python -m catalyx.data.backfill_history [--dry-run]`; one-off `--migrate-yaml` (inline value_history → lake). |
 | **Parquet lake** | `catalyx/store/lake.py` | **Tier 2 source of truth.** Append-only, partitioned parquet (one logical table = folder of partition files), committed to git. `append_partition` (immutable), `read_table` (union via glob), `connect()` (DuckDB views). market_data/flow_data dual-write here; snapshot_repo write-throughs here. CLI: `uv run python -m catalyx.store.lake {tables,ls,read,seed-from-history}` |
 | Indicator history | `catalyx/store/indicator_history.py` | Externalized `value_history` (was inline in catalyst YAMLs). Lake table `indicator_history` partitioned by catalyst_id. `history_for` / `write_catalyst` / `append_observation`. `intensity_engine` reads here first (YAML fallback for unmigrated catalysts). |
 | Model portfolios | `catalyx/execution/portfolio.py` | **Fase D.** Deterministic model portfolios = `(score_run × strategy)`. Reads lake `sector_snapshot`, applies the strategy (filter → dedupe-by-ETF → rank/weight → water-fill cap), records `entry_price` (from lake momentum) + `config_version`, writes `portfolio_holding`. **4 strategies** in `config/portfolios/*.yaml`: `momentum` / `conviction` / `equal` / `low_crowding` (genuinely different selection+weights). CLI: `uv run python -m catalyx.execution.portfolio {profiles,build,build-all,show}`. |
-| NAV engine | `catalyx/execution/nav_engine.py` | **Fase D.2.** Buy-and-hold NAV series (indexed 100) from holdings — model OR real — vs benchmark (**SPY/S&P500**). `holdings_nav` (newly-listed/short-history ETFs → held as cash, never poison the series), `compute_model_nav(--backtest-days N)` = trailing backtest answering "¿batimos mercado?", `compute_real_nav` → lake `portfolio_nav`. CLI: `… nav_engine {model,real,show}`. |
-| Trade logger | `catalyx/execution/trade_logger.py` | **Fase D.2.** Real-money leg: `log_trade` (carries `thesis_id`+`run_id` lineage) → lake `portfolio_trade`; `real_holdings` reduces the log to net positions (qty, avg EUR cost, realized P&L) that feed nav_engine. EUR only. CLI: `… trade_logger {log,holdings,trades} <portfolio_id>`. |
-| Lake query | `catalyx/store/lake_query.py` | **Fase E.** Unified DuckDB read-path over the lake — the day-to-day query layer and the data foundation for the GitHub-Pages dashboard (DuckDB-WASM runs the same SQL in-browser). Read-only, defensive (empty table → empty result). `sector_history` / `latest_ranking` / `rank_moves` / `portfolio_compare` / `portfolio_holdings` / `lineage_for_trade` / `sql`. CLI: `… lake_query {ranking,sector,moves,portfolios,holdings,lineage,sql}`. `snapshot_repo` read queries (history/runs/events) now read the lake too. |
+| NAV engine | `catalyx/execution/nav_engine.py` | **Fase D.2.** Buy-and-hold NAV series (indexed 100) from holdings — model OR real — vs benchmark (**SPY/S&P500**). `holdings_nav` (newly-listed/short-history ETFs → held as cash, never poison the series), `compute_model_nav(--backtest-days N)` = trailing backtest answering "¿batimos mercado?", `compute_real_nav` (real book = `movement_repo.positions`) → lake `portfolio_nav`. CLI: `… nav_engine {model,real,show}`. |
+| Lake query | `catalyx/store/lake_query.py` | **Fase E.** Unified DuckDB read-path over the lake — the day-to-day query layer and the data foundation for the GitHub-Pages dashboard (DuckDB-WASM runs the same SQL in-browser). Read-only, defensive (empty table → empty result). `sector_history` / `latest_ranking` / `rank_moves` / `portfolio_compare` / `portfolio_holdings` / `catalyst_ledger` / `lineage_for_movement` (movement → catalysts → run → reports+snapshot) / `sql`. CLI: `… lake_query {ranking,sector,moves,portfolios,holdings,ledger,lineage,sql}`. `snapshot_repo` read queries (history/runs/events) now read the lake too. |
 | Dashboard (Pages) | `site/` + `scripts/build_site.py` + `.github/workflows/pages.yml` | **Fase F.** Static **DuckDB-WASM** dashboard — reads the committed parquet lake in-browser (no backend, no DVC). Tabs: ranking, sector history, model portfolios, rank moves, lineage, SQL console. `build_site.py` bakes parquet + `manifest.json` into `dist/`; the workflow builds + deploys to Pages on push to `main`. **Live: https://abetatos.github.io/Catalyx/** Preview locally: `uv run python scripts/build_site.py && python -m http.server -d dist 8000`. (Replaced the earlier Evidence.dev `dashboard/`, now deleted — its workflow was already removed.) |
 
 **Storage architecture — two tiers (parquet-first, no database).** See `docs/PLAN_lake_dvc_serving.md`.
@@ -182,11 +180,11 @@ catalyx/
 │   │   └── invalidation_watcher.py
 │   ├── execution/
 │   │   ├── tax_engine.py              ← Spanish CGT progressive brackets  ✅
-│   │   ├── trade_logger.py            ← (planned)
+│   │   ├── nav_engine.py              ← model/real NAV vs SPY (real ← movement_repo)  ✅
 │   │   └── pnl_engine.py              ← (planned)
 │   ├── attribution/
-│   │   ├── thesis_scorer.py           ← right_reason_score  ✅
-│   │   └── return_decomposer.py       ← (planned)
+│   │   ├── thesis_scorer.py           ← REMOVED 2026-06-06 (right_reason rebuilt in Fase 2)
+│   │   └── return_decomposer.py       ← (planned — Fase 2)
 │   ├── feedback/                      ← (planned, Phase 3)
 │   │   ├── prior_updater.py
 │   │   └── pattern_reporter.py
@@ -206,7 +204,7 @@ catalyx/
 │   │   ├── catalyst_repo.py           ← CatalystEvent + TaxonomyGapProposal file reader  ✅
 │   │   ├── sector_study_repo.py       ← SectorStudy file reader  ✅
 │   │   ├── structural_catalyst_repo.py← StructuralCatalyst file reader  ✅
-│   │   ├── thesis_repo.py             ← Thesis + ClosedThesis file reader + tax-snapshot  ✅
+│   │   ├── movement_repo.py           ← Movement reader → positions + catalyst_ledger + ingest  ✅
 │   │   ├── snapshot_repo.py           ← score-run history over the lake  ✅
 │   │   ├── indicator_history.py       ← indicator value_history in the lake  ✅
 │   │   └── prior_repo.py              ← (planned — CatalystSectorPrior, ML feedback loop)
@@ -229,8 +227,7 @@ catalyx/
 │   ├── structural_catalyst.json       ✅
 │   ├── sector_snapshot.json           ✅
 │   ├── sector_study.json              ✅
-│   ├── thesis.json                    ✅
-│   ├── closed_thesis.json             ✅
+│   ├── movement.json                  ← Movement (primary capital unit, replaced thesis)  ✅
 │   └── taxonomy_gap_proposal.json     ← Discovery Pass output  ✅
 ├── data/                              ← Runtime data  ✅
 │   ├── catalysts/  theses/  sector_studies/  taxonomy_proposals/  reports/  ✅  (Tier 1, git)
@@ -258,7 +255,7 @@ This section tells Claude which files to read before working on each area. **Alw
 |---|---|
 | Any data schema or Pydantic model | `schemas/<relevant>.json` |
 | Sector scoring, heatmap | `catalyx/config/sector_taxonomy.yaml` + `schemas/sector_snapshot.json` |
-| Thesis formulation or validation | `schemas/thesis.json` + `schemas/closed_thesis.json` |
+| Opening/closing positions, attribution | `schemas/movement.json` + `docs/PLAN_movement_restructure.md` (Thesis→Movement) |
 | Structural catalysts | `catalyx/config/structural_catalysts/<relevant>.yaml` + `schemas/structural_catalyst.json` |
 | Tax engine or P&L | `docs/SPEC_v1.1.md` §Tax section — Spanish CGT brackets are progressive, no short/long term distinction |
 | ETF selection logic | `catalyx/config/etf_universe.yaml` — check TER, AUM, replication type, spread |
@@ -354,9 +351,9 @@ The order below is not a suggestion. Each step provides data that the next step 
 3.  /catalyx-sector-study         ← PREREQUISITE for heatmap (run for top-5 sectors + any gap sectors)
 4.  /catalyx-dashboard            ← derives from updated catalyst YAMLs
 5.  /catalyx-heatmap              ← requires updated sector studies
-6.  /catalyx-thesis review        ← uses WebSearch + updated catalysts
-7.  /catalyx-thesis draft         ← only after heatmap confirms sector ranking
-8.  Portfolio correlation check   ← before opening any new position
+6.  /catalyx-review (Step 6)      ← open-position reviews (movements + risk_discipline + regime)
+7.  /catalyx-review (Step 9)      ← position-open RECOMMENDATIONS (opening is /catalyx-open, separate)
+8.  Catalyst exposure check       ← combined exposure per catalyst vs cap
 12. Taxonomy Gap Review           ← contextualize each pending proposal, then ASK user (promote/reject/defer)
 ```
 
@@ -374,8 +371,8 @@ The order below is not a suggestion. Each step provides data that the next step 
 | Catalyst dashboard | Indicator updates per active catalyst | All `structural_catalysts/*.yaml` + `data/catalysts/*.json` |
 | Sector study | Sector name + ETF price + current news | `sector_taxonomy.yaml` + `etf_universe.yaml` + existing study if present |
 | Heatmap | No additional (Step 3 already done) | Above + `data/sector_studies/*.json` |
-| Thesis draft | Sector news + ETF data | Heatmap + `schemas/thesis.json` + `data/sector_studies/study_<sector>.json` |
-| Thesis review | Each assumption data source + news | `data/theses/<thesis>.json` + structural catalyst YAML |
+| Open a position | Sector news + ETF data + which catalyst | Heatmap + `schemas/movement.json` + `data/sector_studies/study_<sector>.json` (via `/catalyx-open`) |
+| Position review | Each `risk_discipline` assumption source + news | `data/movements/<mov>.json` + structural catalyst YAML + `regime_state` |
 | Catalyst update | Source data for the indicator being updated | Specific `structural_catalysts/<id>.yaml` |
 
 ### Slash Commands (skills definidas en `.claude/commands/`)
@@ -384,13 +381,12 @@ The order below is not a suggestion. Each step provides data that the next step 
 |---|---|---|
 | `/catalyx-dashboard` | `.claude/commands/catalyx-dashboard.md` | Catalyst dashboard desde los YAMLs actuales |
 | `/catalyx-heatmap` | `.claude/commands/catalyx-heatmap.md` | Sector heatmap rankeado por catalyst_alignment |
-| `/catalyx-thesis draft <sector_id>` | `.claude/commands/catalyx-thesis.md` | Draft completo de thesis siguiendo schema |
-| `/catalyx-thesis review <thesis_id>` | `.claude/commands/catalyx-thesis.md` | Revisa assumptions con WebSearch actual |
-| `/catalyx-thesis close <thesis_id>` | `.claude/commands/catalyx-thesis.md` | Cierra thesis y calcula ClosedThesis + tax |
+| `/catalyx-open <sector_id>` | `.claude/commands/catalyx-open.md` | **Operar (independiente del review).** Escribe un `Movement` (open/add/trim) atribuido a catalizador(es) → `data/movements/*.json` + ingest |
+| `/catalyx-close <sector_id\|etf>` | `.claude/commands/catalyx-close.md` | **Operar.** Cierra posición → P&L realizado + CGT español, escribe close movement |
 | `/catalyx-scan` | `.claude/commands/catalyx-scan.md` | WebSearch → nuevos CatalystEvent JSON |
 | `/catalyx-update <id> <ind> <val>` | `.claude/commands/catalyx-update.md` | Actualiza indicador de catalizador estructural |
 | `/catalyx-sector-study <sector_id>` | `.claude/commands/catalyx-sector-study.md` | Genera/actualiza SectorStudy JSON |
-| `/catalyx-monthly-review` | `.claude/commands/catalyx-monthly-review.md` | Review completo mensual (todos los módulos) |
+| `/catalyx-review [scheduled\|event:<catalyst_id>]` | `.claude/commands/catalyx-review.md` | Review/análisis (scan→…→heatmap→opportunities→position reviews→tax). Recomienda, no opera. Periódico o event-driven |
 
 ### Data files state (Phase 0)
 
@@ -436,10 +432,11 @@ Catalyst YAMLs contain last-month's data. Always search for current values befor
 
 ---
 
-## Feedback Loop — Monthly Review Checklist
+## Feedback Loop — Review Checklist
 
-Run `/catalyx-monthly-review` on the first Monday of each month. The skill handles ordering.
-Manual reminder of what that skill does:
+Run `/catalyx-review` (periodic, e.g. first Monday of the month, OR `event:<catalyst_id>` when a
+catalyst fires). The skill handles ordering. **Operating (open/close) is separate** — done anytime
+via `/catalyx-open` and `/catalyx-close`, never inside the review. Manual reminder of what review does:
 
 0.  WebSearch: current macro/geo context — compare to stored YAML data, flag deltas
 1.  `/catalyx-scan` — Pass 1: Discovery (market-led gaps) + Pass 2: new events above strength 55
@@ -447,9 +444,9 @@ Manual reminder of what that skill does:
 3.  `/catalyx-sector-study` — refresh sector studies for top-5 catalyst_alignment sectors
 4.  `/catalyx-dashboard` — regenerate with updated data
 5.  `/catalyx-heatmap` — re-rank with updated sector studies
-6.  `/catalyx-thesis review` — for each open thesis, concrete recommendation
-7.  Portfolio correlation check — flag any new thesis sharing primary catalyst with open thesis
-8.  Tax snapshot YTD
+6.  Open-position reviews — for each open movement, check `risk_discipline` + driving-catalyst regime → concrete recommendation
+7.  Catalyst exposure check — combined exposure per catalyst vs `correlated_catalyst_cap`
+8.  Tax snapshot YTD (realized from closing movements)
 12. Taxonomy Gap Review — for each pending proposal: present a context block (thesis / why now / ETF coverage / relation to existing sectors / strength·novelty / risk), then ASK the user (promote / reject / defer). Never decide automatically.
 
 ---
@@ -531,6 +528,7 @@ Manual reminder of what that skill does:
 
 | Date | File | Version | Change |
 |---|---|---|---|
+| 2026-06-06 | `schemas/movement.json` (new) + `catalyx/store/movement_repo.py` (new) + `data/movements/*` (new) + `nav_engine.py` + `lake_query.py` + `lake.py` + `.claude/commands/{catalyx-open,catalyx-close,catalyx-review}.md` + `site/*` + `scripts/build_site.py` + `cli/main.py` + tests + **deletions** (`thesis_repo.py`, `thesis_scorer.py`, `trade_logger.py`, `schemas/thesis.json`, `schemas/closed_thesis.json`, `data/theses/`, `catalyx-thesis.md`) | v3.0 | **Thesis → Movement restructure (full, no legacy).** The primary capital unit is no longer a heavyweight falsifiable `Thesis`; it is a **`Movement`** — €X attributed directly to catalyst(s) via weighted `attribution[]`, with `action` (open/add/trim/close), `trigger`, `conviction`, and a point-in-time `score_context`. The **Catalyst** becomes the unit of the track record (`catalyst_ledger` = P&L by catalyst). Movements are Tier-1 JSON files in `data/movements/` (drop a file → run `movement_repo ingest`; the ingest joins `score_context` to the score_run as-of `executed_at`, **no look-ahead**, and write-throughs a `movement` mirror + `catalyst_performance` to the lake). The falsifiable discipline survives as an **optional, machine-checkable `risk_discipline`** block on the movement (assumptions + invalidation/stops — the chosen "option 1"). **Skills restructured**: operating is now `/catalyx-open` + `/catalyx-close` (independent, anytime); `/catalyx-thesis` deleted; `/catalyx-monthly-review` → **`/catalyx-review`** (parametrized `scheduled` \| `event:<catalyst_id>` — reviews are no longer monthly-only). The 2 open theses (copper €1000, grid €500, bought on the dip 2026-06-04, full positions, no rebalance) migrated to movements. `nav_engine` real book ← `movement_repo.positions`; `lake_query` lineage walks movement→catalysts→run; dashboard "Catalysts & theses" → "Catalysts & positions". SQLite-era trade log + the empty `portfolio_trade` table dropped. 105 tests green. Plan: `docs/PLAN_movement_restructure.md`. |
 | 2026-06-06 | `catalyx/config/scoring_weights.yaml` + `weights.py` + `catalyx/scorer/sector_scorer.py` + `catalyx/store/snapshot_repo.py` + `schemas/sector_snapshot.json` (v1.2) + `scripts/build_site.py` + `site/app.js` + `tests/unit/test_portfolio.py` + `experiments/backtest_acceleration.py` (new) | v2.9 | **`valuation_relative` removed from the composite (schema 1.2).** It had always been a constant-50 placeholder (no `valuation_engine`), so it never changed the *ranking* (a constant × fixed weight shifts every composite equally) — it only diluted the real dimensions toward 50. Before removing, tested whether ANY price-derived metric earns that 15%: a walk-forward, no-look-ahead backtest of **momentum acceleration** (2nd derivative: `r3m×4 − r6m×2`) over 48 monthly rebalances / 43 sectors (`experiments/backtest_acceleration.py`). Result: acceleration is orthogonal to momentum-level (corr +0.28) but has **NEGATIVE** monthly IC (−0.054, top quintile *under*performs −0.39%) — short-term reversal dominates; the blend *hurt* pure momentum. **Verdict: no price-derived 4th dimension earns the weight.** So `valuation_relative`'s 0.15 was redistributed **proportionally** (each survivor × 1/0.85) → catalyst **0.35** / momentum **0.29** / flow **0.24** / crowding **0.12** (relative importances unchanged). Composite formula + schema description updated; field marked `deprecated` (nullable) in schema 1.2 for one-major-version read-back of pre-1.2 snapshots; dropped from the lake write-path + dashboard queries (dashboard already hid the column). New `sector_snapshot` partitions omit the column (old read back via `union_by_name`). `valuation_engine` moved from "planned" to **DROPPED** in the roadmap. |
 | 2026-06-06 | `scripts/build_site.py` + `site/app.js` + `site/index.html` | v2.8.5 | **Cache-busting + sectors-table legibility.** (a) **Cache-bust:** `build_site` injects a per-build token → `index.html` sets `window.__BUILD__` and loads `app.js?v=TOKEN`; `app.js` appends it to `overview.json`/`docs.json`/`manifest.json` + the DuckDB-WASM parquet URLs. Fixes the class of bug where Pages served a fresh `index.html` with a browser-cached old `app.js` (DOM-contract mismatch → Sectors/Catalysts blanked with `null.innerHTML`). Also busts rewritten same-name parquet (e.g. backfilled `score_run`). (b) **Sectors table → heatmap** for legibility: score cells are colour-tinted (green/amber/red) numbers instead of look-alike mini-bars; **crowding is now a categorical label** (low/medium/high — it only takes 3 values, deriving from `narrative_maturity`); **`valuation_relative` column removed** — it is a hardcoded 50 placeholder (no `valuation_engine` yet) so a column of identical 50s was pure noise (kept in data + detail with a note). `flow_confirmation` retained (it does vary, 27–68). 104 tests green. |
 | 2026-06-06 | `site/app.js` + `site/index.html` + `scripts/build_site.py` | v2.8.3 | **Dashboard UX pass (feedback).** (1) **Sectors** is now a full **comparison table** — every score dimension side by side (composite, catalyst, momentum, **flow**, **valuation**, crowding) with colored mini-bars, **sortable** column headers, click-row→detail; replaces the narrow master-detail list (user: "ver todas las variables para comparar"). Added flow_confirmation/valuation_relative to the baked + dynamic ranking queries. (2) **Sector score history** redesigned as an **axed multi-line chart** (0–100 gridlines + y labels + x date ticks + legend) showing composite/catalyst/momentum/**crowding**; dropped the per-run table (user: "con la gráfica sirve, pon crowding y ejes"). (3) **Catalysts** section now has **sub-tabs (Structural / Event / Theses)**, all in the same rich master-detail card format (event → Signal chips + related catalysts + driven sectors; thesis → catalyst/sector rationale + vehicle + entry + assumptions/invalidation). (4) Fixed **`[object Object]`** in study fields: object-valued fields (`cycle_position`, `technology_maturity`) render their `assessment` text via a new `fmtMeta` helper (never `String(obj)`). Run dropdown already replaced by the sidebar card + Data timeline (v2.8.1). 104 tests green. |

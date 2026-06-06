@@ -21,7 +21,7 @@ const status = (m) => { const s = $('status'); if (s) s.textContent = m; };
 const V = (typeof window !== 'undefined' && window.__BUILD__) ? ('?v=' + window.__BUILD__) : '';
 
 let OV = {};
-let DOCS = { catalysts_structural: [], catalysts_event: [], studies: [], theses: [] };
+let DOCS = { catalysts_structural: [], catalysts_event: [], studies: [], movements: [] };
 let CUR_RUN = null;          // currently-viewed run_id
 let CUR_DATA = { ranking: [], rank_moves: [], holdings: {} };  // its snapshot
 const RUNCACHE = {};         // run_id → snapshot (dynamically loaded historical runs)
@@ -214,8 +214,8 @@ function renderRunCurrent(rid) {
 const studyFor = (sid) => (DOCS.studies || []).find((s) => s.sector_id === sid);
 const catalystDoc = (cid) => (DOCS.catalysts_structural || []).find((c) => c.id === cid) || (DOCS.catalysts_event || []).find((c) => c.id === cid);
 const sectorsForCatalyst = (cid) => (DOCS.studies || []).filter((s) => (s.active_catalyst_ids || []).includes(cid)).map((s) => s.sector_id);
-const thesisForSector = (sid) => (DOCS.theses || []).find((t) => (t.sector || {}).sector_id === sid);
-const thesesForCatalyst = (cid) => (DOCS.theses || []).filter((t) => (t.catalyst || {}).catalyst_event_id === cid);
+const movementsForSector = (sid) => (DOCS.movements || []).filter((m) => m.sector_id === sid);
+const movementsForCatalyst = (cid) => (DOCS.movements || []).filter((m) => (m.attribution || []).some((a) => a.catalyst_id === cid));
 function holdingPortfolios(sid) {
   const out = [];
   for (const [pid, rows] of Object.entries((OV.latest_holdings || {}).by_pid || {})) {
@@ -379,12 +379,12 @@ function selectSector(sid) {
   document.querySelectorAll('#sec-table tr[data-sid]').forEach((el) => el.classList.toggle('sel', el.dataset.sid === sid));
   const row = rankingRow(sid) || {};
   const study = studyFor(sid);
-  const th = thesisForSector(sid);
+  const movs = movementsForSector(sid);
   const cats = (study && study.active_catalyst_ids) || [];
   const holders = holdingPortfolios(sid);
   const chips = [];
   cats.forEach((c) => chips.push(link('catalysts', c, c)));
-  if (th) chips.push(`<span class="pill ${th.status === 'open' ? 'g' : ''}" title="${escapeHtml(th.id)}">thesis: ${th.status}</span>`);
+  movs.forEach((m) => chips.push(`<span class="pill g" title="${escapeHtml(m.id)}">${m.action}: €${m.amount_eur ?? '—'}</span>`));
   holders.forEach((h) => chips.push(link('portfolios', h.pid, `${pfName(h.pid)} ${num(h.weight, 0)}%`)));
 
   $('sec-detail').innerHTML = `
@@ -448,20 +448,20 @@ async function loadSectorHistory(sid) {
   } catch (e) { const el = $('sec-hist'); if (el) el.innerHTML = `<div class="err">${(e && e.message) || e}</div>`; }
 }
 
-// ── CATALYSTS & THESES (sub-tabbed: structural / event / thesis, all rich) ──────
+// ── CATALYSTS & POSITIONS (sub-tabbed: structural / event / movement, all rich) ──
 let CAT_KIND = 'structural', curCat = null, catWired = false;
 const structuralDoc = (id) => (DOCS.catalysts_structural || []).find((c) => c.id === id);
 const eventDoc = (id) => (DOCS.catalysts_event || []).find((c) => c.id === id);
-const thesisDoc = (id) => (DOCS.theses || []).find((t) => t.id === id);
+const movementDoc = (id) => (DOCS.movements || []).find((m) => m.id === id);
 function catKindOf(id) {
   if (structuralDoc(id)) return 'structural';
   if (eventDoc(id)) return 'event';
-  if (thesisDoc(id)) return 'thesis';
+  if (movementDoc(id)) return 'movement';
   return null;
 }
 function catItems(kind) {
   if (kind === 'event') return (DOCS.catalysts_event || []).map((c) => ({ id: c.id, label: c.id, score: c.strength_score }));
-  if (kind === 'thesis') return (DOCS.theses || []).map((t) => ({ id: t.id, label: t.id, status: t.status }));
+  if (kind === 'movement') return (DOCS.movements || []).map((m) => ({ id: m.id, label: m.id, status: m.action }));
   return (DOCS.catalysts_structural || []).map((c) => ({ id: c.id, label: c.title || c.id, score: (c.intensity || {}).current_score }));
 }
 function buildCatList() {
@@ -495,7 +495,7 @@ function selectCat(id) {
   const el = $('cat-detail');
   if (kind === 'structural') el.innerHTML = structuralDetailHTML(structuralDoc(id));
   else if (kind === 'event') el.innerHTML = eventDetailHTML(eventDoc(id));
-  else if (kind === 'thesis') el.innerHTML = thesisDetailHTML(thesisDoc(id));
+  else if (kind === 'movement') el.innerHTML = movementDetailHTML(movementDoc(id));
   else el.innerHTML = '<p class="hint">Select an item.</p>';
 }
 function catHeader(idLine, title, rightLabel, rightVal, rightColor) {
@@ -506,7 +506,7 @@ function catHeader(idLine, title, rightLabel, rightVal, rightColor) {
 }
 function structuralDetailHTML(c) {
   if (!c) return '<p class="hint">Select a catalyst.</p>';
-  const sectors = sectorsForCatalyst(c.id), ths = thesesForCatalyst(c.id);
+  const sectors = sectorsForCatalyst(c.id), movs = movementsForCatalyst(c.id);
   const intn = (c.intensity || {}).current_score;
   const inds = (c.indicators || []).map((i) => `
     <div style="margin:10px 0;padding:11px 13px;border:1px solid var(--border);border-radius:9px">
@@ -518,7 +518,7 @@ function structuralDetailHTML(c) {
     ${catHeader(`${c.id} · ${c.catalyst_type || 'structural'} · ${c.status || ''}`, c.title || c.id, 'intensity', intn ?? null, scoreColor(intn || 0))}
     <div class="md" style="margin-top:8px">${md(c.description || '')}</div>
     ${sectors.length ? `<h3>Drives sectors</h3><div class="chips">${sectors.map(sectorLink).join('')}</div>` : ''}
-    ${ths.length ? `<h3>Theses</h3><div class="chips">${ths.map((t) => link('catalysts', t.id, t.id)).join('')}</div>` : ''}
+    ${movs.length ? `<h3>Positions</h3><div class="chips">${movs.map((m) => link('catalysts', m.id, m.id)).join('')}</div>` : ''}
     ${inds ? `<h3>Indicators</h3>${inds}` : ''}</div>`;
 }
 function eventDetailHTML(e) {
@@ -542,29 +542,31 @@ function eventDetailHTML(e) {
     ${e.detected_at || e.expires_at ? `<div class="lbl" style="margin-top:10px">detected ${e.detected_at ? String(e.detected_at).slice(0, 10) : '—'}${e.expires_at ? ' · expires ' + String(e.expires_at).slice(0, 10) : ''}</div>` : ''}
   </div>`;
 }
-function thesisDetailHTML(t) {
-  if (!t) return '<p class="hint">Select a thesis.</p>';
-  const sid = (t.sector || {}).sector_id, cid = (t.catalyst || {}).catalyst_event_id;
-  const v = t.vehicle || {}, en = t.entry || {};
+function movementDetailHTML(m) {
+  if (!m) return '<p class="hint">Select a position.</p>';
+  const sid = m.sector_id, v = m.vehicle || {}, sc = m.score_context || {}, rd = m.risk_discipline || {};
   const headLinks = [];
   if (sid) headLinks.push('sector ' + sectorLink(sid));
-  if (cid) headLinks.push('catalyst ' + link('catalysts', cid, cid));
-  if (v.primary_etf) headLinks.push(`<span class="pill b">${v.primary_etf}</span>`);
+  if (v.etf) headLinks.push(`<span class="pill b">${escapeHtml(v.etf)}</span>`);
+  (m.attribution || []).forEach((a) => headLinks.push('catalyst ' + link('catalysts', a.catalyst_id, `${a.catalyst_id} (${Math.round((a.weight || 0) * 100)}%)`)));
   const sec = (title, html) => html ? `<h3>${title}</h3>${html}` : '';
-  const entryChips = [];
-  if (en.conviction_tier) entryChips.push(`<span class="pill">conviction tier ${en.conviction_tier}</span>`);
-  if (en.position_size_pct_portfolio) entryChips.push(`<span class="pill">size ${en.position_size_pct_portfolio}%</span>`);
-  if (en.entry_price_limit) entryChips.push(`<span class="pill">limit ${en.entry_price_limit}</span>`);
-  if (en.trigger_type) entryChips.push(`<span class="pill">${escapeHtml(String(en.trigger_type))}</span>`);
+  const chips = [];
+  if (m.conviction) chips.push(`<span class="pill">conviction ${m.conviction}</span>`);
+  if (m.trigger) chips.push(`<span class="pill">${escapeHtml(String(m.trigger))}</span>`);
+  if (m.amount_eur != null) chips.push(`<span class="pill b">€${m.amount_eur}</span>`);
+  if (m.price != null) chips.push(`<span class="pill">@ ${m.price} ${v.currency || ''}</span>`);
+  const scChips = [];
+  if (sc.composite != null) scChips.push(`<span class="pill">composite ${sc.composite}</span>`);
+  if (sc.catalyst_alignment != null) scChips.push(`<span class="pill">catalyst ${sc.catalyst_alignment}</span>`);
+  if (sc.regime_state) scChips.push(`<span class="pill ${sc.regime_state === 'intact' ? 'g' : 'r'}">${sc.regime_state}</span>`);
   return `<div class="card">
-    ${catHeader(`${t.id} · thesis`, t.id, 'status', null)}
-    <div style="margin-top:2px"><span class="pill ${t.status === 'open' ? 'g' : ''}">${t.status || ''}</span> ${headLinks.join(' · ')}</div>
-    ${sec('Catalyst', (t.catalyst || {}).catalyst_summary ? `<div class="md">${md(t.catalyst.catalyst_summary)}</div>` : '')}
-    ${sec('Sector rationale', (t.sector || {}).rationale ? `<div class="md">${md(t.sector.rationale)}</div>` : '')}
-    ${sec('Vehicle', v.vehicle_selection_rationale ? `<div class="md">${md(v.vehicle_selection_rationale)}</div>` : '')}
-    ${sec('Entry', (entryChips.length ? `<div class="chips">${entryChips.join('')}</div>` : '') + (en.trigger_description ? `<div class="md">${md(en.trigger_description)}</div>` : ''))}
-    ${sec('Assumptions', Array.isArray(t.assumptions) && t.assumptions.length ? `<ul>${t.assumptions.map((a) => `<li>${fmtMeta(a)}</li>`).join('')}</ul>` : '')}
-    ${sec('Invalidation conditions', Array.isArray(t.invalidation_conditions) && t.invalidation_conditions.length ? `<ul>${t.invalidation_conditions.map((a) => `<li>${fmtMeta(a)}</li>`).join('')}</ul>` : '')}
+    ${catHeader(`${m.id} · ${m.action} · ${String(m.executed_at || '').slice(0, 10)}`, m.id, null, null)}
+    <div style="margin-top:2px"><span class="pill g">${m.action}</span> ${headLinks.join(' · ')}</div>
+    ${sec('Trade', `<div class="chips">${chips.join('')}</div>`)}
+    ${sec('Score context at entry (point-in-time)', scChips.length ? `<div class="chips">${scChips.join('')}</div>` : '<span class="lbl">not yet ingested</span>')}
+    ${sec('Note', rd.note ? `<div class="md">${md(rd.note)}</div>` : '')}
+    ${sec('Assumptions', Array.isArray(rd.assumptions) && rd.assumptions.length ? `<ul>${rd.assumptions.map((a) => `<li>${fmtMeta(a)}</li>`).join('')}</ul>` : '')}
+    ${sec('Invalidation conditions', Array.isArray(rd.invalidation) && rd.invalidation.length ? `<ul>${rd.invalidation.map((a) => `<li>${fmtMeta(a)}</li>`).join('')}</ul>` : '')}
   </div>`;
 }
 
@@ -634,22 +636,23 @@ async function initLineage() {
   lineageBuilt = true;
   try {
     await ensureDuckDB();
-    if (!tables.has('portfolio_trade')) { $('pf-lineage').innerHTML = '<p class="hint">No real trades logged yet — these are model (backtested) portfolios.</p>'; return; }
-    const trades = await q(`SELECT trade_id FROM portfolio_trade ORDER BY date DESC`);
-    if (!trades.length) { $('pf-lineage').innerHTML = '<p class="hint">No trades.</p>'; return; }
-    $('pf-lineage').innerHTML = `<div class="row"><label>Trade: <select id="trade-select">${trades.map((t) => `<option>${t.trade_id}</option>`).join('')}</select></label></div><div id="lineage-out"></div>`;
+    if (!tables.has('movement')) { $('pf-lineage').innerHTML = '<p class="hint">No movements ingested yet — these are model (backtested) portfolios.</p>'; return; }
+    const movs = await q(`SELECT id FROM movement ORDER BY executed_at DESC`);
+    if (!movs.length) { $('pf-lineage').innerHTML = '<p class="hint">No movements.</p>'; return; }
+    $('pf-lineage').innerHTML = `<div class="row"><label>Movement: <select id="trade-select">${movs.map((m) => `<option>${m.id}</option>`).join('')}</select></label></div><div id="lineage-out"></div>`;
     $('trade-select').addEventListener('change', renderLineage);
     renderLineage();
   } catch (e) { err('pf-lineage', e); }
 }
 async function renderLineage() {
   try {
-    const tid = $('trade-select').value;
-    const trade = (await q(`SELECT * FROM portfolio_trade WHERE trade_id = ?`, [tid]))[0];
-    let html = '<h3>Trade</h3>' + tableHTML([trade]);
-    if (trade && trade.run_id) {
-      if (tables.has('report')) html += '<h3>Run reports</h3>' + tableHTML(await q(`SELECT report_type, report_date, path FROM report WHERE run_id = ?`, [trade.run_id]));
-      if (tables.has('sector_snapshot') && trade.etf) html += '<h3>Sector scores in that run</h3>' + tableHTML(await q(`SELECT sector_id, rank, composite, momentum, catalyst_alignment FROM sector_snapshot WHERE run_id = ? AND primary_etf = ?`, [trade.run_id, trade.etf]));
+    const mid = $('trade-select').value;
+    const mov = (await q(`SELECT * FROM movement WHERE id = ?`, [mid]))[0];
+    let html = '<h3>Movement</h3>' + tableHTML([mov]);
+    const runId = mov && (mov.score_run_id || mov.run_id);
+    if (runId) {
+      if (tables.has('report')) html += '<h3>Run reports</h3>' + tableHTML(await q(`SELECT report_type, report_date, path FROM report WHERE run_id = ?`, [runId]));
+      if (tables.has('sector_snapshot') && mov.sector_id) html += '<h3>Sector scores in that run</h3>' + tableHTML(await q(`SELECT sector_id, rank, composite, momentum, catalyst_alignment FROM sector_snapshot WHERE run_id = ? AND sector_id = ?`, [runId, mov.sector_id]));
     }
     $('lineage-out').innerHTML = html;
   } catch (e) { err('lineage-out', e); }

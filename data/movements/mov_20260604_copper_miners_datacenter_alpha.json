@@ -1,0 +1,129 @@
+{
+  "$schema": "catalyx/schemas/movement.json",
+  "id": "mov_20260604_copper_miners_datacenter_alpha",
+  "schema_version": "1.0",
+  "executed_at": "2026-06-04T00:00:00Z",
+  "action": "open",
+  "sector_id": "copper_miners",
+  "vehicle": {
+    "etf": "4COP",
+    "isin": "IE0003Z9E2Y3",
+    "currency": "USD"
+  },
+  "amount_eur": 1000.0,
+  "qty": 16.26,
+  "price": 61.5,
+  "fees": 0.0,
+
+  "attribution": [
+    { "catalyst_id": "struct_copper_datacenter_demand", "weight": 1.0 }
+  ],
+
+  "trigger": "new_catalyst",
+  "conviction": "medium",
+
+  "score_context": {
+    "run_id": null,
+    "rank": null,
+    "composite": 70.9,
+    "catalyst_alignment": 89.0,
+    "momentum": null,
+    "flow": null,
+    "crowding": null,
+    "regime_state": null
+  },
+
+  "risk_discipline": {
+    "invalidation": [
+      {
+        "id": "inv_01",
+        "condition": "LME copper spot price closes below $11,000/tonne for 10 consecutive trading days.",
+        "severity": "full_exit",
+        "source": "market_data",
+        "triggered": false,
+        "triggered_at": null,
+        "stop_price_level": 11000,
+        "stop_price_ticker": "COPPER_LME",
+        "rationale": "~21% drawdown from the $13,965 reference. Would signal AI-capex reversal, China demand destruction, or major supply surprise. Structural thesis may still hold but near-term timing is broken."
+      },
+      {
+        "id": "inv_02",
+        "condition": "Any 2 of the 3 largest hyperscalers (Microsoft, Google, Amazon) cut AI capex guidance by >25% vs prior quarter in the same earnings season.",
+        "severity": "full_exit",
+        "source": "earnings_data",
+        "triggered": false,
+        "triggered_at": null
+      },
+      {
+        "id": "inv_03",
+        "condition": "LME copper warehouse inventory rises above 350,000 tonnes on a 4-week rolling average (supply normalization signal).",
+        "severity": "review_and_reduce",
+        "source": "market_data",
+        "triggered": false,
+        "triggered_at": null,
+        "stop_price_level": 350000,
+        "stop_price_ticker": "LME_COPPER_INVENTORY",
+        "review_note": "Latest single reading 393,400t (2026-05-20) is above threshold but the condition specifies a 4-week rolling average not yet computed from one point. Not triggered on a single print — position held in full. Re-check the 4-week average next cycle; if confirmed >350kt, set triggered=true."
+      },
+      {
+        "id": "inv_04",
+        "condition": "EUR/USD spot falls below 1.02 and stays below for 10 consecutive trading days (FX loss amplification on the USD-denominated vehicle).",
+        "severity": "review_and_reduce",
+        "source": "market_data",
+        "triggered": false,
+        "triggered_at": null,
+        "stop_price_level": 1.02,
+        "stop_price_ticker": "EURUSD"
+      }
+    ],
+    "assumptions": [
+      {
+        "id": "asm_01",
+        "statement": "Combined hyperscaler AI capex (Microsoft + Google + Amazon + Meta) stays above $60B/quarter guidance for each of the next 3 quarterly earnings cycles.",
+        "measurability": "Source: quarterly earnings transcripts and 10-Q/10-K. Falsified by: any single quarter where combined guidance falls below $60B AND the revision vs prior quarter exceeds -15%.",
+        "monitoring_source": "earnings_data",
+        "check_frequency": "quarterly",
+        "current_status": "unverified"
+      },
+      {
+        "id": "asm_02",
+        "statement": "LME copper warehouse inventory stays below 200,000 tonnes on a 4-week rolling average throughout the horizon.",
+        "measurability": "Source: LME daily warehouse inventory report. Falsified by: 4-week rolling average exceeds 200,000 tonnes for 8 consecutive weeks.",
+        "monitoring_source": "market_data",
+        "check_frequency": "monthly",
+        "current_status": "weakening",
+        "status_note": "⚠ BREACHING (2026-06-04): LME stock = 393,400t as of 2026-05-20 with positive inflows (+1,275t/day) — ~2x the 200,000t line and above the inv_03 350,000t threshold. Strict falsification needs >200kt for 8 consecutive weeks (week 1/8). The near-term supply-tightness leg is gone; structural DC-demand thesis intact."
+      },
+      {
+        "id": "asm_03",
+        "statement": "COPX basket average AISC stays below $3.50/lb — proxied by FCX + SCCO combined quarterly reports.",
+        "measurability": "Source: FCX and SCCO quarterly earnings. Falsified by: both FCX AND SCCO report AISC > $3.50/lb in the same quarter.",
+        "monitoring_source": "earnings_data",
+        "check_frequency": "quarterly",
+        "current_status": "monitoring",
+        "status_note": "FCX Q1 2026: net cash cost $1.91/lb, est. AISC ~$2.30-2.50/lb. Grasberg Block Cave production cut (H2 2026 −9%) is COMPANY-SPECIFIC — check SCCO before triggering."
+      },
+      {
+        "id": "asm_04",
+        "statement": "China Caixin Manufacturing PMI does not fall below 49.0 for 2 consecutive months.",
+        "measurability": "Source: Caixin PMI (monthly). Falsified by: 2 consecutive months below 49.0. Secondary escalation: PMI <49 for 1 month AND LME inventory >150,000t simultaneously.",
+        "monitoring_source": "macro_data",
+        "check_frequency": "monthly",
+        "current_status": "holding",
+        "status_note": "April 2026: 52.2 (5-year high). May 2026: 51.8. Both well above the 49.0 threshold. China manufacturing in expansion."
+      }
+    ],
+    "note": "Migrated from legacy thesis_20260603_copper_miners_datacenter_alpha (v4). Full position €1,000, bought on the dip 2026-06-04 — no rebalance (held in full). asm_02 (supply tightness) is weakening but that is a monitoring flag, not an exit. Re-rating mechanism: Goldman/JPM/BofA moving DC copper demand from scenario to base case (6–18 months after specialist reports). Horizon 8–52 weeks."
+  },
+
+  "migrated_from_thesis_id": "thesis_20260603_copper_miners_datacenter_alpha",
+  "run_id": null,
+
+  "metadata": {
+    "created_at": "2026-06-06T00:00:00Z",
+    "created_by": "abetatos",
+    "fill_note": "€1,000 full amount, bought on the dip 2026-06-04 (4COP, USD). amount_eur=1000 is authoritative; qty/price are estimates (≈16.3 @ ≈€61.50). Reconcile exact fill with Revolut.",
+    "tax_entry_year": 2026,
+    "tags": ["copper", "data_center", "AI", "structural", "commodities", "mispricing", "narrative_trade"]
+  }
+}

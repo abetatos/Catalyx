@@ -2,7 +2,7 @@
 
 Phase 0.5 stub. The deterministic backbone is invoked today via module CLIs
 (`uv run python -m catalyx.<module> ...`), which skills call directly. The full
-Typer command tree (cmd_scan/score/thesis/trade/feedback) is Phase 1 work.
+Typer command tree (cmd_scan/score/move/feedback) is Phase 1 work.
 
 Until then this entry point exists so the `catalyx` console script declared in
 pyproject.toml resolves to a real callable instead of a missing module. It lists
@@ -23,7 +23,7 @@ _MODULE_CLIS: list[tuple[str, str]] = [
     ("catalyx.scorer.momentum_engine", "Cross-sectional momentum percentile rank"),
     ("catalyx.scorer.sector_scorer", "Composite SectorSnapshot score (orchestrator)"),
     ("catalyx.execution.tax_engine", "Spanish CGT 2026 progressive brackets"),
-    ("catalyx.attribution.thesis_scorer", "right_reason_score from a ClosedThesis"),
+    ("catalyx.store.movement_repo", "Movements → positions + catalyst ledger (summary, positions, ledger, ingest)"),
     ("catalyx.store.catalyst_repo", "Catalyst / taxonomy-gap reader (summary, get, set-status)"),
     ("catalyx.store.snapshot_repo", "Score-run history over the parquet lake (record, history, validate)"),
 ]

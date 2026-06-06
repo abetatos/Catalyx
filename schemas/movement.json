@@ -1,0 +1,166 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://catalyx/schemas/movement.json",
+  "schema_version": "1.0",
+  "_changelog": [
+    "1.0 (2026-06-06): Initial schema. Replaces Thesis as the primary capital-allocation unit. A Movement is a capital event (open/add/trim/close) attributed directly to one or more catalysts, with a trigger, a conviction, and a point-in-time score_context snapshot for no-look-ahead backtesting. The falsifiable discipline (assumptions + invalidation) survives as an OPTIONAL, machine-checkable risk_discipline block (design decision: option 1, attached to the position via its movements). See docs/PLAN_movement_restructure.md."
+  ],
+  "title": "Movement",
+  "description": "A single capital movement attributed to catalyst(s). The unit of the track record: catalysts accumulate P&L across the movements attributed to them. Real money, EUR. Derived objects (Position = net of movements; CatalystLedger = P&L by catalyst) are computed, never authored.",
+  "type": "object",
+  "required": ["id", "schema_version", "executed_at", "action", "sector_id", "vehicle", "attribution", "trigger", "conviction", "metadata"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string", "description": "Tier-1 document convention: relative pointer to this schema file." },
+    "id": {
+      "type": "string",
+      "pattern": "^mov_[0-9]{8}_[a-z0-9_]+$",
+      "description": "Human-readable slug: mov_YYYYMMDD_sectorid_keyword. Never a UUID."
+    },
+    "schema_version": { "type": "string" },
+
+    "executed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Execution timestamp. Used for holding-period and point-in-time joins."
+    },
+
+    "action": {
+      "type": "string",
+      "enum": ["open", "add", "trim", "close"],
+      "description": "open = new position; add = increase; trim = partial reduce; close = full exit. Covers 'actualizar por un catalizador (add)' and 'abrir porque me lo pensé mejor (open)'."
+    },
+
+    "sector_id": {
+      "type": "string",
+      "description": "Canonical sector_id from sector_taxonomy.yaml. Free-text sector names never used."
+    },
+
+    "vehicle": {
+      "type": "object",
+      "required": ["etf", "currency"],
+      "additionalProperties": false,
+      "properties": {
+        "etf": { "type": "string", "description": "Ticker actually traded (e.g. 4COP)." },
+        "isin": { "type": ["string", "null"] },
+        "currency": { "type": "string", "description": "Trade currency. P&L is always converted to EUR at executed_at." }
+      }
+    },
+
+    "amount_eur": {
+      "type": ["number", "null"],
+      "description": "Signed EUR cash deployed (buy +) or returned (sell, recorded on the trim/close). If null, derived from qty*price (+/- fees) at execution."
+    },
+    "qty": { "type": ["number", "null"], "description": "Units transacted (always positive; sign comes from action)." },
+    "price": { "type": ["number", "null"], "description": "Execution price per unit in vehicle.currency." },
+    "fees": { "type": "number", "default": 0, "description": "Commissions/fees in EUR." },
+
+    "attribution": {
+      "type": "array",
+      "minItems": 1,
+      "description": "THE core change vs Thesis: the movement is attributed directly to catalyst(s), not to a thesis. Weights sum to 1.0; the CatalystLedger splits this movement's P&L by weight so no catalyst is double-counted.",
+      "items": {
+        "type": "object",
+        "required": ["catalyst_id", "weight"],
+        "additionalProperties": false,
+        "properties": {
+          "catalyst_id": {
+            "type": "string",
+            "description": "Event (cat_*) or structural (struct_*) catalyst id. Must exist in data/catalysts/ or config/structural_catalysts/."
+          },
+          "weight": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+
+    "trigger": {
+      "type": "string",
+      "enum": ["new_catalyst", "escalation", "contradiction", "reconsideration", "rebalance", "stop_hit", "profit_take"],
+      "description": "What prompted the movement. reconsideration = 'me lo he pensado mejor' (no new external signal). escalation/contradiction = an existing catalyst strengthened/weakened. stop_hit = an invalidation in risk_discipline fired."
+    },
+
+    "conviction": {
+      "type": "string",
+      "enum": ["small", "medium", "high"],
+      "description": "Magnitude reason. Pairs with action: a 'small' escalation add vs a 'high' deliberate open. Drives the expected size relative to conviction_tiers."
+    },
+
+    "score_context": {
+      "type": ["object", "null"],
+      "description": "POINT-IN-TIME snapshot of what the system 'knew' about this sector at executed_at. The key backtest variable: lets you reconstruct the decision without look-ahead. Captured automatically by movement_logger from the latest score_run for the sector; may be null for movements logged before a run existed.",
+      "additionalProperties": false,
+      "properties": {
+        "run_id": { "type": ["string", "null"], "description": "Score-run joined point-in-time at ingest (as-of executed_at). Null until ingest fills it." },
+        "rank": { "type": ["integer", "null"], "description": "Cross-sectional rank of the sector in that run." },
+        "composite": { "type": ["number", "null"] },
+        "catalyst_alignment": { "type": ["number", "null"] },
+        "momentum": { "type": ["number", "null"] },
+        "flow": { "type": ["number", "null"] },
+        "crowding": { "type": ["string", "number", "null"], "description": "Categorical (low/medium/high) or numeric, matching sector_snapshot." },
+        "regime_state": { "type": ["string", "null"], "enum": ["intact", "contested", "breaking", null] }
+      }
+    },
+
+    "risk_discipline": {
+      "type": ["object", "null"],
+      "description": "OPTIONAL falsifiable discipline (design decision: option 1). Machine-checkable, attached to the position via its opening/adding movements. invalidation_watcher reads these to auto-flag; right_reason_score reads assumption outcomes at close. A small satellite movement may omit this entirely; a core movement should carry it. Mirrors the Thesis assumptions/invalidation_conditions shape for clean migration.",
+      "additionalProperties": false,
+      "properties": {
+        "invalidation": {
+          "type": "array",
+          "description": "Pre-committed exit/stop rules. Specific, measurable, checkable.",
+          "items": {
+            "type": "object",
+            "required": ["id", "condition", "severity", "source"],
+            "additionalProperties": true,
+            "properties": {
+              "id": { "type": "string", "pattern": "^inv_[0-9]{2}$" },
+              "condition": { "type": "string", "description": "Specific, measurable. Not 'market deteriorates'." },
+              "severity": { "type": "string", "enum": ["full_exit", "review_and_reduce", "flag_for_review"] },
+              "source": { "type": "string", "enum": ["news_llm", "market_data", "flow_data", "cot_data", "macro_data", "earnings_data", "user_manual"] },
+              "stop_price_level": { "type": ["number", "null"] },
+              "stop_price_ticker": { "type": ["string", "null"] },
+              "triggered": { "type": "boolean", "default": false },
+              "triggered_at": { "type": ["string", "null"], "format": "date-time" }
+            }
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "description": "What must stay true for the bet to hold. Binary pass/fail from a specific data source.",
+          "items": {
+            "type": "object",
+            "required": ["id", "statement", "monitoring_source", "check_frequency"],
+            "additionalProperties": true,
+            "properties": {
+              "id": { "type": "string", "pattern": "^asm_[0-9]{2}$" },
+              "statement": { "type": "string" },
+              "measurability": { "type": "string", "description": "Data source + threshold + falsification criterion." },
+              "monitoring_source": { "type": "string" },
+              "check_frequency": { "type": "string", "enum": ["daily", "weekly", "monthly", "quarterly", "on_event", "event_driven"] },
+              "current_status": { "type": "string", "enum": ["unverified", "monitoring", "holding", "weakening", "violated"], "default": "unverified" }
+            }
+          }
+        },
+        "note": { "type": ["string", "null"], "description": "Optional free-text rationale (the demoted 'thesis' narrative). Not machine-checked." }
+      }
+    },
+
+    "migrated_from_thesis_id": {
+      "type": ["string", "null"],
+      "description": "Set when this movement was lifted from a legacy Thesis during the Phase 1 migration. Audit only."
+    },
+
+    "run_id": { "type": ["string", "null"], "description": "Pipeline run that contextualized this movement (lineage to reports + sector_snapshot)." },
+
+    "metadata": {
+      "type": "object",
+      "required": ["created_at"],
+      "additionalProperties": true,
+      "properties": {
+        "created_at": { "type": "string", "format": "date-time" },
+        "created_by": { "type": "string" }
+      }
+    }
+  }
+}

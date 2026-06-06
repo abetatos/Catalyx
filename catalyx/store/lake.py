@@ -61,7 +61,10 @@ TABLES: dict[str, tuple[str, list[str]]] = {
     # portfolios (model + real)
     "portfolio_nav":      ("portfolio/nav",              ["portfolio_id"]),  # one NAV series file per portfolio
     "portfolio_holding":  ("portfolio/holding",          ["portfolio_id", "run_id"]),
-    "portfolio_trade":    ("portfolio/trade",            ["portfolio_id"]),
+    # movements: queryable mirror of the Tier-1 data/movements/*.json (truth stays in the files)
+    "movement":           ("portfolio/movement",         ["sector_id"]),
+    # catalyst track record — derived ledger, one time-versioned snapshot per ingest
+    "catalyst_performance": ("validation/catalyst_performance", ["as_of"]),
     # validation / forward returns (grows; unpartitioned)
     "forward_returns":    ("validation/forward_returns", []),
     # dislocation lens (opportunities + diversifiers) — one materialization per run

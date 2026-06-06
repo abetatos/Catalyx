@@ -33,20 +33,20 @@ _STATIC = ("index.html", "app.js")
 _STRUCTURAL_CAT = _ROOT / "catalyx" / "config" / "structural_catalysts"
 _EVENT_CAT = _ROOT / "data" / "catalysts"
 _STUDIES = _ROOT / "data" / "sector_studies"
-_THESES = _ROOT / "data" / "theses"
+_MOVEMENTS = _ROOT / "data" / "movements"
 
 
 def _bake_docs(dist: Path) -> dict:
     """Bundle the Tier-1 documents into docs.json so the page can show the full picture:
-    structural + event catalysts, sector studies, theses. Small (KB each) — one fetch."""
+    structural + event catalysts, sector studies, movements (the real positions). Small (KB each)."""
     docs: dict[str, list] = {"catalysts_structural": [], "catalysts_event": [],
-                             "studies": [], "theses": []}
+                             "studies": [], "movements": []}
     for f in sorted(_STRUCTURAL_CAT.glob("*.yaml")):
         try:
             docs["catalysts_structural"].append(yaml.safe_load(f.read_text(encoding="utf-8")))
         except Exception:  # noqa: BLE001
             pass
-    for src, key in ((_EVENT_CAT, "catalysts_event"), (_STUDIES, "studies"), (_THESES, "theses")):
+    for src, key in ((_EVENT_CAT, "catalysts_event"), (_STUDIES, "studies"), (_MOVEMENTS, "movements")):
         if src.exists():
             for f in sorted(src.glob("*.json")):
                 try:

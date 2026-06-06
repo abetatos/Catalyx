@@ -13,7 +13,8 @@ CLI:
     uv run python -m catalyx.store.lake_query ranking [--top-n 10]
     uv run python -m catalyx.store.lake_query sector <sector_id>
     uv run python -m catalyx.store.lake_query portfolios
-    uv run python -m catalyx.store.lake_query lineage <trade_id>
+    uv run python -m catalyx.store.lake_query lineage <movement_id>
+    uv run python -m catalyx.store.lake_query ledger
     uv run python -m catalyx.store.lake_query sql "SELECT ... FROM sector_snapshot ..."
 """
 from __future__ import annotations
@@ -108,30 +109,49 @@ def portfolio_holdings(portfolio_id: str, lake_dir: Path | None = None) -> list[
     return df.to_dict(orient="records")
 
 
-def lineage_for_trade(trade_id: str, lake_dir: Path | None = None) -> dict:
-    """Walk a trade back to the analysis that justified it: trade → run_id → report +
-    that run's sector_snapshot for the traded ETF. (`thesis_id` points to a Tier-1 JSON doc.)"""
-    if not _has("portfolio_trade", lake_dir):
-        return {"error": "no trades in lake"}
-    trade = _df("SELECT * FROM portfolio_trade WHERE trade_id = ?", [trade_id], lake_dir)
-    if len(trade) == 0:
-        return {"error": f"trade {trade_id} not found"}
-    t = trade.to_dict(orient="records")[0]
-    run_id = t.get("run_id")
-    out = {"trade": t, "thesis_id": t.get("thesis_id"), "run_id": run_id,
+def lineage_for_movement(mov_id: str, lake_dir: Path | None = None) -> dict:
+    """Walk a movement back to the analysis that justified it: movement → attributed catalysts
+    + the score_run that was current as-of executed_at → that run's reports + the sector_snapshot
+    for the movement's sector. (Movement truth is the Tier-1 file; this reads the lake mirror.)"""
+    import json as _json
+    if not _has("movement", lake_dir):
+        return {"error": "no movements in lake (run movement_repo ingest)"}
+    mv = _df("SELECT * FROM movement WHERE id = ?", [mov_id], lake_dir)
+    if len(mv) == 0:
+        return {"error": f"movement {mov_id} not found"}
+    m = mv.to_dict(orient="records")[0]
+    run_id = m.get("score_run_id") or m.get("run_id")
+    try:
+        catalysts = _json.loads(m.get("attribution_json") or "[]")
+    except Exception:
+        catalysts = []
+    out = {"movement": m, "catalysts": catalysts, "run_id": run_id,
            "reports": [], "sector_snapshot": None}
     if run_id and _has("report", lake_dir):
         out["reports"] = _df(
             "SELECT report_type, report_date, path FROM report WHERE run_id = ?",
             [run_id], lake_dir).to_dict(orient="records")
-    if run_id and _has("sector_snapshot", lake_dir) and t.get("etf"):
+    if run_id and _has("sector_snapshot", lake_dir) and m.get("sector_id"):
         snap = _df(
             "SELECT sector_id, rank, composite, momentum, catalyst_alignment "
-            "FROM sector_snapshot WHERE run_id = ? AND primary_etf = ?",
-            [run_id, t["etf"]], lake_dir)
+            "FROM sector_snapshot WHERE run_id = ? AND sector_id = ?",
+            [run_id, m["sector_id"]], lake_dir)
         rows = snap.to_dict(orient="records")
         out["sector_snapshot"] = rows[0] if rows else None
     return out
+
+
+def catalyst_ledger(lake_dir: Path | None = None) -> list[dict]:
+    """The latest catalyst track-record snapshot (invested + realized P&L per catalyst), from
+    the time-versioned `catalyst_performance` table written by movement_repo ingest."""
+    if not _has("catalyst_performance", lake_dir):
+        return []
+    return _df(
+        "SELECT catalyst_id, invested_eur, realized_eur, n_movements, sectors "
+        "FROM catalyst_performance "
+        "WHERE as_of = (SELECT max(as_of) FROM catalyst_performance) "
+        "ORDER BY invested_eur DESC", None, lake_dir,
+    ).to_dict(orient="records")
 
 
 def sql(query: str, lake_dir: Path | None = None) -> list[dict]:
@@ -165,8 +185,9 @@ def main() -> None:
     sub.add_parser("portfolios", help="Latest NAV/return per portfolio")
     hd = sub.add_parser("holdings", help="A portfolio's latest holdings")
     hd.add_argument("portfolio_id")
-    ln = sub.add_parser("lineage", help="Trace a trade back to its run + reports")
-    ln.add_argument("trade_id")
+    ln = sub.add_parser("lineage", help="Trace a movement back to its catalysts + run + reports")
+    ln.add_argument("movement_id")
+    sub.add_parser("ledger", help="Latest catalyst track-record (invested/realized per catalyst)")
     sq = sub.add_parser("sql", help="Ad-hoc SQL over the lake")
     sq.add_argument("query")
     args = p.parse_args()
@@ -183,7 +204,9 @@ def main() -> None:
         _print_rows(portfolio_holdings(args.portfolio_id))
     elif args.cmd == "lineage":
         import json
-        print(json.dumps(lineage_for_trade(args.trade_id), indent=2, ensure_ascii=False, default=str))
+        print(json.dumps(lineage_for_movement(args.movement_id), indent=2, ensure_ascii=False, default=str))
+    elif args.cmd == "ledger":
+        _print_rows(catalyst_ledger())
     elif args.cmd == "sql":
         _print_rows(sql(args.query))
 

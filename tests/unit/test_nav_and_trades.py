@@ -1,10 +1,12 @@
-"""Unit tests for the NAV engine and trade logger (Fase D.2). Network-free."""
+"""Unit tests for the NAV engine and movement repo (positions/ledger). Network-free."""
 from __future__ import annotations
+
+import json
 
 import pandas as pd
 
 from catalyx.execution import nav_engine as nav
-from catalyx.execution import trade_logger as tl
+from catalyx.store import movement_repo as mr
 
 
 # ── NAV math ─────────────────────────────────────────────────────────────────
@@ -67,31 +69,45 @@ def test_compute_model_nav_persists_and_dates_from_run(tmp_path, monkeypatch):
     assert len(shown["series"]) == 3
 
 
-# ── trade logger ─────────────────────────────────────────────────────────────
+# ── movement repo: positions + catalyst ledger ───────────────────────────────
 
-def test_log_trade_and_real_holdings(tmp_path):
-    tl.log_trade("real", "COPX", "buy", 10, 90.0, date="2026-06-05", fees=1.0,
-                 thesis_id="thesis_x", run_id="run_y", lake_dir=tmp_path)
-    tl.log_trade("real", "COPX", "buy", 10, 100.0, date="2026-06-06", lake_dir=tmp_path)
-    h = tl.real_holdings("real", lake_dir=tmp_path)
-    pos = h["holdings"][0]
+def _write_mov(d, mid, etf, action, qty, amount_eur, sector_id="a",
+               attribution=None, fees=0.0, executed_at="2026-06-05T00:00:00Z"):
+    doc = {
+        "$schema": "catalyx/schemas/movement.json", "id": mid, "schema_version": "1.0",
+        "executed_at": executed_at, "action": action, "sector_id": sector_id,
+        "vehicle": {"etf": etf, "currency": "EUR"}, "amount_eur": amount_eur,
+        "qty": qty, "price": (amount_eur / qty if qty else None), "fees": fees,
+        "attribution": attribution or [{"catalyst_id": "struct_x", "weight": 1.0}],
+        "trigger": "new_catalyst", "conviction": "medium",
+        "metadata": {"created_at": executed_at},
+    }
+    (d / f"{mid}.json").write_text(json.dumps(doc), encoding="utf-8")
+
+
+def test_positions_net_from_movement_files(tmp_path):
+    _write_mov(tmp_path, "mov_20260605_a_one", "COPX", "open", 10, 901.0, fees=1.0)
+    _write_mov(tmp_path, "mov_20260606_a_two", "COPX", "add", 10, 1000.0)
+    p = mr.positions(movements_dir=tmp_path)
+    pos = p["holdings"][0]
     assert pos["etf"] == "COPX" and pos["qty"] == 20.0
-    assert pos["invested_eur"] == 1901.0           # 901 + 1000
-    assert h["holdings"][0]["weight_pct"] == 100.0
+    assert pos["invested_eur"] == 1901.0           # (901+1) + 1000
+    assert pos["weight_pct"] == 100.0
 
 
-def test_sell_realizes_pnl_and_reduces_position(tmp_path):
-    tl.log_trade("real", "GDX", "buy", 10, 50.0, date="2026-06-05", lake_dir=tmp_path)   # €500, avg 50
-    tl.log_trade("real", "GDX", "sell", 4, 70.0, date="2026-06-10", lake_dir=tmp_path)   # €280, cost 200 → +80
-    h = tl.real_holdings("real", lake_dir=tmp_path)
-    assert h["realized_eur"] == 80.0
-    pos = h["holdings"][0]
+def test_close_realizes_pnl_and_reduces_position(tmp_path):
+    _write_mov(tmp_path, "mov_20260605_a_open", "GDX", "open", 10, 500.0)   # avg 50
+    _write_mov(tmp_path, "mov_20260610_a_close", "GDX", "close", 4, 280.0)  # cost 200 → +80
+    p = mr.positions(movements_dir=tmp_path)
+    assert p["realized_eur"] == 80.0
+    pos = p["holdings"][0]
     assert pos["qty"] == 6.0 and pos["invested_eur"] == 300.0
 
 
-def test_trade_lineage_is_recorded(tmp_path):
-    t = tl.log_trade("real", "COPX", "buy", 5, 92.0, thesis_id="thesis_copper", run_id="run_z",
-                     lake_dir=tmp_path)
-    assert t["thesis_id"] == "thesis_copper" and t["run_id"] == "run_z"
-    logged = tl.trades("real", lake_dir=tmp_path)
-    assert logged[0]["thesis_id"] == "thesis_copper"
+def test_catalyst_ledger_splits_by_attribution_weight(tmp_path):
+    _write_mov(tmp_path, "mov_20260605_a_split", "IQQH", "open", 1, 500.0,
+               attribution=[{"catalyst_id": "struct_grid", "weight": 0.7},
+                            {"catalyst_id": "struct_ai", "weight": 0.3}])
+    led = {e["catalyst_id"]: e for e in mr.catalyst_ledger(movements_dir=tmp_path)}
+    assert led["struct_grid"]["invested_eur"] == 350.0
+    assert led["struct_ai"]["invested_eur"] == 150.0
