@@ -1,0 +1,19 @@
+# Line-ending policy for the repo (kills the Windows "LF will be replaced by CRLF" warnings).
+#
+# Git for Windows sets core.autocrlf=true at the system level, which does an LF<->CRLF round-trip on
+# every checkout/add and warns about it. This file overrides that PER-REPO: all text files are stored
+# AND checked out as LF, so git never converts and never warns — independent of each machine's config.
+# LF is also what the Linux CI (GitHub Actions / Pages build) and the deployed site expect.
+* text=auto eol=lf
+
+# Binary files: never apply text/eol conversion. The parquet lake especially must stay byte-exact.
+*.parquet binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.pdf  binary
+*.woff  binary
+*.woff2 binary
