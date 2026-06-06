@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "catalyx/schemas/portfolio.json",
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "title": "PortfolioConfig",
   "description": "A model-portfolio definition (risk profile + deterministic construction rules). A model portfolio is a function of (score_run × this config): the same run feeds N portfolios. config_version = md5 of this file, recorded with every built holding so an evolution is always traceable to the rules that produced it.",
   "type": "object",
@@ -15,8 +15,8 @@
     "name": { "type": "string" },
     "strategy": {
       "type": "string",
-      "enum": ["momentum", "conviction", "equal", "low_crowding"],
-      "description": "Selection + weighting strategy. momentum: pick/weight by momentum. conviction: by composite. equal: top-N by composite, equal weight. low_crowding: only uncrowded sectors, weight by composite."
+      "enum": ["momentum", "catalyx", "equal", "low_crowding"],
+      "description": "Selection + weighting strategy. momentum: pick/weight by momentum. catalyx: the flagship book, weight by full composite (renamed from 'conviction' 2026-06-06). equal: top-N by composite, equal weight. low_crowding: only uncrowded sectors, weight by composite."
     },
     "risk_profile": {
       "type": "string",

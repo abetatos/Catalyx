@@ -5,171 +5,209 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CATALYX — Dashboard</title>
   <style>
-    :root { --bg:#f6f8fa; --panel:#ffffff; --border:#d0d7de; --fg:#1f2328; --muted:#656d76;
-            --accent:#0969da; --green:#1a7f37; --amber:#9a6700; --red:#cf222e; --track:#eaeef2; }
-    * { box-sizing: border-box; }
+    :root {
+      --bg:#f6f8fa; --panel:#ffffff; --border:#d8dee4; --fg:#1f2328; --muted:#656d76;
+      --accent:#0969da; --accent-soft:#ddf4ff; --green:#1a7f37; --amber:#9a6700; --red:#cf222e;
+      --track:#eaeef2; --shadow:0 1px 3px rgba(27,31,36,.06),0 0 0 1px rgba(27,31,36,.03);
+      --side:236px;
+    }
+    * { box-sizing:border-box; }
+    html,body { height:100%; }
     body { margin:0; background:var(--bg); color:var(--fg);
-           font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
-    header { padding:16px 24px; background:var(--panel); border-bottom:1px solid var(--border);
-             display:flex; align-items:baseline; gap:12px; }
-    header h1 { font-size:18px; margin:0; letter-spacing:.5px; color:var(--accent); }
-    header .sub { color:var(--muted); font-size:12px; }
-    #status { margin-left:auto; font-size:12px; color:var(--muted); }
-    nav { display:flex; gap:2px; padding:0 16px; background:var(--panel); border-bottom:1px solid var(--border);
-          flex-wrap:wrap; position:sticky; top:0; z-index:5; }
-    nav button { background:transparent; color:var(--muted); border:none; border-bottom:2px solid transparent;
-                 padding:11px 14px; cursor:pointer; font-size:13px; font-weight:500; }
-    nav button:hover { color:var(--fg); }
-    nav button.active { color:var(--accent); border-bottom-color:var(--accent); }
-    main { padding:22px 24px; max-width:1220px; }
-    .panel { display:none; } .panel.active { display:block; }
-    h2 { font-size:15px; margin:0 0 4px; } h3 { font-size:13px; color:var(--muted); margin:20px 0 8px; }
-    .hint { color:var(--muted); font-size:12px; margin:0 0 16px; }
+           font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+           display:grid; grid-template-columns:var(--side) 1fr; }
+    a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+
+    /* ── sidebar ── */
+    aside { background:var(--panel); border-right:1px solid var(--border); padding:18px 14px;
+            position:sticky; top:0; height:100vh; overflow:auto; display:flex; flex-direction:column; gap:4px; }
+    .brand { display:flex; align-items:baseline; gap:8px; padding:4px 8px 16px; }
+    .brand h1 { font-size:19px; margin:0; letter-spacing:1px; color:var(--accent); }
+    .brand span { font-size:10px; color:var(--muted); }
+    .navlink { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px;
+               color:var(--muted); cursor:pointer; font-weight:500; font-size:13.5px; user-select:none; }
+    .navlink:hover { background:var(--track); color:var(--fg); text-decoration:none; }
+    .navlink.active { background:var(--accent-soft); color:var(--accent); }
+    .navlink .ic { width:18px; text-align:center; font-size:15px; }
+    .navsep { margin:10px 8px 4px; font-size:10px; letter-spacing:.8px; text-transform:uppercase; color:var(--muted); }
+    .runbar { padding:8px 8px 12px; margin-bottom:6px; border-bottom:1px solid var(--border); }
+    .runbar label { display:block; font-size:10px; letter-spacing:.6px; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+    .runbar select { width:100%; font-size:12px; padding:6px 8px; }
+    .runbar .note { font-size:10.5px; color:var(--muted); margin-top:5px; line-height:1.4; }
+    aside footer { margin-top:auto; padding:12px 8px 0; font-size:11px; color:var(--muted); line-height:1.5; }
+    #status { color:var(--accent); }
+
+    /* ── main ── */
+    main { padding:26px 30px 60px; max-width:1280px; }
+    .section { display:none; } .section.active { display:block; animation:fade .18s ease; }
+    @keyframes fade { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+    .head { margin:0 0 4px; font-size:21px; font-weight:600; letter-spacing:-.2px; }
+    .sub { color:var(--muted); font-size:13px; margin:0 0 22px; max-width:760px; }
+    h2 { font-size:14px; margin:26px 0 12px; letter-spacing:.2px; }
+    h3 { font-size:12px; color:var(--muted); margin:18px 0 8px; text-transform:uppercase; letter-spacing:.6px; }
+    .hint { color:var(--muted); font-size:12px; margin:0 0 14px; }
+
+    /* ── controls ── */
     .row { display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
-    select, input, textarea, .btn { background:var(--panel); color:var(--fg); border:1px solid var(--border);
-            border-radius:7px; padding:8px 11px; font:inherit; }
-    select:focus, .btn:hover { border-color:var(--accent); outline:none; }
+    select, input, .btn { background:var(--panel); color:var(--fg); border:1px solid var(--border);
+            border-radius:8px; padding:8px 12px; font:inherit; }
+    select:focus, input:focus, .btn:hover { border-color:var(--accent); outline:none; }
     .btn { cursor:pointer; font-weight:500; }
-    textarea { width:100%; min-height:90px; font-family:ui-monospace,Menlo,monospace; }
 
-    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:14px; }
-    .card { background:var(--panel); border:1px solid var(--border); border-radius:10px;
-            padding:15px 17px; box-shadow:0 1px 2px rgba(27,31,36,.04); }
-    .card.click { cursor:pointer; } .card.click:hover { border-color:var(--accent); }
-    .card .lbl { color:var(--muted); font-size:12px; }
-    .card .big { font-size:26px; font-weight:600; font-variant-numeric:tabular-nums; }
+    /* ── cards & grids ── */
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:14px; }
+    .strip { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:8px; }
+    .card { background:var(--panel); border:1px solid var(--border); border-radius:12px;
+            padding:16px 18px; box-shadow:var(--shadow); }
+    .card.click { cursor:pointer; transition:border-color .12s, transform .12s; }
+    .card.click:hover { border-color:var(--accent); transform:translateY(-1px); }
+    .card.sel { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+    .lbl { color:var(--muted); font-size:11.5px; letter-spacing:.2px; }
+    .big { font-size:27px; font-weight:650; font-variant-numeric:tabular-nums; letter-spacing:-.5px; }
     .pos { color:var(--green); } .neg { color:var(--red); }
-    .pill { display:inline-block; padding:1px 8px; border-radius:11px; font-size:11px; font-weight:500;
-            background:#eaeef2; color:var(--muted); }
+    .pill { display:inline-block; padding:1px 9px; border-radius:11px; font-size:11px; font-weight:600;
+            background:var(--track); color:var(--muted); vertical-align:middle; }
     .pill.g { background:#dafbe1; color:var(--green); } .pill.a { background:#fff8c5; color:var(--amber); }
-    .pill.r { background:#ffebe9; color:var(--red); } .pill.b { background:#ddf4ff; color:var(--accent); }
+    .pill.r { background:#ffebe9; color:var(--red); } .pill.b { background:var(--accent-soft); color:var(--accent); }
 
-    .bar { background:var(--track); border-radius:5px; height:9px; overflow:hidden; }
+    /* ── bars / sparklines / tables ── */
+    .bar { background:var(--track); border-radius:5px; height:8px; overflow:hidden; }
     .bar > i { display:block; height:100%; border-radius:5px; }
-    .barrow { display:grid; grid-template-columns:minmax(120px,200px) 1fr 44px; gap:10px; align-items:center;
-              margin:6px 0; font-size:12px; }
+    .barrow { display:grid; grid-template-columns:minmax(120px,200px) 1fr 44px; gap:12px; align-items:center;
+              margin:7px 0; font-size:12.5px; }
     .barrow .v { text-align:right; font-variant-numeric:tabular-nums; color:var(--muted); }
     .barrow .nm { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-
+    .rowlink { cursor:pointer; border-radius:6px; padding:3px 6px; margin:2px -6px; }
+    .rowlink:hover { background:var(--track); }
+    svg.spark { vertical-align:middle; }
     table { border-collapse:collapse; width:100%; font-size:13px; }
     th,td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); }
     th { color:var(--muted); font-weight:600; }
     td.num { text-align:right; font-variant-numeric:tabular-nums; }
     .err { color:var(--red); background:#ffebe9; border:1px solid #ffcecb; padding:10px 12px;
            border-radius:8px; white-space:pre-wrap; font-family:ui-monospace,monospace; font-size:12px; }
-    .md { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:18px 24px;
-          line-height:1.65; max-width:880px; }
-    .md h1,.md h2,.md h3 { border-bottom:1px solid var(--border); padding-bottom:5px; color:var(--fg); }
-    .md h1{font-size:20px;} .md h2{font-size:17px;} .md h3{font-size:15px;border:none;}
+
+    /* ── markdown ── */
+    .md { line-height:1.65; }
+    .md h1,.md h2,.md h3 { border-bottom:1px solid var(--border); padding-bottom:5px; color:var(--fg); margin:16px 0 8px; text-transform:none; letter-spacing:0; }
+    .md h1{font-size:19px;} .md h2{font-size:16px;} .md h3{font-size:14px;border:none;}
     .md code { background:#eff1f3; padding:1px 5px; border-radius:4px; font-size:12px; }
     .md pre { background:#f6f8fa; padding:12px; border-radius:6px; overflow:auto; border:1px solid var(--border); }
-    .md a { color:var(--accent); } .md blockquote{border-left:3px solid var(--border);margin:10px 0;padding:2px 14px;color:var(--muted);}
-    svg.spark { vertical-align:middle; }
+    .md blockquote { border-left:3px solid var(--border); margin:10px 0; padding:2px 14px; color:var(--muted); }
+
+    /* ── master-detail ── */
+    .split { display:grid; grid-template-columns:320px 1fr; gap:20px; align-items:start; }
+    .listpane { background:var(--panel); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow);
+                max-height:78vh; overflow:auto; }
+    .listpane .item { padding:9px 14px; border-bottom:1px solid var(--border); cursor:pointer; display:flex;
+                      align-items:center; gap:8px; justify-content:space-between; }
+    .listpane .item:hover { background:var(--track); }
+    .listpane .item.sel { background:var(--accent-soft); box-shadow:inset 3px 0 0 var(--accent); }
+    .listpane .item .rk { color:var(--muted); font-variant-numeric:tabular-nums; font-size:11px; min-width:26px; }
+    .listpane .item .nm { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12.5px; }
+    .chips { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
+
+    /* ── responsive ── */
+    @media (max-width:900px) {
+      body { grid-template-columns:1fr; }
+      aside { position:static; height:auto; flex-direction:row; flex-wrap:wrap; align-items:center; gap:2px; }
+      aside footer, .navsep { display:none; }
+      .brand { padding:4px 8px; }
+      .split { grid-template-columns:1fr; }
+      .listpane { max-height:340px; }
+      main { padding:18px 16px 50px; }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>CATALYX</h1>
-    <span class="sub">sector ETF dashboard · parquet lake · DuckDB-WASM</span>
-    <span id="status">loading…</span>
-  </header>
-  <nav id="tabs">
-    <button data-tab="ranking" class="active">Ranking</button>
-    <button data-tab="catalysts">Catalysts</button>
-    <button data-tab="studies">Sector studies</button>
-    <button data-tab="reports">Runs &amp; reports</button>
-    <button data-tab="portfolios">Portfolios</button>
-    <button data-tab="opportunities">Opportunities</button>
-    <button data-tab="sector">Sector history</button>
-    <button data-tab="moves">Rank moves</button>
-    <button data-tab="lineage">Lineage</button>
-    <button data-tab="sql">SQL</button>
-  </nav>
+  <aside>
+    <div class="brand"><h1>CATALYX</h1><span>sector ETF intelligence</span></div>
+    <div class="runbar">
+      <label for="run-switch">Viewing run</label>
+      <select id="run-switch"></select>
+      <div class="note" id="run-note"></div>
+    </div>
+    <a class="navlink" data-route="overview"><span class="ic">◧</span> Overview</a>
+    <a class="navlink" data-route="sectors"><span class="ic">▦</span> Sectors</a>
+    <a class="navlink" data-route="catalysts"><span class="ic">◆</span> Catalysts &amp; theses</a>
+    <a class="navlink" data-route="portfolios"><span class="ic">◔</span> Portfolios</a>
+    <div class="navsep">Advanced</div>
+    <a class="navlink" data-route="data"><span class="ic">⛁</span> Runs &amp; data</a>
+    <footer>
+      <div id="status">loading…</div>
+      <div style="margin-top:6px">parquet lake · DuckDB-WASM<br/><span id="gen"></span></div>
+    </footer>
+  </aside>
+
   <main>
-    <section class="panel active" id="panel-ranking">
-      <h2>Latest run ranking</h2>
-      <p class="hint">Sectors by composite. Bar = composite, number = momentum.</p>
-      <div id="ranking-out"></div>
+    <!-- ── OVERVIEW ── -->
+    <section class="section" id="s-overview">
+      <h1 class="head">Overview</h1>
+      <p class="sub" id="ov-runbadge">Latest run snapshot — portfolios vs S&amp;P 500, the sector ranking, and live alerts.</p>
+      <h2>Model portfolios vs S&amp;P 500</h2>
+      <div id="ov-portfolios" class="strip"></div>
+      <div class="split" style="grid-template-columns:1.3fr 1fr; margin-top:24px">
+        <div>
+          <h2 style="margin-top:0">Top sectors</h2>
+          <div id="ov-ranking"></div>
+        </div>
+        <div>
+          <h2 style="margin-top:0">Alerts &amp; rotation</h2>
+          <div id="ov-alerts"></div>
+          <h3>Rank moves (latest run)</h3>
+          <div id="ov-moves"></div>
+        </div>
+      </div>
     </section>
 
-    <section class="panel" id="panel-catalysts">
-      <h2>Catalysts</h2>
-      <p class="hint">Structural catalysts with their indicators (bar = score, sparkline = lake history) and event catalysts.</p>
-      <div class="row"><label>Structural: <select id="cat-select"></select></label></div>
-      <div id="cat-detail"></div>
-      <h3>Event catalysts</h3>
+    <!-- ── SECTORS ── -->
+    <section class="section" id="s-sectors">
+      <h1 class="head">Sectors</h1>
+      <p class="sub">Ranking, bottom-up study, score history and links to the catalysts, thesis and
+        portfolios behind each sector — unified. Pick a sector on the left.</p>
+      <div class="row"><input id="sec-search" placeholder="Filter sectors…" style="width:280px" /></div>
+      <div class="split">
+        <div class="listpane" id="sec-list"></div>
+        <div id="sec-detail"></div>
+      </div>
+    </section>
+
+    <!-- ── CATALYSTS ── -->
+    <section class="section" id="s-catalysts">
+      <h1 class="head">Catalysts &amp; theses</h1>
+      <p class="sub">The <i>why</i> behind the rankings. Structural catalysts are the floor signal;
+        event catalysts are the spike. Each lists the sectors it drives. Open theses below.</p>
+      <h2>Structural catalysts</h2>
+      <div class="split">
+        <div class="listpane" id="cat-list"></div>
+        <div id="cat-detail"></div>
+      </div>
+      <h2>Event catalysts</h2>
       <div id="cat-events" class="grid"></div>
+      <h2>Theses</h2>
+      <div id="cat-theses" class="grid"></div>
     </section>
 
-    <section class="panel" id="panel-studies">
-      <h2>Sector studies</h2>
-      <p class="hint">Bottom-up analysis per sector.</p>
-      <div class="row"><label>Sector: <select id="study-select"></select></label></div>
-      <div id="study-detail"></div>
-    </section>
-
-    <section class="panel" id="panel-reports">
-      <h2>Runs &amp; reports</h2>
-      <p class="hint">Each scoring run + the text report it produced.</p>
-      <div class="row"><label>Run: <select id="run-select"></select></label></div>
-      <div id="run-meta" class="grid" style="margin-bottom:16px"></div>
-      <div id="report-out" class="md"></div>
-    </section>
-
-    <section class="panel" id="panel-portfolios">
-      <h2>Portfolios — 4 strategies vs S&amp;P500</h2>
-      <p class="hint">Trailing backtest of current holdings. Did we beat the market? Sparkline: portfolio (blue) vs SPY (grey).</p>
-      <div id="pf-cards" class="grid"></div>
-      <h3>Strategy holdings</h3>
-      <div class="row"><label>Strategy: <select id="pf-select"></select></label></div>
-      <div id="holdings-out"></div>
-    </section>
-
-    <section class="panel" id="panel-opportunities">
-      <h2>Opportunities &amp; Rotation</h2>
-      <p class="hint">The price-vs-fundamentals gap, for deployment. <b>Opportunities</b> = fell hard but
-        fundamentals <span class="pill g">intact</span> + catalyst-confirmed and the drop is mostly
-        <b>contagion</b> (it fell <i>with</i> the tape, its thesis didn't break) — a panic dip. A large
-        idiosyncratic residual is a red flag to investigate, not a buy. <b>Diversifiers</b> = healthy
-        sectors with LOW correlation to the stressed cluster (where to rotate without re-buying the
-        same bet). <b>Recommendations for judgement — never auto-trades.</b></p>
-      <div id="opp-meta"></div>
-      <h3>Opportunities — panic dips (intact · catalyst-confirmed · contagion-driven)</h3>
-      <div id="opp-out"></div>
-      <h3>Diversifiers — rotation targets (low correlation to the stressed cluster)</h3>
-      <div id="div-out"></div>
-      <h3>Regime watch — non-intact sectors (watch only; escalation is a human call)</h3>
-      <div id="regime-out"></div>
-    </section>
-
-    <section class="panel" id="panel-sector">
-      <h2>Sector evolution</h2>
-      <div class="row"><label>Sector: <select id="sector-select"></select></label></div>
-      <div id="sector-out"></div>
-      <h3>Narrative (latest run with a study)</h3>
-      <div id="sector-narrative" class="md"></div>
-    </section>
-
-    <section class="panel" id="panel-moves">
-      <h2>Rank changes (latest run)</h2>
-      <div id="moves-out"></div>
-    </section>
-
-    <section class="panel" id="panel-lineage">
+    <!-- ── PORTFOLIOS ── -->
+    <section class="section" id="s-portfolios">
+      <h1 class="head">Portfolios</h1>
+      <p class="sub">Four deterministic strategies, buy-and-hold NAV vs <b>SPY</b>. Click a strategy to
+        see its holdings; each holding links back to the sector.</p>
+      <div id="pf-cards" class="strip"></div>
+      <div id="pf-detail" style="margin-top:22px"></div>
       <h2>Decision lineage</h2>
-      <div class="row"><label>Trade: <select id="trade-select"></select></label></div>
-      <div id="lineage-out"></div>
+      <p class="hint">Trace a real trade back to the run + reports that justified it (loads on demand).</p>
+      <div id="pf-lineage"></div>
     </section>
 
-    <section class="panel" id="panel-sql">
-      <h2>SQL console</h2>
-      <p class="hint">Read-only over the lake views. E.g.: <code>SELECT * FROM sector_snapshot LIMIT 10</code></p>
-      <textarea id="sql-input">SELECT sector_id, rank, composite, momentum, primary_etf
-FROM sector_snapshot
-WHERE run_id = (SELECT max(run_id) FROM sector_snapshot)
-ORDER BY rank LIMIT 20;</textarea>
-      <div class="row"><button class="btn" id="sql-run">Run</button></div>
-      <div id="sql-out"></div>
+    <!-- ── DATA ── -->
+    <section class="section" id="s-data">
+      <h1 class="head">Runs &amp; data</h1>
+      <p class="sub">Every scoring run, newest first — when it ran, what it was, and how many sectors it
+        scored. "View this run" switches the whole dashboard to that point in time. Reports load on demand.</p>
+      <div id="data-runs"></div>
+      <h2>Report for selected run</h2>
+      <div id="report-out" class="card md"></div>
     </section>
   </main>
   <script type="module" src="app.js"></script>

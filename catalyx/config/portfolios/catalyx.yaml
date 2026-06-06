@@ -1,0 +1,16 @@
+portfolio_id: catalyx
+name: Catalyx
+strategy: catalyx
+description: >
+  The flagship all-things-considered book — CATALYX's own picks. Selects and weights by the
+  full composite score (catalyst + momentum + flow + valuation − crowding). Balanced exposure
+  to the system's best overall ideas, not a single-factor tilt.
+benchmark_etf: SPY
+construction:
+  max_positions: 10
+  min_composite: 55
+  min_momentum: 40
+  max_crowding: 85
+  exclude_narrative_maturity: [exhausted]
+  weighting: composite
+  max_position_pct: 16
