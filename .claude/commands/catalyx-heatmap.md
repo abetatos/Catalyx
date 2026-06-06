@@ -99,9 +99,11 @@ invisible — the goal is full-universe coverage every cycle.
 7. Rank all investable sectors by `composite` descending. Include a `regime` column
    (`regime_state` from `catalyst_scorer`: 🟢 intact / 🟡 contested / 🔴 breaking) so a sector under
    a live contradiction is visible in the main table — but remember `contested` is watch-only and
-   does NOT change its score or weight. Note which dimensions are Phase 0.5 defaults:
+   does NOT change its score or weight. The composite (schema 1.2) has 4 dimensions —
+   `catalyst_alignment×0.35 + momentum×0.29 + flow_confirmation×0.24 + (100−crowding_risk)×0.12`
+   (`valuation_relative` was removed: it was a constant-50 placeholder and no price-derived metric
+   earned its weight). Note which dimensions are Phase 0.5 defaults:
    - `flow_confirmation`: ⚠ default (50) — no ETF flow data yet
-   - `valuation_relative`: ⚠ default (50) — no formal percentile yet
    - `crowding_risk`: 🟢 from study or ⚠ default (35)
 
 8. For the top 5 sectors, write a detailed block including:
