@@ -1,0 +1,130 @@
+{
+  "$schema": "catalyx/schemas/movement.json",
+  "id": "mov_20260604_grid_infrastructure_utilities_bindingconstraint",
+  "schema_version": "1.0",
+  "executed_at": "2026-06-04T00:00:00Z",
+  "action": "open",
+  "sector_id": "grid_infrastructure_utilities",
+  "vehicle": {
+    "etf": "IQQH.DE",
+    "isin": null,
+    "currency": "EUR"
+  },
+  "amount_eur": 500.0,
+  "qty": 43.74,
+  "price": 11.43,
+  "fees": 0.0,
+
+  "attribution": [
+    { "catalyst_id": "struct_energy_transition_grid", "weight": 0.7 },
+    { "catalyst_id": "struct_ai_capex_supercycle", "weight": 0.3 }
+  ],
+
+  "trigger": "new_catalyst",
+  "conviction": "medium",
+
+  "score_context": {
+    "run_id": null,
+    "rank": null,
+    "composite": 91.8,
+    "catalyst_alignment": 95.0,
+    "momentum": null,
+    "flow": null,
+    "crowding": null,
+    "regime_state": null
+  },
+
+  "risk_discipline": {
+    "invalidation": [
+      {
+        "id": "inv_01",
+        "condition": "Eaton Electrical segment backlog declines more than 20% YoY for 2 consecutive quarterly earnings reports AND Schneider Electric backlog also declines YoY in the same periods.",
+        "severity": "full_exit",
+        "source": "earnings_data",
+        "triggered": false,
+        "triggered_at": null,
+        "rationale": "Simultaneous backlog decline at both Eaton AND Schneider would signal broad-based demand destruction in grid equipment — not a company-specific issue. A single company decline is noise; simultaneous decline at two major players is signal."
+      },
+      {
+        "id": "inv_02",
+        "condition": "Power transformer delivery lead times fall below 8 months per 2 consecutive quarterly Wood Mackenzie surveys.",
+        "severity": "review_and_reduce",
+        "source": "user_manual",
+        "triggered": false,
+        "triggered_at": null,
+        "rationale": "Below 8 months = supply normalized to pre-2020 levels; the physical bottleneck that drives equipment pricing power has resolved. Reduce to 2% and reassess whether demand growth alone justifies the position without the supply-constraint amplifier."
+      },
+      {
+        "id": "inv_03",
+        "condition": "US Federal Reserve raises rates to entry_rate + 200bps within 18 months of entry.",
+        "severity": "review_and_reduce",
+        "source": "macro_data",
+        "triggered": false,
+        "triggered_at": null,
+        "rationale": "A +200bps rate shock would compress utility P/E multiples enough to dominate the earnings-growth signal in IQQH.DE. Reduce to 2% and hold equipment-pure exposure only; re-enter at full size when rate peak is confirmed."
+      },
+      {
+        "id": "inv_04",
+        "condition": "IQQH.DE falls more than 20% below entry price for 10 consecutive trading days.",
+        "severity": "review_and_reduce",
+        "source": "market_data",
+        "triggered": false,
+        "triggered_at": null,
+        "stop_price_level": 9.2,
+        "stop_price_ticker": "IQQH.DE",
+        "rationale": "A 20% drawdown triggers a review, not an automatic exit. Check whether the decline is thesis-related (backlog deterioration, rate shock) or market-wide. If market-wide and fundamentals intact, hold or add. Only exit if combined with a triggered fundamental invalidation."
+      }
+    ],
+    "assumptions": [
+      {
+        "id": "asm_01",
+        "statement": "Eaton Electrical sector backlog YoY growth stays positive (above 0%) in each quarterly earnings report during the horizon.",
+        "measurability": "Source: Eaton Corp quarterly earnings (SEC Form 8-K, backlog is a reported segment metric). Falsified by: Eaton Electrical backlog reports negative YoY growth for 2 consecutive quarters.",
+        "monitoring_source": "earnings_data",
+        "check_frequency": "quarterly",
+        "current_status": "holding",
+        "status_note": "Q1 2026: Eaton Electrical backlog +48% YoY to $14.5B. 2026 organic growth guidance raised to 10%. Record first quarter."
+      },
+      {
+        "id": "asm_02",
+        "statement": "Power transformer delivery lead times remain above 12 months per Wood Mackenzie / S&P Global quarterly survey.",
+        "measurability": "Source: Wood Mackenzie quarterly transformer survey. Falsified by: two consecutive quarterly reports showing lead times below 12 months.",
+        "monitoring_source": "user_manual",
+        "check_frequency": "quarterly",
+        "current_status": "holding",
+        "status_note": "Most recent WoodMac (Q1 2026): 20 months. Prior: 22 months. Still 67% above threshold."
+      },
+      {
+        "id": "asm_03",
+        "statement": "Combined hyperscaler AI capex guidance (Microsoft + Google + Amazon + Meta) stays above $100B/quarter during the horizon.",
+        "measurability": "Source: quarterly earnings transcripts and 10-Q/10-K. Falsified by: any single quarter where combined guidance falls below $100B AND represents a >30% sequential cut.",
+        "monitoring_source": "earnings_data",
+        "check_frequency": "quarterly",
+        "current_status": "holding",
+        "status_note": "Q1 2026: ~$700B annual = $175B/quarter average. All 4 hyperscalers raised guidance. Threshold not at risk."
+      },
+      {
+        "id": "asm_04",
+        "statement": "US Federal Reserve does not raise rates more than 100bps cumulative above the entry-date level during the horizon.",
+        "measurability": "Source: FOMC rate decisions. Falsified by: Fed funds target rises to entry_rate + 100bps or more at any FOMC meeting during the horizon.",
+        "monitoring_source": "macro_data",
+        "check_frequency": "on_event",
+        "current_status": "monitoring",
+        "status_note": "Fed in easing/hold cycle (2024–2026). No hike signals in near-term guidance. Macro override-risk monitor, not an active concern."
+      }
+    ],
+    "note": "Migrated from legacy thesis_20260603_grid_infrastructure_utilities_bindingconstraint (v2). Full position €500, bought on the dip 2026-06-04 — no rebalance. Re-rating mechanism: quarterly order-book data (Eaton/Schneider/ABB, Jul 2026) → earnings upgrades → P/E re-rating. Horizon 12–78 weeks."
+  },
+
+  "migrated_from_thesis_id": "thesis_20260603_grid_infrastructure_utilities_bindingconstraint",
+  "run_id": null,
+
+  "metadata": {
+    "created_at": "2026-06-06T00:00:00Z",
+    "created_by": "abetatos",
+    "attribution_note": "Weights are migration estimates: thesis names struct_energy_transition_grid as primary and struct_ai_capex_supercycle as an independent secondary demand driver → 0.7/0.3.",
+    "fill_note": "€500 full amount, bought on the dip 2026-06-04 (IQQH.DE, EUR). qty/price estimated (≈43.7 @ €11.43); reconcile exact fill with Revolut.",
+    "tax_entry_year": 2026,
+    "tags": ["grid_infrastructure", "energy_transition", "AI_power", "equipment_manufacturers", "structural", "order_book_play"]
+  }
+}

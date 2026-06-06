@@ -1,13 +1,28 @@
-# catalyx-monthly-review
+# catalyx-review
 
-Run the full monthly review pipeline. Executes all sub-analyses and produces a consolidated monthly review report.
+Run the analysis & review pipeline (scan → update → studies → dashboard → heatmap → portfolios →
+opportunities → position reviews → tax). Produces a consolidated review report. This is the
+ANALYTICAL cycle — it is **independent of operating**: opening/closing positions is done anytime
+via `/catalyx-open` and `/catalyx-close`, NOT here. The review recommends; it never trades.
 
-Run on: first Monday of each month, or after a significant macro event.
+Usage:
+- `/catalyx-review` or `/catalyx-review scheduled` — full periodic review (run monthly, or ad-hoc).
+- `/catalyx-review event:<catalyst_id>` — **event-driven**: a punctual catalyst fired and you want
+  to react now, not wait for the periodic cycle.
+
+**Trigger modes:**
+- `scheduled` (default): run every step below, full universe.
+- `event:<catalyst_id>`: run only the steps the event touches — Step 0 (macro context for THIS
+  event), Step 1 (scan for related events), Step 2 (update the affected catalyst's indicators),
+  Step 3 (re-study only the sectors that catalyst drives), Steps 5/5b/5c (re-score + regime +
+  dislocation), Step 6 (review open positions attributed to that catalyst). Skip the full-universe
+  Steps 11–12 unless the event surfaces a taxonomy gap. State at the top of the report which
+  trigger ran and why each skipped step was skipped.
 
 ## PIPELINE ORDER — CRITICAL
 
 The order below is mandatory. Each step provides data that the next step requires.
-Do NOT run heatmap before sector studies. Do NOT run thesis review before the dashboard.
+Do NOT run heatmap before sector studies. Do NOT run position review before the dashboard.
 
 ```
 Step 0:   Macro & Geopolitical Context (WebSearch — always first)
@@ -19,10 +34,10 @@ Step 4:   Catalyst Dashboard
 Step 5:   Sector Heatmap (requires updated sector studies)
 Step 5b:  Model Portfolios + NAV vs S&P500 (after the run is recorded)
 Step 5c:  Opportunities & Rotation (regime watch + dislocation lens — recommendations, not trades)
-Step 6:   Open Thesis Reviews
-Step 7:   Portfolio Correlation Check  ← MUST run before any thesis draft decision
-Step 8:   Tax Snapshot
-Step 9:   Thesis Draft Decision  ← uses Step 5 heatmap + Step 6 reviews + Step 7 correlation
+Step 6:   Open Position Reviews (movements + risk_discipline + regime)
+Step 7:   Catalyst Exposure / Correlation Check  ← informs any open-position recommendation
+Step 8:   Tax Snapshot (realized YTD from closing movements)
+Step 9:   Position Open Recommendations  ← uses Step 5 heatmap + Step 6 reviews + Step 7 exposure
 Step 11:  Watch-Only Trigger Progress
 Step 12:  Taxonomy Gap Review → contextualize each pending proposal, then ASK the user (promote/reject/defer)
 ```
@@ -134,7 +149,7 @@ JSON to `data/sector_studies/study_<sector_id>.json`.
 in parallel batches and let freshness-skip shrink the list on subsequent cycles.
 
 **Time-constrained fallback:** if a full run is not feasible, prioritize (a) sectors with an
-open thesis, (b) top catalyst_alignment sectors, (c) highest-momentum sectors from the latest
+open position, (b) top catalyst_alignment sectors, (c) highest-momentum sectors from the latest
 snapshot; write `study_type: "partial"` for the rest.
 
 ---
@@ -199,68 +214,84 @@ uv run python -m catalyx.scorer.dislocation --window 5 --json  # opportunities (
 
 ---
 
-### Step 6 — Open Thesis Reviews
+### Step 6 — Open Position Reviews
 
-For each file in `data/theses/*.json` where `status == "open"`:
-- Follow the `review` sub-flow from `catalyx-thesis` skill
-- Use WebSearch findings from Step 0 to check each assumption against current data
-- Summarize in one row: thesis_id, days_open, assumption_status (N/N validated), recommended_action
+Load the live book and the catalyst attribution:
+```
+uv run python -m catalyx.store.movement_repo positions
+uv run python -m catalyx.store.lake_query ledger
+```
+For each open position, read its opening movement in `data/movements/` and review its
+`risk_discipline`:
+- For each `assumptions[]`: use Step 0 WebSearch findings to assess `holding` / `weakening` /
+  `violated` — cite specific evidence (date, source, value).
+- For each `invalidation[]`: check whether the stop/condition has been breached (price/inventory/
+  rate). A `market_data` stop is checkable from the latest snapshot.
+- Cross the position's attributed catalyst(s) against this run's `regime_state` (Step 5c): if a
+  driving catalyst is `contested`/`breaking`, flag the position.
+- Summarize in one row: sector, days_open, assumptions (N/N holding), regime of driving catalyst,
+  recommended_action (Hold / Add / Reduce / Exit). "Monitor" is not a recommendation.
+- **Recommend only.** Any actual Add/Reduce/Exit is executed by the user via `/catalyx-open` or
+  `/catalyx-close` — never written here.
 
 ---
 
-### Step 7 — Portfolio Correlation Check
+### Step 7 — Catalyst Exposure / Correlation Check
 
-Run BEFORE any thesis draft decision (Step 9 depends on this output):
-
+Informs the open-position recommendations (Step 9). Read exposure already attributed per catalyst:
 ```
-uv run python -m catalyx.store.thesis_repo summary
+uv run python -m catalyx.store.lake_query ledger
 ```
-
-- List all open/draft theses and their primary structural catalyst IDs
-- Read `correlated_catalyst_cap` from `scoring_weights.yaml` (`max_combined_pct`, default 0.20; `enforcement`, default "warn").
-- For each potential new thesis (sectors in top-5 with no open thesis), compute:
-  - Is the primary structural catalyst shared with any open thesis?
-  - `combined_allocation = existing_open_pct + proposed_new_pct`
-  - If combined > `max_combined_pct`: flag as ⚠ OVER-CAP (a flexible warning — not a hard block unless `enforcement == "block"`). The user may still authorize it in Step 9 with an override note.
-- Record this check in the monthly report
+- For each catalyst, the ledger gives `invested_eur` and the sectors carrying it.
+- Read `correlated_catalyst_cap` from `scoring_weights.yaml` (`max_combined_pct`, default 0.20;
+  `enforcement`, default "warn").
+- For each potential new position (top-5 sector with no open position on that catalyst), compute:
+  - Does it share a primary catalyst with existing exposure?
+  - `combined_exposure_pct = existing_catalyst_pct + proposed_new_pct` (as a % of the book).
+  - If combined > `max_combined_pct`: flag ⚠ OVER-CAP (flexible warning unless `enforcement ==
+    "block"`). The user may still authorize it in Step 9 with an override note.
+- Record this check in the report.
 
 ---
 
 ### Step 8 — Tax Snapshot
 
+Realized YTD comes from the closing movements (the `realized_eur` of the net book this calendar
+year):
 ```
-uv run python -m catalyx.store.thesis_repo tax-snapshot
+uv run python -m catalyx.store.movement_repo positions   # realized_eur = YTD realized
 ```
-
-`tax-snapshot` reads the closed-thesis JSON in `data/theses/` directly, so any file written this
-session is already included — no import step.
-
-Show: total realized gains, tax paid YTD, current marginal bracket, estimated full-year tax if open theses close at current mark-to-market.
-If no closed theses: state YTD gains = 0.
+Feed that as `--ytd-prior` to preview the marginal bracket / projected full-year tax if open
+positions closed at mark:
+```
+uv run python -m catalyx.execution.tax_engine --gain <projected_unrealized_eur> --ytd-prior <realized_eur> --json
+```
+Show: total realized gains, tax paid YTD, current marginal bracket, projected full-year tax.
+If no closing movements yet: state YTD realized = 0.
 
 ---
 
-### Step 9 — Thesis Draft Decision
+### Step 9 — Position Open Recommendations
 
-Based on heatmap (Step 5), thesis reviews (Step 6), and correlation check (Step 7):
-- List sectors that rank in top-5 AND have no open thesis — these are the draft candidates.
+Based on heatmap (Step 5), position reviews (Step 6), and exposure check (Step 7):
+- List sectors that rank in top-5 AND have no open position — these are the candidates.
 
-**For EACH candidate, present a context block AND ask the user to decide. Do not draft automatically and do not skip the question** (same pattern as Step 12 taxonomy review). A thesis commits capital — it always requires explicit authorization.
-
-For each candidate, write a short context block so the user can decide without opening files:
+**This step only RECOMMENDS. It never opens a position** — opening is the user's action via
+`/catalyx-open`. Present a context block per candidate so the user can decide:
 
 ```
 ### <sector_id>   [heatmap rank: #N | composite: X]
 - **Why it ranks:** dominant catalyst(s) + their alignment, and momentum (flag if parabolic — high rank ≠ entry point).
 - **Crowding / timing:** narrative_maturity and what it implies for entering now vs waiting.
 - **Best ETF (UCITS):** ticker, TER, AUM, UCITS status, spread. Flag AUM < $200M.
-- **Allocation fit:** proposed size, shared catalyst with any open thesis, `combined_allocation` vs `max_combined_pct` (Step 7). If ⚠ OVER-CAP, state the breach amount — it is a flexible warning, the user may authorize it.
-- **Recommendation:** Draft now / Wait (bad timing) / Skip — with one line of reasoning.
+- **Exposure fit:** proposed size, shared catalyst with existing exposure, `combined_exposure` vs `max_combined_pct` (Step 7). If ⚠ OVER-CAP, state the breach amount — flexible warning, the user may authorize it.
+- **Recommendation:** Open now / Wait (bad timing) / Skip — with one line of reasoning.
 ```
 
-After presenting all context blocks, use the **AskUserQuestion** tool — one question per candidate — with options **Draft now**, **Wait / defer**, **Skip** (and let the user add notes).
-- If the user selects **Draft now**: proceed with the `draft` sub-flow of the `catalyx-thesis` skill for that sector. If the candidate is ⚠ OVER-CAP and `enforcement == "warn"`, the draft may proceed but MUST record the override reason in `correlation_note`; if `enforcement == "block"`, do not draft until the user reduces sizing.
-- Never write a thesis JSON before the user answers.
+After presenting all context blocks, use the **AskUserQuestion** tool — one question per candidate
+— with options **Open now**, **Wait / defer**, **Skip** (and let the user add notes).
+- If the user selects **Open now**: hand off to `/catalyx-open <sector_id>` (that skill writes the
+  movement file, runs the correlation check, and ingests). This review never writes a movement.
 
 ---
 
@@ -395,16 +426,16 @@ Write consolidated monthly review to `data/reports/monthly_review_YYYYMMDD.md`:
 | Sector | Composite | Corr to stressed | Note |
 |---|---|---|---|
 
-## 5. Open Theses
-| Thesis | Days open | Assumptions (N/N ok) | Action |
-|---|---|---|---|
+## 5. Open Positions
+| Sector | Days open | Assumptions (N/N holding) | Driving catalyst regime | Action |
+|---|---|---|---|---|
 
-## 6. Portfolio Correlation
-| Open theses | Shared catalyst | Combined % | Status |
-|---|---|---|---|
+## 6. Catalyst Exposure
+| Catalyst | Invested € | Sectors | Combined % | Status |
+|---|---|---|---|---|
 
-## 7. Thesis Draft Decisions
-[Sectors proposed for new draft. Blocked drafts (correlation ceiling exceeded) listed separately.]
+## 7. Position Open Recommendations
+[Top-5 sectors with no open position. ⚠ OVER-CAP candidates (combined exposure > cap) flagged separately. Recommendations only — opening is done via /catalyx-open.]
 
 ## 8. Tax Snapshot YTD
 | Metric | Value |
@@ -440,10 +471,10 @@ Print to chat: "Monthly review complete. Key findings: [3 bullets]. Full report:
 - **Pass 1 (Discovery) runs before Pass 2 (Classification) in Step 1.** Never read `sector_taxonomy.yaml` during the Discovery pass — the point is to find what the taxonomy misses.
 - **Sector studies before heatmap.** Never run heatmap without refreshing sector studies for the top-5 sectors.
 - The Executive Summary must contain at least one NON-OBVIOUS finding. If everything is "no change", state that explicitly.
-- Open thesis review must make a concrete recommendation (Hold / Add / Reduce / Exit). "Monitor" is not a recommendation.
+- Open position review must make a concrete recommendation (Hold / Add / Reduce / Exit). "Monitor" is not a recommendation. The review only recommends; the user executes via /catalyx-open or /catalyx-close.
 - Stale indicators are not optional to flag — they are data quality issues that corrupt downstream analysis.
 - **Step 12 actively asks the user per pending proposal** (AskUserQuestion: Promote / Reject / Defer) after presenting a context block for each. Never present the gap table as read-only and never promote, reject, or skip a proposal without an explicit answer. Writing to `sector_taxonomy.yaml` only happens after the user selects Promote.
-- **Portfolio correlation check (Step 7) is a prerequisite for any draft decision (Step 9).** Never propose a new thesis without first checking combined allocation against open theses sharing the same primary structural catalyst.
-- **Step 9 actively asks the user per draft candidate** (AskUserQuestion: Draft now / Wait / Skip) after presenting a context block for each. Never draft a thesis without an explicit answer. The `correlated_catalyst_cap` (default 20%, `enforcement: warn`) is a FLEXIBLE warning — a breach is surfaced and requires an override note, but does not by itself block a draft.
+- **Catalyst exposure check (Step 7) informs any open-position recommendation (Step 9).** Never recommend a new position without first checking combined exposure against existing positions sharing the same catalyst.
+- **Step 9 actively asks the user per candidate** (AskUserQuestion: Open now / Wait / Skip) after presenting a context block for each. The review NEVER opens a position — on "Open now" it hands off to `/catalyx-open`. The `correlated_catalyst_cap` (default 20%, `enforcement: warn`) is a FLEXIBLE warning — a breach is surfaced and requires an override note, but does not by itself block.
 - **AI SCORING RULE:** Never assign `intensity.current_score` manually. Always recompute from indicator semaphores using the formula in `scoring_weights.yaml`. If a user_override is needed, document the reason in `computation_note`.
 - **Regime / opportunities (Step 5c) are recommendations, never auto-trades, and never move portfolio weights.** A `contested` sector keeps its full score and weight — it is a watch flag. The pipeline reacts to PERSISTENCE (dispersed developments or measured fundamental degradation), not to a single event, and the escalation + buy/rotate decisions are the user's. "Two consecutive-day drops confirm nothing."

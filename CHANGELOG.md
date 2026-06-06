@@ -4,6 +4,34 @@
 > Read this file only when you need to answer: "when did X change?", "what was the previous formula?", "why was field Y added?"
 >
 > **How to add an entry:** when `Recent Changes` in CLAUDE.md reaches 6 entries, move the oldest row here verbatim and add detail below it.
+>
+> **Versioning (since v0.3.1):** SemVer, **pre-1.0** (early/unstable), one number in `pyproject.toml`, tagged `vX.Y.Z` on `main`. See `RELEASING.md`. The earlier `vN.M` labels below are an informal pre-tag change counter, not SemVer.
+
+---
+
+## v0.3.1 — 2026-06-06 — Thesis → Movement (first tagged release)
+
+**Breaking data-model pivot.** The primary capital unit is no longer a heavyweight falsifiable
+`Thesis`; it is a **`Movement`** — EUR attributed directly to catalyst(s) via weighted
+`attribution[]`, with `action` (open/add/trim/close), `trigger`, `conviction`, and a point-in-time
+`score_context`. The **Catalyst** becomes the unit of the track record (`catalyst_ledger`).
+Movements are Tier-1 JSON files in `data/movements/` (drop a file → `movement_repo ingest`, which
+joins `score_context` to the score_run as-of `executed_at` — no look-ahead — and write-throughs a
+`movement` mirror + `catalyst_performance` to the lake). The falsifiable discipline survives as an
+optional, machine-checkable `risk_discipline` block.
+
+- **New:** `schemas/movement.json`, `catalyx/store/movement_repo.py`, `data/movements/*`,
+  `docs/PLAN_movement_restructure.md`, skills `/catalyx-open` + `/catalyx-close`.
+- **Renamed:** `/catalyx-monthly-review` → `/catalyx-review` (`scheduled | event:<catalyst_id>` —
+  reviews are no longer monthly-only; operating is independent of reviewing).
+- **Repointed:** `nav_engine` real book ← `movement_repo.positions`; `lake_query` lineage walks
+  movement → catalysts → run; dashboard "Catalysts & theses" → "Catalysts & positions".
+- **Migrated:** the 2 open theses → movements (copper €1000, grid €500, full positions bought on
+  the dip 2026-06-04, no rebalance).
+- **Deleted (no legacy):** `thesis_repo.py`, `thesis_scorer.py`, `trade_logger.py`,
+  `schemas/thesis.json`, `schemas/closed_thesis.json`, `data/theses/`, `catalyx-thesis.md`, the
+  empty `portfolio_trade` lake table, a stale dislocation sentinel partition.
+- 105 tests green. `pyproject.toml` version 0.1.0 → 0.3.1 (first tagged release; pre-1.0 — see `RELEASING.md`).
 
 ---
 

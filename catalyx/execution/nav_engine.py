@@ -2,7 +2,7 @@
 
 Turns a set of holdings (weights per ETF) into a NAV time series indexed to 100 at
 inception — a buy-and-hold of that snapshot. Works for BOTH model portfolios (from
-`portfolio.build_model_holdings`) and the real book (from `trade_logger.real_holdings`),
+`portfolio.build_model_holdings`) and the real book (from `movement_repo.positions`),
 because both reduce to {etf: weight}. The price source is injectable: `price_fn(tickers,
 start, end) -> DataFrame[date × ticker]` (adjusted close). The default uses yfinance;
 tests inject a synthetic frame so the math is verified with no network.
@@ -177,19 +177,19 @@ def compute_model_nav(portfolio_id: str, run_id: str | None = None, as_of: str |
 def compute_real_nav(portfolio_id: str, start: str | None = None, as_of: str | None = None,
                      benchmark: str | None = None, price_fn=None, persist: bool = True,
                      lake_dir: Path | None = None) -> dict:
-    """NAV series of the REAL book (from the trade log → net holdings). Same math as the
+    """NAV series of the REAL book (from the movement files → net holdings). Same math as the
     model leg, so the two curves are directly comparable (execution alpha)."""
-    from catalyx.execution import trade_logger
+    from catalyx.store import movement_repo
 
     price_fn = price_fn or yfinance_prices
-    rh = trade_logger.real_holdings(portfolio_id, lake_dir=lake_dir)
+    rh = movement_repo.positions()
     holdings = rh.get("holdings", [])
     if not holdings:
         return {"portfolio_id": portfolio_id, "error": "no open real positions"}
 
     if start is None:
-        ts = trade_logger.trades(portfolio_id, lake_dir=lake_dir)
-        start = min((t["date"] for t in ts), default=date.today().isoformat())
+        movs = movement_repo.load_all()
+        start = min((m["executed_at"][:10] for m in movs), default=date.today().isoformat())
     end = as_of or date.today().isoformat()
 
     etfs = [h["etf"] for h in holdings]
@@ -247,7 +247,7 @@ def main() -> None:
     m.add_argument("--as-of", default=None)
     m.add_argument("--backtest-days", type=int, default=None,
                    help="Trailing backtest window (e.g. 180) — current holdings vs market over last N days")
-    rl = sub.add_parser("real", help="Compute the real book's NAV from the trade log")
+    rl = sub.add_parser("real", help="Compute the real book's NAV from the movement files")
     rl.add_argument("portfolio_id")
     rl.add_argument("--start", default=None)
     rl.add_argument("--as-of", default=None)

@@ -559,3 +559,44 @@ catalyst_lifecycle:
   structural_dormant_consecutive_cycles: 2 # … for N consecutive review cycles → status: dormant
   structural_dormant_if_exhausted: true    # OR narrative_maturity == "exhausted" → dormant
   # dormant is reactivatable: if indicators repoint above threshold, status flips back to active
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Entry-timing overlay (added 2026-06-06) — catalyx/scorer/entry_timing.py
+# ─────────────────────────────────────────────────────────────────────────────
+# This is an EXECUTION-TIMING overlay, NOT part of the composite. The composite answers
+# WHICH sector to be in (catalyst/momentum/flow/crowding); dislocation answers IF a sector
+# is cheap vs its fundamentals. entry_timing answers WHEN to enter a position you already
+# decided on: avoid deploying full size into UNRESOLVED micro-tension (a falling knife) or
+# right before a known near-term event (an overhang — e.g. a peer mega-IPO whale-dump risk).
+# It RECOMMENDS, never trades and never moves weights (same stance as regime/dislocation).
+# Thresholds live here (single source of truth, no LLM drift); the module computes facts and
+# a suggested verdict, and Claude makes the final enter/scale/wait call in the skill.
+entry_timing:
+  lookback_days: 90          # daily-close window pulled from yfinance for the micro-tension math
+  rsi_period: 14
+  rsi_overbought: 70         # RSI ≥ this → chasing an extended move (mean-reversion risk)
+  rsi_oversold: 30           # RSI ≤ this → falling knife (oversold, not yet stabilized)
+  ma_stretch_window: 20      # MA period for the stretch_vs_ma measure
+  stretch_overbought_pct: 8.0   # price > +this% above MA20 → "stretched" (wait for a pullback)
+  vol_ratio_window_short: 10 # realized-vol short window (days)
+  vol_ratio_window_long: 90  # realized-vol long window (days)
+  vol_ratio_elevated: 1.5    # short_vol / long_vol ≥ this → elevated tension
+  short_trend_window: 5      # return window for the short-term trend read
+  drawdown_local_high_window: 20  # local-high lookback for drawdown_from_local_high
+  # Stabilization = the discriminator between "good dip to buy" and "knife still falling".
+  # The recent decline is judged STABILIZED when EITHER holds:
+  stabilization_up_closes: 2     # last N daily closes are higher (sequence turning up), OR
+  stabilization_reclaim_ma: 5    # price has reclaimed its N-day MA after being below it
+  # State → suggested verdict mapping (Claude can override with WebSearch context):
+  #   calm            → enter_now      (no tension, no overhang)
+  #   stabilizing     → scale_in       (dip turning — enter in tranches)
+  #   stretched       → wait_stabilize (overbought/extended — wait for a pullback)
+  #   falling_unstable→ wait_stabilize (knife not stabilized — wait for it to base)
+  # An event overhang in the window upgrades the verdict to wait_event regardless of micro-state.
+  # Event overhang = a near-term discrete CatalystEvent touching the sector (reuse the
+  # catalyst→sector resolution in catalyst_scorer.py). NO separate registry — it is a catalyst.
+  overhang_window_days: 21       # |event_date - today| ≤ this counts as a near-term overhang
+  overhang_magnitudes: ["high", "extreme"]  # magnitudes that qualify as a market-moving overhang
+  overhang_min_strength: 60      # OR strength_score ≥ this (covers events without a magnitude)
+  market_tension_ticker: "^VIX"  # market-wide risk-off backdrop gauge
+  benchmark: "SPY"               # market window-return reference (mirrors dislocation)

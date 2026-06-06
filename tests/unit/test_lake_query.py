@@ -33,12 +33,15 @@ def _seed(tmp_path):
         {"portfolio_id": "real", "kind": "real", "date": "2026-06-05", "nav": 102.0,
          "return_pct": 2.0, "benchmark_etf": "ACWI", "vs_benchmark_pct": -3.0},
     ]), {"portfolio_id": "real"}, lake_dir=tmp_path)
-    # a trade + a report on run_b
-    lake.append_partition("portfolio_trade", pd.DataFrame([
-        {"trade_id": "real_2026-06-05_001", "portfolio_id": "real", "date": "2026-06-05",
-         "etf": "COPX", "side": "buy", "qty": 10.0, "price": 90.0, "fees": 1.0,
-         "eur_value": 901.0, "thesis_id": "thesis_copper", "run_id": "run_b"},
-    ]), {"portfolio_id": "real"}, lake_dir=tmp_path)
+    # a movement (mirror) + a report on run_b
+    lake.append_partition("movement", pd.DataFrame([
+        {"id": "mov_20260605_copper_x", "executed_at": "2026-06-05T00:00:00Z", "action": "open",
+         "sector_id": "copper", "etf": "COPX", "currency": "EUR", "amount_eur": 901.0,
+         "qty": 10.0, "price": 90.0, "fees": 1.0, "trigger": "new_catalyst", "conviction": "medium",
+         "attribution_json": '[{"catalyst_id": "struct_copper", "weight": 1.0}]',
+         "score_run_id": "run_b", "score_composite": 75.0, "score_catalyst_alignment": 90.0,
+         "score_regime_state": "intact", "run_id": "run_b"},
+    ]), {"sector_id": "copper"}, lake_dir=tmp_path)
     lake.append_partition("report", pd.DataFrame([
         {"run_id": "run_b", "report_type": "heatmap", "report_date": "2026-06-05",
          "path": "data/reports/heatmap_20260605.md", "content_md": "..."},
@@ -66,16 +69,27 @@ def test_portfolio_compare_one_row_each_sorted(tmp_path):
     assert rows[0]["return_pct"] == 8.0
 
 
-def test_lineage_walks_trade_to_run_report_snapshot(tmp_path):
+def test_lineage_walks_movement_to_run_report_snapshot(tmp_path):
     _seed(tmp_path)
-    lin = q.lineage_for_trade("real_2026-06-05_001", lake_dir=tmp_path)
-    assert lin["thesis_id"] == "thesis_copper"
+    lin = q.lineage_for_movement("mov_20260605_copper_x", lake_dir=tmp_path)
+    assert lin["catalysts"][0]["catalyst_id"] == "struct_copper"
     assert lin["run_id"] == "run_b"
     assert lin["reports"][0]["report_type"] == "heatmap"
-    assert lin["sector_snapshot"]["sector_id"] == "copper"  # matched COPX → copper in run_b
+    assert lin["sector_snapshot"]["sector_id"] == "copper"
+
+
+def test_catalyst_ledger_reads_latest_snapshot(tmp_path):
+    _seed(tmp_path)
+    lake.append_partition("catalyst_performance", pd.DataFrame([
+        {"catalyst_id": "struct_copper", "invested_eur": 1000.0, "realized_eur": 0.0,
+         "n_movements": 1, "sectors": "copper", "as_of": "2026-06-06"},
+    ]), {"as_of": "2026-06-06"}, lake_dir=tmp_path)
+    led = q.catalyst_ledger(lake_dir=tmp_path)
+    assert led[0]["catalyst_id"] == "struct_copper" and led[0]["invested_eur"] == 1000.0
 
 
 def test_empty_lake_returns_empty(tmp_path):
     assert q.latest_ranking(lake_dir=tmp_path) == []
     assert q.portfolio_compare(lake_dir=tmp_path) == []
-    assert q.lineage_for_trade("x", lake_dir=tmp_path) == {"error": "no trades in lake"}
+    assert q.catalyst_ledger(lake_dir=tmp_path) == []
+    assert q.lineage_for_movement("x", lake_dir=tmp_path) == {"error": "no movements in lake (run movement_repo ingest)"}
