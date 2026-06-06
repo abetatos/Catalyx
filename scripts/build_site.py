@@ -168,7 +168,7 @@ def _bake_overview(dist: Path) -> dict:
         if latest_rid and has("sector_snapshot"):
             ov["latest"]["ranking"] = q(
                 "SELECT sector_id, rank, composite, catalyst_alignment, momentum, flow_confirmation, "
-                "valuation_relative, crowding_risk, narrative_maturity, primary_etf, regime_state "
+                "crowding_risk, narrative_maturity, primary_etf, regime_state "
                 f"FROM sector_snapshot WHERE run_id = '{latest_rid}' ORDER BY rank")
             ov["latest"]["rank_moves"] = q(
                 "SELECT sector_id, event_type, from_rank, to_rank, delta FROM rank_event "

@@ -43,12 +43,14 @@ def _section(name: str, default: dict) -> dict:
 
 # ── Composite (sector_scorer) ────────────────────────────────────────────────
 
+# v1.6: valuation_relative removed (was a constant-50 placeholder that only diluted the
+# ranking; no price-derived metric earned the 15% — see scoring_weights.yaml + the backtest).
+# The weight was redistributed proportionally across the survivors (each × 1/0.85).
 _COMPOSITE_DEFAULT = {
-    "catalyst_alignment": 0.30,
-    "momentum": 0.25,
-    "flow_confirmation": 0.20,
-    "valuation_relative": 0.15,
-    "crowding_risk": 0.10,
+    "catalyst_alignment": 0.35,
+    "momentum": 0.29,
+    "flow_confirmation": 0.24,
+    "crowding_risk": 0.12,
 }
 
 

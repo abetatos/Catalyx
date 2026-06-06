@@ -28,10 +28,15 @@ const RUNCACHE = {};         // run_id → snapshot (dynamically loaded historic
 let LAST = { section: 'overview', id: null };
 
 // ── lazy DuckDB-WASM (booted only when a non-latest run / history / report is needed) ───
-let conn = null, dbPromise = null;
+// IMPORTANT: `conn` is published (and dbReady set) ONLY after every view is created. Earlier
+// this assigned `conn` mid-boot (right after connect, before the CREATE VIEW loop), so a
+// second query landing in that window got the connection with no views yet → "Table
+// sector_snapshot does not exist". The dbReady gate + returning the resolved connection from
+// the single dbPromise removes that race.
+let conn = null, dbPromise = null, dbReady = false;
 const tables = new Set();
 async function ensureDuckDB() {
-  if (conn) return conn;
+  if (dbReady) return conn;
   if (!dbPromise) dbPromise = (async () => {
     status('booting DuckDB-WASM…');
     const duckdb = await import(/* @vite-ignore */ DUCKDB_URL);
@@ -42,7 +47,7 @@ async function ensureDuckDB() {
     await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
     URL.revokeObjectURL(workerURL);
     const manifest = await (await fetch('manifest.json' + V)).json();
-    conn = await db.connect();
+    const c = await db.connect();
     for (const [table, files] of Object.entries(manifest)) {
       const names = [];
       for (const f of files) {
@@ -51,21 +56,22 @@ async function ensureDuckDB() {
         names.push(`'${name}'`);
       }
       if (!names.length) continue;
-      await conn.query(`CREATE OR REPLACE VIEW "${table}" AS SELECT * FROM read_parquet([${names.join(',')}], union_by_name=true)`);
+      await c.query(`CREATE OR REPLACE VIEW "${table}" AS SELECT * FROM read_parquet([${names.join(',')}], union_by_name=true)`);
       tables.add(table);
     }
+    conn = c; dbReady = true;            // publish only when fully ready
     status(`${tables.size} lake tables ready`);
-    return conn;
+    return c;
   })();
   return dbPromise;
 }
 function norm(v) { if (typeof v === 'bigint') return Number(v); if (v && typeof v === 'object' && !Array.isArray(v) && 'toString' in v) return v.toString(); return v; }
 function sqlLiteral(v) { if (v === null || v === undefined) return 'NULL'; if (typeof v === 'number') return String(v); return "'" + String(v).replace(/'/g, "''") + "'"; }
 async function q(sql, params) {
-  await ensureDuckDB();
+  const c = await ensureDuckDB();
   let final = sql;
   if (params && params.length) { let i = 0; final = sql.replace(/\?/g, () => sqlLiteral(params[i++])); }
-  const res = await conn.query(final);
+  const res = await c.query(final);
   return res.toArray().map((r) => Object.fromEntries(res.schema.fields.map((f) => [f.name, norm(r[f.name])])));
 }
 
@@ -173,7 +179,7 @@ async function getRunData(rid) {
   if (RUNCACHE[rid]) return RUNCACHE[rid];
   await ensureDuckDB();
   const ranking = tables.has('sector_snapshot') ? await q(
-    `SELECT sector_id, rank, composite, catalyst_alignment, momentum, flow_confirmation, valuation_relative, crowding_risk, narrative_maturity, primary_etf, regime_state
+    `SELECT sector_id, rank, composite, catalyst_alignment, momentum, flow_confirmation, crowding_risk, narrative_maturity, primary_etf, regime_state
      FROM sector_snapshot WHERE run_id = ? ORDER BY rank`, [rid]) : [];
   const rank_moves = tables.has('rank_event') ? await q(
     `SELECT sector_id, event_type, from_rank, to_rank, delta FROM rank_event WHERE run_id = ? ORDER BY abs(coalesce(delta,99)) DESC`, [rid]) : [];
@@ -294,9 +300,10 @@ function renderOverview() {
 }
 
 // ── SECTORS (full comparison table + study + history, run-aware) ─────────────────
-// Heatmap columns (higher = better). valuation_relative is intentionally omitted — it is a
-// hardcoded 50 placeholder until valuation_engine exists, so a column of identical 50s only
-// adds noise. crowding is shown as a categorical label (it derives from narrative_maturity).
+// Heatmap columns (higher = better). valuation_relative was REMOVED from the model in schema
+// 1.2 (it was a constant-50 placeholder that only diluted the ranking; no price-derived metric
+// earned its weight — see the backtest). crowding is shown as a categorical label (derives from
+// narrative_maturity).
 const SEC_COLS = [
   { k: 'composite', label: 'composite', bold: true, tip: 'Blend used for the ranking (higher = better)' },
   { k: 'catalyst_alignment', label: 'catalyst', tip: 'How strongly active catalysts support the sector' },
@@ -345,7 +352,7 @@ function drawSecTable() {
       <td class="go" title="open sector report">${chevron}</td>
     </tr>`).join('') || `<tr><td colspan="${SEC_COLS.length + 6}" class="lbl" style="padding:14px">no match</td></tr>`;
   $('sec-table').innerHTML = `<div class="cmp"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`
-    + `<p class="hint" style="margin-top:8px">Cell colour: <b style="color:var(--green)">green</b> high · <b style="color:var(--amber)">amber</b> mid · <b style="color:var(--red)">red</b> low (higher = better for all shown). <b>crowding</b> low is better. <code>valuation</code> hidden — it is a neutral placeholder (50) until <code>valuation_engine</code> is built.</p>`;
+    + `<p class="hint" style="margin-top:8px">Cell colour: <b style="color:var(--green)">green</b> high · <b style="color:var(--amber)">amber</b> mid · <b style="color:var(--red)">red</b> low (higher = better for all shown). <b>crowding</b> low is better. <code>valuation</code> was removed from the model (schema 1.2) — it never moved the ranking and no price-derived metric earned its weight.</p>`;
   $('sec-table').querySelector('thead').onclick = (ev) => {
     const th = ev.target.closest('th[data-sort]'); if (!th) return;
     const col = th.dataset.sort;

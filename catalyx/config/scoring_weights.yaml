@@ -33,12 +33,20 @@
 #   existing one: "stronger than X" / "similar to X" / "weaker than X".
 #   This provides inter-catalyst calibration that persists across sessions.
 
+# v1.6 (2026-06-06): valuation_relative REMOVED from the composite. It was a constant
+# 50 placeholder (no valuation_engine), so it never changed the ranking — only diluted
+# the real dimensions. A backtest (experiments/backtest_acceleration.py) confirmed that
+# adding a 4th price-derived dimension (momentum acceleration) carries NEGATIVE IC at the
+# monthly horizon (short-term reversal) — i.e. no price-derived metric earns that 15%.
+# The 0.15 was redistributed PROPORTIONALLY across the surviving dimensions (each × 1/0.85),
+# so their relative importance is unchanged; only valuation's dead weight is gone.
+# The schema keeps `valuation_relative` marked deprecated for one major version (read-back
+# of old snapshots) — see schemas/sector_snapshot.json.
 composite_weights:
-  catalyst_alignment: 0.30
-  momentum: 0.25
-  flow_confirmation: 0.20
-  valuation_relative: 0.15
-  crowding_risk: 0.10  # Applied as (100 - crowding_score) × 0.10
+  catalyst_alignment: 0.35
+  momentum: 0.29
+  flow_confirmation: 0.24
+  crowding_risk: 0.12  # Applied as (100 - crowding_score) × 0.12
 
 # catalyst_alignment sub-weights (event vs structural contribution)
 catalyst_alignment_sub_weights:

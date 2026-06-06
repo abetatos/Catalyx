@@ -2,17 +2,21 @@
 
 Formula source: scoring_weights.yaml §composite_weights
 
-    composite = catalyst_alignment × 0.30
-              + momentum          × 0.25
-              + flow_confirmation × 0.20
-              + valuation_relative × 0.15
-              + (100 - crowding_risk) × 0.10
+    composite = catalyst_alignment × 0.35
+              + momentum          × 0.29
+              + flow_confirmation × 0.24
+              + (100 - crowding_risk) × 0.12
 
 Result capped at [0, 100].
 
+v1.6 (2026-06-06): `valuation_relative` was REMOVED from the composite. It had always
+been a constant-50 placeholder (no valuation_engine), so it never changed the ranking —
+it only diluted the real dimensions. A backtest showed no price-derived metric earns that
+15% (momentum acceleration has negative monthly IC), so the weight was redistributed
+proportionally across the survivors. The schema keeps the field deprecated for read-back.
+
 Phase 0.5 defaults (used when auto-derivation is unavailable):
   - flow_confirmation: 50 (neutral). Auto-derived from flow_data.py when a flow snapshot exists.
-  - valuation_relative: 50 (neutral). Manual until valuation_engine.py is built.
   - crowding_risk: 35. Override via --crowd or from sector study narrative_maturity.
   - catalyst_alignment: computed by catalyst_scorer if not supplied.
   - momentum: computed by momentum_engine if not supplied.
@@ -25,10 +29,10 @@ Usage (callable from skills):
     uv run python -m catalyx.scorer.sector_scorer --all
 
     # Manual override for specific dimensions:
-    uv run python -m catalyx.scorer.sector_scorer copper_miners --flow 50 --val 55 --crowd 35
+    uv run python -m catalyx.scorer.sector_scorer copper_miners --flow 50 --crowd 35
 
     # Use pre-computed scores (skip all derivation):
-    uv run python -m catalyx.scorer.sector_scorer copper_miners --ca 95 --mom 77.7 --flow 50 --val 55 --crowd 35
+    uv run python -m catalyx.scorer.sector_scorer copper_miners --ca 95 --mom 77.7 --flow 50 --crowd 35
 
     # JSON output:
     uv run python -m catalyx.scorer.sector_scorer copper_miners --json
@@ -55,12 +59,10 @@ _CW = weights.composite_weights()
 _W_CATALYST = _CW["catalyst_alignment"]
 _W_MOMENTUM = _CW["momentum"]
 _W_FLOW = _CW["flow_confirmation"]
-_W_VALUATION = _CW["valuation_relative"]
 _W_CROWDING = _CW["crowding_risk"]  # applied as (100 - crowding_risk) × weight
 
 # Phase 0.5 defaults for dimensions without automated data
 _DEFAULT_FLOW = 50.0
-_DEFAULT_VALUATION = 50.0
 _DEFAULT_CROWDING = 35.0
 
 
@@ -70,22 +72,22 @@ def compute_composite(
     catalyst_alignment: float,
     momentum: float,
     flow_confirmation: float,
-    valuation_relative: float,
     crowding_risk: float,
 ) -> dict:
     """Apply composite formula. All inputs in [0, 100].
 
     Returns composite score + weighted contribution breakdown.
+
+    v1.6: valuation_relative dropped (was a constant-50 placeholder — see module docstring).
     """
     crowding_inverted = 100.0 - crowding_risk
 
     contrib_catalyst = catalyst_alignment * _W_CATALYST
     contrib_momentum = momentum * _W_MOMENTUM
     contrib_flow = flow_confirmation * _W_FLOW
-    contrib_valuation = valuation_relative * _W_VALUATION
     contrib_crowding = crowding_inverted * _W_CROWDING
 
-    composite = contrib_catalyst + contrib_momentum + contrib_flow + contrib_valuation + contrib_crowding
+    composite = contrib_catalyst + contrib_momentum + contrib_flow + contrib_crowding
     composite = round(min(100.0, max(0.0, composite)), 1)
 
     return {
@@ -94,14 +96,12 @@ def compute_composite(
             "catalyst_alignment": round(catalyst_alignment, 1),
             "momentum": round(momentum, 1),
             "flow_confirmation": round(flow_confirmation, 1),
-            "valuation_relative": round(valuation_relative, 1),
             "crowding_risk": round(crowding_risk, 1),
         },
         "weighted_contributions": {
             "catalyst_alignment": round(contrib_catalyst, 2),
             "momentum": round(contrib_momentum, 2),
             "flow_confirmation": round(contrib_flow, 2),
-            "valuation_relative": round(contrib_valuation, 2),
             "crowding_penalty": round(contrib_crowding, 2),
         },
     }
@@ -126,7 +126,6 @@ def score_sector(
     catalyst_alignment: float | None = None,
     momentum: float | None = None,
     flow_confirmation: float | None = None,
-    valuation_relative: float = _DEFAULT_VALUATION,
     crowding_risk: float = _DEFAULT_CROWDING,
     momentum_snapshot_path: Path | None = None,
 ) -> dict:
@@ -138,7 +137,6 @@ def score_sector(
         momentum: Pre-computed value or None to derive from momentum_engine.
         flow_confirmation: Manual input [0, 100] or None to auto-load from flow snapshot.
                            Falls back to default (50) if no flow snapshot exists.
-        valuation_relative: Manual input [0, 100]. Default 50.
         crowding_risk: Manual input [0, 100]. Higher = more crowded = penalty.
         momentum_snapshot_path: Optional explicit path to momentum snapshot.
     """
@@ -191,7 +189,6 @@ def score_sector(
         catalyst_alignment=float(catalyst_alignment),
         momentum=float(momentum),
         flow_confirmation=float(flow_confirmation),
-        valuation_relative=float(valuation_relative),
         crowding_risk=float(crowding_risk),
     )
 
@@ -250,8 +247,6 @@ def main() -> None:
                         help="Pre-computed momentum score [0-100]. Default: auto.")
     parser.add_argument("--flow", type=float, default=None,
                         help="flow_confirmation [0-100]. Default: auto-load from flow snapshot.")
-    parser.add_argument("--val", type=float, default=_DEFAULT_VALUATION,
-                        help=f"valuation_relative [0-100]. Default: {_DEFAULT_VALUATION}.")
     parser.add_argument("--crowd", type=float, default=_DEFAULT_CROWDING,
                         help=f"crowding_risk [0-100]. Default: {_DEFAULT_CROWDING}.")
     parser.add_argument("--snapshot", type=Path, default=None,
@@ -273,7 +268,6 @@ def main() -> None:
             catalyst_alignment=args.catalyst_alignment,
             momentum=args.momentum,
             flow_confirmation=args.flow,
-            valuation_relative=args.val,
             crowding_risk=args.crowd,
             momentum_snapshot_path=args.snapshot,
         ))
@@ -283,9 +277,9 @@ def main() -> None:
         return
 
     print("CATALYX — Sector Scorer\n")
-    hdr = f"  {'sector_id':<45} {'composite':>9}  {'ca':>6}  {'mom':>6}  {'flow':>6}  {'val':>6}  {'crowd':>6}  {'inst_sp':>7}"
+    hdr = f"  {'sector_id':<45} {'composite':>9}  {'ca':>6}  {'mom':>6}  {'flow':>6}  {'crowd':>6}  {'inst_sp':>7}"
     print(hdr)
-    print(f"  {'-'*45} {'-'*9}  {'-'*6}  {'-'*6}  {'-'*6}  {'-'*6}  {'-'*6}  {'-'*7}")
+    print(f"  {'-'*45} {'-'*9}  {'-'*6}  {'-'*6}  {'-'*6}  {'-'*6}  {'-'*7}")
 
     for r in sorted(results, key=lambda x: x["composite"], reverse=True):
         sb = r["score_breakdown"]
@@ -296,7 +290,6 @@ def main() -> None:
             f"{sb['catalyst_alignment']:>6.1f}  "
             f"{sb['momentum']:>6.1f}  "
             f"{sb['flow_confirmation']:>6.1f}  "
-            f"{sb['valuation_relative']:>6.1f}  "
             f"{sb['crowding_risk']:>6.1f}  "
             f"{inst_str}"
         )

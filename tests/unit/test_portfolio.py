@@ -35,7 +35,7 @@ def test_water_fill_empty():
 def _seed_snapshot(tmp_path, rows):
     base = {"run_id": "run_t", "snapshot_at": datetime.now(timezone.utc),
             "catalyst_alignment": 50.0, "flow_confirmation": 50.0,
-            "valuation_relative": 50.0, "has_study": 1, "scoring_version": "v"}
+            "has_study": 1, "scoring_version": "v"}
     df = pd.DataFrame([{**base, **r} for r in rows])
     lake.append_partition("sector_snapshot", df, {"run_id": "run_t"}, lake_dir=tmp_path)
 

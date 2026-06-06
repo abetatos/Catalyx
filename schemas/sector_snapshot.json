@@ -1,14 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "catalyx/schemas/sector_snapshot.json",
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "title": "SectorSnapshot",
   "description": "A sector's composite score at a point in time. The output of the Scorer module. One per sector per scoring run.",
   "type": "object",
   "required": ["id", "schema_version", "sector_id", "sector_label", "snapshot_at", "investable", "scores", "active_catalyst_ids"],
   "properties": {
     "id": { "type": "string", "pattern": "^snap_[0-9]{8}_[a-z0-9_]+$" },
-    "schema_version": { "type": "string", "const": "1.1" },
+    "schema_version": { "type": "string", "const": "1.2" },
     "sector_id": { "type": "string", "description": "Must be a valid sector_id from sector_taxonomy.yaml." },
     "sector_label": { "type": "string" },
     "parent_sector": { "type": "string" },
@@ -43,14 +43,20 @@
     },
     "scores": {
       "type": "object",
-      "required": ["catalyst_alignment", "momentum", "flow_confirmation", "valuation_relative", "crowding_risk", "composite"],
+      "required": ["catalyst_alignment", "momentum", "flow_confirmation", "crowding_risk", "composite"],
       "properties": {
         "catalyst_alignment": { "type": "number", "minimum": 0, "maximum": 100 },
         "catalyst_alignment_event_component": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
         "catalyst_alignment_structural_component": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
         "momentum": { "type": "number", "minimum": 0, "maximum": 100 },
         "flow_confirmation": { "type": "number", "minimum": 0, "maximum": 100 },
-        "valuation_relative": { "type": "number", "minimum": 0, "maximum": 100 },
+        "valuation_relative": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 100,
+          "deprecated": true,
+          "description": "DEPRECATED (schema 1.2, 2026-06-06). Removed from the composite — it was always a constant-50 placeholder (no valuation_engine) so it never moved the ranking, and a backtest showed no price-derived metric earns its weight. The 0.15 was redistributed proportionally to the other dimensions. Retained nullable for one major version to read back pre-1.2 snapshots."
+        },
         "crowding_risk": {
           "type": "number",
           "minimum": 0,
@@ -61,7 +67,7 @@
           "type": "number",
           "minimum": 0,
           "maximum": 100,
-          "description": "Weighted composite: alignment×0.30 + momentum×0.25 + flow×0.20 + valuation×0.15 - crowding_penalty×0.10"
+          "description": "Weighted composite (schema 1.2): alignment×0.35 + momentum×0.29 + flow×0.24 + (100−crowding)×0.12. valuation_relative removed."
         }
       }
     },
@@ -89,6 +95,8 @@
         },
         "valuation_detail": {
           "type": "object",
+          "deprecated": true,
+          "description": "DEPRECATED (schema 1.2) alongside valuation_relative.",
           "properties": {
             "metric": { "type": "string" },
             "current": { "type": "number" },
