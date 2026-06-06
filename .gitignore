@@ -226,6 +226,12 @@ data/*.db-shm
 
 # Tier 2 (data lake): data/lake/**/*.parquet IS committed to git on purpose.
 # Append-only + partitioned → immutable files, git stores each once (no bloat). See docs/PLAN_lake_dvc_serving.md.
+
+# Exception: the SAMPLE dislocation partition (scripts/seed_dislocation_sample.py, year-2099 run) is
+# a local UI-testing fixture only — never commit it (it sorts as the latest run and would shadow real
+# dislocation data on the deployed dashboard).
+data/lake/analysis/dislocation/run_id=run_2099*.parquet
+
 # Loose temp scoring dumps at repo root are NOT data — keep them out.
 /after_scores.json
 /before_scores.json
