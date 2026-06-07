@@ -250,3 +250,19 @@ def entry_timing() -> dict:
     realized-vol ratio, stabilization rule, and the near-term event-overhang window. NOT part of
     the composite — a recommend-only timing layer. See scoring_weights.yaml `entry_timing`."""
     return _section("entry_timing", _ENTRY_TIMING_DEFAULT)
+
+
+# ── Exit signals (exit_watcher — Family 1 of the sell-signal layer) ──────────
+
+_EXIT_SIGNALS_DEFAULT = {
+    "lookback_days": 60,
+    "approach_pct": 5.0,
+}
+
+
+def exit_signals() -> dict:
+    """Thresholds for the exit watcher (exit_watcher.py, Family 1): `lookback_days` of price history
+    to pull, `approach_pct` (a not-yet-breaching stop within this % of its threshold reads as
+    'approaching'). Recommend-only sell-side layer; NOT part of the composite. See
+    scoring_weights.yaml `exit_signals` + docs/DESIGN_sell_signals.md."""
+    return _section("exit_signals", _EXIT_SIGNALS_DEFAULT)

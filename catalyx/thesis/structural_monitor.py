@@ -76,12 +76,20 @@ def _parse_dt(date_str):
 
 def within_window(date_str, window_days: int = WINDOW_DAYS) -> bool:
     """True if `date_str` is within the trailing `window_days`. The clock is the WORLD's (event
-    timestamps), not ours (run count) — this is what makes the read run-frequency independent."""
+    timestamps), not ours (run count) — this is what makes the read run-frequency independent.
+
+    Event timestamps are day-granular in intent (a catalyst happened "on date X"), but may carry an
+    intraday time (e.g. '...T09:00:00Z'). Comparing fractional-day deltas against `now` then made the
+    verdict depend on the TIME OF DAY the watcher ran: an event stamped today@09:00Z read as OUT of
+    window when evaluated before 09:00Z (days < 0). That intraday dependence contradicts this
+    module's whole "run-frequency independent" design. Fix: a 1-day future grace on the lower bound
+    absorbs the intraday/timezone slack of a same-day stamp (a genuinely future-scheduled event,
+    >1 day out, is still excluded)."""
     d = _parse_dt(date_str)
     if d is None:
         return False
     days = (datetime.now(timezone.utc) - d).total_seconds() / 86400
-    return 0 <= days <= window_days
+    return -1.0 <= days <= window_days
 
 
 def persistence_evidence(contradicts: list[dict]) -> dict:

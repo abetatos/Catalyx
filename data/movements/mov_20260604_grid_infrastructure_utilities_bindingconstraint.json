@@ -1,7 +1,7 @@
 {
   "$schema": "catalyx/schemas/movement.json",
   "id": "mov_20260604_grid_infrastructure_utilities_bindingconstraint",
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "executed_at": "2026-06-05T00:00:00Z",
   "action": "open",
   "sector_id": "grid_infrastructure_utilities",
@@ -72,6 +72,11 @@
         "triggered_at": null,
         "stop_price_level": 9.2,
         "stop_price_ticker": "IQQH.DE",
+        "comparator": "below",
+        "threshold": 9.2,
+        "consecutive_days": 10,
+        "eval_ticker": "IQQH.DE",
+        "eval_note": "Cleanly machine-checkable: IQQH.DE is the traded vehicle and yfinance-resolvable. threshold 9.2 = entry 11.27 − 20% (the condition's '20% below entry'); equals stop_price_level (same units).",
         "rationale": "A 20% drawdown triggers a review, not an automatic exit. Check whether the decline is thesis-related (backlog deterioration, rate shock) or market-wide. If market-wide and fundamentals intact, hold or add. Only exit if combined with a triggered fundamental invalidation."
       }
     ],

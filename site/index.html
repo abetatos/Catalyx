@@ -275,6 +275,13 @@
       <div id="pos-nav" style="margin:14px 0"></div>
       <h2>Holdings</h2>
       <div id="pos-holdings"></div>
+      <h2>Exit watch <span class="pill">recommend-only</span></h2>
+      <p class="hint">Family-1 sell signals: reads each position's pre-committed <b>stops</b> (deterministically where
+        machine-checkable), <b>assumption</b> health, sector <b>regime</b>, and the <b>after-tax</b> cost of exiting now.
+        A fired <code>full_exit</code> stop &rArr; Exit and overrides timing; else breaking/violated &rArr; Reduce,
+        approaching/contested/weakening &rArr; Watch. Surfaces facts &mdash; never auto-trades. <code>🔍</code> = needs a
+        WebSearch check (no clean price feed).</p>
+      <div id="pos-exit"></div>
       <h2>Movements — buys &amp; sells</h2>
       <p class="hint">Newest first. The <span class="pill b">catalyst</span> chips link to the catalyst that
         justified the trade; <code>score@entry</code> is the point-in-time snapshot (no look-ahead).</p>

@@ -1,9 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://catalyx/schemas/movement.json",
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "_changelog": [
-    "1.0 (2026-06-06): Initial schema. Replaces Thesis as the primary capital-allocation unit. A Movement is a capital event (open/add/trim/close) attributed directly to one or more catalysts, with a trigger, a conviction, and a point-in-time score_context snapshot for no-look-ahead backtesting. The falsifiable discipline (assumptions + invalidation) survives as an OPTIONAL, machine-checkable risk_discipline block (design decision: option 1, attached to the position via its movements). See docs/PLAN_movement_restructure.md."
+    "1.0 (2026-06-06): Initial schema. Replaces Thesis as the primary capital-allocation unit. A Movement is a capital event (open/add/trim/close) attributed directly to one or more catalysts, with a trigger, a conviction, and a point-in-time score_context snapshot for no-look-ahead backtesting. The falsifiable discipline (assumptions + invalidation) survives as an OPTIONAL, machine-checkable risk_discipline block (design decision: option 1, attached to the position via its movements). See docs/PLAN_movement_restructure.md.",
+    "1.1 (2026-06-07): ADDITIVE — structured eval fields on risk_discipline.invalidation[] (comparator/threshold/consecutive_days/eval_ticker/eval_note) so the planned exit_watcher can evaluate price stops DETERMINISTICALLY instead of parsing free-text English. `condition` stays the human description; `stop_price_level`/`stop_price_ticker` stay the native human-facing pair; the new fields are the machine-checkable pair (threshold in eval_ticker's units, eval_ticker yfinance-resolvable or null ⇒ Claude-checked). All optional, only set for market_data stops. No fields removed. Sell-signal design: docs/DESIGN_sell_signals.md §6. profit_take[] (Family 3) deferred."
   ],
   "title": "Movement",
   "description": "A single capital movement attributed to catalyst(s). The unit of the track record: catalysts accumulate P&L across the movements attributed to them. Real money, EUR. Derived objects (Position = net of movements; CatalystLedger = P&L by catalyst) are computed, never authored.",
@@ -118,8 +119,13 @@
               "condition": { "type": "string", "description": "Specific, measurable. Not 'market deteriorates'." },
               "severity": { "type": "string", "enum": ["full_exit", "review_and_reduce", "flag_for_review"] },
               "source": { "type": "string", "enum": ["news_llm", "market_data", "flow_data", "cot_data", "macro_data", "earnings_data", "user_manual"] },
-              "stop_price_level": { "type": ["number", "null"] },
-              "stop_price_ticker": { "type": ["string", "null"] },
+              "stop_price_level": { "type": ["number", "null"], "description": "Human-facing stop level in the condition's NATIVE units (e.g. LME copper $/tonne). Display + audit." },
+              "stop_price_ticker": { "type": ["string", "null"], "description": "Human-facing instrument name in the condition (e.g. COPPER_LME). May not be yfinance-resolvable; see eval_ticker." },
+              "comparator": { "type": ["string", "null"], "enum": ["below", "above", null], "description": "Structured eval (schema 1.1): the breach direction. `below` = fires when the series drops under `threshold`; `above` = fires when it rises over it. Set only for machine-checkable market_data stops." },
+              "threshold": { "type": ["number", "null"], "description": "Structured eval (schema 1.1): the level the exit_watcher compares `eval_ticker` against, expressed in EVAL_TICKER's units (which may differ from stop_price_level's native units — e.g. a $/tonne LME stop evaluated via a $/lb COMEX proxy → threshold is the $/lb equivalent). See eval_note." },
+              "consecutive_days": { "type": ["integer", "null"], "description": "Structured eval (schema 1.1): the persistence window — the breach must hold for this many consecutive trading-day closes before the stop fires (time-independent, a stateless read of price history). Mirrors the condition's 'for N consecutive days'." },
+              "eval_ticker": { "type": ["string", "null"], "description": "Structured eval (schema 1.1): a yfinance-RESOLVABLE ticker the exit_watcher fetches to check this stop (e.g. EURUSD=X, HG=F). Null ⇒ NOT machine-checkable (no clean feed, e.g. LME inventory) ⇒ surfaced as a Claude-checks-with-WebSearch item instead of auto-evaluated." },
+              "eval_note": { "type": ["string", "null"], "description": "Structured eval (schema 1.1): provenance/caveat for the eval mapping — e.g. the LME/COMEX basis approximation when stop_price_ticker and eval_ticker differ, or the unit conversion applied to threshold." },
               "triggered": { "type": "boolean", "default": false },
               "triggered_at": { "type": ["string", "null"], "format": "date-time" }
             }

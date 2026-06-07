@@ -312,6 +312,18 @@ function renderOverview() {
         <span class="nm">${g.sector_id} <span class="pill b">${g.primary_etf || '—'}</span></span>
         <span class="v">ρ ${num(g.mean_corr_to_stressed, 2)}</span><span class="v">${num(g.composite, 0)}</span></a>`).join('');
   }
+  // exit watch — positions whose pre-committed stop fired / regime broke / assumption violated
+  const exAll = (OV.exit_signal && OV.exit_signal.by_etf) ? Object.values(OV.exit_signal.by_etf) : [];
+  const exAct = exAll.filter((e) => e.suggested_action === 'exit' || e.suggested_action === 'reduce')
+    .sort((a, b) => (a.suggested_action === 'exit' ? 0 : 1) - (b.suggested_action === 'exit' ? 0 : 1));
+  if (exAct.length) {
+    alerts += '<h3>Exit watch — positions needing action</h3>'
+      + '<p class="hint" style="margin:-2px 0 8px">A pre-committed stop fired, the regime is breaking, or an assumption was violated. Recommend-only — review on <a href="#/positions">Positions →</a>.</p>'
+      + exAct.map((e) => `<a class="rowlink" style="display:flex;justify-content:space-between;align-items:center;gap:8px;text-decoration:none;color:inherit;padding:8px 6px;border-top:1px solid var(--border)" href="#/positions">
+        <span class="nm"><b>${e.sector_id}</b> <span class="pill b">${e.etf}</span></span>
+        <span style="display:flex;gap:8px;align-items:center;flex-shrink:0">${e.loudest_fired_id ? `<span class="lbl">${e.loudest_fired_id}</span>` : ''}${exitBadge(e)}</span>
+      </a>`).join('');
+  }
   $('ov-alerts').innerHTML = alerts ? `<div class="card">${alerts}</div>` : '<p class="hint">No dislocation / timing analysis yet.</p>';
 
   // biggest movers this run (computed from prev-run deltas — independent of rank_event)
@@ -760,6 +772,19 @@ function movementDetailHTML(m) {
   </div>`;
 }
 
+// ── exit-watch helpers (shared by Positions panel/inline badge + Overview alert) ──
+const _EXIT_BADGE = { exit: ['🔴', 'EXIT', 'r'], reduce: ['🟠', 'REDUCE', 'a'], watch: ['🟡', 'WATCH', 'a'], hold: ['🟢', 'HOLD', 'g'] };
+function exitSigFor(etf) { return ((OV.exit_signal || {}).by_etf || {})[etf] || null; }
+function exitBadge(es) {
+  if (!es || !_EXIT_BADGE[es.suggested_action]) return '';
+  const b = _EXIT_BADGE[es.suggested_action];
+  const why = es.loudest_fired_id ? `stop ${es.loudest_fired_id} fired`
+    : es.assumptions_violated ? 'an assumption is violated'
+      : (es.regime_state && es.regime_state !== 'intact') ? `regime ${es.regime_state}`
+        : (es.n_approaching ? 'a stop is approaching' : (es.assumptions_weakening ? 'an assumption is weakening' : 'no signal fired'));
+  return `<span class="pill ${b[2]}" title="${why} — recommend-only">${b[0]} ${b[1]}</span>`;
+}
+
 // ── POSITIONS (the real book — its own page, portfolio-style + full ledger) ──────
 function renderPositions() {
   const pos = OV.positions || { holdings: [], total_invested_eur: 0, realized_eur: 0 };
@@ -794,6 +819,7 @@ function renderPositions() {
   // ── holdings (marked to market vs avg cost) ──
   const hrows = (pos.holdings || []).map((h) => `<tr data-sid="${h.sector_id}">
       <td><b>${h.sector_id}</b> <span class="pill b">${h.etf}</span></td>
+      <td>${exitBadge(exitSigFor(h.etf)) || '<span class="lbl">—</span>'}</td>
       <td class="num">${num(h.qty)}</td>
       <td class="num">€${num(h.invested_eur, 0)}</td>
       <td class="num">${num(h.avg_cost, 2)}</td>
@@ -802,12 +828,44 @@ function renderPositions() {
       <td class="num ${(h.unrealized_eur ?? 0) >= 0 ? 'pos' : 'neg'}">${h.unrealized_eur != null ? (h.unrealized_eur >= 0 ? '+' : '−') + '€' + num(Math.abs(h.unrealized_eur), 0) + ' (' + signed(h.unrealized_pct) + '%)' : '—'}</td>
       <td class="num">${num(h.weight_pct)}%</td>
       <td class="go">${_CHEV}</td>
-    </tr>`).join('') || '<tr><td colspan="9" class="lbl" style="padding:14px">no open positions</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="10" class="lbl" style="padding:14px">no open positions</td></tr>';
   $('pos-holdings').innerHTML = `<div class="cmp"><table><thead><tr>
-      <th>position</th><th class="num">qty</th><th class="num">invested</th><th class="num">avg cost</th>
+      <th>position</th><th>exit</th><th class="num">qty</th><th class="num">invested</th><th class="num">avg cost</th>
       <th class="num">last</th><th class="num">mkt value</th><th class="num">unrealized P&L</th>
       <th class="num">weight</th><th></th></tr></thead><tbody>${hrows}</tbody></table></div>`;
   $('pos-holdings').querySelector('tbody').onclick = (ev) => { const tr = ev.target.closest('tr[data-sid]'); if (tr) location.hash = '#/sectors/' + tr.dataset.sid; };
+
+  // ── exit watch (Family 1: stops + assumptions + regime + after-tax) — recommend-only ──
+  const exHas = OV.exit_signal && OV.exit_signal.by_etf;
+  const exrows = (pos.holdings || []).map((h) => {
+    const e = exitSigFor(h.etf);
+    if (!e) return `<tr data-sid="${h.sector_id}"><td><b>${h.sector_id}</b> <span class="pill b">${h.etf}</span></td><td colspan="5" class="lbl">no exit signal this run</td></tr>`;
+    const clear = (e.n_stops || 0) - (e.n_fired || 0) - (e.n_approaching || 0);
+    const stops = [];
+    if (e.n_fired) stops.push(`<span class="pill r" title="${e.fired_ids || ''}">✅ ${e.n_fired} fired${e.fired_ids ? ': ' + e.fired_ids : ''}</span>`);
+    if (e.n_approaching) stops.push(`<span class="pill a" title="${e.approaching_ids || ''}">⚠ ${e.n_approaching} near</span>`);
+    if (clear > 0) stops.push(`<span class="pill g">· ${clear} clear</span>`);
+    if (e.n_claude_check) stops.push(`<span class="pill b" title="${e.claude_check_ids || ''}">🔍 ${e.n_claude_check} check</span>`);
+    const okA = (e.assumptions_total || 0) - (e.assumptions_violated || 0) - (e.assumptions_weakening || 0);
+    const asm = e.assumptions_total ? `${okA}✓${e.assumptions_weakening ? ` <span class="neg">${e.assumptions_weakening}~</span>` : ''}${e.assumptions_violated ? ` <span class="neg">${e.assumptions_violated}✗</span>` : ''}` : '<span class="lbl">—</span>';
+    const reg = e.regime_state && e.regime_state !== 'intact' ? `<span class="pill a">${e.regime_state}</span>` : '<span class="lbl">intact</span>';
+    const taxc = (e.harvestable_loss_eur != null && e.harvestable_loss_eur > 0)
+      ? `loss €${num(e.harvestable_loss_eur, 0)} <span class="lbl">harvestable</span>`
+      : (e.tax_due_eur != null ? `net €${num(e.net_proceeds_eur, 0)} <span class="lbl">after €${num(e.tax_due_eur, 0)} CGT</span>` : '—');
+    return `<tr data-sid="${h.sector_id}">
+      <td><b>${h.sector_id}</b> <span class="pill b">${h.etf}</span></td>
+      <td>${exitBadge(e)}</td>
+      <td>${stops.join(' ') || '—'}</td>
+      <td>${asm}</td>
+      <td>${reg}</td>
+      <td class="num">${taxc}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="lbl" style="padding:14px">no open positions</td></tr>';
+  $('pos-exit').innerHTML = exHas
+    ? `<div class="cmp"><table><thead><tr><th>position</th><th>signal</th><th>stops</th><th>assumptions</th><th>regime</th><th class="num">exit after-tax</th></tr></thead><tbody>${exrows}</tbody></table></div>`
+    : '<p class="hint">No exit-watch run yet — run <code>uv run python -m catalyx.scorer.exit_watcher</code> (persists per run).</p>';
+  const ext = $('pos-exit').querySelector('tbody');
+  if (ext) ext.onclick = (ev) => { const tr = ev.target.closest('tr[data-sid]'); if (tr) location.hash = '#/sectors/' + tr.dataset.sid; };
 
   // ── movements (buys & sells) — references catalyst(s) + dates, no catalyst detail duplicated ──
   const actCls = (a) => a === 'open' ? 'g' : (a === 'close' || a === 'trim') ? 'r' : '';

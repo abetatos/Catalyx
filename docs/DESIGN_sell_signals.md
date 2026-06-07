@@ -229,23 +229,41 @@ uv run python -m catalyx.scorer.exit_timing  --positions [--json]            # f
 Both read the live book from `movement_repo`; only the `--all` review path persists the lake table
 (a single-position ad-hoc run stays ephemeral — same rule as `entry_timing`).
 
-## 8. Open decisions (resolve before building)
+## 8. Decisions (resolved 2026-06-07)
 
-1. **One orchestrator vs two modules?** `exit_watcher` (1/3/4) + `exit_timing` (2), or a single
-   `exit_signals` orchestrator that calls both? (Leaning: two modules + a thin orchestrator in the
-   skill, mirroring how the review calls `catalyst_scorer`+`dislocation`+`entry_timing` separately.)
-2. **`triggered` write-back governance** — `ask` (default, safe) vs `auto` for unambiguous price
-   stops? A breached `full_exit` stop with structured eval fields is arguably safe to auto-flag.
-3. **Add `profit_take[]` + structured `invalidation` eval fields now, or defer Family 3?** Family 1
-   needs the eval fields to be deterministic; Family 3 needs `profit_take[]`. Could ship eval fields
-   first (highest leverage), defer targets.
-4. **Non-yfinance stop feeds.** Accept that copper-inventory / LME-spot stops stay Claude-checked
-   (WebSearch), or invest in a data feed? Determines how much of Family 1 is truly automated.
-5. **How hard does tax gate rotation?** Advisory note only, or actually reorder/suppress a Family-4
-   recommendation that trips the 2-month recompra rule or pushes into a higher bracket?
-6. **Stance on a fired `full_exit` stop** — keep "recommend, default Exit" (this doc), or make it
-   the one genuine auto-action (the user pre-committed)? The regime A/B argues recommend; the
-   pre-commitment argument argues act. Worth an explicit call.
+**Resolved from project doctrine (no user input needed):**
+
+1. **Two modules + thin skill orchestration.** `exit_watcher.py` (Families 1/3/4 + tax) +
+   `exit_timing.py` (Family 2), orchestrated in the skill — mirrors how the review already calls
+   `catalyst_scorer` + `dislocation` + `entry_timing` separately. No monolith.
+2. **`triggered` write-back = `ask` by default, `auto` available for STRUCTURED price stops only.**
+   A judgement-source condition (`earnings_data`/`macro_data`/`news_llm`) is NEVER auto-flipped —
+   it has no machine truth. A `market_data` stop with full structured eval fields MAY auto-flag
+   under `governance: auto` (config), same pattern as the lifecycle gate. Default stays `ask`.
+3. **Ship structured `invalidation` eval fields + `exit_watcher` Family 1 FIRST; defer
+   `profit_take[]`/Family 3.** The eval fields are the prerequisite for *any* deterministic stop
+   check (highest leverage, closes the unread-stops gap); targets can come once Family 1 proves out.
+4. **Non-yfinance stops stay Claude-checked (WebSearch); no data-feed investment now.** Resolve the
+   yfinance-able ones via a small map (`EURUSD→EURUSD=X`, `COPPER_LME→HG=F` COMEX proxy — note the
+   LME/COMEX basis is an approximation, flagged in output); LME inventory and similar exotic feeds
+   are surfaced as Claude-checks-with-WebSearch items, not faked. Consistent with the skill-on-Claude
+   model (WebSearch is the intelligence layer; no new data pipeline for a once-a-cycle check).
+
+**The two assertiveness knobs — resolved by the user (2026-06-07):** see §8.1.
+
+## 8.1 Assertiveness knobs (user-decided 2026-06-07)
+
+- **(D6) A fired structured `full_exit` stop → RECOMMEND-ONLY.** The watcher reports
+  *"inv_NN WOULD FIRE"* and surfaces Exit as the recommendation, but writes **nothing** — not even
+  `triggered=true`. The user marks `triggered` and runs `/catalyx-close` by hand. This keeps the
+  whole platform's single stance intact (*the system recommends, never acts*) with zero exceptions —
+  even the most pre-committed signal stays a recommendation. Consequence: `governance: auto` for
+  stop write-back (D2) is **not enabled** for now; `ask` is the only mode wired in v1.
+- **(D5) Tax governs Family-4 rotation by SOFT REORDER + FLAG.** Tax-clean rotations rank above
+  tax-dirty ones; a 2-month recompra violation or a bracket-push is flagged prominently on the
+  pair, but a rotation is **never suppressed** — the user decides with the after-tax figure and the
+  recompra warning in front of them. Tax shapes ordering and visibility, never availability
+  (consistent with the §4 principle: never hold/skip purely for tax, but let tax shape how & when).
 
 ## 9. Summary
 

@@ -405,6 +405,24 @@ def _bake_overview(dist: Path) -> dict:
                     "run_id": run_id, "meta": (m or [None])[0],
                     "by_sector": {r["sector_id"]: r for r in rows},
                 }
+
+        # ── exit watcher (Family 1 sell signals: stops + assumptions + regime + after-tax) ──
+        # Recommend-only. Baked as a by_etf MAP (holdings are keyed by etf) so the Positions page
+        # renders a per-holding Exit-watch panel + an inline action badge, and Overview raises an
+        # alert for any EXIT/REDUCE. Source is the lake exit_signal table (no live network at build).
+        ov["exit_signal"] = None
+        if has("exit_signal"):
+            meta = q("SELECT max(run_id) AS run_id FROM exit_signal")
+            run_id = meta[0]["run_id"] if meta and meta[0].get("run_id") is not None else None
+            if run_id is not None:
+                rows = q(
+                    "SELECT sector_id, etf, suggested_action, regime_state, invested_eur, weight_pct, "
+                    "n_stops, n_fired, n_approaching, n_claude_check, fired_ids, approaching_ids, "
+                    "claude_check_ids, loudest_fired_id, loudest_fired_severity, assumptions_total, "
+                    "assumptions_violated, assumptions_weakening, unrealized_eur, unrealized_pct, "
+                    "tax_due_eur, net_proceeds_eur, harvestable_loss_eur "
+                    f"FROM exit_signal WHERE run_id = '{run_id}'")
+                ov["exit_signal"] = {"run_id": run_id, "by_etf": {r["etf"]: r for r in rows}}
     finally:
         con.close()
 
@@ -415,6 +433,7 @@ def _bake_overview(dist: Path) -> dict:
         "portfolios": len(ov.get("portfolios") or []),
         "dislocation": bool(ov.get("dislocation")),
         "entry_timing": len((ov.get("entry_timing") or {}).get("by_sector") or {}),
+        "exit_signal": len((ov.get("exit_signal") or {}).get("by_etf") or {}),
     }
 
 

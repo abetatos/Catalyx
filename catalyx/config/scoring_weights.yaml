@@ -652,3 +652,18 @@ entry_timing:
   overhang_min_strength: 60      # OR strength_score ≥ this (covers events without a magnitude)
   market_tension_ticker: "^VIX"  # market-wide risk-off backdrop gauge
   benchmark: "SPY"               # market window-return reference (mirrors dislocation)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Exit signals — sell-side layer (added 2026-06-07) — catalyx/scorer/exit_watcher.py
+# ─────────────────────────────────────────────────────────────────────────────
+# Family 1 of the sell-signal design (docs/DESIGN_sell_signals.md): the watcher that READS the
+# risk_discipline.invalidation[] stops authored on every movement (previously unread by any code).
+# RECOMMEND-ONLY (design §8.1, user-decided): it reports "WOULD FIRE", writes nothing — not even
+# triggered=true. A stop fires only when its breach has held for the full consecutive_days window
+# (time-independent: a stateless read of price history). Stops with eval_ticker:null are not
+# auto-evaluated — surfaced as Claude-checks-with-WebSearch. Severity arbitration in §5 of the doc.
+exit_signals:
+  lookback_days: 60          # CALENDAR days of price history to pull (must exceed the largest
+                             # consecutive_days window with buffer; the longest stop today is 10d).
+  approach_pct: 5.0          # a not-yet-breaching stop within this % of its threshold → "approaching"
+                             # (about to cross) rather than "clear". Tunable single source of truth.
