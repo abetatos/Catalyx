@@ -167,8 +167,8 @@ invisible — the goal is full-universe coverage every cycle.
     ```bash
     uv run python -m catalyx.scorer.entry_timing --all --json   # micro-tension + overhangs; --all persists the lake `entry_timing` table (run_id) → dashboard Overview
     ```
-    - `micro_timing_state` + `suggested_verdict`: `falling_unstable` ⇒ `wait_stabilize` (knife not
-      based), `stretched` ⇒ overbought/extended, `stabilizing` ⇒ `scale_in`, `calm` ⇒ no objection.
+    - `micro_timing_state` + `suggested_verdict`: `falling` ⇒ `wait_stabilize` (knife not
+      based), `overbought` ⇒ wait for a pullback, `basing` ⇒ `scale_in`, `neutral` ⇒ no objection.
     - **Event overhang** ⇒ `wait_event`: a discrete CatalystEvent with an `event_date` in the window
       (e.g. a peer mega-IPO whose flow could dump the read-across name). The module surfaces the
       fact; the adverse-vs-bullish call is yours (WebSearch the event). Reconcile with dislocation:

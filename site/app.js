@@ -102,12 +102,12 @@ function verdictPill(t) {
   const lbl = (VERDICT_LABEL[v] || v) + (v === 'wait_event' && t.wait_until ? ' @' + t.wait_until : '');
   return `<span class="pill ${c}" title="entry timing">${lbl}</span>`;
 }
-function statePill(t) { if (!t) return ''; const c = { calm: 'g', stabilizing: 'a', stretched: 'a', falling_unstable: 'r' }[t.micro_timing_state] || ''; return `<span class="pill ${c}">${t.micro_timing_state}</span>`; }
+function statePill(t) { if (!t) return ''; const c = { neutral: 'g', basing: 'a', overbought: 'a', falling: 'r' }[t.micro_timing_state] || ''; return `<span class="pill ${c}">${t.micro_timing_state}</span>`; }
 // one-line facts behind the timing verdict, incl. a near-term event overhang if any
 function timingFacts(t) {
   if (!t) return '';
   const oh = t.has_upcoming_overhang ? ` · <span class="neg">⚠ ${t.nearest_overhang_id} in ${t.nearest_overhang_days_until}d</span>` : '';
-  return `RSI ${num(t.rsi_14, 0)} · vol×${num(t.vol_ratio_10_90, 2)} · 5d ${num(t.return_5d_pct)}% · drawdown ${num(t.drawdown_from_20d_high_pct)}%${t.stabilizing ? ' · stabilizing' : ''}${oh}`;
+  return `RSI ${num(t.rsi_14, 0)} · vol×${num(t.vol_ratio_10_90, 2)} · 5d ${num(t.return_5d_pct)}% · drawdown ${num(t.drawdown_from_20d_high_pct)}%${t.stabilizing ? ' · basing' : ''}${oh}`;
 }
 function bar(v, max = 100, color) { const p = Math.max(0, Math.min(100, (v / max) * 100)); return `<div class="bar"><i style="width:${p}%;background:${color || scoreColor(v)}"></i></div>`; }
 // a labelled colored metric bar: [label] [bar] [value]
@@ -546,12 +546,12 @@ let TIM_FILTER = '', TIM_CAVEAT = false, TIM_SORT = { k: 'opp', dir: 1 }, timWir
 function oppScores() { const m = {}; ((OV.dislocation || {}).opportunities || []).forEach((o, i) => { m[o.sector_id] = o.opportunity_score != null ? o.opportunity_score : (1e6 - i); }); return m; }
 // two opportunity classes in the timing table:
 //   'dip'    = a dislocation panic dip (fell hard, intact, catalyst-confirmed, composite floor)
-//   'strong' = NOT a dip, but high composite AND calm timing → a clean "buy-ready" entry (scores
+//   'strong' = NOT a dip, but high composite AND neutral timing → a clean "buy-ready" entry (scores
 //              high on our strategy with no near-term tension). The user wanted these marked too.
 const STRONG_COMPOSITE = 66;   // green zone — "scores high on our strategy"
 function oppClass(r, opp) {
   if (r.sector_id in opp) return 'dip';
-  if ((r.composite || 0) >= STRONG_COMPOSITE && r.micro_timing_state === 'calm'
+  if ((r.composite || 0) >= STRONG_COMPOSITE && r.micro_timing_state === 'neutral'
       && !r.has_upcoming_overhang) return 'strong';
   return null;
 }
@@ -561,6 +561,7 @@ const TIM_COLS = [
   { k: 'vol_ratio_10_90', label: 'vol×', tip: '10d / 90d realized-vol ratio (>1.5 = elevated tension)' },
   { k: 'stretch_vs_ma20_pct', label: 'stretch%', tip: '% distance from the 20-day MA' },
   { k: 'return_5d_pct', label: '5d%', tip: '5-day return' },
+  { k: 'trend_deadband_pct', label: 'band±', tip: 'noise band on the 5d gate (k·σ·√5, vol-scaled): a 5d move smaller than this reads flat → neutral, not falling. So |5d%| > band± is what makes a name "falling".' },
   { k: 'drawdown_from_20d_high_pct', label: 'draw%', tip: 'drawdown from the 20-day high' },
 ];
 const _CHEV = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
@@ -590,10 +591,10 @@ function drawTimTable() {
   // the combined score is the philosophy anchor: a dip only matters if we'd own the sector at all.
   let rows = timingRows()
     .map((r) => ({ ...r, composite: (rankingRow(r.sector_id) || {}).composite }))
-    .filter((r) => (!f || r.sector_id.toLowerCase().includes(f)) && (!TIM_CAVEAT || r.micro_timing_state !== 'calm'));
+    .filter((r) => (!f || r.sector_id.toLowerCase().includes(f)) && (!TIM_CAVEAT || r.micro_timing_state !== 'neutral'));
   const k = TIM_SORT.k, dir = TIM_SORT.dir;
   if (k === 'opp') {
-    // THREE tiers: dislocation dips → strong+calm (buy-ready) → the rest; WITHIN each tier by
+    // THREE tiers: dislocation dips → strong+neutral (buy-ready) → the rest; WITHIN each tier by
     // composite desc (the philosophy anchor). dir just toggles (dir=-1 reverses the whole list).
     const tier = (r) => ({ dip: 0, strong: 1 }[oppClass(r, opp)] ?? 2);
     rows = rows.slice().sort((a, b) => {
@@ -618,9 +619,9 @@ function drawTimTable() {
     ? '<span class="pill g" title="dislocation opportunity — panic dip">opportunity</span>'
     : cls === 'strong'
       // substantiate the claim with the raw micro-numbers (not a bald "buy-ready") + the macro
-      // backdrop — a calm ETF in a risk-off tape still warrants a human check, so the verdict is a
+      // backdrop — a neutral ETF in a risk-off tape still warrants a human check, so the verdict is a
       // suggestion, not a vetted call.
-      ? `<span class="pill b" title="high composite (${num(r.composite, 0)}) + calm micro-timing: RSI ${num(r.rsi_14, 0)}, ${signed(r.stretch_vs_ma20_pct, 1)}% vs MA20, vol× ${num(r.vol_ratio_10_90, 2)} — not extended. Suggests buy-ready; verify backdrop (VIX ${mkt.vix != null ? num(mkt.vix, 1) : '—'}, S&P 5d ${mkt.spy_5d_pct != null ? signed(mkt.spy_5d_pct, 1) + '%' : '—'}).">strong · calm</span>`
+      ? `<span class="pill b" title="high composite (${num(r.composite, 0)}) + neutral micro-timing: RSI ${num(r.rsi_14, 0)}, ${signed(r.stretch_vs_ma20_pct, 1)}% vs MA20, vol× ${num(r.vol_ratio_10_90, 2)} — not extended. Suggests buy-ready; verify backdrop (VIX ${mkt.vix != null ? num(mkt.vix, 1) : '—'}, S&P 5d ${mkt.spy_5d_pct != null ? signed(mkt.spy_5d_pct, 1) + '%' : '—'}).">strong · neutral</span>`
       : '<span class="lbl">—</span>';
   const edge = (cls) => cls === 'dip' ? ' style="box-shadow:inset 3px 0 0 var(--green)"'
     : cls === 'strong' ? ' style="box-shadow:inset 3px 0 0 var(--accent)"' : '';
@@ -635,10 +636,11 @@ function drawTimTable() {
       <td class="num">${num(r.vol_ratio_10_90, 2)}</td>
       <td class="num">${num(r.stretch_vs_ma20_pct)}</td>
       <td class="num ${r.return_5d_pct < 0 ? 'neg' : ''}">${num(r.return_5d_pct)}</td>
+      <td class="num lbl">±${num(r.trend_deadband_pct)}</td>
       <td class="num neg">${num(r.drawdown_from_20d_high_pct)}</td>
       <td>${r.has_upcoming_overhang ? `<span class="pill r" title="${r.nearest_overhang_date || ''}">⚠ ${r.nearest_overhang_id} · ${r.nearest_overhang_days_until}d</span>` : '<span class="lbl">—</span>'}</td>
       <td class="go" title="open sector detail">${_CHEV}</td>
-    </tr>`; }).join('') || '<tr><td colspan="13" class="lbl" style="padding:14px">no match</td></tr>';
+    </tr>`; }).join('') || '<tr><td colspan="14" class="lbl" style="padding:14px">no match</td></tr>';
   $('timing-table').innerHTML = `<div class="cmp"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
   $('timing-table').querySelector('thead').onclick = (ev) => {
     const th = ev.target.closest('th[data-sort]'); if (!th) return; const col = th.dataset.sort;
@@ -785,6 +787,37 @@ function exitBadge(es) {
   return `<span class="pill ${b[2]}" title="${why} — recommend-only">${b[0]} ${b[1]}</span>`;
 }
 
+// Assumption statements + statuses live on the movement's risk_discipline — gather them per vehicle
+// so the exit-watch row can EXPAND into "what's holding / weakening / violated", not just counts.
+const _ASM_ST = {
+  holding: ['g', '✓', 'holding'], monitoring: ['b', '◔', 'monitoring'],
+  weakening: ['a', '~', 'weakening'], violated: ['r', '✗', 'violated'], unverified: ['', '?', 'unverified'],
+};
+function assumptionsForEtf(etf) {
+  const out = [];
+  for (const mv of (DOCS.movements || [])) {
+    if (!mv || (mv.vehicle || {}).etf !== etf) continue;
+    if (mv.action && !['open', 'add'].includes(mv.action)) continue;
+    for (const a of ((mv.risk_discipline || {}).assumptions || [])) out.push(a);
+  }
+  return out;
+}
+function assumptionsCell(etf, fallback) {
+  const list = assumptionsForEtf(etf);
+  if (!list.length) return fallback;
+  const c = { holding: 0, monitoring: 0, weakening: 0, violated: 0, unverified: 0 };
+  list.forEach((a) => { const s = a.current_status || 'unverified'; c[s] = (c[s] || 0) + 1; });
+  const ok = c.holding + c.monitoring + c.unverified;
+  const summary = `${ok}✓${c.weakening ? ` <span class="neg">${c.weakening}~</span>` : ''}${c.violated ? ` <span class="neg">${c.violated}✗</span>` : ''}`;
+  const items = list.map((a) => {
+    const st = _ASM_ST[a.current_status] || _ASM_ST.unverified;
+    return `<div class="asm-item"><span class="pill ${st[0]}">${st[1]} ${st[2]}</span> ${a.statement || a.assumption || ''}`
+      + `${a.status_note ? `<div class="lbl">${a.status_note}</div>` : ''}</div>`;
+  }).join('');
+  return `<details class="asm" onclick="event.stopPropagation()"><summary>${summary}`
+    + `<span class="asm-chev">${_CHEV}</span></summary><div class="asm-detail">${items}</div></details>`;
+}
+
 // ── POSITIONS (the real book — its own page, portfolio-style + full ledger) ──────
 function renderPositions() {
   const pos = OV.positions || { holdings: [], total_invested_eur: 0, realized_eur: 0 };
@@ -819,7 +852,6 @@ function renderPositions() {
   // ── holdings (marked to market vs avg cost) ──
   const hrows = (pos.holdings || []).map((h) => `<tr data-sid="${h.sector_id}">
       <td><b>${h.sector_id}</b> <span class="pill b">${h.etf}</span></td>
-      <td>${exitBadge(exitSigFor(h.etf)) || '<span class="lbl">—</span>'}</td>
       <td class="num">${num(h.qty)}</td>
       <td class="num">€${num(h.invested_eur, 0)}</td>
       <td class="num">${num(h.avg_cost, 2)}</td>
@@ -828,9 +860,9 @@ function renderPositions() {
       <td class="num ${(h.unrealized_eur ?? 0) >= 0 ? 'pos' : 'neg'}">${h.unrealized_eur != null ? (h.unrealized_eur >= 0 ? '+' : '−') + '€' + num(Math.abs(h.unrealized_eur), 0) + ' (' + signed(h.unrealized_pct) + '%)' : '—'}</td>
       <td class="num">${num(h.weight_pct)}%</td>
       <td class="go">${_CHEV}</td>
-    </tr>`).join('') || '<tr><td colspan="10" class="lbl" style="padding:14px">no open positions</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="9" class="lbl" style="padding:14px">no open positions</td></tr>';
   $('pos-holdings').innerHTML = `<div class="cmp"><table><thead><tr>
-      <th>position</th><th>exit</th><th class="num">qty</th><th class="num">invested</th><th class="num">avg cost</th>
+      <th>position</th><th class="num">qty</th><th class="num">invested</th><th class="num">avg cost</th>
       <th class="num">last</th><th class="num">mkt value</th><th class="num">unrealized P&L</th>
       <th class="num">weight</th><th></th></tr></thead><tbody>${hrows}</tbody></table></div>`;
   $('pos-holdings').querySelector('tbody').onclick = (ev) => { const tr = ev.target.closest('tr[data-sid]'); if (tr) location.hash = '#/sectors/' + tr.dataset.sid; };
@@ -847,7 +879,8 @@ function renderPositions() {
     if (clear > 0) stops.push(`<span class="pill g">· ${clear} clear</span>`);
     if (e.n_claude_check) stops.push(`<span class="pill b" title="${e.claude_check_ids || ''}">🔍 ${e.n_claude_check} check</span>`);
     const okA = (e.assumptions_total || 0) - (e.assumptions_violated || 0) - (e.assumptions_weakening || 0);
-    const asm = e.assumptions_total ? `${okA}✓${e.assumptions_weakening ? ` <span class="neg">${e.assumptions_weakening}~</span>` : ''}${e.assumptions_violated ? ` <span class="neg">${e.assumptions_violated}✗</span>` : ''}` : '<span class="lbl">—</span>';
+    const asmFallback = e.assumptions_total ? `${okA}✓${e.assumptions_weakening ? ` <span class="neg">${e.assumptions_weakening}~</span>` : ''}${e.assumptions_violated ? ` <span class="neg">${e.assumptions_violated}✗</span>` : ''}` : '<span class="lbl">—</span>';
+    const asm = assumptionsCell(h.etf, asmFallback);
     const reg = e.regime_state && e.regime_state !== 'intact' ? `<span class="pill a">${e.regime_state}</span>` : '<span class="lbl">intact</span>';
     const taxc = (e.harvestable_loss_eur != null && e.harvestable_loss_eur > 0)
       ? `loss €${num(e.harvestable_loss_eur, 0)} <span class="lbl">harvestable</span>`
@@ -901,6 +934,29 @@ function renderPositions() {
   $('pos-catalysts').innerHTML = `<div class="cmp"><table><thead><tr>
       <th>catalyst</th><th class="num">invested</th><th class="num">% of book</th><th>sectors</th>
       <th class="num">movements</th></tr></thead><tbody>${lrows}</tbody></table></div>`;
+
+  // ── experiment ledger (closed positions scored as experiments) ──
+  const xp = OV.experiment_ledger || [];
+  const vClr = { skill: '#16a34a', luck: '#d97706', variance: '#2563eb', correct_invalidation: '#ea580c', indeterminate: '#6b7280' };
+  const xrows = xp.map((e) => {
+    const at = e.after_tax_pnl_eur;
+    const flags = (e.behavioral_flags || '').split(',').filter(Boolean);
+    const fpills = flags.map((f) => `<span class="pill r" title="behavioral deviation">${f.split(':')[0]}</span>`).join(' ');
+    const note = e.exit_note ? `<div class="lbl" style="margin-top:3px">“${e.exit_note}”</div>` : '';
+    const cf = e.verdict_confidence === 'low' ? ' <span class="lbl">(low conf)</span>' : '';
+    return `<tr>
+      <td>${String(e.executed_at || '').slice(0, 10)}</td>
+      <td><a href="#/sectors/${e.sector_id}" style="color:inherit"><b>${e.sector_id}</b></a> <span class="pill b">${e.etf || ''}</span></td>
+      <td><b style="color:${vClr[e.verdict_label] || '#6b7280'}">${(e.verdict_label || '—').replace(/_/g, '-')}</b>${cf}</td>
+      <td class="num" style="color:${at != null && at < 0 ? '#dc2626' : '#16a34a'}">€${num(at, 0)}</td>
+      <td class="num">${e.return_pct != null ? num(e.return_pct, 1) + '%' : '—'}</td>
+      <td class="num">${e.holding_days != null ? e.holding_days + 'd' : '—'}</td>
+      <td>${fpills || '<span class="lbl">—</span>'}${note}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" class="lbl" style="padding:14px">no closed experiments yet — they appear here after /catalyx-close</td></tr>';
+  $('pos-ledger').innerHTML = `<div class="cmp"><table><thead><tr>
+      <th>closed</th><th>position</th><th>verdict</th><th class="num">after-tax</th>
+      <th class="num">return</th><th class="num">held</th><th>behavior &amp; note</th></tr></thead><tbody>${xrows}</tbody></table></div>`;
 
   // ── rotation targets (anchored to the book's holdings) ──
   const rot = OV.positions_rotation || [];

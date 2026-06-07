@@ -60,7 +60,7 @@ Usage:
    uv run python -m catalyx.scorer.entry_timing <sector_id>
    ```
    It returns, from yfinance (no LLM drift): a `micro_timing_state`
-   (`calm` / `stretched` / `falling_unstable` / `stabilizing`), the facts behind it (RSI, stretch
+   (`neutral` / `overbought` / `falling` / `basing`), the facts behind it (RSI, stretch
    vs MA20, vol regime, 5d return, drawdown), the market backdrop (^VIX + SPY 5d), any near-term
    **event overhangs** (discrete CatalystEvents with an `event_date` inside the window — e.g. a peer
    mega-IPO whose flow could dump the read-across name), and a `suggested_verdict`
@@ -71,7 +71,7 @@ Usage:
      judgement — WebSearch the event before deciding (e.g. SpaceX IPO date, lock-up, allocation).
    - **Reconcile with dislocation:** a correction with intact fundamentals is a reason to BUY
      (dislocation opportunity lens), but entry_timing says don't deploy full size into UNRESOLVED
-     tension — `falling_unstable` → wait for it to base; `stabilizing` → `scale_in` (enter in
+     tension — `falling` → wait for it to base; `basing` → `scale_in` (enter in
      tranches); `wait_event` → wait past the discrete event. Offer the user: enter now / scale in /
      wait, and let them decide (this can also justify a smaller `conviction`/`amount_eur` now with a
      planned add later).

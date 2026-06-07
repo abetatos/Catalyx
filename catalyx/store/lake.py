@@ -65,6 +65,8 @@ TABLES: dict[str, tuple[str, list[str]]] = {
     "movement":           ("portfolio/movement",         ["sector_id"]),
     # catalyst track record — derived ledger, one time-versioned snapshot per ingest
     "catalyst_performance": ("validation/catalyst_performance", ["as_of"]),
+    # closed-experiment outcomes — one row per closed/trimmed movement (P&L + verdict + behavior)
+    "movement_outcome":   ("validation/movement_outcome", ["mov_id"]),
     # validation / forward returns (grows; unpartitioned)
     "forward_returns":    ("validation/forward_returns", []),
     # dislocation lens (opportunities + diversifiers) — one materialization per run

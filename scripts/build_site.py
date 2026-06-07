@@ -397,7 +397,8 @@ def _bake_overview(dist: Path) -> dict:
                       f"FROM entry_timing WHERE run_id = '{run_id}'")
                 rows = q(
                     "SELECT sector_id, primary_etf, micro_timing_state, tension_score, rsi_14, "
-                    "stretch_vs_ma20_pct, vol_ratio_10_90, return_5d_pct, drawdown_from_20d_high_pct, "
+                    "stretch_vs_ma20_pct, vol_ratio_10_90, return_5d_pct, trend_deadband_pct, "
+                    "drawdown_from_20d_high_pct, "
                     "stabilizing, suggested_verdict, wait_until, has_upcoming_overhang, "
                     "nearest_overhang_id, nearest_overhang_date, nearest_overhang_days_until "
                     f"FROM entry_timing WHERE run_id = '{run_id}'")
@@ -423,8 +424,35 @@ def _bake_overview(dist: Path) -> dict:
                     "tax_due_eur, net_proceeds_eur, harvestable_loss_eur "
                     f"FROM exit_signal WHERE run_id = '{run_id}'")
                 ov["exit_signal"] = {"run_id": run_id, "by_etf": {r["etf"]: r for r in rows}}
+
+        # ── experiment ledger (closed positions scored as experiments) ──
+        # One row per closed/trimmed movement: the right-thesis × right-reason verdict, after-tax
+        # P&L, behavioral flags, and the in-the-moment exit_note. Source: lake movement_outcome
+        # (written by catalyx.attribution.outcome at /catalyx-close). Newest first.
+        ov["experiment_ledger"] = []
+        if has("movement_outcome"):
+            ov["experiment_ledger"] = q(
+                "SELECT mov_id, executed_at, sector_id, etf, verdict_label, verdict_confidence, "
+                "right_thesis, right_reason, gross_pnl_eur, after_tax_pnl_eur, return_pct, "
+                "holding_days, behavioral_flags, exit_trigger_type, followed_signal, exit_reason, "
+                "catalyst_materialized, "
+                # exit_note lives on the Tier-1 file, not the lake row — join it in JS via DOCS if
+                # needed; here surface what the lake carries.
+                "asm_validated, asm_falsified, asm_unresolved "
+                "FROM movement_outcome ORDER BY executed_at DESC")
     finally:
         con.close()
+
+    # exit_note is a Tier-1 doc field (not persisted to the lake row) — splice it in from the files
+    # so the ledger can show the in-the-moment reflection without a second fetch.
+    if ov.get("experiment_ledger"):
+        try:
+            notes = {m["id"]: ((m.get("outcome") or {}).get("exit_note"))
+                     for m in movement_repo.load_all()}
+            for e in ov["experiment_ledger"]:
+                e["exit_note"] = notes.get(e["mov_id"])
+        except Exception:  # noqa: BLE001 — never let a movement read break the build
+            pass
 
     (dist / "overview.json").write_text(json.dumps(ov, ensure_ascii=False), encoding="utf-8")
     return {
@@ -434,6 +462,7 @@ def _bake_overview(dist: Path) -> dict:
         "dislocation": bool(ov.get("dislocation")),
         "entry_timing": len((ov.get("entry_timing") or {}).get("by_sector") or {}),
         "exit_signal": len((ov.get("exit_signal") or {}).get("by_etf") or {}),
+        "experiment_ledger": len(ov.get("experiment_ledger") or []),
     }
 
 

@@ -138,6 +138,15 @@
     .cmp td.go svg { display:block; margin:0 auto; transition:transform .1s; }
     .cmp tbody tr:hover td.go { color:var(--accent); }
     .cmp tbody tr:hover td.go svg { transform:translateX(2px); }
+    /* ── expandable assumptions cell ── */
+    details.asm > summary { cursor:pointer; list-style:none; display:inline-flex; align-items:center; gap:8px; white-space:nowrap; }
+    details.asm > summary::-webkit-details-marker { display:none; }
+    .asm-chev { display:inline-flex; color:var(--muted); transition:transform .12s, color .12s; }
+    details.asm > summary:hover .asm-chev { color:var(--accent); }
+    details.asm[open] > summary .asm-chev { transform:rotate(90deg); color:var(--accent); }
+    details.asm .asm-detail { margin:8px 0 2px; display:flex; flex-direction:column; gap:7px; max-width:520px; white-space:normal; }
+    details.asm .asm-item { font-size:11.5px; line-height:1.45; }
+    details.asm .asm-item .lbl { margin-top:2px; font-style:italic; }
 
     /* ── responsive ── */
     @media (max-width:900px) {
@@ -229,7 +238,7 @@
       </div>
       <div id="timing-table"></div>
       <p class="hint" style="margin-top:14px">Default order: <b>opportunities first</b>, then the rest by tension.
-        Click any column to re-sort. Verdict: <b>enter now</b> = calm, no objection · <b>scale-in</b> = a
+        Click any column to re-sort. Verdict: <b>enter now</b> = neutral, no objection · <b>scale-in</b> = a
         dip that's turning (enter in tranches) · <b>wait — unstable</b> = a falling knife, no base yet · <b>wait — event</b>
         = a near-term catalyst (event_date) could move it. A <span class="neg">⚠ overhang</span> is that discrete event.</p>
     </section>
@@ -280,12 +289,19 @@
         machine-checkable), <b>assumption</b> health, sector <b>regime</b>, and the <b>after-tax</b> cost of exiting now.
         A fired <code>full_exit</code> stop &rArr; Exit and overrides timing; else breaking/violated &rArr; Reduce,
         approaching/contested/weakening &rArr; Watch. Surfaces facts &mdash; never auto-trades. <code>🔍</code> = needs a
-        WebSearch check (no clean price feed).</p>
+        WebSearch check (no clean price feed). Click the <b>assumptions</b> cell (▸) to see each one's statement and
+        whether it's holding, weakening, or violated.</p>
       <div id="pos-exit"></div>
       <h2>Movements — buys &amp; sells</h2>
       <p class="hint">Newest first. The <span class="pill b">catalyst</span> chips link to the catalyst that
         justified the trade; <code>score@entry</code> is the point-in-time snapshot (no look-ahead).</p>
       <div id="pos-movements"></div>
+      <h2>Experiment ledger</h2>
+      <p class="hint">Every closed position scored as an experiment: the <b>right-thesis × right-reason</b>
+        verdict (skill / luck / variance / correct-invalidation), after-tax P&amp;L, and any
+        <b>behavioral flags</b> (sold too early, held past your own stop, overrode the signal). The
+        <code>exit_note</code> is your in-the-moment read. From <code>attribution.outcome</code>.</p>
+      <div id="pos-ledger"></div>
       <h2>Catalyst exposure</h2>
       <p class="hint">How the book's capital splits across catalysts (by movement attribution weights) — no
         catalyst double-counted. This is the track record each catalyst is building.</p>

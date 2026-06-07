@@ -228,11 +228,11 @@ uv run python -m catalyx.scorer.entry_timing --all --json      # entry-timing ov
   without re-buying the same correlated bet.
 - **Entry timing (the *when*, complementary to dislocation's *whether*).** For each top-ranked /
   opportunity sector, read `entry_timing`: a `micro_timing_state` + `suggested_verdict`. Flag any
-  high-ranked sector with bad near-term timing — `falling_unstable` (knife not yet based →
-  `wait_stabilize`), `stretched` (overbought/extended), or an **event overhang** (`wait_event`: a
+  high-ranked sector with bad near-term timing — `falling` (knife not yet based →
+  `wait_stabilize`), `overbought` (overextended up), or an **event overhang** (`wait_event`: a
   discrete CatalystEvent with an `event_date` in the window — e.g. a peer mega-IPO whose flow could
   dump the read-across name). The module surfaces the fact; the adverse-vs-bullish call on an
-  overhang is yours (WebSearch). `stabilizing` → `scale_in`; `calm` → no timing objection. This is
+  overhang is yours (WebSearch). `basing` → `scale_in`; `neutral` → no timing objection. This is
   a recommendation about the execution window, never a trade and never a change to the composite.
 
 ---
@@ -306,7 +306,7 @@ Based on heatmap (Step 5), position reviews (Step 6), and exposure check (Step 7
 ### <sector_id>   [heatmap rank: #N | composite: X]
 - **Why it ranks:** dominant catalyst(s) + their alignment, and momentum (flag if parabolic — high rank ≠ entry point).
 - **Crowding:** narrative_maturity and what it implies (crowded/exhausted ⇒ less edge left).
-- **Entry timing (Step 5c `entry_timing`):** `micro_timing_state` + `suggested_verdict`, and any event overhang. This is the EXECUTION-window read, separate from crowding — e.g. `falling_unstable` ⇒ wait to base, `wait_event` ⇒ a discrete catalyst is in the window. If `scale_in`, suggest a smaller first tranche.
+- **Entry timing (Step 5c `entry_timing`):** `micro_timing_state` + `suggested_verdict`, and any event overhang. This is the EXECUTION-window read, separate from crowding — e.g. `falling` ⇒ wait to base, `wait_event` ⇒ a discrete catalyst is in the window. If `scale_in`, suggest a smaller first tranche.
 - **Best ETF (UCITS):** ticker, TER, AUM, UCITS status, spread. Flag AUM < $200M.
 - **Exposure fit:** proposed size, shared catalyst with existing exposure, `combined_exposure` vs `max_combined_pct` (Step 7). If ⚠ OVER-CAP, state the breach amount — flexible warning, the user may authorize it.
 - **Recommendation:** Open now / Wait (bad timing) / Skip — with one line of reasoning (cite the entry_timing verdict when it is the reason to wait).

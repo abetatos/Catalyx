@@ -234,6 +234,7 @@ _ENTRY_TIMING_DEFAULT = {
     "vol_ratio_window_long": 90,
     "vol_ratio_elevated": 1.5,
     "short_trend_window": 5,
+    "trend_deadband_k": 0.6,
     "drawdown_local_high_window": 20,
     "stabilization_up_closes": 2,
     "stabilization_reclaim_ma": 5,
