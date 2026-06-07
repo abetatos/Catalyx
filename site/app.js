@@ -146,15 +146,17 @@ function fmtMeta(v) {
   }
   return escapeHtml(String(v));
 }
-// A line chart with axes (fixed 0–100 scale, gridlines, x date ticks, legend).
+// A line chart with axes (default 0–100 scale; pass o.maxY for a custom top, e.g. exposure %),
+// gridlines, x date ticks, legend.
 function lineChart(series, dates, o = {}) {
   const n = dates.length;
   if (n < 2) return '<p class="hint">Only one run so far — no trend to chart yet.</p>';
   const W = o.w || 560, H = o.h || 210, padL = 28, padR = 12, padT = 10, padB = 28;
+  const maxY = o.maxY || 100;
   const X = (i) => padL + (i / (n - 1)) * (W - padL - padR);
-  const Y = (v) => padT + (1 - v / 100) * (H - padT - padB);
+  const Y = (v) => padT + (1 - v / maxY) * (H - padT - padB);
   let grid = '';
-  [0, 25, 50, 75, 100].forEach((g) => {
+  [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(f * maxY)).forEach((g) => {
     const y = Y(g);
     grid += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="1"/>`
       + `<text x="${padL - 5}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--muted)">${g}</text>`;
@@ -1045,30 +1047,132 @@ function selectPortfolio(pid) {
     <h3>Holdings ${fallback ? `<span class="pill a">from run ${runId} (latest build)</span>` : `<span class="lbl">run ${runId}</span>`}</h3>
     ${rows.length ? `<div class="card">${holdHead}${holdRows}</div>` : '<p class="hint">No holdings built for this run.</p>'}`;
 }
-async function initLineage() {
-  lineageBuilt = true;
-  try {
-    await ensureDuckDB();
-    if (!tables.has('movement')) { $('pf-lineage').innerHTML = '<p class="hint">No movements ingested yet — these are model (backtested) portfolios.</p>'; return; }
-    const movs = await q(`SELECT id FROM movement ORDER BY executed_at DESC`);
-    if (!movs.length) { $('pf-lineage').innerHTML = '<p class="hint">No movements.</p>'; return; }
-    $('pf-lineage').innerHTML = `<div class="row"><label>Movement: <select id="trade-select">${movs.map((m) => `<option>${m.id}</option>`).join('')}</select></label></div><div id="lineage-out"></div>`;
-    $('trade-select').addEventListener('change', renderLineage);
-    renderLineage();
-  } catch (e) { err('pf-lineage', e); }
+// Decision lineage is anchored on the CATALYST (the unit of the track record), not on a
+// single movement. For a chosen catalyst it shows three things: (1) the real-book movements
+// attributed to it, (2) the sectors it drives (study.active_catalyst_ids), and (3) how each
+// model STRATEGY's exposure to those sectors MOVES run-over-run as portfolios are recomputed
+// (a diff of portfolio_holding across its two latest runs). The catalyst→sector map + real
+// movements come from docs.json (zero WASM); the strategy moves come from the lake on demand.
+function lineageCatalysts() {
+  const mk = (c, kind, score) => ({ id: c.id, label: c.title || c.description || c.id, score, kind });
+  const all = [
+    ...(DOCS.catalysts_structural || []).map((c) => mk(c, 'structural', (c.intensity || {}).current_score)),
+    ...(DOCS.catalysts_event || []).map((c) => mk(c, 'event', c.strength_score)),
+  ];
+  // Only catalysts that actually drive a studied sector or carry a real movement are traceable.
+  return all.filter((c) => sectorsForCatalyst(c.id).length || movementsForCatalyst(c.id).length);
 }
-async function renderLineage() {
+function initLineage() {
+  lineageBuilt = true;
+  const cats = lineageCatalysts();
+  if (!cats.length) { $('pf-lineage').innerHTML = '<p class="hint">No catalyst drives a studied sector yet.</p>'; return; }
+  $('pf-lineage').innerHTML = `<div class="row"><label>Catalyst:
+    <select id="lin-select">${cats.map((c) => `<option value="${c.id}">${escapeHtml(c.label)}${c.score != null ? ' · ' + Math.round(c.score) : ''}</option>`).join('')}</select></label></div>
+    <div id="lineage-out"></div>`;
+  $('lin-select').addEventListener('change', renderLineage);
+  renderLineage();
+}
+function renderLineage() {
+  const cid = $('lin-select').value;
   try {
-    const mid = $('trade-select').value;
-    const mov = (await q(`SELECT * FROM movement WHERE id = ?`, [mid]))[0];
-    let html = '<h3>Movement</h3>' + tableHTML([mov]);
-    const runId = mov && (mov.score_run_id || mov.run_id);
-    if (runId) {
-      if (tables.has('report')) html += '<h3>Run reports</h3>' + tableHTML(await q(`SELECT report_type, report_date, path FROM report WHERE run_id = ?`, [runId]));
-      if (tables.has('sector_snapshot') && mov.sector_id) html += '<h3>Sector scores in that run</h3>' + tableHTML(await q(`SELECT sector_id, rank, composite, momentum, catalyst_alignment FROM sector_snapshot WHERE run_id = ? AND sector_id = ?`, [runId, mov.sector_id]));
-    }
-    $('lineage-out').innerHTML = html;
+    const cat = catalystDoc(cid) || {};
+    const sectors = sectorsForCatalyst(cid);
+    const movs = movementsForCatalyst(cid).slice().sort((a, b) => String(b.executed_at).localeCompare(String(a.executed_at)));
+    const pname = Object.fromEntries((OV.portfolios || []).map((p) => [p.portfolio_id, p.name || p.portfolio_id]));
+
+    let html = `<div class="card" style="border-left:3px solid var(--accent)">
+      <div class="lbl" style="text-transform:uppercase;letter-spacing:.5px;font-size:10px">Catalyst</div>
+      <h3 style="margin:2px 0 4px">${escapeHtml(cat.title || cat.description || cid)} <span class="pill b">${cid}</span></h3></div>`;
+
+    // (1) real book
+    html += '<h3>Real book — your money</h3>';
+    html += movs.length
+      ? '<div class="card">' + movs.map((m) => {
+        const w = (m.attribution || []).find((a) => a.catalyst_id === cid);
+        return `<div class="barrow" style="grid-template-columns:84px 56px minmax(120px,1fr) 80px 70px">
+          <span class="lbl">${String(m.executed_at).slice(0, 10)}</span>
+          <span class="pill">${m.action}</span>
+          <a class="nm" href="#/sectors/${m.sector_id}" style="color:inherit">${m.sector_id}</a>
+          <span class="v">€${num(m.amount_eur, 0)}</span>
+          <span class="lbl">${w ? Math.round(w.weight * 100) + '% attr' : ''}</span></div>`;
+      }).join('') + '</div>'
+      : '<p class="hint">No real position attributed to this catalyst yet.</p>';
+
+    // (2) sectors driven
+    html += '<h3>Sectors it drives</h3>';
+    html += sectors.length
+      ? '<div class="chips">' + sectors.map((s) => `<a class="pill click" href="#/sectors/${s}">${s}</a>`).join('') + '</div>'
+      : '<p class="hint">No studied sector links this catalyst.</p>';
+
+    // (3) strategy exposure over time (lake, on demand)
+    html += `<h3>Strategy exposure to this catalyst <span class="lbl" style="font-weight:400">— combined % + how it rebalances over time</span></h3>`;
+    $('lineage-out').innerHTML = html + '<div id="lin-strat"><p class="hint">Loading strategy exposure…</p></div>';
+    renderStrategyEvolution(sectors, pname);
   } catch (e) { err('lineage-out', e); }
+}
+async function renderStrategyEvolution(sectors, pname) {
+  const box = $('lin-strat');
+  if (!box) return;
+  try {
+    if (!sectors.length) { box.innerHTML = '<p class="hint">No sectors to trace.</p>'; return; }
+    await ensureDuckDB();
+    if (!tables.has('portfolio_holding')) {
+      box.innerHTML = '<p class="hint">No model portfolios built yet — strategy exposure appears once portfolios are recomputed.</p>'; return;
+    }
+    // Each strategy's TOTAL weight in the catalyst's sectors, per run = its exposure to the catalyst.
+    const rows = await q(
+      `SELECT portfolio_id, run_id, SUM(weight_pct) AS exposure FROM portfolio_holding
+       WHERE sector_id IN (${sectors.map(() => '?').join(',')}) GROUP BY portfolio_id, run_id ORDER BY run_id`, sectors);
+    if (!rows.length) { box.innerHTML = '<p class="hint">No strategy holds a sector driven by this catalyst.</p>'; return; }
+
+    const runIds = [...new Set(rows.map((r) => r.run_id))].sort();
+    const runDate = (rid) => { const m = (OV.runs || []).find((r) => r.run_id === rid); return m && m.ts ? String(m.ts).slice(0, 10) : rid; };
+    const dates = runIds.map(runDate);
+    const pids = (OV.portfolios || []).map((p) => p.portfolio_id);
+    const exp = {};                                   // exp[pid][run_id] = exposure %
+    for (const r of rows) (exp[r.portfolio_id] ||= {})[r.run_id] = r.exposure;
+    const val = (pid, rid) => (exp[pid] && exp[pid][rid] != null) ? exp[pid][rid] : 0;
+
+    const PAL = ['#58a6ff', '#d29922', '#3fb950', '#a371f7', '#f85149', '#56d4dd'];
+    const stratSeries = pids.map((pid, i) => ({ label: pname[pid] || pid, color: PAL[i % PAL.length], pid, values: runIds.map((r) => val(pid, r)) }));
+    // COMBINED = the system's average conviction in this catalyst (mean exposure across strategies).
+    const combinedVals = runIds.map((_, idx) => { const v = stratSeries.map((s) => s.values[idx]); return v.reduce((a, b) => a + b, 0) / (v.length || 1); });
+    const curCombined = combinedVals[combinedVals.length - 1];
+    const prevCombined = combinedVals.length > 1 ? combinedVals[combinedVals.length - 2] : null;
+
+    // headline: current combined exposure + Δ since last rebalance
+    const dC = prevCombined != null ? curCombined - prevCombined : null;
+    const head = `<div class="card" style="border-left:3px solid var(--accent);margin-bottom:14px">
+      <div class="lbl" style="text-transform:uppercase;letter-spacing:.5px;font-size:10px">Combined exposure — avg across the ${pids.length} strategies</div>
+      <div class="big">${num(curCombined, 1)}%${dC != null ? ` <span class="pill ${Math.abs(dC) < 0.05 ? '' : (dC > 0 ? 'g' : 'r')}" style="font-size:12px">${signed(dC, 1)}pp vs last rebalance</span>` : ''}</div></div>`;
+
+    // chart: one line per strategy + a bold combined line, auto-scaled to the data
+    const allVals = stratSeries.flatMap((s) => s.values).concat(combinedVals);
+    const maxY = Math.max(10, Math.ceil(Math.max(...allVals, 0) / 10) * 10);
+    const chartSeries = [{ label: '⌀ combined', color: 'var(--text)', values: combinedVals }, ...stratSeries];
+    const chart = runIds.length > 1
+      ? `<div class="card" style="margin-bottom:14px"><h3 style="margin-top:0">Exposure over time <span class="lbl" style="font-weight:400">— each rebalance is a point</span></h3>${lineChart(chartSeries, dates, { maxY })}</div>`
+      : `<p class="hint">Only one portfolio build so far (${dates[0]}) — the rebalance curve grows one run at a time.</p>`;
+
+    // latest snapshot per strategy + Δ vs prior run
+    const curRun = runIds[runIds.length - 1], prevRun = runIds[runIds.length - 2];
+    const snapHead = `<div class="barrow" style="grid-template-columns:minmax(120px,1.4fr) 70px 90px;color:var(--muted);font-size:11px"><span>strategy</span><span>exposure</span><span>Δ rebalance</span></div>`;
+    const snapRows = pids.map((pid) => {
+      const c = val(pid, curRun), p = prevRun ? val(pid, prevRun) : null;
+      let tag = '—', cls = '';
+      if (p != null) {
+        if (c > 0 && p === 0) { tag = 'ENTERED'; cls = 'g'; }
+        else if (c === 0 && p > 0) { tag = 'EXITED'; cls = 'r'; }
+        else { const d = c - p; tag = signed(d, 1) + 'pp'; cls = Math.abs(d) < 0.05 ? '' : (d > 0 ? 'g' : 'r'); }
+      }
+      return `<div class="barrow" style="grid-template-columns:minmax(120px,1.4fr) 70px 90px">
+        <span class="nm">${escapeHtml(pname[pid] || pid)}</span>
+        <span class="v">${num(c, 1)}%</span>
+        <span class="pill ${cls}">${tag}</span></div>`;
+    }).join('');
+
+    box.innerHTML = head + chart + `<div class="card">${snapHead}${snapRows}</div>`;
+  } catch (e) { err('lin-strat', e); }
 }
 
 // ── DATA (runs catalogue + report, lazy) ────────────────────────────────────────

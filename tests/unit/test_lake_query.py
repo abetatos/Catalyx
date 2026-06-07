@@ -88,8 +88,46 @@ def test_catalyst_ledger_reads_latest_snapshot(tmp_path):
     assert led[0]["catalyst_id"] == "struct_copper" and led[0]["invested_eur"] == 1000.0
 
 
+def test_catalyst_lineage_combines_strategy_exposure_over_runs(tmp_path, monkeypatch):
+    _seed(tmp_path)
+    # catalyst → sectors comes from the Tier-1 studies; stub it so the test is self-contained.
+    monkeypatch.setattr(q, "_sectors_for_catalyst", lambda cid: ["copper", "gold"])
+    # two portfolios across two runs holding the catalyst's sectors (a rebalance between runs).
+    # The lake partition key is (portfolio_id, run_id) → one append per (pid, run) group.
+    holds = {
+        ("momentum", "run_a"): [("copper", 10.0), ("gold", 5.0)],
+        ("catalyx", "run_a"): [("copper", 8.0)],
+        # run_b: momentum trims copper + exits gold; catalyx enters gold
+        ("momentum", "run_b"): [("copper", 7.0)],
+        ("catalyx", "run_b"): [("copper", 8.0), ("gold", 4.0)],
+    }
+    for (pid, run), secs in holds.items():
+        lake.append_partition("portfolio_holding", pd.DataFrame([
+            {"portfolio_id": pid, "run_id": run, "sector_id": sec, "weight_pct": w,
+             "primary_etf": "X", "composite": 70.0, "momentum": 60.0,
+             "narrative_maturity": "mainstream", "rank_in_portfolio": i + 1}
+            for i, (sec, w) in enumerate(secs)
+        ]), {"portfolio_id": pid, "run_id": run}, lake_dir=tmp_path)
+
+    lin = q.catalyst_lineage("struct_x", lake_dir=tmp_path)
+    assert lin["sectors"] == ["copper", "gold"]
+    ts = {t["run_id"]: t for t in lin["timeseries"]}
+    # run_a: momentum 15, catalyx 8 → combined mean = 11.5
+    assert ts["run_a"]["by_strategy"] == {"momentum": 15.0, "catalyx": 8.0}
+    assert ts["run_a"]["combined_pct"] == 11.5
+    # run_b: momentum 7 (gold gone), catalyx 12 → combined mean = 9.5
+    assert ts["run_b"]["by_strategy"] == {"momentum": 7.0, "catalyx": 12.0}
+    assert ts["run_b"]["combined_pct"] == 9.5
+    # latest move: momentum −8pp (15→7), catalyx +4pp (8→12)
+    latest = {x["portfolio_id"]: x for x in lin["latest"]}
+    assert latest["momentum"]["move"] == "-8.0pp" and latest["momentum"]["exposure_pct"] == 7.0
+    assert latest["catalyx"]["move"] == "+4.0pp"
+
+
 def test_empty_lake_returns_empty(tmp_path):
     assert q.latest_ranking(lake_dir=tmp_path) == []
     assert q.portfolio_compare(lake_dir=tmp_path) == []
     assert q.catalyst_ledger(lake_dir=tmp_path) == []
     assert q.lineage_for_movement("x", lake_dir=tmp_path) == {"error": "no movements in lake (run movement_repo ingest)"}
+    assert q.catalyst_lineage("x", lake_dir=tmp_path) == {
+        "catalyst_id": "x", "sectors": [], "movements": [], "timeseries": [], "latest": []}
