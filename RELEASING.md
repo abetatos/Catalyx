@@ -6,7 +6,7 @@ across three places:
 | Where | What |
 |---|---|
 | `pyproject.toml` → `version` | the canonical source of truth |
-| git tag `vX.Y.Z` (annotated, on `main`) | the immutable release marker |
+| git tag `vX.Y.Z` (annotated, on `main`) | the immutable release marker — title `vX.Y.Z — YYYY-MM-DD — <name>` |
 | `CLAUDE.md` → Recent Changes / `CHANGELOG.md` | the human-readable "what changed" |
 
 > **Pre-1.0.** CATALYX is early and still moving fast — the schemas, skills, and lake tables may
@@ -46,10 +46,14 @@ Work happens on `release/<name>` (or a feature branch). To release:
    git checkout main
    git merge --no-ff release/<name> -m "Release vX.Y.Z: <title>"
    ```
-6. **Tag `main`** (annotated):
+6. **Tag `main`** (annotated). **Always put the release DATE (`YYYY-MM-DD`) in the title**, right
+   after the version — so the tag list and the GitHub Releases page read as a dated journal of what
+   was shipped when, and you can find "what did I do around date X" at a glance:
    ```
-   git tag -a vX.Y.Z -m "vX.Y.Z — <title>"
+   git tag -a vX.Y.Z -m "vX.Y.Z — YYYY-MM-DD — <title>"
    ```
+   Use the actual release date (the day you cut it); it should match the `## vX.Y.Z — YYYY-MM-DD`
+   section in `CHANGELOG.md`.
 7. **Push** branch + tag:
    ```
    git push origin main --follow-tags
@@ -58,8 +62,10 @@ Work happens on `release/<name>` (or a feature branch). To release:
    annotation; the Release is what renders the full notes on GitHub:
    ```
    gh release create vX.Y.Z --verify-tag \
-     --title "vX.Y.Z — <title>" --notes-from-tag
+     --title "vX.Y.Z — YYYY-MM-DD — <title>" --notes-from-tag
    ```
+   Keep the **same `vX.Y.Z — YYYY-MM-DD — <title>`** form in the Release title as in the tag, so
+   the Releases page is a dated timeline.
    `--notes-from-tag` reuses the annotated-tag body, so write the tag message as the full notes
    (or use `--notes-file` pointing at the `## vX.Y.Z` CHANGELOG section). Requires `gh auth login`.
 
