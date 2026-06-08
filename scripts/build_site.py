@@ -353,6 +353,21 @@ def _bake_overview(dist: Path) -> dict:
         except Exception:  # noqa: BLE001 — never let a movement read break the build
             ov["positions"], ov["catalyst_ledger"] = None, []
 
+        # ── committed capital + cash (dry powder). The full book is allocated up front but
+        # deployed progressively as catalysts fire; cash = committed − cost basis of open
+        # positions. Surfaced on the Positions page so an undeployed balance is explicit. ──
+        try:
+            from catalyx.config import weights as _w
+            cap = _w.total_capital_eur()
+        except Exception:  # noqa: BLE001
+            cap = None
+        ov["total_capital_eur"] = cap
+        if cap is not None and ov.get("positions"):
+            invested = ov["positions"].get("total_invested_eur") or 0.0
+            ov["positions"]["total_capital_eur"] = cap
+            ov["positions"]["cash_eur"] = round(cap - invested, 2)
+            ov["positions"]["deployed_pct"] = round(invested / cap * 100, 1) if cap else None
+
         # rotation targets ANCHORED to the real book's holdings (healthy sectors least correlated
         # to what you already own) — computed by dislocation --anchor-sectors → portfolio_rotation.
         ov["positions_rotation"] = None

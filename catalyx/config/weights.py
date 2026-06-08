@@ -221,6 +221,13 @@ def track_record_inception() -> str | None:
     return str(d) if d else None
 
 
+def total_capital_eur() -> float | None:
+    """Total capital committed to the real book (deployed progressively as catalysts
+    fire; the rest is cash). From track_record.yaml `total_capital_eur`, or None."""
+    v = track_record().get("total_capital_eur")
+    return float(v) if v is not None else None
+
+
 # ── Entry-timing overlay (entry_timing) ──────────────────────────────────────
 
 _ENTRY_TIMING_DEFAULT = {

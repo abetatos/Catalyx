@@ -835,7 +835,12 @@ function renderPositions() {
   //    entry-date-indexed NAV (which is ~flat for a young book and never marks against avg cost) ──
   const mv = pos.market_value_eur;            // qty × last price, summed (best-effort fetch)
   const up = pos.unrealized_eur, upct = pos.unrealized_pct;
-  const cards = [mc('invested', '€' + num(inv, 0), '', `${pos.holdings.length} position${pos.holdings.length === 1 ? '' : 's'}`)];
+  const cap = pos.total_capital_eur, cash = pos.cash_eur;
+  const cards = [];
+  // committed capital + dry powder — the book is funded up front, deployed as catalysts fire
+  if (cap != null) cards.push(mc('committed capital', '€' + num(cap, 0), '', pos.deployed_pct != null ? num(pos.deployed_pct, 0) + '% deployed' : 'allocated to this book'));
+  cards.push(mc('invested', '€' + num(inv, 0), '', `${pos.holdings.length} position${pos.holdings.length === 1 ? '' : 's'}`));
+  if (cash != null) cards.push(mc('cash', '€' + num(cash, 0), '', 'dry powder · awaiting catalysts'));
   if (mv != null) {
     cards.push(mc('current value', '€' + num(mv, 0), (up ?? 0) >= 0 ? 'pos' : 'neg', signed(upct) + '% vs cost'));
     cards.push(mc('unrealized P&L', (up >= 0 ? '+' : '−') + '€' + num(Math.abs(up), 0), up >= 0 ? 'pos' : 'neg', 'marked at last close'));
