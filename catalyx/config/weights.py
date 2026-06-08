@@ -274,3 +274,54 @@ def exit_signals() -> dict:
     'approaching'). Recommend-only sell-side layer; NOT part of the composite. See
     scoring_weights.yaml `exit_signals` + docs/DESIGN_sell_signals.md."""
     return _section("exit_signals", _EXIT_SIGNALS_DEFAULT)
+
+
+# ── Deep technical study (technical_study — opt-in pre-open TA dossier) ───────
+
+_TECHNICAL_STUDY_DEFAULT = {
+    "lookback_days": 420,
+    "min_history": 30,
+    "slope_lag": 5,
+    "macd_fast": 12,
+    "macd_slow": 26,
+    "macd_signal": 9,
+    "bollinger_window": 20,
+    "bollinger_k": 2.0,
+    "atr_period": 14,
+    "pivot_left": 3,
+    "pivot_right": 3,
+    "obv_window": 20,
+    "volume_window": 20,
+    "volume_surge_mult": 1.5,
+    "range_window": 252,
+    "posture_margin": 2,
+}
+
+
+def technical_study() -> dict:
+    """Periods/thresholds for the deep technical study (technical_study.py): MA/MACD/Bollinger/ATR
+    windows, swing-pivot fractal size, volume/OBV windows, 52-week range window, and the posture
+    margin. Opt-in, recommend-only, ephemeral — NOT part of the composite. See scoring_weights.yaml
+    `technical_study`."""
+    return _section("technical_study", _TECHNICAL_STUDY_DEFAULT)
+
+
+# ── Dislocation lens (dislocation.py — opportunities + rotation targets) ──────
+
+_DISLOCATION_DEFAULT = {
+    "drawdown_threshold_pct": -3.0,
+    "min_catalyst_alignment": 70.0,
+    "min_opportunity_composite": 55.0,
+    "max_diversifier_corr": 0.65,
+    "min_diversifier_composite": 50.0,
+}
+
+
+def dislocation() -> dict:
+    """Thresholds for the dislocation lens (dislocation.py). OPPORTUNITY (panic-dip buy): drawdown
+    floor + catalyst floor + the NON-NEGOTIABLE full-blend composite floor. DIVERSIFIER (rotation
+    target): `max_diversifier_corr` (mean corr to the anchor/stressed cluster ≤ this) + a SEPARATE,
+    looser `min_diversifier_composite` so more genuine diversifiers surface without weakening the
+    opportunity lens. Recommend-only; NOT part of the composite. See scoring_weights.yaml
+    `dislocation`."""
+    return _section("dislocation", _DISLOCATION_DEFAULT)

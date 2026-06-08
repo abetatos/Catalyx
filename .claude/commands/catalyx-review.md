@@ -186,6 +186,11 @@ for p in catalyx momentum equal_weight low_crowding; do
   # track_record.yaml inception (no look-ahead). Run AFTER the backtest (live merges, backtest overwrites).
   uv run python -m catalyx.execution.nav_engine live "$p"
 done
+
+# REAL book NAV vs SPY — the actual-money curve from the movement files, indexed 100 at inception.
+# Grows one trading day at a time; this is what the Positions "Performance vs S&P 500" tab compares
+# against the model strategies (same measure: return vs SPY + vol/Sharpe/maxDD). Run every review.
+uv run python -m catalyx.execution.nav_engine real real --benchmark SPY
 ```
 
 The **live** curve is the real track record (`mode='live'`): it starts empty at inception and grows

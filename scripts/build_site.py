@@ -95,13 +95,37 @@ def _series_metrics(navs: list) -> dict | None:
     }
 
 
+def _fx_to_eur() -> dict:
+    """Map a yfinance quote currency → factor that converts ONE quoted unit into EUR.
+
+    Handles the non-EUR vehicles in the book: USD, GBP (pounds) and GBp/GBX (pence — LSE quotes
+    many ETFs in pence, 1/100 of a pound). Without this a pence-quoted line (ISPY.L ≈ 3084 GBp)
+    would be marked as if it were €3084/share → a nonsense +€40k "gain" on a €500 position.
+    Identity on failure → caller falls back to treating the price as already-EUR.
+    """
+    fx = {"EUR": 1.0, None: 1.0}
+    try:
+        import yfinance as yf
+        eurusd = float(yf.Ticker("EURUSD=X").history(period="5d")["Close"].dropna().iloc[-1])
+        if eurusd:
+            fx["USD"] = 1.0 / eurusd                          # USD per EUR → EUR per USD
+        eurgbp = float(yf.Ticker("EURGBP=X").history(period="5d")["Close"].dropna().iloc[-1])
+        if eurgbp:
+            fx["GBP"] = 1.0 / eurgbp                           # GBP per EUR → EUR per GBP
+            fx["GBp"] = fx["GBX"] = (1.0 / eurgbp) / 100.0     # pence → pounds → EUR
+    except Exception:  # noqa: BLE001
+        pass
+    return fx
+
+
 def _mark_to_market(positions: dict | None) -> dict | None:
     """Mark the real book against its AVG COST using last market prices (best-effort yfinance).
 
     The NAV curve measures performance since the entry DATE (market-relative); it does NOT show
-    your unrealized P&L vs what you PAID. This marks each holding (qty × last_price − invested_eur)
-    so the Positions page shows the actual drawdown vs cost. Offline/failed fetch → left unmarked.
-    Assumes the price is in the same currency as amount_eur (true for the EUR-listed vehicles held).
+    your unrealized P&L vs what you PAID. This marks each holding (qty × last_price_EUR − invested_eur)
+    so the Positions page + Decision Journal show the actual gain/loss vs cost. The quoted price is
+    converted to EUR via the vehicle's quote currency (yfinance fast_info) — USD/GBP/GBp all handled,
+    so a pence- or dollar-listed line is not mismarked. Offline/failed fetch → left unmarked.
     """
     if not positions or not positions.get("holdings"):
         return positions
@@ -109,24 +133,46 @@ def _mark_to_market(positions: dict | None) -> dict | None:
         import yfinance as yf
     except Exception:  # noqa: BLE001
         return positions
+    fx = _fx_to_eur()
     mv_total = 0.0
-    ok = False
-    for h in positions["holdings"]:
+    n_marked = 0
+    holds = positions["holdings"]
+    for h in holds:
         try:
-            hist = yf.Ticker(h["etf"]).history(period="5d", auto_adjust=True)["Close"].dropna()
+            tkr = yf.Ticker(h["etf"])
+            hist = tkr.history(period="5d", auto_adjust=True)["Close"].dropna()
             if hist.empty:
                 continue
             last = float(hist.iloc[-1])
-            mv = round(h["qty"] * last, 2)
+            try:
+                cur = (tkr.fast_info or {}).get("currency")
+            except Exception:  # noqa: BLE001
+                cur = None
+            # Convert the quoted price to EUR. A KNOWN non-EUR currency whose FX rate we could not
+            # fetch this build (transient yfinance failure) must NOT silently fall back to factor 1.0
+            # — that would mark e.g. a 3084-GBp line as €3084/share (a phantom +€40k on €500). Skip it
+            # instead, leaving the holding unmarked; only None/EUR (already-EUR) use the identity.
+            factor = fx.get(cur)
+            if factor is None:
+                if cur in (None, "EUR"):
+                    factor = 1.0
+                else:
+                    continue
+            last_eur = last * factor
+            mv = round(h["qty"] * last_eur, 2)
             h["last_price"] = round(last, 4)
+            h["quote_currency"] = cur
+            h["last_price_eur"] = round(last_eur, 4)
             h["market_value_eur"] = mv
             h["unrealized_eur"] = round(mv - h["invested_eur"], 2)
             h["unrealized_pct"] = round((mv / h["invested_eur"] - 1) * 100, 2) if h["invested_eur"] else None
             mv_total += mv
-            ok = True
+            n_marked += 1
         except Exception:  # noqa: BLE001 — a single bad ticker never breaks the book
             continue
-    if ok:
+    # Only report a book-level current value when EVERY holding was marked — a partial sum (some
+    # legs skipped for missing prices/FX) would understate the book and read as a false loss.
+    if n_marked == len(holds) and n_marked:
         inv = positions.get("total_invested_eur") or 0.0
         positions["market_value_eur"] = round(mv_total, 2)
         positions["unrealized_eur"] = round(mv_total - inv, 2)
@@ -333,6 +379,9 @@ def _bake_overview(dist: Path) -> dict:
                     "metrics": _series_metrics([s["nav"] for s in shown]),
                     "bench_metrics": _series_metrics([s["benchmark_nav"] for s in shown]),
                     "n_days": len(shown),
+                    # dates aligned 1:1 with nav/benchmark_nav (same source rows + identical
+                    # downsample indices) → an x-axis for the axed NAV line chart on Positions.
+                    "dates": _downsample([str(s["date"])[:10] for s in shown]),
                     "nav": _downsample([s["nav"] for s in shown]),
                     "benchmark_nav": _downsample([s["benchmark_nav"] for s in shown]),
                     # catalyst decomposition of the notional book, per rebalance + time-weighted avg
@@ -368,6 +417,73 @@ def _bake_overview(dist: Path) -> dict:
             ov["positions"]["cash_eur"] = round(cap - invested, 2)
             ov["positions"]["deployed_pct"] = round(invested / cap * 100, 1) if cap else None
 
+        # ── nav_compare (Positions "Performance vs S&P 500"): an honest apples-to-apples view —
+        # the REAL book + each model's LIVE walk-forward curve + the SPY benchmark, all indexed 100
+        # from inception and date-aligned (NO backtest mixed in, unlike the accruing portfolio cards).
+        # Same measure as the model portfolios (return vs SPY + vol/Sharpe/maxDD). Fills in as the
+        # live track record accrues (≥2 daily points). None until any live/real point exists.
+        ov["nav_compare"] = None
+        if has("portfolio_nav"):
+            cmp_rows = q(
+                "SELECT portfolio_id, kind, CAST(date AS VARCHAR) AS date, nav, benchmark_nav, "
+                "return_pct, vs_benchmark_pct, benchmark_etf FROM portfolio_nav "
+                "WHERE mode = 'live' OR kind = 'real' ORDER BY date")
+            by_pid: dict = {}
+            for r in cmp_rows:
+                d = (r.get("date") or "")[:10]
+                if not d or (inception and d < inception):
+                    continue
+                r["date"] = d
+                by_pid.setdefault(r["portfolio_id"], []).append(r)
+            if by_pid:
+                dates = sorted({r["date"] for rs in by_pid.values() for r in rs})
+                bench_etf = next((r["benchmark_etf"] for rs in by_pid.values()
+                                  for r in rs if r.get("benchmark_etf")), "SPY")
+
+                def _aligned(rs: list[dict], key: str) -> list:
+                    """Series aligned to the union `dates`, REBASED to 100 at its first in-window
+                    point (so all curves share a common start), forward-filled across gaps."""
+                    m = {r["date"]: r[key] for r in rs if r.get(key) is not None}
+                    base = next((m[d] for d in dates if d in m), None)
+                    if not base:
+                        return [None] * len(dates)
+                    out, last = [], None
+                    for d in dates:
+                        if d in m:
+                            last = round(m[d] / base * 100.0, 4)
+                        out.append(last)
+                    return out
+
+                bench_src = max(by_pid.values(), key=len)  # the longest series carries the SPY line
+                bench_nav = _aligned(bench_src, "benchmark_nav")
+                series = []
+                for pid, rs in by_pid.items():
+                    is_real = rs[-1].get("kind") == "real"
+                    navs = _aligned(rs, "nav")
+                    series.append({
+                        "portfolio_id": pid,
+                        "name": "My book" if is_real else cfgs.get(pid, {}).get("name", pid),
+                        "kind": rs[-1].get("kind"),
+                        "is_real": is_real,
+                        "nav": _downsample(navs),
+                        "return_pct": rs[-1].get("return_pct"),
+                        "vs_benchmark_pct": rs[-1].get("vs_benchmark_pct"),
+                        "metrics": _series_metrics([v for v in navs if v is not None]),
+                    })
+                series.sort(key=lambda s: (not s["is_real"], -(s["return_pct"] or 0)))
+                bmet = _series_metrics([v for v in bench_nav if v is not None]) or {}
+                _bn = [v for v in bench_nav if v is not None]
+                if _bn:
+                    bmet["ret_pct"] = round(_bn[-1] - 100.0, 2)
+                ov["nav_compare"] = {
+                    "inception": inception,
+                    "benchmark_etf": bench_etf,
+                    "dates": _downsample(dates),
+                    "series": series,
+                    "benchmark_nav": _downsample(bench_nav),
+                    "benchmark_metrics": bmet or None,
+                }
+
         # rotation targets ANCHORED to the real book's holdings (healthy sectors least correlated
         # to what you already own) — computed by dislocation --anchor-sectors → portfolio_rotation.
         ov["positions_rotation"] = None
@@ -378,7 +494,7 @@ def _bake_overview(dist: Path) -> dict:
                 ov["positions_rotation"] = q(
                     "SELECT sector_id, primary_etf, composite, mean_corr_to_stressed AS corr_to_book, "
                     f"diversifier_score FROM portfolio_rotation WHERE run_id = '{rid}' "
-                    "AND lens = 'diversifier' ORDER BY diversifier_score DESC")
+                    "AND lens = 'diversifier' ORDER BY diversifier_score DESC LIMIT 5")
 
         # ── dislocation lens (opportunities / diversifiers / regime watch) ──
         ov["dislocation"] = None
@@ -481,6 +597,54 @@ def _bake_overview(dist: Path) -> dict:
         except Exception:  # noqa: BLE001 — never let a movement read break the build
             pass
 
+    # ── Decision Journal: OPEN experiments (the forward/hypothesis side) ──
+    # Movements flagged metadata.experiment.is_experiment — the reasoning recorded AT ENTRY:
+    # hypothesis, what-would-disprove, accepted risks, the technical posture, the sizing decision,
+    # plus a compact risk_discipline summary (the loudest stop + assumption counts). The live P&L
+    # lives on the Positions page; here we surface the DECISION, not the mark. Newest first.
+    ov["journal_open"] = []
+    try:
+        rows = []
+        for m in movement_repo.load_all():
+            meta = m.get("metadata") or {}
+            exp = meta.get("experiment") or {}
+            if not exp.get("is_experiment"):
+                continue
+            rd = m.get("risk_discipline") or {}
+            inv = rd.get("invalidation") or []
+            asm = rd.get("assumptions") or []
+            full_exit = next((i.get("condition") for i in inv if i.get("severity") == "full_exit"), None)
+            asm_status = {}
+            for a in asm:
+                s = a.get("current_status") or "unknown"
+                asm_status[s] = asm_status.get(s, 0) + 1
+            rows.append({
+                "mov_id": m.get("id"),
+                "journal_id": exp.get("journal_id"),
+                "executed_at": m.get("executed_at"),
+                "sector_id": m.get("sector_id"),
+                "etf": (m.get("vehicle") or {}).get("etf"),
+                "amount_eur": m.get("amount_eur"),
+                "conviction": m.get("conviction"),
+                "trigger": m.get("trigger"),
+                "attribution": m.get("attribution") or [],
+                "score_context": m.get("score_context") or {},
+                "hypothesis": exp.get("hypothesis"),
+                "what_would_disprove": exp.get("what_would_disprove"),
+                "accepted_risks": exp.get("accepted_risks") or [],
+                "entry_technicals": exp.get("entry_technicals") or {},
+                "sizing_decision": exp.get("sizing_decision") or {},
+                "full_exit_condition": full_exit,
+                "n_invalidation": len(inv),
+                "n_assumptions": len(asm),
+                "assumption_status": asm_status,
+                "risk_note": rd.get("note"),
+            })
+        rows.sort(key=lambda r: str(r.get("executed_at") or ""), reverse=True)
+        ov["journal_open"] = rows
+    except Exception:  # noqa: BLE001 — never let a movement read break the build
+        ov["journal_open"] = []
+
     (dist / "overview.json").write_text(json.dumps(ov, ensure_ascii=False), encoding="utf-8")
     return {
         "runs": len(ov.get("runs") or []),
@@ -490,6 +654,7 @@ def _bake_overview(dist: Path) -> dict:
         "entry_timing": len((ov.get("entry_timing") or {}).get("by_sector") or {}),
         "exit_signal": len((ov.get("exit_signal") or {}).get("by_etf") or {}),
         "experiment_ledger": len(ov.get("experiment_ledger") or []),
+        "journal_open": len(ov.get("journal_open") or []),
     }
 
 

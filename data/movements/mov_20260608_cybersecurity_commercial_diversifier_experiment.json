@@ -1,0 +1,165 @@
+{
+  "$schema": "catalyx/schemas/movement.json",
+  "id": "mov_20260608_cybersecurity_commercial_diversifier_experiment",
+  "schema_version": "1.1",
+  "executed_at": "2026-06-08T00:00:00Z",
+  "action": "open",
+  "sector_id": "cybersecurity_commercial",
+  "vehicle": {
+    "etf": "USPY.L",
+    "isin": null,
+    "currency": "USD"
+  },
+  "amount_eur": 500.0,
+  "qty": 13.99,
+  "price": 40.92,
+  "fees": 0.0,
+  "attribution": [
+    {
+      "catalyst_id": "struct_enterprise_cyber_spend_supercycle",
+      "weight": 1.0
+    }
+  ],
+  "trigger": "reconsideration",
+  "conviction": "small",
+  "score_context": {
+    "run_id": "run_20260606_205930",
+    "rank": 5,
+    "composite": 77.1,
+    "catalyst_alignment": 86.0,
+    "momentum": 89.8,
+    "flow": 65.0,
+    "crowding": 55.0,
+    "regime_state": "intact"
+  },
+  "risk_discipline": {
+    "invalidation": [
+      {
+        "id": "inv_01",
+        "condition": "Enterprise security budget growth turns negative OR a bellwether platform (CrowdStrike / Palo Alto / Zscaler) guides revenue DOWN materially for 2 consecutive quarters.",
+        "severity": "full_exit",
+        "source": "earnings_data",
+        "triggered": false,
+        "triggered_at": null,
+        "eval_ticker": null,
+        "eval_note": "NOT machine-checkable — requires reading platform earnings guidance. Claude-checks-with-WebSearch. This is the structural-deactivation stop for struct_enterprise_cyber_spend_supercycle: cyber spend is famously sticky/non-discretionary, so a sustained guide-down is the cleanest signal the supercycle is breaking.",
+        "rationale": "The position rests on enterprise cyber spend being a secular, recession-resistant budget line. Two consecutive down-guides at the platform leaders would falsify that. Full exit — the thesis is dead, not just timing."
+      },
+      {
+        "id": "inv_02",
+        "condition": "USPY.L closes more than 20% below entry price for 10 consecutive trading days.",
+        "severity": "review_and_reduce",
+        "source": "market_data",
+        "triggered": false,
+        "triggered_at": null,
+        "stop_price_level": 32.74,
+        "stop_price_ticker": "USPY.L",
+        "comparator": "below",
+        "threshold": 32.74,
+        "consecutive_days": 10,
+        "eval_ticker": "USPY.L",
+        "eval_note": "Machine-checkable: USPY.L is the traded vehicle (USD-quoted accumulating line of the L&G Cyber Security ETF — the one actually held). Threshold 32.74 USD = entry 40.92 USD − 20%, in the same USD units yfinance returns (no pence/×100 issue — that was the ISPY.L GBp line, now corrected).",
+        "rationale": "A 20%/10d drawdown triggers a REVIEW, not a reflex exit — given the overbought entry, a near-term pullback is likely and is not itself a thesis break. Exit only if paired with inv_01 firing."
+      },
+      {
+        "id": "inv_03",
+        "condition": "Cybersecurity's 90-day return correlation to the held AI-capex cluster (copper + grid + semis) rises above 0.50 for two consecutive monthly reviews.",
+        "severity": "review_and_reduce",
+        "source": "user_manual",
+        "triggered": false,
+        "triggered_at": null,
+        "eval_ticker": null,
+        "eval_note": "Computed via dislocation --anchor-sectors (90d yfinance correlation). NOT a price stop — it tests the DIVERSIFICATION thesis directly: if cyber starts moving WITH the AI cluster, the reason for holding it (decorrelation) has evaporated.",
+        "rationale": "This position exists to diversify the AI-capex concentration. If its correlation to that cluster rises above 0.5, it is no longer doing that job → reduce and redeploy the diversification budget elsewhere. This is the experiment's specific kill-switch."
+      }
+    ],
+    "assumptions": [
+      {
+        "id": "asm_01",
+        "statement": "Enterprise cybersecurity spending keeps growing double-digit YoY during the horizon.",
+        "measurability": "Source: Gartner/IDC security-spend forecasts + platform-leader revenue. Falsified by: sector revenue growth decelerates below ~5% YoY for 2 consecutive quarters.",
+        "monitoring_source": "earnings_data",
+        "check_frequency": "quarterly",
+        "current_status": "holding",
+        "status_note": "Cyber spend is structurally sticky (non-discretionary, regulation- and threat-driven). struct_enterprise_cyber_spend_supercycle intensity 86 at entry."
+      },
+      {
+        "id": "asm_02",
+        "statement": "Cybersecurity stays low-correlation (<0.30, 90d) to the AI-capex cluster the book is already long.",
+        "measurability": "Source: dislocation correlation engine (90d yfinance). Falsified by: corr-to-book > 0.30 sustained (and the inv_03 kill-switch at 0.50).",
+        "monitoring_source": "user_manual",
+        "check_frequency": "monthly",
+        "current_status": "monitoring",
+        "status_note": "Corr-to-book 0.06 at entry — the lowest of any rotation target. This LOW correlation is the entire reason for the position."
+      },
+      {
+        "id": "asm_03",
+        "statement": "struct_enterprise_cyber_spend_supercycle stays active (intensity > 70, narrative not 'exhausted').",
+        "measurability": "Source: intensity_engine + narrative_maturity. Falsified by: intensity < 70 for 2 consecutive reviews OR narrative reaches 'exhausted'.",
+        "monitoring_source": "user_manual",
+        "check_frequency": "monthly",
+        "current_status": "holding",
+        "status_note": "Intensity 86, narrative_maturity 'mainstream' at entry."
+      }
+    ],
+    "note": "Diversification rotation, NOT a new correlated bet. struct_enterprise_cyber_spend_supercycle had €0 prior exposure, so this does NOT breach the 20% correlated-catalyst cap — it is the deliberate counterweight to the ~82% AI-capex cluster concentration (copper/grid/semis). Chosen because cybersecurity_commercial is the #1 rotation target: composite 83.8, regime intact, and corr 0.06 to the existing book (the lowest available). ACKNOWLEDGED: entry timing is overbought (RSI 68.9, 87.7% of 52w range, +volume surge) → entry_timing said wait_stabilize; see sizing_decision. Decision Journal experiment #2."
+  },
+  "migrated_from_thesis_id": null,
+  "run_id": null,
+  "metadata": {
+    "created_at": "2026-06-08T00:00:00Z",
+    "created_by": "abetatos",
+    "attribution_note": "Single driver: struct_enterprise_cyber_spend_supercycle at 1.0 (the sector's only active catalyst).",
+    "fill_note": "RECONCILED with the actual broker fill (2026-06-08): the vehicle held is USPY.L — the USD-quoted ACCUMULATING line of the L&G Cyber Security UCITS ETF — not the GBp-quoted ISPY.L originally drafted (equivalent index, cleaner currency). Fill: qty 13.99 @ 40.92 USD close, amount_eur=500 gross (avg cost ≈ €35.74/unit at EURUSD ≈ 1.1547; the ~€0.30/unit over the €35.44 market price is the fee/spread wedge baked into amount_eur). USD→EUR FX handled in mark-to-market + nav_engine; the earlier GBp/×100 hazard no longer applies.",
+    "experiment": {
+      "is_experiment": true,
+      "journal_id": "DJ-002",
+      "hypothesis": "Cybersecurity (enterprise cyber-spend supercycle) is a genuine, durable DIVERSIFIER to the AI-capex cluster: adding it lowers book correlation/drawdown risk without sacrificing return, because cyber spend is secular and largely decoupled from the AI-capex cycle.",
+      "what_would_disprove": "inv_03 fires — cyber's 90d correlation to the AI-cluster book rises above 0.50 (the decorrelation evaporates) — OR struct_enterprise_cyber_spend_supercycle weakens (inv_01 / asm_03). A drawdown that stays UNCORRELATED to the book does NOT disprove it.",
+      "accepted_risks": [
+        "overbought entry (RSI 68.9, 87.7% of 52w range, volume surge ×5.53 — chasing strength)",
+        "entry_timing said wait_stabilize; entered anyway (see sizing_decision)",
+        "mainstream narrative (moderate crowding)",
+        "USD-quoted vehicle (USPY.L) → USD/EUR FX on the mark",
+        "diversification thesis could decay if a macro shock correlates everything"
+      ],
+      "entry_technicals": {
+        "source": "technical_study.py (deep TA, opt-in via catalyx-open step 5.6)",
+        "posture": "constructive",
+        "net_signal": 3,
+        "last_price": 3122.0,
+        "atr_pct": 3.15,
+        "range_52w_pct": 87.7,
+        "bullish": [
+          "50d SMA above 200d (bullish regime)",
+          "price +31.4% vs 200d SMA",
+          "MACD above signal and above zero",
+          "OBV rising (accumulation)"
+        ],
+        "bearish": [
+          "entry_timing: overbought (chasing an extended move)"
+        ],
+        "cautions": [
+          "%B 0.74 inside the band",
+          "upper 52-week range (87.7%) — extended, near highs",
+          "volume surge ×5.53 vs 20d avg (move has participation)"
+        ]
+      },
+      "sizing_decision": {
+        "ta_recommendation": "wait_stabilize / scale_in — overbought, near 52w highs; ideally wait for a pullback toward the band midline",
+        "decision_taken": "full €500 now",
+        "rationale": "Override of the timing caution: the VALUE here is the decorrelation (0.06), not the entry tick. The AI-capex cluster carries ~82% concentration RIGHT NOW, so the diversification benefit is wanted now; waiting for a cyber pullback leaves the book concentrated in the interim. Satellite-sized (€500), bounded by inv_02 (−20%/10d review). Logged so the close can judge full-size-now vs the scale-in the TA preferred."
+      }
+    },
+    "tax_entry_year": 2026,
+    "tags": [
+      "cybersecurity",
+      "diversifier",
+      "rotation",
+      "experiment",
+      "decision_journal",
+      "low_correlation",
+      "UCITS"
+    ]
+  }
+}

@@ -683,3 +683,53 @@ exit_signals:
                              # consecutive_days window with buffer; the longest stop today is 10d).
   approach_pct: 5.0          # a not-yet-breaching stop within this % of its threshold → "approaching"
                              # (about to cross) rather than "clear". Tunable single source of truth.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Deep technical study (added 2026-06-08) — catalyx/scorer/technical_study.py
+# ─────────────────────────────────────────────────────────────────────────────
+# The OPT-IN, pre-open deep TA dossier on the actual vehicle — the thorough cousin of the
+# always-on entry_timing overlay. Offered at /catalyx-open when you want to "revisarlo todo
+# antes de abrir". A SUPERSET of entry_timing (embeds its micro-state verbatim) that adds MA
+# structure / MACD / Bollinger / ATR / support-resistance / volume-OBV / 52w-range, then a
+# synthesized bullish-vs-bearish posture. RECOMMEND-ONLY, ephemeral (no lake, no dashboard);
+# Python surfaces the facts + posture, the enter/scale/wait call is Claude's. Periods here are
+# the single source of truth (no LLM drift).
+technical_study:
+  lookback_days: 420         # CALENDAR days pulled (~290 trading days) — must cover SMA200 +
+                             # the trailing-252 (≈1y) range window with buffer.
+  min_history: 30            # fewer usable closes than this → bail (study not meaningful)
+  slope_lag: 5               # an MA "slope" compares now vs this many sessions ago (rising/falling)
+  macd_fast: 12
+  macd_slow: 26
+  macd_signal: 9
+  bollinger_window: 20
+  bollinger_k: 2.0           # band width in standard deviations
+  atr_period: 14
+  pivot_left: 3              # swing-pivot fractal: strict local extreme over [i-left, i+right]
+  pivot_right: 3
+  obv_window: 20             # OBV trend measured over the last N sessions
+  volume_window: 20          # latest volume vs the average of the prior N sessions
+  volume_surge_mult: 1.5     # latest/avg ≥ this → flagged as a participation surge
+  range_window: 252          # trailing sessions for the 52-week range position (≈1 trading year)
+  posture_margin: 2          # |bullish − bearish| ≥ this → constructive / weak; else mixed
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Dislocation lens (thresholds externalized 2026-06-08) — catalyx/scorer/dislocation.py
+# ─────────────────────────────────────────────────────────────────────────────
+# One corr/beta engine, two lenses. These were hardcoded as analyze() defaults; moved here so
+# the single-source-of-truth doctrine holds and the lenses are tunable without code edits.
+#   OPPORTUNITY (panic dip → buy?): the composite floor is NON-NEGOTIABLE — a dip is only an
+#     opportunity if we'd own the sector on the FULL blend; keep it strict (55).
+#   DIVERSIFIER (rotation target → where to add without re-buying the same bet): a sector
+#     qualifies when it is healthy (intact, composite ≥ floor) AND its mean correlation to the
+#     anchor/stressed cluster is ≤ max_diversifier_corr. RELAXED 2026-06-08 (user: too few
+#     rotation targets surfaced — only 1–2): the held book (copper miners + grid/utilities) is
+#     industrial/risk-on, so most healthy sectors correlate >0.5 with it in this tape. Loosened the
+#     corr cut 0.5→0.65 and DECOUPLED the diversifier composite floor from the opportunity floor,
+#     lowering it 55→50, so more genuine diversifiers surface while the opportunity lens stays strict.
+dislocation:
+  drawdown_threshold_pct: -3.0   # opportunity: min 5d drawdown to flag (negative %)
+  min_catalyst_alignment: 70.0   # opportunity: catalyst-confirmation floor
+  min_opportunity_composite: 55.0  # opportunity: full-blend floor (NON-NEGOTIABLE — keep strict)
+  max_diversifier_corr: 0.65     # diversifier: mean corr to the cluster ≤ this qualifies (was 0.5)
+  min_diversifier_composite: 50.0  # diversifier: health floor, decoupled from opportunity (was 55)

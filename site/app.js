@@ -146,27 +146,31 @@ function fmtMeta(v) {
   }
   return escapeHtml(String(v));
 }
-// A line chart with axes (default 0–100 scale; pass o.maxY for a custom top, e.g. exposure %),
-// gridlines, x date ticks, legend.
+// A line chart with axes. Default 0–100 scale; pass o.maxY (custom top, e.g. exposure %) and/or
+// o.minY (custom floor, e.g. a NAV curve sitting ~95–135 where a 0-based axis would flatten it).
+// Per-series o.width / o.dash supported; null values break the line (so curves that begin on
+// different dates align correctly instead of spiking to the baseline). Gridlines, x date ticks, legend.
 function lineChart(series, dates, o = {}) {
   const n = dates.length;
-  if (n < 2) return '<p class="hint">Only one run so far — no trend to chart yet.</p>';
-  const W = o.w || 560, H = o.h || 210, padL = 28, padR = 12, padT = 10, padB = 28;
-  const maxY = o.maxY || 100;
+  if (n < 2) return '<p class="hint">Only one point so far — no trend to chart yet.</p>';
+  const W = o.w || 560, H = o.h || 210, padL = 30, padR = 12, padT = 10, padB = 28;
+  const maxY = o.maxY ?? 100, minY = o.minY ?? 0, rngY = (maxY - minY) || 1;
   const X = (i) => padL + (i / (n - 1)) * (W - padL - padR);
-  const Y = (v) => padT + (1 - v / maxY) * (H - padT - padB);
+  const Y = (v) => padT + (1 - (v - minY) / rngY) * (H - padT - padB);
   let grid = '';
-  [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(f * maxY)).forEach((g) => {
+  [0, 0.25, 0.5, 0.75, 1].map((f) => minY + f * rngY).forEach((g) => {
     const y = Y(g);
     grid += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="1"/>`
-      + `<text x="${padL - 5}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--muted)">${g}</text>`;
+      + `<text x="${padL - 5}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--muted)">${Math.round(g)}</text>`;
   });
   const ticks = [...new Set([0, Math.floor((n - 1) / 2), n - 1])];
   const xlab = ticks.map((i) => `<text x="${X(i).toFixed(1)}" y="${H - 9}" text-anchor="middle" font-size="9" fill="var(--muted)">${dates[i]}</text>`).join('');
   const paths = series.map((s) => {
-    const d = s.values.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v || 0).toFixed(1)).join(' ');
-    const dots = s.values.map((v, i) => `<circle cx="${X(i).toFixed(1)}" cy="${Y(v || 0).toFixed(1)}" r="2" fill="${s.color}"/>`).join('');
-    return `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2"/>${dots}`;
+    let started = false;
+    const d = s.values.map((v, i) => { if (v == null) return ''; const cmd = started ? 'L' : 'M'; started = true; return cmd + X(i).toFixed(1) + ' ' + Y(v).toFixed(1); }).filter(Boolean).join(' ');
+    const dots = s.values.map((v, i) => v == null ? '' : `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="2" fill="${s.color}"/>`).filter(Boolean).join('');
+    const dash = s.dash ? ` stroke-dasharray="${s.dash}"` : '';
+    return `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.width || 2}"${dash}/>${dots}`;
   }).join('');
   const legend = series.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:14px"><span style="width:16px;height:3px;background:${s.color};display:inline-block;border-radius:2px"></span><span class="lbl">${s.label}</span></span>`).join('');
   return `<svg width="100%" viewBox="0 0 ${W} ${H}" style="max-width:${W}px;display:block">${grid}${xlab}${paths}</svg><div style="margin-top:8px">${legend}</div>`;
@@ -269,6 +273,43 @@ function portfolioCard(p) {
     <div class="lbl" style="margin-top:3px">Sharpe ${num(m.sharpe, 2)} · vol ${num(m.vol_pct)}% · maxDD ${num(m.max_drawdown_pct)}%</div>
   </a>`;
 }
+// Compact register of the REAL book on the Overview — summary strip + a few holdings,
+// linking out to the full Positions page. Mirrors the Positions summary cards but trimmed.
+function renderOvPositions() {
+  const el = $('ov-positions'); if (!el) return;
+  const pos = OV.positions;
+  if (!pos || !pos.holdings) {
+    el.innerHTML = '<p class="hint">No positions recorded yet — open one with <code>/catalyx-open</code>.</p>';
+    return;
+  }
+  const book = OV.positions_book;
+  const inv = pos.total_invested_eur || 0;
+  const cap = pos.total_capital_eur, cash = pos.cash_eur;
+  const up = pos.unrealized_eur, upct = pos.unrealized_pct;
+  const mc = (l, v, cls, sub) => `<div class="card"><div class="lbl">${l}</div><div class="big ${cls || ''}">${v}</div>${sub ? `<div class="lbl">${sub}</div>` : ''}</div>`;
+  const cards = [];
+  if (cap != null) cards.push(mc('committed capital', '€' + num(cap, 0), '', pos.deployed_pct != null ? num(pos.deployed_pct, 0) + '% deployed' : 'allocated'));
+  cards.push(mc('invested', '€' + num(inv, 0), '', `${pos.holdings.length} position${pos.holdings.length === 1 ? '' : 's'}`));
+  if (cash != null) cards.push(mc('cash', '€' + num(cash, 0), '', 'dry powder · awaiting catalysts'));
+  if (up != null) cards.push(mc('unrealized P&L', (up >= 0 ? '+' : '−') + '€' + num(Math.abs(up), 0), up >= 0 ? 'pos' : 'neg', signed(upct) + '% vs cost'));
+  if (book && book.vs_benchmark_pct != null) { const beat = (book.vs_benchmark_pct ?? 0) >= 0; cards.push(mc('vs ' + (book.benchmark_etf || 'SPY'), signed(book.vs_benchmark_pct) + 'pp', beat ? 'pos' : 'neg', beat ? 'beating market' : 'below market')); }
+
+  const hrows = (pos.holdings || []).slice(0, 6).map((h) => `<tr data-sid="${h.sector_id}">
+      <td><b>${h.sector_id}</b> <span class="pill b">${h.etf}</span></td>
+      <td class="num">€${num(h.invested_eur, 0)}</td>
+      <td class="num">${num(h.weight_pct)}%</td>
+      <td class="num ${(h.unrealized_eur ?? 0) >= 0 ? 'pos' : 'neg'}">${h.unrealized_eur != null ? (h.unrealized_eur >= 0 ? '+' : '−') + '€' + num(Math.abs(h.unrealized_eur), 0) : '—'}</td>
+      <td class="go">${_CHEV}</td>
+    </tr>`).join('') || '<tr><td colspan="5" class="lbl" style="padding:14px">no open positions</td></tr>';
+
+  el.innerHTML = `<div class="strip" style="margin-bottom:14px">${cards.join('')}</div>
+    <div class="cmp"><table><thead><tr>
+      <th>position</th><th class="num">invested</th><th class="num">weight</th><th class="num">unrealized P&L</th><th></th>
+    </tr></thead><tbody>${hrows}</tbody></table></div>`;
+  const tb = el.querySelector('tbody');
+  if (tb) tb.onclick = (ev) => { const tr = ev.target.closest('tr[data-sid]'); if (tr) location.hash = '#/sectors/' + tr.dataset.sid; };
+}
+
 function renderOverview() {
   const m = runMeta(CUR_RUN);
   $('ov-runbadge').innerHTML = m.run_id
@@ -276,6 +317,8 @@ function renderOverview() {
       + (m.notes ? `<br/><span style="color:var(--muted)">${escapeHtml(m.notes)}</span>` : '')
       + `<div class="lbl" style="margin-top:8px;text-transform:uppercase;letter-spacing:.5px;font-size:10px">What changed this run</div>${runDigest(m.summary)}`
     : 'No scoring run yet.';
+
+  renderOvPositions();
 
   $('ov-portfolios').innerHTML = (OV.portfolios || []).map(portfolioCard).join('') || '<p class="hint">No NAV yet.</p>';
 
@@ -820,6 +863,64 @@ function assumptionsCell(etf, fallback) {
     + `<span class="asm-chev">${_CHEV}</span></summary><div class="asm-detail">${items}</div></details>`;
 }
 
+// ── Performance vs S&P 500: the real book overlaid on the model strategies + SPY ──
+// Reuses the SAME walk-forward live measure computed for the model portfolios (return vs SPY,
+// vol/Sharpe/maxDD), so the comparison is apples-to-apples from inception. Curve fills in as the
+// live track record accrues (one trading day / review at a time).
+const CMP_PALETTE = ['#8250df', '#1a7f37', '#9a6700', '#bf3989', '#0550ae'];
+function renderPfCompare() {
+  const el = $('pf-compare'); if (!el) return;
+  const c = OV.nav_compare;
+  if (!c || !(c.series || []).length) {
+    el.innerHTML = '<p class="hint">The comparison appears once the live track record has points — it grows one trading day / review at a time from inception. Today\'s run adds the next.</p>';
+    return;
+  }
+  const bench = c.benchmark_etf || 'SPY';
+  // assign colours: the real book = accent (bold); models cycle the palette; SPY = grey dashed
+  let pi = 0;
+  const colored = c.series.map((s) => ({ ...s, color: s.is_real ? 'var(--accent)' : CMP_PALETTE[pi++ % CMP_PALETTE.length] }));
+
+  // ── evolution chart (NAV indexed 100) — auto y-range so ~100±x isn't flattened to a 0 baseline ──
+  const dates = c.dates || [];
+  let chart = '<p class="hint">The evolution chart appears once there are ≥2 daily points.</p>';
+  if (dates.length >= 2) {
+    const all = [];
+    colored.forEach((s) => (s.nav || []).forEach((v) => { if (v != null) all.push(v); }));
+    (c.benchmark_nav || []).forEach((v) => { if (v != null) all.push(v); });
+    const lo = Math.min(...all), hi = Math.max(...all), pad = Math.max(1, (hi - lo) * 0.08);
+    const series = colored.map((s) => ({ label: s.name, values: s.nav, color: s.color, width: s.is_real ? 3 : 1.5 }));
+    series.push({ label: bench, values: c.benchmark_nav, color: '#8b949e', width: 1.5, dash: '4 3' });
+    chart = `<div class="card">${lineChart(series, dates, { w: 640, h: 240, minY: Math.floor(lo - pad), maxY: Math.ceil(hi + pad) })}</div>`;
+  }
+
+  // ── comparison table: return%, vs SPY pp, vol, Sharpe, maxDD per book (+ SPY baseline row) ──
+  const metricCols = (mt) => mt
+    ? `<td class="num">${num(mt.vol_pct)}%</td><td class="num">${num(mt.sharpe, 2)}</td><td class="num neg">${num(mt.max_drawdown_pct)}%</td>`
+    : '<td class="num">—</td><td class="num">—</td><td class="num">—</td>';
+  const rows = colored.map((s) => {
+    const beat = (s.vs_benchmark_pct ?? 0) >= 0;
+    return `<tr${s.is_real ? ' style="font-weight:600;background:var(--accent-soft)"' : ''}>
+      <td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${s.color};margin-right:7px"></span>${s.is_real ? '<b>' + escapeHtml(s.name) + '</b> <span class="pill g">real</span>' : escapeHtml(s.name)}</td>
+      <td class="num ${(s.return_pct ?? 0) >= 0 ? 'pos' : 'neg'}">${signed(s.return_pct)}%</td>
+      <td class="num">${s.vs_benchmark_pct != null ? `<span class="pill ${beat ? 'g' : 'r'}">${signed(s.vs_benchmark_pct)}pp</span>` : '—'}</td>
+      ${metricCols(s.metrics)}
+    </tr>`;
+  }).join('');
+  const benchRow = `<tr class="lbl">
+      <td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#8b949e;margin-right:7px"></span>${bench} <span class="pill">benchmark</span></td>
+      <td class="num">${signed((c.benchmark_metrics && c.benchmark_metrics.ret_pct) ?? benchReturn(c))}%</td>
+      <td class="num">—</td>${metricCols(c.benchmark_metrics)}</tr>`;
+  el.innerHTML = chart + `<div class="cmp" style="margin-top:14px"><table><thead><tr>
+      <th>book</th><th class="num" title="total return since inception">return</th>
+      <th class="num" title="return minus ${bench} (percentage points)">vs ${bench}</th>
+      <th class="num" title="annualized volatility">vol</th><th class="num" title="Sharpe (rf=0)">Sharpe</th>
+      <th class="num" title="max peak-to-trough drawdown">maxDD</th>
+    </tr></thead><tbody>${rows}${benchRow}</tbody></table></div>`
+    + `<p class="hint" style="margin-top:8px">All indexed to 100 at inception${c.inception ? ' (' + c.inception + ')' : ''}; return is total since then, <b>vs ${bench}</b> is the gap in percentage points. The model strategies are a <a href="#/portfolios">theoretical exercise</a>; only <b>your book</b> is real money.</p>`;
+}
+// SPY total return from its indexed-100 curve (last/first − 1), as a fallback if not precomputed
+function benchReturn(c) { const b = (c.benchmark_nav || []).filter((v) => v != null); return b.length ? Number((b[b.length - 1] - 100).toFixed(2)) : null; }
+
 // ── POSITIONS (the real book — its own page, portfolio-style + full ledger) ──────
 function renderPositions() {
   const pos = OV.positions || { holdings: [], total_invested_eur: 0, realized_eur: 0 };
@@ -849,11 +950,27 @@ function renderPositions() {
   }
   cards.push(mc('realized P&L', '€' + num(pos.realized_eur, 0), (pos.realized_eur ?? 0) >= 0 ? 'pos' : 'neg', 'closed legs'));
   if (book && book.vs_benchmark_pct != null) cards.push(mc('vs ' + (book.benchmark_etf || 'SPY'), signed(book.vs_benchmark_pct) + 'pp', beat ? 'pos' : 'neg', beat ? 'beating market' : 'below market · since inception'));
+  // risk metrics — same set shown on the model portfolio cards (annualized vol, Sharpe, max drawdown)
+  if (m.vol_pct != null) cards.push(mc('volatility', num(m.vol_pct) + '%', '', 'annualized'));
+  if (m.sharpe != null) cards.push(mc('Sharpe', num(m.sharpe, 2), (m.sharpe ?? 0) >= 0 ? 'pos' : 'neg', 'risk-adjusted · rf=0'));
+  if (m.max_drawdown_pct != null) cards.push(mc('max drawdown', num(m.max_drawdown_pct) + '%', 'neg', 'peak-to-trough'));
   $('pos-summary').innerHTML = cards.join('');
 
-  // ── NAV vs SPY ──
-  $('pos-nav').innerHTML = (book && book.nav && book.nav.length > 1)
-    ? `<div class="card"><div class="lbl" style="margin-bottom:6px">Book NAV vs ${book.benchmark_etf || 'SPY'} — indexed 100 · ${book.n_days}d ${book.n_days < 5 ? '<span class="pill a">young book</span>' : ''}</div>${spark([{ values: book.nav, color: 'var(--accent)' }, { values: book.benchmark_nav, color: '#8b949e' }], { w: 600, h: 90 })}</div>`
+  // ── NAV vs SPY — axed line chart (gridlines + dated x-axis + legend), auto y-range so the
+  //    ~100±x curve isn't flattened against a 0 baseline. Falls back to a hint until ≥2 points. ──
+  $('pos-nav').innerHTML = (book && book.nav && book.nav.length > 1 && (book.dates || []).length === book.nav.length)
+    ? (() => {
+        const all = [];
+        (book.nav || []).forEach((v) => { if (v != null) all.push(v); });
+        (book.benchmark_nav || []).forEach((v) => { if (v != null) all.push(v); });
+        const lo = Math.min(...all), hi = Math.max(...all), pad = Math.max(1, (hi - lo) * 0.08);
+        const series = [
+          { label: 'My book', values: book.nav, color: 'var(--accent)', width: 3 },
+          { label: book.benchmark_etf || 'SPY', values: book.benchmark_nav, color: '#8b949e', width: 1.5, dash: '4 3' },
+        ];
+        return `<div class="card"><div class="lbl" style="margin-bottom:6px">Book NAV vs ${book.benchmark_etf || 'SPY'} — indexed 100 · ${book.n_days}d ${book.n_days < 5 ? '<span class="pill a">young book</span>' : ''}</div>`
+          + `${lineChart(series, book.dates, { w: 600, h: 220, minY: Math.floor(lo - pad), maxY: Math.ceil(hi + pad) })}</div>`;
+      })()
     : '<p class="hint">NAV curve appears once the book has ≥2 daily points. Buy-and-hold from entry; ETFs without yfinance history are held as cash.</p>';
 
   // ── holdings (marked to market vs avg cost) ──
@@ -862,7 +979,7 @@ function renderPositions() {
       <td class="num">${num(h.qty)}</td>
       <td class="num">€${num(h.invested_eur, 0)}</td>
       <td class="num">${num(h.avg_cost, 2)}</td>
-      <td class="num">${h.last_price != null ? num(h.last_price, 2) : '—'}</td>
+      <td class="num"${h.quote_currency && h.quote_currency !== 'EUR' && h.last_price != null ? ` title="${num(h.last_price, 2)} ${h.quote_currency} → EUR"` : ''}>${(h.last_price_eur ?? h.last_price) != null ? num(h.last_price_eur ?? h.last_price, 2) : '—'}</td>
       <td class="num">${h.market_value_eur != null ? '€' + num(h.market_value_eur, 0) : '—'}</td>
       <td class="num ${(h.unrealized_eur ?? 0) >= 0 ? 'pos' : 'neg'}">${h.unrealized_eur != null ? (h.unrealized_eur >= 0 ? '+' : '−') + '€' + num(Math.abs(h.unrealized_eur), 0) + ' (' + signed(h.unrealized_pct) + '%)' : '—'}</td>
       <td class="num">${num(h.weight_pct)}%</td>
@@ -908,26 +1025,49 @@ function renderPositions() {
   if (ext) ext.onclick = (ev) => { const tr = ev.target.closest('tr[data-sid]'); if (tr) location.hash = '#/sectors/' + tr.dataset.sid; };
 
   // ── movements (buys & sells) — references catalyst(s) + dates, no catalyst detail duplicated ──
+  // Per-movement return: each BUY lot stands on its own (qty × its own entry price), so €500 now
+  // vs €500 later are independent lots marked against the same current price — no time-weighting.
+  // Marked only while the lot is OPEN (last_price from the held position); realized P&L on a
+  // partial sell is FIFO-territory and lives in the experiment ledger, shown here as —.
   const actCls = (a) => a === 'open' ? 'g' : (a === 'close' || a === 'trim') ? 'r' : '';
+  const lastByEtf = {};
+  for (const h of (pos.holdings || [])) if (h.last_price != null) lastByEtf[h.etf] = h.last_price;
+  const DAY = 86400000;
   const mrows = movs.map((mv) => {
     const v = mv.vehicle || {}, sc = mv.score_context || {};
     const cats = (mv.attribution || []).map((a) =>
       `<a class="pill b" style="text-decoration:none" href="#/catalysts/${encodeURIComponent(a.catalyst_id)}">${a.catalyst_id} ${Math.round((a.weight || 0) * 100)}%</a>`).join(' ');
     const score = [sc.composite != null ? `comp ${num(sc.composite, 0)}` : '', sc.rank != null ? `#${sc.rank}` : '',
       sc.regime_state ? sc.regime_state : ''].filter(Boolean).join(' · ');
+    // held days since execution
+    const t0 = mv.executed_at ? new Date(mv.executed_at).getTime() : NaN;
+    const days = isFinite(t0) ? Math.max(0, Math.floor((Date.now() - t0) / DAY)) : null;
+    const heldCell = days == null ? '—' : (days < 1 ? '<1d' : days + 'd');
+    // unrealized return of this open buy lot vs current price (qty × own entry price)
+    const last = lastByEtf[v.etf], isBuy = mv.action === 'open' || mv.action === 'add';
+    let retCell = '<span class="lbl">—</span>';
+    if (isBuy && last != null && mv.price) {
+      const pct = (last / mv.price - 1) * 100;
+      const eur = (mv.qty || 0) * (last - mv.price);
+      const cls = eur >= 0 ? 'pos' : 'neg';
+      retCell = `<span class="${cls}">${eur >= 0 ? '+' : '−'}€${num(Math.abs(eur), 0)} (${signed(pct)}%)</span>`;
+    }
     return `<tr>
       <td>${String(mv.executed_at || '').slice(0, 10)}</td>
       <td><span class="pill ${actCls(mv.action)}">${mv.action}</span></td>
       <td><a href="#/sectors/${mv.sector_id}" style="color:inherit"><b>${mv.sector_id}</b></a> <span class="pill b">${v.etf || ''}</span></td>
       <td class="num">€${num(mv.amount_eur, 0)}</td>
       <td class="num">${num(mv.qty)} @ ${num(mv.price, 2)}</td>
+      <td class="num lbl">${heldCell}</td>
+      <td class="num">${retCell}</td>
       <td>${mv.conviction ? `<span class="pill">${mv.conviction}</span> ` : ''}${mv.trigger ? `<span class="pill">${mv.trigger}</span>` : ''}</td>
       <td>${cats || '<span class="lbl">—</span>'}</td>
       <td class="lbl">${score || '—'}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="8" class="lbl" style="padding:14px">no movements yet</td></tr>';
+  }).join('') || '<tr><td colspan="10" class="lbl" style="padding:14px">no movements yet</td></tr>';
   $('pos-movements').innerHTML = `<div class="cmp"><table><thead><tr>
       <th>date</th><th>action</th><th>position</th><th class="num">amount</th><th class="num">qty @ price</th>
+      <th class="num">held</th><th class="num">return</th>
       <th>tags</th><th>catalyst(s)</th><th>score@entry</th></tr></thead><tbody>${mrows}</tbody></table></div>`;
 
   // ── catalyst exposure (the ledger) ──
@@ -941,29 +1081,6 @@ function renderPositions() {
   $('pos-catalysts').innerHTML = `<div class="cmp"><table><thead><tr>
       <th>catalyst</th><th class="num">invested</th><th class="num">% of book</th><th>sectors</th>
       <th class="num">movements</th></tr></thead><tbody>${lrows}</tbody></table></div>`;
-
-  // ── experiment ledger (closed positions scored as experiments) ──
-  const xp = OV.experiment_ledger || [];
-  const vClr = { skill: '#16a34a', luck: '#d97706', variance: '#2563eb', correct_invalidation: '#ea580c', indeterminate: '#6b7280' };
-  const xrows = xp.map((e) => {
-    const at = e.after_tax_pnl_eur;
-    const flags = (e.behavioral_flags || '').split(',').filter(Boolean);
-    const fpills = flags.map((f) => `<span class="pill r" title="behavioral deviation">${f.split(':')[0]}</span>`).join(' ');
-    const note = e.exit_note ? `<div class="lbl" style="margin-top:3px">“${e.exit_note}”</div>` : '';
-    const cf = e.verdict_confidence === 'low' ? ' <span class="lbl">(low conf)</span>' : '';
-    return `<tr>
-      <td>${String(e.executed_at || '').slice(0, 10)}</td>
-      <td><a href="#/sectors/${e.sector_id}" style="color:inherit"><b>${e.sector_id}</b></a> <span class="pill b">${e.etf || ''}</span></td>
-      <td><b style="color:${vClr[e.verdict_label] || '#6b7280'}">${(e.verdict_label || '—').replace(/_/g, '-')}</b>${cf}</td>
-      <td class="num" style="color:${at != null && at < 0 ? '#dc2626' : '#16a34a'}">€${num(at, 0)}</td>
-      <td class="num">${e.return_pct != null ? num(e.return_pct, 1) + '%' : '—'}</td>
-      <td class="num">${e.holding_days != null ? e.holding_days + 'd' : '—'}</td>
-      <td>${fpills || '<span class="lbl">—</span>'}${note}</td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="7" class="lbl" style="padding:14px">no closed experiments yet — they appear here after /catalyx-close</td></tr>';
-  $('pos-ledger').innerHTML = `<div class="cmp"><table><thead><tr>
-      <th>closed</th><th>position</th><th>verdict</th><th class="num">after-tax</th>
-      <th class="num">return</th><th class="num">held</th><th>behavior &amp; note</th></tr></thead><tbody>${xrows}</tbody></table></div>`;
 
   // ── rotation targets (anchored to the book's holdings) ──
   const rot = OV.positions_rotation || [];
@@ -981,6 +1098,103 @@ function renderPositions() {
   if (rt) rt.onclick = (ev) => { const tr = ev.target.closest('tr[data-sid]'); if (tr) location.hash = '#/sectors/' + tr.dataset.sid; };
 }
 
+// ── DECISION JOURNAL ───────────────────────────────────────────────────────────
+const _POSTURE_CLR = { constructive: '#16a34a', mixed: '#d97706', weak: '#dc2626' };
+const _ASM_CLR = { holding: '#16a34a', monitoring: '#6b7280', weakening: '#d97706', violated: '#dc2626', unverified: '#6b7280' };
+
+// current gain/loss for an open experiment — join to the marked real book by sector/etf
+function djPnl(e) {
+  const hs = ((OV.positions || {}).holdings) || [];
+  const h = hs.find((x) => x.sector_id === e.sector_id) || hs.find((x) => x.etf === e.etf);
+  if (!h || h.unrealized_eur == null) return null;
+  return { eur: h.unrealized_eur, pct: h.unrealized_pct };
+}
+
+function djOpenCard(e) {
+  const t = e.entry_technicals || {};
+  const sz = e.sizing_decision || {};
+  const sc = e.score_context || {};
+  const postureClr = _POSTURE_CLR[t.posture] || 'var(--muted)';
+  const pnl = djPnl(e);
+  const sgn = (v) => (v >= 0 ? '+' : '−');
+  const pnlCell = pnl
+    ? `<div class="dj-fig"><b class="${pnl.eur >= 0 ? 'pos' : 'neg'}">${sgn(pnl.eur)}€${num(Math.abs(pnl.eur), 0)}</b><i>${pnl.pct != null ? sgn(pnl.pct) + num(Math.abs(pnl.pct), 1) + '% · P&L' : 'P&L'}</i></div>`
+    : `<div class="dj-fig"><b class="lbl">—</b><i>P&L</i></div>`;
+
+  // ── expanded detail ──
+  const list = (arr, clr) => (arr || []).map((x) => `<li><span style="color:${clr}">•</span> ${escapeHtml(String(x))}</li>`).join('');
+  const attr = (e.attribution || []).map((a) =>
+    `<a class="pill b" style="text-decoration:none" href="#/catalysts/${encodeURIComponent(a.catalyst_id)}" onclick="event.stopPropagation()">${escapeHtml(a.catalyst_id)} ${Math.round((a.weight || 0) * 100)}%</a>`).join(' ');
+  const risks = (e.accepted_risks || []).map((r) => `<span class="pill r">${escapeHtml(String(r))}</span>`).join(' ');
+  const asm = Object.entries(e.assumption_status || {}).map(([k, v]) =>
+    `<span class="pill" style="color:${_ASM_CLR[k] || 'var(--muted)'}">${v}&nbsp;${k}</span>`).join(' ') || '<span class="lbl">—</span>';
+  const stat = (b, i, clr) => `<div class="dj-stat"><b${clr ? ` style="color:${clr}"` : ''}>${b}</b><i>${i}</i></div>`;
+  const stats = [
+    sc.composite != null ? stat(num(sc.composite, 0), 'score @ entry', scoreColor(sc.composite)) : '',
+    t.posture ? stat(`${escapeHtml(t.posture)}${t.net_signal != null ? ` <span class="lbl">${t.net_signal >= 0 ? '+' : ''}${t.net_signal}</span>` : ''}`, 'technicals @ entry', postureClr) : '',
+    sc.regime_state ? stat(escapeHtml(sc.regime_state), 'regime', sc.regime_state === 'intact' ? 'var(--green)' : 'var(--amber)') : '',
+    stat(`${e.n_invalidation} / ${e.n_assumptions}`, 'stops / assumptions'),
+  ].filter(Boolean).join('');
+  const taEv = (t.bullish || t.bearish || t.cautions)
+    ? `<div class="dj-sec"><span class="lbl">technical read @ entry${t.range_52w_pct != null ? ` · ${t.range_52w_pct}% of 52w range · ATR ${t.atr_pct}%` : ''}</span>
+        <div class="dj-ev"><ul>${list(t.bullish, 'var(--green)')}</ul><ul>${list(t.bearish, 'var(--red)')}${list(t.cautions, 'var(--amber)')}</ul></div></div>`
+    : '';
+  const sizing = sz.decision_taken
+    ? `<div class="dj-note"><b>Sizing.</b> Took <b>${escapeHtml(sz.decision_taken)}</b>${sz.ta_recommendation ? ` — the TA preferred <i>${escapeHtml(sz.ta_recommendation)}</i>.` : '.'} ${sz.rationale ? escapeHtml(sz.rationale) : ''}</div>`
+    : '';
+
+  return `<details class="dj-item">
+    <summary class="dj-sum">
+      <span class="dj-id">${escapeHtml(e.journal_id || '—')}</span>
+      <span class="dj-ttl"><a href="#/sectors/${e.sector_id}" onclick="event.stopPropagation()" style="color:inherit">${escapeHtml(e.sector_id || '')}</a><span class="tk">${escapeHtml(e.etf || '')}</span>
+        <span class="mt">${String(e.executed_at || '').slice(0, 10)} · ${escapeHtml(e.conviction || '')} conviction · ${escapeHtml(e.trigger || '')}</span></span>
+      <div class="dj-fig"><b>€${num(e.amount_eur, 0)}</b><i>invested</i></div>
+      ${pnlCell}
+      <span class="dj-chev">${_CHEV}</span>
+    </summary>
+    <div class="dj-body">
+      <div class="lbl" style="margin-top:10px">drivers ${attr} · <a href="#/positions" onclick="event.stopPropagation()">movement on Positions →</a></div>
+      ${e.hypothesis ? `<p class="dj-hyp"><b>Hypothesis.</b> ${escapeHtml(e.hypothesis)}</p>` : ''}
+      ${e.what_would_disprove ? `<p class="dj-kill"><b style="color:var(--fg)">Disproven if</b> — ${escapeHtml(e.what_would_disprove)}</p>` : ''}
+      <div class="dj-grid">${stats}</div>
+      ${taEv}
+      ${sizing}
+      ${risks ? `<div class="dj-sec"><span class="lbl">accepted risks</span><div class="chips">${risks}</div></div>` : ''}
+      <div class="dj-note"><b>Pre-committed discipline.</b> ${e.n_invalidation} stop(s), ${e.n_assumptions} assumption(s) — ${asm}.${e.full_exit_condition ? ` <span class="pill r">full-exit</span> ${escapeHtml(e.full_exit_condition)}` : ''}</div>
+    </div>
+  </details>`;
+}
+
+function renderDecisionJournal() {
+  const open = OV.journal_open || [];
+  $('dj-open').innerHTML = open.length
+    ? `<div class="dj-list">${open.map(djOpenCard).join('')}</div>`
+    : '<p class="hint">No open experiments yet — open one with <code>/catalyx-open</code> and flag it as an experiment.</p>';
+
+  // closed ledger (moved here from Positions)
+  const xp = OV.experiment_ledger || [];
+  const vClr = { skill: '#16a34a', luck: '#d97706', variance: '#2563eb', correct_invalidation: '#ea580c', indeterminate: '#6b7280' };
+  const xrows = xp.map((e) => {
+    const at = e.after_tax_pnl_eur;
+    const flags = (e.behavioral_flags || '').split(',').filter(Boolean);
+    const fpills = flags.map((f) => `<span class="pill r" title="behavioral deviation">${f.split(':')[0]}</span>`).join(' ');
+    const note = e.exit_note ? `<div class="lbl" style="margin-top:3px">“${escapeHtml(e.exit_note)}”</div>` : '';
+    const cf = e.verdict_confidence === 'low' ? ' <span class="lbl">(low conf)</span>' : '';
+    return `<tr>
+      <td>${String(e.executed_at || '').slice(0, 10)}</td>
+      <td><a href="#/sectors/${e.sector_id}" style="color:inherit"><b>${e.sector_id}</b></a> <span class="pill b">${e.etf || ''}</span></td>
+      <td><b style="color:${vClr[e.verdict_label] || '#6b7280'}">${(e.verdict_label || '—').replace(/_/g, '-')}</b>${cf}</td>
+      <td class="num" style="color:${at != null && at < 0 ? '#dc2626' : '#16a34a'}">€${num(at, 0)}</td>
+      <td class="num">${e.return_pct != null ? num(e.return_pct, 1) + '%' : '—'}</td>
+      <td class="num">${e.holding_days != null ? e.holding_days + 'd' : '—'}</td>
+      <td>${fpills || '<span class="lbl">—</span>'}${note}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" class="lbl" style="padding:14px">no closed experiments yet — they appear here after /catalyx-close</td></tr>';
+  $('dj-ledger').innerHTML = `<div class="cmp"><table><thead><tr>
+      <th>closed</th><th>position</th><th>verdict</th><th class="num">after-tax</th>
+      <th class="num">return</th><th class="num">held</th><th>behavior &amp; note</th></tr></thead><tbody>${xrows}</tbody></table></div>`;
+}
+
 // ── PORTFOLIOS ─────────────────────────────────────────────────────────────────
 let curPf = null;
 function holdingsForRun(pid) {
@@ -991,6 +1205,7 @@ function holdingsForRun(pid) {
 }
 function renderPortfolios(pid) {
   $('pf-cards').innerHTML = (OV.portfolios || []).map(portfolioCard).join('') || '<p class="hint">No NAV yet.</p>';
+  renderPfCompare();   // real book + model strategies + SPY, indexed 100 from inception
   const sel = pid || curPf || ((OV.portfolios || [])[0] || {}).portfolio_id;
   if (sel) selectPortfolio(sel);
 }
@@ -1165,7 +1380,7 @@ async function renderData() {
 }
 
 // ── router ──────────────────────────────────────────────────────────────────────
-const RENDER = { overview: renderOverview, sectors: renderSectors, timing: renderTiming, catalysts: renderCatalysts, positions: renderPositions, portfolios: renderPortfolios, data: renderData };
+const RENDER = { overview: renderOverview, sectors: renderSectors, timing: renderTiming, catalysts: renderCatalysts, positions: renderPositions, journal: renderDecisionJournal, portfolios: renderPortfolios, data: renderData };
 function applyRoute(section, id) {
   LAST = { section, id };
   document.querySelectorAll('.navlink').forEach((el) => el.classList.toggle('active', el.dataset.route === section));

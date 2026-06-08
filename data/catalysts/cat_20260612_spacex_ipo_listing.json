@@ -1,0 +1,40 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20260612_spacex_ipo_listing",
+  "schema_version": "1.2",
+  "type": "event",
+  "created_at": "2026-06-08T00:00:00Z",
+  "detected_at": "2026-06-08T00:00:00Z",
+  "event_date": "2026-06-12T00:00:00Z",
+  "source": {
+    "type": "official_announcement",
+    "url": "https://www.bloomberg.com/news/articles/2026-05-21/spacex-ipo-ai-plans-starlink-growth-and-risks",
+    "publication": "Bloomberg / CNBC / Capital.com",
+    "published_at": "2026-05-21T00:00:00Z"
+  },
+  "catalyst_type": "corporate_event",
+  "catalyst_subtype": "mega_ipo_listing",
+  "description": "SpaceX is going public: S-1 filed with the SEC on 2026-05-20, pricing expected 2026-06-11 and Nasdaq listing 2026-06-12 under ticker SPCX. Targeting a raise of up to ~$75B (more than 2x the prior record IPO) at a valuation of at least $1.8T (early-investor consensus ~$2.0-2.2T) — the largest IPO in US market history by valuation. Up to ~30% of shares are reportedly allocated to retail investors (3x the typical 5-10%), enlarging the public float and the post-listing retail-flow dynamic. Starlink (10.3M subscribers as of end-March 2026, doubled YoY, ~58% of SpaceX revenue) is the valuation anchor. This is a liquidity + sentiment catalyst for the entire commercial-space complex: it creates the first directly investable large-cap space equity, forces active managers and index providers to take a sector view, and has already driven the proxy ETFs (UFO +75% YTD, ROKT +58% YTD; UFO AUM crossed $1B) sharply higher in anticipation. CAVEAT: SpaceX's advisers have flagged the listing could slip to 2027 depending on market conditions — the event_date is a target, not yet confirmed fired.",
+  "geography": ["USA", "GLOBAL"],
+  "magnitude": "high",
+  "novelty_score": 60,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": true,
+    "nov_02_new_sector": false,
+    "nov_03_new_source": true,
+    "nov_04_changes_rate": true,
+    "nov_05_consensus_surprise_gt50": false
+  },
+  "strength_score": 80,
+  "consensus_surprise": 0.2,
+  "is_priced_in_estimate": 0.50,
+  "relation_to_structural": "confirms",
+  "decay_halflife_days": 30,
+  "related_catalyst_ids": ["struct_commercial_space_supercycle"],
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": null,
+  "user_rank": 2,
+  "user_notes": "Registered 2026-06-08 ahead of the IPO window at the user's request (the IPO is so close it could move sector news). This is the canonical 'event overhang' for entry_timing on space_commercial / space-adjacent reads (CLAUDE.md cites the SpaceX mega-IPO as the example). Overhang read is AMBIGUOUS: bullish as a sector-wide re-rating + liquidity event (relation 'confirms'), but a near-term risk for anyone entering the proxy ETFs right now — they have already rallied +75%/+58% YTD pricing it in (is_priced_in 0.50), so a 'sell-the-news' or a slip-to-2027 unwind is a live downside. POST-IPO ACTION: once listing is confirmed (or slips), update event_date/status; if it prices Jun 11-12, let it decay (30d half-life) and watch first-30-day trajectory (break below ~$1.4T = bear signal for sector ETF flows).",
+  "tags": ["space", "spacex", "ipo", "starlink", "mega_ipo", "liquidity_event", "sentiment", "event_overhang", "commercial_space", "spcx"]
+}

@@ -116,17 +116,37 @@ def _load_sectors(run_id: str | None, lake_dir: Path | None) -> tuple[list[dict]
 # ── Engine ───────────────────────────────────────────────────────────────────
 
 def analyze(run_id: str | None = None, lookback_days: int = 90, window_days: int = 5,
-            benchmark: str = _BENCHMARK, drawdown_threshold: float = -3.0,
-            min_catalyst_alignment: float = 70.0, min_composite: float = 55.0,
-            max_diversifier_corr: float = 0.5, persist: bool = False,
+            benchmark: str = _BENCHMARK, drawdown_threshold: float | None = None,
+            min_catalyst_alignment: float | None = None, min_composite: float | None = None,
+            max_diversifier_corr: float | None = None,
+            min_diversifier_composite: float | None = None, persist: bool = False,
             anchor_sectors: list[str] | None = None,
             price_fn=None, lake_dir: Path | None = None) -> dict:
     """Compute both lenses from one correlation/beta engine. Returns a JSON-able dict.
+
+    Threshold params default to None → resolved from `scoring_weights.yaml` `dislocation`
+    (single source of truth); pass an explicit value to override for a one-off call.
+    `min_composite` is the OPPORTUNITY floor (non-negotiable, strict); `min_diversifier_composite`
+    is the SEPARATE, looser floor for the rotation-target lens.
 
     If `persist`, materialize one flat row per analyzed sector to the lake table `dislocation`
     (keyed by run_id, overwritten) so the static GitHub-Pages dashboard can read it in-browser.
     """
     import pandas as pd
+
+    from catalyx.config import weights as _w
+
+    cfg = _w.dislocation()
+    if drawdown_threshold is None:
+        drawdown_threshold = cfg["drawdown_threshold_pct"]
+    if min_catalyst_alignment is None:
+        min_catalyst_alignment = cfg["min_catalyst_alignment"]
+    if min_composite is None:
+        min_composite = cfg["min_opportunity_composite"]
+    if max_diversifier_corr is None:
+        max_diversifier_corr = cfg["max_diversifier_corr"]
+    if min_diversifier_composite is None:
+        min_diversifier_composite = cfg["min_diversifier_composite"]
 
     price_fn = price_fn or yfinance_prices
     sectors, used_run = _load_sectors(run_id, lake_dir)
@@ -207,7 +227,8 @@ def analyze(run_id: str | None = None, lookback_days: int = 90, window_days: int
     diversifiers = []
     if corr is not None and stressed_etfs:
         for r in rows:
-            if r["sector_id"] in stressed or r["regime_state"] != "intact" or r["composite"] < min_composite:
+            if (r["sector_id"] in stressed or r["regime_state"] != "intact"
+                    or r["composite"] < min_diversifier_composite):
                 continue
             etf = r["primary_etf"]
             cvals = [corr.loc[etf, se] for se in stressed_etfs
@@ -244,9 +265,18 @@ def analyze(run_id: str | None = None, lookback_days: int = 90, window_days: int
 
 def _persist_lake(run_id, window_days, benchmark, market_window_pct, rows, opportunities,
                   diversifiers, lake_dir, table: str = "dislocation") -> None:
-    """One flat row per analyzed sector → lake `table` (overwrite per run)."""
+    """One flat row per analyzed sector → lake `table` (overwrite per run).
+
+    `lens` precedence depends on what the table is FOR: the market-wide `dislocation` table is
+    consumed for opportunities first (panic dips → buy), so opportunity wins a tie. The anchored
+    `portfolio_rotation` table is consumed ONLY for diversifiers (the Positions rotation-targets
+    panel filters lens='diversifier'); there "opportunity" is meaningless, and letting it win a tie
+    HID genuine rotation targets that happened to also be falling (the "only 1–2 show up" bug). So
+    for that table the diversifier lens wins.
+    """
     import pandas as pd
 
+    diversifier_first = table == "portfolio_rotation"
     opp_by = {o["sector_id"]: o for o in opportunities}
     div_by = {d["sector_id"]: d for d in diversifiers}
     computed_at = datetime.now(timezone.utc)
@@ -254,6 +284,10 @@ def _persist_lake(run_id, window_days, benchmark, market_window_pct, rows, oppor
     for r in rows:
         o = opp_by.get(r["sector_id"])
         d = div_by.get(r["sector_id"])
+        if diversifier_first:
+            lens = "diversifier" if d else ("opportunity" if o else "neither")
+        else:
+            lens = "opportunity" if o else ("diversifier" if d else "neither")
         recs.append({
             "run_id": run_id, "computed_at": computed_at, "window_days": window_days,
             "benchmark": benchmark, "market_window_pct": market_window_pct,
@@ -263,7 +297,7 @@ def _persist_lake(run_id, window_days, benchmark, market_window_pct, rows, oppor
             "beta_to_market": r["beta_to_market"],
             "contagion_explained_pct": r["contagion_explained_pct"],
             "idiosyncratic_pct": r["idiosyncratic_pct"], "contagion_fraction": r["contagion_fraction"],
-            "lens": "opportunity" if o else ("diversifier" if d else "neither"),
+            "lens": lens,
             "opportunity_score": o.get("opportunity_score") if o else None,
             "diversifier_score": d.get("diversifier_score") if d else None,
             "mean_corr_to_stressed": d.get("mean_corr_to_stressed") if d else None,
@@ -283,7 +317,12 @@ def main() -> None:
     p.add_argument("--lookback", type=int, default=90)
     p.add_argument("--window", type=int, default=5)
     p.add_argument("--benchmark", default=_BENCHMARK)
-    p.add_argument("--drawdown", type=float, default=-3.0, help="min drawdown%% to flag (negative)")
+    p.add_argument("--drawdown", type=float, default=None,
+                   help="min drawdown%% to flag, negative (default: config dislocation.drawdown_threshold_pct)")
+    p.add_argument("--max-corr", type=float, default=None,
+                   help="diversifier: max mean corr to the cluster (default: config max_diversifier_corr=0.65)")
+    p.add_argument("--min-div-composite", type=float, default=None,
+                   help="diversifier: min composite floor (default: config min_diversifier_composite=50)")
     p.add_argument("--no-persist", action="store_true", help="do not write the dislocation lake table")
     p.add_argument("--anchor-sectors", default=None,
                    help="comma-separated sector_ids to anchor rotation to (e.g. the real book's "
@@ -294,6 +333,7 @@ def main() -> None:
     anchor = [s.strip() for s in args.anchor_sectors.split(",")] if args.anchor_sectors else None
     r = analyze(run_id=args.run_id, lookback_days=args.lookback, window_days=args.window,
                 benchmark=args.benchmark, drawdown_threshold=args.drawdown,
+                max_diversifier_corr=args.max_corr, min_diversifier_composite=args.min_div_composite,
                 persist=not args.no_persist, anchor_sectors=anchor)
     if args.json:
         print(json.dumps(r, indent=2, ensure_ascii=False))
