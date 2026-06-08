@@ -88,40 +88,53 @@ def test_catalyst_ledger_reads_latest_snapshot(tmp_path):
     assert led[0]["catalyst_id"] == "struct_copper" and led[0]["invested_eur"] == 1000.0
 
 
-def test_catalyst_lineage_combines_strategy_exposure_over_runs(tmp_path, monkeypatch):
-    _seed(tmp_path)
-    # catalyst → sectors comes from the Tier-1 studies; stub it so the test is self-contained.
-    monkeypatch.setattr(q, "_sectors_for_catalyst", lambda cid: ["copper", "gold"])
-    # two portfolios across two runs holding the catalyst's sectors (a rebalance between runs).
-    # The lake partition key is (portfolio_id, run_id) → one append per (pid, run) group.
-    holds = {
-        ("momentum", "run_a"): [("copper", 10.0), ("gold", 5.0)],
-        ("catalyx", "run_a"): [("copper", 8.0)],
-        # run_b: momentum trims copper + exits gold; catalyx enters gold
-        ("momentum", "run_b"): [("copper", 7.0)],
-        ("catalyx", "run_b"): [("copper", 8.0), ("gold", 4.0)],
+def test_portfolio_catalyst_exposure_timeseries_and_time_weighted_avg(tmp_path):
+    # score_run dates (both in the past) so the average is time-weighted: run_a was live ~9 days
+    # (until run_b), run_b is the current allocation (live until 'now' >> 9d → dominates the avg).
+    for rid, ts in [("run_a", "2026-05-01T00:00:00"), ("run_b", "2026-05-10T00:00:00")]:
+        lake.append_partition("score_run", pd.DataFrame([
+            {"run_id": rid, "run_at": ts, "scoring_version": "v1", "sector_count": 2},
+        ]), {"run_id": rid}, lake_dir=tmp_path)
+    # one portfolio decomposed by catalyst across two rebalances
+    exp = {
+        "run_a": [("struct_ai", 60.0), ("struct_nato", 40.0)],
+        "run_b": [("struct_ai", 20.0), ("struct_nato", 30.0), ("cash", 50.0)],
     }
-    for (pid, run), secs in holds.items():
-        lake.append_partition("portfolio_holding", pd.DataFrame([
-            {"portfolio_id": pid, "run_id": run, "sector_id": sec, "weight_pct": w,
-             "primary_etf": "X", "composite": 70.0, "momentum": 60.0,
-             "narrative_maturity": "mainstream", "rank_in_portfolio": i + 1}
-            for i, (sec, w) in enumerate(secs)
-        ]), {"portfolio_id": pid, "run_id": run}, lake_dir=tmp_path)
+    for rid, cats in exp.items():
+        lake.append_partition("portfolio_catalyst_exposure", pd.DataFrame([
+            {"portfolio_id": "catalyx", "run_id": rid, "catalyst_id": cid, "pct": pct,
+             "eur": pct * 10, "notional_eur": 1000.0}
+            for cid, pct in cats
+        ]), {"portfolio_id": "catalyx", "run_id": rid}, lake_dir=tmp_path)
 
-    lin = q.catalyst_lineage("struct_x", lake_dir=tmp_path)
-    assert lin["sectors"] == ["copper", "gold"]
-    ts = {t["run_id"]: t for t in lin["timeseries"]}
-    # run_a: momentum 15, catalyx 8 → combined mean = 11.5
-    assert ts["run_a"]["by_strategy"] == {"momentum": 15.0, "catalyx": 8.0}
-    assert ts["run_a"]["combined_pct"] == 11.5
-    # run_b: momentum 7 (gold gone), catalyx 12 → combined mean = 9.5
-    assert ts["run_b"]["by_strategy"] == {"momentum": 7.0, "catalyx": 12.0}
-    assert ts["run_b"]["combined_pct"] == 9.5
-    # latest move: momentum −8pp (15→7), catalyx +4pp (8→12)
-    latest = {x["portfolio_id"]: x for x in lin["latest"]}
-    assert latest["momentum"]["move"] == "-8.0pp" and latest["momentum"]["exposure_pct"] == 7.0
-    assert latest["catalyx"]["move"] == "+4.0pp"
+    res = q.portfolio_catalyst_exposure("catalyx", lake_dir=tmp_path)
+    assert res["notional_eur"] == 1000.0
+    ts = {t["run_id"]: t["by_catalyst"] for t in res["timeseries"]}
+    assert ts["run_a"] == {"struct_ai": 60.0, "struct_nato": 40.0}
+    assert ts["run_b"]["cash"] == 50.0
+    # time weights: run_a live 9 days, run_b live until ~now (>> 9d), so run_b dominates the avg.
+    avg = {a["catalyst_id"]: a["avg_pct"] for a in res["average"]}
+    # struct_ai avg between its two values (60, 20), pulled toward 20 by run_b's larger weight
+    assert 20.0 <= avg["struct_ai"] < 60.0
+    assert res["average"][0]["avg_eur"] == round(res["average"][0]["avg_pct"] * 10, 2)
+
+
+def test_catalyst_exposure_rows_split_equally(tmp_path):
+    # portfolio.catalyst_exposure_rows splits a sector's weight across its catalysts.
+    from catalyx.execution import portfolio as pf
+    holdings = [
+        {"sector_id": "ai_infra", "weight_pct": 12.0},   # 3 catalysts → 4% each
+        {"sector_id": "gold", "weight_pct": 9.0},         # 1 catalyst → 9%
+        {"sector_id": "mystery", "weight_pct": 5.0},      # none → uncatalyzed
+    ]
+    smap = {"ai_infra": ["c_ai", "c_grid", "c_cu"], "gold": ["c_gold"], "mystery": []}
+    rows = pf.catalyst_exposure_rows("catalyx", "run_a", holdings, built_at=None,
+                                     sector_catalysts=smap, notional=1000.0)
+    by = {r["catalyst_id"]: r["pct"] for r in rows}
+    assert by == {"c_ai": 4.0, "c_grid": 4.0, "c_cu": 4.0, "c_gold": 9.0, "uncatalyzed": 5.0}
+    assert sum(by.values()) == 26.0  # = total deployed weight (12+9+5), nothing double-counted
+    gold = next(r for r in rows if r["catalyst_id"] == "c_gold")
+    assert gold["eur"] == 90.0  # 9% of €1000
 
 
 def test_empty_lake_returns_empty(tmp_path):
@@ -129,5 +142,5 @@ def test_empty_lake_returns_empty(tmp_path):
     assert q.portfolio_compare(lake_dir=tmp_path) == []
     assert q.catalyst_ledger(lake_dir=tmp_path) == []
     assert q.lineage_for_movement("x", lake_dir=tmp_path) == {"error": "no movements in lake (run movement_repo ingest)"}
-    assert q.catalyst_lineage("x", lake_dir=tmp_path) == {
-        "catalyst_id": "x", "sectors": [], "movements": [], "timeseries": [], "latest": []}
+    assert q.portfolio_catalyst_exposure("x", lake_dir=tmp_path) == {
+        "portfolio_id": "x", "notional_eur": None, "timeseries": [], "average": []}

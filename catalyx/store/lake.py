@@ -61,6 +61,11 @@ TABLES: dict[str, tuple[str, list[str]]] = {
     # portfolios (model + real)
     "portfolio_nav":      ("portfolio/nav",              ["portfolio_id"]),  # one NAV series file per portfolio
     "portfolio_holding":  ("portfolio/holding",          ["portfolio_id", "run_id"]),
+    # catalyst decomposition of a portfolio's notional (€1000 assumed) — one row per
+    # (portfolio, run, catalyst): the % of the book exposed to that catalyst, recorded at
+    # each rebalance so the exposure can be tracked over time. Sector weight is split equally
+    # across the catalysts it's driven by (point-in-time); sectors with none → "uncatalyzed".
+    "portfolio_catalyst_exposure": ("portfolio/catalyst_exposure", ["portfolio_id", "run_id"]),
     # movements: queryable mirror of the Tier-1 data/movements/*.json (truth stays in the files)
     "movement":           ("portfolio/movement",         ["sector_id"]),
     # catalyst track record — derived ledger, one time-versioned snapshot per ingest

@@ -147,6 +147,16 @@ def _portfolio_configs() -> dict:
     return out
 
 
+def _catalyst_exposure(pid: str) -> dict:
+    """Per-catalyst decomposition of a portfolio's notional book (timeseries + time-weighted avg),
+    computed by lake_query so the dashboard needs zero WASM for the first paint. {} on any error."""
+    try:
+        from catalyx.store import lake_query
+        return lake_query.portfolio_catalyst_exposure(pid)
+    except Exception:  # noqa: BLE001
+        return {}
+
+
 def _bake_overview(dist: Path) -> dict:
     """Precompute the 'latest-state' AND every-run views into overview.json so the page's
     first paint — and switching the whole page to a historical run — both need zero
@@ -325,6 +335,8 @@ def _bake_overview(dist: Path) -> dict:
                     "n_days": len(shown),
                     "nav": _downsample([s["nav"] for s in shown]),
                     "benchmark_nav": _downsample([s["benchmark_nav"] for s in shown]),
+                    # catalyst decomposition of the notional book, per rebalance + time-weighted avg
+                    "catalyst_exposure": _catalyst_exposure(pid),
                 })
             # `catalyx` (the flagship composite book) is ALWAYS pinned first; the rest by return desc.
             ov["portfolios"].sort(key=lambda p: (
