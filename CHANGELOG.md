@@ -9,6 +9,40 @@
 
 ---
 
+## v0.5.0 — 2026-06-08 — Sell signals, Decision Journal, technical study & catalyst lineage
+
+**Feature release.** The exit side of the platform, a forward-recorded experiment ledger, a deep
+pre-open TA dossier, and a reframing of the dashboard around catalysts — all on top of the v0.4.0
+Movement model; recommend-only, nothing trades.
+
+- **Sell-signal layer — `exit_watcher` Family 1.** Reads each open position's pre-committed
+  `risk_discipline.invalidation[]` stops DETERMINISTICALLY (schema-1.1 structured eval fields:
+  `comparator`/`threshold`/`consecutive_days`/`eval_ticker`, fires only after the breach holds the
+  full window; `eval_ticker:null` ⇒ Claude-checks-with-WebSearch), rolls up assumptions, crosses
+  sector `regime_state`, and marks the after-tax exit P&L → Exit/Reduce/Watch/Hold. Persists an
+  `exit_signal` lake table + Positions-page panel. Design in `docs/DESIGN_sell_signals.md`.
+- **Experiment ledger / Decision Journal** (`catalyx/attribution/outcome.py`): every closed
+  position scored as a registered experiment — realized + after-tax P&L, the right-thesis ×
+  right-reason verdict (skill/luck/variance/correct_invalidation), and behavioral flags (sold too
+  early, held past stop, overrode signal). Schema 1.2 additive `outcome` block; lake
+  `movement_outcome`; dashboard "Decision Journal" page.
+- **Entry-timing**: de-noised the `falling` gate (vol-deadbanded so a sub-noise 5d move reads
+  neutral) and renamed the micro-states to TA-standard (neutral/basing/overbought/falling).
+- **Decision lineage re-anchored on the CATALYST, then on the PORTFOLIO**: each book's notional
+  split BY CATALYST per rebalance + a time-weighted average → `portfolio_catalyst_exposure` lake
+  table + dashboard "Catalyst exposure over time".
+- **Positions: committed-capital + cash model** — €10,000 committed up front, deployed
+  progressively as catalysts fire; cash = committed − cost basis. Long-horizon framing.
+- **Deep technical study** (`catalyx/scorer/technical_study.py`, v2.23): opt-in pre-open TA dossier
+  (MA structure, MACD, Bollinger, ATR, support/resistance, volume/OBV, 52w range → posture),
+  offered at `/catalyx-open`. Recommend-only, ephemeral.
+- **Dashboard / Positions fixes:** the "Performance vs S&P 500" comparison table moved from
+  Positions to Portfolios; the Positions NAV-vs-SPY chart upgraded from an axis-less sparkline to
+  an axed line chart; **currency-aware mark-to-market** (convert the quoted price to EUR via the
+  yfinance quote currency + FX, and skip a non-EUR holding when its FX rate is missing rather than
+  mismark a GBp/USD line as €/share); cyber vehicle corrected ISPY.L/GBp → USPY.L/USD (the line
+  actually held).
+
 ## v0.4.0 — 2026-06-06 — Entry timing, Positions & live track record
 
 **Feature release.** Three execution-layer additions on top of the v0.3.1 Movement model, all
