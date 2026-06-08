@@ -46,9 +46,11 @@ Work happens on `release/<name>` (or a feature branch). To release:
    git checkout main
    git merge --no-ff release/<name> -m "Release vX.Y.Z: <title>"
    ```
-6. **Tag `main`** (annotated). **Always put the release DATE (`YYYY-MM-DD`) in the title**, right
-   after the version — so the tag list and the GitHub Releases page read as a dated journal of what
-   was shipped when, and you can find "what did I do around date X" at a glance:
+6. **Tag `main`** (annotated). The tag message is the **one-line title ONLY** — version + date +
+   name, no body/explanation (the full notes live in the GitHub Release and the CHANGELOG, not in
+   the tag). **Always put the release DATE (`YYYY-MM-DD`) in that title**, right after the version,
+   so the tag list and the Releases page read as a dated journal and you can find "what did I do
+   around date X" at a glance:
    ```
    git tag -a vX.Y.Z -m "vX.Y.Z — YYYY-MM-DD — <title>"
    ```
@@ -58,16 +60,16 @@ Work happens on `release/<name>` (or a feature branch). To release:
    ```
    git push origin main --follow-tags
    ```
-8. **Publish the GitHub Release** (named, with notes) — the tag alone only shows its one-line
-   annotation; the Release is what renders the full notes on GitHub:
+8. **Publish the GitHub Release** (named, with notes) — the tag carries only its one-line title, so
+   the Release is where the **full notes** live. Render them from the `## vX.Y.Z` CHANGELOG section
+   (do NOT use `--notes-from-tag` — the tag has no body):
    ```
    gh release create vX.Y.Z --verify-tag \
-     --title "vX.Y.Z — YYYY-MM-DD — <title>" --notes-from-tag
+     --title "vX.Y.Z — YYYY-MM-DD — <title>" --notes-file <path-to-notes.md>
    ```
-   Keep the **same `vX.Y.Z — YYYY-MM-DD — <title>`** form in the Release title as in the tag, so
-   the Releases page is a dated timeline.
-   `--notes-from-tag` reuses the annotated-tag body, so write the tag message as the full notes
-   (or use `--notes-file` pointing at the `## vX.Y.Z` CHANGELOG section). Requires `gh auth login`.
+   Keep the **same `vX.Y.Z — YYYY-MM-DD — <title>`** form in the Release title as in the tag, so the
+   Releases page is a dated timeline. Point `--notes-file` at the release's `## vX.Y.Z` section
+   (extract it from `CHANGELOG.md` into a temp file, or `--notes "<inline>"`). Requires `gh auth login`.
 
 `main` is the line of releases; every tag points at a merge commit. Release-prep branches
 (`release/*`) can be deleted after the merge.
