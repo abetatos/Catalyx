@@ -40,6 +40,12 @@ from catalyx.store import lake
 _REPO_ROOT = Path(__file__).parents[2]
 _PROFILES_DIR = _REPO_ROOT / "catalyx" / "config" / "portfolios"
 _HOLDING_TABLE = "portfolio_holding"
+_EXPOSURE_TABLE = "portfolio_catalyst_exposure"
+# The model book is sizeless; to record a € exposure per catalyst we assume a fixed notional
+# divided across the holdings (the user's "asume €1000 repartidos entre todos"). The PCT is the
+# real quantity — eur is purely pct × notional for a tangible read.
+_NOTIONAL_EUR = 1000.0
+_UNCATALYZED = "uncatalyzed"
 
 
 # ── Profiles ─────────────────────────────────────────────────────────────────
@@ -195,6 +201,41 @@ def apply_deadband(targets: list[float], held: list[float | None], deadband_pct:
     return [k * total / s for k in kept]
 
 
+def _sector_catalyst_map() -> dict[str, list[str]]:
+    """{sector_id: [catalyst_id, …]} from the Tier-1 sector studies' `active_catalyst_ids`.
+    Read at build time so the decomposition captures the catalyst→sector mapping point-in-time."""
+    from catalyx.store import sector_study_repo as ssr
+    return {s["sector_id"]: list(s.get("active_catalyst_ids") or []) for s in ssr._load_all()}
+
+
+def catalyst_exposure_rows(portfolio_id: str, run_id: str, holdings: list[dict],
+                           built_at, sector_catalysts: dict[str, list[str]] | None = None,
+                           notional: float = _NOTIONAL_EUR) -> list[dict]:
+    """Decompose a portfolio's weights into per-catalyst exposure. Each holding's weight is
+    split EQUALLY across the catalysts that drive its sector (the user's rule); a sector with
+    no catalyst falls into the `uncatalyzed` bucket. The result partitions the book — the pct
+    over all catalysts (incl. uncatalyzed + the implicit cash remainder) sums to 100%. One row
+    per (portfolio, run, catalyst), so the exposure can be tracked across rebalances."""
+    smap = _sector_catalyst_map() if sector_catalysts is None else sector_catalysts
+    by_cat: dict[str, float] = {}
+    for h in holdings:
+        w = float(h.get("weight_pct") or 0.0)
+        if w <= 0:
+            continue
+        cats = smap.get(h["sector_id"]) or []
+        if cats:
+            share = w / len(cats)                       # split equally across the sector's catalysts
+            for cid in cats:
+                by_cat[cid] = by_cat.get(cid, 0.0) + share
+        else:
+            by_cat[_UNCATALYZED] = by_cat.get(_UNCATALYZED, 0.0) + w
+    return [{
+        "portfolio_id": portfolio_id, "run_id": run_id, "catalyst_id": cid,
+        "pct": round(pct, 2), "eur": round(pct / 100.0 * notional, 2),
+        "notional_eur": notional, "built_at": built_at,
+    } for cid, pct in sorted(by_cat.items(), key=lambda kv: kv[1], reverse=True)]
+
+
 def build_model_holdings(portfolio_id: str, run_id: str | None = None,
                          profile: dict | None = None, persist: bool = True,
                          lake_dir: Path | None = None, risk_overlay: bool = True) -> dict:
@@ -332,15 +373,26 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
     cash_pct = round(100.0 - sum(x["weight_pct"] for x in rows), 2)
     n_contested = sum(1 for x in rows if x.get("regime_state") == "contested")
 
+    # catalyst decomposition of the notional book (recorded at this rebalance for the time-series)
+    exposure = catalyst_exposure_rows(portfolio_id, run_id, rows, built_at)
+    if cash_pct > 0.01:                                  # the un-deployed remainder is honest cash
+        exposure.append({"portfolio_id": portfolio_id, "run_id": run_id, "catalyst_id": "cash",
+                         "pct": cash_pct, "eur": round(cash_pct / 100.0 * _NOTIONAL_EUR, 2),
+                         "notional_eur": _NOTIONAL_EUR, "built_at": built_at})
+
     if persist:
         import pandas as pd
         lake.append_partition(_HOLDING_TABLE, pd.DataFrame(rows),
                               {"portfolio_id": portfolio_id, "run_id": run_id},
                               overwrite=True, lake_dir=lake_dir)
+        if exposure:
+            lake.append_partition(_EXPOSURE_TABLE, pd.DataFrame(exposure),
+                                  {"portfolio_id": portfolio_id, "run_id": run_id},
+                                  overwrite=True, lake_dir=lake_dir)
 
     return {"portfolio_id": portfolio_id, "run_id": run_id, "config_version": cfg_ver,
             "positions": len(rows), "cash_pct": cash_pct, "overlay": risk_overlay,
-            "contested": n_contested, "holdings": rows}
+            "contested": n_contested, "holdings": rows, "catalyst_exposure": exposure}
 
 
 def show_holdings(portfolio_id: str, run_id: str | None = None, lake_dir: Path | None = None) -> dict:

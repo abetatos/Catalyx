@@ -634,16 +634,32 @@ entry_timing:
   vol_ratio_warm: 1.2        # vol ratio ≥ this (but < vol_ratio_elevated) = warm
   borderline_min_axes: 2     # ≥ this many warm axes at once → "stretched" (chasing cluster)
   short_trend_window: 5      # return window for the short-term trend read
+  # ── Trend deadband (A′, 2026-06-07) — de-noise the `falling` gate ────────────
+  # The tension gate `(falling AND in_drawdown)` used the RAW SIGN of the 5-day return
+  # (short_ret < 0). At small magnitudes that sign is noise: with daily vol σ, a 5-day
+  # move has std ≈ σ·√5, so a ±2–4% 5d move is within ~1 SE of zero — a coin flip that
+  # made borderline names flicker calm↔falling_unstable run-to-run (persisted to the lake +
+  # shown on the dashboard). Fix: treat a 5d move as `falling` only when it is bearish BEYOND
+  # a vol-scaled noise band: falling ⟺ short_ret < −k·(σ_daily·√h)·100  (h = short_trend_window).
+  # We keep the SHORT horizon on purpose (responsive — catches fresh turns / digested gaps),
+  # and only band it; a longer OLS slope was rejected because it LAGS turns (V-bottoms,
+  # post-gap consolidations, news-driven bounces would read "still falling" for days).
+  # σ uses the LONG vol window (stable noise floor that doesn't itself jump in a vol spike).
+  # k is the band width in standard errors. 0 disables (legacy raw-sign behaviour). Calibrated to
+  # 0.6 (not 1.0): 1 full SE was too permissive — it flattened steel_producers' −3.8%/5d inside a
+  # −6% drawdown into "neutral → enter_now". 0.6 SE still kills the genuine ±1–2% coin-flip (the
+  # actual run-to-run flicker we're removing) while keeping moderate real declines as `falling`.
+  trend_deadband_k: 0.6
   drawdown_local_high_window: 20  # local-high lookback for drawdown_from_local_high
   # Stabilization = the discriminator between "good dip to buy" and "knife still falling".
   # The recent decline is judged STABILIZED when EITHER holds:
   stabilization_up_closes: 2     # last N daily closes are higher (sequence turning up), OR
   stabilization_reclaim_ma: 5    # price has reclaimed its N-day MA after being below it
   # State → suggested verdict mapping (Claude can override with WebSearch context):
-  #   calm            → enter_now      (no tension, no overhang)
-  #   stabilizing     → scale_in       (dip turning — enter in tranches)
-  #   stretched       → wait_stabilize (overbought/extended — wait for a pullback)
-  #   falling_unstable→ wait_stabilize (knife not stabilized — wait for it to base)
+  #   neutral    → enter_now      (no tension, no overhang)
+  #   basing     → scale_in       (dip turning — enter in tranches)
+  #   overbought → wait_stabilize (overextended up — wait for a pullback)
+  #   falling    → wait_stabilize (knife not based — wait for it to base)
   # An event overhang in the window upgrades the verdict to wait_event regardless of micro-state.
   # Event overhang = a near-term discrete CatalystEvent touching the sector (reuse the
   # catalyst→sector resolution in catalyst_scorer.py). NO separate registry — it is a catalyst.
@@ -652,3 +668,68 @@ entry_timing:
   overhang_min_strength: 60      # OR strength_score ≥ this (covers events without a magnitude)
   market_tension_ticker: "^VIX"  # market-wide risk-off backdrop gauge
   benchmark: "SPY"               # market window-return reference (mirrors dislocation)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Exit signals — sell-side layer (added 2026-06-07) — catalyx/scorer/exit_watcher.py
+# ─────────────────────────────────────────────────────────────────────────────
+# Family 1 of the sell-signal design (docs/DESIGN_sell_signals.md): the watcher that READS the
+# risk_discipline.invalidation[] stops authored on every movement (previously unread by any code).
+# RECOMMEND-ONLY (design §8.1, user-decided): it reports "WOULD FIRE", writes nothing — not even
+# triggered=true. A stop fires only when its breach has held for the full consecutive_days window
+# (time-independent: a stateless read of price history). Stops with eval_ticker:null are not
+# auto-evaluated — surfaced as Claude-checks-with-WebSearch. Severity arbitration in §5 of the doc.
+exit_signals:
+  lookback_days: 60          # CALENDAR days of price history to pull (must exceed the largest
+                             # consecutive_days window with buffer; the longest stop today is 10d).
+  approach_pct: 5.0          # a not-yet-breaching stop within this % of its threshold → "approaching"
+                             # (about to cross) rather than "clear". Tunable single source of truth.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Deep technical study (added 2026-06-08) — catalyx/scorer/technical_study.py
+# ─────────────────────────────────────────────────────────────────────────────
+# The OPT-IN, pre-open deep TA dossier on the actual vehicle — the thorough cousin of the
+# always-on entry_timing overlay. Offered at /catalyx-open when you want to "revisarlo todo
+# antes de abrir". A SUPERSET of entry_timing (embeds its micro-state verbatim) that adds MA
+# structure / MACD / Bollinger / ATR / support-resistance / volume-OBV / 52w-range, then a
+# synthesized bullish-vs-bearish posture. RECOMMEND-ONLY, ephemeral (no lake, no dashboard);
+# Python surfaces the facts + posture, the enter/scale/wait call is Claude's. Periods here are
+# the single source of truth (no LLM drift).
+technical_study:
+  lookback_days: 420         # CALENDAR days pulled (~290 trading days) — must cover SMA200 +
+                             # the trailing-252 (≈1y) range window with buffer.
+  min_history: 30            # fewer usable closes than this → bail (study not meaningful)
+  slope_lag: 5               # an MA "slope" compares now vs this many sessions ago (rising/falling)
+  macd_fast: 12
+  macd_slow: 26
+  macd_signal: 9
+  bollinger_window: 20
+  bollinger_k: 2.0           # band width in standard deviations
+  atr_period: 14
+  pivot_left: 3              # swing-pivot fractal: strict local extreme over [i-left, i+right]
+  pivot_right: 3
+  obv_window: 20             # OBV trend measured over the last N sessions
+  volume_window: 20          # latest volume vs the average of the prior N sessions
+  volume_surge_mult: 1.5     # latest/avg ≥ this → flagged as a participation surge
+  range_window: 252          # trailing sessions for the 52-week range position (≈1 trading year)
+  posture_margin: 2          # |bullish − bearish| ≥ this → constructive / weak; else mixed
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Dislocation lens (thresholds externalized 2026-06-08) — catalyx/scorer/dislocation.py
+# ─────────────────────────────────────────────────────────────────────────────
+# One corr/beta engine, two lenses. These were hardcoded as analyze() defaults; moved here so
+# the single-source-of-truth doctrine holds and the lenses are tunable without code edits.
+#   OPPORTUNITY (panic dip → buy?): the composite floor is NON-NEGOTIABLE — a dip is only an
+#     opportunity if we'd own the sector on the FULL blend; keep it strict (55).
+#   DIVERSIFIER (rotation target → where to add without re-buying the same bet): a sector
+#     qualifies when it is healthy (intact, composite ≥ floor) AND its mean correlation to the
+#     anchor/stressed cluster is ≤ max_diversifier_corr. RELAXED 2026-06-08 (user: too few
+#     rotation targets surfaced — only 1–2): the held book (copper miners + grid/utilities) is
+#     industrial/risk-on, so most healthy sectors correlate >0.5 with it in this tape. Loosened the
+#     corr cut 0.5→0.65 and DECOUPLED the diversifier composite floor from the opportunity floor,
+#     lowering it 55→50, so more genuine diversifiers surface while the opportunity lens stays strict.
+dislocation:
+  drawdown_threshold_pct: -3.0   # opportunity: min 5d drawdown to flag (negative %)
+  min_catalyst_alignment: 70.0   # opportunity: catalyst-confirmation floor
+  min_opportunity_composite: 55.0  # opportunity: full-blend floor (NON-NEGOTIABLE — keep strict)
+  max_diversifier_corr: 0.65     # diversifier: mean corr to the cluster ≤ this qualifies (was 0.5)
+  min_diversifier_composite: 50.0  # diversifier: health floor, decoupled from opportunity (was 55)

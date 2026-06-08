@@ -1,7 +1,7 @@
 {
   "$schema": "catalyx/schemas/movement.json",
   "id": "mov_20260604_copper_miners_datacenter_alpha",
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "executed_at": "2026-06-05T00:00:00Z",
   "action": "open",
   "sector_id": "copper_miners",
@@ -44,6 +44,11 @@
         "triggered_at": null,
         "stop_price_level": 11000,
         "stop_price_ticker": "COPPER_LME",
+        "comparator": "below",
+        "threshold": 4.99,
+        "consecutive_days": 10,
+        "eval_ticker": "HG=F",
+        "eval_note": "LME spot ($/tonne) has no free yfinance feed; evaluated via the COMEX copper front-month proxy HG=F ($/lb). threshold 4.99 = $11,000/tonne ÷ 2204.62 lb/tonne. The LME/COMEX basis (typically a few $/tonne) makes this an APPROXIMATION — a near-threshold reading should be Claude-confirmed against the actual LME spot via WebSearch before acting.",
         "rationale": "~21% drawdown from the $13,965 reference. Would signal AI-capex reversal, China demand destruction, or major supply surprise. Structural thesis may still hold but near-term timing is broken."
       },
       {
@@ -63,6 +68,11 @@
         "triggered_at": null,
         "stop_price_level": 350000,
         "stop_price_ticker": "LME_COPPER_INVENTORY",
+        "comparator": "above",
+        "threshold": 350000,
+        "consecutive_days": null,
+        "eval_ticker": null,
+        "eval_note": "NOT machine-checkable: LME warehouse inventory has no free yfinance feed, and the condition aggregates a 4-week ROLLING AVERAGE (not consecutive daily closes, so consecutive_days does not apply). exit_watcher surfaces this as a Claude-checks-with-WebSearch item.",
         "review_note": "Latest single reading 393,400t (2026-05-20) is above threshold but the condition specifies a 4-week rolling average not yet computed from one point. Not triggered on a single print — position held in full. Re-check the 4-week average next cycle; if confirmed >350kt, set triggered=true."
       },
       {
@@ -73,7 +83,12 @@
         "triggered": false,
         "triggered_at": null,
         "stop_price_level": 1.02,
-        "stop_price_ticker": "EURUSD"
+        "stop_price_ticker": "EURUSD",
+        "comparator": "below",
+        "threshold": 1.02,
+        "consecutive_days": 10,
+        "eval_ticker": "EURUSD=X",
+        "eval_note": "Cleanly machine-checkable: EURUSD=X is the yfinance spot. threshold equals stop_price_level (same units)."
       }
     ],
     "assumptions": [

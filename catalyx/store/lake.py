@@ -61,16 +61,25 @@ TABLES: dict[str, tuple[str, list[str]]] = {
     # portfolios (model + real)
     "portfolio_nav":      ("portfolio/nav",              ["portfolio_id"]),  # one NAV series file per portfolio
     "portfolio_holding":  ("portfolio/holding",          ["portfolio_id", "run_id"]),
+    # catalyst decomposition of a portfolio's notional (€1000 assumed) — one row per
+    # (portfolio, run, catalyst): the % of the book exposed to that catalyst, recorded at
+    # each rebalance so the exposure can be tracked over time. Sector weight is split equally
+    # across the catalysts it's driven by (point-in-time); sectors with none → "uncatalyzed".
+    "portfolio_catalyst_exposure": ("portfolio/catalyst_exposure", ["portfolio_id", "run_id"]),
     # movements: queryable mirror of the Tier-1 data/movements/*.json (truth stays in the files)
     "movement":           ("portfolio/movement",         ["sector_id"]),
     # catalyst track record — derived ledger, one time-versioned snapshot per ingest
     "catalyst_performance": ("validation/catalyst_performance", ["as_of"]),
+    # closed-experiment outcomes — one row per closed/trimmed movement (P&L + verdict + behavior)
+    "movement_outcome":   ("validation/movement_outcome", ["mov_id"]),
     # validation / forward returns (grows; unpartitioned)
     "forward_returns":    ("validation/forward_returns", []),
     # dislocation lens (opportunities + diversifiers) — one materialization per run
     "dislocation":        ("analysis/dislocation",       ["run_id"]),
     # entry-timing overlay (micro-tension + event overhang) — one materialization per run
     "entry_timing":       ("analysis/entry_timing",      ["run_id"]),
+    # exit watcher (Family 1 sell signals: stops + assumptions + regime + after-tax) — per run
+    "exit_signal":        ("analysis/exit_signal",       ["run_id"]),
     # portfolio rotation: diversifiers anchored to the REAL book's holdings (not the stressed cluster)
     "portfolio_rotation": ("analysis/portfolio_rotation", ["run_id"]),
 }

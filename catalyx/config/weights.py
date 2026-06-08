@@ -221,6 +221,13 @@ def track_record_inception() -> str | None:
     return str(d) if d else None
 
 
+def total_capital_eur() -> float | None:
+    """Total capital committed to the real book (deployed progressively as catalysts
+    fire; the rest is cash). From track_record.yaml `total_capital_eur`, or None."""
+    v = track_record().get("total_capital_eur")
+    return float(v) if v is not None else None
+
+
 # ── Entry-timing overlay (entry_timing) ──────────────────────────────────────
 
 _ENTRY_TIMING_DEFAULT = {
@@ -234,6 +241,7 @@ _ENTRY_TIMING_DEFAULT = {
     "vol_ratio_window_long": 90,
     "vol_ratio_elevated": 1.5,
     "short_trend_window": 5,
+    "trend_deadband_k": 0.6,
     "drawdown_local_high_window": 20,
     "stabilization_up_closes": 2,
     "stabilization_reclaim_ma": 5,
@@ -250,3 +258,70 @@ def entry_timing() -> dict:
     realized-vol ratio, stabilization rule, and the near-term event-overhang window. NOT part of
     the composite — a recommend-only timing layer. See scoring_weights.yaml `entry_timing`."""
     return _section("entry_timing", _ENTRY_TIMING_DEFAULT)
+
+
+# ── Exit signals (exit_watcher — Family 1 of the sell-signal layer) ──────────
+
+_EXIT_SIGNALS_DEFAULT = {
+    "lookback_days": 60,
+    "approach_pct": 5.0,
+}
+
+
+def exit_signals() -> dict:
+    """Thresholds for the exit watcher (exit_watcher.py, Family 1): `lookback_days` of price history
+    to pull, `approach_pct` (a not-yet-breaching stop within this % of its threshold reads as
+    'approaching'). Recommend-only sell-side layer; NOT part of the composite. See
+    scoring_weights.yaml `exit_signals` + docs/DESIGN_sell_signals.md."""
+    return _section("exit_signals", _EXIT_SIGNALS_DEFAULT)
+
+
+# ── Deep technical study (technical_study — opt-in pre-open TA dossier) ───────
+
+_TECHNICAL_STUDY_DEFAULT = {
+    "lookback_days": 420,
+    "min_history": 30,
+    "slope_lag": 5,
+    "macd_fast": 12,
+    "macd_slow": 26,
+    "macd_signal": 9,
+    "bollinger_window": 20,
+    "bollinger_k": 2.0,
+    "atr_period": 14,
+    "pivot_left": 3,
+    "pivot_right": 3,
+    "obv_window": 20,
+    "volume_window": 20,
+    "volume_surge_mult": 1.5,
+    "range_window": 252,
+    "posture_margin": 2,
+}
+
+
+def technical_study() -> dict:
+    """Periods/thresholds for the deep technical study (technical_study.py): MA/MACD/Bollinger/ATR
+    windows, swing-pivot fractal size, volume/OBV windows, 52-week range window, and the posture
+    margin. Opt-in, recommend-only, ephemeral — NOT part of the composite. See scoring_weights.yaml
+    `technical_study`."""
+    return _section("technical_study", _TECHNICAL_STUDY_DEFAULT)
+
+
+# ── Dislocation lens (dislocation.py — opportunities + rotation targets) ──────
+
+_DISLOCATION_DEFAULT = {
+    "drawdown_threshold_pct": -3.0,
+    "min_catalyst_alignment": 70.0,
+    "min_opportunity_composite": 55.0,
+    "max_diversifier_corr": 0.65,
+    "min_diversifier_composite": 50.0,
+}
+
+
+def dislocation() -> dict:
+    """Thresholds for the dislocation lens (dislocation.py). OPPORTUNITY (panic-dip buy): drawdown
+    floor + catalyst floor + the NON-NEGOTIABLE full-blend composite floor. DIVERSIFIER (rotation
+    target): `max_diversifier_corr` (mean corr to the anchor/stressed cluster ≤ this) + a SEPARATE,
+    looser `min_diversifier_composite` so more genuine diversifiers surface without weakening the
+    opportunity lens. Recommend-only; NOT part of the composite. See scoring_weights.yaml
+    `dislocation`."""
+    return _section("dislocation", _DISLOCATION_DEFAULT)

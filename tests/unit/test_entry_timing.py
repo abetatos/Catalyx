@@ -78,46 +78,75 @@ def test_falling_knife_not_stabilizing():
 
 def test_state_calm_when_no_tension():
     assert et.classify_state(rsi_v=55, stretch_v=1.0, vol_ratio_v=1.0,
-                             short_ret=0.5, ddown=-1.0, stabilizing=False, cfg=CFG) == "calm"
+                             short_ret=0.5, ddown=-1.0, stabilizing=False, cfg=CFG) == "neutral"
 
 
 def test_state_stretched_when_overbought_and_extended():
     assert et.classify_state(rsi_v=75, stretch_v=9.0, vol_ratio_v=1.1,
-                             short_ret=2.0, ddown=-0.5, stabilizing=False, cfg=CFG) == "stretched"
+                             short_ret=2.0, ddown=-0.5, stabilizing=False, cfg=CFG) == "overbought"
 
 
 def test_state_stretched_on_either_hard_line():
     # only RSI over the hard line (stretch below) → still stretched (was AND, now OR)
     assert et.classify_state(rsi_v=72, stretch_v=3.0, vol_ratio_v=1.0,
-                             short_ret=1.0, ddown=-0.5, stabilizing=False, cfg=CFG) == "stretched"
+                             short_ret=1.0, ddown=-0.5, stabilizing=False, cfg=CFG) == "overbought"
     # only stretch over the hard line (RSI below) → still stretched
     assert et.classify_state(rsi_v=60, stretch_v=8.5, vol_ratio_v=1.0,
-                             short_ret=1.0, ddown=-0.5, stabilizing=False, cfg=CFG) == "stretched"
+                             short_ret=1.0, ddown=-0.5, stabilizing=False, cfg=CFG) == "overbought"
 
 
 def test_state_stretched_on_multi_axis_borderline():
     # the cybersecurity_commercial 2026-06-06 case: JUST under every hard line on 3 warm axes
-    # at once → "stretched" (used to fall through to "calm").
+    # at once → "overbought" (used to fall through to "neutral").
     assert et.classify_state(rsi_v=68.9, stretch_v=7.75, vol_ratio_v=1.31,
-                             short_ret=2.46, ddown=-4.7, stabilizing=False, cfg=CFG) == "stretched"
+                             short_ret=2.46, ddown=-4.7, stabilizing=False, cfg=CFG) == "overbought"
 
 
 def test_state_single_warm_axis_is_not_stretched():
     # only ONE warm axis (mildly warm RSI, no stretch, calm vol) → not a chasing cluster → calm
     assert et.classify_state(rsi_v=66, stretch_v=1.0, vol_ratio_v=1.0,
-                             short_ret=0.5, ddown=-1.0, stabilizing=False, cfg=CFG) == "calm"
+                             short_ret=0.5, ddown=-1.0, stabilizing=False, cfg=CFG) == "neutral"
     # a falling knife with only vol warm (1 axis) must NOT be mislabeled stretched
     assert et.classify_state(rsi_v=35, stretch_v=-6.0, vol_ratio_v=1.3,
-                             short_ret=-4.0, ddown=-7.0, stabilizing=False, cfg=CFG) == "falling_unstable"
+                             short_ret=-4.0, ddown=-7.0, stabilizing=False, cfg=CFG) == "falling"
 
 
 def test_state_falling_unstable_vs_stabilizing():
     # elevated vol + drawdown + falling, not stabilized → knife
     assert et.classify_state(rsi_v=35, stretch_v=-6.0, vol_ratio_v=1.8,
-                             short_ret=-4.0, ddown=-7.0, stabilizing=False, cfg=CFG) == "falling_unstable"
+                             short_ret=-4.0, ddown=-7.0, stabilizing=False, cfg=CFG) == "falling"
     # same tension but turned up → stabilizing
     assert et.classify_state(rsi_v=35, stretch_v=-6.0, vol_ratio_v=1.8,
-                             short_ret=-4.0, ddown=-7.0, stabilizing=True, cfg=CFG) == "stabilizing"
+                             short_ret=-4.0, ddown=-7.0, stabilizing=True, cfg=CFG) == "basing"
+
+
+# ── trend deadband (A′) — de-noise the `falling` gate ─────────────────────────
+
+def test_trend_deadband_scales_with_vol_and_disables_at_zero_k():
+    import random
+    random.seed(0)
+    closes = [100.0]
+    for _ in range(120):                       # ~2% daily vol → 5d-sum SE ≈ 0.02·√5·100 ≈ 4.5%
+        closes.append(closes[-1] * (1 + random.gauss(0, 0.02)))
+    band = et.trend_deadband_pct(closes, dict(CFG, trend_deadband_k=1.0))
+    assert 3.0 < band < 6.0                     # ≈ 1 SE of a 5-day move at ~2% daily vol
+    assert et.trend_deadband_pct(closes, dict(CFG, trend_deadband_k=0.0)) == 0.0   # disabled
+    assert et.trend_deadband_pct([100.0, 101.0, 102.0], dict(CFG, trend_deadband_k=1.0)) == 0.0  # too short
+
+
+def test_state_deadband_treats_subnoise_5d_as_flat():
+    # in a drawdown, but the bearish 5d move is WITHIN the noise band → not a decline → calm
+    # (this is the run-to-run coin-flip the band kills: same name, ±noise, used to flicker)
+    assert et.classify_state(rsi_v=50, stretch_v=-1.0, vol_ratio_v=1.0,
+                             short_ret=-2.0, ddown=-4.0, stabilizing=False, cfg=CFG,
+                             trend_deadband_pct=4.5) == "neutral"
+    # the SAME setup but the move is BEYOND the band → a real decline → falling_unstable
+    assert et.classify_state(rsi_v=50, stretch_v=-1.0, vol_ratio_v=1.0,
+                             short_ret=-5.0, ddown=-4.0, stabilizing=False, cfg=CFG,
+                             trend_deadband_pct=4.5) == "falling"
+    # default deadband 0.0 reproduces the legacy raw-sign gate (a tiny dip still counts as falling)
+    assert et.classify_state(rsi_v=50, stretch_v=-1.0, vol_ratio_v=1.0,
+                             short_ret=-0.2, ddown=-4.0, stabilizing=False, cfg=CFG) == "falling"
 
 
 def test_tension_score_higher_when_more_stressed_and_relieved_by_stabilization():
@@ -182,15 +211,15 @@ def test_recently_fired_event_surfaced_but_not_upcoming():
 
 def test_verdict_upcoming_overhang_dominates_state():
     overhangs = [{"upcoming": True, "days_until": 9, "event_date": "2026-06-15"}]
-    verdict, when = et.suggest_verdict("calm", overhangs)
+    verdict, when = et.suggest_verdict("neutral", overhangs)
     assert verdict == "wait_event" and when == "2026-06-15"
 
 
 def test_verdict_follows_state_without_upcoming_overhang():
-    assert et.suggest_verdict("calm", [])[0] == "enter_now"
-    assert et.suggest_verdict("stabilizing", [])[0] == "scale_in"
-    assert et.suggest_verdict("falling_unstable", [])[0] == "wait_stabilize"
-    assert et.suggest_verdict("stretched", [])[0] == "wait_stabilize"
+    assert et.suggest_verdict("neutral", [])[0] == "enter_now"
+    assert et.suggest_verdict("basing", [])[0] == "scale_in"
+    assert et.suggest_verdict("falling", [])[0] == "wait_stabilize"
+    assert et.suggest_verdict("overbought", [])[0] == "wait_stabilize"
     # a past (non-upcoming) overhang does NOT force wait_event
     past = [{"upcoming": False, "days_until": -4, "event_date": "2026-06-02"}]
-    assert et.suggest_verdict("calm", past)[0] == "enter_now"
+    assert et.suggest_verdict("neutral", past)[0] == "enter_now"

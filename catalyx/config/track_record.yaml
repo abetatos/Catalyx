@@ -11,6 +11,13 @@
 # Read via catalyx.config.weights.track_record_inception().
 inception_date: "2026-06-05"
 inception_release: "v1.0"
+
+# Committed capital for the real book. The full €10,000 is allocated to this strategy
+# up front, but deployed PROGRESSIVELY — a position is opened only when a macro catalyst
+# materializes, never all at once. Undeployed capital sits as cash (dry powder) and is
+# surfaced on the Positions page (cash = total_capital - cost basis of open positions).
+# Read via catalyx.config.weights.total_capital_eur().
+total_capital_eur: 10000
 note: >
   Inception anchored to the first REAL position (Friday 2026-06-05) so the theoretical model
   portfolios and the real book are compared from the SAME day vs SPY. Live track record (model

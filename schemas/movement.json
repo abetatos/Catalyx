@@ -1,9 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://catalyx/schemas/movement.json",
-  "schema_version": "1.0",
+  "schema_version": "1.2",
   "_changelog": [
-    "1.0 (2026-06-06): Initial schema. Replaces Thesis as the primary capital-allocation unit. A Movement is a capital event (open/add/trim/close) attributed directly to one or more catalysts, with a trigger, a conviction, and a point-in-time score_context snapshot for no-look-ahead backtesting. The falsifiable discipline (assumptions + invalidation) survives as an OPTIONAL, machine-checkable risk_discipline block (design decision: option 1, attached to the position via its movements). See docs/PLAN_movement_restructure.md."
+    "1.0 (2026-06-06): Initial schema. Replaces Thesis as the primary capital-allocation unit. A Movement is a capital event (open/add/trim/close) attributed directly to one or more catalysts, with a trigger, a conviction, and a point-in-time score_context snapshot for no-look-ahead backtesting. The falsifiable discipline (assumptions + invalidation) survives as an OPTIONAL, machine-checkable risk_discipline block (design decision: option 1, attached to the position via its movements). See docs/PLAN_movement_restructure.md.",
+    "1.1 (2026-06-07): ADDITIVE — structured eval fields on risk_discipline.invalidation[] (comparator/threshold/consecutive_days/eval_ticker/eval_note) so the planned exit_watcher can evaluate price stops DETERMINISTICALLY instead of parsing free-text English. `condition` stays the human description; `stop_price_level`/`stop_price_ticker` stay the native human-facing pair; the new fields are the machine-checkable pair (threshold in eval_ticker's units, eval_ticker yfinance-resolvable or null ⇒ Claude-checked). All optional, only set for market_data stops. No fields removed. Sell-signal design: docs/DESIGN_sell_signals.md §6. profit_take[] (Family 3) deferred.",
+    "1.2 (2026-06-07): ADDITIVE — `outcome` block (set on close/trim only). Turns a closed movement into a registered EXPERIMENT: the result (realized P&L gross + after-tax, holding_days, return_pct), the right-thesis × right-reason VERDICT matrix (was the bet right, AND right for the stated reason?), the captured behavioral self-reflection (exit_note in-the-moment + append-only additional_notes for later realizations — the original is never overwritten so the in-the-moment read survives), the exit-signal context (did you follow exit_watcher or override it?), and the per-assumption resolution at close. `pnl`/`behavioral_flags`/`verdict` are COMPUTED by catalyx.attribution.outcome; the rest are captured at /catalyx-close. No fields removed. The deleted ClosedThesis/right_reason_score, rebuilt on the Movement model. See docs/DESIGN_experiment_ledger.md."
   ],
   "title": "Movement",
   "description": "A single capital movement attributed to catalyst(s). The unit of the track record: catalysts accumulate P&L across the movements attributed to them. Real money, EUR. Derived objects (Position = net of movements; CatalystLedger = P&L by catalyst) are computed, never authored.",
@@ -118,8 +120,13 @@
               "condition": { "type": "string", "description": "Specific, measurable. Not 'market deteriorates'." },
               "severity": { "type": "string", "enum": ["full_exit", "review_and_reduce", "flag_for_review"] },
               "source": { "type": "string", "enum": ["news_llm", "market_data", "flow_data", "cot_data", "macro_data", "earnings_data", "user_manual"] },
-              "stop_price_level": { "type": ["number", "null"] },
-              "stop_price_ticker": { "type": ["string", "null"] },
+              "stop_price_level": { "type": ["number", "null"], "description": "Human-facing stop level in the condition's NATIVE units (e.g. LME copper $/tonne). Display + audit." },
+              "stop_price_ticker": { "type": ["string", "null"], "description": "Human-facing instrument name in the condition (e.g. COPPER_LME). May not be yfinance-resolvable; see eval_ticker." },
+              "comparator": { "type": ["string", "null"], "enum": ["below", "above", null], "description": "Structured eval (schema 1.1): the breach direction. `below` = fires when the series drops under `threshold`; `above` = fires when it rises over it. Set only for machine-checkable market_data stops." },
+              "threshold": { "type": ["number", "null"], "description": "Structured eval (schema 1.1): the level the exit_watcher compares `eval_ticker` against, expressed in EVAL_TICKER's units (which may differ from stop_price_level's native units — e.g. a $/tonne LME stop evaluated via a $/lb COMEX proxy → threshold is the $/lb equivalent). See eval_note." },
+              "consecutive_days": { "type": ["integer", "null"], "description": "Structured eval (schema 1.1): the persistence window — the breach must hold for this many consecutive trading-day closes before the stop fires (time-independent, a stateless read of price history). Mirrors the condition's 'for N consecutive days'." },
+              "eval_ticker": { "type": ["string", "null"], "description": "Structured eval (schema 1.1): a yfinance-RESOLVABLE ticker the exit_watcher fetches to check this stop (e.g. EURUSD=X, HG=F). Null ⇒ NOT machine-checkable (no clean feed, e.g. LME inventory) ⇒ surfaced as a Claude-checks-with-WebSearch item instead of auto-evaluated." },
+              "eval_note": { "type": ["string", "null"], "description": "Structured eval (schema 1.1): provenance/caveat for the eval mapping — e.g. the LME/COMEX basis approximation when stop_price_ticker and eval_ticker differ, or the unit conversion applied to threshold." },
               "triggered": { "type": "boolean", "default": false },
               "triggered_at": { "type": ["string", "null"], "format": "date-time" }
             }
@@ -143,6 +150,98 @@
           }
         },
         "note": { "type": ["string", "null"], "description": "Optional free-text rationale (the demoted 'thesis' narrative). Not machine-checked." }
+      }
+    },
+
+    "outcome": {
+      "type": ["object", "null"],
+      "description": "CLOSE-SIDE experiment record (set on close/trim; null/absent on open/add). The 'result' half of the experiment whose 'hypothesis' half is attribution + score_context + risk_discipline on the opening movement. Captured at /catalyx-close (the human-judged fields) + computed by catalyx.attribution.outcome (pnl/behavioral_flags/verdict). Editable Tier-1 doc: add later realizations to additional_notes; never overwrite exit_note.",
+      "additionalProperties": false,
+      "properties": {
+        "exit_reason": {
+          "type": ["string", "null"],
+          "description": "Free-text: what actually drove this exit, in your own words. Not an enum — many exits resist a clean category."
+        },
+        "exit_note": {
+          "type": ["string", "null"],
+          "description": "Your IN-THE-MOMENT behavioral reflection at the time of exit (the self-learning signal: 'sold because the red Monday spooked me'). By convention NEVER rewritten — the in-the-moment read is more valuable than the calmer story you'll tell later. Put later realizations in additional_notes."
+        },
+        "exit_note_at": { "type": ["string", "null"], "format": "date-time", "description": "When exit_note was written." },
+        "additional_notes": {
+          "type": "array",
+          "description": "Append-only later reflections ('weeks on, I see I always trim winners on risk-off days'). Each is timestamped so the experiment shows how your read evolved.",
+          "items": {
+            "type": "object",
+            "required": ["at", "note"],
+            "additionalProperties": false,
+            "properties": {
+              "at": { "type": "string", "format": "date-time" },
+              "note": { "type": "string" }
+            }
+          }
+        },
+        "exit_trigger_type": {
+          "type": ["string", "null"],
+          "enum": ["signal_stop", "assumption_violated", "regime_break", "profit_take", "rotation", "discretionary", "panic", "other", null],
+          "description": "OPTIONAL light structured tag for aggregation (the free text is exit_reason). Defaults null; set it only if a clean category fits. 'panic'/'discretionary' are the self-learning ones; behavioral_flags may independently SUGGEST one of these from the data."
+        },
+        "signal_context": {
+          "type": ["object", "null"],
+          "description": "Did you act with or against your own deterministic exit signal? The override is the learning event.",
+          "additionalProperties": false,
+          "properties": {
+            "exit_watcher_action": { "type": ["string", "null"], "enum": ["hold", "watch", "reduce", "exit", null], "description": "What exit_watcher suggested for this position at the time of exit (run it just before closing)." },
+            "followed_signal": { "type": ["boolean", "null"], "description": "true = the exit aligned with the signal; false = you overrode it (exited on a hold, or held past a reduce/exit)." }
+          }
+        },
+        "assumption_resolution": {
+          "type": "array",
+          "description": "Final verdict on each opening assumption AT CLOSE — the right-reason input. 'unresolved' (horizon too short to tell) is honest and common; it lowers verdict confidence rather than forcing a call.",
+          "items": {
+            "type": "object",
+            "required": ["id", "outcome"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string", "pattern": "^asm_[0-9]{2}$" },
+              "outcome": { "type": "string", "enum": ["validated", "falsified", "unresolved"] },
+              "note": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "catalyst_materialized": {
+          "type": ["boolean", "null"],
+          "description": "Did the attributed catalyst mechanism actually play out as described? The core right-reason question, distinct from whether the price moved your way."
+        },
+        "catalyst_materialized_note": { "type": ["string", "null"] },
+        "pnl": {
+          "type": ["object", "null"],
+          "description": "COMPUTED by catalyx.attribution.outcome from the close vs the position's cost basis. Do not hand-author.",
+          "additionalProperties": true,
+          "properties": {
+            "gross_pnl_eur": { "type": ["number", "null"] },
+            "tax_due_eur": { "type": ["number", "null"], "description": "Incremental Spanish CGT on this realized gain (tax_engine, given YTD-prior realized)." },
+            "after_tax_pnl_eur": { "type": ["number", "null"] },
+            "return_pct": { "type": ["number", "null"], "description": "gross_pnl_eur / cost basis of the sold qty." },
+            "holding_days": { "type": ["integer", "null"] }
+          }
+        },
+        "behavioral_flags": {
+          "type": "array",
+          "description": "COMPUTED deviation flags from the movement files alone (no network): e.g. held_past_full_exit (you sat past your own fired full_exit stop), exited_intact (closed at a loss/flat with assumptions still holding + no stop fired — the 'sold too early / panic' shape), discretionary_exit (no stop/assumption fired). Flags PROMPT a self-reflection note; they are not accusations.",
+          "items": { "type": "string" }
+        },
+        "verdict": {
+          "type": ["object", "null"],
+          "description": "COMPUTED right-thesis × right-reason matrix. right_thesis = the bet made money after tax; right_reason = the assumptions held / catalyst materialized. The label separates skill (repeat) from luck (don't) from variance from correct-invalidation.",
+          "additionalProperties": true,
+          "properties": {
+            "right_thesis": { "type": ["boolean", "null"] },
+            "right_reason": { "type": ["boolean", "null"] },
+            "label": { "type": ["string", "null"], "enum": ["skill", "luck", "variance", "correct_invalidation", "indeterminate", null] },
+            "confidence": { "type": ["string", "null"], "enum": ["high", "low", null], "description": "low when assumptions are mostly unresolved or holding_days < 60 (no false precision)." },
+            "note": { "type": ["string", "null"] }
+          }
+        }
       }
     },
 

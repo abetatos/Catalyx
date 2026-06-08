@@ -14,6 +14,7 @@ CLI:
     uv run python -m catalyx.store.lake_query sector <sector_id>
     uv run python -m catalyx.store.lake_query portfolios
     uv run python -m catalyx.store.lake_query lineage <movement_id>
+    uv run python -m catalyx.store.lake_query catalyst-exposure <portfolio_id>
     uv run python -m catalyx.store.lake_query ledger
     uv run python -m catalyx.store.lake_query sql "SELECT ... FROM sector_snapshot ..."
 """
@@ -141,6 +142,79 @@ def lineage_for_movement(mov_id: str, lake_dir: Path | None = None) -> dict:
     return out
 
 
+def _run_dates(lake_dir: Path | None = None) -> dict[str, str]:
+    """{run_id: 'YYYY-MM-DDTHH:MM:SS'} from score_run — to time-weight the exposure average."""
+    if not _has("score_run", lake_dir):
+        return {}
+    rd = _df("SELECT run_id, substr(CAST(run_at AS VARCHAR),1,19) AS ts FROM score_run", None, lake_dir)
+    return {r["run_id"]: r["ts"] for r in rd.to_dict(orient="records")}
+
+
+def _time_weights(run_ids: list[str], dates: dict[str, str]) -> list[float]:
+    """Weight each run by how long its allocation was live = Δt to the NEXT run (the last run
+    runs to 'now'). This is the 'tiempo activo' weighting for the exposure average — a holding
+    held 30 days counts more than one rebalanced away after 1. Falls back to equal weights if
+    the run timestamps can't be parsed."""
+    from datetime import datetime, timezone
+    def _p(rid: str):
+        ts = (dates.get(rid) or "").replace("Z", "").strip()[:19]
+        try:
+            return datetime.fromisoformat(ts)
+        except ValueError:
+            return None
+    times = [_p(r) for r in run_ids]
+    if any(t is None for t in times):
+        return [1.0] * len(run_ids)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    out = []
+    for i, t in enumerate(times):
+        nxt = times[i + 1] if i + 1 < len(times) else now
+        out.append(max((nxt - t).total_seconds(), 0.0))
+    return out if sum(out) > 0 else [1.0] * len(run_ids)
+
+
+def portfolio_catalyst_exposure(portfolio_id: str, lake_dir: Path | None = None) -> dict:
+    """A portfolio's notional book (€1000 assumed) decomposed by CATALYST, tracked across every
+    rebalance. Each run records the % of the book exposed to each catalyst (a sector's weight is
+    split equally over the catalysts it's driven by; sectors with none → `uncatalyzed`; the
+    un-deployed remainder → `cash`). Returns:
+      • `timeseries` — per run: {run_id, date, by_catalyst:{cid: pct}} (the rebalance history),
+      • `average`    — per catalyst: the TIME-WEIGHTED mean exposure (weighted by how long each
+                       allocation was live) + its € on the notional — the 'so on average where is
+                       this book?' view.
+    Read-only; empty before any portfolio build."""
+    out: dict = {"portfolio_id": portfolio_id, "notional_eur": None, "timeseries": [], "average": []}
+    if not _has("portfolio_catalyst_exposure", lake_dir):
+        return out
+    rows = _df(
+        "SELECT run_id, catalyst_id, pct, eur, notional_eur FROM portfolio_catalyst_exposure "
+        "WHERE portfolio_id = ? ORDER BY run_id", [portfolio_id], lake_dir,
+    ).to_dict(orient="records")
+    if not rows:
+        return out
+    out["notional_eur"] = rows[0].get("notional_eur")
+    dates = _run_dates(lake_dir)
+    run_ids = sorted({r["run_id"] for r in rows})
+    by_run: dict[str, dict] = {}
+    for r in rows:
+        by_run.setdefault(r["run_id"], {})[r["catalyst_id"]] = r["pct"]
+    out["timeseries"] = [
+        {"run_id": rid, "date": (dates.get(rid) or rid)[:10], "by_catalyst": by_run[rid]}
+        for rid in run_ids
+    ]
+    weights = _time_weights(run_ids, dates)
+    wsum = sum(weights) or 1.0
+    notional = out["notional_eur"] or 0.0
+    cats = sorted({r["catalyst_id"] for r in rows})
+    avg = []
+    for cid in cats:
+        apct = round(sum(by_run[rid].get(cid, 0.0) * w for rid, w in zip(run_ids, weights)) / wsum, 2)
+        avg.append({"catalyst_id": cid, "avg_pct": apct,
+                    "avg_eur": round(apct / 100.0 * notional, 2)})
+    out["average"] = sorted(avg, key=lambda x: x["avg_pct"], reverse=True)
+    return out
+
+
 def catalyst_ledger(lake_dir: Path | None = None) -> list[dict]:
     """The latest catalyst track-record snapshot (invested + realized P&L per catalyst), from
     the time-versioned `catalyst_performance` table written by movement_repo ingest."""
@@ -187,6 +261,8 @@ def main() -> None:
     hd.add_argument("portfolio_id")
     ln = sub.add_parser("lineage", help="Trace a movement back to its catalysts + run + reports")
     ln.add_argument("movement_id")
+    ce = sub.add_parser("catalyst-exposure", help="A portfolio's notional book decomposed by catalyst, per rebalance + time-weighted avg")
+    ce.add_argument("portfolio_id")
     sub.add_parser("ledger", help="Latest catalyst track-record (invested/realized per catalyst)")
     sq = sub.add_parser("sql", help="Ad-hoc SQL over the lake")
     sq.add_argument("query")
@@ -205,6 +281,9 @@ def main() -> None:
     elif args.cmd == "lineage":
         import json
         print(json.dumps(lineage_for_movement(args.movement_id), indent=2, ensure_ascii=False, default=str))
+    elif args.cmd == "catalyst-exposure":
+        import json
+        print(json.dumps(portfolio_catalyst_exposure(args.portfolio_id), indent=2, ensure_ascii=False, default=str))
     elif args.cmd == "ledger":
         _print_rows(catalyst_ledger())
     elif args.cmd == "sql":

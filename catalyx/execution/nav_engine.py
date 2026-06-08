@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from catalyx.config import weights as weights_cfg
@@ -32,11 +32,18 @@ _NAV_TABLE = "portfolio_nav"
 # ── Price source (injectable) ────────────────────────────────────────────────
 
 def yfinance_prices(tickers: list[str], start: str, end: str):
-    """Default price_fn: adjusted-close DataFrame (index=date, columns=tickers)."""
+    """Default price_fn: adjusted-close DataFrame (index=date, columns=tickers).
+
+    yfinance's `end` is EXCLUSIVE, which silently drops the last day of every window —
+    e.g. asking [start, today] never returns today's close, so a curve that should end
+    today loses its final (and on a 1-trading-day window, its ONLY) point. We push end
+    out by one calendar day so the caller's `end` is treated inclusively.
+    """
     import pandas as pd
     import yfinance as yf
 
-    data = yf.download(tickers, start=start, end=end, progress=False, auto_adjust=True)
+    end_excl = (date.fromisoformat(end[:10]) + timedelta(days=1)).isoformat()
+    data = yf.download(tickers, start=start, end=end_excl, progress=False, auto_adjust=True)
     closes = data["Close"] if isinstance(data.columns, pd.MultiIndex) or "Close" in getattr(data, "columns", []) else data
     if isinstance(closes, pd.Series):
         closes = closes.to_frame(tickers[0])
@@ -142,8 +149,6 @@ def compute_model_nav(portfolio_id: str, run_id: str | None = None, as_of: str |
     book would have beaten the market (vs benchmark_etf, e.g. SPY). Otherwise the series
     starts at the run date and accrues forward.
     """
-    from datetime import timedelta
-
     from catalyx.execution import portfolio as pf
 
     price_fn = price_fn or yfinance_prices
@@ -251,7 +256,13 @@ def compute_live_nav(portfolio_id: str, inception: str | None = None, as_of: str
     holdings_by_run = {rid: pf.show_holdings(portfolio_id, run_id=rid, lake_dir=lake_dir).get("holdings", [])
                        for _, rid in runs}
     end = as_of or date.today().isoformat()
-    start = runs[0][0]
+    # Anchor the curve at INCEPTION, not at the first run date. The first run can land on a
+    # non-trading day (e.g. a weekend recompute) with no market day between it and `end` — the
+    # curve would then collapse to a single point and read forever as 'accruing'. inception is a
+    # real trading day (= the first live position), so valuing the first run's holdings from there
+    # gives a genuine NAV=100 anchor + today's point (≥2). No price look-ahead: inception's close
+    # is known on inception day; we only attribute the first run's (already-chosen) holdings to it.
+    start = min(inception, runs[0][0]) if inception else runs[0][0]
     all_etfs = {h.get("primary_etf") for hs in holdings_by_run.values() for h in hs if h.get("primary_etf")}
     tickers = list(dict.fromkeys(list(all_etfs) + ([benchmark] if benchmark else [])))
     prices = price_fn(tickers, start, end)
@@ -259,9 +270,10 @@ def compute_live_nav(portfolio_id: str, inception: str | None = None, as_of: str
     running = 100.0
     chained: list[dict] = []
     for i, (d_k, rid) in enumerate(runs):
+        seg_start = start if i == 0 else d_k                 # first segment anchored at inception
         seg_end = runs[i + 1][0] if i + 1 < len(runs) else end
-        seg_px = prices.loc[d_k:seg_end] if prices is not None and len(prices) else prices
-        seg = holdings_nav(holdings_by_run[rid], seg_px)     # indexed 100 at d_k
+        seg_px = prices.loc[seg_start:seg_end] if prices is not None and len(prices) else prices
+        seg = holdings_nav(holdings_by_run[rid], seg_px)     # indexed 100 at seg_start
         if not seg:
             continue
         for j, pt in enumerate(seg):

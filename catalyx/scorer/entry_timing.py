@@ -14,8 +14,12 @@ Two facets, one advisory verdict:
 
   MICRO-TENSION (price-derived, deterministic, yfinance): RSI, stretch vs MA20, realized-vol regime,
     short-term trend, drawdown from a local high, and a stabilization check → a `micro_timing_state`
-    ∈ {calm, stretched, falling_unstable, stabilizing} plus a `tension_score` for ordering. A market
+    ∈ {neutral, overbought, falling, basing} plus a `tension_score` for ordering. A market
     backdrop gauge (^VIX level + 5d change, SPY 5d) is attached as context.
+
+    State vocabulary (TA-standard, 2026-06-07 — renamed from calm/stretched/falling_unstable/
+    stabilizing): two dichotomies — neutral↔overbought (no-extreme vs overextended up, the oscillator
+    axis) and basing↔falling (turned vs still-declining, the drawdown axis).
 
   EVENT OVERHANG (reuse the existing CatalystEvent model — NO separate registry): a near-term discrete
     event touches the sector (resolved exactly like catalyst_scorer: listed in the study's
@@ -147,27 +151,56 @@ def is_stabilizing(closes: list[float], up_closes: int, reclaim_ma: int) -> bool
     return False
 
 
+def trend_deadband_pct(closes: list[float], cfg: dict) -> float:
+    """Vol-scaled noise band (in %) for the short-horizon `falling` gate (A′, 2026-06-07). A 5d
+    move counts as a decline only when it is bearish BEYOND this band; within it the move is
+    statistically indistinguishable from flat, so it does not flip a name into the tension branch.
+
+        band = k · σ_daily · √h · 100        (h = short_trend_window)
+
+    σ uses the LONG realized-vol window — a stable noise floor that does NOT itself jump during a
+    vol spike, so the band (and hence the classification) stays steady run-to-run. We band the SHORT
+    horizon rather than lengthen it: a 5d return is responsive (it catches fresh turns and forgets
+    digested gaps), whereas a long OLS slope lags those by ~half its window. Falls back to the short
+    vol window, then to 0.0 (legacy raw-sign behaviour) when history is too short to estimate σ."""
+    k = float(cfg.get("trend_deadband_k", 0.0) or 0.0)
+    if k <= 0:
+        return 0.0
+    sigma = (realized_vol(closes, cfg["vol_ratio_window_long"])
+             or realized_vol(closes, cfg["vol_ratio_window_short"]))
+    if not sigma:
+        return 0.0
+    return round(k * sigma * (cfg["short_trend_window"] ** 0.5) * 100.0, 2)
+
+
 def _clamp01(x: float) -> float:
     return max(0.0, min(1.0, x))
 
 
-def classify_state(rsi_v, stretch_v, vol_ratio_v, short_ret, ddown, stabilizing, cfg) -> str:
+def classify_state(rsi_v, stretch_v, vol_ratio_v, short_ret, ddown, stabilizing, cfg,
+                   trend_deadband_pct: float = 0.0) -> str:
     """Map the micro-tension facts to a state. Precedence: an extended/overbought push is
-    `stretched` (chasing); otherwise if there is tension it is `stabilizing` or `falling_unstable`
-    depending on the stabilization check; otherwise `calm`.
+    `overbought` (chasing); otherwise if there is tension it is `basing` or `falling`
+    depending on the stabilization check; otherwise `neutral`.
 
-    `stretched` fires on EITHER hard line (RSI ≥ rsi_overbought OR stretch ≥ stretch_overbought_pct),
+    `overbought` fires on EITHER hard line (RSI ≥ rsi_overbought OR stretch ≥ stretch_overbought_pct),
     OR when ≥ `borderline_min_axes` of the softer "warm" upside-extension axes (rsi_warm /
     stretch_warm_pct / vol_ratio_warm) trip together. The multi-axis band catches the failure mode
     where a name sits JUST under every hard line at once (RSI 68.9 + +7.75% stretch + vol 1.31) and
-    used to read "calm" — being borderline-overbought AND borderline-extended AND vol-rising
+    used to read "neutral" — being borderline-overbought AND borderline-extended AND vol-rising
     simultaneously IS chasing. A SINGLE warm axis (e.g. only vol elevated, as in a selloff) does NOT
-    qualify — it routes to the falling/stabilizing branch instead, so a knife is never "stretched"."""
+    qualify — it routes to the falling/basing branch instead, so a knife is never "overbought".
+
+    `trend_deadband_pct` (A′, 2026-06-07) de-noises the `falling` term: a 5d move counts as falling
+    only when it is bearish BEYOND this vol-scaled noise band (short_ret < −deadband), so a move
+    within ~1 SE of flat is NOT treated as a decline (kills the run-to-run coin-flip on borderline
+    names). The band is computed in `assess` from the name's own realized vol; default 0.0 reproduces
+    the legacy raw-sign behaviour (so the pure-function tests stay unchanged)."""
     overbought = rsi_v is not None and rsi_v >= cfg["rsi_overbought"]
     extended = stretch_v is not None and stretch_v >= cfg["stretch_overbought_pct"]
     elevated_vol = vol_ratio_v is not None and vol_ratio_v >= cfg["vol_ratio_elevated"]
     oversold = rsi_v is not None and rsi_v <= cfg["rsi_oversold"]
-    falling = short_ret is not None and short_ret < 0
+    falling = short_ret is not None and short_ret < -abs(trend_deadband_pct)
     in_drawdown = ddown is not None and ddown <= -3.0
 
     rsi_warm = rsi_v is not None and rsi_v >= cfg.get("rsi_warm", 65)
@@ -176,10 +209,10 @@ def classify_state(rsi_v, stretch_v, vol_ratio_v, short_ret, ddown, stabilizing,
     borderline_axes = sum([rsi_warm, stretch_warm, vol_warm])
 
     if overbought or extended or borderline_axes >= cfg.get("borderline_min_axes", 2):
-        return "stretched"
+        return "overbought"
     if elevated_vol or oversold or (falling and in_drawdown):
-        return "stabilizing" if stabilizing else "falling_unstable"
-    return "calm"
+        return "basing" if stabilizing else "falling"
+    return "neutral"
 
 
 def tension_score(rsi_v, vol_ratio_v, ddown, stabilizing) -> float:
@@ -278,10 +311,10 @@ def suggest_verdict(state: str, overhangs: list[dict]) -> tuple[str, str | None]
         nearest = min(upcoming, key=lambda o: o["days_until"])
         return "wait_event", nearest["event_date"]
     return {
-        "calm": "enter_now",
-        "stabilizing": "scale_in",
-        "stretched": "wait_stabilize",
-        "falling_unstable": "wait_stabilize",
+        "neutral": "enter_now",
+        "basing": "scale_in",
+        "overbought": "wait_stabilize",
+        "falling": "wait_stabilize",
     }.get(state, "enter_now"), None
 
 
@@ -366,7 +399,8 @@ def assess(sector_ids: list[str], cfg: dict | None = None, price_fn=None,
         ddown = drawdown_from_local_high(closes, cfg["drawdown_local_high_window"])
         stabilizing = is_stabilizing(closes, cfg["stabilization_up_closes"],
                                      cfg["stabilization_reclaim_ma"])
-        state = classify_state(rsi_v, stretch_v, vol_v, short_ret, ddown, stabilizing, cfg)
+        band_pct = trend_deadband_pct(closes, cfg)
+        state = classify_state(rsi_v, stretch_v, vol_v, short_ret, ddown, stabilizing, cfg, band_pct)
         tscore = tension_score(rsi_v, vol_v, ddown, stabilizing)
         verdict, ev_date = suggest_verdict(state, overhangs)
 
@@ -375,6 +409,7 @@ def assess(sector_ids: list[str], cfg: dict | None = None, price_fn=None,
             "micro_timing_state": state, "tension_score": tscore,
             "rsi_14": rsi_v, "stretch_vs_ma20_pct": stretch_v, "vol_ratio_10_90": vol_v,
             "return_5d_pct": short_ret, "drawdown_from_20d_high_pct": ddown,
+            "trend_deadband_pct": band_pct,
             "stabilizing": stabilizing,
             "event_overhangs": overhangs,
             "suggested_verdict": verdict, "wait_until": ev_date,
@@ -415,6 +450,7 @@ def _persist_lake(run_id: str, today: date, market: dict, results: list[dict], l
             "micro_timing_state": state, "tension_score": s.get("tension_score"),
             "rsi_14": s.get("rsi_14"), "stretch_vs_ma20_pct": s.get("stretch_vs_ma20_pct"),
             "vol_ratio_10_90": s.get("vol_ratio_10_90"), "return_5d_pct": s.get("return_5d_pct"),
+            "trend_deadband_pct": s.get("trend_deadband_pct"),
             "drawdown_from_20d_high_pct": s.get("drawdown_from_20d_high_pct"),
             "stabilizing": bool(s.get("stabilizing")),
             "suggested_verdict": s.get("suggested_verdict"), "wait_until": s.get("wait_until"),
