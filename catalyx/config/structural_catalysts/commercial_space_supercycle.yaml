@@ -1,12 +1,21 @@
-# StructuralCatalyst: Commercial Space Revenue Supercycle
-# schema_version: "1.3"
-# Update indicators: monthly (Starlink subscriber data, ETF flows) + quarterly (earnings: RKLB, PL, SpaceX post-IPO)
-#
-# Granularity note: DISTINCT from struct_nato_rearmament.
-# commercial_space is driven by private-sector subscription economics, launch unit cost curves,
-# and SpaceX IPO-driven institutional capital formation — NOT government defense program cycles.
-# space_defense_satellite (fed by struct_nato_rearmament) is driven by DoD/USSF appropriations,
-# SDA constellation contracts, and classified program awards. Revenue mechanisms are orthogonal.
+# StructuralCatalyst: Commercial Space Revenue Supercycle
+
+# schema_version: "1.3"
+
+# Update indicators: monthly (Starlink subscriber data, ETF flows) + quarterly (earnings: RKLB, PL, SpaceX post-IPO)
+
+#
+
+# Granularity note: DISTINCT from struct_nato_rearmament.
+
+# commercial_space is driven by private-sector subscription economics, launch unit cost curves,
+
+# and SpaceX IPO-driven institutional capital formation — NOT government defense program cycles.
+
+# space_defense_satellite (fed by struct_nato_rearmament) is driven by DoD/USSF appropriations,
+
+# SDA constellation contracts, and classified program awards. Revenue mechanisms are orthogonal.
+
 
 id: struct_commercial_space_supercycle
 type: structural
@@ -57,7 +66,7 @@ user_notes: >
   months if SpaceX IPO generates sustained institutional analyst coverage.
 
 intensity:
-  current_score: 86.7
+  current_score: 88.7
   computation_method: computed
   computation_note: >
     Bootstrap 2026-06-05. Three indicators: ind_01 (Starlink subscribers 10M vs strong=8M),
@@ -74,8 +83,12 @@ intensity:
     estimate: 82. Rationale: all three indicators are well above strong thresholds, trend is
     rising, but this is a cold-start file with no history — conservative relative to the
     formula's 92.9 output. Run intensity_engine --write-back after first quarterly data update.
-  last_updated: "2026-06-05"
+  last_updated: "2026-06-12"
   history:
+  - period: '2026-06-12'
+    score: 88.7
+    note: 'Computed 2026-06-12: avg=86.67 trend=↑ (rising 1 period) (was 86.7)'
+    computation_method: computed
   - period: '2026-06-05'
     score: 86.7
     note: 'Computed 2026-06-05: avg=86.67 trend=→ (flat — insufficient history) (was 82.0)'
@@ -236,8 +249,10 @@ deactivation_conditions:
 
 linked_event_catalyst_ids: []
 linked_structural_catalyst_ids:
-- struct_ai_capex_supercycle    # AI capex drives data relay satellite demand + SpaceX Starlink enterprise contracts
-- struct_nato_rearmament        # NATO rearmament drives EO analytics demand for Planet Labs / Maxar; dual-use overlap
+- struct_ai_capex_supercycle    # AI capex drives data relay satellite demand + SpaceX Starlink enterprise contracts
+
+- struct_nato_rearmament        # NATO rearmament drives EO analytics demand for Planet Labs / Maxar; dual-use overlap
+
 
 status: active
 status_last_reviewed: "2026-06-05"

@@ -12,12 +12,13 @@ Usage:
 
 **Trigger modes:**
 - `scheduled` (default): run every step below, full universe.
-- `event:<catalyst_id>`: run only the steps the event touches — Step 0 (macro context for THIS
-  event), Step 1 (scan for related events), Step 2 (update the affected catalyst's indicators),
-  Step 3 (re-study only the sectors that catalyst drives), Steps 5/5b/5c (re-score + regime +
-  dislocation), Step 6 (review open positions attributed to that catalyst). Skip the full-universe
-  Steps 11–12 unless the event surfaces a taxonomy gap. State at the top of the report which
-  trigger ran and why each skipped step was skipped.
+- `event:<catalyst_id>`: run only the steps the event touches — Step 0/1 (lightweight refresh of
+  THAT catalyst only — search its keyword, note strengthen/weaken/invalidation; do NOT run the full
+  `/catalyx-scan`), Step 2 (update the affected catalyst's indicators), Step 3 (re-study only the
+  sectors that catalyst drives), Steps 5/5b/5c (re-score + regime + dislocation), Step 6 (review open
+  positions attributed to that catalyst). Skip the full-universe Steps 11–12 unless the event
+  surfaces a taxonomy gap. State at the top of the report which trigger ran and why each skipped step
+  was skipped.
 
 ## PIPELINE ORDER — CRITICAL
 
@@ -25,8 +26,11 @@ The order below is mandatory. Each step provides data that the next step require
 Do NOT run heatmap before sector studies. Do NOT run position review before the dashboard.
 
 ```
-Step 0:   Macro & Geopolitical Context (WebSearch — always first)
-Step 1:   Catalyst Scan (Pass 1: Discovery → gaps | Pass 2: Classification → events)
+Step 0/1: Catalyst Scan & Macro Context — run /catalyx-scan FIRST (it is the macro front door)
+          scheduled → one scan returns it all: C0 macro/big-economy context + Pass 2 refresh of
+                      existing catalysts + Pass 1/2 new gaps & events. Consume its output.
+          event:<id> → SKIP the full scan; do a lightweight refresh of THAT catalyst only
+                      (search its keyword, note strengthen/weaken/invalidation)
 Step 1.5: Freshness & Lifecycle GATE (stale-indicator audit + catalyst lifecycle)  ← BEFORE scoring
 Step 2:   Structural Catalyst Updates → refresh the indicators flagged stale in 1.5
 Step 3:   Sector Studies → refresh priority sectors (BEFORE heatmap)
@@ -54,62 +58,38 @@ Step 12:  Taxonomy Gap Review → contextualize each pending proposal, then ASK 
 
 ## Steps
 
-### Step 0 — Macro & Geopolitical Context
+### Step 0/1 — Catalyst Scan & Macro Context
 
-Run WebSearch for macro context (BEFORE reading any YAML files):
+The review's FIRST action. `/catalyx-scan` is the macro front door — one scan establishes what is
+TRUE TODAY and feeds the whole early pipeline. The web searches always come before trusting any
+stored value (project files are a month stale).
 
-Run these WebSearch queries BEFORE reading any YAML or JSON files. The project files contain
-data from last month — the web searches establish what is TRUE TODAY.
+**`scheduled` — run `/catalyx-scan` first, then consume its output.** The scan returns, in one pass:
+- **C0 macro & big-economy context** — central banks, big economies, commodities, key geopolitics
+  (the generic Trump / US / Europe framings live there — broad queries surface more ideas).
+- **Pass 2 Refresh** — a per-catalyst delta for every registered catalyst (strengthen / weaken /
+  invalidation trigger). This is the input to Step 1.5 (lifecycle gate) and Step 2 (`/catalyx-update`).
+- **Pass 1 + Pass 2 discovery** — new `data/taxonomy_proposals/*.json` (themes the taxonomy misses)
+  + new `data/catalysts/*.json` CatalystEvents above strength 55.
 
-**Mandatory searches (run all):**
+Do NOT repeat the scan's searches here — read its summary tables (C0 context, refresh deltas, new
+gaps/events) and carry them forward.
 
-```
-Macro / Central Banks:
-- "Fed interest rate decision [MONTH YEAR]"
-- "ECB rate policy [MONTH YEAR]"
-- "US CPI inflation [MONTH YEAR]"
-- "USD DXY dollar index [MONTH YEAR]"
+**`event:<catalyst_id>` — SKIP the full scan; do a lightweight refresh of THAT catalyst only.**
+A punctual event doesn't warrant a full-universe Discovery Pass. Instead:
+1. `uv run python -m catalyx.store.catalyst_repo get <catalyst_id>` (or `structural_catalyst_repo`)
+   for its keyword + stored state.
+2. One or two WebSearches on that keyword, e.g. `"<catalyst keyword> latest news [MONTH YEAR]"`.
+3. Note the delta: did it STRENGTHEN, WEAKEN, or hit an **invalidation trigger**? Feed Step 1.5 / Step 2.
 
-Geopolitical:
-- "Russia Ukraine war news [MONTH YEAR]"
-- "NATO defense spending update [MONTH YEAR]"
-- "China Taiwan geopolitical [MONTH YEAR]"
-- "US China trade tariffs [MONTH YEAR]"
-
-Commodities:
-- "LME copper price [MONTH YEAR]"
-- "gold price USD [MONTH YEAR]"
-- "WGC central bank gold purchases [MONTH YEAR]"
-- "oil price OPEC [MONTH YEAR]"
-
-Active catalyst checks (one per active structural catalyst):
-- "[catalyst keyword] latest news [MONTH YEAR]"
-  e.g. "hyperscaler AI capex guidance [MONTH YEAR]"
-  e.g. "NATO defense budget European [MONTH YEAR]"
-  e.g. "LME copper inventory [MONTH YEAR]"
-```
-
-**Output of Step 0:** A bullet-point summary of current macro/geopolitical state.
-Compare this to the most recent report — note any deltas from the project's stored data.
-Flag any indicator where the WebSearch value differs significantly from the YAML current_value.
-
----
-
-### Step 1 — Catalyst Scan
-
-Follow all steps in `catalyx-scan` skill. The scan runs two passes automatically:
-
-**Pass 1 (Discovery):** broad market queries with no taxonomy dependency. Output: new or updated `data/taxonomy_proposals/*.json` files. This pass catches investment themes the taxonomy doesn't cover yet.
-
-**Pass 2 (Classification):** taxonomy-led queries. Output: new `data/catalysts/*.json` CatalystEvent files above strength threshold 55.
-
-After the scan, check each existing structural catalyst: should intensity be revised based on Step 0 findings?
+**Output of Step 0/1:** the macro context bullets + the per-catalyst refresh deltas (flag any that
+should move to `invalidated`/`weakening`) + any brand-new theme/event surfaced.
 
 ---
 
 ### Step 2 — Structural Catalyst Updates
 
-For any indicator flagged as stale OR where Step 0 found a value different from the YAML:
+For any indicator flagged as stale OR where Step 0/1 found a value different from the YAML:
 - Run `/catalyx-update <struct_id> <ind_id> <new_value> "<source note>"` for each
 - After updating, recompute intensity.current_score using the algorithmic formula:
   `intensity = round(indicator_avg × trend_factor, 1)` (see scoring_weights.yaml)
@@ -251,7 +231,7 @@ uv run python -m catalyx.store.lake_query ledger
 ```
 For each open position, read its opening movement in `data/movements/` and review its
 `risk_discipline`:
-- For each `assumptions[]`: use Step 0 WebSearch findings to assess `holding` / `weakening` /
+- For each `assumptions[]`: use Step 0/1 WebSearch findings to assess `holding` / `weakening` /
   `violated` — cite specific evidence (date, source, value).
 - For each `invalidation[]`: check whether the stop/condition has been breached (price/inventory/
   rate). A `market_data` stop is checkable from the latest snapshot.
@@ -393,7 +373,7 @@ For each pending proposal, write a short context block so the user can decide wi
 ```
 ### <proposed_sector_id or theme>   [signal_count: N | first_seen → last_seen]
 - **Investment thesis:** one line — why this theme could move, what the demand/supply driver is.
-- **Why now:** what surfaced it this cycle (cite the Step 0 / Step 1 evidence, not last month's).
+- **Why now:** what surfaced it this cycle (cite the Step 0/1 evidence, not last month's).
 - **ETF coverage:** pure-play ticker if found (TER/AUM if known), else best proxies and their estimated exposure %.
 - **Relation to existing sectors:** which current `sector_id`(s) it overlaps with or complements, and whether it is genuinely distinct under the granularity principle (Gold ≠ Gold miners). If it is just a slice of an existing sector, say so.
 - **Strength / novelty:** strength_score and novelty_score from the proposal; how it compares to an existing catalyst for calibration.
@@ -403,7 +383,7 @@ For each pending proposal, write a short context block so the user can decide wi
 
 After presenting all context blocks, use the **AskUserQuestion** tool — one question per pending proposal — with options **Promote**, **Reject**, **Defer to next cycle** (and let the user add notes). Carry out the action the user selects for each. Never write to `sector_taxonomy.yaml` before the user answers.
 
-- A proposal with `signal_count < 3` should default the recommendation to **Defer** (signal too thin) unless Step 0 produced a strong fresh catalyst for it.
+- A proposal with `signal_count < 3` should default the recommendation to **Defer** (signal too thin) unless Step 0/1 produced a strong fresh catalyst for it.
 - Already-`rejected` proposals are not re-asked; list them in the report for the record only.
 
 **Promotion action (only when the user selects Promote):**
@@ -500,8 +480,8 @@ Print to chat: "Monthly review complete. Key findings: [3 bullets]. Full report:
 
 ## Rules
 
-- **Step 0 is mandatory.** Never start by reading YAML files. WebSearch first — project data is always one month stale.
-- **Pass 1 (Discovery) runs before Pass 2 (Classification) in Step 1.** Never read `sector_taxonomy.yaml` during the Discovery pass — the point is to find what the taxonomy misses.
+- **Step 0/1 is mandatory and runs FIRST: `/catalyx-scan` is the macro front door.** In `scheduled` mode the review's first action is one `/catalyx-scan` — it returns the C0 macro/big-economy context, the Pass 2 per-catalyst refresh deltas, and the new gaps/events; consume that output, do not repeat the searches. In `event:<id>` mode SKIP the full scan and do a lightweight refresh of that one catalyst. Never trust a stored YAML/JSON value before searching — project data is always one month stale.
+- **Within the scan: C0 macro context → Pass 1 (Discovery) → Pass 2 (Classification + Refresh).** Never read `sector_taxonomy.yaml` during the Discovery pass — the point is to find what the taxonomy misses.
 - **Sector studies before heatmap.** Never run heatmap without refreshing sector studies for the top-5 sectors.
 - The Executive Summary must contain at least one NON-OBVIOUS finding. If everything is "no change", state that explicitly.
 - Open position review must make a concrete recommendation (Hold / Add / Reduce / Exit). "Monitor" is not a recommendation. The review only recommends; the user executes via /catalyx-open or /catalyx-close.

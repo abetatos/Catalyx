@@ -31,9 +31,13 @@ user_notes: "Most visible structural catalyst in the market. Risk of being price
   cooling, networking as higher-alpha adjacent plays."
 
 intensity:
-  current_score: 86.9
-  last_updated: "2026-06-05"
+  current_score: 82.9
+  last_updated: "2026-06-12"
   history:
+  - period: '2026-06-12'
+    score: 82.9
+    note: 'Computed 2026-06-12: avg=89.87 trend=↓↓ (falling 2+ consecutive) (was 86.9)'
+    computation_method: computed
   - period: '2026-06-05'
     score: 86.9
     note: 'Computed 2026-06-05: avg=89.87 trend=↓ (falling 1 period) (was 89.9)'
