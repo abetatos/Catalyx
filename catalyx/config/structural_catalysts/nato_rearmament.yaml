@@ -31,8 +31,12 @@ user_notes: "Already played the first leg (EU defense prime ETFs). Monitoring fo
 
 intensity:
   current_score: 70.7
-  last_updated: "2026-06-05"
+  last_updated: "2026-06-12"
   history:
+  - period: '2026-06-12'
+    score: 70.7
+    note: 'Computed 2026-06-12: avg=77.73 trend=↓↓ (falling 2+ consecutive)'
+    computation_method: computed
   - period: '2026-06-05'
     score: 70.7
     note: 'Computed 2026-06-05: avg=77.73 trend=↓↓ (falling 2+ consecutive) (was 74.7)'

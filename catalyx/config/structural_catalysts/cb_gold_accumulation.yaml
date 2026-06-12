@@ -35,8 +35,12 @@ intensity:
   computation_method: "computed"
   computation_note: "Computed 2026-06-03: semaphores ind_01=🟢(100), ind_02=🟡(65), ind_03=🟢(100) → avg=88.3; trend ↑ (79→90
     vs Q1) → factor=1.02; result=90.1→90. ind_01 updated 290→315T (Q2 2026 WGC data)."
-  last_updated: "2026-06-05"
+  last_updated: "2026-06-12"
   history:
+  - period: '2026-06-12'
+    score: 72.1
+    note: 'Computed 2026-06-12: avg=79.13 trend=↓↓ (falling 2+ consecutive)'
+    computation_method: computed
   - period: '2026-06-05'
     score: 72.1
     note: 'Computed 2026-06-05: avg=79.13 trend=↓↓ (falling 2+ consecutive) (was 76.1)'

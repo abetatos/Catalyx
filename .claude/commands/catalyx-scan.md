@@ -3,7 +3,49 @@
 Scan for macro catalysts and emerging investment themes. Runs two sequential passes:
 
 - **Pass 1 — Discovery** (market-led, no taxonomy dependency): detects what is actually moving in the market and flags themes not covered by the current taxonomy.
-- **Pass 2 — Classification** (taxonomy-led): searches for new events within known sectors and registers CatalystEvent JSON files.
+- **Pass 2 — Classification + Refresh** (taxonomy-led): searches for new events within known sectors and registers CatalystEvent JSON files, AND refreshes the state of every already-registered catalyst (strengthen / weaken / invalidation trigger).
+
+**This skill is the macro front door.** Run first in `/catalyx-review` (scheduled mode): a single
+scan returns everything the early pipeline needs — (1) the **macro/big-economy context** (Step C0),
+(2) the **refreshed state of existing catalysts** (Pass 2 Refresh), and (3) **newly discovered
+events + taxonomy gaps**. The review consumes this output instead of repeating the searches.
+
+---
+
+## Step C0 — Macro & Big-Economy Context (run first)
+
+**Goal:** Establish what is TRUE TODAY across the big economies before discovery — this frames
+every pass and is the context the review consumes in scheduled mode. Taxonomy-agnostic, so it does
+not bias Pass 1.
+
+Keep these GENERIC — each line is its own query; broad framings surface more ideas than narrow
+ones. Always include Trump / US / Europe framings, since most market-moving policy now routes
+through US executive action and the European economy.
+
+```
+Macro / Central Banks:
+- "Fed interest rate decision [MONTH YEAR]"
+- "ECB rate policy [MONTH YEAR]"
+- "US CPI inflation [MONTH YEAR]"
+- "USD DXY dollar index [MONTH YEAR]"
+
+Geopolitical / big economies:
+- "Trump news [MONTH YEAR]"
+- "US administration policy [MONTH YEAR]"
+- "Europe economy [MONTH YEAR]"
+- "China economy [MONTH YEAR]"
+- "Russia Ukraine war news [MONTH YEAR]"
+- "China Taiwan geopolitical [MONTH YEAR]"
+
+Commodities:
+- "LME copper price [MONTH YEAR]"
+- "gold price USD [MONTH YEAR]"
+- "WGC central bank gold purchases [MONTH YEAR]"
+- "oil price OPEC [MONTH YEAR]"
+```
+
+**Output of C0:** a short bullet summary of the current macro/geopolitical state. Carry any fresh
+theme it surfaces into Pass 1, and any development touching a known catalyst into the Pass 2 refresh.
 
 ---
 
@@ -66,9 +108,11 @@ For each theme with no matching sector and no existing gap file:
 
 ---
 
-## Pass 2 — Classification Pass
+## Pass 2 — Classification + Refresh Pass
 
-**Goal:** Find new discrete events within known sectors and register them as CatalystEvent JSON files.
+**Goal:** Two things, from the same sector searches: (1) find new discrete events within known
+sectors and register them as CatalystEvent JSON files, and (2) **refresh the state of every
+already-registered catalyst** — did it strengthen, weaken, or hit an invalidation trigger?
 
 ### Step C1 — Load taxonomy and existing catalysts
 
@@ -98,6 +142,9 @@ Use `get <id>` on either repo for full detail when a specific record is needed.
 "commodity supply OPEC production" last 14 days
 ```
 
+(The generic Trump / US / Europe / big-economy framings already ran in Step C0 — reuse those
+findings here rather than repeating them.)
+
 **Analyst model revision queries — run every scan (position close signal):**
 ```
 "Goldman Sachs JPMorgan Morgan Stanley sector research report [MONTH YEAR]"
@@ -110,6 +157,21 @@ Use `get <id>` on either repo for full detail when a specific record is needed.
 These detect `corporate_event / analyst_model_revision` — the signal that a mispricing is closing. Classification rule: if ≥2 of {GS, JPM, MS, BofA, UBS} publish revised sector models in the same 30-day window with ≥10% change in sector revenue estimate or price target, register as `corporate_event / analyst_model_revision`. This is a **position exit trigger** — flag explicitly in the "Structural catalyst flags" table and note which open position it affects.
 
 Also run one query per sector that appeared in the Discovery Pass output, to check for discrete events.
+
+### Step C2b — Refresh every existing catalyst
+
+The inventory loaded in C1 lists every active catalyst (event + structural). The C0 macro context
+and the C2 sector searches already cover most of them — now read those findings through the
+refresh lens, one row per active catalyst:
+
+- **Strengthen / weaken:** does the fresh evidence move the catalyst's intensity up or down vs its
+  stored state? (For structurals, this is the input to `/catalyx-update`; flag the specific indicator.)
+- **Invalidation trigger:** did an event reverse (policy walked back, ceasefire, deal signed) or a
+  structural's thesis break? Flag it for the lifecycle gate — recommend `invalidated` / `weakening`.
+- **No change:** state so explicitly; a stable catalyst is a valid finding.
+
+This is a RECOMMENDATION step — it never edits the YAML/JSON itself (that is `/catalyx-update` and
+the review's lifecycle gate). Emit the per-catalyst delta in the output.
 
 ### Step C3 — Classify and score each significant result
 
@@ -140,6 +202,13 @@ Present a unified summary table after both passes:
 
 ```
 ## Catalyx Scan — YYYY-MM-DD
+
+### C0 — Macro & big-economy context
+[Short bullet summary: central banks, big-economy state, commodities, key geopolitical developments.]
+
+### Pass 2 — Refresh: existing catalysts
+| Catalyst ID | Stored state | Fresh evidence | Delta (↑/↓/=) | Lifecycle flag |
+|---|---|---|---|---|
 
 ### Pass 1 — Discovery: New taxonomy gaps detected
 | Gap ID | Theme | Signal type | Closest existing sector | ETF found? | Action |
@@ -173,7 +242,8 @@ If any structural catalyst's `indicators` appear to have changed materially, fla
 
 ## Rules
 
-- **Pass 1 runs before Pass 2.** Never read `sector_taxonomy.yaml` during Pass 1 — the point is to find what the taxonomy misses.
+- **Order: C0 (macro context) → Pass 1 (Discovery) → Pass 2 (Classification + Refresh).** C0 is taxonomy-agnostic so it does not bias Pass 1. Never read `sector_taxonomy.yaml` during Pass 1 — the point is to find what the taxonomy misses.
+- **The Pass 2 refresh (C2b) is recommend-only.** It flags strengthen/weaken/invalidation per existing catalyst but never edits the YAML/JSON — that is `/catalyx-update` and the review's lifecycle gate.
 - **All dates in evidence entries must be absolute (YYYY-MM-DD).** Never write relative dates ("last week", "this month") — the gap files persist across sessions and relative dates become meaningless.
 - **Promotion is always a user decision.** Never set `status: promoted` or suggest promotion automatically. Only present the evidence table; the user decides.
 - Never fabricate sources. If WebSearch returns no results for a query, say so.

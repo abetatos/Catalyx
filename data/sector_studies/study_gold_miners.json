@@ -5,37 +5,38 @@
   "sector_id": "gold_miners",
   "sector_label": "Gold Miners",
   "created_at": "2026-06-03",
-  "last_updated": "2026-06-04",
+  "last_updated": "2026-06-12",
   "study_type": "full",
 
   "taxonomy": {
     "parent_sector": "precious_metals",
     "adjacent_sectors": ["gold_physical", "silver_miners", "royalty_streaming_metals"],
-    "differentiation_note": "Gold miners ≠ physical gold in three critical ways: (1) operational leverage — a 10% move in gold price typically produces a 20-30% move in miners via margin expansion (revenue fixed in gold price, costs partly fixed in local currency); (2) additional risk layers — mine location geopolitics, management quality, AISC trajectory, M&A, ESG screening; (3) different investor base — gold physical is held by CBs and macro funds as monetary hedge; miners are held by equity investors seeking leveraged gold exposure. The thesis for miners requires BOTH a bullish gold view AND a view that the AISC/price spread will hold or expand. They can diverge significantly: gold can rise while miners fall if cost inflation erodes margins."
+    "differentiation_note": "Gold miners ≠ physical gold in three critical ways: (1) operational leverage — a 10% move in gold price typically produces a 20-30% move in miners via margin expansion (revenue fixed in gold price, costs partly fixed in local currency); (2) additional risk layers — mine location geopolitics, management quality, AISC trajectory, M&A, ESG screening; (3) different investor base — gold physical is held by CBs and macro funds as monetary hedge; miners are held by equity investors seeking leveraged gold exposure. The thesis for miners requires BOTH a bullish gold view AND a view that the AISC/price spread will hold or expand. They can diverge significantly — and in the current 2026 Iran energy shock, this divergence is acute: gold spot corrected 27% from ATH while miners have corrected more (GDX -34% from $117 ATH to $77), as energy cost inflation via diesel threatens AISC. The GDX/GLD ratio is a live read on how much operational leverage the market is pricing relative to physical exposure."
   },
 
   "demand_drivers": [
-    "Central bank systematic gold accumulation (structural): the primary driver of physical gold price, which then drives miner revenues. CBs are price-insensitive buyers — they buy on weakness. This creates a price floor that benefits miners.",
-    "Real interest rate direction: negative or falling real rates reduce the opportunity cost of holding gold (which pays no yield). The 2024-2026 rate cut cycle has been gold-positive.",
-    "USD weakness: gold is priced in USD. A weaker dollar increases gold's purchasing power in other currencies, boosting non-USD demand.",
-    "Geopolitical safe-haven demand: episodic spikes in risk aversion drive gold flows. Less relevant for long-term miners thesis but creates entry/exit timing opportunities.",
-    "AISC/price spread expansion: if gold rises faster than mining cost inflation, margins expand — this is the specific miner alpha vs physical gold.",
-    "M&A activity: sector consolidation (Newmont acquiring Newcrest 2023, ongoing rationalization) can re-rate individual names and the sector."
+    "Central bank systematic gold accumulation (structural): CBs running at ~60t/month (Goldman, April 2026 data), price-insensitive buyers who accelerated purchases ON the correction. Structural demand floor that physical gold — and by extension miners — depend on. Demand pace moderated from peak but remains historically elevated.",
+    "Gold price as primary revenue driver: at ~$4,080/oz (June 12, 2026) vs $5,589 ATH (Jan 28), gold is down ~27%. Miners are operationally levered to this — GDX fell from $117.18 ATH to $77.72 (June 12), a ~34% decline, showing slightly greater downside leverage on the correction. The critical question is whether the AISC/price spread survives the Iran energy shock.",
+    "AISC/price spread: at $4,080 gold, Newmont full-year 2026 AISC guidance of $1,680/oz implies ~$2,400/oz margin. Barrick guidance AISC $1,760-1,950/oz implies $2,130-2,320/oz margin. These are historically exceptional margins even post-correction — the sector is not distressed at current prices.",
+    "Real interest rate direction: real yields remain positive (Fed on hold at 3.50-3.75%, CPI 4.2% YoY → real rates approximately -0.5%). Neutral to mildly positive for gold. If Fed resumes cuts (Warsh era), gold has a potential second leg — which would immediately re-widen AISC/price spread.",
+    "Western ETF re-entry: March 2026 saw record $12B Western gold ETF OUTFLOWS (WGC) as investors trimmed at ATH. Asian inflows offset ($14B, China safe-haven). The West returning to the fold (WGC May 2026 report) as gold corrects toward support is a potential catalyst for a recovery bid in miners.",
+    "M&A activity: sector consolidation continues. Newmont, Barrick, Agnico Eagle have cash generation at current margins supporting buybacks and acquisitions. M&A can re-rate individual names."
   ],
 
   "supply_constraints": [
-    "Grade decline: gold ore grades declining 0.5-1.0% per year at major mines. Same rock processed, less gold output — requires more capex to maintain production.",
+    "Grade decline: gold ore grades declining 0.5-1.0% per year at major mines. Same rock processed, less gold output — requires more capex to maintain production levels.",
     "New mine scarcity: fewer than 10 economically viable new gold deposits of scale (>5Moz) discovered in the last decade. Discovery-to-production: 10-15 years.",
-    "Energy and labor cost inflation: AISC increased from ~$900/oz in 2020 to ~$1,280/oz (2025) to estimated ~$1,420/oz (2026 run-rate, +11% YoY from energy/labor). At current gold spot ($4,457), spread is ~$3,037/oz — the widest absolute margin in sector history. However, AISC inflation pace (~11% YoY) is outrunning historical norms; watch for acceleration if energy prices spike.",
-    "Water and permitting: increasingly difficult environmental permitting for new mines, particularly in Western jurisdictions."
+    "Iran energy shock — diesel cost acceleration: the Iran war/Hormuz disruption has pushed oil prices elevated (Brent ~$80-82). Diesel represents 15-25% of AISC at open-pit operations. Every 10% increase in crude oil adds ~$10/oz to AISC. At sustained oil >$100/bbl (tail risk), add $15-30/oz to guidance. Newmont raised 2026 AISC guidance materially — Q1 2026 actual was $1,029/oz (beat on favorable byproduct pricing) but full-year guidance raised to $1,680/oz. Barrick full-year AISC guidance $1,760-1,950/oz.",
+    "Water and permitting: increasingly difficult environmental permitting for new mines, particularly in Western jurisdictions. Not a near-term supply constraint but limits medium-term production growth.",
+    "Labor cost inflation: skilled mine workers in North America, Australia, West Africa command higher wages in the current inflationary environment. S&P Global 2026 Mine Cost Outlook projects global average AISC to DECLINE 5% vs 2025 as gold price rises 24% — but this was pre-Iran energy shock and may be optimistic."
   ],
 
   "technology_maturity": null,
 
   "cycle_position": {
-    "assessment": "Advanced bull market — re-rating substantially complete, monitoring for second leg",
-    "rationale": "Gold at $4,457/oz (June 2026), ATH $4,689 (January 2026). The sector has re-rated materially since this study was created — the 'valuation lag' thesis from the original draft has partially played out. At estimated AISC of ~$1,420/oz, miners are generating ~$3,037/oz cash margins — the widest in sector history in absolute terms. The Q2 2026 earnings cycle (July 2026) will confirm whether management delivered on production guidance at these exceptional gold prices. Current risk: the re-rating may be substantially priced in for large-caps (GDX) — the second leg of alpha, if any, is more likely in mid-cap producers or in junior miners (GDXJ) where re-rating is less complete. PENDING: GDX/GLD ratio requires live market data — run `uv run python -m catalyx.data.market_data` to get current ratio. If ratio > 0.30, the large-cap re-rating is near completion; if still < 0.25, valuation lag persists.",
-    "last_assessed": "2026-06-04"
+    "assessment": "Post-ATH correction — re-rating partially unwound, stress-testing the thesis",
+    "rationale": "Gold hit $5,589/oz on Jan 28, 2026 (ATH) then corrected to ~$4,080 by June 12 (-27%). GDX peaked at $117.18 (52-week high) then fell to $77.72 (-34% from peak), YTD -9.71% as of June 11. The miners entered an 'outperformance mode' in early 2026 — the GDX/GLD ratio broke out of a 15-year consolidation base signaling the end of structural miner underperformance — then the gold correction hit simultaneously with the Iran energy shock raising AISC fears. The current setup has two competing forces: (1) BULLS: AISC margins remain historically exceptional even at $4,080 (Newmont implied ~$2,400/oz spread at guidance midpoint), Q1 2026 earnings were RECORD (Newmont record free cash flow, Barrick beat all metrics), GDX/GLD ratio has reset from ATH outperformance. (2) BEARS: Newmont raised full-year AISC guidance to $1,680 (vs $1,029 Q1 actual — guidance conservatism or genuine cost acceleration?), Iran diesel risk is real, Western ETF outflows of $12B in March suggest institutional ambivalence at these price levels, gold is still -27% from ATH suggesting the structural bull may need to consolidate. The key falsification test: if Newmont and Barrick Q2 2026 earnings (July 2026) show AISC holding below $1,600/oz while gold is $4,000+, the spread thesis is confirmed and miners are a buy. If AISC breaks above $1,800/oz, the margin protection thesis weakens materially.",
+    "last_assessed": "2026-06-12"
   },
 
   "etf_analysis": [
@@ -45,13 +46,13 @@
       "exchange": "NYSE",
       "currency": "USD",
       "ter": 0.0051,
-      "aum_m_usd": 14100,
+      "aum_m_usd": 26200,
       "replication": "physical",
       "avg_spread_bps": 3,
       "top_10_concentration_pct": 0.58,
-      "characteristics": "Most liquid gold miners ETF globally. Large + mid-cap. Newmont, Barrick, Agnico Eagle, AngloGold, Gold Fields. Most institutional holdings.",
+      "characteristics": "Most liquid gold miners ETF globally. Large + mid-cap. AUM at $26.2B (June 2026, up materially from ~$14B — gold ATH drove inflows). Newmont, Barrick, Agnico Eagle, AngloGold, Gold Fields. 52-week range $50.32-$117.18; current ~$77.72. GDX returned 108% YoY at peak before correcting.",
       "recommendation_tier": 1,
-      "limitations": "Not UCITS. US-listed but global underlying. Top 3 (NEM, GOLD, AEM) = ~35% — moderate concentration. Includes some silver/copper byproduct miners."
+      "limitations": "Not UCITS. US-listed but global underlying. Top 3 (NEM, GOLD, AEM) = ~35% — moderate concentration. Includes some silver/copper byproduct miners. YTD -9.71% as of June 11 reflects the gold correction."
     },
     {
       "ticker": "GDXJ",
@@ -63,9 +64,9 @@
       "replication": "physical",
       "avg_spread_bps": 5,
       "top_10_concentration_pct": 0.42,
-      "characteristics": "Higher beta than GDX. 'Junior' label misleading — many mid-caps included. Use when you want more leverage to gold price in bull market.",
+      "characteristics": "Higher beta than GDX. 'Junior' label misleading — many mid-caps included. Mid-tier producer earnings growth was 63-133% YoY in recent quarters, suggesting less complete re-rating vs large-caps at the ATH. Use when you want more leverage in a recovery from current correction.",
       "recommendation_tier": 2,
-      "limitations": "More volatile. Less liquidity than GDX. In bear markets, juniors fall harder."
+      "limitations": "More volatile. In the current correction GDXJ has likely fallen harder than GDX. Less liquidity. In bear markets and energy shocks, smaller miners have less hedging and face sharper AISC margin compression."
     },
     {
       "ticker": "AUCO.L",
@@ -73,50 +74,57 @@
       "exchange": "LSE",
       "currency": "USD",
       "ter": 0.0065,
-      "aum_m_usd": 890,
+      "aum_m_usd": 393,
       "replication": "physical",
       "avg_spread_bps": 12,
-      "characteristics": "UCITS-compliant gold miners. Best UCITS option for EU investor. Similar exposure to GDX.",
+      "characteristics": "UCITS-compliant gold miners. Best UCITS option for EU/Spanish investor. Price ~$92.75 (June 10, 2026). AUM £393M (market cap basis — down from earlier peak as gold corrected). Similar exposure to GDX.",
       "recommendation_tier": 2,
-      "limitations": "AUM significantly lower than GDX. Wider spread. Acceptable for medium position sizes (<€100k)."
+      "limitations": "AUM significantly lower than GDX. Wider spread (12bps). FLAG: AUM below $500M — monitor for liquidity in thin markets. Acceptable for medium position sizes (<€100k). Preferred vehicle for Spanish investor given UCITS compliance."
     }
   ],
 
   "key_metrics_to_monitor": [
     {
-      "metric": "GDX/GLD ratio",
-      "unit": "ratio",
-      "source": "market_data computed",
-      "current": null,
-      "comment": "REQUIRES LIVE DATA: run `uv run python -m catalyx.data.market_data --tickers GDX GLD`. Prior value (2026-06-03): 0.214 — historically low miner underperformance. With gold at $4,457 and margins ~$3,037/oz, the ratio should have risen. If still below 0.25, re-rating opportunity remains. If above 0.30, large-cap re-rating largely complete."
-    },
-    {
       "metric": "Gold spot price (USD/oz)",
       "unit": "USD/oz",
       "source": "market_data",
-      "current": 4457,
-      "comment": "UPDATED 2026-06-04 via WebSearch. ATH $4,689 (January 2026). Consolidating at $4,450-4,520. JPMorgan target: $5,055 Q4 2026. Primary miner revenue driver: at $4,457 vs $1,420 AISC = $3,037/oz margin."
+      "current": 4080,
+      "comment": "UPDATED 2026-06-12. ATH $5,589 (Jan 28, 2026). Current -27% from ATH. JPMorgan consensus range $4,000-4,500 for H2 2026 — consolidation view. CBs still buying ~60t/month (Goldman). If gold holds $3,900 support, miners at current AISC levels remain profitable with exceptional margins."
     },
     {
       "metric": "Sector average AISC (USD/oz)",
       "unit": "USD/oz",
-      "source": "quarterly earnings aggregate",
-      "current": 1420,
-      "comment": "ESTIMATED 2026-06-04: $1,420/oz based on ~11% YoY cost inflation from $1,280 (2025). Verify from Newmont + Barrick Q1 2026 earnings. Spot - AISC = ~$3,037/oz cash margin — widest in history. Watch for cost acceleration above 15% YoY (energy or labor shock)."
-    },
-    {
-      "metric": "Newmont + Barrick combined production guidance vs actuals",
-      "unit": "Moz deviation",
       "source": "quarterly earnings",
-      "current": null,
-      "comment": "Gold miners have chronic history of missing production guidance. If they miss guidance at current gold prices, re-rating stalls. Key execution risk."
+      "current": 1700,
+      "comment": "UPDATED 2026-06-12. Newmont full-year 2026 guidance raised to $1,680/oz (Q1 actual $1,029/oz — large beat from byproduct credits, conservatism in guidance, or genuine H2 cost escalation from Iran diesel risk). Barrick full-year guidance $1,760-1,950/oz. Using $1,700 as sector midpoint estimate. At $4,080 gold: implied spread ~$2,380/oz — historically exceptional but narrowed from early-2026 peak. Watch Q2 actuals (July 2026) as the Iran diesel shock works through supply chains."
     },
     {
-      "metric": "WGC gold ETF flows (monthly, institutional)",
+      "metric": "GDX price and GDX/GLD ratio",
+      "unit": "ratio + price",
+      "source": "market_data",
+      "current": 0.19,
+      "comment": "UPDATED 2026-06-12. GDX $77.72, AUM $26.2B. 52-week range $50.32-$117.18. GDX/GLD ratio ESTIMATED at ~0.19 (GDX ~$77.72 / GLD ~$400+). The ratio broke out of a 15-year base in early 2026 signaling structural re-rating; the gold correction has partially unwound it. If ratio re-approaches 0.15-0.17 (prior historical lows), re-rating opportunity re-opens; if it holds >0.20 even through correction, the new structural regime is confirmed. Run `uv run python -m catalyx.data.market_data --tickers GDX GLD` to get precise current ratio."
+    },
+    {
+      "metric": "Newmont + Barrick Q2 AISC actuals vs guidance",
+      "unit": "USD/oz",
+      "source": "quarterly earnings (Q2 2026, ~July)",
+      "current": null,
+      "comment": "CRITICAL Q2 2026 FALSIFICATION TEST. Newmont guidance $1,680, Barrick $1,760-1,950. If Q2 actuals come in above $1,900 (Iran diesel shock showing through), AISC thesis breaks. If actuals beat guidance (as Q1 did), the guidance conservatism story holds. This is the most important single data point for the current miner thesis."
+    },
+    {
+      "metric": "WGC gold ETF flows (monthly, Western institutional)",
       "unit": "tonnes",
       "source": "WGC monthly report",
       "current": null,
-      "comment": "Institutional gold ETF demand is the swing factor between CB structural demand and short-term price. Strong inflows = risk-on for miners."
+      "comment": "March 2026 saw $12B Western outflows (record). May 2026 WGC data shows 'the West returns to the fold' — Western outflows reversing. Watch whether this materializes as a sustained re-entry bid on the correction. Asian inflows ($14B in Q1) remain robust."
+    },
+    {
+      "metric": "Oil/diesel price (Brent USD/bbl)",
+      "unit": "USD/bbl",
+      "source": "market_data",
+      "current": 81,
+      "comment": "UPDATED 2026-06-12. Iran/Hormuz ongoing. Brent ~$80-82. Key AISC driver: every $10 in crude = ~$10/oz AISC. If Brent >$100 (escalation), add $15-30/oz to current guidance. JPMorgan sees Hormuz reopening by September as inventories approach critical lows — watch this timeline."
     }
   ],
 
@@ -125,23 +133,23 @@
   ],
 
   "historical_catalyst_performance": {
-    "summary": "Gold miners have historically responded most strongly to: (1) Fed pivot signals — miners lead gold by 3-6 months as investors position before the rate cycle turns; (2) geopolitical crises — initial spike, but fades unless gold sustains the move; (3) CB buying acceleration — slower to price in, more sustained. The user has previously traded EU defense and gold successfully. The key lesson from gold: miners can lag physical gold by 12-18 months during structural re-ratings — the GDX/GLD ratio bottoms before GDX itself bottoms.",
+    "summary": "Gold miners have historically responded most strongly to: (1) Fed pivot signals — miners lead gold by 3-6 months as investors position before the rate cycle turns; (2) geopolitical crises — initial spike, but fades unless gold sustains the move; (3) CB buying acceleration — slower to price in, more sustained. Key lesson from the Jan-June 2026 sequence: miners CAN outperform gold on the way up (GDX +108% YoY at ATH) but the correction shows they also carry greater operational risk (AISC exposed to energy shocks). The GDX/GLD ratio broke out of a 15-year base in Q1 2026 — a historically significant structural signal — then partially reset. A correction holding the ratio above prior structural lows (~0.15-0.17) would confirm a new regime; a breakdown below those levels would negate the re-rating thesis.",
     "avg_response_to_fed_pivot_signal_pct": 0.18,
     "avg_response_to_cb_buying_acceleration_pct": 0.12,
     "avg_response_to_gold_10pct_move_pct": 0.22
   },
 
   "risks": [
-    "Management execution: gold miners have one of the worst track records of meeting production guidance. Cost overruns, operational accidents, grade reconciliation failures are endemic to the sector. This is the primary reason miners trade at a P/NAV discount to NAV even in bull markets.",
-    "Gold price reversal: if real rates spike unexpectedly or USD strengthens sharply, gold can correct 10-15% in weeks. Miners amplify this 2-3x.",
-    "Geopolitical: Barrick has exposure to Mali, Tanzania, Pakistan. Newmont in Ghana, Suriname. AngloGold in DRC. These are not headline risks until they become operational disruptions.",
-    "Cost inflation: energy (diesel for mining equipment), labor (skilled workers, community agreements), and input costs can erode AISC faster than gold price rises if inflationary environment continues.",
-    "Royalty/tax risk: governments in gold-producing countries periodically increase royalties or taxes when gold prices rise. Nevada, Ontario, South Africa have all done this.",
-    "M&A risk (both ways): large acquisitions can dilute per-share production metrics. Newmont's Newcrest acquisition was initially seen as value-destructive."
+    "Iran energy shock / diesel AISC acceleration: the Hormuz disruption has elevated oil/diesel, directly inflating mining operating costs. Diesel = 15-25% of AISC for open-pit operations. Sustained Brent >$100 adds $15-30/oz to AISC. Newmont raised 2026 full-year guidance to $1,680 (vs $1,358 in 2025). This is the most acute and novel near-term risk as of June 2026 — it wasn't present in the study's original thesis.",
+    "Gold price correction depth: gold is -27% from ATH ($5,589→$4,080). If gold breaks $3,500 support (a further ~14% decline), AISC spread narrows to ~$1,800/oz and juniors/high-cost operators face margin pressure. Catalysts for further decline: Warsh (new Fed chair) turns hawkish surprising market, Hormuz reopens and energy shock reverses rapidly, Western institutional re-engagement doesn't materialize.",
+    "Management execution and guidance credibility: Newmont Q1 AISC was $1,029/oz but full-year guidance is $1,680/oz — a $651/oz gap that requires explanation. If H2 shows cost escalation toward $2,000/oz (Iran shock + labor), the 'record margins' narrative inverts. Chronic history of miners missing production guidance.",
+    "Narrative crowding — the re-rating may be fully priced in large-caps: GDX returned 108% YoY at ATH. Even after correction (-34%), the sector is broadly covered and the 'miner re-rating' trade is now mainstream (FinancialContent, Canadian Mining Report, Seeking Alpha). The uncrowded opportunity of early 2025 no longer exists.",
+    "Geopolitical and jurisdictional risk: Barrick has exposure to Mali, Tanzania, Pakistan; Newmont in Ghana, Suriname; AngloGold in DRC. Iran war escalation does not directly threaten these jurisdictions but could trigger broader EM risk-off. Government royalty increases during high-gold-price periods are historically common (Nevada, Ontario, South Africa).",
+    "Western ETF outflow continuation: March 2026 saw $12B of Western ETF outflows. If real yields stay elevated and Western institutions don't re-enter, the physical gold price loses a buyer base, putting pressure on miners indirectly."
   ],
 
-  "narrative_maturity": "mainstream",
-  "analyst_narrative_score": 65,
-  "narrative_trend": "increasing",
-  "narrative_notes": "Gold miners are getting more attention as gold spot makes all-time highs, but mainstream coverage remains focused on physical gold ETF inflows and CB buying — not on the miner equity re-rating opportunity. The GDX/GLD ratio at historical lows is mentioned in specialist mining research but not in generalist macro coverage. The narrative gap is narrowing — gold miners are moving from 'overlooked' to 'noticed' but not yet 'crowded'."
+  "narrative_maturity": "crowded",
+  "analyst_narrative_score": 78,
+  "narrative_trend": "stable",
+  "narrative_notes": "Upgrading from 'mainstream' (prior study) to 'crowded' as of June 2026. The gold ATH at $5,589 triggered mainstream financial media saturation — FinancialContent, Canadian Mining Report, Seeking Alpha, Investing.com all running dedicated miner re-rating coverage. GDX ATH and 108% YoY return created a consensus narrative ('miners entering outperformance mode'). The WGC report being challenged/debated in financial media is a further crowding signal. The 'GDX/GLD ratio breakout' trade was explicitly named in mainstream outlets in March 2026, removing the specialist-only character of the thesis. Anchoring to scoring_weights.yaml: crowded → score_equiv 80; using 78 as the narrative has partially reset with the correction. Narrative_trend 'stable' — the saturation happened at ATH; correction has reduced but not eliminated the crowding. The thesis still has alpha potential but it requires a specific AISC + price spread call rather than a simple re-rating story."
 }

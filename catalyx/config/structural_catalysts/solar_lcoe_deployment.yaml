@@ -1,25 +1,47 @@
-# StructuralCatalyst: Solar LCOE Cost-Curve Decline + Policy-Driven Deployment Supercycle
-# schema_version: "1.3"
-# Update indicators: ind_01 quarterly (BloombergNEF LCOE), ind_02 monthly (EIA/SEIA additions),
-#   ind_03 quarterly (InfoLink/PV-Tech polysilicon), ind_04 quarterly (LevelTen PPA index).
-#
-# Double-counting guard vs struct_energy_transition_grid:
-#   struct_energy_transition_grid measures GRID BOTTLENECK severity (transformer lead times,
-#   EU grid investment, copper price). It treats solar as a SOURCE of grid load, not as the
-#   thesis target. This catalyst measures SOLAR DEPLOYMENT ECONOMICS: cost-curve decline,
-#   policy-driven installation volumes, and AI/datacenter PPA demand for new solar capacity.
-#   Zero indicator overlap. The two structurals are linked (compounding) but distinct.
-#   solar_energy feeds THIS structural only; grid_infrastructure_utilities feeds struct_energy_transition_grid only.
-#
-# Calibration anchor (Rule 3):
-#   Bootstrap score of 78 — similar to struct_cb_gold_accumulation (76.1 current).
-#   Rationale: Solar has strong underlying demand and cost-curve tailwinds comparable to
-#   CB gold accumulation, but the ITC cliff (July 4, 2026) introduces a near-term policy
-#   headwind that suppresses intensity below struct_ai_capex_supercycle (89.9) and well
-#   below struct_energy_transition_grid (95.0). The polysilicon oversupply crushes
-#   manufacturer margins (ind_03 bearish) while utility-scale additions are record-high
-#   (ind_02 bullish) — the bifurcated sector signal averages to a mid-high intensity.
-#   First update run of intensity_engine will replace this bootstrap with computed value.
+# StructuralCatalyst: Solar LCOE Cost-Curve Decline + Policy-Driven Deployment Supercycle
+
+# schema_version: "1.3"
+
+# Update indicators: ind_01 quarterly (BloombergNEF LCOE), ind_02 monthly (EIA/SEIA additions),
+
+#   ind_03 quarterly (InfoLink/PV-Tech polysilicon), ind_04 quarterly (LevelTen PPA index).
+
+#
+
+# Double-counting guard vs struct_energy_transition_grid:
+
+#   struct_energy_transition_grid measures GRID BOTTLENECK severity (transformer lead times,
+
+#   EU grid investment, copper price). It treats solar as a SOURCE of grid load, not as the
+
+#   thesis target. This catalyst measures SOLAR DEPLOYMENT ECONOMICS: cost-curve decline,
+
+#   policy-driven installation volumes, and AI/datacenter PPA demand for new solar capacity.
+
+#   Zero indicator overlap. The two structurals are linked (compounding) but distinct.
+
+#   solar_energy feeds THIS structural only; grid_infrastructure_utilities feeds struct_energy_transition_grid only.
+
+#
+
+# Calibration anchor (Rule 3):
+
+#   Bootstrap score of 78 — similar to struct_cb_gold_accumulation (76.1 current).
+
+#   Rationale: Solar has strong underlying demand and cost-curve tailwinds comparable to
+
+#   CB gold accumulation, but the ITC cliff (July 4, 2026) introduces a near-term policy
+
+#   headwind that suppresses intensity below struct_ai_capex_supercycle (89.9) and well
+
+#   below struct_energy_transition_grid (95.0). The polysilicon oversupply crushes
+
+#   manufacturer margins (ind_03 bearish) while utility-scale additions are record-high
+
+#   (ind_02 bullish) — the bifurcated sector signal averages to a mid-high intensity.
+
+#   First update run of intensity_engine will replace this bootstrap with computed value.
+
 
 id: struct_solar_lcoe_deployment
 type: structural
@@ -71,8 +93,8 @@ user_notes: >
   available as a clean UCITS ETF.
 
 intensity:
-  current_score: 71.1
-  last_updated: "2026-06-05"
+  current_score: 68.1
+  last_updated: "2026-06-12"
   computation_method: computed
   computation_note: >
     Bootstrap estimate at creation. Calibrated relative to struct_cb_gold_accumulation (76.1
@@ -81,13 +103,18 @@ intensity:
     that together suppress intensity below struct_ai_capex_supercycle (89.9). Run
     intensity_engine after first indicator updates to replace with computed value.
   history:
+  - period: '2026-06-12'
+    score: 68.1
+    note: 'Computed 2026-06-12: avg=71.08 trend=↓ (falling 1 period) (was 71.1)'
+    computation_method: computed
   - period: '2026-06-05'
     score: 71.1
     note: 'Computed 2026-06-05: avg=71.08 trend=→ (flat — insufficient history) (was 78.0)'
     computation_method: computed
   - period: "2026-Q2"
     score: 78
-    note: "Bootstrap at creation 2026-06-05. Anchor: similar to struct_cb_gold_accumulation (76.1). Bifurcated sector: utility-scale record additions (bullish) offset by ITC cliff and polysilicon oversupply (bearish)."
+    note: "Bootstrap at creation 2026-06-05. Anchor: similar to struct_cb_gold_accumulation (76.1). Bifurcated sector: utility-scale
+      record additions (bullish) offset by ITC cliff and polysilicon oversupply (bearish)."
     computation_method: bootstrap
 
 indicators:
@@ -269,8 +296,10 @@ deactivation_conditions:
 
 linked_event_catalyst_ids: []
 linked_structural_catalyst_ids:
-- struct_ai_capex_supercycle         # AI/hyperscaler PPA demand: the structural driver of gigawatt-scale solar procurement
-- struct_energy_transition_grid      # Solar deployment is the primary source of grid interconnection congestion; the two trends are compounding
+- struct_ai_capex_supercycle         # AI/hyperscaler PPA demand: the structural driver of gigawatt-scale solar procurement
+
+- struct_energy_transition_grid      # Solar deployment is the primary source of grid interconnection congestion; the two trends are compounding
+
 
 narrative_maturity: "mainstream"
 status: active

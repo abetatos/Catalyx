@@ -4,7 +4,7 @@
   "sector_id": "semiconductors_memory",
   "sector_label": "Semiconductors — Memory IDMs (SK Hynix, Micron, Samsung — DRAM/HBM/NAND)",
   "created_at": "2026-06-04",
-  "last_updated": "2026-06-04",
+  "last_updated": "2026-06-12",
   "study_type": "full",
 
   "taxonomy": {
@@ -15,47 +15,62 @@
       "semiconductors_equipment",
       "ai_infrastructure_data_centers"
     ],
-    "differentiation_note": "Memory IDMs (Integrated Device Manufacturers) both design AND manufacture commodity memory (DRAM, NAND, HBM) — a fundamentally different business model from the adjacent semiconductor sectors. It is distinct from semiconductors_design (Nvidia, AMD, Qualcomm): those fabless designers DRIVE memory demand and are the customers of memory IDMs, not competitors — putting Micron in the same bucket as Nvidia obscures the supply-chain structure. It is distinct from semiconductors_foundry (TSMC): foundries manufacture chips designed by others, whereas memory IDMs are vertically integrated but in a commodity product where margins are dictated by memory bit-pricing, not IP monetization or wafer-service fees — TSMC does not compete with Micron. The cycle driver is DRAM/NAND ASP + HBM supply allocation, not GPU compute demand directly, which gives memory a distinct (and historically more violent) boom-bust profile. Geographic concentration in South Korea (SK Hynix, Samsung) and the US (Micron) adds a Korea/Asia geopolitical and FX dimension not present in US-fabless plays. This is a genuinely separate investable cycle under the granularity principle, not a slice of semiconductors_design — confirmed by SK Hynix reaching a $1T market cap on HBM alone (May 2026)."
+    "differentiation_note": "Memory IDMs (Integrated Device Manufacturers) both design AND manufacture commodity memory (DRAM, NAND, HBM) — a fundamentally different business model from every adjacent semiconductor sector. It is distinct from semiconductors_design (Nvidia, AMD, Qualcomm): those fabless designers DRIVE memory demand and are the customers of memory IDMs — putting Micron in the same bucket as Nvidia obscures the supply-chain structure (they are customer and supplier, not peers). It is distinct from semiconductors_foundry (TSMC): foundries manufacture chips designed by others, whereas memory IDMs are vertically integrated but in a commodity product where margins are dictated by memory bit-pricing, not IP monetization or wafer-service fees. The cycle driver is DRAM/NAND ASP + HBM supply allocation, not GPU compute demand directly — which gives memory a distinct (and historically more violent) boom-bust profile. Geographic concentration in South Korea (SK Hynix, Samsung) and the US (Micron) adds a Korea/Asia geopolitical and FX dimension not present in US-fabless plays. The HBM structural dimension does NOT collapse this into ai_infrastructure_data_centers: HBM is a component supplied to GPU clusters, not the infrastructure that houses them — the revenue model, geographic exposure, and cycle timing are different. The thesis here is commodity memory pricing + HBM oligopoly allocation, not physical infrastructure construction."
   },
 
   "demand_drivers": [
-    "HBM (High Bandwidth Memory) is the structural driver: HBM demand grew +130% YoY in 2025 and is projected +70% YoY in 2026. Every Nvidia AI accelerator (H200, B200) and competing ASIC requires HBM3E/HBM4 stacks. HBM now consumes ~23% of total DRAM wafer capacity, crowding out conventional DRAM and tightening the entire memory market. Source: TrendForce / Counterpoint Q1-Q2 2026.",
-    "Contract-price supercycle: DRAM contract prices rose +90-95% QoQ in Q1 2026 and a further +58-63% in Q2 2026; NAND Flash +70-75% in Q2 — the largest increases in a decade. Some DDR4/DDR5/NAND SKUs have compounded >200% since early 2025. Bank of America frames 2026 as 'a supercycle similar to the 1990s boom,' forecasting global DRAM revenue +51%. Source: TrendForce, Tom's Hardware, BofA.",
-    "Structural supply deficit: DRAM 4.9% deficit, NAND 4.2%, HBM 5.1% — all the highest since 2011 (IDC/TrendForce). Demand is materially outpacing supply because makers are reallocating wafer capacity from consumer memory to high-margin AI memory (HBM, high-capacity DDR5).",
-    "Hyperscaler long-term supply agreements: cloud providers are signing multi-year LTAs that lock up memory-maker output years in advance at premium prices, guaranteeing priority access and structurally removing capacity from the merchant market — a demand floor independent of the spot cycle.",
-    "HBM4 transition (2026): HBM4 uses a new base-logic die architecture (1.5+ TB/s per stack, up to 48GB) requiring a fresh capex and qualification cycle. This resets the technology ladder and advantages the leader (SK Hynix) while opening share contests with Samsung and Micron — a new product cycle on top of the pricing cycle.",
-    "Oligopoly pricing discipline: three players control essentially all HBM (SK Hynix ~50-62%, Samsung ~17-40%, Micron ~5-21% depending on source/quarter) and the bulk of DRAM. Inelastic near-term supply ramp + disciplined capacity additions keep pricing power with the IDMs through 2026."
+    "HBM (High Bandwidth Memory) is the structural demand floor: HBM demand grew +130% YoY in 2025 and is projected +70% YoY in 2026. Every Nvidia AI accelerator (H200, B200, Blackwell) and competing custom ASIC requires HBM3E/HBM4 stacks. HBM now consumes ~23% of total DRAM wafer capacity, crowding out conventional DRAM and tightening the entire memory market. HBM3E prices raised ~20% by SK Hynix and Samsung for 2026 orders. Source: TrendForce / Counterpoint / Seeking Alpha.",
+    "Contract-price supercycle: DRAM contract prices rose +55-60% QoQ in Q1 2026, and SK Hynix/Samsung pitched server DRAM prices +60-70% to Google and Microsoft in Q1. NAND +33-38% in Q1 2026. TrendForce Q1 2026 price outlook was 'sharply upgraded' — the largest increases in a decade. Bank of America frames 2026 as 'a supercycle similar to the 1990s boom,' forecasting global DRAM revenue +51%. Source: TrendForce presscenter Jan-Feb 2026 / LinkedIn.",
+    "Structural supply deficit: DRAM ~4.9% deficit, NAND ~4.2%, HBM ~5.1% — highest since 2011 (IDC/TrendForce). Demand materially outpaces supply because makers are reallocating wafer capacity from consumer memory to high-margin AI memory (HBM, high-capacity DDR5). SK Hynix reported at Oct 2025 earnings that its HBM, DRAM, and NAND capacity is 'essentially sold out' for 2026.",
+    "Hyperscaler long-term supply agreements (LTAs): cloud providers are signing multi-year LTAs locking up memory-maker output at premium prices. Micron has pricing and volume agreements covering its ENTIRE calendar 2026 HBM supply — both HBM3E and HBM4. This demand floor is contract-locked, not spot-market dependent.",
+    "HBM4 transition creates new product cycle: HBM4 (1.5+ TB/s per stack, 48GB configurations) requires a new base-logic die architecture and fresh qualification cycle. Micron is sampling HBM4 36GB 12H in Q1 2026, with ramp planned for Q2 2026. This resets the technology ladder and advantages SK Hynix (leader) while opening market-share contest with Samsung (recovering) and Micron (gaining share). A new product cycle on top of the pricing cycle extends the structural thesis duration.",
+    "Oligopoly pricing discipline: three players control all HBM (SK Hynix ~50-55%, Samsung ~35-40%, Micron ~5-10% per Q1 2026 Counterpoint data) and the bulk of DRAM (Samsung 38%, SK Hynix 29% total DRAM Q1 2026). Inelastic near-term supply ramp + disciplined capacity additions keep pricing power with the IDMs. Collective capex: SK Hynix + Samsung + Micron spending >$58B in 2026."
   ],
 
   "supply_constraints": [
-    "New fab capacity is unlikely to come online in volume before late 2027 or 2028 — memory fabs take 2-3 years and ~$15-20B to build, so the 2026 deficit cannot be resolved by supply within the thesis horizon. Source: IDC.",
-    "Wafer cannibalization: HBM is wafer-inefficient (a given HBM bit consumes ~3x the wafer area of standard DRAM), so allocating wafers to HBM mechanically shrinks conventional DRAM supply — the shortage is self-reinforcing across product lines.",
-    "2026 supply growth below historical norms: IDC expects DRAM bit-supply growth ~16% YoY and NAND ~17% YoY in 2026, well under demand growth — disciplined capex rather than the historical over-build response.",
-    "HBM qualification moat: passing hyperscaler/Nvidia qualification for HBM3E/HBM4 takes quarters; Micron and Samsung cannot instantly close SK Hynix's lead, limiting the competitive supply response in the near term.",
-    "Equipment lead times: advanced DRAM (EUV-based 1c node) and HBM TSV/stacking tooling has extended lead times, constraining how fast even committed capacity can ramp."
+    "New fab capacity not online in volume before 2027-2028: memory fabs take 2-3 years and $15-20B to build. Micron raised FY2026 capex guidance to above $25B (majority cleanroom/facility). SK Hynix maintaining CAPEX at mid-30% of sales (3-year moving average). The 2026 deficit cannot be resolved by supply within the thesis horizon.",
+    "Wafer cannibalization is self-reinforcing: HBM is wafer-inefficient (~3x wafer area per bit vs. standard DRAM), so allocating wafers to HBM mechanically shrinks conventional DRAM supply — the shortage across all memory product lines is structurally self-reinforcing as long as AI demand stays at current levels.",
+    "HBM qualification moat prevents fast competitive response: passing hyperscaler/Nvidia qualification for HBM3E/HBM4 takes quarters. Micron cannot instantly close SK Hynix's share lead; Samsung is recovering from yield issues. Near-term competitive supply response is limited by qualification timelines, not just fab capacity.",
+    "2026 supply growth below historical norms: IDC expects DRAM bit-supply growth ~16% YoY and NAND ~17% YoY in 2026 — well below demand growth, consistent with disciplined capex rather than the historical over-build response that kills cycles.",
+    "Equipment lead times for advanced DRAM: EUV-based 1c-node DRAM and HBM TSV/stacking tooling has extended lead times — constraining how fast even committed capacity can ramp, even post-capex authorization."
   ],
 
   "cycle_position": {
-    "assessment": "Mid-to-late expansion: fundamentals (pricing, shortage) are still tightening hard, but equities have already re-rated violently (SK Hynix +230% YTD, Micron +226% YTD) — the easy money is made, and the dominant forward risk is the eventual cyclical roll-over, not a fundamental miss in 2026.",
-    "rationale": "Memory is the most cyclical sub-sector in semiconductors — historically a brutal boom-bust (2017-18 boom → 2019 bust; 2021 boom → 2022-23 bust with deep losses and below-cash-cost pricing). The 2026 setup is fundamentally one of the strongest ever: deficits at 2011 highs, contract prices up 90%+ then 60%+ in consecutive quarters, supply locked until 2027-28, BofA invoking the 1990s supercycle. But two things mark this as mid-to-LATE rather than early: (1) the equity re-rating has largely happened — both SK Hynix and Micron are in the $1T club and up >200% YTD, so the market already prices a strong cycle; (2) the DRAM ETF became the fastest-launching ETF in history ($6.5B in 27 days, $13.88B AUM), the canonical late-cycle retail/crowding signal. The fundamental peak likely lands in 2026-2027 as prices crest; the danger is that memory equities historically PEAK 1-2 quarters before the pricing peak and fall hard on the first sign of inventory normalization. Position implication: this is a momentum/late-cycle trade requiring a disciplined exit trigger on contract-price deceleration, not a buy-and-hold structural compounder.",
-    "last_assessed": "2026-06-04"
+    "assessment": "Mid-to-late expansion heading toward a peak: fundamentals (pricing, shortage) are still tightening hard in H1 2026, analysts project price peak in Q3-Q4 2026, and the equities have already re-rated violently (+90% for the DRAM ETF since April launch). The cycle is real but the easy money is made — position management (exit trigger discipline) now matters more than entry conviction.",
+    "rationale": "Memory is the most cyclical sub-sector in semiconductors — historically brutal boom-bust (2017-18 boom → 2019 bust, -60% equities; 2021 boom → 2022-23 bust, operating losses). The 2026 setup is fundamentally one of the strongest ever: deficits at 2011 highs, contract prices +60% QoQ then +70% in consecutive quarters, supply locked until 2027-28, BofA invoking the 1990s supercycle. BUT three things mark this as mid-to-LATE: (1) TrendForce consensus now projects Q3-Q4 2026 as the price PEAK, with Q1-Q2 2027 deceleration expected (base case 60% probability). (2) The equity re-rating has largely happened — the DRAM ETF is up ~90% since April 2026 launch, SK Hynix and Micron are both in the $1T market cap club, so the market already prices a strong cycle. (3) The Broadcom capex scare (2026-06-05, cat_20260605_ai_capex_peak_scare) was a warning shot: it contradicts struct_ai_capex_supercycle at the 'rate of acceleration' level (not deactivation), and memory equities historically peak 1-2 quarters BEFORE the pricing peak, on the first hint of inventory normalization. The AI-capex-scare-induced sell-off specifically hit the semiconductor + memory complex (-2.9% info tech on 2026-06-05). The HBM structural leg provides a longer runway than prior pure-DRAM cycles — but it does not repeal cyclicality. The correct positioning is momentum/late-cycle with a hard, pre-committed exit trigger on the first quarter of contract-price deceleration toward flat. Holding past that signal means taking the full -40% to -60% drawdown that every prior memory cycle inflicted at the turn.",
+    "last_assessed": "2026-06-12"
   },
 
   "etf_analysis": [
     {
       "ticker": "DRAM",
       "name": "Roundhill Memory ETF",
-      "exchange": "NASDAQ",
+      "exchange": "CBOE / NASDAQ",
       "currency": "USD",
       "ter": 0.0065,
-      "aum_m_usd": 13880,
+      "aum_m_usd": 15570,
       "replication": "physical",
       "avg_spread_bps": null,
       "avg_daily_volume_m_usd": null,
       "top_10_concentration_pct": 75,
-      "characteristics": "The only pure-play memory ETF (ticker DRAM, corrected from the gap proposal's inferred 'MEMU'). ~75% in the three memory IDMs (SK Hynix, Samsung, Micron) plus NAND/storage names (Kioxia, Sandisk, Seagate, Western Digital). Launched 2026-04-02; fastest ETF launch in history ($6.5B in 27 trading days), AUM $13.88B by early June 2026, TER 0.65%. Captures the full memory cycle in one ticker including the otherwise hard-to-access Korean names (SK Hynix, Samsung).",
+      "characteristics": "The only pure-play memory ETF in existence. Ticker DRAM. ~75% in SK Hynix + Samsung + Micron; also Kioxia, Sandisk, Seagate, WDC. Launched 2026-04-02 — fastest ETF launch in history ($6.5B in 27 trading days). AUM $15.57B as of June 2026 (up from $13.88B at study initiation — still growing). NAV $58.16 (+16.33% in the past month, +90% since April launch). Captures the full memory cycle including otherwise hard-to-access Korean names (SK Hynix, Samsung).",
       "recommendation_tier": 3,
-      "limitations": "⚠ ACCESS BLOCKER for a Spanish investor: US-domiciled, NON-UCITS — generally not purchasable by EU retail under PRIIPs/KID rules (no EU KID). No UCITS pure-play memory ETF exists yet. Also: only ~2 months of track record; AUM exploded on the same retail enthusiasm that marks late-cycle crowding; holds Korean equities with KRW/USD FX and Korea geopolitical exposure. Tier 3 until a UCITS wrapper exists or the user confirms broker access to US-listed ETFs."
+      "limitations": "⚠ CRITICAL ACCESS BLOCKER for a Spanish investor: US-domiciled, NON-UCITS — generally NOT purchasable by EU retail under PRIIPs/KID rules (no EU KID). No UCITS pure-play memory ETF exists. Also: only ~2 months of track record; +90% gain since launch means entering now is late-cycle, not early; AUM explosion on retail enthusiasm is the canonical late-cycle crowding signal. Korean equities carry KRW/USD FX exposure and Korea geopolitical risk. Tier 3 until a UCITS wrapper exists or the user confirms broker access to US-listed ETFs. The +90% gain since April DOES NOT mean the thesis is over — HBM structural + LTAs support continuation — but risk/reward at current levels requires strict exit discipline."
+    },
+    {
+      "ticker": "SEMI.L",
+      "name": "iShares MSCI Global Semiconductors UCITS ETF",
+      "exchange": "LSE",
+      "currency": "USD",
+      "ter": 0.0035,
+      "aum_m_usd": 4250,
+      "replication": "physical",
+      "avg_spread_bps": 8,
+      "avg_daily_volume_m_usd": null,
+      "top_10_concentration_pct": null,
+      "characteristics": "Best UCITS-accessible vehicle with meaningful memory exposure: being a GLOBAL (not US-only) semis ETF, it includes SK Hynix, Samsung, and Micron alongside TSMC and the designers. UCITS-compliant, accessible via standard EU brokers. Total cross-listing AUM ~$4.25B (confirmed Jun 2026 WebSearch; LSE line alone ~$1.4B — share-class ambiguity, reconfirm). Spread ~8bps. The pragmatic answer for a Spanish investor who cannot access DRAM.",
+      "recommendation_tier": 2,
+      "limitations": "Memory is only a partial weight (estimated single-digit to low-teens %) inside a diversified global semis basket — it dilutes the memory-cycle alpha heavily. The current portfolio also holds this ETF (movement for €500 MSCI World Semis, SEMI.L). No clean UCITS pure-play memory ETF exists; SEMI.L is the least-bad UCITS route. Also: SEMI.L includes semiconductors_design exposure (Nvidia, Broadcom) which was specifically hit by the 2026-06-05 capex scare — the broader semis basket absorbs both the memory bull and the silicon deceleration simultaneously."
     },
     {
       "ticker": "SMH",
@@ -68,24 +83,9 @@
       "avg_spread_bps": 2,
       "avg_daily_volume_m_usd": null,
       "top_10_concentration_pct": null,
-      "characteristics": "Liquid, low-spread broad semis ETF. Micron ~5% weight provides only diluted memory exposure; SK Hynix and Samsung are absent (US-listing focus). Use for liquidity, not for pure memory exposure.",
+      "characteristics": "Liquid, low-spread broad semis ETF. Micron ~5% provides only diluted memory exposure; SK Hynix and Samsung are absent (US-listing focus). Use for liquidity and broad semis, not for memory cycle.",
       "recommendation_tier": 3,
-      "limitations": "NOT a memory play — Micron ~5% means ~95% of the fund is non-memory (heavily Nvidia/Broadcom). Also NOT UCITS. Only a proxy if the pure-play is inaccessible and the investor wants tangential exposure."
-    },
-    {
-      "ticker": "SEMI.L",
-      "name": "iShares MSCI Global Semiconductors UCITS ETF",
-      "exchange": "LSE",
-      "currency": "USD",
-      "ter": 0.0035,
-      "aum_m_usd": 2400,
-      "replication": "physical",
-      "avg_spread_bps": 8,
-      "avg_daily_volume_m_usd": null,
-      "top_10_concentration_pct": null,
-      "characteristics": "The best UCITS-accessible vehicle with meaningful memory exposure: being a GLOBAL (not US-only) semis ETF, it includes SK Hynix, Samsung, and Micron alongside TSMC and the designers. UCITS-compliant, EUR/USD-accessible via standard EU brokers, AUM $2.4B, spread ~8bps. The pragmatic answer for a Spanish investor who cannot buy DRAM.",
-      "recommendation_tier": 2,
-      "limitations": "Memory is only a partial weight (single-digit to low-teens %) inside a diversified global semis basket — it dilutes the memory-cycle alpha heavily. Captures the theme directionally, not purely. No clean UCITS pure-play memory ETF currently exists; SEMI.L is the least-bad UCITS route."
+      "limitations": "NOT a memory play — Micron ~5% means ~95% of the fund is non-memory (heavily Nvidia/Broadcom). Also NOT UCITS. Only a proxy if the pure-play is inaccessible and investor wants tangential exposure."
     },
     {
       "ticker": "EWY",
@@ -98,9 +98,9 @@
       "avg_spread_bps": null,
       "avg_daily_volume_m_usd": null,
       "top_10_concentration_pct": null,
-      "characteristics": "Indirect access to SK Hynix and Samsung (the two HBM leaders) via the Korea index, where Samsung + SK Hynix are very large weights. A way to reach the Korean memory champions that US-only ETFs exclude.",
+      "characteristics": "Indirect access to SK Hynix and Samsung (the two HBM leaders) via the Korea index, where Samsung + SK Hynix are very large weights. Reaches the Korean HBM leaders that US-only ETFs exclude.",
       "recommendation_tier": 3,
-      "limitations": "Diluted by the broad Korean equity market (financials, autos, etc.) and NOT UCITS. Adds full Korea macro/FX (KRW) and geopolitical (North Korea, China-export) exposure. Proxy of last resort."
+      "limitations": "Diluted by broad Korean equity market (financials, autos, etc.) and NOT UCITS. Adds full Korea macro/FX (KRW) and geopolitical (North Korea, China-export) exposure. Proxy of last resort."
     }
   ],
 
@@ -108,65 +108,66 @@
     {
       "metric": "DRAM contract price change QoQ",
       "unit": "% QoQ",
-      "source": "TrendForce monthly / quarterly DRAMeXchange",
-      "current": 0.60,
-      "comment": "+58-63% Q2 2026 after +90-95% Q1. THE single most important cycle signal. The exit trigger for any memory position is the FIRST quarter of deceleration toward flat/negative — memory equities historically peak 1-2 quarters before the price peak. Watch the second derivative, not the level."
-    },
-    {
-      "metric": "NAND Flash contract price change QoQ",
-      "unit": "% QoQ",
-      "source": "TrendForce",
-      "current": 0.72,
-      "comment": "+70-75% Q2 2026. Confirms the shortage is broad (not HBM-only). NAND is more commoditized and tends to roll over before DRAM — an early-warning leg of the cycle."
+      "source": "TrendForce monthly DRAMeXchange",
+      "current": "+55-60% Q1 2026 (server DRAM +60-70% for Google/Microsoft)",
+      "comment": "THE single most important cycle signal. TrendForce consensus: price PEAK expected Q3-Q4 2026, deceleration to flat/negative Q1-Q2 2027 (base case 60%). The EXIT TRIGGER for any memory position is the FIRST quarter showing deceleration toward 0% QoQ growth — memory equities historically peak 1-2 quarters before the price peak. Watch the second derivative, not the level. Check monthly TrendForce presscenter releases."
     },
     {
       "metric": "HBM demand growth YoY",
       "unit": "% YoY",
       "source": "TrendForce / Counterpoint HBM tracker",
-      "current": 0.70,
-      "comment": "+70% YoY projected 2026 (after +130% in 2025). The structural (vs. cyclical) core of the thesis — tied directly to AI accelerator shipments. Decelerating HBM growth would be the canary for the whole AI-memory cycle."
+      "current": "+70% YoY projected 2026 (after +130% in 2025)",
+      "comment": "The structural (vs. cyclical) core of the thesis — tied directly to AI accelerator shipments. HBM3E prices raised ~20% for 2026. HBM4 ramp in Q2 2026 opens a new demand leg. Decelerating HBM growth would be the canary for the whole AI-memory cycle. Separating HBM (structural AI demand) from conventional DRAM (cyclical PC/mobile) is critical: a DRAM consumer correction does NOT necessarily imply HBM deceleration."
     },
     {
-      "metric": "Memory supply/demand deficit (DRAM / NAND / HBM)",
+      "metric": "NAND Flash contract price change QoQ",
+      "unit": "% QoQ",
+      "source": "TrendForce",
+      "current": "+33-38% Q1 2026",
+      "comment": "NAND is more commoditized and tends to roll over before DRAM — early-warning leg of the cycle. +33-38% in Q1 is strong but below DRAM's +60-70%. NAND deceleration (toward flat QoQ) would be a leading indicator of the broader memory cycle turn before DRAM peaks."
+    },
+    {
+      "metric": "Memory supply/demand deficit (DRAM / HBM)",
       "unit": "% deficit",
       "source": "IDC / TrendForce supply-demand model",
-      "current": "DRAM -4.9% / NAND -4.2% / HBM -5.1%",
-      "comment": "Highest deficits since 2011. The deficit closing toward 0% (or flipping to surplus) is the structural sell signal. New fab supply not online until late 2027-2028, so a 2026 surplus would have to come from demand destruction (recession / AI capex cut)."
+      "current": "DRAM ~4.9% deficit / HBM ~5.1% deficit",
+      "comment": "Highest deficits since 2011. The deficit closing toward 0% (or flipping to surplus) is the structural sell signal. New fab supply not online until late 2027-2028, so a 2026 surplus would require demand destruction (recession / AI capex cut ≥30% YoY for two quarters). The Broadcom capex scare (cat_20260605_ai_capex_peak_scare) did not trigger this — actual capex guidance was not cut."
     },
     {
-      "metric": "SK Hynix / Micron forward P/E and EV/EBITDA",
-      "unit": "ratio",
-      "source": "Company filings / consensus",
-      "current": null,
-      "comment": "Memory valuations look cheap on trough-to-peak trailing earnings precisely AT the top — the classic value trap. Monitor forward (next-FY) multiples and Street EPS revisions; when forward EPS estimates stop rising, the multiple compression phase begins regardless of how 'cheap' trailing looks."
-    },
-    {
-      "metric": "Memory-maker inventory days + capex guidance",
-      "unit": "days / USD billion",
+      "metric": "Memory-maker capex guidance and inventory days",
+      "unit": "USD billion capex / days inventory",
       "source": "SK Hynix, Samsung, Micron quarterly earnings",
+      "current": "Total >$58B in 2026 (SK Hynix mid-30% of sales / Micron >$25B / Samsung remainder)",
+      "comment": "Rising IDM capex guidance + rising customer inventory days = the two precursors of every prior memory bust (over-build + demand digestion). Micron Q2 FY2026 posted record revenue. Watch for large greenfield DRAM capacity announcements — those seed the next downcycle even if current prices are still rising. LTA coverage (Micron: entire 2026 HBM supply locked) reduces the spot-cycle risk for the near term."
+    },
+    {
+      "metric": "AI capex scare follow-through: hyperscaler Q2 2026 guidance",
+      "unit": "qualitative / USD billion quarterly",
+      "source": "Microsoft, Google, Amazon, Meta Q2 2026 earnings (July 2026)",
       "current": null,
-      "comment": "Rising IDM capex guidance + rising customer inventory days = the two precursors of every prior memory bust (over-build + demand digestion). Watch for SK Hynix/Samsung announcing large greenfield DRAM capacity — that is the seed of the next downcycle."
+      "comment": "NEW metric (2026-06-12): the 2026-06-05 Broadcom capex scare registered as a 'contradicts' event but did NOT trigger deactivation (no actual capex cut). The test comes in July Q2 earnings: if hyperscalers CUT or PAUSE capex guidance, the HBM LTA floors may be renegotiated and the memory bull thesis is critically impaired. If they CONFIRM $600-725B for 2026 and raise 2027 guidance, the capex scare is confirmed as noise and the memory cycle extends. This is the highest-signal event in the next 60 days for this sector."
     }
   ],
 
   "active_catalyst_ids": [
-    "struct_ai_capex_supercycle"
+    "struct_ai_capex_supercycle",
+    "cat_20260605_ai_capex_peak_scare"
   ],
 
   "historical_catalyst_performance": {
-    "summary": "Memory is the textbook boom-bust semiconductor sub-sector, and history is the central risk lesson here. In the 2017-2018 DRAM boom, Micron ran from ~$11 to ~$64 (+480%) on an AI/server/mobile-driven shortage — then collapsed ~-60% into the 2019 bust as supply caught up and prices halved. The 2021 boom/2022-2023 bust repeated the pattern: memory makers swung to operating losses and below-cash-cost pricing in 2023 before the next recovery. The lesson: memory equities are a LEVERAGED play on the second derivative of contract prices, and they peak BEFORE the fundamental peak — typically 1-2 quarters ahead of the contract-price top, on the first hint of inventory normalization. The 2026 cycle is fundamentally stronger than any prior (HBM adds a structural, AI-tied demand leg that did not exist in 2017 or 2021, and supply discipline is far better), which can extend the run — but it does not repeal the cyclicality. The correct historical analog for positioning is NOT 'own it for years' but 'ride the momentum with a hard exit on the first contract-price deceleration.' SK Hynix +230% / Micron +226% YTD in 2026 already mirrors the magnitude of prior full-cycle moves, suggesting the position is closer to the late innings than the early ones."
+    "summary": "Memory is the textbook boom-bust semiconductor sub-sector, and history is the dominant risk lesson. In the 2017-2018 DRAM boom, Micron ran from ~$11 to ~$64 (+480%) on an AI/server/mobile-driven shortage — then collapsed ~-60% into the 2019 bust as supply caught up and prices halved. The 2021 boom / 2022-2023 bust repeated: memory makers swung to operating losses and below-cash-cost pricing in 2023 before the next recovery. The lesson: memory equities are a LEVERAGED play on the second derivative of contract prices, and they peak BEFORE the fundamental peak — typically 1-2 quarters ahead of the contract-price top, on the first hint of inventory normalization. The 2026 cycle is fundamentally stronger than any prior (HBM adds a structural, AI-tied demand leg that did not exist in 2017 or 2021, and LTA coverage removes some of the spot-market volatility), which can extend the run — but it does not repeal the cyclicality. The correct historical analog for positioning is NOT 'own it for years' but 'ride the momentum with a hard exit on the first contract-price deceleration.' The DRAM ETF +90% in 2 months (April-June 2026) mirrors the magnitude of the 2017-2018 full-cycle equity move, suggesting the position is in the later innings. The June 2026-05 Broadcom capex scare specifically hit the memory complex — a preview of the severity of the eventual turn when it arrives from a real catalyst (actual capex cut or inventory normalization) rather than a sentiment shock."
   },
 
   "risks": [
-    "Cyclical roll-over (the dominant risk): memory is brutally mean-reverting. The first quarter of DRAM/NAND contract-price deceleration historically triggers a -40% to -60% equity drawdown, and it arrives BEFORE the fundamentals visibly weaken. With stocks already +200%+ YTD, the asymmetry has shifted: limited remaining upside vs. a large, fast downside when the cycle turns.",
-    "Crowding / late-cycle retail signal: the DRAM ETF is the fastest-launching ETF in history ($6.5B in 27 days, $13.88B AUM) and BofA is publicly calling a '1990s supercycle.' Mainstream/retail saturation of a cyclical theme is the canonical contrarian warning — exactly the conditions under which a sharp de-grossing does the most damage.",
-    "Supply response / capex over-build: the cure for high prices is high prices. SK Hynix, Samsung, and Micron announcing large new DRAM/HBM capacity (even with late-2027/2028 delivery) would be the market's signal that the deficit has a sunset — memory equities discount future supply long before it ships.",
-    "AI-capex dependency: the structural HBM leg rests entirely on hyperscaler AI accelerator demand (the same $725B capex base as the rest of the book). An AI capex cut would hit memory harder than designers, because memory carries both the cyclical commodity beta AND the AI beta simultaneously.",
-    "Access / UCITS constraint for a Spanish investor: the only pure-play vehicle (DRAM) is US-domiciled and non-UCITS, generally not buyable by EU retail under PRIIPs. The investable UCITS routes (SEMI.L global semis, EWY Korea) dilute the memory exposure heavily, so the thesis is hard to express cleanly in EUR without single-stock (Micron ADR) or broker-specific non-UCITS access.",
-    "Geographic / geopolitical concentration: ~75-80% of HBM and a majority of DRAM comes from two South Korean firms. Any Korea-specific shock (China export controls on Korean chip tools, North Korea escalation, KRW volatility) or US-Korea trade friction hits the sector disproportionately versus a US-fabless basket."
+    "Cyclical roll-over is the dominant risk — and it arrives before the fundamentals visibly weaken: the first quarter of DRAM/NAND contract-price deceleration historically triggers a -40% to -60% equity drawdown. With TrendForce projecting the price peak in Q3-Q4 2026 and consensus expecting deceleration by Q1-Q2 2027, the clock is ticking. The DRAM ETF +90% since April means position management is more important than entry thesis.",
+    "AI capex cut dependency: the HBM structural leg rests entirely on hyperscaler AI accelerator demand (the same $600-725B capex base driving the rest of the book). An actual guidance cut — as opposed to the June 2026-05 scare which was NOT a cut — would hit memory harder than semiconductors_design, because memory carries both the cyclical commodity beta AND the AI beta simultaneously. The July 2026 Q2 earnings season is the next binary event.",
+    "Crowding / late-cycle retail saturation: the DRAM ETF is the fastest-launching ETF in history ($15.57B AUM in ~2 months) and BofA is publicly calling a '1990s supercycle.' These are textbook contrarian crowding signals. A de-grossing event (risk-off, rotation to SpaceX IPO, macro surprise) would be amplified by the extreme positioning.",
+    "Supply response / capex over-build seeding next cycle: SK Hynix + Samsung + Micron collectively spending >$58B in 2026 capex. Even with 2027-2028 delivery timelines, the market will discount the future supply long before it ships. Any large greenfield DRAM fab announcement would reset the cycle clock — even while current prices are still rising.",
+    "UCITS access constraint: the pure-play vehicle (DRAM, $15.57B AUM) is non-UCITS and generally inaccessible for EU retail. SEMI.L (held by the user) provides diluted memory exposure inside a broad global semis basket. No UCITS pure-play memory ETF exists; the thesis cannot be expressed cleanly in EUR without broker-confirmed non-UCITS access or single-stock (Micron ADR).",
+    "Geographic / geopolitical concentration in South Korea: ~50-55% of HBM and a majority of DRAM premium capacity comes from SK Hynix. Any Korea-specific shock (China tool export controls targeting Korean fabs, North Korea escalation, KRW volatility, US-Korea trade friction on semiconductors) hits this sector disproportionately relative to a US-fabless basket."
   ],
 
   "narrative_maturity": "crowded",
   "narrative_trend": "increasing",
-  "narrative_notes": "Scored 80 = 'crowded' per scoring_weights.yaml narrative_maturity_levels.score_equiv. Justification: (1) the memory shortage / 'supercycle' is daily mainstream financial-press coverage with named institutional sponsorship — Bank of America explicitly calling it a '1990s-style supercycle' with DRAM revenue +51%; (2) the pure-play ETF (DRAM) became the fastest-launching ETF in history and gathered $13.88B in two months — textbook ETF-proliferation/retail-inflow crowding signal; (3) the two leaders (SK Hynix, Micron) are both up >220% YTD and in the $1T market-cap club, i.e. the re-rating is broadly recognized, not early/contrarian. It is scored 'crowded' rather than 'exhausted' (95) because fundamentals are still actively confirming and accelerating (contract prices +60% QoQ, deficits at 2011 highs, HBM +70% YoY) — earnings have not yet rolled over, which is what 'exhausted' would require. narrative_trend = increasing: coverage and inflows are still rising into June 2026. The investment consequence of a 'crowded, increasing' read on a deeply cyclical sector: the remaining return is momentum/late-cycle in character (real but fragile), the alpha from being early is gone, and risk management (a hard exit on the first contract-price deceleration) matters more than upside capture."
+  "narrative_notes": "Maintained at 'crowded', narrative_trend maintained 'increasing'. Justification as of 2026-06-12: (1) the DRAM ETF ($15.57B AUM, fastest launch in history) is now the most concrete ETF-proliferation/retail-inflow crowding signal in the entire book; (2) Bank of America is actively publishing '1990s supercycle' framework pieces — institutional naming of a supercycle IS the mainstream-to-crowded transition; (3) SK Hynix and Micron are both in the $1T market cap club with +200%+ trailing YTD performance; (4) TrendForce is now publishing articles framing the Q3-Q4 2026 price peak as the consensus call — when the TIMING of the peak becomes consensus media coverage, the narrative has reached the 'crowded' ceiling. It is NOT yet 'exhausted' (95) because: earnings are still actively confirming (Micron record revenue, HBM LTAs intact, SK Hynix sold out), contract prices are still rising sharply, and the HBM structural demand leg provides a more durable floor than prior commodity DRAM cycles. Narrative_trend = increasing: the DRAM ETF AUM grew from $13.88B to $15.57B in the two weeks since study initiation, and the 'AI capex scare' narrative (cat_20260605_ai_capex_peak_scare) has increased rather than decreased media scrutiny of the memory cycle. The investment consequence of 'crowded, increasing' on a deeply cyclical sector: remaining return is real but fragile, all alpha from being early is gone, and exit discipline (hard trigger on first contract-price deceleration) now dominates the risk management calculus."
 }
