@@ -1,6 +1,6 @@
 [project]
 name = "catalyx"
-version = "0.5.0"
+version = "0.5.1"
 description = "Macro catalyst → sector ETF movement platform"
 requires-python = ">=3.12"
 dependencies = [

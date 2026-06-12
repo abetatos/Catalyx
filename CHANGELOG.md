@@ -9,6 +9,28 @@
 
 ---
 
+## v0.5.1 — 2026-06-12 — Scan as macro front door + scheduled review run
+
+**Patch release.** Backward-compatible: a skill-doc refactor plus the 2026-06-12 scheduled pipeline
+run committed (data + lake), no schema or contract change.
+
+- **`catalyx-scan` reframed as the "macro front door."** Added **Step C0 — Macro & Big-Economy
+  Context** (generic Fed/CPI/DXY + Trump / US administration / Europe / China framings, each its own
+  query — broad framings surface more ideas) and turned **Pass 2** into **Classification + Refresh**:
+  it now also refreshes the state of every already-registered catalyst (strengthen / weaken /
+  invalidation Δ), not just registers new events. `/catalyx-review` (scheduled) now runs the scan
+  FIRST and **consumes its output** instead of repeating the macro searches; `event:<id>` mode does
+  a lightweight single-catalyst refresh. Threaded through `CLAUDE.md` (pipeline order, skill table,
+  review checklist) + `catalyx-review.md` (Steps 0/1 merged).
+- **Scheduled review 2026-06-12 committed** (the run itself): 7 stale sector studies refreshed
+  (copper, gold_physical, gold_miners, grid, ai_infrastructure, semiconductors_memory,
+  eu_defense_prime_contractors), all 9 structural intensities recomputed from indicators and written
+  back, run `run_20260612_151007` recorded to the lake (sector_snapshot, rank_event, momentum/flow
+  snapshots, dislocation/entry_timing/exit_signal, 4 model portfolios + NAV, real-book NAV), and the
+  heatmap + consolidated review reports registered. Macro backdrop: Iran/Hormuz energy shock (CPI
+  4.2%), gold −25% from its ATH (CB buying intact), AI-capex digestion; space supercycle took the
+  top of the ranking. Real book +0.92% vs SPY −2.55% over the 5d window.
+
 ## v0.5.0 — 2026-06-08 — Sell signals, Decision Journal, technical study & catalyst lineage
 
 **Feature release.** The exit side of the platform, a forward-recorded experiment ledger, a deep
