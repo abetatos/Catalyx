@@ -33,9 +33,16 @@ pipeline with money, **which parts are resilient and which are fragile**.
 
 ## Index
 
-| Date | Experiment | Event | Headline finding |
+| Date | Experiment | Event | Status / headline finding |
 |---|---|---|---|
-| 2026-06-05 | [exp_2026-06-05_ai_selloff](exp_2026-06-05_ai_selloff.md) | AI/semiconductor selloff (S&P −2.64%, Nasdaq −4.18%) triggered by Broadcom AI-capex guidance miss + hot jobs report | Scoring layer **STABLE** & directionally correct, but the **momentum strategy is BLIND** to a contradicting catalyst and the **momentum data layer is FRAGILE** (78% stale on the event day). All 4 strategies underperform SPY by ~2.8pts — diversification is illusory. |
+| 2026-06-15 | [exp_2026-06-15_hormuz_deescalation](exp_2026-06-15_hormuz_deescalation.md) | US-Iran de-escalation deal (14-Jun) to reopen the Strait of Hormuz; Brent −4.7% | **🟡 OPEN — awaiting market open.** Pre-open directional prediction logged with NO look-ahead: oil/LNG/tankers DOWN, broad market + oil-importers (India) risk-ON. **Grade at the next `/catalyx-review scheduled`** (or first market open after 15-Jun) by appending a Findings section. |
+| 2026-06-05 | [exp_2026-06-05_ai_selloff](exp_2026-06-05_ai_selloff.md) | AI/semiconductor selloff (S&P −2.64%, Nasdaq −4.18%) triggered by Broadcom AI-capex guidance miss + hot jobs report | ✅ Closed. Scoring layer **STABLE** & directionally correct, but the **momentum strategy is BLIND** to a contradicting catalyst and the **momentum data layer is FRAGILE** (78% stale on the event day). All 4 strategies underperform SPY by ~2.8pts — diversification is illusory. |
+
+> **Open experiments** (🟡) carry a falsifiable prediction with no result yet. They are graded
+> when the data arrives — for a market-direction call, at the **first `/catalyx-review scheduled`
+> after the relevant market open**. The review's scan step (Step 0/1) already refreshes the
+> driving catalyst's state; grading the open prediction belongs right after, before the heatmap,
+> so the verdict can inform that run's ranking read.
 
 ## Design notes spawned by experiments
 

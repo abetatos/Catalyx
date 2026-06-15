@@ -1,0 +1,40 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20260614_hormuz_deescalation_deal",
+  "schema_version": "1.2",
+  "type": "event",
+  "created_at": "2026-06-15T00:00:00Z",
+  "detected_at": "2026-06-15T00:00:00Z",
+  "event_date": "2026-06-14T00:00:00Z",
+  "source": {
+    "type": "news_article",
+    "url": "https://www.investing.com/news/commodities-news/oil-slips-over-4-after-us-iran-reach-peace-deal-reopen-strait-of-hormuz-4741118",
+    "publication": "Reuters / Investing.com / CNBC",
+    "published_at": "2026-06-14T00:00:00Z"
+  },
+  "catalyst_type": "geopolitical",
+  "catalyst_subtype": "ceasefire_deescalation",
+  "description": "US-Iran initial deal (2026-06-14) to end the war and reopen the Strait of Hormuz: a Memorandum of Understanding is to be signed in Switzerland on 2026-06-19, followed by a 60-day ceasefire window for a more expansive agreement (lift the naval blockade, dismantle Iran's nuclear program, remove enriched uranium). Trump-administration officials put ~80% odds on signing. This is the OPPOSITE-SIGN reversal of cat_20260228_hormuz_closure: bearish for oil/LNG/tankers (the war premium unwinds) and risk-on for the broad market (geopolitical risk premium fades, lower energy costs / lower inflation impulse). Friday reaction: Brent -4.7% to $83.25, WTI -5.1% to $80.53 (lowest since 2026-03-10); oil ~-6% on the week but still +20% above pre-conflict levels. Normalization is gradual even after signing — Hormuz mine-clearing, restart of idled production, facility repairs (CBA: flows only need to reach 60-70% of pre-war levels to restore oversupply expectations).",
+  "geography": ["IRN", "ISR", "USA", "MENA", "GLOBAL"],
+  "magnitude": "high",
+  "novelty_score": 40,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": true,
+    "nov_02_new_sector": false,
+    "nov_03_new_source": false,
+    "nov_04_changes_rate": true,
+    "nov_05_consensus_surprise_gt50": false
+  },
+  "strength_score": 68,
+  "consensus_surprise": 0.3,
+  "is_priced_in_estimate": 0.50,
+  "relation_to_structural": "contradicts",
+  "decay_halflife_days": 30,
+  "related_catalyst_ids": ["cat_20260228_hormuz_closure"],
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": null,
+  "user_rank": null,
+  "user_notes": "Cara revertida de cat_20260228_hormuz_closure. is_priced_in 0.50: el viernes ya descontó parte (oil -5%) pero la apertura del lunes 15-jun + la firma del 19-jun + la normalización gradual del tránsito siguen pendientes. consensus_surprise 0.3: estaba telegrafiado (semanas de conversaciones, ~80% de probabilidad), no fue sorpresa. relation_to_structural=contradicts: contradice la tesis del shock de oferta energética encarnada por el cierre de Ormuz. NOTA de modelización: el motor catalyst_scorer NO agrega eventos contradicts 'directos' (no hay un estructural 'shock-de-oferta-oil' que amortiguar). La caída del catalyst_alignment en energía se produce sola por el DECAY natural de cat_20260228_hormuz_closure (ya en ~27 hoy) y se completará cuando ese evento pase a status: invalidated al confirmarse la reapertura del estrecho. Este evento queda registrado como el driver macro de la cara revertida (bajista-oil / risk-on). RIESGO de invalidación de este catalizador: que el acuerdo se caiga antes del 19-jun (ya hubo falsos arranques de des-escalada — abr/may) → re-escalada y oil al alza. Experimento de predicción pre-apertura registrado en experiments/exp_2026-06-15_hormuz_deescalation.md.",
+  "tags": ["geopolitical", "deescalation", "ceasefire", "Iran", "Hormuz", "oil", "lng", "tanker", "risk_on", "reversion", "macro"]
+}
