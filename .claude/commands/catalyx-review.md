@@ -56,6 +56,43 @@ Step 12:  Taxonomy Gap Review → contextualize each pending proposal, then ASK 
 
 ---
 
+## EXECUTION MODEL — keep the main conversation short (delegate to subagents)
+
+A full review does bulk WebSearch + reads dozens of files. If it all runs in the main thread the
+context balloons and every later step gets more expensive. **Rule: the main conversation is a thin
+orchestrator that holds only compact digests + runs the user-facing decisions. Every bulk-WebSearch
+or many-file phase runs in a SUBAGENT that returns only a structured digest** (the summary tables in
+each step's Output). The subagent writes the JSON/report files directly (the file IS the
+registration); the main thread never ingests the raw intermediate data.
+
+| Step | Where | Why |
+|---|---|---|
+| 0/1 Scan | **SUBAGENT** (`general-purpose`, follows `catalyx-scan.md`) | ~30 WebSearches — return only C0 bullets + refresh deltas + new gaps/events |
+| 1.5 Freshness/lifecycle | MAIN (or subagent) | deterministic CLI + status writes; digest is small |
+| 2 Catalyst updates | MAIN | few targeted `/catalyx-update` calls flagged by the scan |
+| 3 Sector studies | **SUBAGENTS** (one per few sectors) | already delegated — each returns nothing to main but the written path |
+| 4/5/5b Dashboard+heatmap+portfolio+NAV | **SUBAGENT** (or a post-run hook) | deterministic Python CLIs; return the ranking digest + "beat SPY?" line |
+| 5c Opportunities/regime | **SUBAGENT** | runs the 4 scorer CLIs + WebSearch to rule out hidden causes → returns the 4 tables |
+| 6 Open-position reviews | **SUBAGENT** | WebSearch per assumption → returns one row/position (recommendation only) |
+| 7 Exposure · 8 Tax | MAIN | one CLI each, tiny output |
+| **9 Position-open recs** | **MAIN** | uses **AskUserQuestion** — subagents cannot ask the user |
+| 11 Watch triggers | **SUBAGENT** | WebSearch per watch sector → returns fired/approaching/none |
+| **12 Taxonomy gap review** | **MAIN** | uses **AskUserQuestion** per proposal |
+
+**How to delegate a phase:** spawn the subagent with the step's instructions (or "follow
+`.claude/commands/<skill>.md`"), tell it to Write any files and **return ONLY the step's Output
+table(s)** — never the raw searches/file contents. Run independent phases (e.g. Step 6 position
+reviews and Step 11 watch triggers) in parallel. Only the digests come back to main, which then
+assembles the report and runs the two AskUserQuestion steps (9, 12).
+
+**Complementary — hooks for deterministic chains.** The pure-Python chains that always run the same
+way (e.g. after a run is recorded: `portfolio build-all` → `nav_engine` model/live/real) are good
+candidates for a `settings.json` hook so they fire outside the conversation entirely, rather than as
+skill-narrated Bash. Those never need reasoning, so moving them to a hook removes them from context
+with zero judgment lost. (Reasoning/WebSearch phases stay subagents — hooks can't reason.)
+
+---
+
 ## Steps
 
 ### Step 0/1 — Catalyst Scan & Macro Context
@@ -63,6 +100,11 @@ Step 12:  Taxonomy Gap Review → contextualize each pending proposal, then ASK 
 The review's FIRST action. `/catalyx-scan` is the macro front door — one scan establishes what is
 TRUE TODAY and feeds the whole early pipeline. The web searches always come before trusting any
 stored value (project files are a month stale).
+
+**Run the scan in a background subagent** (per the Execution Model): the subagent follows
+`.claude/commands/catalyx-scan.md`, writes the new catalyst/gap JSON files itself, and returns ONLY
+its Output summary tables (C0 bullets, per-catalyst refresh deltas, new gaps/events). The main
+thread consumes that digest — it never runs the ~30 searches in its own context.
 
 **`scheduled` — run `/catalyx-scan` first, then consume its output.** The scan returns, in one pass:
 - **C0 macro & big-economy context** — central banks, big economies, commodities, key geopolitics
@@ -99,38 +141,46 @@ For any indicator flagged as stale OR where Step 0/1 found a value different fro
 
 ### Step 3 — Sector Studies (PREREQUISITE FOR HEATMAP)
 
-**Default coverage: ALL investable sectors.** The pipeline studies every investable sector
-in the taxonomy each cycle (not just the catalyst-driven top-N) so that opportunities in
-sectors without a structural catalyst — uranium, silver, lithium, etc. — are never missed.
+**Default coverage: MOVEMENT-DRIVEN + decision-relevant, NOT the whole universe.** A deep study
+costs ≈ 45–50k tokens / 6 WebSearches. Re-studying ~46 sectors every cycle is a 2M+ token spend,
+and most of it re-derives an unchanged study. **Only refresh a study when its driver actually
+moved or the sector is decision-relevant this cycle.** A sector without a fresh study still appears
+in the heatmap on its cheap momentum baseline (the momentum engine scores ALL sectors from the
+yfinance snapshot) — so nothing is "missed" by not deep-studying it.
 
-**Freshness skip (rotation):** skip any sector whose existing study `last_updated` is ≤ 7 days
-old (already fresh this cycle). Study everything else. This naturally rotates coverage and
-avoids paying to re-study a sector analyzed days ago.
+**Build the work list — study a sector this cycle only if it meets one of these triggers:**
+1. **Open position** — always keep the live book's theses current.
+2. **Driver moved** — the Step 0/1 scan flagged its driving catalyst as strengthen/weaken/
+   invalidation, OR surfaced a new event / taxonomy gap touching it.
+3. **Entry candidate + stale** — it is top-N by momentum or prior `catalyst_alignment` AND its
+   study is missing or > 7 days old (these are the sectors a Step 9 recommendation could name).
+4. **Never studied** — no study file exists AND it is a plausible candidate (has a catalyst or
+   ranks mid-pack+ on momentum).
 
-Build the work list — list investable sectors and their study freshness:
+Everything else: **keep the existing study as-is** (it feeds the heatmap fine). The 7-day
+`last_updated` gate is a FLOOR, not the trigger — never re-study a sector just because 7 days
+passed if its driver didn't move.
+
 ```
-uv run python -m catalyx.scorer.sector_scorer --universe --json   # gives the full investable sector_id list
-uv run python -m catalyx.store.sector_study_repo stale --days 7    # which studies are stale/missing
+uv run python -m catalyx.scorer.sector_scorer --universe --json   # full investable sector_id list + momentum rank
+uv run python -m catalyx.store.sector_study_repo stale --days 7    # study freshness/missing
+uv run python -m catalyx.store.movement_repo positions             # open positions (trigger 1)
 ```
-For each investable sector_id whose study is missing or > 7 days old, run a sector study.
+Cross the scan's refresh deltas (trigger 2) + the momentum/alignment top-N (trigger 3) + missing
+studies (trigger 4) against these lists to produce a SHORT work list. Report the work list and
+why each sector is on it (and the count skipped as unchanged).
 
-**Parallelize with subagents.** Sector studies are independent and WebSearch-bound, so fan
-them out across background subagents (Agent tool, `subagent_type: general-purpose`,
-`model: sonnet`, `run_in_background: true`), one or a few sectors per agent. Each agent must
-follow `.claude/commands/catalyx-sector-study.md` for its assigned sector(s) and Write the
-JSON to `data/sector_studies/study_<sector_id>.json`.
+**Parallelize with subagents.** The (now short) work list is independent and WebSearch-bound, so
+fan out across background subagents (Agent tool, `subagent_type: general-purpose`, `model: sonnet`,
+`run_in_background: true`), one or a few sectors per agent, each following
+`.claude/commands/catalyx-sector-study.md` → Write `data/sector_studies/study_<sector_id>.json`.
 
 > Subagents Write the study JSON directly into `data/sector_studies/`. That file IS the
-> registration — `sector_study_repo summary`/`get`/`stale` read the directory directly, so no
-> import step is needed (there is no database).
+> registration — `sector_study_repo summary`/`get`/`stale` read the directory directly, no import.
 
-**Cost note:** a single sonnet sector study runs ≈ 45–50k tokens / 6 WebSearches /
-~3–3.5 min wall-clock. Studying the full ~46-sector universe is a material spend — fan out
-in parallel batches and let freshness-skip shrink the list on subsequent cycles.
-
-**Time-constrained fallback:** if a full run is not feasible, prioritize (a) sectors with an
-open position, (b) top catalyst_alignment sectors, (c) highest-momentum sectors from the latest
-snapshot; write `study_type: "partial"` for the rest.
+**Full-universe sweep (opt-in, occasional):** a complete re-study of every investable sector is
+worthwhile only periodically (e.g. quarterly) or on demand — run it explicitly with
+`/catalyx-review scheduled full-studies`, never as the monthly default.
 
 ---
 
@@ -155,52 +205,39 @@ After the heatmap records the run (so `sector_snapshot` exists in the lake), reb
 portfolios from this run and refresh their NAV vs the market. This is what feeds the dashboard's
 Carteras tab (4 strategies + "¿batimos mercado?").
 
+**This whole phase is ONE deterministic command** — no reasoning, no WebSearch. Run it as a single
+call (ideally inside the Step 4/5/5b subagent per the Execution Model) so the conversation sees one
+compact digest, not nine verbose outputs:
 ```bash
-# build the 4 strategy portfolios from the latest run → lake portfolio_holding (records entry_price)
-uv run python -m catalyx.execution.portfolio build-all
-
-for p in catalyx momentum equal_weight low_crowding; do
-  # reference: trailing-backtest of CURRENT holdings vs SPY (hypothetical — shown only until live accrues)
-  uv run python -m catalyx.execution.nav_engine model "$p" --backtest-days 180
-  # the headline: LIVE walk-forward track record — chains each run's ACTUAL holdings from
-  # track_record.yaml inception (no look-ahead). Run AFTER the backtest (live merges, backtest overwrites).
-  uv run python -m catalyx.execution.nav_engine live "$p"
-done
-
-# REAL book NAV vs SPY — the actual-money curve from the movement files, indexed 100 at inception.
-# Grows one trading day at a time; this is what the Positions "Performance vs S&P 500" tab compares
-# against the model strategies (same measure: return vs SPY + vol/Sharpe/maxDD). Run every review.
-uv run python -m catalyx.execution.nav_engine real real --benchmark SPY
+bash scripts/post_run.sh
 ```
+`post_run.sh` does, in order: `portfolio build-all` → per strategy `nav_engine model --backtest-days
+180` + `nav_engine live` → real-book `nav_engine real --benchmark SPY` → rotation targets
+(`dislocation --anchor-sectors <held>`). The verbose steps (build-all, dislocation) go to
+`data/reports/post_run_<date>.log`; the compact NAV lines (last NAV / return / vs-SPY per strategy)
+print to stdout AS the digest. A `snapshot_repo record` also trips a PostToolUse hook that reminds
+to run this — so it is easy to keep the portfolios in sync with the latest run.
 
 The **live** curve is the real track record (`mode='live'`): it starts empty at inception and grows
 one run at a time, so each review adds a rebalance point. The dashboard shows the live curve once it
 has ≥2 points; until then it labels the book *accruing* and shows the backtest for reference only.
-Report in the summary: each strategy's return and whether it beat SPY (`vs_benchmark_pct`).
-
-**Portfolio rotation targets (real book).** Derive the held sectors from the real positions and
-compute diversifiers ANCHORED to them (healthy, least-correlated to what you already own → where to
-add next without doubling the same bet). Persists the `portfolio_rotation` lake table → Positions page.
-```bash
-held=$(uv run python -m catalyx.store.movement_repo positions | python -c "import sys,json;print(','.join(sorted({h['sector_id'] for h in json.load(sys.stdin)['holdings']})))")
-uv run python -m catalyx.scorer.dislocation --anchor-sectors "$held"
-```
-Strategies live in `catalyx/config/portfolios/*.yaml`; NAV math/benchmark in `nav_engine.py`.
+Report in the summary: each strategy's return and whether it beat SPY (`vs_benchmark_pct`), plus the
+rotation anchor. Strategies live in `catalyx/config/portfolios/*.yaml`; NAV math/benchmark in
+`nav_engine.py`. (Editing the chain? Edit `scripts/post_run.sh`, the single source of truth.)
 
 ---
 
 ### Step 5c — Opportunities & Rotation (regime watch + dislocation lens)
 
-This is **step 12 of the `catalyx-heatmap` skill** — run it here (the run is recorded, so
-`regime_state` is in the lake) and surface its findings in the monthly report. **Recommendations
-for your judgement, never auto-trades.** Python computes the facts; you make the calls.
-
-```bash
-uv run python -m catalyx.scorer.catalyst_scorer --all --json   # regime_state + persistence dossier per sector
-uv run python -m catalyx.thesis.structural_monitor --all       # fundamentals health (flags degrading → breaking)
-uv run python -m catalyx.scorer.dislocation --window 5 --json  # opportunities (panic dips) + diversifiers (rotation)
-uv run python -m catalyx.scorer.entry_timing --all --json      # entry-timing overlay (micro-tension + event overhang)
-```
+This is **step 12 of the `catalyx-heatmap` skill**, and Step 5's heatmap already produced it: the
+heatmap runs `bash scripts/score_run.sh` (record + the four scorers below), so `regime_state` is in
+the lake and the opportunity/regime JSON was already emitted. **Read that Step 5 output — do NOT
+re-run the scorers.** (If you are running Step 5c standalone in `event:<id>` mode without a fresh
+heatmap, run `bash scripts/score_run.sh "<notes>"` once to produce it.) The four facts are:
+`catalyst_scorer --all` (regime_state + persistence), `structural_monitor --all` (fundamentals
+health), `dislocation --window 5` (opportunities + diversifiers), `entry_timing --all` (micro-tension
++ overhangs). **Recommendations for your judgement, never auto-trades** — Python computes the facts;
+you make the calls.
 
 - **Regime watch.** `contested` = watch only (no action); a single `clustered_one_shock` development
   is noise. Escalate to a regime call ONLY when `review_recommended` (dispersed multiples) OR a

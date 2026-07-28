@@ -147,12 +147,11 @@ findings here rather than repeating them.)
 
 **Analyst model revision queries — run every scan (position close signal):**
 ```
-"Goldman Sachs JPMorgan Morgan Stanley sector research report [MONTH YEAR]"
-"sell-side analyst initiates upgrades sector [MONTH YEAR]"
-"copper price target revision Goldman JPMorgan [MONTH YEAR]"
-"analyst commodities model update copper gold [MONTH YEAR]"
-"Wall Street copper outlook revision [MONTH YEAR]"
+"sell-side analyst model revision price target [sector of each OPEN position] [MONTH YEAR]"
+"Goldman JPMorgan Morgan Stanley sector research report upgrade [MONTH YEAR]"
 ```
+Scope the first query to the sectors you actually hold (open positions) — that is where a model
+revision is a live exit signal. Add one more targeted query only if a held sector needs it.
 
 These detect `corporate_event / analyst_model_revision` — the signal that a mispricing is closing. Classification rule: if ≥2 of {GS, JPM, MS, BofA, UBS} publish revised sector models in the same 30-day window with ≥10% change in sector revenue estimate or price target, register as `corporate_event / analyst_model_revision`. This is a **position exit trigger** — flag explicitly in the "Structural catalyst flags" table and note which open position it affects.
 
@@ -160,18 +159,19 @@ Also run one query per sector that appeared in the Discovery Pass output, to che
 
 ### Step C2b — Refresh every existing catalyst
 
-The inventory loaded in C1 lists every active catalyst (event + structural). The C0 macro context
-and the C2 sector searches already cover most of them — now read those findings through the
-refresh lens, one row per active catalyst:
+The inventory loaded in C1 lists every active catalyst (event + structural). **Do NOT run a fresh
+search per catalyst.** Read the C0 + C2 findings already in hand and refresh only the catalysts
+those findings actually TOUCH — a full per-row sweep over all ~30 catalysts with no new evidence is
+wasted output. For each catalyst a finding touches, emit a delta row:
 
 - **Strengthen / weaken:** does the fresh evidence move the catalyst's intensity up or down vs its
   stored state? (For structurals, this is the input to `/catalyx-update`; flag the specific indicator.)
 - **Invalidation trigger:** did an event reverse (policy walked back, ceasefire, deal signed) or a
   structural's thesis break? Flag it for the lifecycle gate — recommend `invalidated` / `weakening`.
-- **No change:** state so explicitly; a stable catalyst is a valid finding.
 
-This is a RECOMMENDATION step — it never edits the YAML/JSON itself (that is `/catalyx-update` and
-the review's lifecycle gate). Emit the per-catalyst delta in the output.
+All catalysts NOT touched by any finding: collapse into a **single** "no change: [id, id, …]" line —
+do not spend a row or a search on each. This is a RECOMMENDATION step — it never edits the YAML/JSON
+(that is `/catalyx-update` and the review's lifecycle gate).
 
 ### Step C3 — Classify and score each significant result
 

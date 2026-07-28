@@ -116,14 +116,16 @@ invisible — the goal is full-universe coverage every cycle.
 
 10. Write report to `data/reports/heatmap_YYYYMMDD.md` following `docs/report_templates/heatmap_template.md`.
 
-11. **Persist to the score history (append-only — enables validation of past analyses).**
-    After the report is written, record this run and register the report:
+11-12. **Persist the run + compute opportunity/regime facts — ONE call.** After the report is
+    written, record the run, register the report, and emit the regime/dislocation/entry-timing facts
+    in a single command (the record/register output goes to a log; the scorer JSON prints for you to
+    consume in step 12d):
     ```bash
-    uv run python -m catalyx.store.snapshot_repo record --notes "monthly heatmap"
-    uv run python -m catalyx.store.snapshot_repo register-report data/reports/heatmap_YYYYMMDD.md --type heatmap
+    bash scripts/score_run.sh "monthly heatmap" data/reports/heatmap_YYYYMMDD.md
     ```
-    Both commands write to the parquet lake (data/lake/scores/, committed to git) — the durable,
-    only source of truth (there is no database).
+    This is the shared script `/catalyx-review` Step 5c also runs — the two used to narrate the same
+    six commands. It writes to the parquet lake (data/lake/scores/, committed to git) — the durable,
+    only source of truth (there is no database). Interpret its scorer output per step 12 below.
 
     `record` writes one `sector_snapshot` per sector (scores + rank + primary ETF + `regime_state`
     + the per-sector narrative block as `rationale_md`), tags the run with the `scoring_version`
@@ -135,15 +137,13 @@ invisible — the goal is full-universe coverage every cycle.
 
 12. **Regime watch + Opportunities & Rotation + Entry timing (recommendations, NEVER auto-trades).**
 
-    Runs AFTER `record` (step 11) so `regime_state` is in the lake. Python computes the facts; the
-    escalation and buy/rotate calls are yours (the hybrid model). See
+    The `scripts/score_run.sh` call in step 11-12 already ran the four scorers below (AFTER `record`,
+    so `regime_state` is in the lake) and printed their JSON. Read that output — do NOT re-run them.
+    Python computes the facts; the escalation and buy/rotate calls are yours (the hybrid model). See
     `docs/DESIGN_catalyst_regime_discrimination.md`.
 
-    **a. Regime watch** — per-sector noise-vs-regime state + the persistence dossier:
-    ```bash
-    uv run python -m catalyx.scorer.catalyst_scorer --all --json   # regime_state, regime_review_recommended, persistence
-    uv run python -m catalyx.thesis.structural_monitor --all       # fundamentals health of every structural
-    ```
+    **a. Regime watch** — from `catalyst_scorer --all` (regime_state, review_recommended, persistence)
+    + `structural_monitor --all` (fundamentals health):
     - `intact` → nothing to do. `contested` → **WATCH only, do not touch weights.** A single
       `clustered_one_shock` development is noise (e.g. "two consecutive-day drops confirm nothing").
       Only when `review_recommended` is true (multiple DISPERSED developments) OR a structural is
@@ -151,10 +151,8 @@ invisible — the goal is full-universe coverage every cycle.
       Python never auto-escalates off an event count.
     - Time-independent: the verdict is identical whether this review runs daily, weekly, or monthly.
 
-    **b. Opportunities & Rotation (dislocation lens)** — the price-vs-fundamentals gap for deployment:
-    ```bash
-    uv run python -m catalyx.scorer.dislocation --window 5 --json   # also persists the lake `dislocation` table → dashboard Opportunities tab
-    ```
+    **b. Opportunities & Rotation** — from `dislocation --window 5` (persists the lake `dislocation`
+    table → dashboard Opportunities tab):
     - **OPPORTUNITIES** — fell hard but `intact` + catalyst-confirmed, drop mostly CONTAGION (high
       `contagion_fraction`, small `idiosyncratic_pct`): "the tape sold it, the thesis didn't break."
       For each, WebSearch to confirm the idiosyncratic residual has **no hidden cause** before
@@ -162,11 +160,9 @@ invisible — the goal is full-universe coverage every cycle.
     - **DIVERSIFIERS** — healthy sectors with LOW correlation to the stressed cluster: where to
       rotate so you are not re-buying the same correlated bet (fixes "illusory diversification").
 
-    **c. Entry timing (the execution window — complementary to dislocation's *whether*)** — for the
-    top-ranked + opportunity sectors, the *when* to enter:
-    ```bash
-    uv run python -m catalyx.scorer.entry_timing --all --json   # micro-tension + overhangs; --all persists the lake `entry_timing` table (run_id) → dashboard Overview
-    ```
+    **c. Entry timing (the execution window — complementary to dislocation's *whether*)** — from
+    `entry_timing --all` (persists the lake `entry_timing` table by run_id → dashboard Overview), for
+    the top-ranked + opportunity sectors, the *when* to enter:
     - `micro_timing_state` + `suggested_verdict`: `falling` ⇒ `wait_stabilize` (knife not
       based), `overbought` ⇒ wait for a pullback, `basing` ⇒ `scale_in`, `neutral` ⇒ no objection.
     - **Event overhang** ⇒ `wait_event`: a discrete CatalystEvent with an `event_date` in the window
