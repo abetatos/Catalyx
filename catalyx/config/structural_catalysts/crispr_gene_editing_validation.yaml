@@ -1,0 +1,138 @@
+# StructuralCatalyst: In-Vivo Gene Editing / CRISPR Clinical Validation
+#
+# Calibration anchor (Rule 3): bootstrap 68 — weaker than struct_ai_capex_supercycle (89.9); a genuine
+# science inflection but early-cycle, endogenous (clinical, not macro-flow driven) with binary timing risk.
+# Drives genomics_precision_medicine (primary).
+
+id: struct_crispr_gene_editing_validation
+type: structural
+schema_version: "1.4"
+title: "In-vivo gene editing / CRISPR clinical validation — first in-vivo therapy toward approval"
+description: >
+  Gene editing is crossing from ex-vivo proof-of-concept to in-vivo clinical validation, the inflection that
+  turns a science story into a commercial platform: (1) First in-vivo therapy on the approval path — Intellia's
+  lonvo-z (in-vivo CRISPR for hereditary angioedema) posted an ~87% attack-rate reduction in Phase 3 and is in
+  a rolling BLA submission (completion H2 2026, commercial launch targeted H1 2027) — potentially the world's
+  first in-vivo CRISPR therapy. (2) Cost floor — whole-genome sequencing crossed the sub-$100 research threshold,
+  scaling the diagnostic base that makes precision-medicine reimbursable. (3) Reimbursement — a pending CMS
+  multi-cancer-early-detection (MCED) liquid-biopsy coverage decision would open a large paid market. Primary
+  sector: genomics_precision_medicine (editing platforms + sequencing + precision-dx). Key risk: a safety event
+  in an in-vivo program, or a negative CMS coverage decision, would set the whole platform back.
+
+created_at: "2026-07-01T12:00:00Z"
+created_by: user
+onset_period: "2025-Q4"
+onset_evidence: >
+  Intellia's lonvo-z Phase 3 in-vivo efficacy readout and the start of its rolling BLA (late 2025 / early 2026)
+  marked the first in-vivo CRISPR therapy on a regulatory approval path — the transition from ex-vivo edits to
+  a scalable in-vivo platform.
+
+catalyst_type: technology_adoption
+catalyst_subtype: crispr_in_vivo_validation
+geography: [US, GLOBAL]
+thematic_tags: [crispr, gene_editing, in_vivo, genomics, intellia, precision_medicine, sequencing, mced]
+user_rank: 4
+user_notes: >
+  Genomics UCITS baskets are the vehicle; the pure editing names are US-listed and thinly covered in UCITS.
+  Bootstrap 68 anchored below struct_ai_capex_supercycle (89.9). Binary catalyst — track the lonvo-z BLA and
+  the CMS MCED decision as the key milestones (candidate future event catalysts).
+
+intensity:
+  current_score: 68
+  computation_method: bootstrap
+  last_updated: "2026-07-01"
+  computation_note: >
+    Bootstrap at creation 2026-07-01. Anchor: below struct_ai_capex_supercycle (89.9). Real clinical inflection,
+    early-cycle with binary approval/coverage timing.
+  history:
+  - period: "2026-Q3"
+    score: 68
+    note: "Bootstrap at creation 2026-07-01. Intellia lonvo-z rolling BLA (completion H2 2026); sub-$100 WGS; CMS MCED coverage pending."
+    computation_method: bootstrap
+
+indicators:
+- id: ind_01
+  name: "In-vivo gene-editing programs in Phase 3 / BLA (count)"
+  source: "Company IR / clinicaltrials.gov"
+  source_url_template: "https://clinicaltrials.gov/"
+  check_frequency: quarterly
+  current_value: 3
+  unit: count_late_stage
+  direction: higher_is_stronger
+  threshold_strong: 2
+  threshold_weak: 0
+  last_value: 2
+  last_date: "2025-12-31"
+  update_note: >
+    In-vivo editing programs at Phase 3/BLA (Intellia lonvo-z lead, plus follow-ons). Threshold_strong 2 =
+    platform validating; threshold_weak 0 = ex-vivo only.
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 2
+  - date: "2024-12-31"
+    value: 1
+
+- id: ind_02
+  name: "Whole-genome sequencing cost floor ($/genome, research)"
+  source: "NHGRI sequencing cost tracker"
+  source_url_template: "https://www.genome.gov/sequencingcostsdata"
+  check_frequency: quarterly
+  current_value: 99
+  unit: usd_per_genome
+  direction: lower_is_stronger
+  threshold_strong: 150
+  threshold_weak: 400
+  last_value: 130
+  last_date: "2025-12-31"
+  update_note: >
+    Research WGS crossed sub-$100; consumer ~$169. Lower_is_stronger; threshold_strong $150 (scales dx base),
+    threshold_weak $400.
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 130
+  - date: "2024-12-31"
+    value: 200
+
+- id: ind_03
+  name: "FDA gene/cell-therapy approvals YTD (count)"
+  source: "FDA CBER approvals"
+  source_url_template: "https://www.fda.gov/vaccines-blood-biologics/"
+  check_frequency: quarterly
+  current_value: 2
+  unit: count_ytd
+  direction: higher_is_stronger
+  threshold_strong: 3
+  threshold_weak: 1
+  last_value: 4
+  last_date: "2025-12-31"
+  update_note: >
+    2 gene/cell-therapy approvals H1 2026 (full-year 2025 ran higher). Threshold_strong 3/yr-pace;
+    threshold_weak 1.
+  semaphore: 🟡
+  value_history:
+  - date: "2025-12-31"
+    value: 4
+  - date: "2024-12-31"
+    value: 3
+
+deactivation_conditions:
+- id: deact_01
+  condition: >
+    A serious safety event (SAE/hold/withdrawal) in a lead in-vivo editing program, OR a negative CMS MCED
+    coverage decision, setting back the platform for two consecutive quarters.
+  action: review_required
+- id: deact_02
+  condition: >
+    In-vivo editing Phase 3/BLA program count falls to 0 (lead asset fails or is withdrawn and no follow-on
+    reaches late stage).
+  action: full_deactivation
+
+linked_event_catalyst_ids: []
+linked_structural_catalyst_ids:
+- struct_ai_drug_discovery
+
+narrative_maturity: "emerging"
+status: active
+status_last_reviewed: "2026-07-01"

@@ -5,39 +5,39 @@
   "sector_id": "copper_miners",
   "sector_label": "Copper Miners",
   "created_at": "2026-06-03",
-  "last_updated": "2026-06-12",
+  "last_updated": "2026-06-29",
   "study_type": "full",
 
   "taxonomy": {
     "parent_sector": "industrial_metals",
     "adjacent_sectors": ["gold_miners", "lithium_miners", "grid_infrastructure_utilities", "ai_infrastructure_data_centers"],
-    "differentiation_note": "Copper miners are distinct from other metals plays in three ways: (1) supply is the most inelastic of any major metal — 16 years average from discovery to production, grade declining globally at ~0.2%/year; (2) demand drivers are the most convergent — EV, grid, AI data centers, and traditional construction all require copper simultaneously; (3) the equity vehicles (COPX) offer 2-3x leverage to copper price via operational leverage, unlike physical ETCs (COPA.L) which track spot 1:1. The thesis in copper miners is specifically about the gap between what the market has priced (EV narrative only) vs the actual demand profile (EV + grid + AI data centers + traditional EM demand). The AI data center copper demand angle (27-33 tonnes per MW of installed capacity; $725B hyperscaler capex in 2026 alone) is still absent from generalist analyst models — this is the residual alpha. The sector is NOT adjacent to lithium miners, which depend on battery chemistry trends, nor to grid infrastructure utilities, which are users of copper, not producers."
+    "differentiation_note": "Copper miners are distinct from other metals plays in three ways: (1) supply is the most inelastic of any major metal — 16 years average from discovery to production, grade declining globally at ~0.2%/year; (2) demand drivers are the most convergent — EV, grid, AI data centers, and traditional construction all require copper simultaneously; (3) the equity vehicles (COPX) offer 2-3x leverage to copper price via operational leverage, unlike physical ETCs (COPA.L) which track spot 1:1. The thesis in copper miners is specifically about the gap between what the market has priced (EV narrative only) vs the actual demand profile (EV + grid + AI data centers + traditional EM demand). The AI data center copper demand angle (27-33 tonnes per MW of installed capacity; $725B hyperscaler capex in 2026 alone) is still underrepresented in generalist analyst models. The sector is NOT adjacent to lithium miners, which depend on battery chemistry trends, nor to grid infrastructure utilities, which are users of copper, not producers. A new near-term risk as of June 29, 2026: Section 232 phased copper tariffs (15% Jan 2027, 30% Jan 2028) are under active review — a US tariff regime would bifurcate the global copper market, creating a premium US domestic price and headwinds for ex-US miners serving US buyers."
   },
 
   "demand_drivers": [
-    "AI data center buildout (underpriced in consensus): $725B hyperscaler capex confirmed for 2026 — +64% above 2025, with Goldman Sachs projecting $1.15T total capex 2025-2027. Copper use is 27-33 tonnes per MW of installed capacity for power delivery, transformers, busbars, cabling, and cooling. A 100MW campus = 2,700-3,300t copper — one mid-size mine's annual output. WoodMac forecasts a 304kt refined copper deficit in 2025 and wider in 2026, with AI as a key incremental driver. This demand is NOT in generalist consensus models.",
-    "Grid transmission expansion: HVDC cables (undersea, cross-country) are 95%+ copper by weight. Each GW of HVDC transmission requires ~4,000t of copper. EU €584B grid investment through 2030 = structural multi-year demand. Jefferies structural deficit forecast of 491kt/yr avg through 2030 explicitly includes grid capex as a primary driver.",
-    "EV adoption (demand floor, in consensus): an EV uses 4x the copper of an ICE vehicle (83kg vs 23kg). Charging infrastructure adds further demand. This IS in consensus — not the marginal alpha, but provides the demand floor that underpins the structural deficit thesis.",
-    "Heat pump adoption: a heat pump uses 4-6kg copper vs <1kg for a gas boiler. EU mandating phase-out of gas boilers — 100M units to replace over the decade. Incremental but growing.",
-    "Defense manufacturing: NATO rearmament requires copper-intensive military equipment (ships, aircraft, missiles, electronics). Additive demand, not the primary thesis.",
-    "Traditional EM construction (China partially recovering): China PMI has stabilized above 50. India + Southeast Asia infrastructure buildout partially offsets the Chinese property drag. Less of a swing factor than 2020-2022 but not absent."
+    "AI data center buildout (underpriced in consensus): $725B confirmed hyperscaler capex for 2026 — +77% above 2025 (Amazon $200B, Google $175-185B, Microsoft $110-120B, Meta $125-145B). Goldman now projects $5.3T cumulative hyperscaler capex 2025-2030. Copper use is 27-33 tonnes per MW installed capacity for transformers, busbars, cabling, and cooling. ~40% of announced AI DC projects are delayed by POWER constraints, not chip supply — confirming the grid is the binding constraint and copper demand is structural. This demand is still absent from generalist copper analyst base-case models; Goldman has revised its 2026 ex-US copper deficit to ~640kt (10x prior forecast), partly driven by AI-related infrastructure.",
+    "Grid transmission expansion: HVDC cables are 95%+ copper by weight. Each GW of HVDC transmission requires ~4,000t copper. EU €584B grid investment through 2030 = structural multi-year demand. US IIJA $65B allocated. Power transformer demand projected at 21% above 2024 levels in 2026, with lead times extending to 128-144 weeks — confirming equipment manufacturing (and thus copper) demand is accelerating, not slowing.",
+    "EV adoption (demand floor, in consensus): an EV uses 4x the copper of an ICE vehicle (83kg vs 23kg). Charging infrastructure adds further demand. This IS in consensus — not the marginal alpha, but provides the demand floor underpinning the structural deficit thesis.",
+    "Heat pump and industrial electrification: a heat pump uses 4-6kg copper vs <1kg for a gas boiler. EU mandating phase-out of gas boilers — 100M units to replace over the decade. Industrial electrification (steel, cement, chemicals shifting to electric process heat) adds further concentrated load.",
+    "Section 232 tariff arbitrage — near-term demand pull: with a potential 15% US tariff on refined copper imports starting January 2027, buyers are frontloading imports ahead of the tariff. This has already created a premium in CME (US) copper over LME. The pull-forward demand supports prices through year-end 2026 even as fundamentals remain contested.",
+    "Traditional EM construction (China stabilizing): China PMI stabilized above 50. India + Southeast Asia infrastructure buildout partially offsets the Chinese property drag. China accounts for ~55% of global copper consumption — even flat growth in China prevents a structural surplus from materializing."
   ],
 
   "supply_constraints": [
-    "Grade decline: average ore grade at major mines declining ~0.2% per year. Same ore processed = less copper output, higher energy and processing cost per tonne produced.",
-    "Discovery-to-production lag: 16 years average globally. High copper prices today will not produce new supply until 2040+. No quick supply response is physically possible regardless of economics.",
-    "Permitting and political risk: major copper deposits in Chile, Peru, DRC face community opposition, water rights disputes, royalty increases (Chile's mining royalty law passed 2024, less aggressive than feared but still a headwind). Codelco (~10% of global supply) has persistently missed production guidance.",
-    "US-Iran conflict diesel cost escalation: FCX guided 2026 unit net cash costs to $1.95/lb (up from $1.75 prior guidance), driven by sharply higher diesel costs following the US-Iran military conflict in late February. Energy price spikes directly hit mine operating costs globally.",
-    "Geographic concentration: Chile + Peru = ~40% of global mine supply. Political risk is structural, not episodic.",
-    "Supply surplus vs deficit divergence: Goldman Sachs (surplus 160kt) vs ICSG (deficit 150kt) are on opposite sides in 2026 — consensus is genuinely split. The Jefferies 491kt/yr structural deficit is the long-run view (5-year average). Short-run balance is contested."
+    "Grade decline: average ore grade at major mines declining ~0.2% per year globally. Same ore processed = less copper output, higher energy and processing cost per tonne. No technological fix exists for this physical depletion dynamic.",
+    "Discovery-to-production lag: 16 years average globally. High copper prices today cannot produce new supply until 2040+. No quick supply response is physically possible regardless of economics.",
+    "Grasberg production downgrade: FCX reduced Grasberg ramp-up guidance to 60,000 t/day in H2 2026 (from 100,000 t/day previously) and cut full-year 2026 copper sales guidance to 3.1B lbs (from 3.4B lbs). Grasberg is the world's largest copper mine — any production miss directly removes supply from the global market and tightens the ex-US balance.",
+    "Diesel cost escalation (Iran war spillover): FCX raised 2026 unit net cash cost guidance to $1.95/lb (from $1.75), driven by higher diesel costs from the US-Iran military conflict. Energy cost inflation hits all major mines globally (Chile, Peru, DRC all import diesel). A prolonged conflict keeps this headwind in place.",
+    "Permitting and political risk: Chile + Peru = ~40% of global mine supply. Chile mining royalty law (2024) adds cost. Codelco (~10% of global supply) has persistently missed production guidance. Community opposition and water rights disputes in Chile/Peru are structural, not episodic.",
+    "Section 232 tariff uncertainty: a potential 15% import duty on refined copper starting January 2027 creates market bifurcation risk. Miners serving US customers may face margin pressure if the tariff creates a price wedge that disadvantages foreign supply. The June 30, 2026 Commerce Department report to the President is the immediate catalyst — tariff confirmation or rejection will move prices."
   ],
 
   "technology_maturity": null,
 
   "cycle_position": {
-    "assessment": "Mid-cycle bull market — price correction within intact structural bull, equity at relative discount vs spot",
-    "rationale": "Copper spot is ~$6.40/lb (~$14,110/t) as of June 2026, down ~4.3% month-on-month as US-Iran peace optimism briefly eased industrial demand fears, but +33.9% YoY. FCX realized $5.78/lb average in Q1 2026 with unit net cash costs of $1.91/lb — a $3.87/lb spread, the widest in the company's history. COPX is trading at ~$83 (range $78-83 on June 12), off its 52-week high of ~$100 but with COPX AUM having grown to $7.27B (from ~$2.1B at prior study). The equity has not caught up with the spot move: COPX up 122% YTD (total return) but spot copper is up 34% — the equity premium is compressing after the initial leg. AISC margins remain very healthy at ~$3.87/lb spread for FCX. Jefferies projects 491kt/yr avg supply deficit through 2030; the structural case is intact. The month-on-month pullback from peace optimism is noise against this backdrop. Miners are pricing a higher certainty of structural demand than they were in June 2023 — this is mid-cycle, not early-cycle.",
-    "last_assessed": "2026-06-12"
+    "assessment": "Mid-cycle bull with equity correction — structural thesis intact, near-term price pressure from hawkish macro and Section 232 uncertainty",
+    "rationale": "Copper LME 3M is at $13,357/t (-6.2% MoM, +21% YoY) as of June 29, 2026. CME copper fell to $6.12/lb on June 29 as Fed Chair Warsh reiterated hawkish commitment to inflation control, pushing USD strength and weighing on commodity prices. COPX is trading at $75.38 (June 29), off its 52-week high of $99.99 — a ~25% drawdown from peak. FCX Q1 2026: realized $5.78/lb vs $1.91/lb costs = $3.87/lb spread (record margin). The near-term pressure is macro (hawkish Warsh Fed + strong USD) and event-driven (Section 232 tariff uncertainty creates hedging nervousness). The structural case is firmly intact: Goldman revised its ex-US deficit to ~640kt (from ~64kt — a 10x upward revision), Jefferies raised 2027 copper target to $6.50/lb ($14,330/t). The equity drawdown (COPX -25% from peak) is partially justified by the production guide-down (Grasberg) and cost inflation, but the structural demand thesis has actually strengthened since June 12. The cycle is mid-phase: the first re-rating leg (2024-2026 to 122% return) has corrected; a second leg requires either (a) Section 232 tariff clarity that removes uncertainty, or (b) consensus models adopting the AI DC demand angle explicitly, or (c) the Grasberg ramp materializing in H2 2026 demonstrating supply recovery is limited.",
+    "last_assessed": "2026-06-29"
   },
 
   "etf_analysis": [
@@ -51,9 +51,9 @@
       "replication": "physical",
       "avg_spread_bps": 7,
       "top_10_concentration_pct": 0.53,
-      "characteristics": "Pure-play copper miners equity. AUM has grown to $7.27B (from ~$2.1B in June 2023) — institutional adoption reflecting structural thesis conviction. Top holdings: Teck Resources 5.45%, BHP 5.36%, Hudbay Minerals 5.22%, KGHM Polska Miedz 5.19%, First Quantum 5.20%. P/E 24.1x. 45 holdings. 2-3x leverage to copper price via operational leverage. 52-week range $41.51-$99.99.",
+      "characteristics": "Pure-play copper miners equity. AUM $7.27B. Top holdings: Teck Resources, BHP, Hudbay Minerals, KGHM, First Quantum. P/E ~24x. 45 holdings. 2-3x operational leverage to copper price. 52-week range $41.94-$99.99. Current price $75.38 (June 29, 2026) — ~25% off peak. Dividend yield 2.52%. YTD total return +115% (as of this assessment, reflects the run-up earlier in 2026).",
       "recommendation_tier": 1,
-      "limitations": "Not UCITS. AUM surge changes the top-10 concentration from prior data — more distributed (top-10 ~53% vs 62% prior). Diesel cost elevation will persist while Iran conflict continues, squeezing margins relative to Q1."
+      "limitations": "Not UCITS — not eligible as primary vehicle for Spanish investor. For a Spanish investor, COPX.L is the UCITS equivalent. Section 232 tariff dynamics may affect US vs non-US miners differently; COPX holds predominantly non-US miners (SCCO, FCX, TECK) who would face potential US customer price pressure if 30% tariff materializes in 2028."
     },
     {
       "ticker": "COPX.L",
@@ -65,92 +65,94 @@
       "replication": "physical",
       "avg_spread_bps": 16,
       "top_10_concentration_pct": 0.53,
-      "characteristics": "Same underlying exposure as COPX. UCITS-compliant for EU/Spanish investor. AUM has grown modestly. Tracks the same index.",
-      "recommendation_tier": 2,
-      "limitations": "Lower AUM than US version, wider spread. For a Spanish investor this is tier 1 on UCITS compliance grounds; tier 2 on liquidity versus COPX. Size carefully; limit orders recommended."
+      "characteristics": "Same underlying exposure as COPX. UCITS-compliant — PREFERRED vehicle for Spanish investor (no PRIIPs restriction). Tracks the same index with same holdings. Use limit orders given wider spread.",
+      "recommendation_tier": 1,
+      "limitations": "Lower AUM than US version ($420M vs $7.27B), wider spread (16bps vs 7bps). AUM is above $200M floor — acceptable liquidity for position sizing up to €5,000. Spread of 16bps is within acceptable range for a conviction position but use limit orders. The UCITS compliance makes this tier 1 for a Spanish investor despite liquidity constraints."
     },
     {
-      "ticker": "COPA.L",
-      "name": "WisdomTree Copper ETC",
-      "exchange": "LSE",
-      "currency": "USD",
+      "ticker": "4COP.DE",
+      "name": "WisdomTree Copper ETC (Xetra EUR listing)",
+      "exchange": "XETRA",
+      "currency": "EUR",
       "ter": 0.0049,
       "aum_m_usd": 640,
       "replication": "synthetic_swap",
       "avg_spread_bps": 12,
-      "characteristics": "Physical copper commodity exposure — NOT miners. Tracks LME copper spot 1:1. Different thesis: pure commodity price play without operational leverage or mining risk. Appropriate if the thesis is a near-term spot price move rather than the margin expansion equity story.",
+      "top_10_concentration_pct": null,
+      "characteristics": "Physical copper commodity exposure — NOT miners. Tracks LME copper spot 1:1 in EUR terms. EUR-denominated, UCITS, Xetra-listed. OPEN POSITION (€1,000, entered 2026-06-05). Different thesis to COPX.L: pure commodity price play without operational leverage or mining risk. If Section 232 tariff is confirmed, CME copper premium over LME could create a basis trade; this ETC tracks LME, not CME.",
       "recommendation_tier": 2,
-      "limitations": "Synthetic (swap-based) — counterparty risk. No equity upside from margin expansion. With FCX margins at record spreads, the miners are the preferred vehicle for the structural thesis. COPA.L is the fallback when equity-specific risk (labor, political) is elevated and you want pure commodity exposure."
+      "limitations": "Synthetic (swap-based) — counterparty risk. No equity upside from margin expansion when FCX spreads are at record levels. With Grasberg cut and cost guidance raised, the miners (COPX.L) are less preferred vs pure commodity play. However, the LME/CME basis risk is specific to this vehicle: if Section 232 creates a sustained CME premium, 4COP.DE may underperform a US-copper-price-exposed vehicle. Appropriate for near-term spot price expression or as a portfolio diversifier vs COPX.L operational risk."
     }
   ],
 
   "key_metrics_to_monitor": [
     {
-      "metric": "LME copper spot price (USD/tonne)",
+      "metric": "LME copper 3M spot price (USD/tonne)",
       "unit": "USD/tonne",
-      "source": "LME daily",
-      "current": 14110,
-      "comment": "June 12, 2026: ~$6.40/lb = ~$14,110/t. Down ~4.3% month-on-month on US-Iran peace optimism, but +33.9% YoY. Invalidation threshold: sustained break below ~$11,000/t ($5/lb) would suggest demand thesis weakening."
+      "source": "LME daily / Trading Economics",
+      "current": 13357,
+      "comment": "June 29, 2026: $13,357/t ($6.12/lb). Down 6.2% MoM (hawkish Warsh Fed + USD strength), +21% YoY. Goldman RAISED year-end target to $13,735; Morgan Stanley forecasts a 600kt deficit. Key watch: Section 232 tariff decision (June 30) could create CME premium vs LME. Invalidation threshold: sustained break below ~$11,000/t ($5/lb) signals demand thesis weakening."
+    },
+    {
+      "metric": "CME vs LME copper basis (USD/lb)",
+      "unit": "USD/lb",
+      "source": "CME Group / LME",
+      "current": null,
+      "comment": "NEW METRIC as of June 29, 2026. Section 232 tariff risk has created a CME (US) premium over LME (global). Track this basis: a widening premium signals traders are pricing in the tariff (buy CME, sell LME arbitrage). A sudden collapse of the premium post-June 30 decision could signal the tariff was not confirmed — potentially bullish for LME-tracking vehicles like 4COP.DE. Critical for understanding the instrument split between COPX.L (miners who sell globally) and 4COP.DE (LME price)."
     },
     {
       "metric": "Freeport-McMoRan unit net cash cost (USD/lb)",
       "unit": "USD/lb",
       "source": "FCX quarterly earnings / SEC 8-K",
       "current": 1.91,
-      "comment": "Q1 2026: $1.91/lb realized cost vs $5.78/lb realized price = $3.87/lb spread (record margin). 2026 full-year guidance: $1.95/lb (raised from $1.75 due to diesel cost from Iran conflict). Watch diesel cost trajectory as the primary margin headwind."
+      "comment": "Q1 2026: $1.91/lb realized cost vs $5.78/lb realized price = $3.87/lb spread (record margin). 2026 full-year guidance raised to $1.95/lb (from $1.75) due to diesel cost from Iran conflict and Grasberg ramp delay. Watch Q2 2026 earnings for: (a) whether diesel cost normalizes as Iran situation resolves, (b) Grasberg 60k t/day H2 guidance confirmation, (c) any further production guide-down."
     },
     {
-      "metric": "FCX realized copper price (USD/lb)",
-      "unit": "USD/lb",
-      "source": "FCX quarterly earnings",
-      "current": 5.78,
-      "comment": "Q1 2026 average realized price: $5.78/lb. With spot now at ~$6.40/lb, current quarter should realize higher. Monitor quarterly for margin trend."
+      "metric": "Goldman Sachs 2026 ex-US copper deficit (kt)",
+      "unit": "kt",
+      "source": "Goldman Sachs commodities research",
+      "current": 640,
+      "comment": "MAJOR UPDATE: Goldman revised its 2026 ex-US deficit to ~640kt — approximately 10x its prior forecast. This is the signal that AI/grid demand is beginning to enter Goldman's base-case models. Watch for Goldman/JPM generalist commodity team updates that explicitly include DC copper demand in their 5-year models — this is the narrative maturity leading indicator."
     },
     {
-      "metric": "Hyperscaler capex — AI infrastructure spend (USD billion, annualized)",
-      "unit": "USD billion",
-      "source": "Company earnings / WoodMac / Goldman Sachs commodities research",
-      "current": 725,
-      "comment": "2026 confirmed Big-5 hyperscaler capex: $725B (+64% vs 2025). Goldman projects $1.15T cumulative 2025-2027. Each $100B capex increase translates to approximately 200-300kt incremental copper demand (at 27-33t/MW). This is the primary alpha indicator — track earnings call capex guidance quarterly."
+      "metric": "Section 232 copper tariff status",
+      "unit": "categorical",
+      "source": "White House / Federal Register",
+      "current": "pending_decision",
+      "comment": "June 30, 2026 Commerce Department report to President. If confirmed: 15% tariff starting Jan 2027, 30% starting Jan 2028 on refined copper imports. Impact: would create CME/LME basis, benefit US domestic producers, complicate ex-US miners' access to US customers. June 1, 2026 proclamation already expanded Section 232 derivatives coverage and reduced US-content threshold to 85% (in effect from June 8, 2026). This is the most important single near-term catalyst for the sector."
     },
     {
-      "metric": "Jefferies/WoodMac annual copper supply deficit (kt)",
-      "unit": "kt/year",
-      "source": "Jefferies commodities research / WoodMac quarterly",
-      "current": 491,
-      "comment": "Jefferies: 491kt/yr avg through 2030. WoodMac: 304kt deficit in 2025, wider in 2026. Goldman Sachs: 160kt surplus (2026 only). ICSG: 150kt deficit. Consensus is split on 2026 balance but converges on a structural deficit from 2027 onward. Watch for Goldman and JPM deficit revisions as AI demand enters base-case models — that is the signal the mispricing is closing."
-    },
-    {
-      "metric": "Codelco production guidance vs actuals (kt deviation)",
-      "unit": "kt deviation",
-      "source": "Codelco quarterly production reports",
+      "metric": "Grasberg mine production vs guidance (kt deviation)",
+      "unit": "kt deviation vs guidance",
+      "source": "FCX quarterly production reports / SEC 8-K",
       "current": null,
-      "comment": "Codelco = ~10% of global supply. Persistent guidance misses = supply tighter than models. Track quarterly. No update since prior study."
+      "comment": "FCX cut Grasberg ramp-up to 60k t/day H2 2026 (from 100k t/day prior). Grasberg is ~10% of global mine supply. Track H2 2026 production vs 60k t/day guidance. A further miss removes supply and tightens the global balance; an outperformance vs 60k would be a positive surprise. First confirmation expected at Q2 2026 earnings."
     }
   ],
 
   "active_catalyst_ids": [
     "struct_copper_datacenter_demand",
-    "struct_energy_transition_grid"
+    "struct_energy_transition_grid",
+    "cat_20260617_fed_hawkish_pivot",
+    "cat_20260603_copper_supply_deficit_2026"
   ],
 
   "historical_catalyst_performance": {
-    "summary": "Copper miners have historically been highly cyclical — strong performers in China-driven commodity supercycles (2003-2008, 2020-2022), weak in risk-off or China slowdown periods. The current cycle is structurally different: demand is driven by electrification + AI data centers rather than EM construction, and supply response is structurally impaired (16-year lead time). COPX has delivered +122% total return over the past year (52-week: $41.51→$99.99 high; current ~$83) — the equity market is pricing the structural deficit but has not yet priced the AI data center demand angle in consensus analyst models. Historical analog: 2003-2006, when China urbanization demand first became apparent — copper tripled over 3 years before the consensus caught up. Key learning: COPX lag-to-spot is a signal, not a deterrent — miners typically lead in the first leg (2024-2025), consolidate, then re-accelerate when supply-deficit data becomes undeniable.",
+    "summary": "Copper miners have historically been highly cyclical — strong performers in China-driven commodity supercycles (2003-2008, 2020-2022), weak in risk-off or China slowdown periods. The current cycle is structurally different: demand is driven by electrification + AI data centers rather than EM construction, and supply response is structurally impaired (16-year lead time). COPX delivered 115%+ total return in the past year despite a -25% drawdown from the March 2026 peak ($99.99), reflecting initial over-exuberance followed by a reset. FCX Q1 2026 beat estimates by 21% (EPS $0.57 vs $0.47 expected), yet the stock dropped post-earnings — a classic mid-cycle pattern where fundamentals are strong but guide-down (production cut, cost increase) caps multiples. Historical analog: 2003-2006 China urbanization cycle — copper tripled over 3 years before consensus caught up. The AI data center demand angle is at the equivalent of 2004 for that cycle (specialist awareness, pre-consensus). Key learning: the Goldman ex-US deficit revision to 640kt (from ~64kt) is the type of analyst model upgrade that historically marks the transition from 'specialist knows' to 'generalist models in'. When that upgrade happens in the generalist commodity teams (not just GS commodities desk), the equity narrative goes to 'crowded'.",
     "avg_response_to_china_pmi_beat_pct": 0.08,
     "avg_response_to_copper_spot_10pct_move_pct": 0.22
   },
 
   "risks": [
-    "Diesel cost / Iran war spillover: FCX already raised 2026 cost guidance by $0.20/lb due to Iran conflict diesel costs. If the conflict escalates or persists beyond 2026, operating cost inflation across all major miners (Chile, Peru, DRC all import diesel) erodes margins even as copper spot stays elevated. This is the near-term margin risk.",
-    "Goldman Sachs 2026 surplus call: Goldman projects a 160kt surplus in 2026 (vs ICSG deficit of 150kt). If Goldman's model is right and a surplus materializes, it caps the near-term price. Note: the disagreement is about the 2026 single-year balance, not the 2027-2030 structural deficit — but a surplus print would pressure equity multiples for 6-12 months.",
-    "China demand collapse: China is ~55% of global copper consumption. A hard landing in Chinese construction/manufacturing would overwhelm AI + EV demand in the short term. China PMI is currently above 50 but watch for deterioration.",
-    "AI capex cycle reversal: if hyperscaler capex cuts materially (a second DeepSeek-type efficiency shock at scale), DC copper demand estimates collapse. This is the thesis-specific risk — the highest-conviction demand driver is also the newest and least battle-tested.",
-    "USD strength from Fed rate hike: copper is priced in USD. CME FedWatch now shows 70% probability of at least one hike by December 2026. Dollar strengthening + risk-off would depress copper price in the near term, though the structural supply deficit persists.",
-    "Equity vs commodity divergence: COPX has already delivered 122% total return in the past year. If the rally is now in price, further equity upside requires earnings acceleration (margin expansion + production growth), not just spot holding. A flat spot price would likely produce muted equity returns from current levels."
+    "Section 232 copper tariff (15% Jan 2027 / 30% Jan 2028): the June 30 Commerce Department report is the immediate trigger. If confirmed, it would bifurcate the global copper market. Ex-US miners (COPX.L top holdings: TECK Canada, BHP Australia, SCCO Peru) selling into the US market would face customer margin pressure. The CME/LME basis could widen by the tariff amount. This is a near-term binary risk — confirmation moves the sector adversely in the short term despite unchanged structural fundamentals.",
+    "Hawkish Fed (Warsh era) and USD strength: CME copper fell to $6.12/lb on June 29 as Warsh reiterated anti-inflation commitment. The new dot plot median sees a hike to 3.8% end-2026. USD strength mechanically compresses copper prices (USD-denominated commodity). A full rate hike cycle would also pressure risk assets and EM demand. This is the dominant short-term macro headwind.",
+    "Grasberg production downgrade and further execution risk: FCX cut annual sales guidance from 3.4B to 3.1B lbs and Grasberg ramp from 100k to 60k t/day. This mine is critical — if H2 2026 misses the 60k t/day target (infrastructure issues, labor disputes, equipment), further guidance cuts would weigh on FCX equity and the copper sector broadly.",
+    "Goldman Sachs global 2026 surplus call persists: despite revising the ex-US deficit sharply to 640kt, Goldman maintains a small global 2026 surplus (imports vs exports balance). If surplus materializes globally, it caps near-term price even if the structural deficit from 2027+ is intact. Six-month price pressure would compress equity multiples.",
+    "AI capex cycle moderation: if hyperscalers reduce capex in H2 2026 (another efficiency shock, margin pressure), the AI DC copper demand estimate collapses. At $725B hyperscaler capex, this is currently the strongest demand driver. Any material reduction is the thesis-specific risk.",
+    "COPX equity now -25% from peak but structural thesis intact: the 25% drawdown from $99.99 to $75.38 has priced in some of the Grasberg miss, cost inflation, and macro headwinds. However, if the structural bull resumes, the equity is still up 115% over the past year — new entrants are entering mid-drawdown, not at a historic low. Further downside is possible before the second leg of the structural re-rating begins."
   ],
 
   "narrative_maturity": "mainstream",
-  "analyst_narrative_score": 60,
   "narrative_trend": "increasing",
-  "narrative_notes": "The 'electrification copper demand' story is now mainstream — CNBC, Bloomberg, and buy-side research all cover it. However, the AI data center copper demand angle (27-33t/MW, $725B capex) is present in specialist research (WoodMac, CRU, Goldman commodities desk) but still absent from generalist copper analyst earnings models. The narrative maturity is 'mainstream' not 'crowded' because the KEY incremental driver (AI DC demand) has not yet entered the base-case consensus. With COPX at $7.27B AUM (3x growth from 2023), institutional flows confirm the structural thesis is being expressed in the market. The alpha window is narrowing but has not yet closed — watch for when Goldman/JPM generalist commodity research teams explicitly include DC copper demand in their 5-year deficit models as the signal that the narrative is becoming crowded."
+  "narrative_notes": "Maintained at 'mainstream' as of June 29, 2026. The 'electrification copper demand' story is consensus — CNBC, Bloomberg, ETF product descriptions all reference it. However, the key incremental driver (AI DC demand at 27-33t/MW, $725B capex) is entering mainstream coverage but is not yet the base-case in generalist copper analyst earnings models. The Goldman ex-US deficit revision to ~640kt is the leading indicator that this is changing — when Goldman's generalist commodity research team (not just the AI-infrastructure team) explicitly includes DC copper demand in their 5-year models, the narrative transitions to 'crowded'. The COPX AUM at $7.27B (3x growth from 2023) confirms institutional positioning. The narrative trend is 'increasing' — it was 'mainstream' in June 2026 and is migrating toward 'crowded' as the AI demand angle enters sell-side models. The Section 232 tariff development has brought mainstream financial press coverage (WSJ, FT, Bloomberg Commodities) to copper, accelerating this trend."
 }

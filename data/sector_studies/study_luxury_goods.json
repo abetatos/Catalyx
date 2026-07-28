@@ -107,7 +107,7 @@
       "limitations": "Not pure luxury — significant non-luxury consumer discretionary dilution (Amazon, Tesla, Home Depot) within the MSCI consumer discretionary index. Use LUXE.PA instead for sector-specific positioning. USD denomination introduces EUR/USD FX risk for Spanish investors. Only use as a secondary or if LUXE.PA liquidity is insufficient."
     }
   ],
-  "active_catalyst_ids": [],
+  "active_catalyst_ids": ["struct_china_luxury_recovery"],
   "historical_catalyst_performance": {
     "summary": "Luxury goods equities have historically exhibited two dominant catalyst patterns: (1) China demand reopening/recovery events and (2) global UHNW wealth creation cycles tied to equity market bull runs. During China's 2023 post-COVID reopening, European luxury names (LVMH, Hermes, Richemont) rallied 30-50% in H1 2023 as analysts priced a demand surge; however, the actual recovery was less strong than anticipated, leading to a partial reversal. This pattern of 'buy the catalyst, sell the confirmation' is consistent — the equity market re-rates ahead of earnings confirmation, creating a narrow optimal entry window. During the 2008-2009 recession, luxury suffered 30-40% equity declines in line with general equities but recovered faster than average as UHNW wealth rebounded with equity markets. The sector shows correlation to the MSCI World of ~0.75 in risk-off regimes but decouples to the upside during China-specific recovery catalysts where the MSCI World is broadly flat. The 2024 luxury bear market (LVMH -30% peak-to-trough) was entirely China-demand-driven and confirms that China is the dominant idiosyncratic catalyst — more influential than interest rates, recession fears, or Western consumer confidence.",
     "key_catalyst_types": [

@@ -152,7 +152,7 @@
     }
   ],
 
-  "active_catalyst_ids": [],
+  "active_catalyst_ids": ["struct_battery_storage_supercycle", "cat_20260630_drc_cobalt_export_quota"],
 
   "historical_catalyst_performance": {
     "summary": "Cobalt and nickel have exhibited extreme boom-bust cycles with 2-4 year amplitude. Cobalt peaked at ~$82,000/t in March 2022 driven by EV battery demand euphoria, then collapsed 72% to ~$23,000/t by early 2025 as DRC production surged (CMOC capacity additions), Chinese NMC battery oversupply emerged, and LFP substitution accelerated. This mirrors the 2017-2018 cycle where cobalt ran from $24,000 to $95,000/t then crashed back to $26,000/t by 2019 on DRC supply glut. Nickel's 2022 spike was uniquely violent: a short squeeze on the LME in March 2022 sent prices above $100,000/t intraday (later cancelled) before normalizing around $30,000/t. Indonesian NPI and HPAL capacity additions then drove a sustained bear market to $14,000-$16,000/t by 2025 — a 53%+ peak-to-trough decline. Key historical lesson: positive catalysts in this sector (DRC export restriction, Indonesian quota cuts, NMC demand acceleration) produce sharp near-term rallies of 50-150%, but structural supply responses (new Indonesian HPAL, DRC quota relaxation, LFP substitution) arrive within 1-3 years and reliably terminate the cycle. ETF-level catalyst performance: the LIT ETF (Global X Lithium & Battery Tech, closest historical proxy for this sector) fell ~75% from its 2022 peak to mid-2024 trough as battery metals prices collapsed. Recovery since mid-2025 has been moderate (~30-40% off lows) driven by cobalt and DRC policy story. Battery metals as a sector category has significant reputational damage from the 2022-2024 crash among retail investors — a contrarian indicator.",

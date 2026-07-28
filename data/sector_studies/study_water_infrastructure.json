@@ -124,7 +124,7 @@
     }
   ],
 
-  "active_catalyst_ids": [],
+  "active_catalyst_ids": ["struct_ai_capex_supercycle"],
 
   "historical_catalyst_performance": {
     "summary": "Water infrastructure ETFs have historically re-rated sharply on drought/scarcity events with a 2-6 month lag as market first interprets drought as a macro event before recognizing infrastructure investment implications. PHO 2015-2022 returns show the sector is strongly pro-cyclical in growth environments (+23.6% in 2017, +37.6% in 2019, +31.3% in 2021) and meaningfully negative in broad risk-off years (-15.3% in 2015, -14.9% in 2022). This means the sector behaves more like industrial equities than defensive utilities in market stress — an important portfolio construction note. The EU regulatory catalyst (mandatory data center water reporting, rolling out 2026) has no historical precedent to map returns onto, but the analog from GDPR/digital regulation compliance waves suggests 12-24 month pull-forward in equipment demand. The IRA/IIJA infrastructure spending wave (2022-2025) drove PHO YTD +5% in early 2026 — outperforming broad water history but lagging AI-infra, indicating the narrative has not yet attracted flows commensurate with fundamental rerating.",

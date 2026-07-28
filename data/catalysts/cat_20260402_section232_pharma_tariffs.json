@@ -1,0 +1,40 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20260402_section232_pharma_tariffs",
+  "schema_version": "1.2",
+  "type": "event",
+  "created_at": "2026-07-01T00:00:00Z",
+  "detected_at": "2026-07-01T00:00:00Z",
+  "event_date": "2026-04-02T00:00:00Z",
+  "source": {
+    "type": "official_announcement",
+    "url": "https://www.crowell.com/en/insights/client-alerts/trump-administration-imposes-section-232-tariffs-on-patented-pharmaceutical-imports-tiered-rate-structure-takes-effect-beginning-july-31-2026",
+    "publication": "US Presidential Proclamation (Section 232) / Crowell",
+    "published_at": "2026-04-02T18:00:00Z"
+  },
+  "catalyst_type": "sanctions_trade",
+  "catalyst_subtype": "section_232_tariffs",
+  "description": "The US administration imposed Section 232 tariffs on patented pharmaceutical imports — 100% ad valorem — under a tiered structure taking effect 2026-07-31 for Annex III companies and 2026-09-29 for others. MFN-compliant companies get 0%; EU/Japan/Swiss face 15%. This is a discrete, dated policy HEADWIND to pharma_large_cap: it compresses ex-US manufacturer margins and forces re-shoring/pricing decisions, partially offsetting the GLP-1 supercycle tailwind. Relevant to pharma_large_cap as a bearish overlay on the otherwise-bullish GLP-1 thesis. Registered as a headwind event so the risk is documented and dated; the net sector call is Claude's (GLP-1 volume growth vs tariff margin drag).",
+  "geography": ["US", "EU", "JPN", "CHE", "GLOBAL"],
+  "magnitude": "high",
+  "novelty_score": 40,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": false,
+    "nov_02_new_sector": true,
+    "nov_03_new_source": true,
+    "nov_04_changes_rate": false,
+    "nov_05_consensus_surprise_gt50": false
+  },
+  "strength_score": 60,
+  "consensus_surprise": 0.4,
+  "is_priced_in_estimate": 0.75,
+  "relation_to_structural": "contradicts",
+  "decay_halflife_days": 120,
+  "related_catalyst_ids": ["struct_glp1_obesity_supercycle"],
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": null,
+  "user_rank": 4,
+  "user_notes": "Registered 2026-07-01 in the sectors-without-catalyst review. Headwind overlay on pharma_large_cap (driven primarily by struct_glp1_obesity_supercycle). relation_to_structural='contradicts' vs the GLP-1 structural: it dampens that structural's contribution in pharma's scoring (the confirm/contradict path applies a penalty to the structural score), so pharma's alignment reflects the tariff drag rather than being falsely lifted. strength 60; is_priced_in 0.75 (well-telegraphed). event_date anchored to the ~2026-04-02 proclamation (effective 2026-07-31). Re-check on MFN-compliance carve-outs and any rate revision.",
+  "tags": ["pharma", "tariffs", "section_232", "trade", "drug_pricing", "margin_headwind", "contradicts", "glp1"]
+}

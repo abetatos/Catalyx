@@ -5,9 +5,8 @@
   "sector_id": "space_defense_satellite",
   "sector_label": "Space & Satellite Defense",
   "created_at": "2026-06-05",
-  "last_updated": "2026-06-05",
+  "last_updated": "2026-06-29",
   "study_type": "full",
-
   "taxonomy": {
     "parent_sector": "defense",
     "adjacent_sectors": [
@@ -16,34 +15,29 @@
       "eu_defense_prime_contractors",
       "drone_autonomous_systems"
     ],
-    "differentiation_note": "Space & Satellite Defense is NOT space_commercial: the commercial sector is driven by satellite internet bandwidth economics (Starlink subscribers, launch cost curves, LEO broadband competition), whereas space_defense is driven by defense budget authorizations, Space Force procurement cycles, treaty dynamics, and adversarial space doctrines — a DoD contractor can grow its satellite revenue even if SpaceX dominates commercial launch, because they are bidding for classified programs with zero-sum competitive selection, not commoditized bandwidth. Space & Satellite Defense is also NOT us_defense_prime_contractors: while primes like Northrop Grumman and L3Harris are constituent companies in both sectors, the revenue stream here is specifically the satellite and space domain awareness portion of their backlog — a separate procurement cycle with longer lead times (5-10 year constellation programs), space-specific regulatory and classification constraints (SDA, NRO, USSF), and different technology risk profiles (radiation hardening, orbital mechanics, EW payloads) than conventional ground platforms or aircraft. The differentiation matters because a defense prime can miss on aircraft deliveries and still post record satellite contract wins; the mix shift within the company drives sector-specific alpha that a broad defense ETF will dilute."
+    "differentiation_note": "Space & Satellite Defense is NOT space_commercial: the commercial sector is driven by satellite internet bandwidth economics (Starlink subscribers, launch cost curves, LEO broadband competition), whereas space_defense is driven by defense budget authorizations, Space Force procurement cycles, treaty dynamics, and adversarial space doctrines — a DoD contractor can grow its satellite revenue even if SpaceX dominates commercial launch, because they are bidding for classified programs with zero-sum competitive selection, not commoditized bandwidth. Space & Satellite Defense is also NOT us_defense_prime_contractors: while primes like Northrop Grumman and L3Harris are constituent companies in both sectors, the revenue stream here is specifically the satellite and space domain awareness portion of their backlog — a separate procurement cycle with longer lead times (5-10 year constellation programs), space-specific regulatory and classification constraints (SDA, NRO, USSF), and different technology risk profiles (radiation hardening, orbital mechanics, EW payloads) than conventional ground platforms or aircraft. JUNE 2026 UPDATE: The Golden Dome program has now awarded its first two major contracts ($4.16B to SpaceX for SB-AMTI satellites + $2.29B for Space Data Network Backbone = $6.45B total to SpaceX), plus Space Force FY2027 budget request of $71.2B (vs ~$40B FY2026 with reconciliation) — the largest YoY expansion in Space Force history. The dual-use commercial/defense convergence (SpaceX winning both commercial and defense contracts) means the two adjacent sectors are now more intertwined than the taxonomy suggests, but the revenue drivers remain distinct."
   },
-
   "demand_drivers": [
-    "US Space Force budget growth: USSF received $26 billion in FY2026 appropriations (defense appropriations bill, Feb 2026), including $13.4 billion earmarked specifically for space and missile defense systems, a ~9% YoY increase from FY2025's ~$24 billion baseline. This is the single largest direct demand lever — roughly 60-70% of total sector revenue is US DoD contracted.",
-    "Golden Dome missile defense: President Trump's executive order establishing the Golden Dome program has created a new procurement wave. The FY2026 defense bill allocated $13.4 billion for space and missile defense components. A $2.3 billion firm-fixed-price OTA award to SpaceX for the Space Data Network Backbone was issued May 2026. CBO estimates the full Golden Dome architecture at $1.2 trillion over 20 years — if even 10% materializes in the next 5 years, it represents $120 billion in incremental addressable TAM, predominantly in satellite-based sensors and space-based interceptors.",
-    "Space Domain Awareness (SDA) 'Andromeda' program: Space Force awarded a 10-year, $1.8 billion IDIQ vehicle to 14 vendors (April 2026) to field next-generation SDA capabilities replacing the legacy GSSAP constellation. This is a perpetual rolling-award contract structure — not a one-time spend — creating recurring revenue visibility for qualified vendors.",
-    "SDA Tranche 3 Tracking Layer — $3.5 billion contract: In December 2025, SDA awarded $3.5 billion to Lockheed Martin ($1.1B), L3Harris ($843M), Rocket Lab ($805M), and Northrop Grumman ($764M) for 72 missile tracking and warning satellites (18 each) to be delivered over ~3 years. This is the largest single SDA award to date and locks in manufacturing revenue through ~2028-2029.",
-    "Dual-use commercial-defense convergence: Defense budgets have recognized that commercial satellite infrastructure (Starlink, Capella, Planet Labs) is now mission-critical military infrastructure. The US DoD has committed to integrating commercial low-earth orbit (LEO) networks into its Space Data Network alongside government-owned assets. This creates a second demand stream — government contracted usage of commercial constellations — that benefits names in ROKT/UFO that straddle both markets. Companies like Iridium (IRDM), Capella Space, and Planet Labs saw 2022-2024 defense contract spikes of ~300%.",
-    "NATO allied space investment: NATO's June 2022 formal designation of space as a 'fifth domain of operations' triggered allied spending commitments beyond the US. The UK (National Space Strategy), France (Space Command), Germany, Italy, Japan, and Australia are all expanding military satellite programs — widening the addressable market for US prime contractors via Foreign Military Sales and allied co-development programs."
+    "Golden Dome program — first major contracts awarded (NEW June 2026): SpaceX awarded two Golden Dome contracts totaling $6.45B: (1) $4.16B for SB-AMTI (Space-Based Advanced Moving Target Indicator) — a new LEO satellite constellation to detect and track airborne threats globally, awarded early June 2026; (2) $2.29B for Space Data Network Backbone (Starshield-based secure comms layer), awarded ~May 29, 2026. Separately, Northrop Grumman was selected among 12 companies by Space Force to develop space-based interceptors (April 24, 2026), partnered with startup Apex, targeting on-orbit capability by 2027. Total estimated Golden Dome program cost: $185B. If even 20% ($37B) flows in the next 3 years, this is a transformative addressable market expansion for the sector.",
+    "Space Force FY2027 budget — fastest growth of any service branch: Administration request $71.2B ($59B regular + $12B reconciliation) vs FY2026 baseline ~$40B with reconciliation. House appropriators' bill (June 2026) passed at $55.5B (omitting reconciliation funds). Year-on-year growth: +77% at the full request level. This is the single largest direct demand lever — roughly 60-70% of total sector revenue is US DoD contracted. Even the $55.5B House bill represents +39% YoY growth.",
+    "SDA Tranche 3 Tracking Layer — $3.5B in active production: December 2025 awards now in active execution: L3Harris ($843M), Lockheed Martin ($1.1B), Northrop Grumman ($764M), Rocket Lab ($805M) — 72 LEO missile tracking and warning satellites (18 each), delivery scheduled through ~2028-2029. This is contracted revenue flowing into FY2026-2028 earnings. SDA is also receiving a $30M tactical SATCOM demo contract to AST SpaceMobile — the commercial/defense boundary continues to blur.",
+    "Space Domain Awareness 'Andromeda' program — perpetual rolling IDIQ: Space Force awarded a 10-year, $1.8B IDIQ vehicle to 14 vendors (April 2026) to field next-generation SDA capabilities replacing the legacy GSSAP constellation. Perpetual rolling-award structure creates recurring revenue visibility for qualified vendors. Space Force's shift from standalone SDA to integrated Space Data Network architecture is a strategic pivot — some existing vendors face architecture mismatch risk, but net new contract value is expanding.",
+    "Dual-use commercial/defense convergence at unprecedented scale: SpaceX winning both the $4.16B SB-AMTI and $2.29B SDN contracts confirms that commercial space infrastructure IS mission-critical military infrastructure. DoD has committed to integrating commercial LEO networks (Starlink/Starshield, Capella, Planet Labs) into its Space Data Network alongside government-owned assets. Iridium's planned acquisition by Rocket Lab (announced June 29, 2026) — with Iridium holding significant US government SATCOM contracts — further blurs the commercial/defense line. This convergence is structurally bullish: it expands the addressable defense market to include commercial space companies.",
+    "NATO allied space investment: NATO's June 2022 formal designation of space as a 'fifth domain of operations' triggered allied spending commitments. UK National Space Strategy, France Space Command, Germany, Italy, Japan, and Australia are all expanding military satellite programs — widening the addressable market for US prime contractors via Foreign Military Sales and allied co-development programs. This is amplified by the current NATO rearmament cycle (struct_nato_rearmament) driving allied defense budgets to 3.5-5% of GDP."
   ],
-
   "supply_constraints": [
-    "Radiation-hardened component scarcity: satellite payloads require rad-hard processors, memory, and power systems that cannot be sourced from commercial semiconductor supply chains. Only a small number of qualified suppliers (BAE Systems Microelectronics, Microchip Technology Aeroflex, Renesas) produce rad-hard ICs, creating a bottleneck that lengthens satellite production lead times by 12-24 months vs commercial equivalents.",
-    "Classified program workforce: cleared aerospace engineers (active Secret/TS-SCI) are a limiting input — security clearance processing takes 12-18+ months, and competition for cleared talent between USSF programs, NRO, and commercial new-space firms creates wage inflation and attrition risk for established primes.",
-    "Launch slot availability for large constellations: even as SpaceX has dramatically reduced launch costs (Falcon 9 ~$2,700/kg LEO, Falcon Heavy ~$1,500/kg), the manifest for priority DoD payloads competes with Starlink replenishment and commercial backlog. Large constellation programs (300+ satellites) face multi-year launch scheduling constraints.",
-    "Ground control infrastructure: the software-defined ground systems needed to operate next-generation LEO/MEO constellations require proprietary mission operations software and specialized RF infrastructure — a 2-3 year build time that creates a bottleneck between satellite delivery and operational capability.",
-    "Export control (ITAR/EAR): US satellite technology is subject to strict International Traffic in Arms Regulations, limiting international customer base and allied co-production. ITAR reforms are incremental — any acceleration of non-US allied participation requires statutory changes that take multiple Congressional cycles."
+    "Radiation-hardened component scarcity: satellite payloads require rad-hard processors, memory, and power systems unavailable from commercial semiconductor supply chains. Only a small number of qualified suppliers (BAE Systems Microelectronics, Microchip Aeroflex, Renesas) produce rad-hard ICs, creating 12-24 month bottlenecks vs commercial equivalents.",
+    "Cleared aerospace workforce: active Secret/TS-SCI engineers are a limiting input — clearance processing takes 12-18+ months. Competition for cleared talent between USSF programs, NRO, and commercial new-space firms (SpaceX's Starshield, Rocket Lab post-Iridium) creates wage inflation and attrition risk for established primes.",
+    "SpaceX launch monopoly for DoD manifests: even as SpaceX dramatically reduced launch costs, the manifest for priority DoD payloads competes with Starlink replenishment and commercial backlog. Large constellation programs (300+ satellites) face multi-year launch scheduling constraints. Rocket Lab's planned Neutron medium-lift vehicle and Iridium constellation operation capability could partially relieve this constraint post-2027.",
+    "Ground control infrastructure: software-defined ground systems for next-generation LEO/MEO constellations require proprietary mission operations software and specialized RF infrastructure — a 2-3 year build time creating a bottleneck between satellite delivery and operational capability.",
+    "ITAR export control constraining allied market access: US satellite technology subject to ITAR, limiting international customer base and allied co-production. ITAR reforms are incremental — any acceleration of non-US allied participation requires statutory changes taking multiple Congressional cycles."
   ],
-
   "technology_maturity": null,
-
   "cycle_position": {
-    "assessment": "Early-to-mid bull market — new procurement wave just beginning, major catalysts not yet fully priced",
-    "rationale": "The sector is at the beginning of a multi-year procurement up-cycle driven by two independent demand catalysts: (1) the SDA Tranche 3 + Andromeda program awards made in December 2025 and April 2026 represent a fresh order book, with satellite production deliveries scheduled through 2028-2029 — this is contracted revenue not yet reflected in earnings; (2) Golden Dome is still in the early program definition phase, with $13.4 billion appropriated but contract awards still in process as of June 2026 — the bulk of contract announcements will come in H2 2026 and 2027, creating a multi-quarter catalyst pipeline. ETF performance confirms market is ahead of earnings but not obviously exhausted: ROKT +58% YTD (June 2026) vs benchmark defense indices typically +12-18% YTD. The risk to 'early-to-mid' classification is that a portion of the ROKT/UFO YTD move reflects SpaceX IPO speculation (retail flows into ROKT/ARKX as SpaceX proxies) rather than pure fundamentals — if SpaceX IPO expectations get reset, satellite defense names may face a narrative-specific correction even as underlying contracts accelerate. Net assessment: cycle is constructive but ETF entry should be sized relative to the SpaceX IPO premium embedded in current prices.",
-    "last_assessed": "2026-06-05"
+    "assessment": "Early-to-mid bull market — new procurement wave accelerating, Golden Dome first contracts awarded, FY2027 budget request largest in Space Force history",
+    "rationale": "As of June 29, 2026, the space defense sector has materially strengthened since the June 5 study. (1) Golden Dome has moved from 'speculative program definition' to 'active contracts': SpaceX $6.45B combined award is the first real capital deployed, and Northrop Grumman SBI demonstrator selection (12 companies) signals a Phase 1 competitive down-select is underway. The $185B total estimated program cost with initial capability targeted 2028 creates a 2-3 year forward procurement pipeline visible now; (2) FY2027 budget request of $71.2B (+77% YoY at full request) is the single largest Space Force expansion in history — even the more conservative House bill at $55.5B (+39%) represents a step-change from FY2026; (3) SDA Tranche 3 ($3.5B, Dec 2025) is in active satellite production through 2028-2029 — this is contracted, backlog-driven revenue not yet reflected in full-year earnings. Risk to 'early-to-mid' classification: a portion of ROKT's YTD move reflected SpaceX IPO speculation (retail proxy flows); with SPCX now listed and in consolidation, that speculative premium has partially unwound. ROKT AUM has declined from $410M to ~$250M — approaching the $200M liquidity floor. Net assessment: fundamentals are the strongest they have been, but the pure-play investable vehicle (ROKT) is weakened by AUM decline. The sector is constructive on fundamentals and catalysts, but ETF entry requires verifying ROKT AUM stability first.",
+    "last_assessed": "2026-06-29"
   },
-
   "etf_analysis": [
     {
       "ticker": "ROKT",
@@ -51,128 +45,123 @@
       "exchange": "NYSE",
       "currency": "USD",
       "ter": 0.0045,
-      "aum_m_usd": 410,
+      "aum_m_usd": 250,
       "replication": "physical",
       "avg_spread_bps": 18,
-      "top_10_concentration_pct": 0.52,
-      "characteristics": "Equal-weighted across space and deep-sea exploration companies. Top holdings include Planet Labs (8.2%), Intuitive Machines (8%), Iridium (5.6%), Lockheed Martin, Northrop Grumman, L3Harris. The equal-weighting methodology gives meaningful exposure to pure-play satellite names (Iridium, Planet, Intuitive Machines) that would be diluted in AUM-cap-weighted defense indices. 54% Aerospace & Defense sector exposure. YTD 2026 performance: +58%. NOT UCITS — not directly purchasable for Spanish retail investor under PRIIPs/KID rules without specific broker access.",
+      "top_10_concentration_pct": 0.54,
+      "characteristics": "Tracks the S&P Kensho Final Frontiers Index (deep space + deep sea exploration). Top holdings include Planet Labs, Intuitive Machines, Iridium (pending RKLB acquisition), Lockheed Martin, Northrop Grumman, L3Harris. Equal-weighting methodology gives meaningful exposure to pure-play satellite names. UPDATED: AUM ~$245-254M (DOWN from $410M in June 5 study) — approaching the $200M liquidity warning threshold. 52-week range $60.84-$137.63, current price ~$117. 1-year performance +91%. Shared vehicle with space_commercial sector. Note: RKLB announced $8B Iridium acquisition June 29 — both names are ROKT constituents, creating concentrated event risk on the announcement day.",
       "recommendation_tier": 2,
-      "limitations": "NOT UCITS — restricted for EU/Spanish retail investors. AUM $410M is above the $200M liquidity threshold but modest by ETF standards. Spread of 18bps is elevated — execution should use limit orders. The equal-weight methodology creates quarterly rebalancing turnover (~25-30% annualized) and tax friction. Deep-sea exposure (~15-20% of portfolio) reduces pure satellite defense exposure; cannot surgically separate space from subsea holdings."
+      "limitations": "NOT UCITS — restricted for EU/Spanish retail investors. AUM NOW ~$250M — APPROACHING $200M LIQUIDITY WARNING. Verify AUM before new positions; if AUM drops below $200M, reclassify to liquidity-warning. Spread of 18bps — use limit orders. Deep-sea exposure (~15-20% of portfolio) reduces pure satellite defense exposure. RKLB-Iridium acquisition creates event risk on ~8% combined weight in ROKT. The post-SpaceX-IPO AUM decline from $410M to $250M reflects unwinding of speculative retail proxy flows — more volatile AUM base going forward."
     },
     {
       "ticker": "UFO",
       "name": "Procure Space ETF",
       "exchange": "NASDAQ",
       "currency": "USD",
-      "ter": 0.0075,
-      "aum_m_usd": 90,
+      "ter": 0.0094,
+      "aum_m_usd": 1000,
       "replication": "physical",
-      "avg_spread_bps": 35,
+      "avg_spread_bps": 22,
       "top_10_concentration_pct": null,
-      "characteristics": "Pure-play space economy ETF with the highest exposure to commercial satellite operators. Revenue-weighted methodology (companies must derive >50% revenue from space activities). YTD 2026 performance: +75%. Includes SiriusXM, Iridium, Echostar, Maxar-successor entities, ViaSat, DirecTV. More concentrated commercial satellite exposure than ROKT. Highest revenue purity in the space ETF universe.",
+      "characteristics": "Pure-play space economy ETF with highest revenue-to-space weighting. AUM now ~$1B (was $90M in June 5 study — major AUM expansion driven by SpaceX IPO inflows and addition of SPCX at 6.17% weight). Updated top holdings (June 2026): Garmin 5.06%, Rocket Lab 4.99%, Trimble 4.97%, Sirius XM 4.94%, SpaceX SPCX 4.89%. The SPCX inclusion makes this the only accessible ETF with direct SpaceX equity exposure. However UFO has more commercial space character than defense satellite — it is a better proxy for space_commercial than space_defense_satellite.",
       "recommendation_tier": 3,
-      "limitations": "WARNING: AUM $90M is BELOW the $200M liquidity threshold (liquidity_warning: true). Spread of 35bps is ABOVE the 25bps alert level (spread_warning: true). NOT UCITS. High TER at 0.75%. The low AUM makes position entry/exit difficult for anything beyond small sizes (<€30k). Not suitable as primary vehicle — monitor-only classification until AUM recovers above $200M. The +75% YTD performance reflects speculative retail inflows and is vulnerable to a sharp reversal if SpaceX IPO timeline shifts."
+      "limitations": "NOT UCITS. TER 0.94% elevated. Spread ~22bps borderline. Primarily a commercial-space vehicle — defense satellite revenue is diluted by the revenue-weighting methodology (SDA/Golden Dome program revenue is a smaller share of constituent revenue than commercial broadband). For pure space_defense_satellite thesis, ROKT or ITA are better proxies. SPCX lock-up expiry (Sept-Dec 2026) creates AUM volatility risk."
     },
     {
       "ticker": "ITA",
       "name": "iShares U.S. Aerospace & Defense ETF",
       "exchange": "NYSE",
       "currency": "USD",
-      "ter": 0.0040,
+      "ter": 0.004,
       "aum_m_usd": 6200,
       "replication": "physical",
       "avg_spread_bps": 3,
       "top_10_concentration_pct": 0.55,
-      "characteristics": "Largest US defense ETF by AUM. Includes LMT (~18%), RTX, NOC, GD, L3Harris — all of which have significant satellite/space programs. Provides broad defense + space exposure at excellent liquidity and spread. NOT UCITS. Space and satellite programs represent approximately 20-30% of constituent revenue, making ITA a diluted but liquid proxy. Suitable as a portfolio hedge or for investors who want defense-broad exposure without satellite concentration risk.",
+      "characteristics": "Largest US defense ETF by AUM ($6.2B). Includes LMT (~18%), RTX, NOC, GD, L3Harris — all with significant satellite/space programs. Excellent liquidity (spread 3bps). Space and satellite programs represent approximately 20-30% of constituent revenue. All three SDA Tranche 3 prime contractors (LMT, L3H, NOC) are major holdings. Golden Dome contract awards (SpaceX $6.45B, NOC SBI selection) directly benefit ITA holdings. A diversified defense vehicle with material space exposure.",
       "recommendation_tier": 2,
-      "limitations": "NOT UCITS — restricted for EU/Spanish retail investors under PRIIPs. Primarily a broad-defense vehicle — only ~20-30% of revenue is space-specific. In a scenario where space defense outperforms but conventional defense disappoints (budget sequestration on aircraft), ITA will underperform a pure-play space vehicle. Use as a complement, not substitute, for satellite-specific thesis exposure."
+      "limitations": "NOT UCITS — restricted for EU/Spanish retail investors under PRIIPs. Primarily a broad-defense vehicle — only ~20-30% of revenue is space-specific. In a scenario where space defense outperforms but conventional defense disappoints (budget sequestration on aircraft), ITA will underperform a pure-play space vehicle. Use as complement to ROKT, not substitute. Note: SpaceX (SPCX) is NOT in ITA as it is not a defense prime contractor in the ITA index methodology."
     },
     {
-      "ticker": "AUCO.L",
-      "name": "Note: No UCITS pure-play space defense ETF available (June 2026)",
-      "exchange": "N/A",
-      "currency": "N/A",
-      "ter": null,
-      "aum_m_usd": null,
+      "ticker": "EUDF.L",
+      "name": "VanEck Defense UCITS ETF — best UCITS proxy for space defense",
+      "exchange": "LSE (London)",
+      "currency": "GBP / USD (currency variants)",
+      "ter": 0.0055,
+      "aum_m_usd": 1840,
       "replication": "physical",
-      "avg_spread_bps": null,
+      "avg_spread_bps": 8,
       "top_10_concentration_pct": null,
-      "characteristics": "UCITS GAP: As of June 2026, there is no UCITS-compliant ETF with primary exposure to space defense and military satellite constellations. Spanish investor thesis access requires either: (a) broker-level PRIIPs exception for ROKT/ITA (some EU brokers allow non-UCITS for professional clients); (b) direct equity positions in European-listed primes with space divisions (Airbus SE, Leonardo S.p.A., Thales — all LSE/Euronext-listed and UCITS-accessible as direct equity); (c) broad UCITS defense ETF (EUDF.L, DFEN.DE) which captures EU prime contractor space programs at lower purity. Monitor for new UCITS space ETF launches — a HANetf or Global X UCITS space defense product has been discussed for H2 2026.",
-      "recommendation_tier": 3,
-      "limitations": "Placeholder entry documenting the UCITS gap. No actionable UCITS vehicle exists. Best UCITS proxy for a Spanish investor: EUDF.L (VanEck Defense UCITS ETF, AUM $1.84B, TER 0.55%, spread 8bps) — captures Thales, Airbus Defence, Leonardo space programs at ~15-20% effective space revenue weight within the broader EU defense basket."
+      "characteristics": "Best available UCITS proxy for a Spanish investor seeking space defense exposure. AUM $1.84B — adequate liquidity. TER 0.55%, spread 8bps — acceptable. Captures EU prime contractor space programs (Thales, Airbus Defence, Leonardo) at ~15-20% effective space revenue weight within the broader EU defense basket. UCITS-compliant, LSE-listed. Provides NATO rearmament exposure (struct_nato_rearmament) plus indirect space program exposure via EU prime contractors. NOT a pure-play space defense ETF.",
+      "recommendation_tier": 1,
+      "limitations": "EU-focused defense composition — does NOT capture US Space Force programs, Golden Dome, or US SDA constellation contracts directly. Primary thesis is NATO rearmament (EU prime contractors) with space as a secondary exposure (~15-20%). For a Spanish investor, this is the only UCITS option with any meaningful space-adjacent defense exposure. Pure-play US space defense requires non-UCITS vehicles (ROKT, ITA)."
     }
   ],
-
   "key_metrics_to_monitor": [
     {
-      "metric": "US Space Force budget (annual appropriations, DoD RDTEN + Procurement)",
+      "metric": "Golden Dome contract awards YTD cumulative",
+      "unit": "USD billions awarded",
+      "source": "DefenseScoop, SpaceNews, SAM.gov, Breaking Defense",
+      "current": "$6.45B (SpaceX $4.16B SB-AMTI + $2.29B SDN Backbone, through June 2026)",
+      "comment": "This metric tracks the pace of Golden Dome capital deployment. Current $6.45B is Phase 1 of a $185B program. Next milestone: formal program architecture decision and Phase 2 space-based interceptor (SBI) competitive down-select (expected H2 2026 or Q1 2027) — this will size the addressable revenue more precisely for NOC/LMT/L3H. Total program CBO estimate was $1.2T over 20 years; White House estimate $175B over 5-7 years. Any official downward revision of program scope below $100B total is a partial deactivation trigger."
+    },
+    {
+      "metric": "Space Force annual budget appropriation",
       "unit": "USD billions",
-      "source": "DoD budget justification documents (SAF/FM); DefenseScoop; Air & Space Forces Magazine",
-      "current": 26.0,
-      "comment": "FY2026: $26B total Space Force appropriation (defense bill Feb 2026), including $13.4B for space and missile defense systems. Watch the FY2027 President's Budget Request (expected February 2027) — Space Force is requesting billions for the Space Data Network (SDN) in FY27. An increase >10% YoY is a strong bull signal; a cut (budget reconciliation risk) is the key deactivation trigger."
+      "source": "DoD budget documents (SAF/FM), SpaceNews, Stars and Stripes",
+      "current": "FY2026: ~$40B. FY2027 request: $71.2B ($59B regular + $12B reconciliation). House bill: $55.5B.",
+      "comment": "FY2027 is the decisive budget year: +77% at full request, +39% at House level. Watch the Senate appropriations bill and final FY2027 conference agreement (expected October-December 2026). A conference agreement above $55B is a strong bull signal; below $50B suggests reconciliation funds were stripped. This is the single most reliable forward indicator for sector revenue."
     },
     {
       "metric": "SDA constellation tranche contract award pace",
       "unit": "cumulative USD billions awarded YTD",
-      "source": "Space Development Agency press releases; SAM.gov; DefenseScoop",
-      "current": 3.5,
-      "comment": "Tranche 3 ($3.5B, Dec 2025) is the most recent major award. Tranche 3 Follow-On and Tranche 4 are the next watch events. Golden Dome Phase 1 space-based sensor contracts (expected H2 2026) could add $2-5B in awards. Track each award announcement — these are step-change revenue events for recipients (LMT, L3H, RKLB, NOC)."
+      "source": "Space Development Agency press releases, SAM.gov, DefenseScoop",
+      "current": "$3.5B (Tranche 3 Tracking Layer, Dec 2025) + $1.8B IDIQ Andromeda (Apr 2026) = $5.3B active",
+      "comment": "Tranche 3 ($3.5B, Dec 2025) in active satellite production through 2028-2029. Andromeda IDIQ ($1.8B, Apr 2026) adds recurring rolling awards. Tranche 4 award timing is the next watch event. Each major SDA award is a step-change revenue event for recipients (LMT, L3H, NOC, RKLB). Monitor SDA program office press releases monthly."
     },
     {
-      "metric": "Rocket Lab (RKLB) backlog and revenue guidance",
-      "unit": "USD millions backlog / USD millions annual revenue",
-      "source": "RKLB quarterly earnings; investor relations",
-      "current": null,
-      "comment": "Rocket Lab is the most pure-play investable public name in space defense (available on NASDAQ). Q1 2026 earnings backlog and revenue guidance are the highest-frequency fundamental signal for the sector. RKLB won $816M SDA prime contract + $190M HASTE contract + $90M USSF geostationary satellite contract in 2025-2026. Watch for backlog-to-revenue conversion timeline and any gross margin guidance — currently operating near breakeven."
-    },
-    {
-      "metric": "ROKT ETF AUM trajectory (USD millions)",
+      "metric": "ROKT ETF AUM trajectory",
       "unit": "USD millions AUM",
-      "source": "State Street SPDR ETF website; Bloomberg ETF data",
-      "current": 410,
-      "comment": "AUM as of last_verified 2026-06-01 per etf_universe.yaml. The 58% YTD price appreciation alone would have increased AUM from whatever the January 2026 base was — verify whether the AUM growth reflects net new inflows (bullish) or purely price appreciation (neutral). Net new flows > 5% monthly is a crowding watch signal."
+      "source": "State Street SPDR ETF website, Bloomberg ETF data",
+      "current": "~$250M (June 2026, down from $410M June 8 study)",
+      "comment": "CRITICAL: AUM has declined ~40% from the June 8 level, approaching the $200M liquidity warning threshold. This AUM decline appears to reflect unwinding of speculative retail proxy flows post-SpaceX IPO (investors who bought ROKT as a SpaceX proxy are now rotating to SPCX directly). If AUM falls below $200M, the vehicle must be reclassified as liquidity-warning and position sizing must be reduced. Verify at execution."
     },
     {
-      "metric": "Golden Dome program architecture decisions and contract awards",
-      "unit": "qualitative milestones (architecture decision / contract announcement)",
-      "source": "SpaceNews; DefenseScoop; White House / DoD press releases",
-      "current": "Architecture decision expected H2 2026",
-      "comment": "The CBO estimates $1.2T over 20 years for a full Golden Dome constellation (7,800 space-based interceptors). Even a partial implementation at $175B (White House estimate) over 5-7 years would be transformative. The critical catalyst is the formal program architecture decision — expected H2 2026 or early 2027. Until then, the program is a speculative option premium embedded in ROKT/RKLB prices, not contracted revenue."
+      "metric": "Rocket Lab (RKLB) Iridium acquisition regulatory progress",
+      "unit": "qualitative milestone",
+      "source": "RKLB press releases, FCC filings, DoJ/CFIUS",
+      "current": "Announced June 29, 2026. Close expected mid-2027.",
+      "comment": "Iridium's significant US government SATCOM contracts and L-band global spectrum license may trigger CFIUS national security review and FCC transfer-of-control proceeding. Both could extend the timeline or impose divestiture conditions. RKLB is the most pure-play public space defense name accessible via ROKT and UFO — the Iridium integration risk is the primary single-company risk in the sector ETFs. Monitor regulatory filing progress. Approval = strongly bullish for RKLB and indirectly for space defense sector."
     },
     {
-      "metric": "Commercial space backlog aggregate (publicly-reported contracts)",
-      "unit": "USD billions",
-      "source": "24/7 Wall St.; Space News commercial backlog trackers; individual company IR",
-      "current": 500,
-      "comment": "Commercial space backlog crossed $500B in June 2026 (24/7 Wall St. report, June 2026). This is a sentiment and narrative indicator more than a fundamental driver — verify which companies are included and whether government/defense contracts are excluded. The $500B backlog number is partially double-counted (commercial and government sides both claim portions of dual-use contracts)."
+      "metric": "Space-based interceptor (SBI) program down-select timeline",
+      "unit": "qualitative milestone / number of companies selected",
+      "source": "DefenseScoop, Breaking Defense, Space Force press releases",
+      "current": "12 companies selected for SBI demonstrators (April 24, 2026). Architecture decision: H2 2026 expected.",
+      "comment": "The 12-company SBI demonstrator selection is the current state. The next step is a competitive down-select to 2-4 prime contractors for the actual SBI production program — this will be the single largest Golden Dome contract announcement yet (potentially $10B+ total). Timing: H2 2026 to Q1 2027. Individual company winners will gap up on announcement. This is the most important single event remaining in the Golden Dome catalyst pipeline."
     }
   ],
-
   "active_catalyst_ids": [
     "struct_nato_rearmament",
     "cat_20260603_nato_defense_gdp",
     "cat_20260603_nato_hague_5pct_gdp"
   ],
-
   "historical_catalyst_performance": {
-    "summary": "Space defense ETFs have historically shown strong episodic responses to three catalyst types: (1) Geopolitical escalation events — the February 2022 Russian invasion of Ukraine triggered a ~40-60% re-rating in space/defense ETFs over 6-12 months, as the commercial-military satellite convergence thesis (Starlink used for Ukrainian battlefield comms) was validated in real-time; defense space budgets expanded ~40% in two years (US USSF $17.7B in FY2021 to $24.5B in FY2023). (2) Major contract awards — individual companies receiving SDA Tranche contracts have historically gapped up 5-15% on announcement day, with the multiple re-rating over the following quarter as earnings analysts update backlog estimates; Rocket Lab's SDA Tranche 3 award ($816M) drove a ~20-25% stock move in the days following announcement (December 2025). (3) Budget appropriations — Space Force budget passage is a lower-volatility, slower-moving catalyst; the February 2026 defense bill ($26B USSF) confirmed the spending trajectory but was largely anticipated, limiting the incremental move to ~3-5% on confirmation. Key lesson from Ukraine 2022: the commercial-military satellite blurring was the non-consensus thesis that drove the largest returns — investors who understood Starlink was military infrastructure from day one outperformed those who treated it as a commercial broadband story.",
+    "summary": "Space defense ETFs have historically shown strong episodic responses to three catalyst types: (1) Geopolitical escalation events — the February 2022 Russian invasion of Ukraine triggered a ~40-60% re-rating in space/defense ETFs over 6-12 months as the commercial-military satellite convergence thesis was validated in real-time (Starlink for Ukrainian battlefield comms). Defense space budgets expanded ~40% in two years (USSF $17.7B FY2021 to $24.5B FY2023). (2) Major contract awards — individual companies receiving SDA Tranche contracts have historically gapped up 5-15% on announcement day, with multiple re-rating over the following quarter. Rocket Lab SDA Tranche 3 award ($805M) drove ~20-25% stock move on announcement (December 2025). (3) Budget appropriations — Space Force budget passage is a lower-volatility, slower-moving catalyst; the FY2026 defense bill (~$40B USSF) confirmed the spending trajectory and drove ~3-5% incremental move. NEW PATTERN JUNE 2026: (4) M&A with government contract portfolios — Rocket Lab announcing $8B Iridium acquisition (+9.7% RKLB on day) confirms that vertical integration deals with government-contract-holding targets are immediately positive. The government contract backlog is valued at a premium, not a discount, by the market. (5) Golden Dome contract announcements — SpaceX $4.16B SB-AMTI award drove sector sentiment positive; no individual company re-rating data available yet (ROKT and ITA responses pending verification). Key lesson from Ukraine 2022: the commercial-military satellite blurring was the non-consensus thesis that drove the largest returns.",
     "response_to_major_contract_pct": 0.15,
     "response_to_geopolitical_escalation_pct": 0.45,
     "response_to_budget_passage_pct": 0.04,
     "ukraine_2022_sector_return_12m_pct": 0.55,
     "sda_tranche3_rklb_move_pct": 0.22
   },
-
   "risks": [
-    "SpaceX IPO premium reversal: A significant portion of the 2026 YTD performance in ROKT (+58%) and UFO (+75%) is attributable to retail speculation about SpaceX going public (targeting mid-2026 IPO at $1.5T valuation). ROKT holds names that would benefit from or be correlated with a SpaceX listing. If the SpaceX IPO is delayed, repriced, or structured as a direct listing without ETF-accessible shares, the speculative premium embedded in satellite ETFs could unwind 15-25% in a matter of weeks — entirely unrelated to defense contract fundamentals.",
-    "Golden Dome political and budget risk: The program's CBO estimate of $1.2T over 20 years creates Congressional appropriations risk. Future administrations may reduce scope, and in any given fiscal year, budget reconciliation could divert Golden Dome funding to other priorities. The program has no historical analog to model — the cost range ($175B to $3.6T) is so wide that individual company revenue projections embedded in analyst models are essentially speculative. A formal architecture decision that sizes the program below $500B 10-year would disappoint current market pricing.",
-    "ITAR and export control restriction on European market access: US satellite technology is subject to ITAR, restricting allied country participation in US constellation programs. This limits the addressable market for US primes to domestic + FMS-approved countries. Any escalation of ITAR restrictions (e.g., US-China or US-Russia technology decoupling triggered by secondary sanctions) could reduce the addressable FMS market. For EU-based investors, ITAR also complicates thesis access — no UCITS wrapper exists for pure-play US space defense, so exposure requires non-UCITS vehicles or direct equity in US-listed companies.",
-    "SDA program budget cuts and structure changes: The Space Force budget already cut SDA's data transport layer funding in the FY2026 cycle (Air & Space Forces Magazine, April 2026) — a real precedent for within-cycle program restructuring. The Space Force's shift from the SDA transport layer to a new 'Space Data Network backbone' (Breaking Defense, April 2026) represents a strategic pivot that may strand some vendors who built for the earlier architecture. Companies that were exclusively positioned for SDA Tranche 2/3 transport-layer work face a potential revenue gap in FY2027-2028.",
-    "Concentration and single-name risk in ETFs: ROKT's equal-weight methodology gives ~8% weight to small-cap pure plays (Planet Labs AUM: ~$500M market cap, Intuitive Machines market cap: ~$800M). These names have high revenue concentration in a small number of government contracts; a single contract loss or delivery delay can cause -30% to -50% drawdowns in the individual name, dragging the ETF. UFO's AUM of $90M with 35bps spreads means that market-wide risk-off events can cause severe ETF bid-ask widening and NAV tracking error.",
-    "Adversarial anti-satellite (ASAT) threats and in-orbit insurance: China and Russia have demonstrated kinetic ASAT capability (China's 2007 ASAT test, Russia's 2021 Nudol test). A live ASAT event against a US military constellation would simultaneously be a geopolitical escalation (short-term bullish for defense stocks) and a direct destruction of capital assets. The insurance and risk management infrastructure for large LEO constellations is nascent — the liability framework for debris generation from an ASAT attack on a 72-satellite Tranche 3 layer is unresolved."
+    "ROKT AUM approaching liquidity floor (NEW PRIMARY risk): AUM has fallen from $410M (June 8) to ~$250M (June 29). This represents ~40% AUM outflow in 3 weeks — consistent with retail proxy-for-SpaceX investors rotating to SPCX directly after the IPO. If ROKT AUM falls below $200M, the fund enters the liquidity-warning zone and the manager may consider ETF closure or merge. This is the primary EXECUTION risk — the underlying defense fundamentals are strong but the accessible vehicle is deteriorating. Mitigation: ITA or EUDF.L as alternatives; ROKT AUM must be verified before any new position.",
+    "Golden Dome political and budget risk: program's $185B total estimate creates Congressional appropriations risk. The House bill at $55.5B (omitting $12B reconciliation) is already ~$16B below the administration's request. Future administrations may reduce scope further. The architecture decision (H2 2026) will narrow the uncertainty range — until then, individual company revenue projections are speculative. A formal architecture decision sizing the total program below $100B 10-year would disappoint current pricing.",
+    "SpaceX dual-role concentration risk (defense AND commercial): SpaceX winning $6.45B in Golden Dome contracts while being a public company (SPCX) and the dominant commercial launch provider creates a new concentration risk. Any SpaceX operational disruption (FAA license suspension, launch failure, regulatory action) now simultaneously impacts: commercial launch services, Golden Dome SB-AMTI satellite production, SDN Backbone, and Starlink constellation maintenance. No previous single company in the space domain has had this multi-layer concentration.",
+    "SDA program architecture shift — stranded vendor risk: Space Force's reorganization of SDA into a broader acquisition office and the shift from the original SDA transport layer architecture to the new Space Data Network Backbone framework may strand some vendors positioned for earlier architectures. Companies exclusively positioned for SDA Tranche 2/3 transport-layer work face a potential revenue gap in FY2027-2028 as the new SDN architecture replaces it.",
+    "ITAR and export control constraining allied market access: US satellite technology subject to ITAR limits allied participation in US constellation programs. Any escalation of restrictions reduces the addressable FMS market. For EU-based investors, ITAR complicates thesis access — no pure-play UCITS wrapper for US space defense exists, so exposure requires non-UCITS vehicles (ROKT, ITA) or EUDF.L (EU primes only).",
+    "Adversarial anti-satellite (ASAT) threats: China and Russia have demonstrated kinetic ASAT capability (China 2007, Russia 2021). A live ASAT event against a US military constellation would simultaneously be a geopolitical escalation (short-term bullish for defense stocks) and a direct destruction of capital assets. The insurance/liability framework for large LEO constellation ASAT scenarios is unresolved — the SDA Tranche 3 72-satellite layer has no precedent for multi-satellite kinetic attack response."
   ],
-
   "narrative_maturity": "emerging",
   "narrative_trend": "increasing",
-  "narrative_notes": "Space defense is in the 'emerging' category per the scoring_weights.yaml anchored criteria: the space domain awareness and Golden Dome thesis appears in specialist defense publications (DefenseScoop, Breaking Defense, Via Satellite, Air & Space Forces Magazine) and some generalist defense coverage, but has NOT reached the Bloomberg/WSJ/FT daily-coverage threshold of 'mainstream'. Key observable criteria check: (a) Not yet appearing in sell-side thematic ETF marketing as a primary theme (defense ETF marketing still leads with NATO rearmament and EU prime contractors, not specifically space defense); (b) ROKT's AUM of $410M is below the $500M ETF-AUM 'mainstream' threshold from scoring_weights.yaml; (c) The Golden Dome program has received Congressional and political media coverage, but the investment thesis — 'how does Golden Dome translate into EPS for L3Harris vs Rocket Lab vs Northrop?' — is still being worked out in specialist research, not yet in consensus models. Aggregation rule (scoring_weights.yaml §NARRATIVE_MATURITY_MULTI-CATALYST): struct_nato_rearmament is 'mainstream' for EU prime contractors but 'emerging' specifically for the space domain sub-theme. The maximum rule applies — if this sector study is used alongside struct_nato_rearmament as its primary catalyst, the sector inherits 'mainstream' from that catalyst's broader narrative saturation. Within the space defense sub-thesis specifically (SDA constellation, Golden Dome, ASAT), 'emerging' is the honest classification as of June 2026."
+  "narrative_notes": "MAINTAINED at 'emerging' — but with HIGH confidence that reclassification to 'mainstream' should occur within 1-2 months. The Golden Dome contract awards (SpaceX $6.45B, Northrop Grumman SBI selection) are now front-page Bloomberg/FT/DefenseScoop stories, and the FY2027 Space Force budget request (+77% YoY) has been covered by mainstream financial media. However the INVESTMENT THESIS — 'how does Golden Dome translate into EPS for L3Harris vs Rocket Lab vs Northrop?' — is still being worked out in specialist research, not yet in consensus models. The maximum-catalyst rule from scoring_weights.yaml: struct_nato_rearmament is 'mainstream' for EU prime contractors but 'emerging' specifically for the space domain sub-theme. Using the maximum: if this study is used alongside struct_nato_rearmament as its primary catalyst, the sector inherits 'mainstream'. Within the space defense sub-thesis specifically (SDA constellation, Golden Dome SBIs, ASAT doctrine), 'emerging' remains the honest classification as of June 29, 2026. narrative_trend 'increasing': the Golden Dome first contract awards (June 2026) are the specific event accelerating narrative from specialist defense media to generalist financial coverage — the same pattern as NATO rearmament 12 months earlier."
 }

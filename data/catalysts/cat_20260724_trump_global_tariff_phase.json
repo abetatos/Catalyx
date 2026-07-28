@@ -1,0 +1,40 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20260724_trump_global_tariff_phase",
+  "schema_version": "1.2",
+  "type": "event",
+  "created_at": "2026-07-28T00:00:00Z",
+  "detected_at": "2026-07-28T00:00:00Z",
+  "event_date": "2026-07-24T00:00:00Z",
+  "source": {
+    "type": "official_announcement",
+    "url": "https://finance.yahoo.com/economy/policy/article/trumps-next-phase-of-global-tariffs-goes-into-effect-affecting-countries-that-provide-994-of-us-imports-210032314.html",
+    "publication": "US Executive Order (Section 301, Trade Act 1974) / NPR / Yahoo Finance",
+    "published_at": "2026-07-24T05:00:00Z"
+  },
+  "catalyst_type": "sanctions_trade",
+  "catalyst_subtype": "import_tariff",
+  "description": "The US administration brought into force a new phase of global tariffs replacing the expiring 2026 global tariff regime: 10%-12.5% duties on 60 of the top US trading partners covering ~99.4% of US imports, imposed under Section 301 (forced-labor investigation). Imports of most EU products face a 15% rate. The administration additionally threatened a 50% tariff on a range of Canadian goods, 100% tariffs on generic drugs from 2028, and a 100% tariff on goods from any country levying a digital-services tax on US companies, and announced USMCA will NOT be renewed in its current form. This is a broad, dated trade HEADWIND to global goods trade — a margin/pricing drag on EU exporters, autos, industrials and import-dependent supply chains, and a partial tailwind to reshoring themes (BIOSECURE biomanufacturing, domestic industrials). Registered as a macro-backdrop trade event so the risk is documented and dated; the net per-sector call is Claude's.",
+  "geography": ["US", "EU", "CAN", "MEX", "GLOBAL"],
+  "magnitude": "high",
+  "novelty_score": 40,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": false,
+    "nov_02_new_sector": false,
+    "nov_03_new_source": false,
+    "nov_04_changes_rate": true,
+    "nov_05_consensus_surprise_gt50": false
+  },
+  "strength_score": 72,
+  "consensus_surprise": 0.3,
+  "is_priced_in_estimate": 0.5,
+  "relation_to_structural": "independent",
+  "decay_halflife_days": 180,
+  "related_catalyst_ids": ["struct_biosecure_biomanufacturing_reshoring", "struct_em_capital_attraction_india"],
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": null,
+  "user_rank": 3,
+  "user_notes": "Registered 2026-07-28 in the scheduled review scan. Broad trade-policy headwind: the 2026 global tariff regime was renewed/escalated (10-12.5% on 60 partners, EU 15%, Section 301 forced-labor basis, USMCA non-renewal, 100% generic-drug tariff telegraphed for 2028). Treated as macro backdrop, not a single-sector catalyst. Positive read-across to reshoring structurals (biosecure biomanufacturing), negative read-across to EM/export-dependent (em_capital_attraction_india). is_priced_in 0.5 — tariffs have been a running 2026 theme but this specific phase (breadth + EU 15% + USMCA death) was fresh. Re-check for retaliation (EU/Canada countermeasures) and Supreme Court challenge status.",
+  "tags": ["tariffs", "trade", "section_301", "trump", "eu", "usmca", "reshoring", "macro_headwind"]
+}

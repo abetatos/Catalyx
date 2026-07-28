@@ -5,37 +5,37 @@
   "sector_id": "gold_physical",
   "sector_label": "Gold — Physical / ETC",
   "created_at": "2026-06-03",
-  "last_updated": "2026-06-12",
+  "last_updated": "2026-06-29",
   "study_type": "full",
 
   "taxonomy": {
     "parent_sector": "precious_metals",
     "adjacent_sectors": ["gold_miners", "silver_physical", "royalty_streaming_metals"],
-    "differentiation_note": "Gold physical (ETC) is distinct from gold miners in three critical dimensions: (1) Beta — physical ETC tracks gold 1.0x; miners track gold 2-3x via operational leverage. (2) Risk profile — physical ETC has NO operational risk: no mine accidents, no AISC inflation, no geopolitical asset exposure (Barrick in Mali, Newmont in Ghana). IGLN is backed by allocated, segregated physical gold in HSBC vault, London — the vehicle itself is structurally sound regardless of miner cost dynamics. (3) Use case — physical gold is held by macro funds and central banks as a monetary hedge and reserve asset; miners are held by equity investors seeking leveraged gold exposure. In the current cycle (mid-2026), the distinction is especially relevant because: (a) gold is in a significant correction from its ATH ($5,589 Jan 28) to current levels (~$4,080); (b) miners' operational leverage amplifies both the upside and the drawdown — a miner with 2x leverage to gold is DOWN more than gold physical during the correction; (c) the structural CB buying thesis is INDEPENDENT of miner margins and therefore most directly expressed through physical gold. The two vehicles serve different portfolio roles: physical = monetary insurance and CB-demand proxy; miners = leveraged directional bet requiring operational execution."
+    "differentiation_note": "Gold physical (ETC) is distinct from gold miners in three critical dimensions: (1) Beta — physical ETC tracks gold 1.0x; miners track gold 2-3x via operational leverage. (2) Risk profile — physical ETC has NO operational risk: no mine accidents, no AISC inflation, no geopolitical asset exposure (Barrick in Mali, Newmont in Ghana). IGLN is backed by allocated, segregated physical gold in HSBC vault, London — the vehicle itself is structurally sound regardless of miner cost dynamics. (3) Use case — physical gold is held by macro funds and central banks as a monetary hedge and reserve asset; miners are held by equity investors seeking leveraged gold exposure. In the current cycle (late June 2026), the distinction is especially relevant because: (a) gold is in a significant correction from its ATH of ~$5,602 (Jan 28, 2026) to approximately $4,026/oz (-28%); (b) miners carry the additional Iran diesel AISC risk that does not affect physical; (c) the structural CB buying thesis (INDEPENDENT of miner margins) is most directly expressed through physical gold. Physical = monetary insurance and CB-demand proxy; miners = leveraged directional bet requiring operational execution."
   },
 
   "demand_drivers": [
-    "Central bank systematic reserve diversification (structural, ongoing — primary driver): WGC Q1 2026: 244t net purchases (+3% YoY). Full-year 2026 guidance: 700-900t (WGC). PBoC ramped from ~1t/month (Sep 2025-Feb 2026) to 5t in March and 8t in April — an acceleration. Poland NBP led with 14t in recent months. 95% of CBs surveyed by WGC expect to grow gold reserves in the next 12 months. This demand is price-insensitive, non-procyclical, and has multi-decade holding horizons. Post-2022 Russia sanctions have made gold the only reserve asset with no sanctions vulnerability — this is a structural shift in reserve policy, not a cycle.",
-    "Stagflation hedge — NEW near-term driver as of June 2026: US CPI May 2026 = 4.2% YoY (highest since Apr 2023), energy-driven (Iran war oil shock). Core 2.9%. Fed on hold (3.50-3.75%) with markets now pricing 70% odds of at least one hike by December (CME FedWatch). New Fed Chair Warsh signals inflation hawkishness. Stagflation — high inflation + decelerating growth + fiscal stress — is historically gold's STRONGEST environment precisely because monetary policy cannot address the supply-side cause. Goldman Sachs stripped all 2026 rate cuts from its forecast but kept its $5,400 year-end gold target intact, citing CB demand + stagflation as the structural floor.",
-    "Investment demand acceleration (Q1 2026 record): WGC Q1 2026 total gold demand: 1,231t, value surging to record US$193B (quarterly average LBMA PM fix: $4,873/oz, itself a record). Bar/coin demand: 474t (+42% YoY, second-highest quarter on record). Gold ETF flows: +62t in Q1, with Asian funds adding $14B (record quarter for Asian gold ETFs). Despite US fund outflows in March, Eastern inflows dominated. IGLN AUM: ~$37.7B (confirmed as of May 15, 2026 Fund NAV).",
-    "USD diversification and dedollarization (secular tailwind): IMF COFER non-USD reserve share at 58.2% (approaching 5-year high). Gold is the only reserve asset with no counterparty risk. The Russia 2022 sanctions demonstrated that USD-denominated reserves can be frozen — this has been internalized by EM central banks with long institutional memory. The portfolio shift away from USD assets is slow and multi-decade, providing a persistent secular bid for gold.",
-    "Geopolitical safe-haven demand (episodic but recurring): Iran war / Strait of Hormuz energy shock is ongoing. Hormuz brinkmanship continues. Multiple geopolitical flashpoints (Russia-Ukraine, Taiwan tensions). Each escalation episode provides a tactical bid. Short-term positive, but structurally less important than CB buying — these episodic bids are absorbed by the structural floor.",
-    "Real rate environment (currently HEADWIND — regime change from prior study): Prior study assumed the Fed was on a cutting path. As of June 2026, this has reversed. TIPS 5-year real yield at 1.367% (April auction). 10-year TIPS running near 2.2%. Rate hike odds at 72% for December. This is NOW a headwind for gold, not a tailwind — the opportunity cost of holding non-yielding gold has increased. However, Goldman and JPMorgan maintain their bullish targets precisely because the CB demand + stagflation drivers override the real-rate headwind in their models."
+    "Central bank systematic reserve diversification (structural, primary): WGC Q1 2026 net purchases 244t (+3% YoY), above five-year average. Full-year 2026 guidance 700-900t. PBoC added 7t in Q1 (total: 2,313t = 9% of reserves), accelerating from ~1t/month (late 2025) to 5t/March and 8t/April. WGC June 2026 survey: RECORD 45% of CBs plan to ADD reserves, 89% expect global CB holdings to increase. March 2026 saw 30t net outflows (isolated — Q1 total still +244t). This demand is price-insensitive and multi-decade — post-2022 Russia sanctions made gold the only reserve asset with no sanctions vulnerability, a structural shift in reserve policy not a cycle.",
+    "Stagflation hedge (active — Fed hawkish pivot, June 17 FOMC): US CPI May 2026 = 4.2% YoY (energy-driven Iran/Hormuz shock). Fed held at 3.50-3.75% June 17 (Warsh's first FOMC), hawkish dot-plot flip: median 2026 dot raised to 3.8% (from 3.4% March), signaling at least one hike more likely than a cut. Oct hike in play. Stagflation — high inflation + decelerating growth — is historically gold's STRONGEST environment because monetary policy cannot address a supply-side cause. Goldman cut year-end target to $4,900 (from $5,400) assuming no cuts, but JPMorgan ~$6,000, Wells Fargo $6,100-6,300, Bank of America $6,000. Consensus range end-2026: $4,900-6,300.",
+    "WGC Q1 2026 record demand: total gold demand Q1 2026 = 1,231t at record USD $193B. Bar/coin 474t (+42% YoY, second-highest quarter on record). Gold ETF net +62t globally — Asian funds record $14B inflows. Chinese net imports 317t in Q1 (~3x prior quarter). IGLN AUM ~$37.7B confirmed (May 15, 2026 Fund NAV).",
+    "USD diversification / dedollarization (secular tailwind): IMF COFER non-USD reserve share ~58%. Gold is the only reserve asset with zero counterparty risk. EM central banks continuing systematic portfolio shift. Slow and multi-decade — persistent secular floor bid.",
+    "Real rate environment (HEADWIND — confirmed June 17): June 17 FOMC hawkish flip removes all 2026 cuts and adds hike probability. TIPS 10-year real yield ~2.2%. Primary near-term headwind — opportunity cost of non-yielding gold has risen. Goldman/JPMorgan maintain bullish targets precisely because CB demand + stagflation override the real-rate headwind in their models. Gold's -10.2% past month reflects the rate regime change.",
+    "Geopolitical safe-haven demand (episodic): US-Iran ceasefire framework signed June 18. BUT Trump stated June 26 Iran violated the agreement with drone attacks near Hormuz. Ceasefire fragile. Each escalation episode provides a tactical bid. Short-term positive, structurally less important than CB buying."
   ],
 
   "supply_constraints": [
-    "Mine production structurally inelastic: global gold mine production is ~3,700t/year and has been essentially flat for a decade. High prices in 2022-2026 have not produced a supply response — new mine development takes 10-15 years from discovery to first pour.",
-    "Above-ground stock dominance: total above-ground gold stock is ~212,000t vs ~3,700t annual mine supply. Gold never disappears — recycled gold (~1,200t/year) is the only supply response to high prices. But recycling supply is limited by holders' willingness to sell, which is low when CB demand creates a guaranteed buyer.",
-    "Grade decline: average mined ore grade has declined from ~1.8g/t (2000) to ~1.1g/t (2026). More rock must be processed to produce the same gold.",
-    "No meaningful supply surprise risk: unlike copper (AI data center demand underpriced), gold supply has no analogous positive demand shock waiting. Supply is well-understood and geologically constrained."
+    "Mine production structurally inelastic: global gold mine production ~3,700t/year, essentially flat for a decade. High prices in 2022-2026 have not produced a supply response — new mine development takes 10-15 years from discovery to first pour.",
+    "Above-ground stock dominance: total above-ground gold ~212,000t vs ~3,700t annual mine supply. Recycled gold (~1,200t/year) is the only price-responsive supply, limited by holders' willingness to sell — low when CB demand creates a guaranteed buyer.",
+    "Grade decline: average mined ore grade declined from ~1.8g/t (2000) to ~1.1g/t (2026). More rock processed per ounce — rising cost floor for producers.",
+    "No meaningful supply surprise risk: unlike copper or uranium, gold supply has no positive demand shock waiting to be priced in. Geologically constrained and well-understood."
   ],
 
   "technology_maturity": null,
 
   "cycle_position": {
-    "assessment": "Mid-cycle secular bull market — significant correction underway from ATH, structural thesis intact but near-term environment is hostile",
-    "rationale": "Gold has corrected from its January 28, 2026 ATH of $5,589/oz to approximately $4,080/oz as of June 11-12, 2026 — a ~27% drawdown, the deepest pullback of the current bull cycle. The correction is driven by three concurrent headwinds: (1) May NFP 172k vs 85k consensus, erasing near-term rate cut expectations and spiking hike odds to 70%; (2) May CPI 4.2% forcing the real-yield adjustment (TIPS 10-year near 2.2%); (3) USD strengthening as the inflation shock is perceived as a cyclical, not just geopolitical, phenomenon. UBS cut its near-term target and trimmed year-end to $5,500 (from $5,900). Gold briefly slid to $4,161 on June 10 before recovering slightly to ~$4,080 on June 11. HOWEVER — Goldman Sachs $5,400 year-end target held with rate cuts stripped. JPMorgan maintaining $6,000+ by year-end. The structural case (CB buying 244t/quarter, stagflation, dedollarization) is not broken — what changed is the rate environment, which is a headwind that delays rather than invalidates the bull. The cycle analog in this correction: gold's 2021 correction (from $2,070 ATH to $1,680 trough = -19%) before resuming to $2,600+. Current correction is deeper (-27%), driven by a more acute real-rate shock. CB buying provides the non-procyclical floor that absorbs the selling. KEY WATCH: TIPS 10-year real yield — if it breaks above 2.5% and holds, the structural bull thesis requires reassessment.",
-    "last_assessed": "2026-06-12"
+    "assessment": "Mid-cycle secular bull market — fourth consecutive monthly loss, deepest correction from ATH, structural thesis intact but near-term environment is hostile; panic-dip vs regime-change question is OPEN",
+    "rationale": "Gold peaked at ~$5,602/oz Jan 28, 2026. As of June 29 it is ~$4,026/oz (-28%). This is the FOURTH STRAIGHT MONTHLY LOSS and the deepest pullback of the current bull cycle. June 25 confirmed $4,005 (Fortune.com); June 22 at $4,191. IGLN 52-week range GBP 63.61-107.70 confirms the magnitude. Three concurrent headwinds: (1) June 17 FOMC hawkish dot-plot flip (cat_20260617_fed_hawkish_pivot) — median sees a hike, zero cuts, Oct hike in play; (2) CPI 4.2% forcing real-yield adjustment (TIPS 10-year ~2.2%); (3) USD strength on Warsh inflation hawkishness. STRUCTURAL CASE QUESTION — PANIC DIP or REGIME CHANGE? Evidence for PANIC DIP: WGC June 2026 survey — record 45% of CBs plan to ADD (buying into the correction, not stepping back). PBoC accelerated purchases March/April. Goldman cut target to $4,900 (not $3,500). JPMorgan $6,000 unchanged. Evidence for REGIME CHANGE: four monthly losses, TIPS near danger zone, Goldman CUT. KEY FALSIFICATION THRESHOLD: TIPS 10-year above 2.5% sustained = re-assess timeline. Current ~2.2% is proximate but not yet breach. Analog: 2021 correction ($2,070→$1,680, -19%) driven by TIPS spiking 0% → +0.8%. Current correction deeper but CB buying pace (~900t/year run-rate) has no 2021 analog — absorbing more selling.",
+    "last_assessed": "2026-06-29"
   },
 
   "etf_analysis": [
@@ -50,9 +50,9 @@
       "avg_spread_bps": 3,
       "avg_daily_volume_m_usd": null,
       "top_10_concentration_pct": 1.0,
-      "characteristics": "Physically backed gold ETC — each share backed by allocated gold in HSBC vault, London. USD-denominated on LSE. Lowest TER in UCITS gold space (0.12%). AUM confirmed at $37,707M (NAV as of May 15, 2026). Directly tracks LBMA gold PM fix. The go-to institutional UCITS gold vehicle. Has experienced AUM fluctuation in the correction period — monitor monthly.",
+      "characteristics": "Physically backed gold ETC — each share backed by allocated gold in HSBC vault, London. USD-denominated on LSE. Lowest TER in UCITS gold space (0.12%). AUM ~$37,707M confirmed (May 15, 2026 Fund NAV). Current price ~GBP 78.73 (June 29, prev close 79.19). 52-week range GBP 63.61-107.70; current = -26.9% from 52-week high. Directly tracks LBMA PM fix. Institutional go-to UCITS vehicle. For Spanish investor entering at current levels: the 28% correction from ATH creates more attractive risk/reward vs entering at $5,600 — provided structural thesis intact.",
       "recommendation_tier": 1,
-      "limitations": "USD-denominated — EUR/USD adds P&L volatility for Spanish investor. During the correction from $5,589 to $4,080 (-27%), IGLN has declined proportionally. For a Spanish investor entering at current levels: the correction creates a potentially more attractive entry vs ATH levels, but the near-term rate headwind means timing risk is elevated. No EUR-hedged version under this ticker."
+      "limitations": "USD-denominated on LSE — EUR/USD adds P&L volatility for EUR-base Spanish investor. No EUR-hedged version under this ticker. During continued real-yield pressure (Warsh hike scenario), IGLN will continue declining proportionally to spot gold. No yield; opportunity cost elevated at 3.75% Fed funds."
     },
     {
       "ticker": "WGLD.L",
@@ -65,9 +65,9 @@
       "avg_spread_bps": 3,
       "avg_daily_volume_m_usd": null,
       "top_10_concentration_pct": 1.0,
-      "characteristics": "WisdomTree's physically backed gold ETC. Same physical structure as IGLN. Some investors diversify custodian risk between IGLN (BlackRock/HSBC) and WGLD (WisdomTree/ICBC Standard Bank).",
+      "characteristics": "WisdomTree physically backed gold ETC. Same physical structure as IGLN. Custodian: ICBC Standard Bank (vs HSBC for IGLN). AUM $9.8B. Use for custodian diversification from IGLN.",
       "recommendation_tier": 1,
-      "limitations": "TER marginally higher than IGLN (0.15% vs 0.12%). For long-term holds, IGLN preferred for cost efficiency. WGLD as alternative for custodian diversification."
+      "limitations": "TER 0.15% vs IGLN 0.12% — marginal cost difference favors IGLN for long holds. WGLD as secondary vehicle for custodian diversification only."
     },
     {
       "ticker": "XGLD.DE",
@@ -80,9 +80,9 @@
       "avg_spread_bps": 7,
       "avg_daily_volume_m_usd": null,
       "top_10_concentration_pct": 1.0,
-      "characteristics": "EUR-hedged physical gold ETC. Eliminates USD/EUR volatility from P&L. EUR-denominated on XETRA — most convenient exchange for Spanish brokers. In the current environment (USD strengthening on rate hike fears), the EUR hedge provides a cushion vs unhedged IGLN.",
+      "characteristics": "EUR-hedged physical gold ETC. Eliminates USD/EUR from P&L. EUR-denominated on XETRA — most convenient for Spanish brokers. In current environment (USD strengthening on Warsh rate hike fears), the EUR hedge provides a meaningful cushion vs unhedged IGLN — pure gold exposure in EUR.",
       "recommendation_tier": 2,
-      "limitations": "Higher TER (0.28%) reflects hedge cost. During a USD strengthening environment (as per current hike odds), EUR-hedged underperforms unhedged in USD terms but delivers pure gold price exposure in EUR. Preferred if investor wants to isolate the gold thesis from FX and currently sees USD strength as persistent."
+      "limitations": "Higher TER (0.28%) reflects hedge cost. During USD strengthening (current), EUR-hedged XGLD outperforms unhedged IGLN in EUR terms. Preferred if investor wants to isolate gold thesis from FX and USD strength is expected to persist through Warsh era. AUM $2.1B — adequate but watch if correction erodes it."
     }
   ],
 
@@ -90,69 +90,69 @@
     {
       "metric": "Gold spot price (USD/oz)",
       "unit": "USD per troy ounce",
-      "source": "LBMA PM Fix / Bloomberg",
-      "current": 4080,
-      "comment": "June 11, 2026: ~$4,080/oz. Down from ATH of $5,589 (Jan 28, 2026) — a -27% drawdown. Q1 2026 quarterly average was $4,873/oz (WGC). Key levels: $4,000 (psychological support / CB buying floor); $3,800 (would signal thesis stress requiring reassessment). Upside targets: Goldman $5,400, JPMorgan $6,000 year-end. Near-term trigger for recovery: jobs / CPI data showing inflation cooling or growth decelerating (confirming stagflation rather than pure inflation — the latter is more negative for gold, the former is gold-positive)."
+      "source": "LBMA PM Fix / goldprice.org",
+      "current": 4026,
+      "comment": "June 29, 2026: ~$4,026/oz per macro brief. June 25: $4,005 (Fortune); June 22: $4,191. -10.2% past month; -28% from Jan 28 ATH of $5,602. Fourth consecutive monthly loss. Key levels: $4,000 (psychological/CB buying floor), $3,800 (thesis stress zone). Year-end targets: Goldman $4,900, JPMorgan ~$6,000, Wells Fargo $6,100-6,300, BoA $6,000. Next catalyst for recovery: jobs/CPI data showing stagflation (growth deceleration outweighs inflation) OR TIPS peak."
     },
     {
       "metric": "US 10-year TIPS real yield",
       "unit": "percent",
       "source": "US Treasury / Fed H.15 / Bloomberg DFII10",
       "current": 2.2,
-      "comment": "CRITICAL: real yield near 2.2% as of June 2026 (5-year TIPS auction got 1.367% in April; 10-year extrapolated higher). This is NOW the primary headwind for gold. Historical reference: real yields above +2% (2022) caused a gold correction of ~15-20%. Current level is in that danger zone. WATCH: if TIPS 10-year breaks above 2.5% and holds, the structural bull thesis requires reassessment of timeline. If it peaks and reverses on stagflation data, gold resumes."
+      "comment": "CRITICAL HEADWIND. ~2.2% as of late June 2026. June 17 FOMC raised median 2026 dot to 3.8% (hike bias). FALSIFICATION THRESHOLD: TIPS 10-year breaking 2.5% sustained = reassess timeline. If it peaks and reverses on stagflation/growth data, gold resumes. Most important variable to track weekly."
     },
     {
       "metric": "WGC Central Bank net purchases (quarterly, tonnes)",
       "unit": "tonnes net quarterly",
-      "source": "WGC Gold Demand Trends report (quarterly)",
+      "source": "WGC Gold Demand Trends (quarterly) / WGC Central Bank Survey",
       "current": 244,
-      "comment": "Q1 2026: 244t (+3% YoY). Full-year guidance: 700-900t. PBoC ACCELERATING: from ~1t/month to 5t (March) to 8t (April). Poland NBP 14t. Buyer base broadening (new entrants in 2026). This is the thesis-preserving signal: CB buying did NOT slow during the correction — it demonstrates the non-procyclical nature of this demand pillar. Watch Q2 2026 WGC report for continuity."
+      "comment": "Q1 2026: +244t net. March 2026: -30t (isolated monthly outflow). WGC June 2026 survey: RECORD 45% of CBs plan to add reserves. Q2 2026 WGC report (July 2026) — watch whether CB buying held through the correction. Continued buying INTO the drawdown = structural thesis intact."
     },
     {
-      "metric": "CME FedWatch December 2026 rate hike probability",
+      "metric": "CME FedWatch October/December 2026 rate hike probability",
       "unit": "percent probability",
       "source": "CME FedWatch Tool",
       "current": 70,
-      "comment": "June 2026: 70% probability of at least one 25bp hike by December (up from 45% a week prior). This is the primary tactical headwind for gold currently. If hike probability falls on soft growth data, gold will recover. If it rises further (e.g., July CPI also hot), further gold pressure near-term. Goldman Sachs kept $5,400 target with hike probability raised to 20% — so the market is pricing a different distribution than Goldman. Monitor CME FedWatch weekly."
+      "comment": "~70% probability of at least one hike by December (cat_20260617_fed_hawkish_pivot, strength 80). Oct hike in play per June 17 FOMC. Primary tactical headwind. Monitor weekly — if soft growth data reduces hike probability, gold recovers tactically."
     },
     {
-      "metric": "IGLN AUM (proxy for institutional gold ETF demand)",
-      "unit": "USD billion",
-      "source": "BlackRock iShares / Bloomberg",
-      "current": 37.7,
-      "comment": "May 15, 2026: $37,707M confirmed (Fund NAV). In the correction from ATH, IGLN AUM fluctuates with both price and flows. Monitor monthly — sustained AUM INFLOWS during the correction would signal institutional dip-buying (thesis reinforcement); sustained OUTFLOWS would signal institutional thesis abandonment (warning)."
+      "metric": "IGLN.L price (GBP)",
+      "unit": "GBP",
+      "source": "LSE / Investing.com",
+      "current": 78.73,
+      "comment": "June 29, 2026: GBP 78.73 (prev close 79.19). 52-week range 63.61-107.70. -26.9% from 52-week high. At the lower quarter of the 52-week range — technically near support. Downtrend may continue if TIPS yields rise further toward 2.5%."
     },
     {
       "metric": "IMF COFER non-USD reserve share",
       "unit": "fraction of total FX reserves",
       "source": "IMF COFER quarterly",
       "current": 0.582,
-      "comment": "Q2 2026 data: 0.582. Trending toward increasing non-USD share = positive for gold. Watch for sustained break above 0.60 — would signal dedollarization acceleration and further CB gold buying impetus."
+      "comment": "Q2 2026: 0.582. Trending toward 0.60. Sustained break above 0.60 = dedollarization acceleration signal and further CB gold buying impetus. Structural trend clear; pace matters for timing."
     }
   ],
 
   "active_catalyst_ids": [
-    "struct_cb_gold_accumulation"
+    "struct_cb_gold_accumulation",
+    "cat_20260617_fed_hawkish_pivot"
   ],
 
   "historical_catalyst_performance": {
-    "summary": "Physical gold ETCs (IGLN, GLD) track gold spot with minimal deviation. Historically, gold's strongest 12-month moves came during: (1) Fed easing cycles — gold +32% in 2019-2020 as Fed cut from 2.5% to 0%; (2) Geopolitical shocks — gold +25% in 2022 post-Ukraine invasion; (3) Banking crises — gold +15% in March 2023 (SVB); (4) Stagflation analogs — 1973-1980 gold from $65 to $850 (+1,200%), the best gold environment in history. The 2024-2026 bull market has been driven by structural CB demand (unlike prior cycles driven by episodic events). Key historical analog for the CURRENT CORRECTION: gold's 2021 correction from $2,070 ATH to $1,680 trough (-19%) was driven by the same mechanism — real yield spike from 0% to +0.8% in TIPS. The current correction is driven by real yields spiking toward 2.2%, which is more severe — hence the -27% drawdown. However, the CB buying was NOT present in the 2021 cycle at current pace (244t/quarter). This structural buyer base is new vs history and is absorbing the selling. The gold correction of 2022 (-20% in 6 months driven by TIPS yield from -1% to +1.5%) is the most comparable recent analog; gold bottomed and then made new ATHs when real yields peaked. The thesis is: real yields peak when stagflation data confirms slowing growth → Fed cannot hike into recession → real yields reverse → gold resumes.",
+    "summary": "Physical gold ETCs track gold spot with minimal deviation. Historically: (1) Fed easing cycles — gold +32% in 2019-2020 (Fed cut 2.5%→0%); (2) Geopolitical shocks — gold +25% in 2022 post-Ukraine; (3) Banking crises — gold +15% March 2023 (SVB); (4) Stagflation — 1973-1980 gold $65→$850 (+1,200%), gold's strongest historical environment. Current correction analog: 2021 correction ($2,070→$1,680, -19%) driven by TIPS spiking 0%→+0.8%. Present is deeper (-28%) at higher absolute TIPS levels. Structural CB buying at ~900t/year is new vs 2021 (~400t/year) — absorbing more of the selling. Resolution scenario: TIPS peaks when stagflation confirms growth deceleration → Fed cannot hike into recession → real yields reverse → gold resumes. June 17 hawkish pivot (cat_20260617) is consistent with a rates PEAK near-term rather than indefinite escalation.",
     "avg_response_to_fed_cut_signal_pct": 0.08,
     "avg_response_to_cb_buying_acceleration_pct": 0.06,
     "avg_response_to_geopolitical_shock_pct": 0.12
   },
 
   "risks": [
-    "Real interest rate escalation — PRIMARY NEAR-TERM RISK: TIPS 10-year near 2.2% and rising. CME FedWatch pricing 70% probability of December rate hike. If Warsh delivers a hike into Q4 2026, real yields could spike further. Real yields above +2.5% sustained = gold correction extending below $4,000. Historical reference: 2022 real-yield shock took gold from $2,070 to $1,618 (-22%). Current correction is already deeper (-27%) but CB buying is absorbing more of the flow.",
-    "Stagflation vs pure inflation disambiguation: gold performs well in stagflation (high inflation + decelerating growth) but poorly in pure inflation with tight labor markets (the 1999-2000 scenario). May NFP 172k suggests a still-resilient labor market. If labor stays strong AND inflation stays high, this is pure inflation (not stagflation) → Fed can hike without recession risk → gold remains under pressure. Watch for cracks in labor market data as the key discriminator.",
-    "ETF outflow feedback loop: IGLN AUM at $37.7B represents substantial institutional positioning. If gold price extends below $4,000 and triggers systematic stop-losses, ETF outflows could amplify the downside. Unlike CB demand (steady, price-insensitive), ETF flows are procyclical. The 2013 gold crash (-28%) was partly ETF-driven. Key distinction vs 2013: CB buying in 2013 was ~400t/year; in 2026 it is tracking 900t/year — a far larger structural offset.",
-    "USD strengthening sustained: Warsh's anti-inflation stance combined with a resilient US economy (jobs beat) is USD-positive. Dollar strength is the most consistent tactical headwind for gold. If DXY breaks above 108 and holds, gold faces additional pressure in non-USD currencies, reducing demand from EM buyers.",
-    "China domestic demand shift: China is a key gold consumer (retail + PBoC). If the Chinese property market recovers sharply, retail investors may rotate from gold back to real estate. PBoC buying would continue (strategic), but retail demand (~400t/year) pulling back is a meaningful headwind. Current data: PBoC ACCELERATING (8t in April) — no evidence of domestic rotation yet.",
-    "Narrative fragility at elevated prices despite correction: even at $4,080 (vs ATH $5,589), gold is still 73% above the $2,360 level of January 2024. Sentiment surveys show retail bullishness remains elevated. A second leg of the correction (toward $3,500-3,800) driven by a higher-than-expected June CPI would test conviction broadly — position sizing must account for drawdown risk during the real-rate adjustment."
+    "Real interest rate escalation to 2.5%+ (PRIMARY NEAR-TERM): June 17 FOMC hawkish flip added hike to base case. TIPS 10-year ~2.2% approaching the danger zone. If Warsh delivers October hike, TIPS could spike above 2.5% — gold may test $3,800. Historical reference: 2022 real-yield shock (-1% → +1.5%) = gold -22%. Current starting real yield is higher, so incremental hikes add less pct headwind but cumulative effect is real. Key offset: CB demand ~2.25x the 2022 pace.",
+    "Fourth monthly loss breeds momentum-based selling: consecutive monthly losses at this magnitude can trigger CTA trend-following short positioning and systematic gold ETF outflows. Unlike 2013 ETF-driven crash, structural CB buyer now ~900t/year (was ~400t in 2013) — but momentum selling could still create a temporary overshoot below $4,000.",
+    "Goldman $4,900 target cut is a narrative inflection: Goldman cutting from $5,400 to $4,900 while stripping all 2026 cuts signals the consensus is shifting from 'rate cut catalyst' to 'CB buying + stagflation base.' Less reliant on one binary outcome — structurally more stable — but the cut itself triggers additional analyst re-rating and is a near-term narrative headwind.",
+    "USD sustained strengthening: Warsh anti-inflation hawkishness + resilient US economy (strong jobs) = USD positive. DXY strength reduces demand from EM non-USD buyers and adds P&L drag for EUR-base Spanish investor in IGLN.",
+    "Iran ceasefire fragility: Trump June 26 stated Iran violated ceasefire with Hormuz drone attacks. If Hormuz re-closes, oil spikes → inflation spike → more rate hike pressure → gold faces net-ambiguous short-term impact (stagflation positive vs rate-hike negative), with the rate-hike channel dominant in the very near term.",
+    "WGC March 2026 net sellers data: 30t net CB OUTFLOWS in March 2026. If this is the start of a trend (2+ consecutive months) rather than a one-off, the non-procyclical floor bid thesis weakens materially. Watch Q2 2026 WGC monthly data closely."
   ],
 
   "narrative_maturity": "crowded",
-  "analyst_narrative_score": 80,
   "narrative_trend": "stable",
-  "narrative_notes": "Gold physical is well-covered across all financial media tiers — mainstream (CNBC, Bloomberg, FT run daily gold price stories), specialist (WGC quarterly, Goldman commodities), and retail (gold ETF AUM growth confirms retail discovery). The narrative has shifted during the correction: the prior bull-trend narrative ('gold to $6,000') is now being contested by rate-hike fears, creating a brief period of narrative uncertainty. The PRIMARY structural driver (CB reserve diversification as a secular portfolio shift) is still not understood by most mainstream media coverage, which attributes the bull to 'safe haven demand' and 'Fed expectations' — missing that CB buying is INDEPENDENT of the rate cycle. This partial narrative gap is why the sector remains investable despite crowded mainstream coverage. Narrative score raised to 80 (crowded) from 72 in the prior study — the gold bull narrative is now fully crowded at the price level ($4,000+) and the correction has not reset this to 'mainstream'. The corrective phase is making the narrative contested temporarily but not reversing the structural story. Goldman and JPMorgan maintaining $5,400-6,000 year-end targets while trimming near-term estimates is the sign of a 'crowded but not exhausted' narrative. Narrative trend: stable (correction has not changed the structural narrative, only the timing debate)."
+  "narrative_notes": "Gold physical remains 'crowded' despite the correction. The fourth monthly loss has created a narrative CONTEST between structural bulls (Goldman $4,900, JPMorgan $6,000) and tactical bears (real yield spike, hawkish Fed) — this is generating MORE financial media content, not less. WGC June 2026 survey (record 45% CB add intention) widely covered in FT, Bloomberg, Reuters. The structural CB demand story remains underappreciated by mainstream media (misattributed to 'safe haven' rather than reserve policy shift) — this partial narrative gap is why the sector remains investable despite crowded coverage. Narrative_trend 'stable': the level of coverage has not changed meaningfully with the correction; the debate has shifted from 'bull or bear' rather than coverage dropping. Anchoring to scoring_weights.yaml: crowded (80 score-equiv) is the right level — not yet exhausted (95, thesis not consensually understood), but past mainstream (60)."
 }

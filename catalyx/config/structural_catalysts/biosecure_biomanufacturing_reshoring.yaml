@@ -1,0 +1,135 @@
+# StructuralCatalyst: BIOSECURE Act Biomanufacturing Reshoring
+#
+# Calibration anchor (Rule 3): bootstrap 58 — weaker than struct_enterprise_cyber_spend_supercycle (86);
+# real structural demand pull (CHIPS-Act-style reshoring) but slow revenue translation and a poor ETF proxy.
+# Drives synthetic_biology (primary).
+
+id: struct_biosecure_biomanufacturing_reshoring
+type: structural
+schema_version: "1.4"
+title: "BIOSECURE Act biomanufacturing reshoring — policy-driven pull toward Western DNA/bio supply"
+description: >
+  A CHIPS-Act-style reshoring of the biomanufacturing and genomics supply chain, driven by US national-security
+  policy: (1) Policy — the BIOSECURE Act was signed into law (Dec 2025, within the FY2026 NDAA), naming Chinese
+  providers (WuXi AppTec/Biologics, BGI/MGI/Complete Genomics) and pushing US biotech + federal contractors to
+  designated-supplier alternatives; enforcement phases in through 2027. (2) Beneficiaries — Western DNA-synthesis
+  and tools names (Twist Bioscience, Agilent) inherit displaced demand; Twist posted Q2 FY2026 revenue ~$110.7M
+  (+19%) with an EBITDA-breakeven target. (3) Cost curve — DNA synthesis cost continues to fall (~$0.07-0.10/bp),
+  and AI-designed biology (cell-free protein programs) compounds the demand pull. Primary sector: synthetic_biology.
+  Adjacency to genomics_precision_medicine (BGI/MGI/Complete Genomics are named sequencing providers). Key risk:
+  slow commercial translation (survivor names still sub-scale) and a poor UCITS ETF proxy dilute the tradable signal.
+
+created_at: "2026-07-01T12:00:00Z"
+created_by: user
+onset_period: "2025-Q4"
+onset_evidence: >
+  BIOSECURE Act enactment in the FY2026 NDAA (Dec 2025) created the binding policy pull; Western tools names
+  began citing displaced-China demand and reshoring tailwinds in subsequent quarters — the transition from a
+  proposed bill (uncertain) to enacted law (a durable demand driver).
+
+catalyst_type: regulatory
+catalyst_subtype: biosecure_biomanufacturing_reshoring
+geography: [US, GLOBAL]
+thematic_tags: [biosecure, synthetic_biology, biomanufacturing, reshoring, twist, dna_synthesis, national_security]
+user_rank: 5
+user_notes: >
+  Poor UCITS pure-play; expressed via synthetic-biology / genomics-tools baskets and single-names (Twist).
+  Bootstrap 58 anchored below struct_enterprise_cyber_spend_supercycle (86). Slow revenue translation is the key
+  cap; track Twist revenue + displaced-China disclosures as the confirmation.
+
+intensity:
+  current_score: 58
+  computation_method: bootstrap
+  last_updated: "2026-07-01"
+  computation_note: >
+    Bootstrap at creation 2026-07-01. Anchor: below struct_enterprise_cyber_spend_supercycle (86). Real
+    reshoring pull but slow commercial translation and weak ETF proxy.
+  history:
+  - period: "2026-Q3"
+    score: 58
+    note: "Bootstrap at creation 2026-07-01. BIOSECURE Act enacted Dec 2025 (FY2026 NDAA); Twist Q2 FY2026 ~$110.7M (+19%); enforcement phasing to 2027."
+    computation_method: bootstrap
+
+indicators:
+- id: ind_01
+  name: "Twist Bioscience quarterly revenue ($M)"
+  source: "Twist SEC filings"
+  source_url_template: "https://www.sec.gov/"
+  check_frequency: quarterly
+  current_value: 110.7
+  unit: usd_million_quarterly
+  direction: higher_is_stronger
+  threshold_strong: 105
+  threshold_weak: 80
+  last_value: 100
+  last_date: "2026-03-31"
+  update_note: >
+    Twist Q2 FY2026 revenue ~$110.7M (+19% YoY), a survivor-traction proxy for reshored DNA-synthesis demand.
+    Threshold_strong $105M; threshold_weak $80M.
+  semaphore: 🟢
+  value_history:
+  - date: "2026-03-31"
+    value: 100
+  - date: "2025-09-30"
+    value: 93
+
+- id: ind_02
+  name: "DNA synthesis cost ($/base pair)"
+  source: "NHGRI / industry synthesis-cost trackers"
+  source_url_template: "https://www.genome.gov/"
+  check_frequency: quarterly
+  current_value: 0.08
+  unit: usd_per_bp
+  direction: lower_is_stronger
+  threshold_strong: 0.10
+  threshold_weak: 0.20
+  last_value: 0.09
+  last_date: "2025-12-31"
+  update_note: >
+    Synthesis cost ~$0.07-0.10/bp and falling, expanding the addressable market. Lower_is_stronger;
+    threshold_strong $0.10, threshold_weak $0.20.
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 0.09
+  - date: "2024-12-31"
+    value: 0.12
+
+- id: ind_03
+  name: "US federal / DoD biomanufacturing contract commitments ($B cumulative)"
+  source: "USASpending / DoD announcements"
+  source_url_template: "https://www.usaspending.gov/"
+  check_frequency: quarterly
+  current_value: 1.2
+  unit: usd_billion_cumulative
+  direction: higher_is_stronger
+  threshold_strong: 1.0
+  threshold_weak: 0.3
+  last_value: 1.0
+  last_date: "2025-12-31"
+  update_note: >
+    Cumulative US-gov/DoD biomanufacturing commitments >$1B (EO 14081 lineage + BIOSECURE follow-through).
+    Threshold_strong $1B; threshold_weak $0.3B.
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 1.0
+
+deactivation_conditions:
+- id: deact_01
+  condition: >
+    BIOSECURE enforcement is repealed, indefinitely delayed, or granted broad WuXi/BGI waivers, removing the
+    reshoring pull.
+  action: full_deactivation
+- id: deact_02
+  condition: >
+    Twist quarterly revenue falls below $80M for two consecutive quarters (survivor traction stalls).
+  action: downgrade_to_weak
+
+linked_event_catalyst_ids: []
+linked_structural_catalyst_ids:
+- struct_ai_drug_discovery
+
+narrative_maturity: "emerging"
+status: active
+status_last_reviewed: "2026-07-01"

@@ -5,52 +5,53 @@
   "sector_id": "space_commercial",
   "sector_label": "Commercial Space — Launch, Satellites, Services",
   "created_at": "2026-06-05",
-  "last_updated": "2026-06-08",
+  "last_updated": "2026-06-29",
   "study_type": "full",
-
   "taxonomy": {
     "parent_sector": "deep_tech",
-    "adjacent_sectors": ["space_defense_satellite", "ai_infrastructure_data_centers", "cybersecurity_defense", "us_defense_prime_contractors"],
-    "differentiation_note": "Commercial space is driven by private-sector economics and addressable-market expansion: Rocket Lab, Planet Labs, SpaceX, AST SpaceMobile, and Amazon Kuiper compete on unit economics (cost per kg to LEO, revenue per subscriber), not on government program continuity or DoD budget cycles. The revenue model is SaaS-like (satellite broadband subscriptions, EO analytics-as-a-service, launch manifest contracts) — not milestone-based cost-plus defense contracting. Space & Satellite Defense (space_defense_satellite) by contrast is funded by military satellite constellation programs (SBIRS, WGS, JADC2), Space Domain Awareness budgets, and classified DoD/Intelligence Community contracts — those revenues are insulated from commercial competition but also from commercial growth catalysts. A SpaceX Starlink revenue inflection, an Amazon Kuiper launch ramp, or declining $/kg launch economics are commercial-specific catalysts with no meaningful read-through to the defense satellite prime contractors (Northrop Grumman, Raytheon), and vice versa."
+    "adjacent_sectors": [
+      "space_defense_satellite",
+      "ai_infrastructure_data_centers",
+      "cybersecurity_defense",
+      "us_defense_prime_contractors"
+    ],
+    "differentiation_note": "Commercial space is driven by private-sector economics and addressable-market expansion: Rocket Lab, Planet Labs, SpaceX, AST SpaceMobile, and Amazon Kuiper compete on unit economics (cost per kg to LEO, revenue per subscriber), not on government program continuity or DoD budget cycles. The revenue model is SaaS-like (satellite broadband subscriptions, EO analytics-as-a-service, launch manifest contracts) — not milestone-based cost-plus defense contracting. Space & Satellite Defense (space_defense_satellite) by contrast is funded by military satellite constellation programs (SBIRS, WGS, JADC2), Space Domain Awareness budgets, and classified DoD/Intelligence Community contracts — those revenues are insulated from commercial competition but also from commercial growth catalysts. A SpaceX Starlink revenue inflection, an Amazon Kuiper launch ramp, or declining $/kg launch economics are commercial-specific catalysts with no meaningful read-through to the defense satellite prime contractors, and vice versa. JUNE 2026 UPDATE: SpaceX is now a public company (SPCX, Nasdaq, listed June 12, 2026 at $135/share) — the sector's investability profile has changed materially. Additionally, Rocket Lab announced the $8B acquisition of Iridium Communications on June 29, 2026, representing the first major commercial-space vertical integration deal: build + launch + operate a global constellation."
   },
-
   "demand_drivers": [
-    "Satellite broadband — LEO mega-constellation subscriptions: Starlink generated an estimated $10.4B in revenue in 2025 (up ~40% YoY). Subscriber base reached 10.3 million as of end-March 2026 — DOUBLED YoY (from ~5M) and already past the prior ~6M year-end-2026 internal target; estimated ~58% of total SpaceX revenue in 2024. Amazon Kuiper launched its first commercial customers in 2026 with 700+ satellites deployed and $10B cumulative investment. NGSO broadband services forecast to capture >95% of satcom connectivity supply post-2026, with combined market exceeding $100B annually. This is the largest demand anchor in the sector — the subscriber inflection is now the core number underpinning the SpaceX IPO valuation.",
-    "Earth observation and geospatial analytics: Planet Labs FY2026 (ending Jan 2026) revenue +26% YoY to $307.7M; Q1 FY2027 (ending Apr 2026) revenue +42% YoY to $94M with RPO backlog +81% YoY to $816M. Commercial EO market projected at $7.68B in 2026, growing to $14.55B by 2034 (CAGR 8.3%). Shift from price-per-image to insights-as-a-service (AI analytics layer) expands TAM. Government + military = ~48% of end-users, agriculture = ~41%, with defense geospatial intelligence spending accelerating alongside NATO rearmament.",
-    "Launch services market growth: space launch services market growing from $11.82B in 2025 to $13.85B in 2026 at 17.2% CAGR. Falcon 9 cost per kg to LEO at ~$2,720 — a 95% reduction from Space Shuttle era — opening use cases previously uneconomic (IoT constellations, on-orbit servicing, smallsat commercial imaging). SpaceX executes a launch approximately every 2-3 days, performing >90% of global commercial orbital launches.",
-    "SpaceX IPO as a liquidity and sentiment catalyst (IMMINENT — within the review window): SpaceX filed its S-1 with the SEC on May 20, 2026; pricing is expected June 11 and the Nasdaq listing June 12, 2026 under ticker SPCX. It is targeting a raise of up to ~$75B (more than 2x the previous record IPO) at a valuation of at least $1.8T (early-investor consensus ~$2.0–2.2T). Elon Musk is reportedly allocating up to 30% of IPO shares to RETAIL investors — 3x the typical 5–10% — which enlarges the public float and the post-listing retail-flow/volatility dynamic. This is the largest IPO in US market history by valuation and will (1) create a directly investable equity for those who previously accessed space only via UFO/ROKT/NASA proxies, (2) force active fund managers to take a view on the sector, (3) drive mainstream coverage that accelerates retail ETF inflows. CAVEAT: SpaceX's own advisers have flagged the listing could slip to 2027 depending on market conditions — the date is not yet certain. Short-term bullish catalyst with a real post-IPO mean-reversion risk if the valuation premium unwinds.",
-    "Commercial space backlog expansion: total commercial space backlog crossed $500B in mid-2026 per NOAA Office of Space Commerce, spanning satellite operators, launch providers, and Earth observation companies with order books stretching years into the future. Rocket Lab Q1 2026 revenue $200.4M combined (systems $136.7M + launch $63.7M), backlog doubled YoY to $2.2B; Q2 2026 guidance $225-240M.",
-    "Defense and intelligence adjacency: EO data demand from NATO-aligned defense ministries is accelerating independently of civilian demand. Planet Labs, Satellogic, and Maxar now supply geospatial intelligence under both commercial and government contracts, providing revenue base insulation against purely commercial cycle risk."
+    "SpaceX post-IPO structural validation — Starlink at scale: SpaceX listed as SPCX on Nasdaq June 12, 2026 at $135/share (~$1.8T valuation), raising ~$75B in the largest IPO in US history. The IPO has MATERIALIZED (cat_20260612_spacex_ipo_listing overhang resolved). Post-listing trajectory: $135 IPO price → $225 intraday peak on June 16 (+67% in 4 days) → $153 by June 29 (lock-up/whale-flow consolidation). Fundamental anchor: Starlink >10.3M active subscribers as of end-March 2026 (doubled YoY), >9,800 satellites deployed, Starlink revenue = 61% of total SpaceX (~$11.4B of ~$18.7B estimated total). SpaceX now discloses quarterly, creating a recurring fundamental catalyst mechanism.",
+    "Satellite broadband LEO — subscriber expansion and ARPU: Starlink subscriber doubling YoY (5M end-2025 → 10.3M end-Q1 2026) is the central growth metric for the IPO valuation. Amazon Kuiper in commercial deployment with 700+ satellites and $10B cumulative investment. NGSO broadband services forecast to capture >95% of satcom connectivity supply post-2026, combined market exceeding $100B annually. Kuiper competition means Starlink's near-monopoly pricing power will narrow from 2027 onwards — the current window of pricing purity is a 2026-2027 phenomenon.",
+    "Earth observation and geospatial analytics: Planet Labs Q1 FY2027 (ending April 2026) revenue +42% YoY to $94M (record), non-GAAP gross margin 56%, RPO backlog +81% YoY to $816M, total backlog $906M (+72% YoY), cash $731M (+223% YoY). Defense & Intelligence revenue +65% YoY. Commercial EO market $7.68B in 2026, growing to $14.55B by 2034 (CAGR 8.3%). The AI analytics-as-a-service layer expands TAM beyond price-per-image.",
+    "Rocket Lab vertical integration via Iridium acquisition (ANNOUNCED JUNE 29, 2026): Rocket Lab announced acquisition of Iridium Communications for ~$8B ($27 cash + RKLB stock, $54/share total; expected close mid-2027, pending regulatory/shareholder approval). Strategic rationale: creates the first vertically integrated pure-play commercial space company — builds satellites, launches them, operates a global constellation with L-band spectrum and 500+ ecosystem partners. Iridium has 1.9M subscribers, government contracts, and global communications coverage. Rocket Lab Q1 2026 revenue $200.4M, Q2 2026 guidance $225-240M, backlog $2.2B. This is the most significant commercial-space M&A event of 2026. Dilution and $8B debt load are execution risks; strategic rationale is industry-transforming if integration succeeds.",
+    "Launch services market growth and SpaceX monopoly: space launch services market growing at ~17% CAGR ($11.82B in 2025 → $13.85B in 2026). SpaceX Falcon 9 ~$2,720/kg LEO (95% reduction from Space Shuttle era), executing approximately one launch every 2-3 days (~>90% of global commercial orbital launches). The launch monopoly is the single-largest pricing power in the sector — disruption from Rocket Lab Neutron (medium-lift, ~2027) and ULA Vulcan Centaur would erode this but are multi-year timelines.",
+    "Defense and government adjacency providing revenue floor: EO data demand from NATO-aligned defense ministries accelerates independently of civilian demand. Planet Labs defense & intelligence revenue +65% YoY. Iridium (post-RKLB acquisition) has significant government SATCOM contracts. The dual-revenue structure insulates the sector against purely commercial cycle corrections and the current AI/tech rotation narrative."
   ],
-
   "supply_constraints": [
-    "SpaceX launch monopoly creates single-point bottleneck: SpaceX holds >90% of global commercial orbital launch market share. Competing launch vehicles (Rocket Lab Neutron — not yet operational in 2026, ULA Vulcan Centaur — limited cadence, Arianespace Ariane 6 — catching up) cannot absorb overflow demand on short notice. Any SpaceX operational disruption (FAA license delays, range safety holds) directly constrains satellite deployment for all LEO constellation operators.",
-    "Orbital spectrum and slot congestion: ITU spectrum coordination for LEO mega-constellations is becoming contentious. OneWeb (Eutelsat), Amazon Kuiper, Chinese G60 constellation (targeting 15,000 satellites by 2030) and Starlink are competing for Ka/Ku/V-band frequencies. Interference coordination disputes add regulatory latency to deployment timelines.",
-    "Satellite manufacturing capacity: smallsat production requires specialized electronics, RF components, and precision optics. Supply chain constraints in phased-array antenna components (driven by parallel 5G and EO demand) create lead time bottlenecks for constellation expansion. Planet Labs' Pelican constellation uses custom focal planes with limited fab alternatives.",
-    "Talent concentration: orbital mechanics engineers, RF systems designers, and mission operations specialists remain scarce. SpaceX, Blue Origin, Rocket Lab, and Planet compete for an extremely thin global talent pool. Salary inflation compresses unit economics for smaller players.",
-    "Regulatory launch licensing: FAA commercial space launch licensing has historically created multi-month delays. Executive Orders from Feb 2025 aimed at reducing regulatory friction, but implementation lag means licensing backlogs persist into 2026 for new launch vehicles and new orbital regimes."
+    "SpaceX launch monopoly as single-point bottleneck: >90% of global commercial orbital launches. Any SpaceX operational disruption (FAA license delays, range safety holds, booster failure sequence) simultaneously constrains satellite deployment for all LEO operators. Post-IPO quarterly reporting creates enhanced operational scrutiny.",
+    "Orbital spectrum and slot congestion: ITU spectrum coordination for LEO mega-constellations increasingly contested. OneWeb (Eutelsat), Amazon Kuiper, Chinese G60 (15,000 satellite target by 2030), and Starlink compete for Ka/Ku/V-band frequencies. Interference coordination disputes add regulatory latency.",
+    "RKLB-Iridium integration execution risk: the $8B acquisition closes mid-2027 at earliest. Integration of a 1.9M-subscriber constellation (L-band, different architecture from Rocket Lab's manufacturing focus) introduces operational complexity that could divert engineering resources from Neutron development — the other critical medium-lift supply constraint.",
+    "UCITS vehicle gap for Spanish investors: no UCITS-listed pure-play commercial space ETF exists on LSE, Euronext, or XETRA as of June 2026. ROKT (~$250M AUM) and UFO (~$1B AUM) remain non-UCITS. The post-IPO sector growth creates commercial incentive for iShares/Amundi to launch UCITS space ETFs, but none have materialized.",
+    "Post-IPO lock-up and whale-flow dynamics on SPCX: primary 180-day lock-up expires ~December 9, 2026. The June 16 ATH ($225) → June 29 pullback ($153) is early-holder selling without lock-up constraints. This supply overhang on SPCX persists through at least September 2026 (90-day expiry) and creates intermittent sentiment headwinds for the sector ETFs."
   ],
-
   "technology_maturity": {
     "trl_level": 8,
-    "trl_description": "Core technologies (reusable launch, LEO constellations, high-resolution EO imaging) are proven and in commercial operation. TRL 8 = system complete and qualified through test and demonstration in operational environment. NOT experimental — Starlink, Falcon 9, Planet's SkySat and SuperDove are operational revenue-generating assets.",
+    "trl_description": "Core technologies (reusable launch, LEO constellations, high-resolution EO imaging) are proven and in commercial operation at scale. TRL 8 = system complete and qualified through test and demonstration in operational environment. NOT experimental — Starlink (>9,800 satellites, 10M+ subscribers, $11.4B revenue), Falcon 9 (>300 successful missions), Planet's SkySat and SuperDove are operational revenue-generating assets.",
     "gartner_hype_cycle_position": "slope_of_enlightenment",
-    "estimated_commercialization_horizon": "Now — already commercial. The question is scale, not commercialization.",
-    "investability_note": "Investable today via ROKT (NYSE, not UCITS), UFO (Nasdaq, not UCITS). No UCITS pure-play space ETF currently listed on LSE or Euronext. For a Spanish investor, this sector has a coverage gap — only proxy/non-UCITS vehicles available, creating a real compliance risk for larger allocations.",
+    "estimated_commercialization_horizon": "Now — already commercial at scale. The question is subscriber growth, ARPU, competitive dynamics, and adjacent market (EO, in-orbit services) expansion, not commercialization.",
+    "investability_note": "Investable via ROKT (NYSE, ~$250M AUM post-IPO volatility), UFO (Nasdaq, ~$1B AUM, added SPCX at 6.17% weight June 16), and SPCX directly (Nasdaq). All are non-UCITS. For a Spanish investor under UCITS compliance: no Tier-1 vehicle exists. Monitor for a UCITS space ETF launch by iShares/Amundi; most likely trigger is SPCX's S&P 500 / MSCI World index inclusion (~3-6 months post-IPO).",
     "etf_proxy_quality": "poor",
     "watch_triggers": [
       "Launch of a UCITS-eligible commercial space ETF on LSE or Euronext with AUM > $200M",
-      "SpaceX post-IPO inclusion in major indices (S&P 500, MSCI World) causing passive fund rebalance flows",
-      "Rocket Lab Neutron first successful commercial launch (establishes duopoly in medium-lift launch)"
+      "SpaceX (SPCX) S&P 500 or MSCI World inclusion triggering passive rebalancing flows",
+      "SPCX 90-day lock-up expiry (~Sept 9, 2026) clearing and price stabilizing above $160",
+      "Rocket Lab Neutron first successful commercial launch (establishes medium-lift duopoly)",
+      "RKLB-Iridium acquisition receiving regulatory approval (removes integration uncertainty)"
     ]
   },
-
   "cycle_position": {
-    "assessment": "Early bull run — sector re-rating underway driven by SpaceX IPO catalyst and backlog inflection",
-    "rationale": "As of June 2026, the commercial space sector is in the early phase of a structural re-rating, not a cyclical recovery. The fundamental change is the convergence of three forces simultaneously: (1) revenue model maturation — Starlink's $10.4B revenue run-rate proves the subscription model at scale; (2) SpaceX IPO creating the first direct large-cap equity vehicle, forcing institutional and index inclusion flows; (3) downstream backlog expansion across launch and EO companies that confirms demand is not hype. UFO is +122% over the trailing 12 months, ROKT +100% — this is not early-stage price discovery, it is a re-rating in progress. The risk is that the SpaceX IPO at $1.77T valuation pulls forward 3-5 years of expected earnings, creating a post-IPO mean-reversion window. Cycle position is early bull on fundamentals but mid-to-late on near-term sentiment — a distinction worth tracking monthly.",
-    "last_assessed": "2026-06-08"
+    "assessment": "Mid-cycle re-rating with post-IPO consolidation and new vertical integration M&A — fundamentals intact and strengthening, near-term sentiment compressed by hawkish Fed and lock-up dynamics",
+    "rationale": "As of June 29, 2026, the commercial space sector is in a mid-cycle phase with three concurrent dynamics: (1) FUNDAMENTAL CONFIRMATION: SpaceX IPO materialized at $135 (not slipped to 2027), Starlink >10M subscribers validated, Planet Labs 42% revenue growth confirmed — the thesis is proven. The sector has moved definitively from 'venture speculation' to 'public-market growth equity'; (2) STRUCTURAL STEP-CHANGE: Rocket Lab's $8B Iridium acquisition (announced June 29) is the first major vertical integration deal in commercial space. If successful, RKLB becomes build+launch+operate, creating a new business model archetype. Short-term dilutive; long-term transformative. Stock fell ~40% in June but +9.7% on the announcement day; (3) NEAR-TERM HEADWINDS: SPCX post-IPO consolidation ($225 peak → $153 current, -32%), hawkish Fed pivot June 17 (removed 2026 cut bias, Oct hike possible), AI/tech sector rotation OUT of growth names. Commercial space is not rate-sensitive fundamentally (subscription business, not REIT) but trades at growth multiples subject to risk-off multiple compression. Net assessment: mid-bull on fundamentals, short-term consolidating on sentiment. Next re-rating catalysts: first SPCX quarterly earnings (September 2026), SPCX S&P 500 index inclusion, RKLB Neutron launch, Iridium deal closure.",
+    "last_assessed": "2026-06-29"
   },
-
   "etf_analysis": [
     {
       "ticker": "UFO",
@@ -63,9 +64,9 @@
       "avg_spread_bps": 22,
       "avg_daily_volume_m_usd": 4.2,
       "top_10_concentration_pct": 0.68,
-      "characteristics": "Tracks the S-Network Space Index, weighting constituents by share of revenue from space. Pure-play focus: top holdings include Rocket Lab, Planet Labs, Viasat, MDA Space, AST SpaceMobile. Satellite communications = 46% of portfolio, industrials = 43%. AUM CROSSED $1B in early June 2026 amid the SpaceX IPO frenzy (was ~$376M in May) — the thin-AUM concern is now resolved. +122% over trailing 12 months and roughly +75% YTD per early-June reporting (the prior +31% YTD figure understated the recent IPO-driven surge). Revenue-weighting methodology gives heavier allocation to companies whose actual business IS space (not just a defense prime with a space division).",
+      "characteristics": "Tracks the VettaFi Space Index (SPACE), weighting constituents by share of revenue from space. AUM crossed $1B (from ~$376M in May 2026). ADDED SPCX at 6.17% weight on June 16, 2026 via Fast-Track IPO rule (Mega-Cap Classification allows scale up to 15% max). Current top holdings (June 2026): Garmin 5.06%, Rocket Lab 4.99%, Trimble 4.97%, Sirius XM 4.94%, SpaceX SPCX 4.89%. Price June 29: $49.05 (+6.2% on the day, likely driven by RKLB-Iridium announcement). Pure-play focus with revenue-weighting methodology. This is now the only accessible ETF that directly owns SpaceX equity.",
       "recommendation_tier": 2,
-      "limitations": "NOT UCITS — non-compliant for Spanish regulated accounts or UCITS-mandated vehicles. AUM now ~$1B (was thin at ~$376M; the liquidity concern has cleared). TER 0.94% is elevated. Spread ~22bps borderline (flag: approaching 25bps warning threshold). High concentration: top 10 = ~68%. SpaceX is not yet in the index as it is unlisted — post-IPO index inclusion could be a significant catalyst or dilution depending on weight methodology. NOTE: a separate vehicle (NASA ETF) drew ~$2.6B in two months specifically as a SpaceX pre-IPO-access retail trade — evidence of how concentrated the IPO-driven flow is, and a potential post-IPO redemption source."
+      "limitations": "NOT UCITS — non-compliant for Spanish regulated accounts. TER 0.94% elevated. Spread ~22bps borderline (use limit orders). High concentration: top 10 = ~68%. SPCX at 6.17% creates direct lock-up-expiry risk in UFO in September-December 2026. RKLB's Iridium acquisition at $8B creates dilution/debt risk on a 4.99% holding. AUM verify at execution: the $1B level may be sensitive to SPCX post-IPO price action. Post-IPO SPCX could scale to 15% in UFO if market cap qualifies — would change the ETF's risk profile materially."
     },
     {
       "ticker": "ROKT",
@@ -73,14 +74,14 @@
       "exchange": "NYSE",
       "currency": "USD",
       "ter": 0.0045,
-      "aum_m_usd": 410,
+      "aum_m_usd": 250,
       "replication": "physical",
       "avg_spread_bps": 18,
       "avg_daily_volume_m_usd": 5.1,
       "top_10_concentration_pct": 0.54,
-      "characteristics": "Tracks the S&P Kensho Final Frontiers Index (AI + quantitative weighting). Mixes aerospace and defense primes (Lockheed Martin, Northrop Grumman = ~54% of fund) with emerging pure-play space names (Planet Labs, Rocket Lab, Intuitive Machines). Lower TER (0.45%) and better liquidity than UFO. +100% over trailing 12 months, +29% YTD. The defense prime allocation makes this a less pure commercial-space vehicle — LMT and NOC are driven by DoD budgets, not LEO commercial dynamics.",
+      "characteristics": "Tracks the S&P Kensho Final Frontiers Index. UPDATED: AUM has declined to ~$245-254M (from $410M in June 8 study), now approaching the $200M liquidity floor — verify before any new position. 52-week range $60.84-$137.63, price ~$117 as of late June. 1-year performance +91%. Defense prime contamination (~54% weight — LMT, NOC, L3H) provides partial hedge against commercial-space sentiment corrections. Shared vehicle for both space_commercial and space_defense_satellite sector exposure. RKLB's Iridium acquisition ($8B, announced June 29) may affect ROKT constituent weighting at next rebalance.",
       "recommendation_tier": 2,
-      "limitations": "NOT UCITS — same compliance issue as UFO for Spanish investors. Defense prime contamination (~54% weight) dilutes commercial space exposure; correlates ROKT with NATO rearmament and US defense budget cycles more than with Starlink/EO revenue inflections. Best for investors who want broad aerospace exposure; suboptimal for a pure commercial space thesis. AUM $410M — adequate liquidity."
+      "limitations": "NOT UCITS. AUM NOW ~$250M — approaching the $200M liquidity warning threshold. VERIFY AUM before new positions; if AUM drops below $200M this vehicle is reclassified as liquidity-warning. Defense prime contamination (~54%) dilutes pure commercial-space thesis. Shared holdings with space_defense_satellite creates sector exposure blurring. Spread 18bps — use limit orders."
     },
     {
       "ticker": "ARKX",
@@ -88,14 +89,14 @@
       "exchange": "NYSE",
       "currency": "USD",
       "ter": 0.0075,
-      "aum_m_usd": 390,
+      "aum_m_usd": 350,
       "replication": "physical",
       "avg_spread_bps": 20,
       "avg_daily_volume_m_usd": 3.8,
       "top_10_concentration_pct": 0.72,
-      "characteristics": "Actively managed by ARK Invest. Cathie Wood's team selects across orbital/suborbital aerospace, enabling technologies (3D printing, AI chips for satellites), aerospace beneficiaries (Netflix as a Starlink content beneficiary), and adjacent areas. More concentrated and thematic than UFO or ROKT. +67% over trailing 12 months, +11% YTD — meaningfully underperforming UFO and ROKT, reflecting active management drift. Includes enabling tech names unrelated to pure commercial space.",
+      "characteristics": "Actively managed by ARK Invest. AUM ~$350M (as of March 2026; verify current). Active management creates uncertainty about when/whether SPCX will be added to ARKX — a major portfolio decision with significant return implications given SPCX's market cap. Meaningful underperformer vs UFO/ROKT in 2026 YTD.",
       "recommendation_tier": 3,
-      "limitations": "NOT UCITS. Active management introduces tracking error and mandate drift — ARKX has historically held names with weak commercial space connection (Deere & Co, Trimble). Highest TER of the three at 0.75%. Lowest YTD performance in 2026 (+11% vs UFO +31% and ROKT +29%). Not recommended as the primary vehicle for this thesis."
+      "limitations": "NOT UCITS. Active management introduces tracking error and mandate drift. Highest TER at 0.75%. Lowest YTD performer of the three ETFs. Not recommended as primary vehicle for this thesis."
     },
     {
       "ticker": "No UCITS pure-play space ETF available",
@@ -108,76 +109,74 @@
       "avg_spread_bps": null,
       "avg_daily_volume_m_usd": null,
       "top_10_concentration_pct": null,
-      "characteristics": "As of June 2026, no UCITS-listed pure-play commercial space ETF exists on LSE, Euronext, or XETRA. For a Spanish investor operating under UCITS compliance requirements, this sector cannot be accessed via a Tier 1 vehicle. Monitor for new launches — the SpaceX IPO and sector AUM growth above $500B in aggregate creates commercial incentive for asset managers (iShares, Amundi, DWS) to launch UCITS equivalents by late 2026 or 2027.",
+      "characteristics": "As of June 2026, no UCITS-listed pure-play commercial space ETF exists on LSE, Euronext, or XETRA. SpaceX's Nasdaq listing (SPCX) creates commercial incentive for iShares, Amundi, or HANetf to launch a UCITS space ETF — most likely timeline H2 2026 or early 2027. Direct equity (SPCX Nasdaq, RKLB Nasdaq, PL NYSE, ASTS NYSE) is an alternative if non-UCITS access and individual stock mandate are available.",
       "recommendation_tier": 3,
-      "limitations": "CRITICAL: No UCITS-compliant vehicle available. Investing via ROKT or UFO carries regulatory compliance risk for Spanish retail/professional accounts that mandate UCITS funds. Any position in this sector via the US-listed ETFs should be sized accordingly (smaller than normal, given non-UCITS). Direct equity (Rocket Lab NYSE:RKLB, Planet Labs NYSE:PL, AST SpaceMobile NYSE:ASTS) is an alternative if individual stock selection is within mandate."
+      "limitations": "CRITICAL: No UCITS-compliant vehicle available. All investable vehicles (UFO, ROKT, ARKX, SPCX) are US-listed, non-UCITS. For Spanish retail/professional accounts with UCITS requirements, this creates regulatory compliance risk. Position sizing should be reduced relative to UCITS-accessible sectors."
     }
   ],
-
   "key_metrics_to_monitor": [
     {
-      "metric": "Starlink active subscribers",
-      "unit": "millions",
-      "source": "SpaceX earnings / investor presentations (post-IPO), press releases",
-      "current": "10.3",
-      "comment": "10.3M subscribers as of end-March 2026 — DOUBLED YoY and already past the prior ~6M year-end-2026 target. Key growth indicator — monthly net adds signal whether LEO broadband TAM expansion is tracking forecasts. This is the central number the SpaceX IPO valuation rests on; a deceleration in net adds post-IPO would be the first crack in the growth premium."
+      "metric": "SpaceX (SPCX) stock price and lock-up expiry trajectory",
+      "unit": "USD per share",
+      "source": "Nasdaq real-time; Bloomberg; Yahoo Finance",
+      "current": "$153 (June 29, 2026 — from $135 IPO / $225 intraday peak June 16)",
+      "comment": "IPO has materialized. Current $153 = 32% drawdown from ATH driven by lock-up/whale dynamics and AI/tech sector rotation. Critical level: sustaining above $135 (IPO price) = base case intact. 90-day lock-up expiry ~Sept 9, 2026 is the first structural supply event. First SPCX quarterly earnings expected September 2026 is the next major fundamental catalyst — Starlink net-add rate and ARPU are the central disclosures."
     },
     {
-      "metric": "Rocket Lab quarterly revenue",
+      "metric": "Starlink active subscribers and ARPU",
+      "unit": "millions subscribers / USD per month ARPU",
+      "source": "SpaceX quarterly earnings (now mandatory as public company); investor presentations",
+      "current": ">10.3M (end-March 2026, most recent published)",
+      "comment": "SpaceX IPO forces quarterly public disclosure for the first time. Central valuation metric. Watch: (1) net adds per quarter (must exceed 500K/quarter to sustain growth premium); (2) ARPU trends vs Kuiper competition; (3) geographic expansion. Q2 2026 subscriber data will be in the September quarterly report."
+    },
+    {
+      "metric": "Rocket Lab (RKLB) Iridium acquisition progress and Q2 earnings",
+      "unit": "qualitative milestones / USD millions quarterly revenue",
+      "source": "RKLB SEC filings, press releases; RKLB quarterly earnings",
+      "current": "Announced June 29, 2026. Close expected mid-2027. Q2 2026 guidance: $225-240M revenue.",
+      "comment": "The Iridium acquisition is the defining event for RKLB in 2026. Watch: (1) regulatory approvals (FCC, DoJ, potential national security review given Iridium's government contracts); (2) financing structure finalization ($27 cash + RKLB stock; need to confirm debt facility terms); (3) impact on Neutron development timeline — the acquisition must not be allowed to delay the medium-lift launch vehicle that underpins the long-term thesis. Q2 earnings expected late July 2026."
+    },
+    {
+      "metric": "Planet Labs (PL) RPO and revenue trajectory",
       "unit": "USD millions",
-      "source": "RKLB earnings (quarterly), SEC 8-K",
-      "current": 200.4,
-      "comment": "Q1 2026: $200.4M combined (systems $136.7M, launch $63.7M). Q2 2026 guidance: $225-240M. Monitor whether Neutron development stays on timeline — Neutron qualification flight is the next major inflection."
+      "source": "PL quarterly earnings, SEC 8-K",
+      "current": "$816M RPO / $94M Q1 FY2027 revenue / $731M cash",
+      "comment": "RPO +81% YoY to $816M (Q1 FY2027, ending April 2026). Total backlog $906M. Defense & Intelligence +65% YoY. Cash position $731M (+223% YoY) provides substantial runway. Watch RPO growth rate deceleration as the leading demand indicator — any slowdown below +40% YoY would be an early warning signal. Next quarterly report Q2 FY2027 (ending July 2026), expected September 2026."
     },
     {
-      "metric": "Planet Labs RPO (Remaining Performance Obligations)",
-      "unit": "USD millions",
-      "source": "PL earnings (quarterly), SEC 8-K",
-      "current": 816,
-      "comment": "RPO +81% YoY to $816M. This is the forward revenue visibility metric — watch for continued RPO growth as a leading indicator of EO demand inflection. $906M backlog."
+      "metric": "UFO ETF SpaceX weight and AUM trajectory",
+      "unit": "pct weight / USD millions AUM",
+      "source": "Procure ETFs (procureetfs.com), Bloomberg ETF data",
+      "current": "SPCX at 6.17% in UFO; UFO AUM ~$1B",
+      "comment": "UFO added SPCX at 6.17% on June 16 via Fast-Track IPO rule. The Mega-Cap Classification allows scale to 15% max — if SPCX market cap justifies full 15% at next rebalance, UFO's risk profile changes materially. AUM at ~$1B is the highest it has been — verify it has not pulled back following SPCX's retreat from $225 ATH. This is the only UCITS-gap workaround that gives indirect SPCX exposure via an accessible ETF."
     },
     {
-      "metric": "Global commercial orbital launch cadence (SpaceX)",
-      "unit": "launches per year",
-      "source": "SpaceX press releases, FAA launch records, NASASpaceFlight.com",
-      "current": "~100-110 annualized",
-      "comment": "SpaceX launching every 2-3 days in 2026. Watch for any FAA launch license delays, range safety holds, or booster retirement rate changes — these directly affect constellation deployment timelines for customers."
-    },
-    {
-      "metric": "SpaceX post-IPO market capitalization",
-      "unit": "USD trillions",
-      "source": "Nasdaq real-time data post June 12, 2026",
-      "current": "≥1.8 (IPO target; pricing Jun 11, listing Jun 12 as SPCX)",
-      "comment": "Targeting a raise of up to ~$75B at ≥$1.8T valuation; early-investor consensus ~$2.0–2.2T. Up to 30% of shares to retail. Trajectory in first 30 trading days will set the sentiment tone for the entire sector ETF flow picture. A post-IPO break below $1.4T would be a bear signal. RISK: advisers flag the listing could slip to 2027 — confirm pricing actually occurred Jun 11–12 before treating the catalyst as fired."
-    },
-    {
-      "metric": "Commercial EO market revenue — total sector",
+      "metric": "Commercial EO market revenue",
       "unit": "USD billions",
-      "source": "Novaspace annual space economy report, MarkNtel Advisors, Grand View Research",
-      "current": 7.68,
-      "comment": "Commercial satellite imagery market $7.01B-$7.68B in 2026 depending on source. Growing to $14.55B by 2034 (CAGR 8.3%). Monitor Planet Labs and Maxar quarterly revenue for actual-vs-forecast tracking."
+      "source": "Novaspace annual space economy report, Grand View Research",
+      "current": "~$7.68B (2026 estimate)",
+      "comment": "Growing to $14.55B by 2034 (CAGR 8.3%). Planet Labs and Maxar quarterly revenue are the best real-time trackers. NATO defense EO contracts (Hormuz crisis context) are the upside lever in the current geopolitical environment."
     }
   ],
-
-  "active_catalyst_ids": ["struct_commercial_space_supercycle", "cat_20260612_spacex_ipo_listing"],
-
+  "active_catalyst_ids": [
+    "struct_commercial_space_supercycle",
+    "cat_20260612_spacex_ipo_listing"
+  ],
   "historical_catalyst_performance": {
-    "summary": "Commercial space equities have exhibited extreme sensitivity to two historical catalyst types: (1) Launch milestone events — Falcon 9 first successful booster landing (Dec 2015) catalyzed a multi-year re-rating of SpaceX valuation on secondary markets and drove ARKX constituent re-ratings post-2021 launch. Rocket Lab's Electron reaching operational cadence in 2019 drove a 3-4x re-rating of the company in private markets. (2) Revenue model validation events — Starlink crossing 1M subscribers (late 2022) was the first proof that LEO broadband TAM was real, driving a 30-40% rally in UFO over 6 months. Planet Labs crossing profitability on adjusted EBITDA basis in FY2025 drove a re-rating of EO names broadly. Historical pattern: the sector tends to rally sharply (+20-50% over 3-6 months) on first-proof-of-concept events, then consolidate waiting for the next milestone. The current SpaceX IPO is the largest milestone event in the sector's history as a public equity category. Precedent from Tesla's 2010 IPO (EV sector re-rating followed 18 months later) and Airbnb's 2020 IPO (travel-tech TAM expansion narrative) suggests meaningful secondary effects on adjacent listed names (Rocket Lab, Planet Labs, AST SpaceMobile) over a 6-12 month window post-IPO.",
+    "summary": "Commercial space equities have exhibited extreme sensitivity to two historical catalyst types: (1) Launch milestone events — Falcon 9 first booster landing (Dec 2015) catalyzed a multi-year re-rating of SpaceX valuation on secondary markets. Rocket Lab's Electron reaching operational cadence (2019) drove 3-4x re-rating in private markets. (2) Revenue model validation — Starlink crossing 1M subscribers (late 2022) drove +30-40% rally in UFO over 6 months. Planet Labs crossing EBITDA profitability (FY2025) drove EO sector re-rating. (3) POST-IPO PATTERN ADDED JUNE 2026: SpaceX listed June 12 at $135, peaked $225 June 16 (+67% in 4 days), pulled back to $153 by June 29 (-32% from ATH). This matches the pattern of high-profile growth company IPOs: Tesla IPO (2010) fell 40% over 4 months before its multi-year rally; Airbnb IPO (2020) pulled back 30% over 60 days before recovering. The implication: SPCX's post-IPO consolidation is historically normal. ETF proxy holders (UFO, ROKT) who bought into the June 16 peak face a 3-6 month consolidation. (4) M&A PRECEDENT: large acquisition announcements in commercial space have historically caused acquiring company short-term dilution (RKLB -40% in June pre-announcement), then sector re-rating over 6-12 months once strategic rationale is absorbed. Amazon acquiring Globalstar ($11.6B) in parallel is confirmation of vertical integration as the dominant sector strategy in 2026.",
     "launch_milestone_avg_return_3m": "+28% for UFO/ARKX basket on major Falcon 9 milestones (2020-2025 sample, n=4)",
     "revenue_validation_avg_return_6m": "+35% for UFO on Starlink subscriber milestones (2022-2024 sample, n=3)",
-    "post_ipo_adjacent_names_12m": "Historical IPO spillover to sector ETFs: Tesla IPO → CARZ ETF +44% in 12 months; Airbnb IPO → AWAY ETF +38% in 6 months. SpaceX IPO analog expected to be larger given scale."
+    "post_ipo_adjacent_names_12m": "SpaceX IPO fired June 12, 2026. Trajectory: $135→$225 peak (+67%) → $153 by June 29 (-32% from peak, +13% from IPO). UFO added SPCX at 6.17% weight June 16. RKLB announced $8B Iridium acquisition June 29 — first major vertical integration M&A in the sector."
   },
-
   "risks": [
-    "SpaceX IPO valuation overhang AND timing risk — post-listing mean reversion / event-date uncertainty: a ≥$1.8T IPO represents ~90x trailing revenue (<$20B annual) and assumes decades of future free cash flow from Starlink, Starship, and Mars colonization. If post-IPO trading reveals institutional selling at the open or analyst initiations with Hold/Sell on valuation, the entire sector (UFO, ROKT, NASA) faces redemption pressure — the up-to-30% retail allocation enlarges the float of weak-handed holders and can amplify a post-listing drawdown. This is the single highest near-term risk — not fundamental, but sentiment-driven and potentially severe (-20 to -40% in ETFs over 1-3 months). TIMING: pricing is expected Jun 11 / listing Jun 12 under SPCX, but SpaceX advisers have said it could slip to 2027 — a delay would deflate the run-up in the proxy ETFs (UFO/ROKT have already rallied +75%/+58% YTD in anticipation), a 'sell-the-news-that-didn't-come' unwind risk.",
-    "SpaceX launch monopoly — single-point systemic risk: SpaceX executes >90% of global commercial orbital launches. Any SpaceX operational disruption (repeated launch failures, FAA stand-down order analogous to the 2016 Amos-6 explosion, national security regulatory action) would freeze satellite deployment for all LEO constellation operators simultaneously. This is a tail risk but with near-total sector impact if it materialized.",
-    "UCITS vehicle gap — Spanish investor access constraint: no UCITS-listed pure-play commercial space ETF exists. The only investable ETFs (UFO, ROKT, ARKX) are US-listed, non-UCITS. For a Spanish retail or professional investor with UCITS compliance requirements, direct ETF access is non-compliant. This limits position sizing and creates regulatory risk on the execution side.",
-    "LEO constellation saturation and pricing pressure: once Amazon Kuiper reaches commercial scale (target 2026-2027), Starlink faces genuine subscription pricing competition for the first time. If LEO broadband becomes commoditized, revenue growth rates decelerate sharply — undermining the SpaceX IPO growth premium. European OneWeb/Eutelsat and Chinese G60 add further capacity. The broadband satellite market could follow a pattern similar to early terrestrial ISP pricing collapse.",
-    "Orbital debris and Kessler syndrome regulatory risk: the ITU and national regulators (FCC, ESA) are increasingly focused on active debris removal mandates and constellation de-orbit requirements. New regulations requiring end-of-life deorbit within 5 years (FCC 2022 rule update) add per-satellite cost. A major collision event (analogous to 2009 Iridium-Cosmos) could trigger emergency regulatory action and temporary orbital access restrictions, materially impacting launch cadence.",
-    "Valuation model fragility for non-revenue pure plays: several major commercial space companies (AST SpaceMobile, Intuitive Machines, Redwire) remain pre-profitability with speculative business models. In a risk-off environment or broader tech de-rating, these names can lose 40-70% rapidly, dragging UFO (which is weighted toward pure-play names, including pre-revenue). ROKT's defense-prime ballast partially mitigates this risk."
+    "SpaceX post-IPO lock-up consolidation and valuation risk (PRIMARY near-term): SPCX at ~$153 = ~$1.8T valuation = ~90x estimated 2026 revenue. The 90-day lock-up expiry (~Sept 9) and 180-day expiry (~Dec 9) are structural supply events. Growth premium requires sustained 30%+ Starlink subscriber expansion annually for multiple years. First quarterly earnings (September 2026) is the decisive near-term fundamental catalyst — any net-add deceleration will be widely covered and could trigger outsized selling.",
+    "Rocket Lab — Iridium acquisition execution risk (NEW June 29, 2026): $8B acquisition announced today. Risks: (1) dilution and debt load on a ~$800M-revenue company; (2) regulatory approval uncertainty (Iridium has US government SATCOM contracts — could trigger national security review); (3) integration complexity of a 1.9M-subscriber L-band constellation is architecturally different from Rocket Lab's manufacturing + launch focus; (4) diversion of engineering resources from Neutron development, which is the medium-lift strategic asset. Market reaction on announcement day was +9.7% on RKLB — positive sentiment — but this is a multi-year execution story with binary outcomes.",
+    "AI/tech sector rotation headwind (NEW June 2026): Fed hawkish pivot June 17 (3.50-3.75%, hike bias, Oct hike in play), CPI 4.2%, strong USD. Market rotating OUT of AI/tech/growth names. Commercial space trades at growth multiples and is subject to multiple compression in this regime, independent of fundamental strength. This is a 3-6 month tactical headwind.",
+    "UCITS vehicle gap — Spanish investor access constraint: No UCITS-compliant vehicle. UFO, ROKT, ARKX, SPCX are all US-listed non-UCITS. This limits position sizing and creates regulatory compliance risk for Spanish retail/professional accounts.",
+    "Kuiper and G60 competitive pressure on Starlink ARPU: Amazon Kuiper in commercial deployment; Chinese G60 targets 15,000 satellites by 2030. Once Kuiper reaches scale (2026-2027), Starlink faces genuine subscription pricing competition for the first time. SpaceX IPO valuation embeds a perpetual-monopoly premium on LEO broadband.",
+    "Orbital debris and regulatory intervention: ITU/FCC increasingly focused on active debris removal mandates and constellation de-orbit requirements. A major collision event could trigger emergency regulatory action. Tail risk but grows in probability as constellation density increases."
   ],
-
-  "narrative_maturity": "emerging",
-  "narrative_trend": "increasing",
-  "narrative_notes": "Commercial space sits at 'emerging' by the scoring_weights.yaml criteria as of June 2026. The thesis (commercial space as a distinct investable sector with SaaS-like revenue models) has been present in specialist research (Morgan Stanley, Novaspace, BofA space team) for 2-3 years but is only now appearing with regularity in generalist sell-side coverage. The SpaceX IPO filing is the specific event that triggered mainstream coverage acceleration — Bloomberg, FT, CNBC, Al Jazeera all ran front-page stories on the IPO in early June 2026. This is the observable transition from emerging→mainstream. The ETF AUM combined (UFO $376M + ROKT $410M + ARKX $390M = ~$1.18B) is above the $500M threshold in aggregate but the largest individual fund (ROKT at $410M) does not yet have the Goldman/JPM base-case sector thematic reports that would mark full mainstream. Classification: 'emerging' with high confidence that reclassification to 'mainstream' should occur within 1-2 months if SpaceX IPO generates continued institutional analyst coverage. Narrative_trend: strongly increasing — SpaceX IPO is the biggest narrative accelerator the sector has had."
+  "narrative_maturity": "mainstream",
+  "narrative_trend": "stable",
+  "narrative_notes": "UPGRADED from 'emerging' (June 8 study) to 'mainstream' (June 29). The SpaceX IPO listing June 12 was the specific crossing event. Observable criteria per scoring_weights.yaml: (1) Bloomberg, FT, CNBC, Reuters, WSJ all ran front-page coverage of the IPO, subscriber data, and post-IPO price trajectory — generalist tier-1 media daily coverage met; (2) Multiple sell-side desks initiated coverage of SPCX with price targets within 48h of listing — consensus bank model coverage met; (3) UFO AUM crossed $1B, ROKT+UFO+ARKX ~$1.6B combined — approaching mainstream threshold. RKLB's $8B Iridium acquisition announcement (June 29) is a second mainstream-confirming event: major M&A in a sector only attracts Bloomberg/WSJ front-page when the sector has reached institutional critical mass. NOT 'crowded' yet: total ETF AUM ~$1.6B is still below the $2B+ crowded threshold, SPCX has no UCITS vehicle (limiting retail broadening), and multiple future catalysts remain unresolved (quarterly earnings, index inclusion, Neutron, Iridium close). narrative_trend 'stable': the IPO-driven acceleration has normalized post-listing; the sector is at a steady-state mainstream level rather than still accelerating."
 }

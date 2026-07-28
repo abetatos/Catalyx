@@ -132,7 +132,7 @@
     }
   ],
 
-  "active_catalyst_ids": [],
+  "active_catalyst_ids": ["cat_20260314_private_credit_redemption_crisis"],
 
   "historical_catalyst_performance": {
     "summary": "Listed asset managers are highly positively correlated with equity market levels (beta ~1.2-1.5 to S&P 500 for traditional managers, ~1.5-2.0 for alternative managers). Historical catalyst response patterns: (1) Bull market onset — asset managers outperform broad financials by 8-15% in the first 12 months of a new bull market as AUM appreciation drives multiple expansion and revenue momentum; (2) Rate normalization (falling rates) — mixed: helps equity valuations (AUM appreciation) but compresses money market and fixed income fee rates; net positive for equity-heavy managers, mixed for fixed income managers; (3) M&A announcements — acquirers typically sell off 5-8% on announcement as market prices dilution risk; targets re-rate +20-40% to acquisition premium; (4) Bear markets — asset managers typically fall 30-40% in a severe bear market as AUM contracts and performance fees evaporate; the alternatives segment is partially insulated (locked-up capital does not redeem) but mark-to-market still affects NAV and hence management fees; (5) Alternative asset fundraising supercycles — Blackstone, KKR, Apollo have historically re-rated 40-60% in the 12-18 months following the completion of a large flagship fund raise, as the management fee base locks in for 5-7 years.",

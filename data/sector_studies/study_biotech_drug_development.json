@@ -151,5 +151,5 @@
     "rate_sensitivity": "Empirical: for every 100bps rise in the 10-year Treasury yield, XBI historically underperforms S&P 500 by approximately 15–20% over the subsequent 12 months. The inverse is directionally true but the magnitude is lower (rate cuts = +10–12% sector outperformance per 100bps cut). Source: SPDR historical returns vs Fed Funds rate."
   },
 
-  "active_catalyst_ids": []
+  "active_catalyst_ids": ["struct_biopharma_patent_cliff_ma", "struct_ai_drug_discovery"]
 }

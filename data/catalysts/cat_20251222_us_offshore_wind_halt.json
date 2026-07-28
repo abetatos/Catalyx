@@ -1,0 +1,40 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20251222_us_offshore_wind_halt",
+  "schema_version": "1.2",
+  "type": "event",
+  "created_at": "2026-07-01T00:00:00Z",
+  "detected_at": "2026-07-01T00:00:00Z",
+  "event_date": "2025-12-22T00:00:00Z",
+  "source": {
+    "type": "official_announcement",
+    "url": "https://www.utilitydive.com/news/trump-burgum-offshore-wind-orsted-sunrise-wind/811178/",
+    "publication": "US Department of the Interior / Utility Dive",
+    "published_at": "2025-12-22T14:00:00Z"
+  },
+  "catalyst_type": "regulatory",
+  "catalyst_subtype": "policy_suspension",
+  "description": "A negative US policy shock has impaired offshore wind. The Trump DOI suspended five major leases (Empire, Revolution, Sunrise, Vineyard 1, CVOW) on 2025-12-22 and is paying developers (>$2bn TotalEnergies deal) to CANCEL leases and switch to oil/gas. Developer impairments cascaded: Orsted needs ~$9.4bn to finish two US projects citing 'adverse developments'; Equinor took a $955M Empire Wind impairment; Shell a $996M Atlantic Shores loss. BNEF cut its US offshore deployment forecast from 39 GW to ~6 GW by 2035. The EU side is a separate, milder recovery (111 GW-by-2030 target intact; EU auctions awarded ~17.2 GW in 2025). Directly relevant to wind_energy_offshore as a HEADWIND: there is no positive structural driving US offshore wind — the real levers (WACC, CfD/lease policy, OEM-duopoly economics) are all rate/policy-bound and currently adverse. Registered as a bearish/regime headwind so the sector is flagged policy-impaired rather than left to score on a momentum-only baseline; the tradable read is EU-only or avoid.",
+  "geography": ["US", "EU"],
+  "magnitude": "high",
+  "novelty_score": 40,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": false,
+    "nov_02_new_sector": true,
+    "nov_03_new_source": true,
+    "nov_04_changes_rate": false,
+    "nov_05_consensus_surprise_gt50": false
+  },
+  "strength_score": 78,
+  "consensus_surprise": 0.4,
+  "is_priced_in_estimate": 0.75,
+  "relation_to_structural": "contradicts",
+  "decay_halflife_days": 180,
+  "related_catalyst_ids": [],
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": null,
+  "user_rank": 5,
+  "user_notes": "Registered 2026-07-01 in the sectors-without-catalyst review. Drives wind_energy_offshore as a bearish policy headwind. relation_to_structural='contradicts' so the catalyst_scorer records it WITHOUT adding a positive alignment term — correct for a headwind: an impaired sector should not be lifted in the heatmap (its alignment stays N/A/baseline). Long 180d half-life: this is a durable policy regime, not a one-shot shock. The EU offshore recovery is a DIFFERENT investor base — do not treat this as EU-bearish; if a EU-only offshore vehicle is used, model that separately. Re-check on any DOI lease reinstatement or a 2028 US administration shift.",
+  "tags": ["offshore_wind", "wind", "trump", "doi", "policy", "orsted", "equinor", "shell", "renewables", "contradicts", "regime_headwind"]
+}

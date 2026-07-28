@@ -1,0 +1,40 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20260624_memory_shortage_confirmed",
+  "schema_version": "1.2",
+  "type": "event",
+  "created_at": "2026-06-29T00:00:00Z",
+  "detected_at": "2026-06-29T00:00:00Z",
+  "event_date": "2026-06-24T00:00:00Z",
+  "source": {
+    "type": "earnings_report",
+    "url": "https://investors.micron.com/static-files/631b1a32-5537-46ae-8f40-82e42fc79dfe",
+    "publication": "Micron Q3 FY2026 earnings / S&P Global / Goldman Sachs",
+    "published_at": "2026-06-24T20:30:00Z"
+  },
+  "catalyst_type": "corporate_event",
+  "catalyst_subtype": "earnings_guidance_revision",
+  "description": "Micron's 2026-06-24 fiscal Q3 print confirmed the memory super-cycle is real and supply-bound, NOT a sentiment bubble: 81% gross margin, entire 2026 HBM capacity fully contracted/sold out, and management guiding constraints to persist through at least 2026. Corroborating market data: Q2 DRAM contract prices +63%, NAND +75%; Goldman Sachs calls it the most severe memory shortage in 15 years (DRAM shortfall 4.9%, NAND 4.2%, HBM 5.1% for 2026), with AI infrastructure absorbing ~23% of global DRAM wafer output. This is a fundamentals-CONFIRMING counterpoint to the 06-05/late-June AI-chip selloff: while fabless/compute names (Nvidia, Broadcom) sold off on capex-peak fears, the memory IDMs printed record margins on a genuine physical shortage. Directly bullish for sector semiconductors_memory (Micron, SK Hynix, Samsung); confirms the AI-capex structural via real revenue, not guidance.",
+  "geography": ["USA", "KOR", "GLOBAL"],
+  "magnitude": "high",
+  "novelty_score": 40,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": false,
+    "nov_02_new_sector": true,
+    "nov_03_new_source": true,
+    "nov_04_changes_rate": false,
+    "nov_05_consensus_surprise_gt50": false
+  },
+  "strength_score": 75,
+  "consensus_surprise": 0.4,
+  "is_priced_in_estimate": 0.5,
+  "relation_to_structural": "confirms",
+  "decay_halflife_days": 30,
+  "related_catalyst_ids": ["struct_ai_capex_supercycle", "cat_20260605_ai_capex_peak_scare"],
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": null,
+  "user_rank": 2,
+  "user_notes": "Registered 2026-06-29 in the scan refresh. Maps to the promoted sector semiconductors_memory (gap_20260604, promoted 2026-06-04) — so it is a Pass-2 classification, not a gap update. The signal that originated the Discovery Pass ('RAM disk' case) is now a hard-fundamental confirmation. Importance for the book: it splits the 'AI selloff' into two regimes — compute/fabless under capex-peak pressure (cat_20260605) vs memory IDMs with record margins on a physical shortage. semiconductors_memory has no open movement yet but ranks as a candidate. is_priced_in 0.5: memory names already ran hard YTD, so much of the shortage is in the price; the earnings confirm staying power rather than re-rating from scratch. consensus_surprise 0.4: the shortage was well-telegraphed; the 81% margin magnitude was the beat.",
+  "tags": ["memory", "dram", "nand", "hbm", "micron", "sk_hynix", "shortage", "ai_memory", "supercycle", "earnings", "confirms_ai_capex"]
+}

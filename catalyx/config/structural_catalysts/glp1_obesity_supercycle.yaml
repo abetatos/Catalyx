@@ -1,0 +1,180 @@
+# StructuralCatalyst: GLP-1 / Obesity-Drug Supercycle
+#
+# Calibration anchor (Rule 3): bootstrap 82 — on par with struct_cb_gold_accumulation (84),
+# slightly below struct_ai_capex_supercycle (89.9). Mainstream, consensus, but the TAM is still
+# expanding (oral GLP-1 approval + Medicare coverage onset 2026) so it is not yet exhausted.
+#
+# Sign note: this catalyst is a TAILWIND for pharma_large_cap and longevity_biotech, but a
+# HEADWIND (procedure displacement) for medical_devices — bariatric/cardio-metabolic device volumes
+# fall as GLP-1 use rises. medical_devices is therefore deliberately NOT linked in active_catalyst_ids:
+# the catalyst_scorer treats a linked structural as a POSITIVE alignment contributor, which would
+# misrepresent a sector the trend actually pressures. Model the device headwind separately if desired.
+
+id: struct_glp1_obesity_supercycle
+type: structural
+schema_version: "1.4"
+title: "GLP-1 / obesity-drug supercycle — cardio-metabolic TAM expansion + oral + Medicare onset"
+description: >
+  The GLP-1 receptor-agonist class (semaglutide, tirzepatide, and the 2026 oral entrants) has moved
+  from a diabetes therapy to a structural cardio-metabolic platform with a multi-hundred-billion-dollar
+  addressable market. Three compounding forces make it structural rather than episodic: (1) Indication
+  expansion — beyond weight loss into cardiovascular risk reduction, sleep apnea, MASH/liver, and CKD,
+  each adding reimbursed lives. (2) Oral formulation — the FDA approval of Eli Lilly's oral orforglipron
+  (Foundayo) on 2026-04-01 removes the injection barrier and the cold-chain constraint, opening primary-care
+  and ex-US scale; the pill is projected to take the majority of the oral-obesity market by 2030. (3) Payer
+  onset — US Medicare obesity coverage begins ~July 2026, converting a cash-pay market into a reimbursed one.
+  ~39 GLP-1 molecules from ~34 companies are in development, so the class is deepening, not saturating.
+  Primary beneficiary: pharma_large_cap (Novo Nordisk, Eli Lilly and the fast-followers). Adjacent tailwind:
+  longevity_biotech (metabolic-healthspan framing is the mainstream, investable expression of the aging thesis).
+  Adjacent HEADWIND: medical_devices (bariatric surgery volumes fell ~34% 2022-2024 as GLP-1 use rose ~140%).
+  Key near-term risk: US Section 232 pharma tariffs (100% on patented imports, effective 2026-07-31) compress
+  ex-US manufacturer margins — a discrete policy headwind tracked as a separate event, not part of this structural.
+
+created_at: "2026-07-01T12:00:00Z"
+created_by: user
+onset_period: "2023-Q1"
+onset_evidence: >
+  Novo Nordisk's Wegovy SELECT trial (topline Aug 2023) demonstrated a 20% reduction in major adverse
+  cardiovascular events, reframing obesity drugs as cardio-metabolic therapeutics; simultaneous 2023
+  supply shortages of Wegovy/Mounjaro confirmed demand vastly exceeded capacity. Both the clinical
+  re-rating and the demand-supply gap established the supercycle in Q1-Q3 2023.
+
+catalyst_type: technology_adoption
+catalyst_subtype: glp1_obesity_drug_adoption
+geography: [US, EU, GLOBAL]
+thematic_tags: [glp1, obesity, semaglutide, tirzepatide, orforglipron, pharma, cardio_metabolic, medicare]
+user_rank: 3
+user_notes: >
+  Cleanest UCITS expression is broad pharma (e.g. HEAL/IHCU or single-names Novo/Lilly where accessible);
+  there is no pure-play GLP-1 UCITS ETF, so the sector vehicle dilutes the signal. Bootstrap 82 anchored to
+  struct_cb_gold_accumulation (84). Run intensity_engine after the first indicator refresh to replace bootstrap.
+
+intensity:
+  current_score: 82
+  computation_method: bootstrap
+  last_updated: "2026-07-01"
+  computation_note: >
+    Bootstrap at creation 2026-07-01. Anchor: on par with struct_cb_gold_accumulation (84), below
+    struct_ai_capex_supercycle (89.9). Consensus/mainstream but TAM still expanding (oral + Medicare onset).
+  history:
+  - period: "2026-Q3"
+    score: 82
+    note: "Bootstrap at creation 2026-07-01. Oral orforglipron approved 2026-04-01; Medicare obesity coverage onset ~Jul 2026; ~39 molecules in development."
+    computation_method: bootstrap
+
+indicators:
+- id: ind_01
+  name: "US GLP-1 weekly prescription volume (millions/week)"
+  source: "IQVIA National Prescription Audit"
+  source_url_template: "https://www.iqvia.com/"
+  check_frequency: monthly
+  current_value: 9.0
+  unit: millions_rx_per_week
+  direction: higher_is_stronger
+  threshold_strong: 8
+  threshold_weak: 4
+  last_value: 8.2
+  last_date: "2026-05-31"
+  update_note: >
+    US GLP-1 dispensed volume ~8-10M scripts/week mid-2026, still rising with oral orforglipron launch.
+    Threshold_strong 8M = mainstream primary-care adoption; threshold_weak 4M = pre-oral baseline.
+  semaphore: 🟢
+  value_history:
+  - date: "2026-05-31"
+    value: 8.2
+  - date: "2025-12-31"
+    value: 6.8
+  - date: "2025-06-30"
+    value: 5.4
+
+- id: ind_02
+  name: "Global GLP-1 / obesity-drug market size (analyst consensus, $B projected)"
+  source: "Grand View Research / JPMorgan / Morgan Stanley sector notes"
+  source_url_template: "https://www.grandviewresearch.com/"
+  check_frequency: quarterly
+  current_value: 185
+  unit: usd_billion_projected
+  direction: higher_is_stronger
+  threshold_strong: 150
+  threshold_weak: 80
+  last_value: 150
+  last_date: "2025-12-31"
+  update_note: >
+    Consensus 2033 obesity-drug TAM ~$150-200B and drifting up with each new indication. Threshold_strong
+    $150B; threshold_weak $80B (pre-CV-indication 2023 consensus). Rising estimates = deepening structural.
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 150
+  - date: "2024-12-31"
+    value: 130
+  - date: "2023-12-31"
+    value: 100
+
+- id: ind_03
+  name: "GLP-1 / incretin molecules in clinical development (count)"
+  source: "Company pipelines / Evaluate Pharma"
+  source_url_template: "https://www.evaluate.com/"
+  check_frequency: quarterly
+  current_value: 39
+  unit: count_molecules
+  direction: higher_is_stronger
+  threshold_strong: 25
+  threshold_weak: 10
+  last_value: 34
+  last_date: "2025-12-31"
+  update_note: >
+    ~39 incretin molecules from ~34 companies in development (oral, once-monthly, amylin/GLP combos).
+    A deepening pipeline = class not yet saturating. Threshold_strong 25; threshold_weak 10.
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 34
+  - date: "2024-12-31"
+    value: 28
+  - date: "2023-12-31"
+    value: 16
+
+- id: ind_04
+  name: "US Medicare/CMS obesity-drug covered lives (millions)"
+  source: "CMS coverage determinations"
+  source_url_template: "https://www.cms.gov/"
+  check_frequency: quarterly
+  current_value: 7
+  unit: millions_lives
+  direction: higher_is_stronger
+  threshold_strong: 5
+  threshold_weak: 0
+  last_value: 0
+  last_date: "2025-12-31"
+  update_note: >
+    US Medicare obesity coverage begins ~July 2026, converting cash-pay to reimbursed demand. Threshold_strong
+    5M lives = payer onset confirmed; threshold_weak 0 = no coverage (pre-2026 baseline).
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 0
+
+deactivation_conditions:
+- id: deact_01
+  condition: >
+    US GLP-1 weekly prescription volume falls below 4M/week for two consecutive quarters (would indicate
+    demand saturation or a safety/efficacy setback reversing adoption).
+  action: downgrade_to_weak
+- id: deact_02
+  condition: >
+    A major GLP-1 safety signal (regulatory black-box or withdrawal) removes a lead molecule, OR Medicare
+    obesity coverage is rescinded before onset — collapsing the reimbursed-lives thesis.
+  action: full_deactivation
+- id: deact_03
+  condition: >
+    Consensus obesity-drug TAM projection falls below $80B for two consecutive quarterly analyst updates
+    (structural demand narrative de-rating).
+  action: review_required
+
+linked_event_catalyst_ids: []
+linked_structural_catalyst_ids: []
+
+narrative_maturity: "mainstream"
+status: active
+status_last_reviewed: "2026-07-01"

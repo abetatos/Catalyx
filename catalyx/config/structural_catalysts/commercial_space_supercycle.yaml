@@ -66,7 +66,7 @@ user_notes: >
   months if SpaceX IPO generates sustained institutional analyst coverage.
 
 intensity:
-  current_score: 88.7
+  current_score: 86.7
   computation_method: computed
   computation_note: >
     Bootstrap 2026-06-05. Three indicators: ind_01 (Starlink subscribers 10M vs strong=8M),
@@ -83,8 +83,12 @@ intensity:
     estimate: 82. Rationale: all three indicators are well above strong thresholds, trend is
     rising, but this is a cold-start file with no history — conservative relative to the
     formula's 92.9 output. Run intensity_engine --write-back after first quarterly data update.
-  last_updated: "2026-06-12"
+  last_updated: "2026-06-29"
   history:
+  - period: 2026-Q2
+    score: 86.7
+    note: 'Computed 2026-06-29: avg=86.67 trend=→ (flat) (was 88.7)'
+    computation_method: computed
   - period: '2026-06-12'
     score: 88.7
     note: 'Computed 2026-06-12: avg=86.67 trend=↑ (rising 1 period) (was 86.7)'

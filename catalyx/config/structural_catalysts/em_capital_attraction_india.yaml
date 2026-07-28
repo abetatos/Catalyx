@@ -1,0 +1,172 @@
+# StructuralCatalyst: EM Capital-Attraction Cycle & Policy-Driven Reflows (India)
+#
+# Calibration anchor (Rule 3): bootstrap 45 — weaker than every other active structural. A real long-run
+# EM-consumption floor, but the near-term driver is two-sided and USD-gated: the 2026 thesis flipped from
+# "RBI easing + weak dollar" to "policy-driven foreign-capital re-attraction against a strong-dollar headwind".
+# Designed to score LOW/degrading now — the sector was uncatalyzed precisely because its driver is contested.
+# Drives consumer_india_em.
+
+id: struct_em_capital_attraction_india
+type: structural
+schema_version: "1.4"
+title: "EM capital-attraction cycle & policy-driven reflows (India) — USD-gated"
+description: >
+  India's equity/consumption thesis has shifted from a monetary-easing + weak-dollar tailwind to a
+  POLICY-DRIVEN foreign-capital re-attraction story, whose near-term intensity is gated by the US-dollar cycle.
+  Three moving parts: (1) Policy pull — after FPIs net-sold ~$19B of Indian equity/debt, the RBI + government
+  launched a coordinated capital-attraction package (expanded FAR access to government securities, FCNR(B)
+  facilities, removal of certain CGT/withholding taxes on foreign bond investment); the rupee posted its biggest
+  1-day gain in two months toward ~sub-₹95/USD. (2) Monetary — the RBI HELD the repo at 5.25% (June 2026, no cut),
+  cut its growth forecast and raised inflation (crude/geopolitics), so the easing leg the old thesis relied on has
+  stalled. (3) FX gate — DXY rebounded to ~101 by mid-2026 on the Fed hawkish pivot (2026 cuts erased), a direct
+  headwind to EM flows; a EUR-based investor also carries the INR/USD × USD/EUR double-FX drag. Primary sector:
+  consumer_india_em. This is a WEAK / contested structural by design — the long-run EM-consumption floor is intact,
+  but the cyclical + FX overlay is currently a drag, so it should rank low until the USD cycle turns.
+
+created_at: "2026-07-01T12:00:00Z"
+created_by: user
+onset_period: "2026-Q2"
+onset_evidence: >
+  The June-2026 RBI/government coordinated capital-attraction measures (FAR expansion, FCNR(B) facilities,
+  foreign-bond tax relief) marked the pivot from an easing/weak-dollar thesis to a policy-reflow thesis, after
+  ~$19B of cumulative FPI outflows and a DXY rebound to ~101.
+
+catalyst_type: institutional_flow
+catalyst_subtype: em_capital_attraction_india
+geography: [IND, EM]
+thematic_tags: [india, em, consumer, fpi_flows, rupee, dxy, rbi, capital_attraction]
+user_rank: 6
+user_notes: >
+  EUR-based investor carries a double-FX drag (INR/USD + USD/EUR). Bootstrap 45 — deliberately below all other
+  structurals: the long-run consumption thesis is intact but the near-term driver is two-sided and USD-gated.
+  Watch DXY < 97 and FPI flows turning net-positive as the re-rating triggers. The consumer_india_em study is
+  stale on its old weak-dollar premise and should be refreshed via /catalyx-sector-study.
+
+intensity:
+  current_score: 45
+  computation_method: bootstrap
+  last_updated: "2026-07-01"
+  computation_note: >
+    Bootstrap at creation 2026-07-01. Deliberately weakest active structural: real long-run EM-consumption floor
+    but the near-term driver is contested (RBI on hold, DXY back to ~101, FPI outflows).
+  history:
+  - period: "2026-Q3"
+    score: 45
+    note: "Bootstrap at creation 2026-07-01. RBI held 5.25% (no cut); DXY ~101; FPI ~-$19B; policy capital-attraction package launched."
+    computation_method: bootstrap
+
+indicators:
+- id: ind_01
+  name: "US Dollar Index (DXY) — EM-flow gate"
+  source: "ICE / Bloomberg DXY"
+  source_url_template: "https://www.marketwatch.com/investing/index/dxy"
+  check_frequency: weekly
+  current_value: 101.3
+  unit: dxy_index
+  direction: lower_is_stronger
+  threshold_strong: 97
+  threshold_weak: 104
+  last_value: 99
+  last_date: "2026-05-31"
+  update_note: >
+    DXY ~101.3 (June 2026), rebounded on the Fed hawkish pivot — a headwind to EM flows. Lower_is_stronger;
+    threshold_strong <97 (EM tailwind), threshold_weak 104 (acute EM stress).
+  semaphore: 🟡
+  value_history:
+  - date: "2026-05-31"
+    value: 99
+  - date: "2025-12-31"
+    value: 97
+  - date: "2025-06-30"
+    value: 104
+
+- id: ind_02
+  name: "FPI net equity+debt flows into India, trailing 12M ($B)"
+  source: "NSDL / CDSL FPI data"
+  source_url_template: "https://www.fpi.nsdl.co.in/"
+  check_frequency: monthly
+  current_value: -19
+  unit: usd_billion_ttm
+  direction: higher_is_stronger
+  threshold_strong: 10
+  threshold_weak: -10
+  last_value: -15
+  last_date: "2026-05-31"
+  update_note: >
+    Cumulative FPI net-sell ~-$19B — the flow driver is negative. Threshold_strong +$10B (re-attraction working);
+    threshold_weak -$10B (outflow regime).
+  semaphore: 🔴
+  value_history:
+  - date: "2026-05-31"
+    value: -15
+  - date: "2025-12-31"
+    value: -8
+
+- id: ind_03
+  name: "RBI repo rate (%) — easing leg"
+  source: "RBI Monetary Policy Committee"
+  source_url_template: "https://www.rbi.org.in/"
+  check_frequency: quarterly
+  current_value: 5.25
+  unit: percent
+  direction: lower_is_stronger
+  threshold_strong: 5.0
+  threshold_weak: 6.0
+  last_value: 5.25
+  last_date: "2026-06-30"
+  update_note: >
+    RBI held 5.25% in June 2026 (no cut) — the easing tailwind has stalled. Lower_is_stronger; threshold_strong
+    5.0% (active easing supports valuations), threshold_weak 6.0% (tight).
+  semaphore: 🟡
+  value_history:
+  - date: "2026-06-30"
+    value: 5.25
+  - date: "2025-12-31"
+    value: 5.5
+
+- id: ind_04
+  name: "INR/USD exchange rate"
+  source: "RBI / Bloomberg USD/INR"
+  source_url_template: "https://www.rbi.org.in/"
+  check_frequency: weekly
+  current_value: 94.5
+  unit: inr_per_usd
+  direction: lower_is_stronger
+  threshold_strong: 92
+  threshold_weak: 97
+  last_value: 95.5
+  last_date: "2026-05-31"
+  update_note: >
+    INR ~₹94-95/USD, stabilizing off the policy-support measures. Lower_is_stronger (stronger rupee = capital
+    attraction working); threshold_strong 92, threshold_weak 97.
+  semaphore: 🟡
+  value_history:
+  - date: "2026-05-31"
+    value: 95.5
+  - date: "2025-12-31"
+    value: 94.0
+
+deactivation_conditions:
+- id: deact_01
+  condition: >
+    DXY sustains above 104 AND FPI flows stay below -$10B TTM for two consecutive quarters (acute EM
+    capital-flight regime — the re-attraction has failed).
+  action: downgrade_to_weak
+- id: deact_02
+  condition: >
+    A structural break in the India-consumption thesis (sustained GDP-growth downgrade below 5% + INR above
+    ₹100/USD) removing the long-run floor.
+  action: full_deactivation
+- id: deact_03
+  condition: >
+    FPI flows turn net-positive (>+$10B TTM) with DXY below 97 — this is the UPSIDE trigger; flag for a
+    thesis upgrade / study refresh, not deactivation.
+  action: review_required
+
+linked_event_catalyst_ids: []
+linked_structural_catalyst_ids:
+- struct_japan_carry_unwind   # both are USD/DXY-gated EM-flow regimes; watch together
+
+narrative_maturity: "emerging"
+status: active
+status_last_reviewed: "2026-07-01"

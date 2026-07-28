@@ -160,7 +160,7 @@
     }
   ],
 
-  "active_catalyst_ids": [],
+  "active_catalyst_ids": ["struct_glp1_obesity_supercycle"],
 
   "historical_catalyst_performance": {
     "summary": "Longevity biotech has no direct public-market track record as a defined sector — no pure-play ETF existed to benchmark. The closest historical analogs are the broader biotech cycle (XBI) and genomics (ARKG). Key historical catalyst patterns observable in adjacent sectors: (1) FDA approval events in clinical-stage biotech have driven 30-70% sector moves in XBI over 2-4 week windows; the 2025 FDA approval wave (46 drugs) was the primary driver of XBI's +35.9% return. (2) Big pharma M&A events — the $65B+ M&A wave in 2024-2025 drove 20-30% average premium on acquisition targets and lifted the clinical-stage cohort. (3) Negative trial events (Unity Biotechnology UBX1325 Phase II failure) can cause 40-60% drawdowns in individual names within 24 hours and negative sentiment spillover to the sector for 4-8 weeks. (4) Billionaire/celebrity endorsement events (Sam Altman backing Retro Bio, Bezos + Thiel backing Unity) have historically created short-term momentum spikes (2-4 week windows) followed by consolidation — they are attention catalysts, not fundamental re-ratings. The longevity narrative has been in early-stage build for 3+ years without a clean public-market vehicle, meaning the first qualifying pure-play ETF launch will likely capture significant pent-up demand and could generate an initial flow-driven premium above fair value.",

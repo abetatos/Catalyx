@@ -3,8 +3,8 @@
   "schema_version": "1.0",
   "status": "promoted",
   "first_detected": "2026-06-04",
-  "last_seen": "2026-06-04",
-  "signal_count": 1,
+  "last_seen": "2026-06-24",
+  "signal_count": 2,
   "label_inferred": "Semiconductor Memory — DRAM / HBM / NAND",
   "parent_sector_inferred": "technology",
   "demand_drivers_inferred": [
@@ -50,6 +50,13 @@
       "signal_type": "price_outlier",
       "description": "SK Hynix +230% YTD, Micron +226% YTD in 2026. SK Hynix joined Micron in the $1 trillion market cap club driven by HBM3E/HBM4 demand from Nvidia AI accelerators. Roundhill Memory ETF (MEMU) launched 2026-04-02, has more than doubled in two months. HBM market: SK Hynix ~55% share, Samsung ~38%, Micron ~7%. HBM4 expected to demand new base-logic die in 2026.",
       "source_query": "HBM high bandwidth memory ETF SK Hynix Micron 2026",
+      "magnitude": "extreme"
+    },
+    {
+      "date": "2026-06-24",
+      "signal_type": "earnings_surprise",
+      "description": "Micron fiscal Q3 (2026-06-24): 81% gross margin, entire 2026 HBM capacity sold out, constraints through at least 2026. Q2 DRAM contract prices +63%, NAND +75%. Goldman: most severe memory shortage in 15 years (DRAM -4.9%, NAND -4.2%, HBM -5.1% for 2026); AI absorbs ~23% of DRAM wafer output. Hard-fundamental confirmation of the thesis that originated this gap — registered as CatalystEvent cat_20260624_memory_shortage_confirmed.",
+      "source_query": "memory chips DRAM HBM Micron earnings shortage June 2026",
       "magnitude": "extreme"
     }
   ],

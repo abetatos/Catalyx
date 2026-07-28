@@ -1,0 +1,163 @@
+# StructuralCatalyst: Biopharma Patent-Cliff M&A Supercycle
+#
+# Calibration anchor (Rule 3): bootstrap 80 — comparable to struct_ai_capex_supercycle (89.9) but
+# slightly weaker; durable multi-year takeout pressure with clear deal-flow indicators.
+# Drives biotech_drug_development (primary — clinical-stage names are the takeout targets).
+
+id: struct_biopharma_patent_cliff_ma
+type: structural
+schema_version: "1.4"
+title: "Biopharma patent-cliff M&A supercycle — LOE-driven takeout wave into clinical-stage biotech"
+description: >
+  A multi-year loss-of-exclusivity (LOE) wall is forcing large-cap pharma to replace ~$230-300B of branded
+  revenue exposed to patent expiry by 2030, and the fastest fix is acquisition. This is structural, not a
+  one-off deal cycle: (1) The cliff is dated and large — Keytruda, Eliquis, Opdivo and others lose exclusivity
+  2026-2028, so acquirers have a hard, recurring pipeline-replacement need. (2) Deal flow confirms it —
+  biopharma M&A reached ~$106B across ~201 transactions by early June 2026 (avg deal ~$527M vs ~$365M in 2025);
+  IQVIA forecasts ~$140-160B full-year. Eli Lilly alone spent ~$25B across 10 acquisitions; Merck is evaluating
+  Revolution Medicines at ~$28-32B. (3) The takeout premium is durable — clinical-stage targets command 45-65%
+  premiums, and the XBI is +~50% trailing 12 months, largely on the M&A bid. Primary sector: biotech_drug_development
+  (the clinical-stage names that get bought). Secondary read-through to genomics and synthetic_biology (platform
+  targets). Key risk: FTC/antitrust tightening or a rate-driven financing freeze slows the deal machine.
+
+created_at: "2026-07-01T12:00:00Z"
+created_by: user
+onset_period: "2024-Q4"
+onset_evidence: >
+  2025 biopharma M&A re-accelerated (deal value and count up YoY) as the 2026-2028 LOE wall came into the
+  planning horizon; by early 2026 YTD deal value (~$106B by June) confirmed a sustained takeout cycle rather
+  than isolated large deals. The dated, recurring LOE need is what makes it structural.
+
+catalyst_type: institutional_flow
+catalyst_subtype: patent_cliff_ma_supercycle
+geography: [US, EU, GLOBAL]
+thematic_tags: [biotech, pharma, patent_cliff, loe, m_and_a, takeout, xbi]
+user_rank: 3
+user_notes: >
+  Cleanest UCITS expression is a biotech basket (XBI-style equal-weight captures the takeout optionality better
+  than cap-weighted). Bootstrap 80 anchored just below struct_ai_capex_supercycle (89.9). Deal-flow indicators
+  are the primary confirmation; refresh quarterly against IQVIA/BioPharma deal trackers.
+
+intensity:
+  current_score: 80
+  computation_method: bootstrap
+  last_updated: "2026-07-01"
+  computation_note: >
+    Bootstrap at creation 2026-07-01. Anchor: just below struct_ai_capex_supercycle (89.9). Durable
+    LOE-driven takeout pressure with clear deal-flow indicators.
+  history:
+  - period: "2026-Q3"
+    score: 80
+    note: "Bootstrap at creation 2026-07-01. Biopharma M&A ~$106B YTD by June; IQVIA FY forecast ~$140-160B; XBI +~50% 12m."
+    computation_method: bootstrap
+
+indicators:
+- id: ind_01
+  name: "Biopharma M&A deal value YTD ($B)"
+  source: "IQVIA / BioPharma Dive deal tracker"
+  source_url_template: "https://www.iqvia.com/"
+  check_frequency: quarterly
+  current_value: 106
+  unit: usd_billion_ytd
+  direction: higher_is_stronger
+  threshold_strong: 120
+  threshold_weak: 60
+  last_value: 90
+  last_date: "2026-05-31"
+  update_note: >
+    ~$106B YTD by early June 2026 (annualizing to ~$140-160B). Threshold_strong $120B/yr-pace = active
+    supercycle; threshold_weak $60B = normalized deal environment.
+  semaphore: 🟢
+  value_history:
+  - date: "2026-05-31"
+    value: 106
+  - date: "2025-12-31"
+    value: 95
+  - date: "2024-12-31"
+    value: 70
+
+- id: ind_02
+  name: "XBI (equal-weight biotech) trailing 12-month total return (%)"
+  source: "SPDR S&P Biotech ETF"
+  source_url_template: "https://www.ssga.com/"
+  check_frequency: monthly
+  current_value: 50
+  unit: percent_ttm
+  direction: higher_is_stronger
+  threshold_strong: 25
+  threshold_weak: 0
+  last_value: 40
+  last_date: "2026-05-31"
+  update_note: >
+    XBI +~50% trailing 12m, largely on the M&A bid re-rating clinical-stage names. Threshold_strong +25%;
+    threshold_weak 0%.
+  semaphore: 🟢
+  value_history:
+  - date: "2026-05-31"
+    value: 50
+  - date: "2025-12-31"
+    value: 30
+
+- id: ind_03
+  name: "Average clinical-stage takeout premium (%)"
+  source: "Fierce Pharma / deal disclosures"
+  source_url_template: "https://www.fiercepharma.com/"
+  check_frequency: quarterly
+  current_value: 55
+  unit: percent_premium
+  direction: higher_is_stronger
+  threshold_strong: 45
+  threshold_weak: 25
+  last_value: 50
+  last_date: "2025-12-31"
+  update_note: >
+    Clinical-stage takeouts commanding ~45-65% premiums. Threshold_strong 45%; threshold_weak 25% (normalized).
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 50
+  - date: "2024-12-31"
+    value: 42
+
+- id: ind_04
+  name: "Branded revenue at LOE risk by 2030 ($B)"
+  source: "Evaluate Pharma / analyst LOE models"
+  source_url_template: "https://www.evaluate.com/"
+  check_frequency: quarterly
+  current_value: 265
+  unit: usd_billion
+  direction: higher_is_stronger
+  threshold_strong: 200
+  threshold_weak: 100
+  last_value: 250
+  last_date: "2025-12-31"
+  update_note: >
+    ~$230-300B branded revenue faces LOE by 2030 — the structural driver of the takeout need. Threshold_strong
+    $200B; threshold_weak $100B.
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 250
+
+deactivation_conditions:
+- id: deact_01
+  condition: >
+    Biopharma M&A YTD-annualized deal value falls below $60B for two consecutive quarters (takeout cycle stalls).
+  action: downgrade_to_weak
+- id: deact_02
+  condition: >
+    A regulatory regime shift (FTC/antitrust block of large biopharma deals) or a sustained financing freeze
+    halts large acquisitions for two consecutive quarters.
+  action: full_deactivation
+- id: deact_03
+  condition: >
+    Average clinical-stage takeout premium falls below 25% (targets no longer command a scarcity bid).
+  action: review_required
+
+linked_event_catalyst_ids: []
+linked_structural_catalyst_ids:
+- struct_glp1_obesity_supercycle   # obesity/cardio-metabolic assets are a prime takeout target class
+
+narrative_maturity: "mainstream"
+status: active
+status_last_reviewed: "2026-07-01"

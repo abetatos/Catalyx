@@ -1,10 +1,11 @@
 {
+  "$schema": "catalyx/schemas/sector_study.json",
   "id": "study_nuclear_energy",
   "schema_version": "1.2",
   "sector_id": "nuclear_energy",
   "sector_label": "Nuclear Energy — Operators & Developers",
   "created_at": "2026-06-05",
-  "last_updated": "2026-06-05",
+  "last_updated": "2026-06-29",
   "study_type": "full",
 
   "taxonomy": {
@@ -12,80 +13,37 @@
     "adjacent_sectors": [
       "uranium_miners",
       "grid_infrastructure_utilities",
-      "oil_integrated_majors",
+      "oil_majors_integrated",
       "lng_natural_gas"
     ],
-    "differentiation_note": "Nuclear energy operators (Constellation Energy, EDF, Vistra) earn revenue from selling electricity at regulated or contracted power prices — their P&L is driven by capacity utilisation, power purchase agreements, and regulated rate bases, NOT by the uranium spot price. A uranium miner like Cameco or Kazatomprom is a commodity producer whose revenue tracks the uranium spot price (currently ~$90/lb); the miner benefits from higher input-cost inflation that simultaneously hurts nuclear operators' fuel cost lines. This sector is also distinct from grid infrastructure utilities (transmission/distribution builders) because nuclear operators own generation assets, carry nuclear decommissioning liabilities, and face safety-specific regulatory regimes — they are not primarily infrastructure yield vehicles. The investment thesis here is: firm, carbon-free baseload power becoming scarcer and more valuable as AI datacenters demand 24/7 dispatchable electricity that intermittent renewables cannot provide."
+    "differentiation_note": "Nuclear energy operators (Constellation Energy, Vistra, EDF) earn revenue from selling electricity at regulated or contracted power prices — their P&L is driven by capacity utilisation, power purchase agreements (PPAs), and regulated rate bases, NOT by the uranium spot price. A uranium miner like Cameco or Kazatomprom is a commodity producer whose revenue tracks uranium spot price (~$88-92/lb Q1 2026); the miner benefits from higher input-cost inflation that simultaneously hurts nuclear operators' fuel cost lines. This sector is also distinct from grid_infrastructure_utilities (transmission/distribution builders) because nuclear operators own generation assets with large decommissioning liabilities and nuclear-specific safety regimes — they are not primarily infrastructure yield vehicles. Oil_majors (adjacent) are price-takers on Brent; nuclear operators are price-takers on regional electricity markets (PJM, ERCOT, EEX) — structurally different exposure. The investment thesis here: firm, carbon-free baseload power becoming scarcer and more valuable as AI datacenters demand 24/7 dispatchable electricity that intermittent renewables cannot reliably provide. This is a POWER PRICE thesis, not a uranium thesis — nuclear operators benefit as electricity prices rise, while uranium miners benefit as uranium prices rise; these can move independently."
   },
 
   "demand_drivers": [
-    "AI datacenter baseload power demand: data center electricity consumption projected to reach 1,050 TWh by 2026 (IEA/IAEA estimates), equivalent to ~5th largest country consumer globally. Hyperscalers have signed direct nuclear PPAs — Meta secured 6.6 GW from Vistra, TerraPower, Oklo, and Constellation (announced January 2026); Microsoft has a 20-year, $1.6B agreement with Constellation for Three Mile Island restart. Data centers require firm 24/7 power that solar/wind cannot guarantee without storage; nuclear is the only large-scale carbon-free dispatchable option currently available at scale.",
-    "European energy independence: EU energy policy post-Russia gas cutoff has elevated nuclear as a strategic baseload asset. France (EDF) is actively building and refurbishing capacity; Belgium reversed its nuclear phase-out; Finland brought Olkiluoto 3 into full commercial operation. European countries cannot meet emissions targets AND energy security requirements on renewables alone within the 2030 timeframe without nuclear operating at full utilisation.",
-    "US nuclear renaissance and bipartisan policy support: The Trump administration (2025-2026) has been aggressively pro-nuclear — executive orders streamlining NRC permitting, $2.7B DOE award for domestic enrichment capacity (January 2026), new tax credits for nuclear operators, and NRC oversight reform. The Nuclear Production Tax Credit (PTC) provides ~$15/MWh for qualifying nuclear generation through 2032, directly supporting operator margins.",
-    "Power price re-rating: US wholesale electricity prices in PJM and ERCOT have risen 25-40% since 2023 due to AI-driven load growth, benefiting merchant generators like Constellation and Vistra. Constellation's 2026 guidance of $11.00-$12.00 adjusted EPS affirms the margin uplift. Nuclear's near-zero marginal cost means ALL price increases flow directly to EBITDA margin.",
-    "SMR optionality (late-decade): NuScale has NRC certification and a TVA agreement for up to 6 GW deployment; Rolls-Royce SMR has cleared UK Generic Design Assessment stage 3. First commercial SMR deployments are targeted post-2030, giving operators with SMR agreements (Constellation, Vistra, BWRX-300 licensees) an embedded development option priced into equities now.",
-    "Nuclear generation record in 2025: Global nuclear generation hit a new record in 2025 (IEA, 2026 World Energy Outlook), with capacity expected to grow through 2030. 15 new reactors brought online globally in 2026 (IEA estimate), led by China's 10-12 GW annual additions."
+    "AI datacenter baseload power demand (structural, primary): data center electricity consumption projected to reach 1,050 TWh by 2026 (IEA/IAEA), equivalent to the 5th largest country consumer globally. Hyperscalers have signed direct nuclear PPAs accumulating 18-22 GW committed capacity: Meta 6.6 GW from Vistra/TerraPower/Oklo/Constellation (January 2026); Microsoft 20-year PPA with Constellation for Three Mile Island restart ($1.6B); Amazon and Google commitments. Nuclear is the ONLY large-scale, carbon-free, 24/7 dispatchable power source currently available — solar and wind cannot guarantee firm load without storage. AI data center power demand is projected to quadruple to 1,600 TWh by 2034, a structural 10-year driver.",
+    "NLR performance confirms sector institutional adoption: NLR trades at $117.05 (June 29, 2026), 52-week range $104.05-$168.12. YTD +18%, 1-year +98%. URNM (uranium miners) +26% YTD, +119% 1-year. NLR has pulled back from the $168 peak — a -30% correction that mirrors the broader AI-capex digestion (cat_20260605_ai_capex_peak_scare). The pullback does NOT invalidate the structural demand thesis — it reflects multiple compression as investors rotated out of high-momentum names. NLR YTD +18% = still a 2026 leader vs S&P.",
+    "European energy independence: EU policy post-Russia gas cutoff has elevated nuclear as strategic baseload. France (EDF) building/refurbishing capacity; Belgium reversed phase-out; Finland Olkiluoto 3 in full commercial operation. EU cannot meet both emissions targets AND energy security on renewables alone by 2030.",
+    "US policy support — bipartisan: Trump administration aggressively pro-nuclear: $2.7B DOE award for domestic enrichment capacity (January 2026), NRC permitting streamlined, Nuclear Production Tax Credit ($15/MWh, through 2032). Constellation 2026 adjusted EPS guidance $11.00-$12.00 affirmed Q1 2026 — the PTC is structurally embedded in operator margins.",
+    "Power price re-rating: US wholesale electricity prices (PJM, ERCOT) rose 25-40% since 2023 on AI-driven load growth. Nuclear's near-zero marginal cost means ALL price increases flow directly to EBITDA margin. Every $5/MWh increase in the 12-month PJM forward strip = ~$400-600M Constellation EBITDA. The energy rotation from AI/tech into 'real economy' (per macro brief) is supportive of power sector positioning.",
+    "Global nuclear generation record 2025: new record global nuclear generation (IEA, 2026 World Energy Outlook). 15 new reactors brought online globally in 2026 (IEA estimate), led by China (~10-12 GW annually). SMR optionality late-decade: NuScale NRC-certified, Rolls-Royce SMR at UK Generic Design Assessment stage 3. First commercial SMR deployments targeted post-2030 — operators with SMR agreements have embedded development option."
   ],
 
   "supply_constraints": [
-    "Uranium enrichment bottleneck: US domestic enrichment capacity is 4.3 million SWU against requirements of 15.6 million SWU — a 72% gap. Russian enriched uranium (~30% of US supply) faces a legislated import ban from 1 January 2028, while Centrus's new Ohio HALEU facility comes online only in 2029. This creates a 12-24 month supply gap window in 2028, which raises fuel cost risk for operators (margin compression, not demand destruction).",
-    "Construction cost overruns and schedule risk: Average large nuclear plant construction overruns 102.5% of budget and delivers ~3 years late (academic meta-analysis through 2025). Vogtle 3&4 (US) demonstrated this acutely. SMR proponents argue factory manufacturing breaks the overrun cycle, but no Western SMR has yet been built at commercial scale. For existing operators, this constraint applies primarily to expansion — existing fleet has zero construction risk.",
-    "Long regulatory and permitting lead times: Even under streamlined Trump-era NRC processes, a new large reactor takes 10-15 years from decision to commercial operation. The practical supply response to rising demand is therefore limited to reactor life extensions, restarts of idled capacity, and uprates — not greenfield builds. This is a feature for existing operators (no new competition) but a constraint on sector capacity growth.",
-    "Nuclear skills shortage: The workforce required to design, build, and operate nuclear plants is concentrated in a generation of workers nearing retirement. The NRC has lost over 400 experienced staff since early 2025 (under DOGE budget cuts), and the industry globally faces a pipeline gap for nuclear engineers, welders qualified for nuclear-grade work, and safety inspectors.",
-    "Decommissioning liability and waste: Nuclear operators carry very long-dated decommissioning liabilities (multi-billion dollars per plant) and spent fuel storage costs that become a balance sheet overhang. High-level waste repository solutions remain unresolved in the US, EU, and most markets — this is a recurring political constraint on new project approvals.",
-    "Russian fuel supply geopolitical risk: ~40-50% of global uranium enrichment capacity remains in Russia (Rosatom/TENEX). Western utilities cannot fully substitute away before 2028-2029 at earliest. Any escalation in Russia-West sanctions beyond the scheduled 2028 ban could create an acute supply shock for enriched uranium before domestic alternatives are ready."
+    "Uranium enrichment bottleneck: US domestic enrichment capacity 4.3 million SWU vs requirements 15.6 million SWU — 72% gap. Russian enriched uranium (~30-40% of US supply) faces legislated import ban from January 2028. Centrus Ohio HALEU facility comes online 2029. This 12-24 month window in 2028 creates enrichment cost risk for operators on un-hedged volumes.",
+    "Construction cost overruns and schedule risk (applies to new builds): average large nuclear plant construction overruns 102.5% of budget and delivers ~3 years late (meta-analysis). Vogtle 3&4 cost $35B vs $14B estimate. For EXISTING fleet: zero construction risk. SMR proponents argue factory manufacturing breaks the overrun cycle — but no Western SMR has been built at commercial scale.",
+    "Long regulatory lead times: even under streamlined Trump-era NRC processes, a new large reactor takes 10-15 years from decision to commercial operation. Practical supply response limited to: reactor life extensions, restarts of idled capacity, uprates. No new competition for at least a decade for existing operators — a feature, not a constraint.",
+    "Nuclear skills shortage: NRC lost 400+ experienced staff since early 2025 (DOGE budget cuts). Former NRC chair Macfarlane stated 'the regulator is no longer independent.' Nuclear engineer, qualified-welder, and safety inspector pipeline gap is sector-wide and multi-country.",
+    "Decommissioning liability and waste: very long-dated decommissioning liabilities (multi-billion per plant) and spent fuel storage costs. High-level waste repository solutions unresolved in US, EU, and most markets. Recurring political constraint on new project approvals.",
+    "Russian enrichment geopolitical risk: ~40-50% of global enrichment capacity remains Rosatom/TENEX. Western utilities cannot fully substitute before 2028-2029 at earliest. Any escalation in Russia-West relations could create an acute enrichment shock before domestic alternatives are ready."
   ],
+
+  "technology_maturity": null,
 
   "cycle_position": {
-    "assessment": "Early majority adoption — nuclear renaissance confirmed, institutional re-rating in progress, but SMR optionality still speculative and power price cycle peak uncertain.",
-    "rationale": "Nuclear operators entered a structural re-rating cycle in 2023 when Big Tech began signing direct nuclear PPAs, and that re-rating has accelerated through 2025-2026. NLR traded from ~$95 (52-week low) to $168 (52-week high) before consolidating to ~$133 as of end-May 2026 — a -21% pullback from peak but +39% from trough, consistent with a sector that has been discovered by institutional flows but is working through valuation consolidation. The thesis is confirmed (AI demand real, PPAs signed, policy tailwinds strong) but not exhausted: SMR commercialisation, EU fleet expansion, and the Chinese nuclear buildout (10-12 GW/yr) are medium-term catalysts not yet fully reflected in current earnings. The sector is NOT in bubble territory (P/E for operators like Constellation is ~15-18x 2026E, below the S&P 500 average) but it is no longer undiscovered. Cycle position: 'early majority' — past the inflection, before saturation. The -10.5% quarterly pullback (NLR Q1 2026) reflects power price volatility and not thesis invalidation.",
-    "last_assessed": "2026-06-05"
+    "assessment": "Early majority — thesis confirmed and institutionally adopted, but sector in a -30% correction from peak as AI-capex digestion compresses multiples; structural demand intact, power price tailwind ongoing; entry window may be more attractive now than at the ATH",
+    "rationale": "NLR peaked at $168 (52-week high) and is at $117.05 (June 29, 2026) — a -30% correction. YTD +18% and 1-year +98% confirm institutional adoption is real. The AI-capex digestion selloff (cat_20260605_ai_capex_peak_scare) affected nuclear as a high-multiple AI-adjacent theme, even though the underlying demand thesis — firm power for AI datacenters — is specifically CONFIRMED by the memory shortage (cat_20260624_memory_shortage_confirmed) and ongoing hyperscaler capex commitment. The 24/7 Wall St article (June 1, 2026) 'Load Up on Nuclear Before the Data Center Energy Race Accelerates: These 3 ETFs Cover Reactors, Uranium, and Smart Grid' is evidence the narrative is still actively being pushed to retail investors — a crowding signal, but also a reflection that the NLR -30% from ATH has created a second entry opportunity. Constellation EPS guidance $11.00-$12.00 (affirmed Q1 2026) is intact. Power prices remain elevated (PJM 12-month strip $60-80/MWh). The -30% correction from peak is in line with the sector's historical pattern of volatile corrections that do not invalidate 3-5 year structural theses. Cycle position: early majority — past inflection, before saturation, in a healthy consolidation. Not yet the 'buy signal' from exhaustion — but the correction offers a better risk/reward than the $168 ATH.",
+    "last_assessed": "2026-06-29"
   },
-
-  "key_metrics_to_monitor": [
-    {
-      "metric": "US PJM/ERCOT wholesale electricity forward prices (12-month strip)",
-      "unit": "USD/MWh",
-      "source": "PJM Interconnection / ERCOT market data",
-      "current": "~$60-80/MWh (PJM 2027 forward, elevated vs 2022 avg ~$45)",
-      "comment": "Primary revenue driver for merchant nuclear generators (Constellation, Vistra). Every $5/MWh change in the 12-month forward strip translates to ~$400-600M in Constellation EBITDA. Monitor quarterly."
-    },
-    {
-      "metric": "Constellation Energy adjusted operating EPS guidance (2026 FY)",
-      "unit": "USD per share",
-      "source": "Constellation Energy quarterly earnings (SEC Form 8-K)",
-      "current": "$11.00-$12.00 (affirmed Q1 2026 earnings, May 2026)",
-      "comment": "The bellwether for US nuclear operator margins. Guidance range width reflects power price uncertainty. Watch for mid-year revision as summer power demand data comes in."
-    },
-    {
-      "metric": "Uranium spot price (U3O8)",
-      "unit": "USD per pound",
-      "source": "Cameco spot price / UxC Consulting / TradeTech",
-      "current": "~$88-92/lb (Q1 2026 stabilisation range per Sprott Q1 2026 report)",
-      "comment": "Affects nuclear operators' fuel cost (hedged 2-4 years forward typically). High uranium prices compress operator margins on un-hedged volumes; also drives investor rotation between operators and miners. Monitor monthly."
-    },
-    {
-      "metric": "Hyperscaler nuclear PPA signings (cumulative GW committed)",
-      "unit": "GW total capacity contracted",
-      "source": "Press releases / BloombergNEF nuclear PPA tracker",
-      "current": "~18-22 GW signed or announced (inc. Meta 6.6 GW, Microsoft 3 Mile Island, Amazon, Google commitments)",
-      "comment": "Each new hyperscaler nuclear PPA provides 20-year revenue visibility for an operator and confirms the AI-nuclear demand thesis. Track incremental signings; plateau would be a thesis warning signal."
-    },
-    {
-      "metric": "NRC licence approvals / SMR design certifications",
-      "unit": "count of certifications / COLs granted",
-      "source": "US Nuclear Regulatory Commission docket tracker",
-      "current": "NuScale uprated design certified; Rolls-Royce SMR at GDA stage 3 (UK); BWRX-300 under review",
-      "comment": "Regulatory milestones are option-pricing events for SMR developers and operators with SMR agreements. Watch for BWRX-300 (GE-Hitachi) NRC certification, expected 2026-2027."
-    },
-    {
-      "metric": "Global nuclear capacity additions (GW commissioned, trailing 12 months)",
-      "unit": "GW",
-      "source": "IAEA Power Reactor Information System (PRIS)",
-      "current": "~15 reactors in 2026 (IEA estimate), predominantly China (~10-12 GW) + South Korea + India",
-      "comment": "Capacity growth confirms long-cycle demand is being acted on. China additions are most predictable; Western additions (US, France, UK) are where surprise to upside could occur. Monitor quarterly."
-    }
-  ],
 
   "etf_analysis": [
     {
@@ -99,9 +57,9 @@
       "avg_spread_bps": 14,
       "avg_daily_volume_m_usd": 45.0,
       "top_10_concentration_pct": 62.0,
-      "characteristics": "AUM has grown from ~$980M (per etf_universe.yaml last_verified 2026-06-01) to ~$4.93B as of May 2026 — a significant upgrade in liquidity and institutional credibility. Mix of nuclear operators (Constellation Energy CEG, Vistra VST, EDF) and uranium producers (Cameco CCJ). 52-week range $95.41-$168.12; currently ~$133 (end-May 2026), approximately -21% from peak. NOT UCITS — not eligible for Spanish UCITS-mandate accounts. For a Spanish investor, use as benchmark reference and for non-UCITS accounts only. TER 0.61% is reasonable for the theme. Concentration risk: top-10 holdings ~62%. Spread 14bps is acceptable.",
+      "characteristics": "AUM has grown to ~$4.93B (from $980M in etf_universe.yaml — a 5x increase confirming institutional adoption). Current price $117.05 (June 29, 2026). 52-week range $104.05-$168.12. YTD +18%, 1-year +98%. Mix of nuclear operators (Constellation Energy CEG 8.38%, Vistra, EDF) and uranium producers (Cameco). Sector allocation: Energy 50.15%, Utilities 29.69%, Industrials 18.44%, Technology 1.72%. Spread 14bps acceptable. NOT UCITS.",
       "recommendation_tier": 1,
-      "limitations": "NOT UCITS. Cannot be used in Spanish UCITS-restricted accounts. High top-10 concentration (mixed operators + miners — impure play on operators vs uranium commodity). AUM growth to $4.93B confirms institutional adoption but also means less undiscovered alpha in the vehicle itself."
+      "limitations": "NOT UCITS — cannot be used in Spanish UCITS-restricted accounts. Mixed operators + miners (impure play if pure operator exposure is the intent). Top-10 concentration 62%. Spread 14bps acceptable but not tier-1 tight. AUM $4.93B confirms institutional credibility — less undiscovered alpha in the vehicle itself."
     },
     {
       "ticker": "NUKE.L",
@@ -114,19 +72,55 @@
       "avg_spread_bps": 18,
       "avg_daily_volume_m_usd": 3.5,
       "top_10_concentration_pct": 75.0,
-      "characteristics": "UCITS-eligible — preferred vehicle for Spanish investor. AUM $420M (above the $200M liquidity warning threshold; no warning). TER 0.85% is elevated vs NLR but justified by UCITS wrapper for EU investors. Spread 18bps is within the <20bps tier-1 threshold. IMPORTANT: despite the ticker name referencing 'Uranium Miners', this ETF includes both nuclear operators and uranium miners per HANetf factsheet — verify holdings composition before position sizing. Heavy uranium miners tilt means higher commodity beta and less pure operator exposure than NLR. Cameco is largest position (~20.2% per Sprott Q1 2026). AUM growing: Sprott total AUM $65.1B (+9% QoQ Q1 2026), uranium strategies were 96% of Q1 net sales — flows confirmed.",
+      "characteristics": "UCITS-eligible — preferred vehicle for Spanish investor. AUM $420M (above $200M threshold — no liquidity warning). TER 0.85% justified by UCITS wrapper for EU investors. Spread 18bps within 20bps tier-1 threshold. IMPORTANT: despite 'Uranium Miners' in the name, NUKE.L includes both nuclear operators and uranium miners per HANetf factsheet — it is not a pure operator play. Cameco largest position (~20.2%). Sprott total AUM $65.1B (+9% QoQ Q1 2026); uranium strategies were 96% of Q1 net sales — confirmed inflows.",
       "recommendation_tier": 2,
-      "limitations": "Higher TER (0.85%). Uranium miners tilt dilutes pure nuclear operator exposure — investor gets more commodity beta and less regulated/PPA revenue profile than intended for this sector study. Verify current holdings split between operators vs miners before using as primary vehicle. Daily volume $3.5M may create execution friction for large positions."
+      "limitations": "Higher TER (0.85%). Uranium miners tilt dilutes pure nuclear operator exposure — investor gets more commodity (uranium spot) beta vs the PPA/power-price revenue profile the sector thesis is based on. Verify current holdings split before using. Daily volume $3.5M may create execution friction for larger positions. AUM $420M is adequate but not deep."
     }
   ],
 
-  "risks": [
-    "Acute regulatory safety risk from NRC staff depletion: Over 400 NRC experienced staff have resigned or been removed since Trump took office (Jan 2025), including veterans from reactor safety and nuclear materials teams. Former NRC chair Allison Macfarlane stated 'the regulator is no longer independent.' This creates a tail risk: if a safety incident occurs at a US nuclear plant under a weakened regulatory regime, the political backlash could trigger emergency shutdowns across the fleet — analogous to post-Fukushima closures in Germany (2011). This risk is low probability but very high impact and is sector-specific, not present in any adjacent energy sector.",
-    "Power price mean reversion risk: Nuclear operators' near-zero marginal cost means earnings are highly leveraged to wholesale electricity prices. Current elevated PJM/ERCOT prices ($60-80/MWh) are driven partly by AI demand growth and natural gas prices. A significant gas price decline, a demand-side shock, or faster-than-expected renewable deployment with storage could deflate power prices and compress Constellation/Vistra margins without any change to nuclear fundamentals. The -10.5% NLR quarterly pullback in Q1 2026 already reflects some power price volatility sensitivity.",
-    "Uranium fuel cost squeeze: The January 2028 Russian enriched uranium import ban, combined with the gap between domestic capacity (4.3M SWU) and US requirements (15.6M SWU), creates a potential 12-24 month window where operators face enrichment cost spikes. Operators with long-dated fuel supply contracts are hedged; unhedged volumes or short-hedged operators are exposed. This is a margin, not a revenue, risk — but can be significant (fuel = ~20-30% of nuclear operating costs).",
-    "SMR commercialisation slippage: The sector's medium-term bull case partly prices in SMR optionality (2030+ revenue streams for Constellation, Vistra, NuScale licensees). NuScale already cancelled the Idaho Falls Carbon Free Power Project in 2023 due to cost escalation. If SMR costs fail to come down from the $10,000-14,000/kW range to the $5,000-7,000/kW commercially viable range, the technology remains uneconomic and operator valuations that embed SMR optionality will need to be written down. Rolls-Royce SMR still awaiting site licence; first Canadian SNC-Lavalin SMR has not started construction.",
-    "Construction and execution risk for new capacity: The academic record (meta-analysis through 2025) shows average 102.5% cost overrun and 3-year schedule delay for large nuclear builds. The Vogtle 3&4 experience (US first new nuclear in 30 years) cost $35B vs original $14B estimate. Any Western operator announcing new large-scale construction faces credibility risk on execution — capital market reaction can be sharply negative even on confirmed strategic rationale.",
-    "Political reversal in Europe and nuclear-unfriendly elections: While France, Belgium, and Finland have reversed nuclear phase-out policies, Germany remains firmly out and political dynamics can shift. If anti-nuclear parties win in France (EDF's home market) or if a major incident in Europe or Asia triggers political backlash, the European operator premium could reverse sharply. EDF's earnings are particularly sensitive to French regulatory power prices (ARENH mechanism), which adds a policy-rate risk on top of market power prices."
+  "key_metrics_to_monitor": [
+    {
+      "metric": "NLR price (USD)",
+      "unit": "USD",
+      "source": "VanEck / Yahoo Finance",
+      "current": 117.05,
+      "comment": "June 29, 2026: $117.05. 52-week range $104.05-$168.12. YTD +18%, 1-year +98%. -30% from $168 peak. At $117.05 vs $104.05 52-week low, NLR is near the lower quarter of its annual range — a better entry point than $168. Run market_data to track. URNM (uranium miners, not tracked here) +26% YTD, +119% 1-year."
+    },
+    {
+      "metric": "US PJM/ERCOT wholesale electricity forward prices (12-month strip)",
+      "unit": "USD/MWh",
+      "source": "PJM Interconnection / ERCOT market data",
+      "current": 70,
+      "comment": "Estimated $60-80/MWh (PJM 2027 forward, elevated vs 2022 avg ~$45). Primary revenue driver for merchant nuclear generators (Constellation, Vistra). Every $5/MWh change in 12-month forward = ~$400-600M Constellation EBITDA. The June 17 Fed hawkish pivot (cat_20260617) adds a discount-rate headwind to utilities as a rate-sensitive sector — but nuclear operators' near-zero marginal cost insulates them more than thermal generators."
+    },
+    {
+      "metric": "Constellation Energy adjusted operating EPS guidance (2026 FY)",
+      "unit": "USD per share",
+      "source": "Constellation Energy IR / SEC Form 8-K",
+      "current": "11.00-12.00",
+      "comment": "Affirmed Q1 2026 earnings (May 2026). The PTC ($15/MWh) is structurally embedded. Watch for mid-year revision: upward = power market tightening; downward = demand disappointment or cost escalation. Fed hawkish pivot (rate hike scenario) adds discount-rate headwind to regulated utility EPS — but Constellation is primarily a merchant generator (market power prices), less rate-sensitive than pure regulated utilities."
+    },
+    {
+      "metric": "Cumulative hyperscaler nuclear PPA commitments (GW)",
+      "unit": "GW committed",
+      "source": "Press releases / BloombergNEF nuclear PPA tracker",
+      "current": 22,
+      "comment": "~18-22 GW signed or announced (Meta 6.6 GW, Microsoft TMI, Amazon, Google). Each new PPA provides 20-year revenue visibility for an operator. Track incremental signings — plateau of new announcements would be a thesis momentum warning. The memory shortage confirmation (cat_20260624_memory_shortage_confirmed) corroborates AI infrastructure capex continuing, supporting further PPA demand."
+    },
+    {
+      "metric": "Uranium spot price (U3O8)",
+      "unit": "USD per pound",
+      "source": "Cameco / UxC Consulting / TradeTech",
+      "current": 90,
+      "comment": "~$88-92/lb (Q1 2026 stabilisation per Sprott Q1 2026 report). Affects nuclear operators' fuel cost on un-hedged volumes (typically hedged 2-4 years forward). High uranium prices compress operator margins on unhedged volumes. Monitor via URNM price as a proxy. Key 2028 watch: Russian enrichment ban creates potential enrichment cost spike in the 12-24 month window 2028-2029."
+    },
+    {
+      "metric": "NRC staff levels and regulatory independence",
+      "unit": "qualitative",
+      "source": "NRC docket tracker / FT / Reuters nuclear regulatory coverage",
+      "current": "400+ staff departed since Jan 2025 per NRC / former chair Macfarlane",
+      "comment": "TAIL RISK MONITOR. This is the low-probability, high-impact risk specific to this sector. If a safety incident occurs under a weakened regulatory regime and triggers political backlash, the sector can see -40-60% within weeks (Fukushima 2011 analog). This is NOT a fundamentals-based signal — it is a political risk that the market cannot price until it materialises. Track quarterly via NRC staffing announcements."
+    }
   ],
 
   "active_catalyst_ids": [
@@ -135,37 +129,51 @@
   ],
 
   "historical_catalyst_performance": {
-    "summary": "Nuclear energy equities have a strongly asymmetric response to catalyst events, with negative incidents creating disproportionate drawdowns. The Fukushima disaster (March 2011) caused uranium equities to fall 40-60% within weeks and triggered Germany's immediate shutdown of 8 reactors plus a 2022 full phase-out; nuclear ETFs did not recover to pre-Fukushima levels for over a decade. Three Mile Island (1979) and Chernobyl (1986) each triggered 5-10 year periods of US and European nuclear moratoriums. The lesson: nuclear operators have very high 'black swan' tail risk from safety incidents — a single event at any plant globally can destabilise the entire sector regardless of geographic distance. On the positive side, the sector shows strong response to policy catalysts: when the US Production Tax Credit for nuclear was extended (2022 IRA, $15/MWh), Constellation stock re-rated +40% within 3 months. The Three Mile Island restart announcement (Constellation + Microsoft PPA, September 2023) drove a +25% NLR rally within 6 weeks. Tech company nuclear PPA announcements have been the most consistent positive catalysts in 2023-2026, with each major signing (Microsoft, Amazon, Meta) generating 5-15% sector reactions within days. The current cycle is unprecedented in that multiple PPA signings are occurring simultaneously and nuclear is embedded in hyperscaler 10-year capex plans, making thesis invalidation from a single event less likely (multiple counterparties with independent reasons to demand nuclear power).",
+    "summary": "Nuclear energy equities have a strongly asymmetric response to catalyst events. Fukushima (March 2011): -40-60% within weeks, sector took ~10 years to recover. IRA Nuclear PTC ($15/MWh, August 2022): Constellation +40% in 3 months. Microsoft/Constellation Three Mile Island restart PPA (September 2023): NLR +25% in 6 weeks. Meta 6.6 GW nuclear commitment (January 2026): NLR approached $168 ATH. Current correction (-30% from $168) mirrors the broader AI-capex digestion (cat_20260605) but NOT a fundamental thesis invalidation — hyperscaler capex continues, memory shortage (cat_20260624) confirms AI infrastructure spending is supply-constrained not demand-depleted. The pattern: nuclear has a secular bull thesis backed by 20-year PPAs, but intermediate corrections of 25-35% from momentum peaks are part of the discovery phase (as seen in clean energy, copper, uranium in prior cycles). The -30% NLR correction represents the most attractive entry window since the pre-PPA announcement period of early 2022.",
     "key_events": [
       {
         "event": "Fukushima Daiichi disaster",
         "date": "2011-03",
-        "sector_response": "NLR -45% in 3 months; uranium equities -55-65%. Germany closed 8 reactors immediately. Sector took ~10 years to recover.",
-        "lesson": "Geographically-distant incidents cause global sector drawdowns due to political contagion, not operational impact."
+        "sector_response": "NLR -45% in 3 months; uranium equities -55-65%. Germany closed 8 reactors. Sector took ~10 years to recover.",
+        "lesson": "Geographically-distant incidents cause global drawdowns via political contagion."
       },
       {
         "event": "IRA Nuclear Production Tax Credit ($15/MWh)",
         "date": "2022-08",
-        "sector_response": "Constellation +40% within 3 months. NLR +28% in 6 months.",
-        "lesson": "Policy certainty on revenue is the most powerful re-rating catalyst for regulated/merchant nuclear operators."
+        "sector_response": "Constellation +40% in 3 months. NLR +28% in 6 months.",
+        "lesson": "Policy revenue certainty is the most powerful re-rating catalyst for nuclear operators."
       },
       {
         "event": "Microsoft / Constellation Three Mile Island restart PPA",
         "date": "2023-09",
-        "sector_response": "NLR +25% within 6 weeks. Confirmed AI-nuclear demand thesis for institutional investors.",
-        "lesson": "First hyperscaler direct nuclear PPA was a structural catalyst inflection — validated the demand thesis and accelerated sector re-rating."
+        "sector_response": "NLR +25% in 6 weeks.",
+        "lesson": "First hyperscaler direct nuclear PPA was a structural catalyst inflection."
       },
       {
         "event": "Meta 6.6 GW nuclear commitment (Vistra, TerraPower, Oklo, Constellation)",
         "date": "2026-01",
-        "sector_response": "NLR approached 52-week high of $168 in early 2026. Confirmed AI demand is not single-company or single-plant idiosyncratic.",
+        "sector_response": "NLR approached 52-week high of $168. Confirmed AI demand is multi-company.",
         "lesson": "Portfolio-level PPA commitments from multiple hyperscalers are more durable than single-company deals."
+      },
+      {
+        "event": "AI-capex peak scare + NLR correction",
+        "date": "2026-06",
+        "sector_response": "NLR -30% from $168 ATH to $117.05. Mirrors cat_20260605_ai_capex_peak_scare selloff.",
+        "lesson": "Nuclear as AI-adjacent theme participates in AI sentiment corrections even when underlying power demand is unaffected. Fundamental demand (20-year PPAs already signed) is insulated from sentiment corrections."
       }
     ]
   },
 
+  "risks": [
+    "Acute regulatory safety risk from NRC staff depletion (LOW-PROBABILITY, HIGH-IMPACT): 400+ NRC experienced staff have departed since Jan 2025. If a safety incident occurs under a weakened regulatory regime, political backlash could trigger emergency shutdowns — Fukushima analog (-45-60% in weeks). Sector-specific tail risk with no analog in adjacent energy sectors. Probability remains low (US nuclear operational excellence is strong) but non-trivial with reduced oversight.",
+    "Power price mean reversion: nuclear operators' near-zero marginal cost = earnings heavily leveraged to wholesale electricity prices. A significant gas price decline, faster-than-expected renewable + storage deployment, or demand-side shock could deflate PJM/ERCOT prices and compress Constellation/Vistra margins. The June 17 Fed hawkish pivot adds a discount-rate headwind to utilities broadly — NLR has already corrected -30% partly on this dynamic.",
+    "Uranium fuel cost squeeze in 2028: Jan 2028 Russian enrichment import ban + domestic capacity gap (4.3M vs 15.6M SWU needed) creates a potential 12-24 month enrichment cost window in 2028. Operators with long-dated fuel supply contracts are hedged; unhedged volumes or short-hedged operators are exposed. This is a margin (not revenue) risk — meaningful for smaller/younger operators.",
+    "SMR commercialisation slippage: NuScale cancelled its Idaho Falls project in 2023 on cost escalation. If SMR costs fail to decline from $10,000-14,000/kW to commercially viable $5,000-7,000/kW range, operators with SMR valuations embedded will be written down. First Canadian SNC-Lavalin SMR has not started construction; Rolls-Royce awaiting site licence.",
+    "AI-capex digestion extending NLR correction: the memory shortage (cat_20260624) confirms AI infrastructure capex is real — but the Broadcom AI-capex miss (cat_20260605) showed the market can price AI risk into nuclear even when the thesis is actually CONFIRMED. If the AI-capex digestion phase extends through H2 2026, NLR may retest the $104 52-week low before recovering.",
+    "Political reversal in European nuclear markets: while France, Belgium, and Finland have reversed phase-outs, political dynamics can shift. If anti-nuclear parties gain in France (EDF's home market) or a European incident triggers backlash, EDF-weighted European nuclear exposure re-rates sharply lower. EU regulatory power price mechanisms (ARENH in France) add a policy-rate risk on top of market power prices."
+  ],
+
   "narrative_maturity": "mainstream",
-  "analyst_narrative_score": null,
   "narrative_trend": "increasing",
-  "narrative_notes": "Classified as 'mainstream' per scoring_weights.yaml criteria: Goldman Sachs has published a named report 'Is nuclear energy the answer to AI data centers' power consumption?' (visible in search results); Wood Mackenzie published '5 things to look for in nuclear in 2026'; the sector has its own ETF with $4.93B AUM; it appears in Bloomberg/CNBC/FT with regular frequency; and multiple hyperscaler PPAs have generated mainstream financial press coverage. However, it has not yet reached 'crowded' status: COT positioning data for nuclear utilities is not extreme, the narrative is framed as 'renaissance/recovery' rather than pure momentum-chasing, and there is still substantive debate about whether SMR economics will work. The NLR -10.5% quarterly pullback in Q1 2026 suggests the crowding premium has not been fully re-built after earlier profit-taking. Narrative trend is 'increasing' because each new tech company PPA announcement generates a fresh wave of coverage and analyst upgrades. Risk: could reach 'crowded' within 2-3 more large PPA announcements or a strong Q2 2026 equity rally. Monitor for ETF flow acceleration as a leading crowding indicator. Anchored against comparable sectors: EU defense thesis (mainstream, 2024) and AI semiconductor thesis (crowded, 2025-2026) — nuclear sits between these, closer to EU defense than AI semis."
+  "narrative_notes": "Maintaining 'mainstream' from prior study (June 5). The sector has NOT yet reached 'crowded' despite being the subject of active retail articles (24/7 Wall St. June 1 2026: 'Load Up on Nuclear Before the Data Center Energy Race Accelerates: These 3 ETFs'). The NLR -30% correction from the ATH has partially reset the momentum-premium that would drive it to 'crowded.' The thesis is: mainstream institutional adoption (NLR AUM $4.93B, Goldman/Wood Mackenzie coverage, multiple hyperscaler PPA announcements), but NOT yet the extreme retail inflow / COT extremes / analyst consensus uniformity that defines 'crowded.' Narrative_trend 'increasing' because the June 29 study finds new coverage drivers: 24/7 Wall St. June 1 article, Tortoise Capital and Commonfund publishing nuclear AI power demand analyses, and the correction itself generating 'is nuclear still the answer?' articles that maintain coverage intensity. Risk: narrative_maturity could shift to 'crowded' within 2-3 more large PPA announcements or a sharp NLR recovery toward $150+. The current $117 level represents a more attractive entry from a narrative perspective than the $168 ATH where crowding risk was higher. Anchoring: between EU defense 2024 (mainstream) and AI semis 2025-2026 (crowded) — nuclear sits at mainstream, confirmed from June 5 study."
 }

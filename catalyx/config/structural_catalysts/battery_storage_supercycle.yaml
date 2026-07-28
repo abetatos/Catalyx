@@ -1,0 +1,184 @@
+# StructuralCatalyst: Battery-Metals & Stationary-Storage (BESS) Supercycle
+#
+# Calibration anchor (Rule 3): bootstrap 57 — WEAKER than struct_solar_lcoe_deployment (64.1) and well
+# below struct_ai_capex_supercycle (89.9). The oversupply→deficit inflection is real, but the CATL/LFP
+# capacity overhang and pack-price deflation cap intensity in the low-mainstream / high-emerging band.
+#
+# Scope note vs struct_energy_transition_grid: that catalyst measures GRID BOTTLENECK severity
+# (transmission, transformer lead times, interconnection) — it deliberately does NOT cover battery
+# chemistry or metals. This catalyst covers the demand+supply of the BATTERY itself: lithium/nickel
+# price inflection, BESS installations as a new structural demand leg, and EV run-rate. Zero indicator
+# overlap; the two are compounding but distinct. Drives lithium_miners (primary) and the battery-grade
+# nickel leg of cobalt_nickel (cobalt's acute driver is the separate DRC-quota event).
+
+id: struct_battery_storage_supercycle
+type: structural
+schema_version: "1.4"
+title: "Battery-metals & stationary-storage (BESS) supercycle — oversupply→deficit inflection + new demand leg"
+description: >
+  Battery raw materials and stationary storage are inflecting from a 2023-2024 oversupply glut back toward
+  balance, on the back of a genuinely new structural demand leg. Two forces: (1) Price inflection — lithium
+  carbonate recovered from the ~$8,300/t June-2025 trough to ~$25,000/t by mid-2026 as the market flips from
+  surplus to a modest deficit (Fastmarkets), a supply-discipline signal after two years of Chinese lepidolite
+  and brine overcapacity. (2) Demand broadening — battery demand is no longer EV-only: grid-scale BESS is now
+  ~30% of lithium demand (heading to ~36% by 2030), with China's NEA targeting ~180 GW installed BESS by 2027
+  and global installations rising from ~421 GWh (2025) toward ~600 GWh (2026E). BESS is a policy-independent,
+  AI/renewables-driven demand floor (datacenter backup + solar firming + grid arbitrage) that did not exist at
+  scale in the prior lithium cycle. Primary sector: lithium_miners. Secondary: the battery-grade nickel/MHP leg
+  of cobalt_nickel. Key near-term risk: CATL and Chinese cell-makers' capacity surge + LFP pack-price deflation
+  (BNEF pack prices ~$108/kWh) can re-open the supply overhang and cap metal prices — hence the mid-band intensity.
+
+created_at: "2026-07-01T12:00:00Z"
+created_by: user
+onset_period: "2025-Q3"
+onset_evidence: >
+  Lithium carbonate bottomed near $8,300/t in June 2025 and rose >50% into late 2025, coinciding with the
+  first quarter that grid-scale BESS surpassed ~25% of global lithium demand (S&P Global). The simultaneous
+  price bottom and BESS-demand crossover mark the inflection out of the 2023-2024 oversupply regime.
+
+catalyst_type: climate_transition
+catalyst_subtype: battery_storage_bess_supercycle
+geography: [CHN, US, GLOBAL]
+thematic_tags: [lithium, nickel, bess, battery_storage, ev, energy_storage, battery_metals]
+user_rank: 5
+user_notes: >
+  Primary UCITS vehicles: broad battery/energy-storage baskets (e.g. VOLT/BATT-style) and lithium miners
+  (LIT). The sector is bifurcated — miners (price-leveraged) vs cell-makers (margin-compressed by LFP
+  deflation). Bootstrap 57 anchored below struct_solar_lcoe_deployment (64.1). CATL supply overhang is the
+  key cap on intensity. Run intensity_engine after the first indicator refresh to replace bootstrap.
+
+intensity:
+  current_score: 57
+  computation_method: bootstrap
+  last_updated: "2026-07-01"
+  computation_note: >
+    Bootstrap at creation 2026-07-01. Anchor: weaker than struct_solar_lcoe_deployment (64.1). Real
+    oversupply→deficit inflection + BESS demand leg, but CATL/LFP overhang caps intensity mid-band.
+  history:
+  - period: "2026-Q3"
+    score: 57
+    note: "Bootstrap at creation 2026-07-01. Lithium carbonate ~$25k/t (off $8.3k trough); BESS ~30% of Li demand; global BESS ~600 GWh 2026E."
+    computation_method: bootstrap
+
+indicators:
+- id: ind_01
+  name: "Lithium carbonate battery-grade spot (USD/t)"
+  source: "SMM / Fastmarkets battery-grade lithium carbonate assessment"
+  source_url_template: "https://www.metal.com/"
+  check_frequency: weekly
+  current_value: 24937
+  unit: usd_per_tonne
+  direction: higher_is_stronger
+  threshold_strong: 20000
+  threshold_weak: 12000
+  last_value: 22000
+  last_date: "2026-05-31"
+  update_note: >
+    Battery-grade lithium carbonate ~$24,937/t (June 2026), recovered from the ~$8,300/t June-2025 trough.
+    Threshold_strong $20k = healthy miner margins; threshold_weak $12k = marginal-cost stress. June pullback
+    on CATL supply-surge fears is the key caveat.
+  semaphore: 🟢
+  value_history:
+  - date: "2026-05-31"
+    value: 22000
+  - date: "2025-12-31"
+    value: 13500
+  - date: "2025-06-30"
+    value: 8300
+
+- id: ind_02
+  name: "Global grid-scale BESS annual installations (GWh)"
+  source: "BloombergNEF Energy Storage / S&P Global"
+  source_url_template: "https://about.bnef.com/"
+  check_frequency: quarterly
+  current_value: 600
+  unit: gwh_annual_installed
+  direction: higher_is_stronger
+  threshold_strong: 400
+  threshold_weak: 200
+  last_value: 421
+  last_date: "2025-12-31"
+  update_note: >
+    Global BESS installations ~421 GWh (2025) → ~600 GWh (2026E). China NEA targets ~180 GW installed by 2027.
+    Threshold_strong 400 GWh = BESS as a primary demand leg; threshold_weak 200 GWh = EV-dominated baseline.
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 421
+  - date: "2024-12-31"
+    value: 300
+  - date: "2023-12-31"
+    value: 185
+
+- id: ind_03
+  name: "BESS share of total lithium demand (%)"
+  source: "S&P Global Commodity Insights / BNEF"
+  source_url_template: "https://www.spglobal.com/commodityinsights/"
+  check_frequency: quarterly
+  current_value: 30
+  unit: percent_of_li_demand
+  direction: higher_is_stronger
+  threshold_strong: 25
+  threshold_weak: 15
+  last_value: 26
+  last_date: "2025-12-31"
+  update_note: >
+    Stationary storage now ~30% of lithium demand (heading to ~36% by 2030). The structural discriminator
+    from the prior EV-only cycle. Threshold_strong 25%; threshold_weak 15%.
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 26
+  - date: "2024-12-31"
+    value: 20
+  - date: "2023-12-31"
+    value: 14
+
+- id: ind_04
+  name: "Global EV sales run-rate (millions units/yr)"
+  source: "Rho Motion / BNEF EV sales tracker"
+  source_url_template: "https://rhomotion.com/"
+  check_frequency: monthly
+  current_value: 25
+  unit: millions_units_annual
+  direction: higher_is_stronger
+  threshold_strong: 22
+  threshold_weak: 15
+  last_value: 22
+  last_date: "2025-12-31"
+  update_note: >
+    Global EV (BEV+PHEV) sales run-rate ~25M units/yr 2026E. The baseline battery-demand leg. Threshold_strong
+    22M; threshold_weak 15M. Growth decelerating vs 2021-2023 but still expanding — a floor, not the swing driver.
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 22
+  - date: "2024-12-31"
+    value: 17
+  - date: "2023-12-31"
+    value: 14
+
+deactivation_conditions:
+- id: deact_01
+  condition: >
+    Lithium carbonate falls back below $12,000/t for two consecutive quarters (would signal the oversupply
+    glut has re-opened and the deficit inflection failed).
+  action: downgrade_to_weak
+- id: deact_02
+  condition: >
+    Global BESS annual installations fall below 200 GWh AND BESS share of lithium demand falls below 15% for
+    two consecutive quarters (the new structural demand leg has collapsed back to an EV-only cycle).
+  action: full_deactivation
+- id: deact_03
+  condition: >
+    A confirmed multi-hundred-GWh Chinese cell-capacity surge drives battery pack prices below $80/kWh with
+    metal prices following (structural margin destruction across the chain).
+  action: review_required
+
+linked_event_catalyst_ids: []
+linked_structural_catalyst_ids:
+- struct_energy_transition_grid   # BESS firms renewables and relieves grid congestion; compounding but distinct (no indicator overlap)
+
+narrative_maturity: "emerging"
+status: active
+status_last_reviewed: "2026-07-01"

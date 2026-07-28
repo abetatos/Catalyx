@@ -171,5 +171,5 @@
     "active_catalysts_note": "No active CatalystEvent in the system currently maps to real_estate_logistics. Sector tailwinds are secular (e-commerce, supply chain reshoring) rather than acute catalyst-driven. Rate-cut cycle is the nearest event-driven driver. Recommend creating StructuralCatalyst 'struct_ecommerce_logistics_buildout' if this sector is promoted to thesis-target status."
   },
 
-  "active_catalyst_ids": []
+  "active_catalyst_ids": ["struct_ai_capex_supercycle"]
 }

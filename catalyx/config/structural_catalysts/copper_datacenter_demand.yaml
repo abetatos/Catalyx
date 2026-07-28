@@ -53,8 +53,12 @@ intensity:
   computation_note: "Recomputed 2026-06-03 from indicator semaphores: ind_01=🟢(100), ind_02=🟢(100), ind_03=🟢(100), ind_04=🟢(100)
     → avg=100; trend ↑ (68→76→87) → factor=1.02; capped at 95. Override to 87 reflecting genuine strength without hitting
     ceiling. WebSearch confirmed: hyperscaler capex $700B combined 2026, LME copper $13,965/tonne."
-  last_updated: "2026-06-12"
+  last_updated: "2026-06-29"
   history:
+  - period: 2026-Q2
+    score: 71.9
+    note: 'Computed 2026-06-29: avg=78.92 trend=↓↓ (falling 2+ consecutive)'
+    computation_method: computed
   - period: '2026-06-12'
     score: 71.9
     note: 'Computed 2026-06-12: avg=78.92 trend=↓↓ (falling 2+ consecutive) (was 75.9)'
@@ -118,19 +122,22 @@ indicators:
   name: "LME copper spot price (USD/tonne)"
   source: "LME spot price"
   check_frequency: monthly
-  current_value: 13965
+  current_value: 13357.50
   unit: USD_per_tonne
   direction: higher_is_stronger
   threshold_strong: 9500
   threshold_weak: 7500
-  last_value: 12742
-  last_date: "2026-06-02"
-  update_note: "WebSearch confirmed 2026-06-03: LME copper spot $13,965/tonne (June 2, 2026). 2026 YTD range $12,528-$13,965.
-    Prior YAML value of $10,200 was stale. JPMorgan forecasting $12,500 Q2 / $12,075 FY — actual is well above bank forecasts,
-    consistent with thesis."
+  last_value: 13965
+  last_date: "2026-06-29"
+  update_note: "WebSearch 2026-06-29: LME copper 3M $13,357.50/tonne ($6.12/lb), -6.2% MoM on firmer USD + hawkish Fed/ECB
+    rate concerns; still +21% YoY and far above strong threshold. Goldman RAISED year-end 2026 target to $13,735 (640kt ex-US
+    deficit; Grasberg + Kamoa-Kakula not at full capacity until 2028) — fundamentals intact, near-term price cooling is macro
+    (rates/dollar), not demand."
 
   semaphore: 🟢
   value_history:
+  - date: '2026-06-02'
+    value: 13965.0
   - date: '2026-06-01'
     value: 14407.0
   - date: '2026-05-01'

@@ -1,0 +1,40 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20260630_drc_cobalt_export_quota",
+  "schema_version": "1.2",
+  "type": "event",
+  "created_at": "2026-07-01T00:00:00Z",
+  "detected_at": "2026-07-01T00:00:00Z",
+  "event_date": "2026-06-30T00:00:00Z",
+  "source": {
+    "type": "official_announcement",
+    "url": "https://discoveryalert.com.au/congo-cobalt-export-quotas-price-supply-chain-2026/",
+    "publication": "DRC ARECOMS / Fastmarkets",
+    "published_at": "2026-06-30T10:00:00Z"
+  },
+  "catalyst_type": "commodity_supply",
+  "catalyst_subtype": "export_quota_supply_shock",
+  "description": "The Democratic Republic of Congo has imposed a hard cobalt export quota — a 96,600 t/yr ceiling for 2026-27 (~48% of 2024 output) — with unused H1 quota forfeited to the ARECOMS reserve after the 2026-06-30 deadline. Cobalt has repriced ~+160% off its Feb-2025 lows to ~$26/lb (~$57,320/t cobalt hydroxide CIF China) on the sovereign supply squeeze. Nickel is the softer counterpart: structural surplus, range-bound ~$17-18.8k/t, with Indonesia not yet finalizing its 2026 RKAB quota (target ~260-270 Mt vs 379 Mt in 2025, ~one-third compression) — a second, milder supply lever. Directly relevant to cobalt_nickel: a discrete, sovereign, timestamped supply shock (textbook EventCatalyst, decays on quota relaxation) that stacks on top of the struct_battery_storage_supercycle demand structural. Caveat: LFP-battery substitution away from cobalt caps the durable upside, so the sector-level catalyst is asymmetric — a sharp near-term price lever, not a permanent re-rating.",
+  "geography": ["COD", "IDN", "CHN", "GLOBAL"],
+  "magnitude": "high",
+  "novelty_score": 40,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": false,
+    "nov_02_new_sector": true,
+    "nov_03_new_source": true,
+    "nov_04_changes_rate": false,
+    "nov_05_consensus_surprise_gt50": false
+  },
+  "strength_score": 70,
+  "consensus_surprise": 0.4,
+  "is_priced_in_estimate": 0.5,
+  "relation_to_structural": "confirms",
+  "decay_halflife_days": 90,
+  "related_catalyst_ids": ["struct_battery_storage_supercycle"],
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": null,
+  "user_rank": 4,
+  "user_notes": "Registered 2026-07-01 in the sectors-without-catalyst review. Acute driver for cobalt_nickel, stacking on struct_battery_storage_supercycle. relation_to_structural='confirms' vs the battery structural (supply squeeze corroborates the metals-tightness thesis) — as a direct event in the study it contributes its decayed strength positively. strength 70; is_priced_in 0.5 (the move has already run ~+160%). 90d half-life (quota is a 2026-27 regime but the price spike decays as substitution/compliance-friction plays out). Cobalt is the clean driver; nickel's Indonesia RKAB is a softer secondary lever. LFP substitution is the key cap — do NOT over-score. Re-check on ARECOMS quota relaxation and Indonesia's finalized 2026 RKAB.",
+  "tags": ["cobalt", "nickel", "drc", "congo", "export_quota", "arecoms", "indonesia", "rkab", "battery_metals", "supply_shock"]
+}

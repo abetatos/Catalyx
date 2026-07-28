@@ -7,6 +7,7 @@
   "type": "object",
   "required": ["id", "schema_version", "type", "created_at", "detected_at", "catalyst_type", "description", "novelty_score", "strength_score", "status"],
   "properties": {
+    "$schema": { "type": "string", "description": "Optional self-reference to this schema file. Present on all event documents (de-facto convention); declared here so strict additionalProperties:false validation passes." },
     "id": {
       "type": "string",
       "pattern": "^cat_[0-9]{8}_[a-z0-9_]+$",
@@ -16,11 +17,12 @@
     "type": { "type": "string", "const": "event" },
     "created_at": { "type": "string", "format": "date-time" },
     "detected_at": { "type": "string", "format": "date-time" },
+    "event_date": { "type": ["string", "null"], "format": "date-time", "description": "When the event OCCURRED (vs detected_at = when registered). Canonical decay anchor used by catalyst_scorer._anchor_date; present on ~all events." },
     "source": {
       "type": "object",
       "required": ["type"],
       "properties": {
-        "type": { "type": "string", "enum": ["news_article", "official_announcement", "data_release", "cot_report", "etf_flow", "user_manual"] },
+        "type": { "type": "string", "enum": ["news_article", "official_announcement", "official_statement", "data_release", "earnings_report", "cot_report", "etf_flow", "user_manual"] },
         "url": { "type": "string" },
         "publication": { "type": "string" },
         "published_at": { "type": "string", "format": "date-time" }
@@ -107,7 +109,7 @@
       "type": "string",
       "enum": ["active", "decayed", "invalidated", "archived"]
     },
-    "expires_at": { "type": "string", "format": "date" },
+    "expires_at": { "type": ["string", "null"], "format": "date", "description": "Optional expiry date; null = no fixed expiry (decays instead). Nullable to match all existing event documents." },
     "user_rank": {
       "type": ["integer", "null"],
       "minimum": 1,

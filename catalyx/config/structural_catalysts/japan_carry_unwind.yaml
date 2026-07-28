@@ -53,8 +53,12 @@ intensity:
   computation_note: "Computed 2026-06-06 by intensity_engine: avg=68.1 (JGB above strong, CPI near strong, rate + positioning
     moderate), trend flat (insufficient history). Elevated-but-latent — no active unwind. Recompute via /catalyx-update each
     review."
-  last_updated: "2026-06-12"
+  last_updated: "2026-06-29"
   history:
+  - period: 2026-Q2
+    score: 68.1
+    note: 'Computed 2026-06-29: avg=68.1 trend=→ (flat)'
+    computation_method: computed
   - period: '2026-06-12'
     score: 68.1
     note: 'Computed 2026-06-12: avg=68.1 trend=→ (flat — insufficient history)'

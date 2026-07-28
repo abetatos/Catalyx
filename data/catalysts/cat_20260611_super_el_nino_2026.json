@@ -1,0 +1,40 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20260611_super_el_nino_2026",
+  "schema_version": "1.2",
+  "type": "event",
+  "created_at": "2026-07-01T00:00:00Z",
+  "detected_at": "2026-07-01T00:00:00Z",
+  "event_date": "2026-06-11T00:00:00Z",
+  "source": {
+    "type": "data_release",
+    "url": "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/",
+    "publication": "NOAA Climate Prediction Center — ENSO advisory",
+    "published_at": "2026-06-11T16:00:00Z"
+  },
+  "catalyst_type": "commodity_supply",
+  "catalyst_subtype": "climate_supply_shock",
+  "description": "The ENSO regime flipped: NOAA upgraded to an El Nino Advisory on 2026-06-11 with a ~63% chance of a VERY STRONG ('super') El Nino in the Nov-Jan window (ECMWF Nino3.4 possibly >2.5C by October) — potentially the 4th super El Nino in 30 years. This inverts the prior La-Nina base case that most 2025 soft-commodity studies assumed. A super El Nino pressures tropical softs UP — cocoa, food oils, rice, sugar, robusta coffee — with tail-risk estimates of +50-100% on the most-exposed crops (cocoa spiked to ~$4,700/t in May before easing to ~$3,850/t). The impact is crop-split: El Nino typically HELPS US/Argentina/Brazil soybean yields (+2-5%) while hurting tropical softs and Asian rice, so a broad softs basket (DBA) benefits unevenly. Directly relevant to agriculture_soft_commodities: a supply-shock catalyst that raises soft prices, with the peak physical impact lagging 6-12 months into 2027. Treated as a BUILDING event (long half-life) that strengthens as the winter event confirms. NOTE: this inverts the stored agriculture_soft_commodities study thesis (assumed 71% La Nina) — flag that study for /catalyx-sector-study refresh.",
+  "geography": ["GLOBAL", "US", "APAC"],
+  "magnitude": "high",
+  "novelty_score": 80,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": true,
+    "nov_02_new_sector": true,
+    "nov_03_new_source": true,
+    "nov_04_changes_rate": false,
+    "nov_05_consensus_surprise_gt50": true
+  },
+  "strength_score": 58,
+  "consensus_surprise": 0.6,
+  "is_priced_in_estimate": 0.25,
+  "relation_to_structural": "independent",
+  "decay_halflife_days": 120,
+  "related_catalyst_ids": [],
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": null,
+  "user_rank": 4,
+  "user_notes": "Registered 2026-07-01 in the sectors-without-catalyst review. Drives agriculture_soft_commodities as a bullish supply-shock (softs prices up). relation_to_structural='independent' so it contributes its decayed strength as a standalone positive term. strength 58 (building — the physical impact peaks into winter/2027); is_priced_in 0.25 (early). Long 120d half-life because the event STRENGTHENS toward the Nov-Jan peak rather than decaying like a one-shot data print; re-score UP if NOAA confirms a super event. Inverts the stored study's La-Nina premise — study refresh flagged.",
+  "tags": ["el_nino", "enso", "agriculture", "soft_commodities", "cocoa", "coffee", "sugar", "rice", "climate", "supply_shock"]
+}

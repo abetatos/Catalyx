@@ -1,0 +1,136 @@
+# StructuralCatalyst: AI-Driven Drug Discovery
+#
+# Calibration anchor (Rule 3): bootstrap 72 — below struct_ai_capex_supercycle (89.9) and
+# struct_biopharma_patent_cliff_ma (80): a genuine science inflection but early-cycle (no AI-designed drug
+# is FDA-approved yet as of mid-2026) with binary clinical-timing risk. Cross-cutting SECONDARY driver across
+# biotech_drug_development, pharma_large_cap, synthetic_biology, genomics_precision_medicine.
+
+id: struct_ai_drug_discovery
+type: structural
+schema_version: "1.4"
+title: "AI-driven drug discovery — foundation-model design compressing the discovery cycle"
+description: >
+  Machine-learning structure prediction and generative design are compressing the design-build-test cycle in
+  drug discovery from years to months, and the capital + first clinical readouts now validate it as a durable
+  platform shift rather than hype: (1) Capital — Isomorphic Labs raised a $2.1B Series B (May 2026) and released
+  a next-generation design engine (IsoDDE, ~50% vs ~23% prior-gen accuracy on hard targets). (2) First clinical
+  evidence — Insilico's rentosertib became the first fully AI-designed molecule to show Phase IIa safety +
+  efficacy (Nature Medicine). (3) Adoption — every large-cap pharma now runs an AI-discovery partnership, and
+  the same tooling accelerates synthetic-biology design and genomics target-ID. It is a SECONDARY, cross-cutting
+  driver: it lifts the odds/speed of the pipelines the other biotech structurals depend on. Key caveat: no
+  AI-designed drug is FDA-approved yet (mid-2026), so the thesis is validation-stage — a failed pivotal readout
+  from a lead AI-designed asset would de-rate the whole theme.
+
+created_at: "2026-07-01T12:00:00Z"
+created_by: user
+onset_period: "2024-Q3"
+onset_evidence: >
+  AlphaFold-class structure prediction moved from research tool to industrialized design platform through 2024-2025
+  (large pharma partnerships, dedicated AI-discovery raises); by 2026 the first AI-designed molecule posted Phase IIa
+  data and Isomorphic's $2.1B raise confirmed institutional capital scale — the shift from tool to platform.
+
+catalyst_type: technology_adoption
+catalyst_subtype: ai_drug_discovery
+geography: [US, EU, GLOBAL]
+thematic_tags: [ai, drug_discovery, alphafold, isomorphic, insilico, biotech, platform]
+user_rank: 4
+user_notes: >
+  No clean UCITS pure-play; expressed through biotech baskets and the large-caps with AI-discovery programs.
+  SECONDARY catalyst — link alongside a primary sector driver, not alone. Bootstrap 72 anchored below the
+  patent-cliff structural (80). Validation-stage: watch for the first AI-designed-drug pivotal readout.
+
+intensity:
+  current_score: 72
+  computation_method: bootstrap
+  last_updated: "2026-07-01"
+  computation_note: >
+    Bootstrap at creation 2026-07-01. Anchor: below struct_biopharma_patent_cliff_ma (80). Real platform
+    inflection but early-cycle with binary clinical-validation risk.
+  history:
+  - period: "2026-Q3"
+    score: 72
+    note: "Bootstrap at creation 2026-07-01. Isomorphic $2.1B Series B (May 2026); Insilico rentosertib Phase IIa; no AI-designed drug FDA-approved yet."
+    computation_method: bootstrap
+
+indicators:
+- id: ind_01
+  name: "AI-discovery venture + strategic capital raised, trailing 12M ($B)"
+  source: "PitchBook / press releases"
+  source_url_template: "https://pitchbook.com/"
+  check_frequency: quarterly
+  current_value: 6
+  unit: usd_billion_ttm
+  direction: higher_is_stronger
+  threshold_strong: 4
+  threshold_weak: 1.5
+  last_value: 4
+  last_date: "2025-12-31"
+  update_note: >
+    TTM capital into AI-discovery (Isomorphic $2.1B + peers) ~$6B. Threshold_strong $4B = institutional scale;
+    threshold_weak $1.5B = niche.
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 4
+  - date: "2024-12-31"
+    value: 2.5
+
+- id: ind_02
+  name: "AI-designed molecules in clinical trials (count)"
+  source: "Company pipelines / clinicaltrials.gov"
+  source_url_template: "https://clinicaltrials.gov/"
+  check_frequency: quarterly
+  current_value: 22
+  unit: count_in_clinic
+  direction: higher_is_stronger
+  threshold_strong: 15
+  threshold_weak: 5
+  last_value: 18
+  last_date: "2025-12-31"
+  update_note: >
+    ~20+ AI-designed/AI-optimized molecules now in clinical trials. Threshold_strong 15; threshold_weak 5.
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 18
+  - date: "2024-12-31"
+    value: 11
+
+- id: ind_03
+  name: "Large-pharma AI-discovery partnerships (active count)"
+  source: "Company disclosures"
+  source_url_template: "https://www.sec.gov/"
+  check_frequency: quarterly
+  current_value: 20
+  unit: count_active
+  direction: higher_is_stronger
+  threshold_strong: 12
+  threshold_weak: 4
+  last_value: 16
+  last_date: "2025-12-31"
+  update_note: >
+    Every top-15 pharma now runs at least one AI-discovery partnership. Threshold_strong 12; threshold_weak 4.
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 16
+
+deactivation_conditions:
+- id: deact_01
+  condition: >
+    A lead AI-designed asset fails a pivotal (Phase III) readout AND no AI-designed drug reaches approval, for
+    two consecutive quarters of net pipeline attrition (validation thesis breaks).
+  action: downgrade_to_weak
+- id: deact_02
+  condition: >
+    AI-discovery capital raised falls below $1.5B TTM for two consecutive quarters (funding-cycle collapse).
+  action: review_required
+
+linked_event_catalyst_ids: []
+linked_structural_catalyst_ids:
+- struct_biopharma_patent_cliff_ma
+- struct_ai_capex_supercycle
+
+narrative_maturity: "emerging"
+status: active
+status_last_reviewed: "2026-07-01"

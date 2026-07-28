@@ -1,0 +1,40 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20260314_private_credit_redemption_crisis",
+  "schema_version": "1.2",
+  "type": "event",
+  "created_at": "2026-07-01T00:00:00Z",
+  "detected_at": "2026-07-01T00:00:00Z",
+  "event_date": "2026-03-14T00:00:00Z",
+  "source": {
+    "type": "news_article",
+    "url": "https://fortune.com/2026/03/14/private-credit-meltdown-how-wall-streets-blackstone-kkr-apollo-ares-blue-owl-investment-craze-panic/",
+    "publication": "Fortune / fund filings (BCRED, BlackRock HPS, Ares Strategic Income)",
+    "published_at": "2026-03-14T12:00:00Z"
+  },
+  "catalyst_type": "institutional_flow",
+  "catalyst_subtype": "private_credit_redemption_crisis",
+  "description": "A private-credit / semi-liquid alternatives redemption crisis has crystallized since late 2025 and remains ongoing into mid-2026. The listed alternative-asset managers have de-rated sharply from their 2025 peaks — Blackstone ~-46%, Apollo ~-41%, Ares/KKR ~-48%, Blue Owl ~-66% — erasing roughly $265B of market cap. The trigger stack: the Tricolor and First Brands collapses exposed credit-underwriting and mark-to-model concerns, and semi-liquid perpetual vehicles hit redemption gates (Blackstone's BCRED ~$3.8B redemption requests; BlackRock's HPS ~$1.2B / ~9.3% of NAV; Ares Strategic Income ~11.6% of an $22B fund), forcing GPs to fund redemptions from their own balance sheets (Blackstone committed ~$400M to BCRED). Distributions-to-NAV across private-equity funds sit below ~15% for a fourth consecutive year (a record low), and leveraged-loan / IG spreads have widened, freezing the exit and refinancing pipeline. This directly CONTRADICTS the prior bullish thesis for private_equity_listed and the alternatives-fee engine of asset_management (carry crystallization on an M&A/exit reopening) — the 'exit dam breaking' narrative broke the other way. Higher-for-longer rates (cat_20260617_fed_hawkish_pivot) are the macro amplifier: they re-widen LBO financing costs and depress carry NPV. Recorded as a bearish/regime headwind: it is deliberately non-boosting to catalyst_alignment (a sector whose dominant catalyst is a headwind should not be lifted in the heatmap), but it registers the driver, dates it, and lets the regime/exit logic and the review pick it up.",
+  "geography": ["US", "GLOBAL"],
+  "magnitude": "high",
+  "novelty_score": 60,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": true,
+    "nov_02_new_sector": true,
+    "nov_03_new_source": true,
+    "nov_04_changes_rate": false,
+    "nov_05_consensus_surprise_gt50": false
+  },
+  "strength_score": 82,
+  "consensus_surprise": 0.5,
+  "is_priced_in_estimate": 0.5,
+  "relation_to_structural": "contradicts",
+  "decay_halflife_days": 90,
+  "related_catalyst_ids": ["cat_20260617_fed_hawkish_pivot"],
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": null,
+  "user_rank": 3,
+  "user_notes": "Registered 2026-07-01 during the sectors-without-catalyst review. Drives private_equity_listed (primary) and asset_management (secondary — the alternatives-fee sub-segment; broad AUM managers are less exposed). Modeled as relation_to_structural='contradicts' so the catalyst_scorer records it WITHOUT adding a positive alignment term — the correct behavior for a bearish driver: PE/asset_management should NOT get a heatmap boost from a crisis that breaks their thesis. related_catalyst_ids points to the Fed hawkish pivot as the macro amplifier (not a structural parent). event_date anchored to the 2026-03-14 ~$265B mark-down crystallization; the situation is ongoing (long 90d half-life). Re-check redemption-gate and spread data at each review; downgrade to decayed only once gates lift and distributions-to-NAV normalize.",
+  "tags": ["private_credit", "alternatives", "redemptions", "blackstone", "apollo", "kkr", "ares", "blue_owl", "semi_liquid", "bdc", "contradicts", "regime_headwind"]
+}

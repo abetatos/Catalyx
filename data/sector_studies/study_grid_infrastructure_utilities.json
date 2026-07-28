@@ -5,41 +5,55 @@
   "sector_id": "grid_infrastructure_utilities",
   "sector_label": "Grid Infrastructure & Storage",
   "created_at": "2026-06-03",
-  "last_updated": "2026-06-12",
+  "last_updated": "2026-06-29",
   "study_type": "full",
 
   "taxonomy": {
     "parent_sector": "energy",
     "adjacent_sectors": ["solar_energy", "wind_energy_offshore", "nuclear_energy", "copper_miners"],
-    "differentiation_note": "Grid infrastructure is NOT a generation play. It is the transmission, distribution, and storage layer that connects generation to consumption. Different business model: regulated utilities have guaranteed returns (WACC-based rate cases), equipment manufacturers (ABB, Eaton, Schneider) have order book visibility of 18-36 months. The investment thesis is about physical constraint, not energy policy — whether solar or nuclear wins the generation mix is irrelevant because both need the same grid hardware to deliver electrons. This also distinguishes grid from copper_miners: copper is the input commodity, grid infrastructure is the built-out end product. The binding constraint thesis (transformers, transmission lines, interconnection queues) is grid-specific — no other adjacent sector captures it. The Iran energy shock of 2026 is an ACCELERANT for grid (higher power prices improve utility returns and create urgency to expand domestic generation capacity) but a HEADWIND for gold_miners (diesel cost inflation) — demonstrating the sectors' distinct macro sensitivity despite both being 'energy-adjacent'."
+    "differentiation_note": "Grid infrastructure is NOT a generation play. It is the transmission, distribution, and storage layer that connects generation to consumption. Different business model: regulated utilities have guaranteed WACC-based returns via rate cases; equipment manufacturers (ABB, Eaton, Schneider) have order book visibility of 18-36 months. The investment thesis is about physical constraint, not energy policy — whether solar or nuclear wins the generation mix is irrelevant because both need the same grid hardware to deliver electrons. This distinguishes grid from adjacent sectors in three specific ways: (1) vs solar/wind (generation assets whose economics depend on LCOE and policy subsidies — the grid thesis holds regardless of which generation type wins); (2) vs nuclear_energy (operators with regulated revenue are similar but nuclear has a specific SMR technology catalyst; grid infrastructure is the conduit for nuclear output too); (3) vs copper_miners (copper is the input commodity consumed by grid buildout, not the sector that builds the grid — when grid capex rises, copper miners benefit as input suppliers, but grid infrastructure equity benefits as the builder/operator). The market theme as of June 2026 (rotation from AI/tech into real economy including utilities) is a direct tailwind for this sector that does NOT benefit AI semiconductor plays or fabless chip designers."
   },
 
   "demand_drivers": [
-    "AI data center power demand — the primary near-term catalyst: hyperscaler combined capex is $660-690B in 2026 (Amazon $200B, Google $175-185B, Microsoft $110-120B, Meta $125-145B). Approximately 40% of announced AI data center projects face construction delays due to power infrastructure bottlenecks, NOT chip supply. Microsoft CEO Satya Nadella acknowledged GPUs sit idle in inventory because the company lacks electricity to install them. This means grid infrastructure is the binding constraint on AI build-out — demand is guaranteed.",
-    "Iran energy shock — power price tailwind for regulated utilities: the Strait of Hormuz disruption and elevated Brent ($80-82) have raised wholesale power prices. Regulated utilities with approved rate cases pass through higher fuel costs and earn WACC-based returns on expanded grid capex. Higher power prices create urgency for domestic energy independence via grid build-out.",
-    "EV charging and industrial electrification: public fast-chargers require 50-350kW grid upgrades per site. Fleet electrification (trucks, buses), steel/cement/chemicals shifting to electric process heat create concentrated, high-voltage load spikes requiring dedicated grid upgrades.",
-    "Renewable integration necessity: solar and wind require 2-5x more transmission capacity per GW than conventional plants due to intermittency and geographic mismatch between generation (sun/wind resources) and load centers (cities, industrial hubs).",
-    "FERC June 2026 rulemaking on large-load interconnection: FERC has set a June 2026 deadline to rewrite large-load grid connection rules for AI-era power demand, including data center co-location with generation assets. This regulatory clarity, if issued, removes a permitting uncertainty that has delayed $80B+ of Microsoft Azure capacity alone.",
-    "EU and US grid modernization mandates: EU €584B committed through 2030. US IIJA $65B allocated. European targets require member states to upgrade grids to meet 2030 renewable capacity targets."
+    "AI data center power demand — the primary near-term catalyst: hyperscaler combined capex is $725B in 2026 (Amazon $200B, Google $175-185B, Microsoft $110-120B, Meta $125-145B), with 60%+ allocated to power infrastructure, not chips. Data center energy consumption globally approaches 1,050 TWh by 2026 (equivalent to Germany's total electricity consumption). ~40% of announced AI data center projects face construction delays due to power infrastructure bottlenecks, NOT chip supply. Morgan Stanley forecasts US data center demand could reach 74 GW by 2028, with a projected shortfall of ~49 GW in available power access — confirming grid is the binding constraint on the AI buildout.",
+    "FERC June 2026 large-load interconnection orders — regulatory catalyst: on June 18, 2026, FERC issued six show-cause orders to all major RTOs (PJM, MISO, SPP, CAISO, etc.) requiring them to file reports within 30 days on generation adequacy for large loads and justify or revise their tariffs within 60 days. This is the regulatory framework being built in real time. RTOs must address interim non-firm services for large loads and consider advanced power flow technologies. Failure to adapt risks federal preemption. This reduces permitting uncertainty for hyperscalers' grid connections, unlocking $80B+ of Microsoft Azure capacity that has been delayed by interconnection ambiguity.",
+    "Market rotation — macroeconomic tailwind: the June 2026 market theme is a notable rotation out of AI/tech into 'real economy' sectors — energy, industrials, materials, and UTILITIES. Equal-weight S&P is beating cap-weight. This directly benefits grid infrastructure and regulated utilities, which were underweighted in the AI bull run. The hawkish macro (Warsh Fed, CPI 4.2%) is driving investors toward inflation-protected regulated assets with pass-through mechanisms.",
+    "EU and US grid modernization mandates: EU €584B committed through 2030. US IIJA $65B allocated. European targets require member states to upgrade grids to meet 2030 renewable capacity targets. Germany has explicitly committed to a multi-year infrastructure spending program (referenced in the macro brief) with grid as a priority. ENTSO-E rolling 12M capex tracking at €96B.",
+    "EV and industrial electrification: public fast-chargers require 50-350kW grid upgrades per site. Fleet electrification (trucks, buses) creates concentrated high-voltage load spikes requiring dedicated grid upgrades. Industrial process electrification (steel, cement, chemicals) adds large baseload requirements.",
+    "Renewable integration necessity: solar and wind require 2-5x more transmission capacity per GW than conventional plants due to intermittency and geographic mismatch between generation resources and load centers. As renewable capacity continues to be installed, the grid expansion required grows non-linearly."
   ],
 
   "supply_constraints": [
-    "Transformer manufacturing capacity — now WORSE: large power transformer lead times have extended to 128 WEEKS (from ~20 months at last assessment, now ~30 months). Prices up 77% since 2019. A chronic pad transformer shortage in North America is expected to WORSEN in 2026. New manufacturing lines (e.g. Hitachi Energy expansions) take 3-5 years to come online — demand growth is outpacing capacity additions. Distribution transformer lead times: 12-18 months. High-voltage transformers: up to 3 years.",
-    "Engineering and skilled labor scarcity: specialized HV engineers, cable splicers, and grid construction crews are scarce. The workforce contracted during the low-investment decade of 2010-2020. Training pipelines are 3-5 years. This is a structural bottleneck that cannot be resolved by capital alone.",
-    "Copper dependency — input cost headwind: grid equipment is 40-60% copper by cost. Copper price at ~$13,965/LME (as of prior study). If copper sustains at elevated levels, grid equipment costs rise, compressing margins for equipment manufacturers while inflating utility capex budgets.",
-    "Permitting — the ultimate binding constraint: new US transmission lines take 10-15 years to permit. EU average 7-10 years. Grid interconnection queue: 2,600GW of US generation projects waiting for grid connection (LBNL data), most will never connect — but the queue indicates latent demand far exceeds build-out capacity. FERC June 2026 rulemaking is a potential partial solution for large loads specifically.",
-    "Supply chain concentration: transformer core steel (electrical steel) is dominated by a small number of producers. A supply shock in electrical steel (a different commodity from structural steel) would further delay transformer production."
+    "Transformer manufacturing capacity — chronic bottleneck worsening: large power and GSU transformer lead times have extended to 128-144 weeks (2.5-3 years) for standard sizes, with the largest high-voltage units reaching up to 4 years. Power transformer demand is projected at 21% above 2024 levels in 2026, and 16% above 2024 for GSUs. Constrained by electrical steel (GOES) supply and limited global manufacturing capacity. New facility investments (Eaton's $340M South Carolina plant) target a 2027 start — the constraint does NOT ease in 2026. ABB Grid Technologies backlog is €49B with a book-to-bill ratio of 2.28 as of Q2 2026; Eaton MV/LV switchgear has $1.8B backlog with book-to-bill 1.7 (May 2026). Equipment manufacturers have multi-year order visibility and significant pricing power.",
+    "Engineering and skilled labor scarcity: specialized HV engineers, cable splicers, and grid construction crews are scarce. The workforce contracted during the low-investment decade of 2010-2020. Training pipelines are 3-5 years. This is structural — cannot be resolved by capital allocation alone.",
+    "Copper input cost: grid equipment is 40-60% copper by cost. With LME copper at $13,357/t, equipment manufacturers face input cost pressure. Equipment manufacturers with long-term copper supply agreements or strong pricing power (ABB, Eaton, Schneider) can pass through costs; smaller contractors may face margin compression.",
+    "Permitting — the ultimate binding constraint: new US transmission lines take 10-15 years to permit. EU average 7-10 years. FERC's June 18 show-cause orders address large-load interconnection specifically but do NOT solve bulk transmission permitting. The 2,600 GW US interconnection queue represents latent demand that cannot be cleared quickly. The FERC orders are a positive marginal step, not a systemic fix.",
+    "Supply chain concentration: transformer core steel (electrical steel / GOES) is dominated by a small number of producers (AK Steel/Cleveland-Cliffs, Nippon Steel, Thyssenkrupp). A supply shock in GOES would further delay transformer production beyond current 128-144 week lead times."
   ],
 
   "technology_maturity": null,
 
   "cycle_position": {
-    "assessment": "Early-to-mid multi-decade buildout cycle — AI demand inflection has made this consensus; entry point matters more than direction",
-    "rationale": "The structural thesis remains intact and has actually strengthened: hyperscaler combined capex reached $660-690B in 2026 and the binding constraint has explicitly shifted to electricity infrastructure — Microsoft publicly acknowledged GPUs sitting idle for lack of power. The FERC rulemaking in June 2026 is a potential near-term catalyst. IQQH.DE (the proxy UCITS ETF) is up 71.76% YoY, reflecting how rapidly this sector has re-rated. The concern is that the thesis is now consensus — it has moved from 'specialist view' to 'ETF article on etf.com' — which limits the incremental re-rating upside and compresses the alpha window. The Iran energy shock creates a secondary demand driver (power price urgency) but also a headwind for equipment manufacturers with copper-intensive supply chains if materials costs escalate. The cycle position is correctly early-to-mid in absolute terms (the buildout will run 10-15 years) but valuations already reflect 3-5 years of that; the opportunity is now in identifying which segment still hasn't re-rated fully (equipment manufacturers vs regulated utilities vs specialized grid contractors).",
-    "last_assessed": "2026-06-12"
+    "assessment": "Mid-cycle infrastructure buildout — consensus thesis at high valuation, but market rotation creates a new entry dynamic as of June 2026",
+    "rationale": "IQQH.DE is at €9.69 (June 29, 2026), up +48% YoY (vs +71.76% YoY at the June 12 study). The 23-point YoY return deceleration from June 12 to June 29 is partly the base effect (the June 2025 base is now higher) and partly the hawkish macro headwind (rate sensitivity of regulated utilities). However, the June 2026 market rotation theme — out of AI/tech, into real economy including utilities — is a direct sector tailwind. The thesis is consensus (score_equiv: crowded) but the rotation-driven re-entry thesis is NEW since June 12. The physical demand case has strengthened: ABB's €49B backlog and 2.28 book-to-bill confirm that equipment orders are accelerating, not stalling. Transformer demand is 21% above 2024 levels. The FERC June 18 orders reduce one element of interconnection uncertainty. The risk is that the regulated utility component is duration-sensitive — Warsh's hawkish posture is a headwind for the long-duration regulated utility names within IQQH.DE. The equipment manufacturers (ABB, Eaton, Schneider) within the broader clean energy basket are less interest rate sensitive and more directly levered to the transformer bottleneck. The cycle is mid-phase in absolute terms (the buildout runs to 2035+) but the initial re-rating has occurred; further upside requires ongoing confirmation of the physical constraint story, which the transformer backlog data provides.",
+    "last_assessed": "2026-06-29"
   },
 
   "etf_analysis": [
+    {
+      "ticker": "IQQH.DE",
+      "name": "iShares Global Clean Energy Transition UCITS ETF",
+      "exchange": "XETRA",
+      "currency": "EUR",
+      "ter": 0.0065,
+      "aum_m_usd": 3180,
+      "replication": "physical",
+      "avg_spread_bps": 8,
+      "top_10_concentration_pct": null,
+      "characteristics": "OPEN POSITION (€500, entered 2026-06-05). AUM €3.036B (June 2026) — high institutional AUM, tight 8bps spread. EUR-denominated on XETRA. UCITS-compliant. +48% YoY as of June 29, 2026. Broad clean energy — covers generation (solar, wind, hydro), grid, storage, and clean energy equipment. 105 holdings. Includes National Grid, Eaton, Schneider Electric, utility holdings. Best UCITS vehicle for Spanish investor on AUM + spread + accessibility grounds.",
+      "recommendation_tier": 1,
+      "limitations": "Broad clean energy — less pure-play grid exposure than GRID ETF. Includes generation assets (solar/wind) whose thesis differs from grid infrastructure specifically. The sector rotation theme (into utilities) should benefit IQQH.DE broadly. Duration sensitivity: regulated utility holdings are long-duration assets; Warsh hawkish pivot is a headwind for that sub-component."
+    },
     {
       "ticker": "GRID",
       "name": "First Trust NASDAQ Clean Edge Smart Grid & Electric Vehicles ETF",
@@ -50,9 +64,9 @@
       "replication": "physical",
       "avg_spread_bps": 12,
       "top_10_concentration_pct": 0.52,
-      "characteristics": "Most direct play on grid hardware and equipment. ABB, Eaton, Schneider Electric, Hubbell. Best pure-play on the transformer/switchgear demand theme. Also includes EV charging component.",
-      "recommendation_tier": 1,
-      "limitations": "Not UCITS — not eligible for Spanish investor as primary vehicle. AUM $510M — manageable but watch if it falls below $200M. EV charging component adds noise to the pure grid thesis. Suitable as a secondary reference position or for non-UCITS accounts."
+      "characteristics": "Most direct play on grid hardware and equipment. ABB, Eaton, Schneider Electric, Hubbell, Landis+Gyr. Best pure-play on the transformer/switchgear demand theme. AUM $510M — adequate but watch if it declines toward $200M floor. Includes EV charging component. Pure equipment focus means less duration risk vs regulated utilities, and more direct exposure to the transformer backlog story.",
+      "recommendation_tier": 2,
+      "limitations": "Not UCITS — not eligible as primary vehicle for Spanish investor. Suitable as a reference position for monitoring the pure equipment thesis. If broker allows non-UCITS access, GRID is the higher-precision instrument for the transformer bottleneck thesis."
     },
     {
       "ticker": "INFR.L",
@@ -64,23 +78,9 @@
       "replication": "physical",
       "avg_spread_bps": 8,
       "top_10_concentration_pct": 0.48,
-      "characteristics": "Core infrastructure: utilities, toll roads, airports, ports. UCITS-compliant, high AUM ($3.1B), tight spread. National Grid, Enbridge, Transurban, Vinci. Best UCITS vehicle for Spanish investor if seeking broad regulated-utility grid exposure with downside protection.",
-      "recommendation_tier": 1,
-      "limitations": "Includes toll roads and airports — not pure grid. More defensive (lower beta to grid investment theme specifically). Less direct exposure to transformer/equipment manufacturing demand surge."
-    },
-    {
-      "ticker": "IQQH.DE",
-      "name": "iShares Global Clean Energy Transition UCITS ETF",
-      "exchange": "XETRA",
-      "currency": "USD",
-      "ter": 0.0065,
-      "aum_m_usd": 3180,
-      "replication": "physical",
-      "avg_spread_bps": 8,
-      "top_10_concentration_pct": null,
-      "characteristics": "AUM €3.18B (June 2026). EUR-listed on XETRA — preferred vehicle for a Spanish investor (EUR-denominated, UCITS, high AUM, tight spread). Up 71.76% YoY — reflects strong sector re-rating. The existing open position (€500 bought on dip, 2026-06-05) uses this vehicle.",
-      "recommendation_tier": 1,
-      "limitations": "Clean energy broad — includes generation (solar, wind) alongside grid. Less pure-play grid exposure than GRID ETF. But highest AUM and lowest spread in UCITS space makes it the practical primary vehicle for this sector."
+      "characteristics": "Core infrastructure: utilities, toll roads, airports, ports. UCITS-compliant, high AUM ($3.1B), tight 8bps spread. National Grid, Enbridge, Transurban, Vinci. More defensive — provides regulated utility grid exposure with infrastructure diversification. Duration-sensitive due to regulated utility holdings.",
+      "recommendation_tier": 2,
+      "limitations": "Includes toll roads and airports — dilutes the pure grid/electricity thesis. More defensive and less correlated to the AI power demand story. Better for pure infrastructure allocation than for capturing the grid bottleneck re-rating specifically. The market rotation into utilities benefits this ETF but the AI-power constraint thesis is a more specific driver for IQQH.DE."
     }
   ],
 
@@ -88,69 +88,76 @@
     {
       "metric": "Power transformer delivery lead times",
       "unit": "weeks",
-      "source": "Wood Mackenzie / IEEE PES T&D / industry reports",
-      "current": 128,
-      "comment": "UPDATED 2026-06-12. Extended from ~20 months to 128 WEEKS (~30 months) — worsening. Prices up 77% since 2019. Distribution transformers 12-18 months; high-voltage up to 3 years. A chronic North American pad transformer shortage is projected to WORSEN in 2026. Lead time extension is bullish for equipment manufacturers with order backlog and pricing power."
+      "source": "Wood Mackenzie / IEEE PES T&D / VAWN Electrical Equipment Lead Time Index",
+      "current": 136,
+      "comment": "UPDATED June 29, 2026. Range 128-144 weeks for large power/GSU transformers; up to 208 weeks (4 years) for the largest HV units. Distribution transformers 12-18 months. 2026 power transformer demand projected 21% above 2024; GSU demand 16% above 2024. Lead time extension = bullish for equipment manufacturers with pricing power and order backlog. No meaningful easing expected until 2027+ (Eaton's new South Carolina plant targets 2027 start)."
     },
     {
-      "metric": "Hyperscaler combined capex (annualized, big-5)",
+      "metric": "ABB Grid Technologies order backlog (EUR billion)",
+      "unit": "EUR billion",
+      "source": "ABB quarterly earnings",
+      "current": 49,
+      "comment": "UPDATED June 29, 2026. ABB Grid Technologies backlog €49B as of Q2 2026, book-to-bill 2.28 — orders are growing more than 2x the rate of revenue recognition. This is one of the clearest single-number confirmations of the grid bottleneck thesis. A stable or growing backlog confirms the supply-demand imbalance is structural, not episodic. Watch for any deceleration in book-to-bill as the primary early warning signal."
+    },
+    {
+      "metric": "Eaton MV/LV switchgear order backlog (USD billion)",
       "unit": "USD billion",
-      "source": "Company earnings / analyst compilations",
-      "current": 690,
-      "comment": "UPDATED 2026-06-12. Amazon $200B, Google $175-185B, Microsoft $110-120B, Meta $125-145B, Apple TBC. ~$660-690B combined. 36-77% increase YoY depending on source. ~40% of announced AI DC projects delayed by POWER constraints, not chip supply — confirms grid as the binding constraint."
+      "source": "Eaton quarterly earnings",
+      "current": 1.8,
+      "comment": "UPDATED June 29, 2026. Eaton MV/LV switchgear backlog $1.8B with book-to-bill 1.7 as of May 2026. Eaton has committed $340M to a new transformer facility in South Carolina (2027 start). Switchgear and transformers are co-bottlenecked — both are needed for a grid connection project. Watch Eaton's quarterly order intake for early signals of demand deceleration."
     },
     {
-      "metric": "US grid interconnection queue backlog",
-      "unit": "GW waiting",
-      "source": "LBNL annual interconnection report / FERC docket RM26-4",
-      "current": 2600,
-      "comment": "2,600GW queue unchanged. FERC June 2026 deadline to issue large-load interconnection rulemaking (Docket RM26-4). If FERC issues clear rules, it could unlock $80B+ of Microsoft Azure capacity and accelerate datacenter grid connections — a near-term positive catalyst. SPP's HILL initiative (Jan 2026) is a promising regional prototype."
+      "metric": "Hyperscaler combined capex (annualized, big-4)",
+      "unit": "USD billion",
+      "source": "Company earnings / Futurum / NextWaves",
+      "current": 725,
+      "comment": "UPDATED June 29, 2026. Amazon $200B + Google $175-185B + Microsoft $110-120B + Meta $125-145B = ~$725B. 60%+ is allocated to power/infrastructure, not chips. Goldman projects $5.3T cumulative 2025-2030 for the big-4. ~40% of announced AI DC projects delayed by POWER constraints. Morgan Stanley: US DC demand 74 GW by 2028, shortfall ~49 GW. This metric is the primary thesis confirmation — watch quarterly earnings calls for any capex reduction signals."
     },
     {
-      "metric": "ABB + Eaton + Schneider combined order book growth YoY",
-      "unit": "% YoY",
-      "source": "Quarterly earnings",
-      "current": null,
-      "comment": "Prior: +18% YoY. Needs update from Q1 2026 earnings. Orders lead revenue by 12-18 months. The transformer market is projected at ~$26-27B globally in 2026 with 6-7% annual growth. Equipment manufacturers have pricing power from supply constraints — watch whether order intake growth continues at or above 15% YoY."
+      "metric": "FERC large-load interconnection progress (RTO compliance)",
+      "unit": "categorical",
+      "source": "FERC docket RM26-4 / utility industry press",
+      "current": "show_cause_orders_issued",
+      "comment": "UPDATED June 29, 2026. FERC issued six show-cause orders on June 18, 2026 to all major RTOs, requiring 30-day reports and 60-day tariff justifications. This is NOT a final rule — it is the beginning of a proceeding that could take 12-18 months to reach final rules. Watch for: (a) RTO compliance filings (August 2026), (b) whether FERC issues interim guidance, (c) whether PJM (the largest RTO) proposes meaningful tariff changes. Full rulemaking final decision expected 2027."
     },
     {
-      "metric": "IQQH.DE price and YTD performance",
-      "unit": "EUR",
-      "source": "market_data",
-      "current": null,
-      "comment": "IQQH.DE up 71.76% YoY as of June 2026 per search. Run `uv run python -m catalyx.data.market_data` to get current price and YTD. The 71.76% YoY return is IMPORTANT for position sizing context — the re-rating is substantial. Assess whether entry_timing shows overbought conditions vs a healthy uptrend."
+      "metric": "IQQH.DE price and YoY performance",
+      "unit": "EUR / % YoY",
+      "source": "market_data / Yahoo Finance",
+      "current": 9.69,
+      "comment": "UPDATED June 29, 2026. IQQH.DE at €9.69, +48% YoY (vs +71.76% YoY at June 12 assessment). AUM €3.036B. The YoY deceleration reflects both the higher base effect and the hawkish macro headwind on regulated utility holdings. Current position: €500 open (entered 2026-06-05). Run uv run python -m catalyx.data.market_data for exact current momentum metrics."
     },
     {
       "metric": "EU grid investment actual capex (rolling 12M)",
       "unit": "EUR billion",
-      "source": "ENTSO-E + European Commission",
+      "source": "ENTSO-E / European Commission",
       "current": 96,
-      "comment": "€584B committed through 2030, €96B rolling 12M. Track whether announcements convert to actual capex spend. This is the critical validation that regulatory targets translate to physical equipment orders."
+      "comment": "€584B committed through 2030, €96B rolling 12M. Germany infrastructure spending program explicitly includes grid as a priority (macro brief confirms this is active). Track whether regulatory commitments convert to actual equipment orders — the ABB/Eaton backlog data already confirms Europe is a major order source."
     }
   ],
 
   "active_catalyst_ids": [
     "struct_energy_transition_grid",
-    "struct_ai_capex_supercycle"
+    "struct_ai_capex_supercycle",
+    "cat_20260617_fed_hawkish_pivot"
   ],
 
   "historical_catalyst_performance": {
-    "summary": "Grid infrastructure historically a late-cycle play within energy transitions — lags generation investment by 3-5 years (build where generation goes first, then build the grid to carry it). We are now in that lag period: renewables built 2018-2023, grid buildout 2023-2030+. The AI power demand shock has compressed this timeline dramatically — utilities are now securing power contracts 5-7 years forward (Nuclear PPAs with Microsoft/Meta) and grid equipment lead times confirm physical scarcity. The IQQH.DE 71.76% YoY performance reflects this re-rating happening faster than a typical infrastructure cycle. Historical risk: sector was punished severely during 2020-2022 rate-rise period (regulated utilities = long-duration assets, duration compression). With Fed on hold at 3.50-3.75% and a potentially more hawkish Warsh era ahead, this tail risk remains. The energy shock (Iran/Hormuz) creates a secondary bullish impulse via higher power prices — historically positive for regulated utilities' rate case filings.",
+    "summary": "Grid infrastructure is historically a late-cycle play within energy transitions — lags generation investment by 3-5 years (build where generation goes first, then build the grid to carry it). We are now in that lag period: renewables built 2018-2023, grid buildout accelerating 2023-2035+. The AI power demand shock has compressed this timeline dramatically — utilities are securing power contracts 5-7 years forward (Nuclear PPAs with Microsoft/Meta) and grid equipment lead times confirm physical scarcity. IQQH.DE at +48% YoY (June 29) reflects a partial cooldown from the +71.76% YoY peak (June 12), but the long-run structural driver is intact. Historical risk: sector was punished severely during 2020-2022 rate-rise period (regulated utilities = long-duration assets, duration compression). With Warsh hawkish and dual DM central banks (Fed held 3.50-3.75%, ECB hiked 25bps June 11), this tail risk is active. However, the CURRENT market rotation theme (out of AI/tech, into real economy/utilities) creates a new favorable positioning context that was absent in the 2022 rate shock. The dual-catalyst structure (infrastructure buildout + sector rotation bid) is a more robust setup than the 2022 analog.",
     "avg_response_to_rate_cut_signal_pct": 0.12,
     "avg_response_to_grid_policy_announcement_pct": 0.07
   },
 
   "risks": [
-    "Valuations have re-rated substantially: IQQH.DE +71.76% YoY. The thesis is NOW CONSENSUS — it appears in ETF.com 'Top 5 ETFs for AI power demand', DataCenterKnowledge, MarketWise, etfdb.com. The alpha window of early 2025 has narrowed. Entry point at current valuations requires a specific view on the second leg of buildout (not just the initial re-rating), which is a higher bar.",
-    "Interest rate sensitivity: regulated utilities are long-duration assets. With Warsh replacing Powell and a more hawkish Fed posture possible, any rate increase surprises compress regulated utility multiples and P/E. Equipment manufacturers are less affected but not immune. The current Fed-on-hold is neutral; a rate HIKE cycle would be a material headwind.",
-    "FERC rulemaking failure or delay: the June 2026 FERC deadline for large-load interconnection reform is a positive catalyst if it issues clear rules. If rulemaking is delayed, contentious (20MW vs 300MW threshold debate is unresolved), or results in rules that add friction rather than reduce it, this removes a near-term positive catalyst and delays $80B+ of Microsoft/hyperscaler grid connections.",
-    "Copper and materials cost inflation: grid equipment is 40-60% copper by cost. Iran energy shock also raises aluminum, steel, and logistics costs. Equipment manufacturers (ABB, Eaton, Schneider) have pricing power but face margin compression if materials costs rise faster than pricing. Copper at $13,965/LME is already elevated.",
-    "AI demand overhang risk: if AI capex cycle shows any demand moderation signal (e.g. another Broadcom/hyperscaler earnings miss like the June 2025 event), the grid sector — now priced as a beneficiary — could see multiple compression even if the physical demand is still real. The sector is now correlated to AI infrastructure sentiment.",
-    "Permitting — the ultimate bottleneck remains structural: the US transmission permitting problem (10-15 years) is not solved by FERC rulemaking alone. Jurisdictional complexity, NIMBY opposition, and state-level litigation mean large-scale new transmission remains slow. This limits the upside scenario where grid buildout fully matches demand."
+    "Hawkish macro (dual central banks — Warsh Fed + ECB hike): regulated utilities are long-duration assets. With Warsh's dot-plot flip (median sees a hike to 3.8% end-2026) AND the ECB having hiked 25bps on June 11, both DM central banks are leaning hawkish. Duration compression reduces regulated utility multiples directly. Equipment manufacturers (ABB, Eaton, Schneider) are less affected but the IQQH.DE mix includes regulated utility holdings. CPI at 4.2% YoY and core at 2.9% reduce the probability of near-term easing.",
+    "FERC rulemaking is a multi-year process, not a near-term catalyst: the June 18 show-cause orders are the BEGINNING of an interconnection proceeding. Final rules are unlikely before 2027. The near-term catalyst (FERC issues clear guidance unlocking $80B+ of hyperscaler capacity) has not yet fired — RTOs have 30-60 days to respond, not a final decision. The interconnection uncertainty for hyperscalers persists in 2026.",
+    "Valuation re-rating already substantial — crowded narrative: IQQH.DE +48% YoY. The 'AI power demand + grid buildout' thesis is widely held across Bloomberg, ETF.com, DataCenterKnowledge, and multiple dedicated ETF launches (Defiance AIPO, GRID ETF etc.). Entering at current levels requires conviction on the second leg (equipment manufacturers' backlog crystallizing into earnings) rather than the initial thesis re-rating, which is a higher analytical bar.",
+    "AI capex moderation risk: if hyperscaler capex decelerates in H2 2026 (earnings miss, AI efficiency gains reducing GPU demand), the grid-as-AI-constraint narrative weakens. The sector is now priced as a beneficiary of AI infrastructure demand — any signal of AI capex deceleration would compress grid multiples even if the physical demand is still real.",
+    "Copper and materials cost inflation: grid equipment is 40-60% copper by cost. LME at $13,357/t is elevated. A Section 232 tariff on refined copper (June 30 decision) creating a US price premium would further increase equipment costs for US-based grid projects. Equipment manufacturers have pricing power but face a lag between cost increases and order price adjustments.",
+    "German infrastructure spending execution risk: the macro brief references Germany's infrastructure spending plans as a grid tailwind. Germany has historically had execution challenges translating infrastructure commitments to actual spending (coalition political constraints, procurement complexity). If German grid spending underwhelms actual commitments, the EU tailwind component is weaker than priced."
   ],
 
   "narrative_maturity": "crowded",
-  "analyst_narrative_score": 75,
   "narrative_trend": "stable",
-  "narrative_notes": "Upgrading from 'mainstream' (prior study, score 58) to 'crowded' as of June 2026. The 'AI power demand + grid buildout' thesis has moved from specialist infrastructure research to ETF.com listicles, mainstream investment publications, and multiple dedicated ETF launches (Defiance AIPO, GRID ETF coverage, etc.). IQQH.DE's 71.76% YoY return is itself a crowding signal — the re-rating is widely noted and the trade is consensus. The Harvard/Oxford AI-grid electricity papers, FERC rulemaking media coverage, and Microsoft GPU-idling-for-lack-of-power quote have all entered mainstream coverage. Anchoring to scoring_weights.yaml: crowded → score_equiv 80; using 75 because the saturation is less than gold miners ATH coverage and there remains genuine complexity in the equipment-vs-utility sub-thesis debate. Narrative_trend 'stable' — it reached crowded in H1 2026 and isn't accelerating further into 'exhausted' territory yet. The ETF already reflects the thesis; new entrants need a more nuanced sub-sector view."
+  "narrative_notes": "Maintained at 'crowded' as of June 29, 2026 — same as the June 12 assessment. The AI power demand + grid buildout thesis is consensus: it appears in ETF.com listicles, Bloomberg infrastructure coverage, Deloitte Power & Utilities 2026 Outlook, Morgan Stanley research, and multiple dedicated ETF launches (Defiance AIPO, AINF, etc.). IQQH.DE's 48% YoY return is itself a crowding signal. The market rotation theme (out of AI/tech into utilities — June 2026) creates a new entry bid, but that bid is also broadly known and discussed in the financial press. The ABB €49B backlog and Eaton 1.7 book-to-bill are specialist data points that confirm the physical constraint — they are now being cited in generalist investment publications, which is a crowding indicator. Narrative trend is 'stable' — it reached crowded in H1 2026 and is not meaningfully accelerating toward 'exhausted'. The market rotation theme adds a new rationale for near-term entry that is separate from the original AI-power thesis, which could briefly push the narrative toward more active discussion before settling. Score equivalent: crowded → 80 per scoring_weights.yaml. Using the categorical 'crowded' level rather than a numeric score per schema 1.2."
 }

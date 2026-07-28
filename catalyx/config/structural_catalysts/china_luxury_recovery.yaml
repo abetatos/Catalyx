@@ -1,0 +1,181 @@
+# StructuralCatalyst: China Luxury-Demand Recovery / Consumption Reset
+#
+# Calibration anchor (Rule 3): bootstrap 67 — comparable conviction to struct_cb_gold_accumulation (84)
+# on the driver being sector-defining, but EARLIER in confirmation (the trough is data-confirmed, the
+# recovery is one-to-two quarters old) and capped by the US/EU tariff margin drag + EUR strength — so it
+# anchors below cb_gold, near struct_solar_lcoe_deployment (64.1).
+#
+# Drives luxury_goods. China is, per the sector study's own history, more influential on luxury than
+# rates and recession combined — hence a dedicated structural rather than a link to a macro catalyst.
+
+id: struct_china_luxury_recovery
+type: structural
+schema_version: "1.4"
+title: "China luxury-demand recovery — mainland consumption reset off the 2024-2025 trough"
+description: >
+  Chinese personal-luxury demand — the single largest swing factor for the global luxury complex — is
+  inflecting up from a two-year contraction. The mechanism is a consumption reset, not a policy pump: (1) Trough
+  confirmed — Bain data show mainland personal luxury contracted only ~3-5% in 2025 (vs ~18-20% in 2024) and is
+  forecast to return to low-to-mid single-digit growth (~+5%) in 2026; Q3-2025 was the trough. (2) Company
+  confirmation — LVMH posted its first sales growth in over a year (+1%, citing a "noticeable improvement" in
+  Asia-ex-Japan led by China); Richemont's APAC grew ~10% at constant FX with China back to growth for the first
+  time in ~2 years; Burberry China comps turned positive. (3) Capital commitment — LVMH is investing into the
+  recovery (opened the 1,600m² "The Louis" Shanghai flagship June 2026; multiple Beijing multi-storey stores).
+  A gradually appreciating CNY narrows the mainland-vs-overseas price gap, repatriating demand onshore. Primary
+  sector: luxury_goods (LVMH, Richemont, Hermès, Kering, Burberry). Key near-term caps: US/EU import tariffs
+  compress margins (~-150bps on LVMH Fashion & Leather) and a strong EUR is a translation headwind — so the
+  recovery is real but its intensity is bounded until the +5% mainland-growth confirmation is sustained.
+
+created_at: "2026-07-01T12:00:00Z"
+created_by: user
+onset_period: "2025-Q4"
+onset_evidence: >
+  Bain's H2-2025 luxury report identified Q3-2025 as the mainland-China demand trough (contraction narrowing
+  to ~-3/-5% from ~-18/-20% in 2024), and LVMH's Q4-2025 print showed the first group sales growth in over a
+  year led by an Asia-ex-Japan / China improvement — the data-confirmed inflection off the trough.
+
+catalyst_type: demographic
+catalyst_subtype: china_luxury_demand_recovery
+geography: [CHN, EU, APAC]
+thematic_tags: [luxury, china, consumer, lvmh, richemont, hermes, consumption, apac]
+user_rank: 4
+user_notes: >
+  Cleanest UCITS expression is a European luxury basket (LVMH/Richemont/Hermès-heavy, e.g. GLUX/LUXU-style).
+  China is the dominant idiosyncratic driver — the study's history shows it outweighs rates+recession combined.
+  Bootstrap 67 anchored near struct_solar_lcoe_deployment (64.1): sector-defining and inflecting up, but early
+  in confirmation and capped by tariff margin drag + EUR strength. Run intensity_engine after first refresh.
+
+intensity:
+  current_score: 67
+  computation_method: bootstrap
+  last_updated: "2026-07-01"
+  computation_note: >
+    Bootstrap at creation 2026-07-01. Anchor: near struct_solar_lcoe_deployment (64.1); below
+    struct_cb_gold_accumulation (84) because the recovery is only one-to-two quarters confirmed and
+    tariff/FX drags cap the near-term upside.
+  history:
+  - period: "2026-Q3"
+    score: 67
+    note: "Bootstrap at creation 2026-07-01. Bain confirms Q3-2025 trough; LVMH +1% (first growth in >1yr); Richemont APAC +10% cc; China back to growth."
+    computation_method: bootstrap
+
+indicators:
+- id: ind_01
+  name: "China mainland personal-luxury growth (YoY %)"
+  source: "Bain & Company semi-annual luxury study"
+  source_url_template: "https://www.bain.com/insights/topics/luxury-goods-worldwide-market-study/"
+  check_frequency: quarterly
+  current_value: 0
+  unit: percent_yoy
+  direction: higher_is_stronger
+  threshold_strong: 5
+  threshold_weak: -10
+  last_value: -4
+  last_date: "2025-12-31"
+  update_note: >
+    Mainland personal luxury contraction narrowed to ~-3/-5% in 2025 and is inflecting toward positive in early
+    2026 (Bain forecast ~+5% for 2026). Threshold_strong +5% = recovery confirmed; threshold_weak -10% = deep
+    contraction (2024 was ~-18/-20%). Current ~0 marks the inflection.
+  semaphore: 🟡
+  value_history:
+  - date: "2025-12-31"
+    value: -4
+  - date: "2024-12-31"
+    value: -19
+
+- id: ind_02
+  name: "LVMH Fashion & Leather Goods organic growth (YoY %)"
+  source: "LVMH quarterly revenue releases"
+  source_url_template: "https://www.lvmh.com/en/investors"
+  check_frequency: quarterly
+  current_value: 1
+  unit: percent_organic_yoy
+  direction: higher_is_stronger
+  threshold_strong: 5
+  threshold_weak: -5
+  last_value: -3
+  last_date: "2025-09-30"
+  update_note: >
+    LVMH Fashion & Leather organic growth turned to +1% (first group sales growth in >1yr), led by
+    Asia-ex-Japan / China. Threshold_strong +5% = confirmed recovery; threshold_weak -5% = ongoing contraction.
+  semaphore: 🟡
+  value_history:
+  - date: "2026-03-31"
+    value: 1
+  - date: "2025-09-30"
+    value: -3
+  - date: "2025-03-31"
+    value: -5
+
+- id: ind_03
+  name: "Richemont Asia-Pacific growth (constant FX, YoY %)"
+  source: "Richemont quarterly/half-year results"
+  source_url_template: "https://www.richemont.com/en/home/investors/"
+  check_frequency: quarterly
+  current_value: 10
+  unit: percent_constant_fx_yoy
+  direction: higher_is_stronger
+  threshold_strong: 6
+  threshold_weak: -5
+  last_value: 4
+  last_date: "2025-09-30"
+  update_note: >
+    Richemont APAC +10% constant FX with China back to growth for the first time in ~2 years — the hard-luxury
+    lead indicator of the recovery. Threshold_strong +6%; threshold_weak -5%.
+  semaphore: 🟢
+  value_history:
+  - date: "2026-03-31"
+    value: 10
+  - date: "2025-09-30"
+    value: 4
+  - date: "2025-03-31"
+    value: -2
+
+- id: ind_04
+  name: "USD/CNY exchange rate (CNY appreciation = onshore-demand tailwind)"
+  source: "ECB / Bloomberg USD/CNY"
+  source_url_template: "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/"
+  check_frequency: monthly
+  current_value: 7.25
+  unit: cny_per_usd
+  direction: lower_is_stronger
+  threshold_strong: 6.9
+  threshold_weak: 7.4
+  last_value: 7.28
+  last_date: "2026-05-31"
+  update_note: >
+    USD/CNY ~7.25 and CNY appreciating (forecast toward ~6.8 by Q4-2026). A stronger CNY narrows the
+    mainland-vs-overseas luxury price gap, repatriating demand onshore. Lower_is_stronger; threshold_strong 6.9,
+    threshold_weak 7.4.
+  semaphore: 🟡
+  value_history:
+  - date: "2026-05-31"
+    value: 7.28
+  - date: "2025-12-31"
+    value: 7.32
+  - date: "2025-06-30"
+    value: 7.25
+
+deactivation_conditions:
+- id: deact_01
+  condition: >
+    Mainland China personal-luxury growth returns to below -10% YoY, OR LVMH Fashion & Leather organic growth
+    falls below -5% for two consecutive quarters (recovery aborted).
+  action: full_deactivation
+- id: deact_02
+  condition: >
+    Richemont APAC growth turns negative AND China-specific commentary reverts to declining for two
+    consecutive reporting periods (hard-luxury lead indicator rolls over).
+  action: downgrade_to_weak
+- id: deact_03
+  condition: >
+    A new US/EU luxury-tariff escalation or a sharp EUR appreciation compresses sector margins enough to
+    offset the volume recovery (margin-led de-rating despite demand).
+  action: review_required
+
+linked_event_catalyst_ids: []
+linked_structural_catalyst_ids: []
+
+narrative_maturity: "mainstream"
+status: active
+status_last_reviewed: "2026-07-01"

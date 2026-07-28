@@ -140,7 +140,7 @@
     }
   ],
 
-  "active_catalyst_ids": [],
+  "active_catalyst_ids": ["cat_20260314_private_credit_redemption_crisis"],
 
   "historical_catalyst_performance": {
     "summary": "Listed PE equities exhibit a distinct historical pattern: they are hypersensitive to the M&A and exit cycle, with a lead-lag relationship vs. underlying portfolio value. In 2009-2012 (post-GFC recovery): Blackstone (BX) rose ~300% as M&A volumes recovered and carry crystallized from pre-crisis vintages — outperforming the S&P 500 by ~180% in that window. In 2021 (peak cycle): BX, KKR, APO all hit all-time highs on record deal volumes and carry income; the sector re-rated to 20-25x earnings on carry expectations. In 2022-2023 (rate shock): listed PE sold off 30-50% as rising rates compressed LBO multiples, froze exit markets, and slashed carry expectations — this was structurally NOT an earnings collapse but a multiple de-rating on carry optionality. The 2024-2026 recovery mirrors 2010-2013: FRE base business reprices first (stable earnings), then carry optionality reprices as M&A activity confirms recovery. Key historical lesson: the best entry point for LPE equities is when FRE is growing but carry is still depressed — this is the current 2026 setup. Late entry (after carry has crystallized into P&L) offers much lower upside. Historical sensitivity to rate catalysts: every 100bps of rate cuts added approximately 15-25% to LPE equity multiples in the 2019 and 2024 rate-cut cycles, reflecting lower discount rate on future carry NPV and improved LBO economics.",

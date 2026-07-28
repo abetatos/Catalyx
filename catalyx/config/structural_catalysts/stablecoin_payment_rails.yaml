@@ -1,0 +1,173 @@
+# StructuralCatalyst: Stablecoin Payment-Rail Adoption (GENIUS Act era)
+#
+# Calibration anchor (Rule 3): bootstrap 64 — on par with struct_solar_lcoe_deployment (64.1), a notch
+# below struct_enterprise_cyber_spend_supercycle. Onset-phase secular trend, high novelty; the
+# incumbent-capture thesis (Visa/Mastercard absorbing rather than being disrupted) limits downside.
+#
+# Drives fintech_payments. NOTE this is a DIFFERENT thesis from crypto_infrastructure: stablecoin rails
+# are a payments-settlement infrastructure trend where the incumbents win, not a BTC-price/regulation bet.
+
+id: struct_stablecoin_payment_rails
+type: structural
+schema_version: "1.4"
+title: "Stablecoin payment-rail adoption — regulated settlement infrastructure, incumbent-captured"
+description: >
+  Fiat-backed stablecoins are becoming a mainstream settlement rail rather than a crypto-trading instrument,
+  and the payments incumbents are absorbing the technology rather than being disrupted by it. Three forces make
+  it structural: (1) Regulatory clarity — the US GENIUS Act established a federal framework for payment
+  stablecoins, converting a legal-grey instrument into regulated, bank-adjacent settlement money. (2) Incumbent
+  capture — on 2026-06-30 a consortium including Visa, Mastercard and Coinbase launched a joint stablecoin
+  standard ("Open USD" / "Open Standard," 140+ businesses); Mastercard acquired BVNK for up to $1.8B (Mar 2026);
+  Visa's on-chain settlement pilot reached a ~$7B annualized run-rate (+50% QoQ) across nine blockchains. The
+  networks are building the rails, so stablecoin volume growth accrues to them rather than eroding their take.
+  (3) Scale — fiat-backed stablecoin supply exceeds $270B (~40x vs 2020) and annual settlement volume (~$10.9T
+  adjusted, 2025) is approaching Visa's ($14.2T). Primary sector: fintech_payments (Visa, Mastercard, and the
+  on-chain settlement enablers). Key risk: a stablecoin de-peg / issuer-reserve event, or a regulatory reversal
+  that pushes settlement off-network, would break the incumbent-capture thesis.
+
+created_at: "2026-07-01T12:00:00Z"
+created_by: user
+onset_period: "2025-Q3"
+onset_evidence: >
+  US GENIUS Act enactment (2025) established the federal payment-stablecoin regime; incumbent commitment
+  followed within months (Visa on-chain settlement scaling, Mastercard-BVNK acquisition Mar 2026, and the
+  Visa/Mastercard/Coinbase consortium launch 2026-06-30) — the regulatory floor plus incumbent adoption mark
+  the onset of a durable settlement-infrastructure trend, distinct from the speculative 2021 stablecoin surge.
+
+catalyst_type: technology_adoption
+catalyst_subtype: stablecoin_payment_rail_adoption
+geography: [US, GLOBAL]
+thematic_tags: [stablecoin, payments, genius_act, visa, mastercard, settlement, fintech, on_chain]
+user_rank: 4
+user_notes: >
+  Cleanest UCITS expression is broad payments/fintech (Visa/Mastercard-heavy baskets). The incumbent-capture
+  framing is the key differentiator — this is NOT a bet on stablecoin issuers (Circle) disrupting the networks,
+  but on the networks monetizing the rails. Bootstrap 64 anchored to struct_solar_lcoe_deployment (64.1).
+
+intensity:
+  current_score: 64
+  computation_method: bootstrap
+  last_updated: "2026-07-01"
+  computation_note: >
+    Bootstrap at creation 2026-07-01. Anchor: on par with struct_solar_lcoe_deployment (64.1). Onset-phase,
+    high-novelty adoption trend with an incumbent-capture floor.
+  history:
+  - period: "2026-Q3"
+    score: 64
+    note: "Bootstrap at creation 2026-07-01. Visa/MC/Coinbase consortium launched 2026-06-30; stablecoin supply >$270B; Visa on-chain ~$7B annualized run-rate."
+    computation_method: bootstrap
+
+indicators:
+- id: ind_01
+  name: "Fiat-backed stablecoin supply ($B)"
+  source: "CoinMetrics / DeFiLlama stablecoin market cap"
+  source_url_template: "https://coinmetrics.io/"
+  check_frequency: monthly
+  current_value: 273
+  unit: usd_billion
+  direction: higher_is_stronger
+  threshold_strong: 200
+  threshold_weak: 100
+  last_value: 240
+  last_date: "2026-05-31"
+  update_note: >
+    Fiat-backed stablecoin supply >$270B (Mar 2026), ~40x vs 2020. Threshold_strong $200B = mainstream scale;
+    threshold_weak $100B = pre-GENIUS baseline. Rising supply = settlement demand, not just trading collateral.
+  semaphore: 🟢
+  value_history:
+  - date: "2026-05-31"
+    value: 240
+  - date: "2025-12-31"
+    value: 205
+  - date: "2024-12-31"
+    value: 160
+
+- id: ind_02
+  name: "Annual stablecoin settlement volume ($T, adjusted)"
+  source: "Visa Onchain Analytics / industry aggregators"
+  source_url_template: "https://visaonchainanalytics.com/"
+  check_frequency: quarterly
+  current_value: 10.9
+  unit: usd_trillion_annual
+  direction: higher_is_stronger
+  threshold_strong: 8
+  threshold_weak: 3
+  last_value: 9.0
+  last_date: "2025-12-31"
+  update_note: >
+    Adjusted stablecoin settlement volume ~$10.9T (2025), approaching Visa's ~$14.2T. Threshold_strong $8T =
+    payments-scale usage; threshold_weak $3T = trading-dominated baseline.
+  semaphore: 🟢
+  value_history:
+  - date: "2025-12-31"
+    value: 9.0
+  - date: "2024-12-31"
+    value: 6.5
+
+- id: ind_03
+  name: "Incumbent on-chain settlement run-rate (Visa, $B annualized)"
+  source: "Visa quarterly disclosures"
+  source_url_template: "https://investor.visa.com/"
+  check_frequency: quarterly
+  current_value: 7
+  unit: usd_billion_annualized
+  direction: higher_is_stronger
+  threshold_strong: 5
+  threshold_weak: 1
+  last_value: 4.7
+  last_date: "2026-03-31"
+  update_note: >
+    Visa on-chain settlement ~$7B annualized run-rate, +50% QoQ, across 9 blockchains. The direct
+    incumbent-capture proxy. Threshold_strong $5B; threshold_weak $1B (pilot-scale).
+  semaphore: 🟢
+  value_history:
+  - date: "2026-03-31"
+    value: 4.7
+  - date: "2025-12-31"
+    value: 3.1
+
+- id: ind_04
+  name: "Incumbent stablecoin M&A / product launches (count, trailing 12M)"
+  source: "Company filings / press releases"
+  source_url_template: "https://www.sec.gov/"
+  check_frequency: quarterly
+  current_value: 3
+  unit: count_ttm
+  direction: higher_is_stronger
+  threshold_strong: 2
+  threshold_weak: 0
+  last_value: 2
+  last_date: "2026-03-31"
+  update_note: >
+    Trailing-12M incumbent stablecoin moves: Mastercard-BVNK ($1.8B, Mar 2026), Visa/MC/Coinbase "Open USD"
+    consortium (Jun 30 2026), plus network on-chain products. Threshold_strong 2/yr = active incumbent capture.
+  semaphore: 🟢
+  value_history:
+  - date: "2026-03-31"
+    value: 2
+  - date: "2025-12-31"
+    value: 1
+
+deactivation_conditions:
+- id: deact_01
+  condition: >
+    A major fiat-backed stablecoin de-pegs or an issuer-reserve failure triggers a >20% contraction in
+    aggregate stablecoin supply sustained for two consecutive months (settlement-trust break).
+  action: review_required
+- id: deact_02
+  condition: >
+    Regulatory reversal (GENIUS Act repeal or a restrictive rewrite) that pushes settlement off regulated
+    networks, AND incumbent on-chain settlement run-rate falls for two consecutive quarters.
+  action: full_deactivation
+- id: deact_03
+  condition: >
+    Annual stablecoin settlement volume falls below $3T for two consecutive quarters (reverts to a
+    trading-collateral instrument rather than a payment rail).
+  action: downgrade_to_weak
+
+linked_event_catalyst_ids: []
+linked_structural_catalyst_ids: []
+
+narrative_maturity: "emerging"
+status: active
+status_last_reviewed: "2026-07-01"

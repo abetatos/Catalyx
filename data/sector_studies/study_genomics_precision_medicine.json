@@ -132,7 +132,7 @@
     }
   ],
 
-  "active_catalyst_ids": [],
+  "active_catalyst_ids": ["struct_crispr_gene_editing_validation", "struct_ai_drug_discovery"],
 
   "historical_catalyst_performance": {
     "summary": "Genomics & precision medicine ETFs respond most sharply to three catalyst types, in order of magnitude: (1) In vivo gene editing Phase 3 / FDA approval events — ARKG surged ~35% in the week of Casgevy Phase 3 data (June 2023), then corrected as commercialisation timelines were pushed. The sector pattern is spike-and-fade on approval news as pricing and reimbursement uncertainty re-emerges; (2) Sequencing cost breakthroughs — the $1,000 WGS threshold crossing (2014) preceded a multi-year ARKG bull run; the sub-$100 research genome achievement (2026) is analogous in kind but the sector is now starting from trough valuations rather than elevated ones; (3) Reimbursement decisions — CMS Medicare coverage decisions create sustained (not spike) re-ratings because they unlock addressable markets rather than validating science. Historical response data from ARKG: FDA approval catalyst → median +25-40% in 60 days followed by 50-70% retracement; positive Phase 3 data → +15-25% persistent if no regulatory uncertainty; negative trial → -20% to -40% in one session with 12-18 month recovery horizon. The sector's volatility profile (ARKG 12.87% vs GNOM 9.88% current) implies option pricing is consistently elevated — long ARKG during binary catalysts is structurally expensive.",

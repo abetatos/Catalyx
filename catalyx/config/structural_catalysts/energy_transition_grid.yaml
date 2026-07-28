@@ -31,9 +31,13 @@ user_notes: "Less crowded than pure AI play. Copper miners is the physical commo
   infrastructure expression."
 
 intensity:
-  current_score: 92.9
-  last_updated: "2026-06-12"
+  current_score: 89.9
+  last_updated: "2026-06-29"
   history:
+  - period: 2026-Q2
+    score: 89.9
+    note: 'Computed 2026-06-29: avg=92.87 trend=↓ (falling 1 period) (was 92.9)'
+    computation_method: computed
   - period: '2026-06-12'
     score: 92.9
     note: 'Computed 2026-06-12: avg=92.87 trend=→ (flat) (was 95.0)'
@@ -95,18 +99,20 @@ indicators:
   name: "Copper price trend (spot, USD/tonne)"
   source: "LME spot price"
   check_frequency: monthly
-  current_value: 13965
+  current_value: 13357.50
   unit: USD_per_tonne
   direction: higher_is_stronger
   threshold_strong: 9000
   threshold_weak: 7000
-  last_value: 12742
-  last_date: "2026-06-02"
-  update_note: "WebSearch confirmed 2026-06-03: LME copper $13,965/tonne. Prior value $10,200 was stale — likely a 2025 reference
-    level. Copper well above threshold_strong ($9,000). 2026 YTD average ~$12,841."
+  last_value: 13965
+  last_date: "2026-06-29"
+  update_note: "WebSearch 2026-06-29: LME copper 3M $13,357.50/tonne, -6.2% MoM on USD strength + dual-hawkish Fed/ECB; still
+    far above strong threshold ($9,000). Copper-as-grid-input cost remains elevated."
 
   semaphore: 🟢
   value_history:
+  - date: '2026-06-02'
+    value: 13965.0
   - date: '2026-06-01'
     value: 14407.0
   - date: '2026-05-01'
