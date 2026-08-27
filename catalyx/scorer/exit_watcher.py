@@ -42,9 +42,9 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 from catalyx.config import weights
-from catalyx.execution import tax_engine
+from catalyx.execution import nav_engine, tax_engine
 from catalyx.scorer.dislocation import yfinance_prices
-from catalyx.store import lake, movement_repo
+from catalyx.store import lake, movement_repo, structural_catalyst_repo
 
 _BUY_ACTIONS = ("open", "add")
 
@@ -127,16 +127,127 @@ def roll_up_assumptions(assumptions: list[dict]) -> dict:
 
 
 def suggest_action(fired_full_exit: bool, fired_reduce: bool, regime_state: str | None,
-                   has_violated: bool, has_weakening: bool, has_approaching: bool) -> str:
+                   has_violated: bool, has_weakening: bool, has_approaching: bool,
+                   drawdown_action: str = "none", reverify_required: bool = False) -> str:
     """Severity arbitration (docs/DESIGN_sell_signals.md §5). The most pre-committed / most
-    fundamental trigger binds; a fired full_exit stop overrides timing entirely."""
-    if fired_full_exit:
+    fundamental trigger binds; a fired full_exit stop overrides timing entirely.
+
+    `drawdown_action` / `reverify_required` fold in the capital-preservation floor (§6, added
+    2026-08-04): the drawdown overlay contributes an `exit`/`reduce`/`warn` and, when the driving
+    catalyst's verdict is stale, forces at least a `watch` so a −20% never sits on a 2-month-old
+    'intact'. Doctrine: a drawdown is a trigger to re-verify, not an auto-sell (see
+    drawdown_overlay_action)."""
+    if fired_full_exit or drawdown_action == "exit":
         return "exit"
-    if fired_reduce or regime_state == "breaking" or has_violated:
+    if fired_reduce or regime_state == "breaking" or has_violated or drawdown_action == "reduce":
         return "reduce"
-    if has_approaching or regime_state == "contested" or has_weakening:
+    if (has_approaching or regime_state == "contested" or has_weakening
+            or drawdown_action == "warn" or reverify_required):
         return "watch"
     return "hold"
+
+
+# ── Capital-preservation floor + catalyst freshness (user-decided 2026-08-04) ─
+# Two additions born from a real miss: a EUR position sat at −22% flagged only "watch" because the
+# only price stops were soft "−20% for 10 CONSECUTIVE days" (which reset on any bounce) and the
+# catalyst's `intact` verdict was 2 months stale. The fix has three parts, all here:
+#   (1) the drawdown is measured on the FX-correct EUR mark (see assess → nav_engine FX), not on a
+#       native price conflated with an EUR cost basis;
+#   (2) a two-tier floor on that EUR drawdown (reduce / exit) — no consecutive-day gate;
+#   (3) FRESHNESS DOMINATES — the floor is a trigger to RE-VERIFY the catalyst against live data,
+#       not an auto-sell. Only a FRESH-and-weakening verdict auto-acts; fresh-and-intact (a fear
+#       selloff on a live thesis) is hold/add, so it only warns. A stale verdict can't be trusted,
+#       so a drawdown on it forces a re-verify (and a protective reduce on the deepest tier).
+
+def evaluate_drawdown(unrealized_pct: float | None, reduce_pct: float, exit_pct: float) -> dict:
+    """Classify the EUR drawdown against the two-tier floor. Pure. `reduce_pct`/`exit_pct` are
+    NEGATIVE (e.g. −20.0 / −30.0). tier ∈ {clear, reduce, exit, unknown}."""
+    if unrealized_pct is None:
+        return {"tier": "unknown", "drawdown_pct": None, "reduce_at": reduce_pct, "exit_at": exit_pct}
+    if unrealized_pct <= exit_pct:
+        tier = "exit"
+    elif unrealized_pct <= reduce_pct:
+        tier = "reduce"
+    else:
+        tier = "clear"
+    return {"tier": tier, "drawdown_pct": round(unrealized_pct, 2),
+            "reduce_at": reduce_pct, "exit_at": exit_pct}
+
+
+def drawdown_overlay_action(dd_tier: str, freshness_status: str, catalyst_weakening: bool) -> tuple[str, bool]:
+    """Fold the drawdown tier + catalyst health into (action_contribution, reverify_required).
+
+    action_contribution ∈ {none, warn, reduce, exit} feeds suggest_action.
+    Doctrine (freshness dominates): a drawdown escalates to an AUTO action only when the catalyst
+    verdict is FRESH and weakening; fresh+intact only warns (fear selloff → hold/add is the call);
+    a stale/unknown verdict + a real drawdown forces a re-verify (and a protective reduce on the
+    exit tier, since we can't confirm 'intact')."""
+    if dd_tier in (None, "unknown", "clear"):
+        if freshness_status == "very_stale":      # no drawdown, but the verdict is past its ceiling
+            return "warn", True
+        if freshness_status == "stale":
+            return "none", True                    # nudge a re-verify without changing the action
+        return "none", False
+    # a real drawdown (reduce or exit tier) is breached
+    if freshness_status == "fresh":
+        if catalyst_weakening:
+            return ("exit" if dd_tier == "exit" else "reduce"), False
+        return "warn", False                       # fresh + intact: live thesis, fear selloff → warn
+    # stale / unknown verdict under a real drawdown: trust nothing, demand a fresh check
+    return ("reduce" if dd_tier == "exit" else "warn"), True
+
+
+def _parse_date(v) -> date | None:
+    """Best-effort parse of a YAML date/datetime string ('2026-06-01' or ISO) → date."""
+    if v is None:
+        return None
+    if isinstance(v, datetime):
+        return v.date()
+    if isinstance(v, date):
+        return v
+    s = str(v).strip()
+    if not s:
+        return None
+    try:
+        return datetime.fromisoformat(s.replace("Z", "+00:00")).date()
+    except ValueError:
+        try:
+            return date.fromisoformat(s[:10])
+        except ValueError:
+            return None
+
+
+def catalyst_freshness(catalyst_ids: list[str], today: date, warn_days: int, max_days: int,
+                       get_fn=None) -> dict:
+    """How old is the fundamental verdict on the catalyst(s) driving a position? Reads each
+    structural catalyst's `status_last_reviewed` (the human judgement date — NOT `intensity.
+    last_updated`, which can look fresh after a trend-only recompute over stale indicator values).
+    The STALEST driver governs. status ∈ {fresh, stale, very_stale, unknown}."""
+    get_fn = get_fn or structural_catalyst_repo.get_catalyst
+    reviewed, indicator_dates = [], []
+    for cid in catalyst_ids or []:
+        try:
+            cat = get_fn(cid)
+        except Exception:  # noqa: BLE001
+            cat = None
+        if not isinstance(cat, dict):
+            continue
+        d = _parse_date(cat.get("status_last_reviewed"))
+        if d:
+            reviewed.append(d)
+        for ind in cat.get("indicators") or []:
+            di = _parse_date(ind.get("last_date"))
+            if di:
+                indicator_dates.append(di)
+    freshest_ind = max(indicator_dates).isoformat() if indicator_dates else None
+    if not reviewed:
+        return {"status": "unknown", "review_age_days": None, "last_reviewed": None,
+                "freshest_indicator_date": freshest_ind, "n_catalysts": len(catalyst_ids or [])}
+    oldest = min(reviewed)                          # stalest driver = the trust ceiling
+    age = (today - oldest).days
+    status = "very_stale" if age > max_days else ("stale" if age > warn_days else "fresh")
+    return {"status": status, "review_age_days": age, "last_reviewed": oldest.isoformat(),
+            "freshest_indicator_date": freshest_ind, "n_catalysts": len(catalyst_ids or [])}
 
 
 # ── Lake read: regime per sector (latest run) ─────────────────────────────────
@@ -181,14 +292,27 @@ def _risk_for_etf(etf: str, movements: list[dict]) -> tuple[list[dict], list[dic
 
 def assess(cfg: dict | None = None, price_fn=None, today: date | None = None,
            persist: bool = False, run_id: str | None = None,
-           movements_dir: Path | None = None, lake_dir: Path | None = None) -> dict:
+           movements_dir: Path | None = None, lake_dir: Path | None = None,
+           ccy_fn=None, fx_fn=None) -> dict:
     """Evaluate Family-1 exit signals for every open position. ONE price fetch for all tickers.
-    Recommend-only — writes nothing to the movement files."""
+    Recommend-only — writes nothing to the movement files.
+
+    Price stops are checked in NATIVE currency (their thresholds are native, e.g. a GBP −20% line);
+    the P&L / drawdown mark is FX-converted to EUR (the book's currency) via nav_engine's FX helpers
+    so a GBP/USD vehicle is not compared against its EUR cost basis (the pre-2026-08-04 bug that
+    showed SEMI.L at −24% when its real EUR drawdown was −11%). Tests that inject `price_fn` stay
+    FX-free (native marking) unless they also pass `ccy_fn`, mirroring nav_engine's convention."""
     cfg = cfg or weights.exit_signals()
+    injected_price = price_fn is not None
     price_fn = price_fn or yfinance_prices
     today = today or date.today()
     approach_pct = float(cfg.get("approach_pct", 5.0))
     lookback = int(cfg.get("lookback_days", 60))
+    reduce_pct = float(cfg.get("drawdown_reduce_pct", -20.0))
+    exit_pct = float(cfg.get("drawdown_exit_pct", -30.0))
+    warn_days = int(cfg.get("catalyst_staleness_warn_days", 30))
+    max_days = int(cfg.get("catalyst_staleness_max_days", 45))
+    convert = (ccy_fn is not None) or (not injected_price)   # real path converts; injected tests don't
 
     book = movement_repo.positions(movements_dir=movements_dir)
     holdings = book.get("holdings", [])
@@ -209,10 +333,21 @@ def assess(cfg: dict | None = None, price_fn=None, today: date | None = None,
                 tickers.add(et)
         per_pos_meta.append((h, inv, asm, attr))
 
-    prices = None
+    prices = None            # native — for stop evaluation
+    eur_prices = None        # FX-converted vehicle columns — for the EUR P&L mark
     if tickers:
         start = (today - _td(lookback + 10)).isoformat()
         prices = price_fn(sorted(tickers), start, today.isoformat())
+        if convert and prices is not None:
+            vehicles = [c for c in {h["etf"] for h in holdings} if c in getattr(prices, "columns", [])]
+            if vehicles:
+                try:
+                    eur_prices = nav_engine._eur_prices(
+                        prices[sorted(vehicles)].copy(), start, today.isoformat(),
+                        ccy_fn or nav_engine._default_ccy_fn, fx_fn or nav_engine._default_fx_fn)
+                except Exception:  # noqa: BLE001 — FX unavailable → fall back to native marking
+                    eur_prices = None
+    mark_prices = eur_prices if eur_prices is not None else prices
 
     results = []
     for h, inv, asm, attr in per_pos_meta:
@@ -249,21 +384,36 @@ def assess(cfg: dict | None = None, price_fn=None, today: date | None = None,
         # ── assumptions ──
         asm_roll = roll_up_assumptions(asm)
 
-        # ── mark-to-market + after-tax exit consequence ──
-        tax = _tax_view(h, prices, realized_ytd)
+        # ── mark-to-market (FX-correct EUR) + after-tax exit consequence ──
+        tax = _tax_view(h, mark_prices, realized_ytd)
+
+        # ── capital-preservation floor + catalyst freshness (2026-08-04) ──
+        catalyst_ids = [a.get("catalyst_id") for a in attr]
+        freshness = catalyst_freshness(catalyst_ids, today, warn_days, max_days)
+        drawdown = evaluate_drawdown(tax.get("unrealized_pct"), reduce_pct, exit_pct)
+        # a driving catalyst is "weakening" when its regime is contested/breaking or an assumption
+        # is violated — the gate that lets a drawdown auto-act (user policy: else it only warns)
+        catalyst_weakening = regime_state in ("contested", "breaking") or bool(asm_roll["violated"])
+        dd_action, reverify = drawdown_overlay_action(drawdown["tier"], freshness["status"],
+                                                      catalyst_weakening)
+        drawdown["action_contribution"] = dd_action
+        drawdown["reverify_required"] = reverify
 
         action = suggest_action(fired_full_exit, fired_reduce, regime_state,
                                 bool(asm_roll["violated"]), bool(asm_roll["weakening"]),
-                                has_approaching)
+                                has_approaching, drawdown_action=dd_action,
+                                reverify_required=reverify)
 
         results.append({
             "sector_id": sector_id, "etf": etf,
             "invested_eur": h.get("invested_eur"), "weight_pct": h.get("weight_pct"),
             "regime_state": regime_state,
-            "attribution": [a.get("catalyst_id") for a in attr],
+            "attribution": catalyst_ids,
             "stops_checked": checked,
             "stops_claude_check": claude_check,
             "assumptions": asm_roll,
+            "drawdown": drawdown,
+            "catalyst_freshness": freshness,
             "tax": tax,
             "suggested_action": action,
         })
@@ -291,7 +441,9 @@ def assess(cfg: dict | None = None, price_fn=None, today: date | None = None,
 
 def _tax_view(holding: dict, prices, realized_ytd: float) -> dict:
     """Mark the position and surface the after-tax consequence of exiting now (Spanish CGT). A loss
-    is a harvestable offset (no tax). Non-EUR vehicles are flagged (FX needed) and left unmarked."""
+    is a harvestable offset (no tax). `prices` must already be EUR-denominated (assess FX-converts
+    the vehicle columns via nav_engine before calling this) — the cost basis is EUR, so a native
+    GBP/USD price here would corrupt unrealized_pct (the bug fixed 2026-08-04)."""
     qty = float(holding.get("qty") or 0.0)
     invested = float(holding.get("invested_eur") or 0.0)
     px = _last(prices, holding["etf"])
@@ -333,11 +485,17 @@ def _persist_lake(run_id: str, today: date, results: list[dict], lake_dir) -> No
         approaching = [s for s in checked if s.get("status") == "approaching"]
         loudest = next((s for s in fired if s["severity"] == "full_exit"), fired[0] if fired else None)
         tax = r["tax"]
+        dd = r.get("drawdown") or {}
+        fresh = r.get("catalyst_freshness") or {}
         recs.append({
             "run_id": run_id, "computed_at": computed_at, "as_of": today.isoformat(),
             "sector_id": r["sector_id"], "etf": r["etf"],
             "invested_eur": r["invested_eur"], "weight_pct": r["weight_pct"],
             "regime_state": r["regime_state"], "suggested_action": r["suggested_action"],
+            "drawdown_tier": dd.get("tier"), "drawdown_action": dd.get("action_contribution"),
+            "reverify_required": bool(dd.get("reverify_required")),
+            "catalyst_freshness": fresh.get("status"),
+            "catalyst_review_age_days": fresh.get("review_age_days"),
             "n_stops": len(checked), "n_fired": len(fired), "n_approaching": len(approaching),
             "n_claude_check": len(r["stops_claude_check"]),
             # comma-joined ids so the dashboard can name the stops without the full per-stop list
@@ -406,6 +564,16 @@ def main() -> None:
         print(f"  {icon.get(s['suggested_action'], s['suggested_action']):<11} "
               f"{s['sector_id']:<34}{s['etf']:<10} €{s['invested_eur']:>7,.0f}  "
               f"P&L {pnl:<8} regime={s['regime_state']}")
+        dd = s.get("drawdown") or {}
+        fr = s.get("catalyst_freshness") or {}
+        if dd.get("tier") in ("reduce", "exit"):
+            print(f"        📉 drawdown {dd.get('drawdown_pct')}% → {dd['tier'].upper()} tier "
+                  f"(floor {dd.get('reduce_at')}/{dd.get('exit_at')}) → contributes '{dd.get('action_contribution')}'")
+        if fr.get("status") in ("stale", "very_stale"):
+            print(f"        ⏳ catalyst verdict {fr.get('review_age_days')}d old "
+                  f"({fr['status']}, reviewed {fr.get('last_reviewed')}) → RE-VERIFY before trusting regime")
+        elif dd.get("reverify_required"):
+            print("        ⏳ RE-VERIFY catalyst before acting on drawdown")
         for st in s["stops_checked"]:
             mark = {"fired": "✅ FIRED", "approaching": "⚠ approaching",
                     "clear": "· clear", "unknown": "? unknown"}.get(st["status"], st["status"])

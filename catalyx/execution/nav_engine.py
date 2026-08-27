@@ -50,6 +50,76 @@ def yfinance_prices(tickers: list[str], start: str, end: str):
     return closes
 
 
+# ── FX → EUR (the book, and every comparison, is denominated in EUR) ──────────
+#
+# yfinance serves each ETF's price in its LISTING currency (4COP.DE/IQQH.DE=EUR,
+# USPY.L=USD, SEMI.L=GBP, SPY=USD). Summing those natively is meaningless for a
+# EUR investor, so every price series is converted to EUR before any NAV math —
+# NAV(t) = Σ w_i · [p_i(t)·fx_i(t)] / [p_i(t0)·fx_i(t0)]. CLAUDE.md: all P&L in EUR.
+
+def _default_ccy_fn(tickers: list[str]) -> dict[str, str]:
+    """{ticker: listing currency}. Best-effort via yfinance; unknown → 'EUR' (no conversion)."""
+    import yfinance as yf
+    out: dict[str, str] = {}
+    for t in tickers:
+        try:
+            out[t] = (yf.Ticker(t).fast_info.get("currency") or "EUR")
+        except Exception:
+            out[t] = "EUR"
+    return out
+
+
+def _default_fx_fn(currencies, start: str, end: str) -> dict:
+    """{base_ccy: Series of EUR per 1 unit of that ccy, indexed by date}.
+
+    EURUSD=X quotes USD per EUR, so EUR-per-USD = 1/EURUSD; likewise 1/EURGBP for GBP.
+    Pence (GBp/GBX) reuse the GBP series and are scaled ×0.01 at conversion time."""
+    pair_for = {"USD": "EURUSD=X", "GBP": "EURGBP=X"}
+    series: dict = {}
+    for ccy in currencies:
+        pair = pair_for.get(ccy)
+        if not pair:
+            continue
+        px = yfinance_prices([pair], start, end)
+        col = px[pair] if pair in getattr(px, "columns", []) else px.iloc[:, 0]
+        series[ccy] = 1.0 / col
+    return series
+
+
+def _to_eur(prices, ccy_map: dict, fx_by_ccy: dict):
+    """Convert each column of a price frame from its listing currency to EUR in place-of-copy.
+    A currency with no FX series (couldn't be fetched) is left native rather than dropped."""
+    if prices is None or len(prices) == 0:
+        return prices
+    out = prices.copy()
+    for t in list(getattr(out, "columns", [])):
+        ccy = (ccy_map.get(t) or "EUR")
+        pence = ccy in ("GBp", "GBX")
+        base = "GBP" if pence else ccy
+        col = out[t]
+        if base != "EUR":
+            fx = fx_by_ccy.get(base)
+            if fx is None:
+                continue
+            col = col * fx.reindex(out.index).ffill().bfill()
+        if pence:
+            col = col * 0.01
+        out[t] = col
+    return out
+
+
+def _eur_prices(prices, start: str, end: str, ccy_fn, fx_fn):
+    """Full native→EUR conversion of a price frame: look up each column's currency, fetch the
+    needed FX series, apply. No-op for an all-EUR frame."""
+    if prices is None or len(prices) == 0:
+        return prices
+    tickers = list(getattr(prices, "columns", []))
+    ccy_map = ccy_fn(tickers)
+    needed = {("GBP" if c in ("GBp", "GBX") else c) for c in ccy_map.values()} - {"EUR"}
+    fx_by_ccy = fx_fn(needed, start, end) if needed else {}
+    return _to_eur(prices, ccy_map, fx_by_ccy)
+
+
 # ── Core NAV math ────────────────────────────────────────────────────────────
 
 def holdings_nav(holdings: list[dict], prices, base: float = 100.0) -> list[dict]:
@@ -141,16 +211,21 @@ def _run_date(run_id: str | None) -> str | None:
 
 def compute_model_nav(portfolio_id: str, run_id: str | None = None, as_of: str | None = None,
                       backtest_days: int | None = None, price_fn=None, persist: bool = True,
-                      lake_dir: Path | None = None) -> dict:
+                      lake_dir: Path | None = None, eur: bool = True, ccy_fn=None, fx_fn=None) -> dict:
     """Compute (and persist) the NAV series of a model portfolio's holdings vs its benchmark.
 
     `backtest_days`: if set, measure the CURRENT holdings over the trailing window
     (today − N days → today) — a buy-and-hold backtest that shows immediately whether the
     book would have beaten the market (vs benchmark_etf, e.g. SPY). Otherwise the series
     starts at the run date and accrues forward.
+
+    `eur`: convert every price series to EUR before the NAV math (default; the book is EUR).
+    Conversion runs on the default yfinance price path, or when a `ccy_fn` is injected — so
+    tests that inject only a synthetic `price_fn` stay FX-free.
     """
     from catalyx.execution import portfolio as pf
 
+    convert = eur and (ccy_fn is not None or price_fn is None)
     price_fn = price_fn or yfinance_prices
     shown = pf.show_holdings(portfolio_id, run_id=run_id, lake_dir=lake_dir)
     holdings = shown.get("holdings", [])
@@ -174,6 +249,8 @@ def compute_model_nav(portfolio_id: str, run_id: str | None = None, as_of: str |
     etfs = [h["primary_etf"] for h in holdings if h.get("primary_etf")]
     tickers = list(dict.fromkeys(etfs + ([benchmark] if benchmark else [])))
     prices = price_fn(tickers, start, end)
+    if convert:
+        prices = _eur_prices(prices, start, end, ccy_fn or _default_ccy_fn, fx_fn or _default_fx_fn)
 
     port = holdings_nav(holdings, prices)
     bench = holdings_nav([{"etf": benchmark, "weight_pct": 100.0}], prices) if benchmark else []
@@ -227,7 +304,8 @@ def _runs_with_holdings(portfolio_id: str, since: str | None, lake_dir: Path | N
 
 
 def compute_live_nav(portfolio_id: str, inception: str | None = None, as_of: str | None = None,
-                     price_fn=None, persist: bool = True, lake_dir: Path | None = None) -> dict:
+                     price_fn=None, persist: bool = True, lake_dir: Path | None = None,
+                     eur: bool = True, ccy_fn=None, fx_fn=None) -> dict:
     """Walk-forward, no-look-ahead track record (mode='live').
 
     Each score_run on/after inception is a rebalance point. For consecutive runs k → k+1, the
@@ -240,6 +318,7 @@ def compute_live_nav(portfolio_id: str, inception: str | None = None, as_of: str
     """
     from catalyx.execution import portfolio as pf
 
+    convert = eur and (ccy_fn is not None or price_fn is None)
     price_fn = price_fn or yfinance_prices
     inception = inception or weights_cfg.track_record_inception()
     runs = _runs_with_holdings(portfolio_id, inception, lake_dir)
@@ -266,6 +345,8 @@ def compute_live_nav(portfolio_id: str, inception: str | None = None, as_of: str
     all_etfs = {h.get("primary_etf") for hs in holdings_by_run.values() for h in hs if h.get("primary_etf")}
     tickers = list(dict.fromkeys(list(all_etfs) + ([benchmark] if benchmark else [])))
     prices = price_fn(tickers, start, end)
+    if convert:
+        prices = _eur_prices(prices, start, end, ccy_fn or _default_ccy_fn, fx_fn or _default_fx_fn)
 
     running = 100.0
     chained: list[dict] = []
@@ -315,29 +396,101 @@ def compute_live_nav(portfolio_id: str, inception: str | None = None, as_of: str
 
 def compute_real_nav(portfolio_id: str, start: str | None = None, as_of: str | None = None,
                      benchmark: str | None = None, price_fn=None, persist: bool = True,
-                     lake_dir: Path | None = None) -> dict:
-    """NAV series of the REAL book (from the movement files → net holdings). Same math as the
-    model leg, so the two curves are directly comparable (execution alpha)."""
+                     lake_dir: Path | None = None, eur: bool = True, ccy_fn=None, fx_fn=None) -> dict:
+    """NAV series of the REAL book (from the movement files → net holdings), in EUR.
+
+    Unlike the model leg, the real curve is anchored to the ACTUAL EUR cost basis, not to the
+    entry-date market close: NAV(t) = 100 · Σ_i qty_i·price_i(t)_EUR / Σ_i invested_eur_i. So the
+    last point's return_pct IS the true mark-to-market P&L you'd see in the broker.
+
+    Also decomposes the FX effect: `fx_pnl_eur` = how much of the current P&L comes purely from
+    EUR/USD & EUR/GBP moves since each position was opened (qty·price_now_native·(fx_now−fx_entry)),
+    so a EUR loss can be split into asset performance vs currency."""
+    import pandas as pd
     from catalyx.store import movement_repo
 
+    convert = eur and (ccy_fn is not None or price_fn is None)
     price_fn = price_fn or yfinance_prices
     rh = movement_repo.positions()
     holdings = rh.get("holdings", [])
     if not holdings:
         return {"portfolio_id": portfolio_id, "error": "no open real positions"}
 
+    movs = movement_repo.load_all()
     if start is None:
-        movs = movement_repo.load_all()
         start = min((m["executed_at"][:10] for m in movs), default=date.today().isoformat())
     end = as_of or date.today().isoformat()
+    # earliest open date per ETF → the FX reference date for that holding's currency attribution
+    entry_by_etf: dict[str, str] = {}
+    for m in sorted(movs, key=lambda x: x.get("executed_at", "")):
+        et = m.get("etf")
+        if et and et not in entry_by_etf:
+            entry_by_etf[et] = m["executed_at"][:10]
 
     etfs = [h["etf"] for h in holdings]
     tickers = list(dict.fromkeys(etfs + ([benchmark] if benchmark else [])))
-    prices = price_fn(tickers, start, end)
+    native = price_fn(tickers, start, end)
 
-    port = holdings_nav(holdings, prices)
+    # currency + FX series (kept explicit here so we can attribute the FX effect)
+    ccy_map = (ccy_fn or _default_ccy_fn)(tickers) if convert else {t: "EUR" for t in tickers}
+    needed = {("GBP" if c in ("GBp", "GBX") else c) for c in ccy_map.values()} - {"EUR"}
+    fx_by_ccy = (fx_fn or _default_fx_fn)(needed, start, end) if (convert and needed) else {}
+    prices = _to_eur(native, ccy_map, fx_by_ccy) if convert else native
+
+    # ── cost-basis-anchored EUR NAV series ───────────────────────────────────
+    total_cost = sum(float(h.get("invested_eur", 0.0)) for h in holdings)
+    px_cols = [h["etf"] for h in holdings if h["etf"] in getattr(prices, "columns", [])]
+    port: list[dict] = []
+    if total_cost > 0 and px_cols:
+        pxe = prices[px_cols].ffill().dropna(how="all")
+        value = pd.Series(0.0, index=pxe.index)
+        covered_cost = 0.0
+        for h in holdings:
+            et = h["etf"]
+            if et in pxe.columns:
+                value = value + float(h.get("qty", 0.0)) * pxe[et].ffill()
+                covered_cost += float(h.get("invested_eur", 0.0))
+        value = value + (total_cost - covered_cost)          # unpriced holdings held flat at cost
+        nav_series = 100.0 * value / total_cost
+        port = [{"date": (ts.date().isoformat() if hasattr(ts, "date") else str(ts)),
+                 "nav": round(float(v), 4)} for ts, v in nav_series.items()]
+    else:
+        port = holdings_nav(holdings, prices)                 # fallback (no cost/qty)
+
+    # benchmark: buy-and-hold, EUR, indexed 100 at start (directly comparable)
     bench = holdings_nav([{"etf": benchmark, "weight_pct": 100.0}], prices) if benchmark else []
     bench_by_date = {b["date"]: b["nav"] for b in bench}
+
+    # ── FX-effect attribution at the endpoint ────────────────────────────────
+    def _fx_at(ccy_base: str, on: str) -> float | None:
+        s = fx_by_ccy.get(ccy_base)
+        if s is None:
+            return 1.0 if ccy_base == "EUR" else None
+        s2 = s[s.index <= (on + " 23:59:59")] if len(s) else s
+        return float(s2.iloc[-1]) if len(s2) else (float(s.iloc[0]) if len(s) else None)
+
+    fx_pnl_eur = 0.0
+    fx_breakdown: list[dict] = []
+    for h in holdings:
+        et = h["etf"]
+        ccy = ccy_map.get(et, "EUR")
+        base = "GBP" if ccy in ("GBp", "GBX") else ccy
+        scale = 0.01 if ccy in ("GBp", "GBX") else 1.0
+        if base == "EUR" or et not in getattr(native, "columns", []):
+            continue
+        pn = native[et].ffill().dropna()
+        if pn.empty:
+            continue
+        price_now = float(pn.iloc[-1]) * scale
+        fx_now = _fx_at(base, end)
+        fx_entry = _fx_at(base, entry_by_etf.get(et, start))
+        if fx_now is None or fx_entry is None:
+            continue
+        contrib = float(h.get("qty", 0.0)) * price_now * (fx_now - fx_entry)
+        fx_pnl_eur += contrib
+        fx_breakdown.append({"etf": et, "ccy": base, "fx_entry": round(fx_entry, 4),
+                             "fx_now": round(fx_now, 4), "fx_pnl_eur": round(contrib, 2)})
+
     computed_at = datetime.now(timezone.utc)
     rows = []
     for p in port:
@@ -355,8 +508,12 @@ def compute_real_nav(portfolio_id: str, start: str | None = None, as_of: str | N
         _persist_nav_rows(portfolio_id, None, rows, lake_dir=lake_dir)
 
     last = rows[-1] if rows else None
+    pnl_eur = round(total_cost * (last["nav"] / 100.0 - 1.0), 2) if last else None
     return {"portfolio_id": portfolio_id, "kind": "real", "start": start, "end": end,
-            "points": len(rows), "benchmark": benchmark,
+            "points": len(rows), "benchmark": benchmark, "cost_eur": round(total_cost, 2),
+            "value_eur": round(total_cost * last["nav"] / 100.0, 2) if last else None,
+            "pnl_eur": pnl_eur,
+            "fx_pnl_eur": round(fx_pnl_eur, 2), "fx_breakdown": fx_breakdown,
             "last_nav": last["nav"] if last else None,
             "last_return_pct": last["return_pct"] if last else None,
             "series": rows}
@@ -429,6 +586,12 @@ def main() -> None:
             return
         print(f"  {r['portfolio_id']} (real)  {r['start']} → {r['end']}  ({r['points']} pts)  "
               f"last NAV={r['last_nav']}  return={r['last_return_pct']:+}%")
+        if r.get("cost_eur") is not None:
+            print(f"    cost=€{r['cost_eur']}  value=€{r['value_eur']}  P&L=€{r['pnl_eur']:+}  "
+                  f"(of which FX: €{r['fx_pnl_eur']:+})")
+            for b in r.get("fx_breakdown", []):
+                print(f"      {b['etf']:9} {b['ccy']}  fx {b['fx_entry']}→{b['fx_now']}  "
+                      f"FX P&L=€{b['fx_pnl_eur']:+}")
     elif args.cmd == "show":
         r = show_nav(args.portfolio_id)
         for row in r["series"]:

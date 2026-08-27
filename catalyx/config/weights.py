@@ -265,6 +265,10 @@ def entry_timing() -> dict:
 _EXIT_SIGNALS_DEFAULT = {
     "lookback_days": 60,
     "approach_pct": 5.0,
+    "drawdown_reduce_pct": -20.0,
+    "drawdown_exit_pct": -30.0,
+    "catalyst_staleness_warn_days": 30,
+    "catalyst_staleness_max_days": 45,
 }
 
 

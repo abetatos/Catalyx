@@ -9,6 +9,16 @@
 
 ---
 
+## v2.21 — 2026-06-08 — Portfolio-anchored catalyst exposure over time
+
+> Rotated out of the CLAUDE.md Recent Changes table (2026-08-04) when it reached 6 entries. Verbatim row:
+
+| Date | File | Version | Change |
+|---|---|---|---|
+| 2026-06-08 | `catalyx/execution/portfolio.py` + `catalyx/store/lake.py` (`portfolio_catalyst_exposure` table) + `catalyx/store/lake_query.py` (`portfolio_catalyst_exposure` + CLI) + `scripts/build_site.py` + `site/{app.js,index.html}` + `tests/unit/test_lake_query.py` | v2.21 | **Lineage reframed again (user) → PORTFOLIO-anchored catalyst exposure OVER TIME.** v2.20's catalyst→strategies cut was the wrong axis. The right question: take a strategy's book (assume **€1000 split across its holdings**), decompose it **by catalyst**, and track how that mix shifts as the book **rebalances every run**. New deterministic decomposition recorded at each `portfolio.py` build: each holding's `weight_pct` is divided **EQUALLY across the catalysts driving its sector** (point-in-time from the studies' `active_catalyst_ids`; sectors with no catalyst → `uncatalyzed`; the water-fill remainder → `cash`) → the % of the book exposed to each catalyst. Persisted to a new lake table **`portfolio_catalyst_exposure`** (portfolio_id, run_id, catalyst_id, pct, eur, notional_eur) — partition (portfolio_id, run_id), one row per catalyst per rebalance. `lake_query.portfolio_catalyst_exposure(pid)` returns `{timeseries[{run_id,date,by_catalyst}], average[{catalyst_id,avg_pct,avg_eur}]}` where the average is **TIME-WEIGHTED** — each rebalance weighted by how long its allocation was live (Δt to the next run, last → now), the 'tiempo activo' rule the user asked for. `build_site` bakes it per portfolio into `overview.json` (zero-WASM first paint). Dashboard: the residual catalyst-dropdown lineage REPLACED by a portfolio-anchored **"Catalyst exposure over time"** that follows the selected strategy — current composition bars (% + € of the €1000), a multi-line exposure-over-time chart (one line per catalyst, `lineChart` auto-scaled via `o.maxY`), and the time-weighted-average table. **Only 1 build exists today** → the chart + avg populate from the next recompute; the composition bars are live now. Verified: catalyx 24.9% ai_capex / momentum 29.8% ai_capex / low_crowding 22.4% NATO. 180 tests green. |
+
+---
+
 ## v0.5.1 — 2026-06-12 — Scan as macro front door + scheduled review run
 
 **Patch release.** Backward-compatible: a skill-doc refactor plus the 2026-06-12 scheduled pipeline

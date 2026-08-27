@@ -105,6 +105,77 @@ def test_hold_when_nothing_fires():
     assert ew.suggest_action(False, False, "intact", False, False, False) == "hold"
 
 
+def test_drawdown_action_folds_into_arbitration():
+    # a drawdown 'exit' contribution overrides everything short of a fired full_exit stop
+    assert ew.suggest_action(False, False, "intact", False, False, False,
+                             drawdown_action="exit") == "exit"
+    assert ew.suggest_action(False, False, "intact", False, False, False,
+                             drawdown_action="reduce") == "reduce"
+    # a warn contribution, or a forced re-verify, is at least a watch
+    assert ew.suggest_action(False, False, "intact", False, False, False,
+                             drawdown_action="warn") == "watch"
+    assert ew.suggest_action(False, False, "intact", False, False, False,
+                             reverify_required=True) == "watch"
+
+
+# ── evaluate_drawdown (two-tier EUR floor) ─────────────────────────────────────
+
+def test_evaluate_drawdown_tiers():
+    assert ew.evaluate_drawdown(-11.0, -20.0, -30.0)["tier"] == "clear"
+    assert ew.evaluate_drawdown(-21.7, -20.0, -30.0)["tier"] == "reduce"
+    assert ew.evaluate_drawdown(-31.0, -20.0, -30.0)["tier"] == "exit"
+    assert ew.evaluate_drawdown(-20.0, -20.0, -30.0)["tier"] == "reduce"   # boundary inclusive
+    assert ew.evaluate_drawdown(None, -20.0, -30.0)["tier"] == "unknown"
+
+
+# ── drawdown_overlay_action (freshness dominates) ──────────────────────────────
+
+def test_overlay_fresh_intact_only_warns():
+    # a fear selloff on a live thesis: −22% but catalyst fresh + intact → warn, no auto-action
+    assert ew.drawdown_overlay_action("reduce", "fresh", False) == ("warn", False)
+    assert ew.drawdown_overlay_action("exit", "fresh", False) == ("warn", False)
+
+
+def test_overlay_fresh_weakening_auto_acts():
+    assert ew.drawdown_overlay_action("reduce", "fresh", True) == ("reduce", False)
+    assert ew.drawdown_overlay_action("exit", "fresh", True) == ("exit", False)
+
+
+def test_overlay_stale_verdict_forces_reverify():
+    # a real drawdown on a stale verdict can't trust 'intact' → re-verify (protective reduce on exit tier)
+    assert ew.drawdown_overlay_action("reduce", "stale", False) == ("warn", True)
+    assert ew.drawdown_overlay_action("exit", "very_stale", False) == ("reduce", True)
+
+
+def test_overlay_no_drawdown_but_very_stale_still_flags():
+    assert ew.drawdown_overlay_action("clear", "very_stale", False) == ("warn", True)
+    assert ew.drawdown_overlay_action("clear", "stale", False) == ("none", True)
+    assert ew.drawdown_overlay_action("clear", "fresh", False) == ("none", False)
+
+
+# ── catalyst_freshness (age of status_last_reviewed, stalest driver governs) ────
+
+def test_catalyst_freshness_stalest_driver_governs():
+    def fake_get(cid):
+        return {"struct_a": {"status_last_reviewed": "2026-07-20",
+                             "indicators": [{"last_date": "2026-07-01"}]},
+                "struct_b": {"status_last_reviewed": "2026-06-01",
+                             "indicators": [{"last_date": "2026-06-02"}]}}.get(cid)
+    fr = ew.catalyst_freshness(["struct_a", "struct_b"], date(2026, 8, 4), 30, 45, get_fn=fake_get)
+    assert fr["last_reviewed"] == "2026-06-01"           # the older of the two
+    assert fr["review_age_days"] == 64
+    assert fr["status"] == "very_stale"                  # 64 > 45
+    assert fr["freshest_indicator_date"] == "2026-07-01"
+
+
+def test_catalyst_freshness_fresh_and_unknown():
+    fresh = ew.catalyst_freshness(["x"], date(2026, 8, 4), 30, 45,
+                                  get_fn=lambda c: {"status_last_reviewed": "2026-07-25"})
+    assert fresh["status"] == "fresh" and fresh["review_age_days"] == 10
+    unknown = ew.catalyst_freshness(["x"], date(2026, 8, 4), 30, 45, get_fn=lambda c: None)
+    assert unknown["status"] == "unknown" and unknown["review_age_days"] is None
+
+
 # ── engine (injected price_fn, tmp movements dir, no lake) ─────────────────────
 
 def _fake_prices(tickers, start, end):
@@ -163,3 +234,47 @@ def test_assess_end_to_end(tmp_path):
     assert pos["tax"]["unrealized_eur"] == 200.0
     assert pos["tax"]["tax_due_eur"] == 38.0          # 19% of €200 (first bracket)
     assert pos["tax"]["net_proceeds_eur"] == 1162.0
+
+
+def test_assess_fx_marks_non_eur_vehicle_in_eur(tmp_path):
+    """The 2026-08-04 fix: a GBP vehicle must be FX-converted before comparing to its EUR cost
+    basis. Native price 10 GBP × 0.5 EUR/GBP × 100 = €500 vs €1000 cost → −50% (NOT the 0% a
+    native-vs-EUR mark would show)."""
+    import pandas as pd
+
+    mov = {
+        "$schema": "catalyx/schemas/movement.json",
+        "id": "mov_20260601_gbp_x", "schema_version": "1.1",
+        "executed_at": "2026-06-01T00:00:00Z", "action": "open", "sector_id": "test_gbp",
+        "vehicle": {"etf": "TESTG.L", "isin": None, "currency": "GBP"},
+        "amount_eur": 1000.0, "qty": 100.0, "price": 10.0, "fees": 0.0,
+        "attribution": [{"catalyst_id": "struct_test", "weight": 1.0}],
+        "trigger": "new_catalyst", "conviction": "medium",
+        "risk_discipline": {"invalidation": [], "assumptions": []},
+        "metadata": {"created_at": "2026-06-01T00:00:00Z"},
+    }
+    (tmp_path / "mov_20260601_gbp_x.json").write_text(json.dumps(mov), encoding="utf-8")
+
+    def price_fn(tickers, start, end):
+        idx = pd.date_range("2026-05-01", periods=20, freq="D")
+        return pd.DataFrame({t: [10.0] * 20 for t in tickers}, index=idx)
+
+    def ccy_fn(tickers):
+        return {t: "GBP" for t in tickers}
+
+    def fx_fn(currencies, start, end):
+        idx = pd.date_range("2026-05-01", periods=20, freq="D")
+        return {c: pd.Series([0.5] * 20, index=idx) for c in currencies}
+
+    r = ew.assess(cfg={"lookback_days": 60, "approach_pct": APPROACH, "drawdown_reduce_pct": -20.0,
+                       "drawdown_exit_pct": -30.0, "catalyst_staleness_warn_days": 30,
+                       "catalyst_staleness_max_days": 45},
+                  price_fn=price_fn, ccy_fn=ccy_fn, fx_fn=fx_fn, today=date(2026, 6, 7),
+                  persist=False, movements_dir=tmp_path, lake_dir=tmp_path / "nolake")
+    pos = r["positions"][0]
+    assert pos["tax"]["unrealized_pct"] == -50.0        # FX applied — not 0.0
+    assert pos["drawdown"]["tier"] == "exit"            # −50% ≤ −30% floor
+    # struct_test doesn't resolve → freshness unknown → drawdown forces a protective reduce + reverify
+    assert pos["catalyst_freshness"]["status"] == "unknown"
+    assert pos["drawdown"]["reverify_required"] is True
+    assert pos["suggested_action"] == "reduce"

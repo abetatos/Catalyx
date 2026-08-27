@@ -683,6 +683,20 @@ exit_signals:
                              # consecutive_days window with buffer; the longest stop today is 10d).
   approach_pct: 5.0          # a not-yet-breaching stop within this % of its threshold → "approaching"
                              # (about to cross) rather than "clear". Tunable single source of truth.
+  # ── Capital-preservation floor + catalyst freshness (added 2026-08-04, user-decided) ──
+  # A two-tier floor on the FX-correct EUR drawdown vs REAL cost basis — independent of the
+  # hand-authored per-movement price stops (which are native-currency and gated on 10 consecutive
+  # days, so an oscillating −22% position never fired). NOT a mechanical auto-sell: a breach is a
+  # trigger to RE-VERIFY the driving catalyst against live data (WebSearch), and only a FRESH-and-
+  # weakening verdict auto-acts. Fresh+intact (a fear selloff on a live thesis) only warns → the
+  # hold/add call stays Claude's. See exit_watcher.drawdown_overlay_action.
+  drawdown_reduce_pct: -20.0   # EUR drawdown at/below this → REDUCE tier (review/trim, re-verify)
+  drawdown_exit_pct: -30.0     # deeper: EXIT tier (protective; exit-bias once catalyst confirmed)
+  # Freshness of the catalyst's fundamental verdict (status_last_reviewed age, in days). The
+  # cadence is adaptive (review when the market OR the clock asks), and these are the ceiling that
+  # makes the discipline independent of memory: a stale verdict is never trusted blind.
+  catalyst_staleness_warn_days: 30   # older than this → 'stale' (nudge a re-verify)
+  catalyst_staleness_max_days: 45    # older than this → 'very_stale' (force a look even w/o drawdown)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Deep technical study (added 2026-06-08) — catalyx/scorer/technical_study.py
