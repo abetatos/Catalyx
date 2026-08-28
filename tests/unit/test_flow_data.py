@@ -40,10 +40,46 @@ def test_flow_score_inflow_outflow_symmetry_and_clamp():
 
 # ── SECTOR_FLOW_TICKERS coverage + chain conventions ─────────────────────────
 
+def _investable_sector_ids() -> set[str]:
+    import yaml
+    from pathlib import Path
+    tax = Path(__file__).parents[2] / "catalyx" / "config" / "sector_taxonomy.yaml"
+    return {
+        s["id"] for s in yaml.safe_load(tax.read_text())["sectors"]
+        if s.get("investable", False) and not s.get("watch_only", False)
+    }
+
+
+def _buyable_tickers() -> set[str]:
+    import yaml
+    from pathlib import Path
+    uni = Path(__file__).parents[2] / "catalyx" / "config" / "etf_universe.yaml"
+    return {
+        e["ticker"] for lst in yaml.safe_load(uni.read_text())["etf_universe"].values()
+        for e in lst
+    }
+
+
+def test_flow_chain_head_is_a_buyable_vehicle():
+    """chain[0] se expone como SECTOR_TICKERS (\"primary tradeable ticker\").
+
+    Antes de la v2.0 varios chain[0] eran ETFs US no-UCITS (COPX, GDX, XLE, IBB...):
+    el alias afirmaba que eran operables cuando un retail en Espana no puede comprarlos.
+    Este test impide que vuelva a colarse uno.
+    """
+    buyable = _buyable_tickers()
+    offenders = {sid: chain[0] for sid, chain in fd.SECTOR_FLOW_TICKERS.items()
+                 if chain[0] not in buyable}
+    assert not offenders, f"chain[0] fuera de etf_universe.yaml: {offenders}"
+
+
 def test_flow_chains_are_ordered_lists_with_us_fallbacks():
     m = fd.SECTOR_FLOW_TICKERS
-    # broad coverage — far more than the original 17 sectors
-    assert len(m) >= 45
+    # Universo v2.0 (2026-08-27): la cobertura ya NO se mide por amplitud. El criterio
+    # anterior (>= 45 sectores) premiaba justo el defecto que la v2.0 elimina — listar
+    # sectores sin vehiculo comprable. El invariante correcto es la ALINEACION: un
+    # sector tiene senal de flujo si y solo si es investable en la taxonomia.
+    assert len(m) == len(_investable_sector_ids()), sorted(set(m) ^ set(_investable_sector_ids()))
     # every entry is a non-empty ordered list of ticker strings
     for sid, chain in m.items():
         assert isinstance(chain, list) and chain, sid

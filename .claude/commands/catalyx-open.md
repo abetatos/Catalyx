@@ -21,6 +21,24 @@ Usage:
    - `catalyx/config/etf_universe.yaml` — ETF options for the sector.
    - `catalyx/config/scoring_weights.yaml` — `conviction_tiers` + `correlated_catalyst_cap`.
 
+   **GATE DE VEHÍCULO — obligatorio, no negociable (universo v2.0, 2026-08-27).**
+   El usuario opera con **Revolut desde España**. Un ETF US no-UCITS (`ITA`, `XLE`, `GDX`,
+   `XBI`, `COPX`, `SOXX`…) **no se puede comprar**: PRIIPs exige un KID que los emisores US
+   no publican. Proponer uno gasta la sesión y termina en "no puedo abrir el ticket".
+   1. El ticker **debe** existir en `etf_universe.yaml`. Si no está, no se propone. Punto.
+   2. Antes de escribir el `Movement`, **verifícalo contra datos reales**:
+      ```
+      uv run python -c "import yfinance;i=yfinance.Ticker('<TICK>').info;\
+        print(i.get('longName'),'|',i.get('currency'),'|',i.get('exchange'))"
+      ```
+      Si no resuelve, o el `longName` no es el fondo que crees, **PARA** — así es como la v1.1
+      acabó con `IQQR.DE` (MSCI Eastern Europe) etiquetado como robótica y `LNGA.L` (gas
+      natural 2x apalancado) etiquetado como LNG.
+   3. Si la entrada tiene `broker_access: assumed`, dilo al usuario al proponerla: está
+      pendiente de confirmar en la app. `verified` = ya operado de hecho.
+   4. Si el sector no tiene vehículo viable, **no fuerces un proxy**: dilo y propón el sector
+      superviviente más cercano (los `retired_reason` de la taxonomía nombran cuál).
+
 2. **Determine the action.** `open` (new position) / `add` (increase existing) / `trim` (reduce,
    non-taxable book-keeping). Check current state:
    ```

@@ -79,8 +79,12 @@ intensity:
     ind_05 (ZS AI Security ARR $400M, ahead of schedule → strong) → ~85.
     Unweighted avg ≈ 85.2, flat trend (no prior period to compute delta) → 85.2 → round to 86.0.
     Run /catalyx-update after first quarterly data update to switch to computed method.
-  last_updated: "2026-06-29"
+  last_updated: "2026-07-28"
   history:
+  - period: '2026-07-28'
+    score: 85.8
+    note: 'Computed 2026-07-28: avg=85.78 trend=→ (flat)'
+    computation_method: computed
   - period: 2026-Q2
     score: 85.8
     note: 'Computed 2026-06-29: avg=85.78 trend=→ (flat)'

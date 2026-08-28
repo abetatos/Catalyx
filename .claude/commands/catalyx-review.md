@@ -1,530 +1,299 @@
 # catalyx-review
 
-Run the analysis & review pipeline (scan → update → studies → dashboard → heatmap → portfolios →
-opportunities → position reviews → tax). Produces a consolidated review report. This is the
-ANALYTICAL cycle — it is **independent of operating**: opening/closing positions is done anytime
-via `/catalyx-open` and `/catalyx-close`, NOT here. The review recommends; it never trades.
+The ANALYTICAL cycle: facts → scan → apply → studies → score → rebalance → decisions. It
+**recommends and never trades** — opening and closing are `/catalyx-open` and `/catalyx-close`,
+run separately, whenever the user decides.
 
 Usage:
-- `/catalyx-review` or `/catalyx-review scheduled` — full periodic review (run monthly, or ad-hoc).
-- `/catalyx-review event:<catalyst_id>` — **event-driven**: a punctual catalyst fired and you want
-  to react now, not wait for the periodic cycle.
+- `/catalyx-review` or `/catalyx-review scheduled` — the full periodic review.
+- `/catalyx-review event:<catalyst_id>` — a catalyst fired and you want to react now. Run only
+  Step 0 · a **lightweight refresh of that one catalyst** (its keyword, strengthen/weaken/
+  invalidation — NOT the full scan) · Step 2 for its indicators · Step 3 for the sectors it drives
+  · Steps 5–5c · Step 6 for positions attributed to it. Skip 11–12 unless the event surfaces a gap.
+  Say at the top of the report which trigger ran and why each skipped step was skipped.
+- `/catalyx-review scheduled full-studies` — opt-in full-universe study sweep (quarterly at most).
 
-**Trigger modes:**
-- `scheduled` (default): run every step below, full universe.
-- `event:<catalyst_id>`: run only the steps the event touches — Step 0/1 (lightweight refresh of
-  THAT catalyst only — search its keyword, note strengthen/weaken/invalidation; do NOT run the full
-  `/catalyx-scan`), Step 2 (update the affected catalyst's indicators), Step 3 (re-study only the
-  sectors that catalyst drives), Steps 5/5b/5c (re-score + regime + dislocation), Step 6 (review open
-  positions attributed to that catalyst). Skip the full-universe Steps 11–12 unless the event
-  surfaces a taxonomy gap. State at the top of the report which trigger ran and why each skipped step
-  was skipped.
+## Pipeline order — mandatory
 
-## PIPELINE ORDER — CRITICAL
-
-The order below is mandatory. Each step provides data that the next step requires.
-Do NOT run heatmap before sector studies. Do NOT run position review before the dashboard.
+Each step produces what the next needs. `pre_run.sh` before any search; studies before the heatmap;
+the heatmap's recorded run before portfolios; `post_run.sh` (which ends in **rebalance**) before any
+position decision.
 
 ```
-Step 0/1: Catalyst Scan & Macro Context — run /catalyx-scan FIRST (it is the macro front door)
-          scheduled → one scan returns it all: C0 macro/big-economy context + Pass 2 refresh of
-                      existing catalysts + Pass 1/2 new gaps & events. Consume its output.
-          event:<id> → SKIP the full scan; do a lightweight refresh of THAT catalyst only
-                      (search its keyword, note strengthen/weaken/invalidation)
-Step 1.5: Freshness & Lifecycle GATE (stale-indicator audit + catalyst lifecycle)  ← BEFORE scoring
-Step 2:   Structural Catalyst Updates → refresh the indicators flagged stale in 1.5
-Step 3:   Sector Studies → refresh priority sectors (BEFORE heatmap)
-Step 4:   Catalyst Dashboard
-Step 5:   Sector Heatmap (requires updated sector studies)
-Step 5b:  Model Portfolios + NAV vs S&P500 (after the run is recorded)
-Step 5c:  Opportunities & Rotation (regime watch + dislocation lens — recommendations, not trades)
-Step 6:   Open Position Reviews (movements + risk_discipline + regime)
-Step 7:   Catalyst Exposure / Correlation Check  ← informs any open-position recommendation
-Step 8:   Tax Snapshot (realized YTD from closing movements)
-Step 9:   Position Open Recommendations  ← uses Step 5 heatmap + Step 6 reviews + Step 7 exposure
-Step 11:  Watch-Only Trigger Progress
-Step 12:  Taxonomy Gap Review → contextualize each pending proposal, then ASK the user (promote/reject/defer)
+0    scripts/pre_run.sh          facts, work list, override tally — BEFORE any search
+0/1  /catalyx-scan               C0 + discovery + per-catalyst refresh → scan_deltas_<date>.json
+1.5  freshness gate              overdue indicators + lifecycle transitions, BEFORE scoring
+2    apply the deltas            3 commands, one file
+3    sector studies              movement-driven work list, fanned out to subagents
+4    catalyst digests            two CLI summaries
+5    /catalyx-heatmap            re-rank (+ score_run.sh: regime, dislocation, entry timing)
+5b   scripts/post_run.sh         portfolios, NAV vs SPY, rotation, METRICS, REBALANCE table
+6    open-position reviews       evidence per assumption; the ACTION comes from the table
+7    catalyst exposure           combined per catalyst vs the cap
+8    tax snapshot YTD
+8.5  dashboard                   build + serve locally — the user looks BEFORE Step 9
+9    open recommendations        AskUserQuestion per candidate
+11   watch-only triggers         findings-driven, never a sweep
+12   taxonomy gap review         AskUserQuestion per proposal
 ```
 
-> **Why 1.5 runs BEFORE scoring (fixed 2026-06-05):** the stale-indicator audit and the
-> catalyst lifecycle (archive spent / dormant weak catalysts) were previously Step 10 — AFTER
-> the heatmap recorded the run. That meant the run scored `catalyst_alignment` on un-pruned,
-> stale catalyst state (e.g. sectors ranking top-10 on indicators 100–500 days old, or a
-> fully-priced-in event still contributing near-full strength). Freshness must GATE the
-> scoring, not trail it: prune/refresh first, then score on clean state. The old "Step 10"
-> body now lives under the "Step 1.5" heading below.
+**Why 1.5 gates scoring:** it used to run after the heatmap recorded the run, which baked stale and
+spent catalysts into the recorded scores — sectors ranking top-10 on indicators 100–500 days old.
+Prune first, then score.
 
----
+## Execution model — the main thread is a thin orchestrator
 
-## EXECUTION MODEL — keep the main conversation short (delegate to subagents)
+Bulk WebSearch and many-file phases run in **subagents that return only the step's digest**; the
+main conversation holds compact summaries and runs the two user-facing decisions (subagents cannot
+ask the user). The subagent Writes its files directly — the file IS the registration.
 
-A full review does bulk WebSearch + reads dozens of files. If it all runs in the main thread the
-context balloons and every later step gets more expensive. **Rule: the main conversation is a thin
-orchestrator that holds only compact digests + runs the user-facing decisions. Every bulk-WebSearch
-or many-file phase runs in a SUBAGENT that returns only a structured digest** (the summary tables in
-each step's Output). The subagent writes the JSON/report files directly (the file IS the
-registration); the main thread never ingests the raw intermediate data.
-
-| Step | Where | Why |
-|---|---|---|
-| 0/1 Scan | **SUBAGENT** (`general-purpose`, follows `catalyx-scan.md`) | ~30 WebSearches — return only C0 bullets + refresh deltas + new gaps/events |
-| 1.5 Freshness/lifecycle | MAIN (or subagent) | deterministic CLI + status writes; digest is small |
-| 2 Catalyst updates | MAIN | few targeted `/catalyx-update` calls flagged by the scan |
-| 3 Sector studies | **SUBAGENTS** (one per few sectors) | already delegated — each returns nothing to main but the written path |
-| 4/5/5b Dashboard+heatmap+portfolio+NAV | **SUBAGENT** (or a post-run hook) | deterministic Python CLIs; return the ranking digest + "beat SPY?" line |
-| 5c Opportunities/regime | **SUBAGENT** | runs the 4 scorer CLIs + WebSearch to rule out hidden causes → returns the 4 tables |
-| 6 Open-position reviews | **SUBAGENT** | WebSearch per assumption → returns one row/position (recommendation only) |
-| 7 Exposure · 8 Tax | MAIN | one CLI each, tiny output |
-| **9 Position-open recs** | **MAIN** | uses **AskUserQuestion** — subagents cannot ask the user |
-| 11 Watch triggers | **SUBAGENT** | WebSearch per watch sector → returns fired/approaching/none |
-| **12 Taxonomy gap review** | **MAIN** | uses **AskUserQuestion** per proposal |
-
-**How to delegate a phase:** spawn the subagent with the step's instructions (or "follow
-`.claude/commands/<skill>.md`"), tell it to Write any files and **return ONLY the step's Output
-table(s)** — never the raw searches/file contents. Run independent phases (e.g. Step 6 position
-reviews and Step 11 watch triggers) in parallel. Only the digests come back to main, which then
-assembles the report and runs the two AskUserQuestion steps (9, 12).
-
-**Complementary — hooks for deterministic chains.** The pure-Python chains that always run the same
-way (e.g. after a run is recorded: `portfolio build-all` → `nav_engine` model/live/real) are good
-candidates for a `settings.json` hook so they fire outside the conversation entirely, rather than as
-skill-narrated Bash. Those never need reasoning, so moving them to a hook removes them from context
-with zero judgment lost. (Reasoning/WebSearch phases stay subagents — hooks can't reason.)
+| Step | Where |
+|---|---|
+| 0/1 scan | **SUBAGENT** (`general-purpose`, follows `catalyx-scan.md`) → C0 bullets + refresh deltas + new gaps |
+| 3 studies | **SUBAGENTS**, one per few sectors, `run_in_background` → return only the written path |
+| 4/5/5b digests, heatmap, portfolios, NAV, rebalance | **SUBAGENT** → ranking digest + vs-SPY line + rebalance table |
+| 5c opportunities/regime | **SUBAGENT** → the four tables |
+| 6 position reviews | **SUBAGENT** → one row per position |
+| 0 · 1.5 · 2 · 7 · 8 · 11 | MAIN — one CLI each, small output |
+| **9 · 12** | **MAIN** — AskUserQuestion |
 
 ---
 
 ## Steps
 
-### Step 0/1 — Catalyst Scan & Macro Context
+### Step 0 — Facts before questions
 
-The review's FIRST action. `/catalyx-scan` is the macro front door — one scan establishes what is
-TRUE TODAY and feeds the whole early pipeline. The web searches always come before trusting any
-stored value (project files are a month stale).
-
-**Run the scan in a background subagent** (per the Execution Model): the subagent follows
-`.claude/commands/catalyx-scan.md`, writes the new catalyst/gap JSON files itself, and returns ONLY
-its Output summary tables (C0 bullets, per-catalyst refresh deltas, new gaps/events). The main
-thread consumes that digest — it never runs the ~30 searches in its own context.
-
-**`scheduled` — run `/catalyx-scan` first, then consume its output.** The scan returns, in one pass:
-- **C0 macro & big-economy context** — central banks, big economies, commodities, key geopolitics
-  (the generic Trump / US / Europe framings live there — broad queries surface more ideas).
-- **Pass 2 Refresh** — a per-catalyst delta for every registered catalyst (strengthen / weaken /
-  invalidation trigger). This is the input to Step 1.5 (lifecycle gate) and Step 2 (`/catalyx-update`).
-- **Pass 1 + Pass 2 discovery** — new `data/taxonomy_proposals/*.json` (themes the taxonomy misses)
-  + new `data/catalysts/*.json` CatalystEvents above strength 55.
-
-Do NOT repeat the scan's searches here — read its summary tables (C0 context, refresh deltas, new
-gaps/events) and carry them forward.
-
-**`event:<catalyst_id>` — SKIP the full scan; do a lightweight refresh of THAT catalyst only.**
-A punctual event doesn't warrant a full-universe Discovery Pass. Instead:
-1. `uv run python -m catalyx.store.catalyst_repo get <catalyst_id>` (or `structural_catalyst_repo`)
-   for its keyword + stored state.
-2. One or two WebSearches on that keyword, e.g. `"<catalyst keyword> latest news [MONTH YEAR]"`.
-3. Note the delta: did it STRENGTHEN, WEAKEN, or hit an **invalidation trigger**? Feed Step 1.5 / Step 2.
-
-**Output of Step 0/1:** the macro context bullets + the per-catalyst refresh deltas (flag any that
-should move to `invalidated`/`weakening`) + any brand-new theme/event surfaced.
-
----
-
-### Step 2 — Structural Catalyst Updates
-
-For any indicator flagged as stale OR where Step 0/1 found a value different from the YAML:
-- Run `/catalyx-update <struct_id> <ind_id> <new_value> "<source note>"` for each
-- After updating, recompute intensity.current_score using the algorithmic formula:
-  `intensity = round(indicator_avg × trend_factor, 1)` (see scoring_weights.yaml)
-- Do NOT manually assign intensity — derive it from the indicators
-
----
-
-### Step 3 — Sector Studies (PREREQUISITE FOR HEATMAP)
-
-**Default coverage: MOVEMENT-DRIVEN + decision-relevant, NOT the whole universe.** A deep study
-costs ≈ 45–50k tokens / 6 WebSearches. Re-studying ~46 sectors every cycle is a 2M+ token spend,
-and most of it re-derives an unchanged study. **Only refresh a study when its driver actually
-moved or the sector is decision-relevant this cycle.** A sector without a fresh study still appears
-in the heatmap on its cheap momentum baseline (the momentum engine scores ALL sectors from the
-yfinance snapshot) — so nothing is "missed" by not deep-studying it.
-
-**Build the work list — study a sector this cycle only if it meets one of these triggers:**
-1. **Open position** — always keep the live book's theses current.
-2. **Driver moved** — the Step 0/1 scan flagged its driving catalyst as strengthen/weaken/
-   invalidation, OR surfaced a new event / taxonomy gap touching it.
-3. **Entry candidate + stale** — it is top-N by momentum or prior `catalyst_alignment` AND its
-   study is missing or > 7 days old (these are the sectors a Step 9 recommendation could name).
-4. **Never studied** — no study file exists AND it is a plausible candidate (has a catalyst or
-   ranks mid-pack+ on momentum).
-
-Everything else: **keep the existing study as-is** (it feeds the heatmap fine). The 7-day
-`last_updated` gate is a FLOOR, not the trigger — never re-study a sector just because 7 days
-passed if its driver didn't move.
-
+```bash
+bash scripts/pre_run.sh          # add --offline to serve the warm price cache
 ```
-uv run python -m catalyx.scorer.sector_scorer --universe --json   # full investable sector_id list + momentum rank
-uv run python -m catalyx.store.sector_study_repo stale --days 7    # study freshness/missing
-uv run python -m catalyx.store.movement_repo positions             # open positions (trigger 1)
+Writes `data/reports/state_<date>.json`: book P&L, exit-watcher actions, stale indicators and
+verdicts, pending lifecycle transitions, the tiered work list (`must` / `should` / `optional`), and
+the **override tally**. Read the tally now, not after Step 6 — the review has to know what its own
+last deviation cost before it proposes another one. Everything downstream is scoped to the work
+list: a review that opens with searches discovers its own book's problems last.
+
+### Step 0/1 — Scan (macro front door)
+
+Delegate to a subagent following `.claude/commands/catalyx-scan.md`. It returns the C0 digest, one
+delta per catalyst **on the work list**, and any new gaps/events, and writes
+`data/reports/scan_deltas_<date>.json`. Budget ≈ 6 C0 + 3 discovery + one per `must_reverify` + 2
+analyst-revision ≈ **15 searches**. Catalysts not on the work list collapse to one "no change" line
+and are **not stamped** — freshness must reflect what was actually checked.
+
+Never read `sector_taxonomy.yaml` during the discovery pass: reading it first biases the search
+toward known sectors, and finding what the taxonomy misses is the entire point of the pass.
+
+### Step 1.5 — Freshness & lifecycle gate
+
+```bash
+uv run python -m catalyx.scorer.freshness --json          # overdue indicators → Step 2 targets
+uv run python -m catalyx.scorer.catalyst_lifecycle        # dry run; --apply happens in Step 2
 ```
-Cross the scan's refresh deltas (trigger 2) + the momentum/alignment top-N (trigger 3) + missing
-studies (trigger 4) against these lists to produce a SHORT work list. Report the work list and
-why each sector is on it (and the count skipped as unchanged).
+Thresholds are per-indicator **native cadence** (`check_frequency` is the single source of truth;
+a `⚠mislabel` row means the YAML is wrong — fix the YAML). Every transition rule — archive a spent
+event, dormant a weak structural, promote a repeated event — lives in `catalyst_lifecycle.py`. Do
+not re-derive them here; read its output and report it. Reversals come only from scan evidence,
+never inferred.
 
-**Parallelize with subagents.** The (now short) work list is independent and WebSearch-bound, so
-fan out across background subagents (Agent tool, `subagent_type: general-purpose`, `model: sonnet`,
-`run_in_background: true`), one or a few sectors per agent, each following
-`.claude/commands/catalyx-sector-study.md` → Write `data/sector_studies/study_<sector_id>.json`.
+`last_date` is the date the value was **observed**, not the date it was entered. A fresh value with
+a stale `last_date` is the main false-positive source.
 
-> Subagents Write the study JSON directly into `data/sector_studies/`. That file IS the
-> registration — `sector_study_repo summary`/`get`/`stale` read the directory directly, no import.
+### Step 2 — Apply the scan, in three commands
 
-**Full-universe sweep (opt-in, occasional):** a complete re-study of every investable sector is
-worthwhile only periodically (e.g. quarterly) or on demand — run it explicitly with
-`/catalyx-review scheduled full-studies`, never as the monthly default.
+One file, three consumers. No per-indicator conversational calls, no hand-edited YAML, one intensity
+recompute per touched catalyst:
+```bash
+D=data/reports/scan_deltas_$(date +%Y%m%d).json
+uv run python -m catalyx.store.indicator_update batch "$D"                 # values + intensity
+uv run python -m catalyx.store.catalyst_review   batch "$D"                # status_last_reviewed
+uv run python -m catalyx.scorer.catalyst_lifecycle --deltas "$D" --apply   # status transitions
+```
+Report: N observations · M catalysts recomputed (any intensity Δ > 5) · any `⚠` deactivation notice
+· any lifecycle transition. **The second command is what makes the exit-watcher freshness gate
+work** — before it existed a review could re-verify the whole book and every catalyst still read
+`very_stale` the next day.
 
----
+### Step 3 — Sector studies (prerequisite for the heatmap)
 
-### Step 4 — Catalyst Dashboard
+**Movement-driven, not a sweep.** A deep study costs ≈ 45–50k tokens / 6 searches, and most of a
+full sweep re-derives an unchanged file. A sector without a fresh study still ranks on its momentum
+baseline, so nothing is missed by leaving it. Study a sector this cycle only if:
+1. **it holds an open position** — the live book's theses stay current, always;
+2. **its driver moved** — the scan flagged its catalyst strengthen/weaken/invalidation, or surfaced
+   a new event or gap touching it;
+3. **it is an entry candidate AND stale** — top-N by momentum or prior alignment, study missing or
+   > 7 days old (these are the sectors Step 9 could name);
+4. **it has never been studied** and is a plausible candidate.
 
-Follow all steps in `catalyx-dashboard` skill.
-Write to `data/reports/catalyst_dashboard_YYYYMMDD.md`.
+The 7-day gate is a FLOOR, not a trigger — never re-study a sector just because 7 days passed if its
+driver did not move. A STALE study is worse than none: it injects confident, wrong full-dimension
+scores.
 
----
+```bash
+uv run python -m catalyx.scorer.sector_scorer --universe --json   # investable ids + momentum rank
+uv run python -m catalyx.store.sector_study_repo stale --days 7
+uv run python -m catalyx.store.movement_repo positions
+```
+Report the work list, why each sector is on it, and the count skipped as unchanged. Fan the list out
+to background subagents following `catalyx-sector-study.md`.
 
-### Step 5 — Sector Heatmap
+### Step 4 — Catalyst state
 
-Follow all steps in `catalyx-heatmap` skill.
-Heatmap reads sector_study data — this is why Step 3 must come first.
-Write to `data/reports/heatmap_YYYYMMDD.md`.
+```bash
+uv run python -m catalyx.store.structural_catalyst_repo summary
+uv run python -m catalyx.store.catalyst_repo summary
+```
+There is no separate dashboard report — `/catalyx-dashboard` still exists on demand but is not a
+step of the review.
 
----
+### Step 5 / 5b — Score, then rebalance
 
-### Step 5b — Model Portfolios + NAV vs S&P500
-
-After the heatmap records the run (so `sector_snapshot` exists in the lake), rebuild the model
-portfolios from this run and refresh their NAV vs the market. This is what feeds the dashboard's
-Carteras tab (4 strategies + "¿batimos mercado?").
-
-**This whole phase is ONE deterministic command** — no reasoning, no WebSearch. Run it as a single
-call (ideally inside the Step 4/5/5b subagent per the Execution Model) so the conversation sees one
-compact digest, not nine verbose outputs:
+Follow `catalyx-heatmap.md` (it runs `scripts/score_run.sh`, records the run, and emits the regime /
+dislocation / entry-timing facts). Then, once `sector_snapshot` is in the lake:
 ```bash
 bash scripts/post_run.sh
 ```
-`post_run.sh` does, in order: `portfolio build-all` → per strategy `nav_engine model --backtest-days
-180` + `nav_engine live` → real-book `nav_engine real --benchmark SPY` → rotation targets
-(`dislocation --anchor-sectors <held>`). The verbose steps (build-all, dislocation) go to
-`data/reports/post_run_<date>.log`; the compact NAV lines (last NAV / return / vs-SPY per strategy)
-print to stdout AS the digest. A `snapshot_repo record` also trips a PostToolUse hook that reminds
-to run this — so it is easy to keep the portfolios in sync with the latest run.
+Portfolios → NAV live vs SPY per strategy → real-book NAV → rotation anchored to held sectors →
+**position & book metrics** → **rebalance**. The verbose parts go to a log; the NAV digest, the
+metrics table and the whole rebalance table print to stdout. The metrics come first because they
+explain the rows rebalance is about to act on — the EUR P&L split into price vs FX (a non-EUR
+vehicle is two positions and only one was a thesis), drawdown from the position's own peak, and
+**score drift** vs the score the pipeline gave that sector on the day it was bought. Report each strategy's `vs_benchmark_pct` and the rotation anchor. Editing the chain means
+editing `post_run.sh` — it is the single source of truth.
 
-The **live** curve is the real track record (`mode='live'`): it starts empty at inception and grows
-one run at a time, so each review adds a rebalance point. The dashboard shows the live curve once it
-has ≥2 points; until then it labels the book *accruing* and shows the backtest for reference only.
-Report in the summary: each strategy's return and whether it beat SPY (`vs_benchmark_pct`), plus the
-rotation anchor. Strategies live in `catalyx/config/portfolios/*.yaml`; NAV math/benchmark in
-`nav_engine.py`. (Editing the chain? Edit `scripts/post_run.sh`, the single source of truth.)
+### Step 5c — Opportunities & rotation
 
----
+Step 5 already produced these; **read that output, do not re-run the scorers.** Facts, not trades:
+- **Regime.** `contested` is a watch flag that changes no weight. Escalate only on
+  `review_recommended` (dispersed developments) or a `degrading` structural — then WebSearch the
+  macro context and decide. Two consecutive down days confirm nothing.
+- **Opportunities.** Fell hard, still `intact` + catalyst-confirmed, drop mostly CONTAGION (low
+  `idiosyncratic_pct`). WebSearch each to rule out a hidden cause behind the residual first.
+- **Diversifiers.** Healthy, low correlation to the stressed cluster — where to rotate without
+  re-buying the same bet.
+- **Entry timing** (the *when*, complementary to dislocation's *whether*). Flag a high-ranked sector
+  with `falling` (knife not based), `overbought`, or an event overhang. The module states the fact;
+  the adverse-vs-bullish read on an overhang is yours.
 
-### Step 5c — Opportunities & Rotation (regime watch + dislocation lens)
+### Step 6 — Open position reviews
 
-This is **step 12 of the `catalyx-heatmap` skill**, and Step 5's heatmap already produced it: the
-heatmap runs `bash scripts/score_run.sh` (record + the four scorers below), so `regime_state` is in
-the lake and the opportunity/regime JSON was already emitted. **Read that Step 5 output — do NOT
-re-run the scorers.** (If you are running Step 5c standalone in `event:<id>` mode without a fresh
-heatmap, run `bash scripts/score_run.sh "<notes>"` once to produce it.) The four facts are:
-`catalyst_scorer --all` (regime_state + persistence), `structural_monitor --all` (fundamentals
-health), `dislocation --window 5` (opportunities + diversifiers), `entry_timing --all` (micro-tension
-+ overhangs). **Recommendations for your judgement, never auto-trades** — Python computes the facts;
-you make the calls.
-
-- **Regime watch.** `contested` = watch only (no action); a single `clustered_one_shock` development
-  is noise. Escalate to a regime call ONLY when `review_recommended` (dispersed multiples) OR a
-  structural is `degrading` — then WebSearch the macro context and decide. Time-independent: same
-  verdict at any cadence.
-- **Opportunities.** Sectors that fell hard but are `intact` + catalyst-confirmed and whose drop is
-  mostly CONTAGION (low `idiosyncratic_pct`) → panic dips. WebSearch each to rule out a hidden cause
-  behind the idiosyncratic residual before treating it as an entry.
-- **Diversifiers.** Healthy sectors with LOW correlation to the stressed cluster → where to rotate
-  without re-buying the same correlated bet.
-- **Entry timing (the *when*, complementary to dislocation's *whether*).** For each top-ranked /
-  opportunity sector, read `entry_timing`: a `micro_timing_state` + `suggested_verdict`. Flag any
-  high-ranked sector with bad near-term timing — `falling` (knife not yet based →
-  `wait_stabilize`), `overbought` (overextended up), or an **event overhang** (`wait_event`: a
-  discrete CatalystEvent with an `event_date` in the window — e.g. a peer mega-IPO whose flow could
-  dump the read-across name). The module surfaces the fact; the adverse-vs-bullish call on an
-  overhang is yours (WebSearch). `basing` → `scale_in`; `neutral` → no timing objection. This is
-  a recommendation about the execution window, never a trade and never a change to the composite.
-
----
-
-### Step 6 — Open Position Reviews
-
-Load the live book and the catalyst attribution:
-```
+```bash
 uv run python -m catalyx.store.movement_repo positions
 uv run python -m catalyx.store.lake_query ledger
 ```
-For each open position, read its opening movement in `data/movements/` and review its
-`risk_discipline`:
-- For each `assumptions[]`: use Step 0/1 WebSearch findings to assess `holding` / `weakening` /
-  `violated` — cite specific evidence (date, source, value).
-- For each `invalidation[]`: check whether the stop/condition has been breached (price/inventory/
-  rate). A `market_data` stop is checkable from the latest snapshot.
-- Cross the position's attributed catalyst(s) against this run's `regime_state` (Step 5c): if a
-  driving catalyst is `contested`/`breaking`, flag the position.
-- Summarize in one row: sector, days_open, assumptions (N/N holding), regime of driving catalyst,
-  recommended_action (Hold / Add / Reduce / Exit). "Monitor" is not a recommendation.
-- **Recommend only.** Any actual Add/Reduce/Exit is executed by the user via `/catalyx-open` or
-  `/catalyx-close` — never written here.
+For each open position read its movement in `data/movements/` and work its `risk_discipline`:
+each `assumptions[]` → `holding` / `weakening` / `violated` with **specific evidence (date, source,
+value)**; each `invalidation[]` → breached or not; then cross its catalysts against this run's
+`regime_state`.
+
+**The action does not come from your judgement — it comes from the rebalance table** that
+`post_run.sh` just printed: `rule_action`, `trade_eur`, `tax_eur`, `net_edge_eur`, `gate_note`.
+One row per position: sector · days open · assumptions (N/N holding) · catalyst regime ·
+**`rule_action` + `trade_eur`** · one line of evidence.
+
+- **Banned in the action column:** `watch`, `monitor`, `consider`, `optional`. A verdict that does
+  not move money is `HOLD`, written once, with its reason.
+- Your evidence can CONTRADICT the rule — that is what an override is for. Say so explicitly and
+  record it, never by quietly softening the wording:
+  ```bash
+  uv run python -m catalyx.execution.rebalance override <sector_id> <chosen_action> \
+    --reason "<the evidence the rule is missing>" --author claude --trade-eur <€ actually moved>
+  ```
+  `<chosen_action>` includes `DEFER`. **A "revisit next cycle" IS a deviation** — it is the form
+  conservatism usually takes, and unlogged it is invisible. `--trade-eur 0` for a HOLD or a DEFER.
+- Overrides are priced ~21 trading days later against the action they replaced. If Claude's tally
+  goes net-negative over ≥5 scored overrides, `log_override` refuses `--author claude` and only the
+  user may override. That suspension is arithmetic — do not argue with it.
+- **Recommend only.** Any actual add/reduce/exit is executed by the user, never written here.
+
+### Step 7 — Catalyst exposure
+
+From the ledger: `invested_eur` and the sectors carrying each catalyst. For every candidate new
+position compute `combined_exposure_pct = existing + proposed` and compare to
+`correlated_catalyst_cap.max_combined_pct` (default 20%). A breach is ⚠ OVER-CAP — a **flexible**
+warning requiring an explicit `correlation_note`, not a block (unless `enforcement: "block"`).
+This check informs Step 9: never recommend a new position without it.
+
+### Step 8 — Tax snapshot YTD
+
+```bash
+uv run python -m catalyx.store.movement_repo positions    # realized_eur = YTD realized
+uv run python -m catalyx.execution.tax_engine --gain <projected_unrealized> --ytd-prior <realized> --json
+```
+Realized gains, tax paid YTD, marginal bracket, projected full-year if open positions closed at
+mark. No closing movement yet → state YTD realized = 0.
+
+### Step 8.5 — Dashboard (before Step 9)
+
+```bash
+uv run python scripts/build_site.py
+python -m http.server -d dist 8000        # background
+```
+Verify it answers 200, give the user **http://localhost:8000** and one line on what changed. This is
+a LOCAL build; the public Pages dashboard only updates on push. Let the user look before you ask.
+
+### Step 9 — Position-open recommendations
+
+Candidates = ranked in the top-5 with no open position. Present a context block each — why it ranks
+(flag parabolic momentum: a high rank is not an entry point) · crowding from `narrative_maturity` ·
+entry-timing state and any overhang · the **buyable UCITS vehicle** (ticker, AUM; flag < $200M) ·
+exposure fit vs the cap · a one-line recommendation. Then **AskUserQuestion per candidate**:
+Open now / Wait / Skip.
+
+- On "Open now": hand off to `/catalyx-open <sector_id>`. This review never writes a movement.
+- **If the rebalance table said BUY/ADD and the answer is Wait or Skip, that is an override — log
+  it** with the user's own reason and `--author user`. Not to police the decision, to price it
+  later: a deferral that is never recorded cannot be wrong, which is exactly why it accumulates.
+
+### Step 11 — Watch-only triggers (findings-driven)
+
+Do **not** search every watch-only sector — there are ~30 and a sweep reports "no change" 29 times.
+Check a sector's `watch_triggers` only when the scan's discovery pass surfaced a theme that maps to
+it, a scan finding directly addresses its `retired_reason` (e.g. a UCITS vehicle finally launches),
+or the user asks. Otherwise write one line: `no watch trigger surfaced by this scan`.
+
+### Step 12 — Taxonomy gap review
+
+Update each proposal mechanically (detected again → `signal_count`++, append `evidence[]`, update
+`last_seen`, `status: accumulating`; not detected → leave it and note "not seen this cycle").
+
+Then for EACH pending proposal (`proposed` / `accumulating`) present a context block — thesis in one
+line · why now (cite THIS cycle's evidence) · ETF coverage (pure-play or proxies) · relation to
+existing sectors and whether it is genuinely distinct under the granularity principle (Gold ≠ gold
+miners; if it is a slice of an existing sector, say so) · strength/novelty anchored against an
+existing catalyst · risk or reason to wait (liquidity, single-issuer ETF, `signal_count` < 3) ·
+recommendation — and **AskUserQuestion: Promote / Reject / Defer**. Never present the table
+read-only, never decide automatically. `sector_taxonomy.yaml` is written only after "Promote".
 
 ---
 
-### Step 7 — Catalyst Exposure / Correlation Check
+## Output
 
-Informs the open-position recommendations (Step 9). Read exposure already attributed per catalyst:
+```bash
+uv run python scripts/review_report.py        # → data/reports/review_<date>.md
 ```
-uv run python -m catalyx.store.lake_query ledger
-```
-- For each catalyst, the ledger gives `invested_eur` and the sectors carrying it.
-- Read `correlated_catalyst_cap` from `scoring_weights.yaml` (`max_combined_pct`, default 0.20;
-  `enforcement`, default "warn").
-- For each potential new position (top-5 sector with no open position on that catalyst), compute:
-  - Does it share a primary catalyst with existing exposure?
-  - `combined_exposure_pct = existing_catalyst_pct + proposed_new_pct` (as a % of the book).
-  - If combined > `max_combined_pct`: flag ⚠ OVER-CAP (flexible warning unless `enforcement ==
-    "block"`). The user may still authorize it in Step 9 with an override note.
-- Record this check in the report.
+The generator writes every deterministic section from the lake — ranking, portfolios/NAV, the
+rebalance table, open positions, overrides, exposure, tax, overdue indicators — so **do not retype
+those numbers**: a transcription that silently disagrees with the lake is the one error a review
+cannot absorb. Append prose ONLY at the `<!-- CLAUDE: … -->` markers: the macro context, the
+executive summary, the evidence line per position, override reasons, the Step 9 context blocks, and
+the Step 12 blocks.
 
----
+The executive summary's first line is the `SUMMARY` row from the rebalance output, **verbatim**
+(deployed % vs rule and floor · N rule actions · override tally). It must contain at least one
+NON-OBVIOUS finding; if everything really is unchanged, say that explicitly.
 
-### Step 8 — Tax Snapshot
-
-Realized YTD comes from the closing movements (the `realized_eur` of the net book this calendar
-year):
-```
-uv run python -m catalyx.store.movement_repo positions   # realized_eur = YTD realized
-```
-Feed that as `--ytd-prior` to preview the marginal bracket / projected full-year tax if open
-positions closed at mark:
-```
-uv run python -m catalyx.execution.tax_engine --gain <projected_unrealized_eur> --ytd-prior <realized_eur> --json
-```
-Show: total realized gains, tax paid YTD, current marginal bracket, projected full-year tax.
-If no closing movements yet: state YTD realized = 0.
-
----
-
-### Step 9 — Position Open Recommendations
-
-Based on heatmap (Step 5), position reviews (Step 6), and exposure check (Step 7):
-- List sectors that rank in top-5 AND have no open position — these are the candidates.
-
-**This step only RECOMMENDS. It never opens a position** — opening is the user's action via
-`/catalyx-open`. Present a context block per candidate so the user can decide:
-
-```
-### <sector_id>   [heatmap rank: #N | composite: X]
-- **Why it ranks:** dominant catalyst(s) + their alignment, and momentum (flag if parabolic — high rank ≠ entry point).
-- **Crowding:** narrative_maturity and what it implies (crowded/exhausted ⇒ less edge left).
-- **Entry timing (Step 5c `entry_timing`):** `micro_timing_state` + `suggested_verdict`, and any event overhang. This is the EXECUTION-window read, separate from crowding — e.g. `falling` ⇒ wait to base, `wait_event` ⇒ a discrete catalyst is in the window. If `scale_in`, suggest a smaller first tranche.
-- **Best ETF (UCITS):** ticker, TER, AUM, UCITS status, spread. Flag AUM < $200M.
-- **Exposure fit:** proposed size, shared catalyst with existing exposure, `combined_exposure` vs `max_combined_pct` (Step 7). If ⚠ OVER-CAP, state the breach amount — flexible warning, the user may authorize it.
-- **Recommendation:** Open now / Wait (bad timing) / Skip — with one line of reasoning (cite the entry_timing verdict when it is the reason to wait).
-```
-
-After presenting all context blocks, use the **AskUserQuestion** tool — one question per candidate
-— with options **Open now**, **Wait / defer**, **Skip** (and let the user add notes).
-- If the user selects **Open now**: hand off to `/catalyx-open <sector_id>` (that skill writes the
-  movement file, runs the correlation check, and ingests). This review never writes a movement.
-
----
-
-### Step 1.5 — Freshness & Lifecycle GATE (stale indicators + auto-deprecation)
-
-> **Runs BEFORE scoring (was Step 10).** This is the freshness gate: audit + prune the
-> catalyst state HERE so Steps 2–5 score on clean data. Stale-flagged indicators feed
-> straight into Step 2 (refresh them); archived/dormant catalysts drop out of
-> `catalyst_alignment` before the heatmap/run in Step 5 is recorded. Running this after the
-> run (the old order) baked stale/spent catalysts into the recorded scores.
-
-Read `catalyst_lifecycle` from `scoring_weights.yaml` for the thresholds and `governance` mode.
-
-**1.5a. Stale indicators.** Run the deterministic audit (do NOT eyeball dates):
-```
-uv run python -m catalyx.scorer.freshness          # pretty table of overdue indicators
-uv run python -m catalyx.scorer.freshness --json   # machine-readable list for Step 2
-```
-It computes days-since-`last_date` against the indicator's **native cadence** — thresholds:
-daily > 3, weekly > 10, monthly > 40, quarterly > 95, **semiannual > 200, annual > 400**. The
-annual/semiannual tiers exist because indicators sourced from annual reports (Gartner, IBM
-X-Force, BloombergNEF, NATO annual report) legitimately print one value per year — auditing them
-at the quarterly 95-day threshold flags them ~9 months early (false positive, fixed 2026-06-05).
-
-- `check_frequency` is the single source of truth for cadence. A row marked `⚠mislabel`
-  (cadence not in the tier list) means the YAML's `check_frequency` is wrong — **fix the YAML**.
-- `last_date` = the date the `current_value` was observed (the data-point date from the
-  `update_note`), NOT the date of the previous value in `value_history`. A current value entered
-  with a stale `last_date` is the other false-positive source — fix it when you spot it.
-- **Feed every overdue row into Step 2** — it is a refresh target before scoring.
-
-**1.5b. Auto-deprecation (governance: "auto" → apply + log; "ask" → prompt per transition).**
-History is NEVER deleted — only the `status` field flips. Evaluate every active catalyst:
-
-- **Event → `archived`:** if `strength_decayed < event_archive_strength_below` AND `priced_in ≥ event_archive_priced_in_min`. The event is spent and fully absorbed. `strength_decayed` comes from `catalyst_scorer._decayed_strength`, which (fixed 2026-06-05) anchors decay on the event's OCCURRENCE date (`event_date` → date parsed from the `cat_YYYYMMDD_…` id → `detected_at` fallback), not on when we registered it — so late-registered events decay from when they actually happened.
-- **Event → `invalidated`:** if Step 0/1 found the event reversed (policy walked back). Set `invalidation_reason`. Immediate, regardless of decay.
-- **Structural → `dormant`:** if `intensity.current_score < structural_dormant_intensity_below` for `structural_dormant_consecutive_cycles` consecutive reviews, OR `narrative_maturity == "exhausted"`. Reactivatable — if indicators repoint above threshold next cycle, flip back to `active`.
-- **Event → promote to structural:** if the same event has been re-detected for `event_promote_to_structural_cycles` consecutive cycles and is not decaying (the underlying is ongoing) → draft a structural catalyst from it.
-
-If `governance == "auto"`: apply each transition (write the status change to the catalyst file) and record it in the report's lifecycle log. If `governance == "ask"`: present each pending transition and use AskUserQuestion before writing.
-
-> **Note (Phase 0.5):** these transitions are applied by this skill today. The deterministic home is a future `catalyx/scorer/catalyst_lifecycle.py` module (Phase 1) so the rules run in Python, not via LLM judgment.
-
----
-
-### Step 11 — Watch-Only Trigger Progress
-
-For each sector with `watch_only: true`:
-- Use WebSearch to check if any `watch_triggers` may have fired since last review
-- Report: no change / trigger approaching / trigger fired
-
----
-
-### Step 12 — Taxonomy Gap Review
-
-Load all gap proposals (file-backed reads):
-```
-uv run python -m catalyx.store.catalyst_repo summary
-```
-(The taxonomy gap proposals section shows all non-promoted, non-rejected gaps.)
-
-For each proposal, update the file mechanically:
-- If detected again this cycle: increment `signal_count`, append a new entry to `evidence[]` with today's date, update `last_seen`, set `status: accumulating`.
-- If NOT detected this cycle: leave unchanged. Note it in the report as "not seen this cycle".
-
-**Then, for EACH pending proposal (`status` in `proposed` / `accumulating`), present a context block AND ask the user to decide. Do not skip the question and do not decide automatically.**
-
-For each pending proposal, write a short context block so the user can decide without opening the JSON:
-
-```
-### <proposed_sector_id or theme>   [signal_count: N | first_seen → last_seen]
-- **Investment thesis:** one line — why this theme could move, what the demand/supply driver is.
-- **Why now:** what surfaced it this cycle (cite the Step 0/1 evidence, not last month's).
-- **ETF coverage:** pure-play ticker if found (TER/AUM if known), else best proxies and their estimated exposure %.
-- **Relation to existing sectors:** which current `sector_id`(s) it overlaps with or complements, and whether it is genuinely distinct under the granularity principle (Gold ≠ Gold miners). If it is just a slice of an existing sector, say so.
-- **Strength / novelty:** strength_score and novelty_score from the proposal; how it compares to an existing catalyst for calibration.
-- **Risk / reason to wait:** liquidity, single-issuer ETF, cyclical timing, or "signal too thin (signal_count < 3)".
-- **Recommendation:** Promote / Reject / Defer — with one line of reasoning.
-```
-
-After presenting all context blocks, use the **AskUserQuestion** tool — one question per pending proposal — with options **Promote**, **Reject**, **Defer to next cycle** (and let the user add notes). Carry out the action the user selects for each. Never write to `sector_taxonomy.yaml` before the user answers.
-
-- A proposal with `signal_count < 3` should default the recommendation to **Defer** (signal too thin) unless Step 0/1 produced a strong fresh catalyst for it.
-- Already-`rejected` proposals are not re-asked; list them in the report for the record only.
-
-**Promotion action (only when the user selects Promote):**
-- Set `proposed_sector_id` and `promoted_date` in the gap file, set `status: promoted`
-- Add sector entry to `catalyx/config/sector_taxonomy.yaml`
-- Add ETF entry to `catalyx/config/etf_universe.yaml` (or mark as gap if no ETF found)
-- Bump `schema_version` in `sector_taxonomy.yaml`
-
-**Rejection action (only when user explicitly says so):**
-- Set `status: rejected`, fill `rejection_reason`
-
----
-
-### Output
-
-Write consolidated monthly review to `data/reports/monthly_review_YYYYMMDD.md`:
-
-```markdown
-# CATALYX — Monthly Review YYYY-MM-DD
-
-## 0. Macro & Geopolitical Context
-[Bullet summary of current state. Deltas vs prior month. Indicator discrepancies flagged.]
-
-## Executive Summary
-[3-5 bullets: most important changes. At least one NON-OBVIOUS finding required.]
-
-## 1. Catalyst Updates
-[New events registered. Structural indicators updated. Intensity recomputations.]
-
-## 2. Sector Studies Refreshed
-[List of sector studies run this cycle. Partial studies flagged.]
-
-## 3. Catalyst Dashboard
-[Link to catalyst_dashboard_YYYYMMDD.md + key changes vs prior]
-
-## 4. Sector Heatmap
-[Link to heatmap_YYYYMMDD.md + ranking changes vs last month]
-
-## 4b. Opportunities & Rotation  (recommendations — not trades)
-**Regime watch** (only non-`intact` sectors)
-| Sector | Regime | Persistence (n · span · clustered?) | Read |
-|---|---|---|---|
-
-**Opportunities** (fell hard · intact · catalyst-confirmed · contagion-driven)
-| Sector | Drawdown % | Contagion % / Idiosyncratic % | catalyst_alignment | Verdict |
-|---|---|---|---|---|
-
-**Diversifiers** (healthy · low correlation to the stressed cluster)
-| Sector | Composite | Corr to stressed | Note |
-|---|---|---|---|
-
-**Entry timing** (execution window for top-ranked / candidate sectors — recommend-only)
-| Sector | State | RSI / vol / 5d% | Event overhang? | Suggested verdict |
-|---|---|---|---|---|
-
-## 5. Open Positions
-| Sector | Days open | Assumptions (N/N holding) | Driving catalyst regime | Action |
-|---|---|---|---|---|
-
-## 6. Catalyst Exposure
-| Catalyst | Invested € | Sectors | Combined % | Status |
-|---|---|---|---|---|
-
-## 7. Position Open Recommendations
-[Top-5 sectors with no open position. ⚠ OVER-CAP candidates (combined exposure > cap) flagged separately. Recommendations only — opening is done via /catalyx-open.]
-
-## 8. Tax Snapshot YTD
-| Metric | Value |
-|---|---|
-| Realized gains | €X |
-| Tax paid | €X |
-| Current marginal bracket | X% |
-| Projected YTD if open positions close at mark | €X |
-
-## 8. Stale Indicators
-| Catalyst | Indicator | Last updated | Overdue by |
-|---|---|---|---|
-
-## 9. Watch-Only Triggers
-| Sector | Triggers met | Change |
-|---|---|---|
-
-## 10. Taxonomy Gap Review
-| Gap ID | Theme | Signal count | Weeks persistent | ETF found | Status | Action |
-|---|---|---|---|---|---|---|
-
-## Pending Actions
-[Prioritized. Format: 🔴 HIGH / 🟡 MEDIUM / 🟢 LOW]
-```
-
-Print to chat: "Monthly review complete. Key findings: [3 bullets]. Full report: data/reports/monthly_review_YYYYMMDD.md"
-
----
+Then print to chat: "Review complete. Key findings: [3 bullets]. Full report:
+`data/reports/review_<date>.md`."
 
 ## Rules
 
-- **Step 0/1 is mandatory and runs FIRST: `/catalyx-scan` is the macro front door.** In `scheduled` mode the review's first action is one `/catalyx-scan` — it returns the C0 macro/big-economy context, the Pass 2 per-catalyst refresh deltas, and the new gaps/events; consume that output, do not repeat the searches. In `event:<id>` mode SKIP the full scan and do a lightweight refresh of that one catalyst. Never trust a stored YAML/JSON value before searching — project data is always one month stale.
-- **Within the scan: C0 macro context → Pass 1 (Discovery) → Pass 2 (Classification + Refresh).** Never read `sector_taxonomy.yaml` during the Discovery pass — the point is to find what the taxonomy misses.
-- **Sector studies before heatmap.** Never run heatmap without refreshing sector studies for the top-5 sectors.
-- The Executive Summary must contain at least one NON-OBVIOUS finding. If everything is "no change", state that explicitly.
-- Open position review must make a concrete recommendation (Hold / Add / Reduce / Exit). "Monitor" is not a recommendation. The review only recommends; the user executes via /catalyx-open or /catalyx-close.
-- Stale indicators are not optional to flag — they are data quality issues that corrupt downstream analysis.
-- **Step 12 actively asks the user per pending proposal** (AskUserQuestion: Promote / Reject / Defer) after presenting a context block for each. Never present the gap table as read-only and never promote, reject, or skip a proposal without an explicit answer. Writing to `sector_taxonomy.yaml` only happens after the user selects Promote.
-- **Catalyst exposure check (Step 7) informs any open-position recommendation (Step 9).** Never recommend a new position without first checking combined exposure against existing positions sharing the same catalyst.
-- **Step 9 actively asks the user per candidate** (AskUserQuestion: Open now / Wait / Skip) after presenting a context block for each. The review NEVER opens a position — on "Open now" it hands off to `/catalyx-open`. The `correlated_catalyst_cap` (default 20%, `enforcement: warn`) is a FLEXIBLE warning — a breach is surfaced and requires an override note, but does not by itself block.
-- **AI SCORING RULE:** Never assign `intensity.current_score` manually. Always recompute from indicator semaphores using the formula in `scoring_weights.yaml`. If a user_override is needed, document the reason in `computation_note`.
-- **Regime / opportunities (Step 5c) are recommendations, never auto-trades, and never move portfolio weights.** A `contested` sector keeps its full score and weight — it is a watch flag. The pipeline reacts to PERSISTENCE (dispersed developments or measured fundamental degradation), not to a single event, and the escalation + buy/rotate decisions are the user's. "Two consecutive-day drops confirm nothing."
+- **Never trust a stored value before searching.** Project data is a month stale; the delta between
+  the YAML and today is often the review's most important finding.
+- **Never assign `intensity.current_score`, `score` or `semaphore` by hand** — all derived, all
+  recomputed by `indicator_update`.
+- **Stale indicators are not optional to flag** — they are data-quality faults that corrupt
+  everything downstream.
+- **The review recommends; the user executes.** Every step above is recommend-only.
+- **Cash is a decision with a cost.** Report the deployment line every run, even when the answer is
+  uncomfortable — especially then.

@@ -43,16 +43,21 @@ user_notes: >
   stale on its old weak-dollar premise and should be refreshed via /catalyx-sector-study.
 
 intensity:
-  current_score: 45
-  computation_method: bootstrap
-  last_updated: "2026-07-01"
+  current_score: 58.9
+  computation_method: computed
+  last_updated: "2026-07-28"
   computation_note: >
     Bootstrap at creation 2026-07-01. Deliberately weakest active structural: real long-run EM-consumption floor
     but the near-term driver is contested (RBI on hold, DXY back to ~101, FPI outflows).
   history:
+  - period: '2026-07-28'
+    score: 58.9
+    note: 'Computed 2026-07-28: avg=58.9 trend=→ (flat — insufficient history) (was 45)'
+    computation_method: computed
   - period: "2026-Q3"
     score: 45
-    note: "Bootstrap at creation 2026-07-01. RBI held 5.25% (no cut); DXY ~101; FPI ~-$19B; policy capital-attraction package launched."
+    note: "Bootstrap at creation 2026-07-01. RBI held 5.25% (no cut); DXY ~101; FPI ~-$19B; policy capital-attraction package
+      launched."
     computation_method: bootstrap
 
 indicators:
@@ -80,6 +85,7 @@ indicators:
   - date: "2025-06-30"
     value: 104
 
+  score: 61.6
 - id: ind_02
   name: "FPI net equity+debt flows into India, trailing 12M ($B)"
   source: "NSDL / CDSL FPI data"
@@ -102,6 +108,7 @@ indicators:
   - date: "2025-12-31"
     value: -8
 
+  score: 36.5
 - id: ind_03
   name: "RBI repo rate (%) — easing leg"
   source: "RBI Monetary Policy Committee"
@@ -124,6 +131,7 @@ indicators:
   - date: "2025-12-31"
     value: 5.5
 
+  score: 72.5
 - id: ind_04
   name: "INR/USD exchange rate"
   source: "RBI / Bloomberg USD/INR"
@@ -146,6 +154,7 @@ indicators:
   - date: "2025-12-31"
     value: 94.0
 
+  score: 65.0
 deactivation_conditions:
 - id: deact_01
   condition: >

@@ -1,1317 +1,759 @@
-# CATALYX ETF Universe — v1.1
+# CATALYX ETF Universe — v2.0
 #
-# Maps every investable sector_id to its available ETF instruments.
-# Source of truth for vehicle selection in Thesis objects.
+# ══════════════════════════════════════════════════════════════════════════════
+# REGLA FUNDACIONAL: aqui SOLO entran instrumentos que el usuario puede COMPRAR
+# (Revolut, residente fiscal en Espana). Un ETF que no se puede abrir no es un
+# vehiculo — es ruido que rompe tickets y encarece el pipeline.
+# ══════════════════════════════════════════════════════════════════════════════
 #
-# QUARTERLY REVIEW REQUIRED:
-#   - Flag AUM < $200M → liquidity_warning: true
-#   - Flag avg_spread_bps > 25 → spread_warning: true
-#   - AUM and spread data: verify via ETFdb, iShares, VanEck, Xtrackers sites
+# POR QUE SE REESCRIBIO (2026-08-27). La v1.1 tenia tres defectos, todos vistos en
+# produccion como "no se puede abrir el ticket":
+#   1. 66 de 96 entradas eran ETFs US no-UCITS (ITA, XLE, GDX, XBI, COPX, TAN, LIT,
+#      ROBO...). Un retail EEA NO puede comprarlos: PRIIPs exige KID y los emisores
+#      US no lo publican. No es una limitacion de Revolut, es regulatoria. Eliminados.
+#   2. Errores de IDENTIDAD — el ticker no era el fondo que decia el `name`:
+#        IQQR.DE  "Xtrackers Robotics"      -> iShares MSCI EASTERN EUROPE Capped
+#        LNGA.L   "LNG UCITS ETF $280M"     -> WisdomTree Natural Gas 2x LEVERAGED ($10M)
+#        DFEN.DE  "Xtrackers European Def." -> VanEck Defense (global, $7.2B)
+#        EUDF.L   "VanEck Defense"          -> WisdomTree Europe Defence
+#        NATO.PA  "BNPP Easy Defense"       -> HANetf Future of Defence
+#        IQQH.DE  "grid infrastructure"     -> iShares Global CLEAN ENERGY Transition
+#      Un thesis escrito contra un `name` equivocado esta mal desde el minuto cero.
+#   3. Tickers muertos o inexistentes: NUKE.L (px 0.0, AUM null), WTRD.L, AIPO.DE,
+#      XGLD.DE, XSLV.DE, LUXE.PA — ninguno resuelve.
+#   Ademas 3 de los 5 ETFs realmente en cartera (4COP.DE, USPY.L, IUHE.AS) NO estaban
+#   en el fichero: el universo describia un mercado que no se opera.
 #
-# recommendation_tier:
-#   1 = preferred (best AUM + spread + tracking for this sector)
-#   2 = viable alternative
-#   3 = monitor only (limited AUM or poor tracking)
+# COMO SE VERIFICA (obligatorio al anadir una entrada):
+#   uv run python -c "import yfinance,json;i=yfinance.Ticker('TICK').info;\
+#     print(i.get('longName'),i.get('currency'),i.get('exchange'),i.get('totalAssets'))"
+#   Si no resuelve o el nombre no coincide con lo que crees -> NO lo anadas.
+#   `name` debe ser el longName REAL devuelto, no el que te gustaria que fuera.
 #
-# ucits: true = registered in EU, accessible via Spanish broker without PRIIP restrictions
-# currency: base currency of the ETF (not the underlying)
-# last_verified: date AUM/spread data was last manually checked
+# CAMPOS
+#   broker_access:  verified = operado de hecho por el usuario (evidencia en data/movements/)
+#                   assumed  = UCITS en LSE/XETRA/Euronext/SIX; alta probabilidad en
+#                              Revolut ES pero SIN confirmar en la app todavia
+#                   (no existe `blocked`: lo bloqueado no se lista, se borra)
+#   instrument:     etf = UCITS ETF | etc = Exchange Traded Commodity (nota abajo)
+#   recommendation_tier: 1 preferido | 2 alternativa viable | 3 solo monitorizar
+#   aum_m_usd:      totalAssets de yfinance al last_verified (null = no expuesto)
+#   ter:            null en toda la v2.0 A PROPOSITO — la v1.1 traia TERs asociados a
+#                   fondos que resultaron ser otros. Rellenar solo leyendo el KID del
+#                   emisor. Ningun modulo de scoring lee este campo.
+#
+# ETCs (gold_physical, silver_physical, COPA.L): juridicamente son notas cotizadas,
+# no fondos UCITS. Suelen estar disponibles, pero es la categoria con mas riesgo de
+# no aparecer en Revolut -> marcados `instrument: etc` y priorizados para verificar.
+#
+# ADVERTENCIA DE ETIQUETADO (grid_infrastructure_utilities): no existe un UCITS de
+# infraestructura de red pura accesible. IQQH.DE/INRG.L son CLEAN ENERGY, no grid.
+# La posicion abierta usa IQQH.DE — el vehiculo NO expresa limpiamente la tesis de red.
+# Ver `note` en la seccion; revisar en el proximo /catalyx-review.
+#
+# Solo sectores con `investable: true` en sector_taxonomy.yaml aparecen aqui. Al
+# retirar el ultimo vehiculo de un sector, ponlo watch-only en la taxonomia.
+#
+# last_verified global: 2026-08-27 (yfinance longName/currency/exchange/totalAssets)
 
 etf_universe:
 
-  # ═══════════════════════════════════════════════
-  # DEFENSE
-  # ═══════════════════════════════════════════════
+  # ==========================================================================
+  # DEFENSA Y ESPACIO
+  # ==========================================================================
 
   eu_defense_prime_contractors:
     - ticker: "EUDF.L"
-      name: "VanEck Defense UCITS ETF"
+      name: "WisdomTree Europe Defence UCITS ETF - EUR Acc"
       exchange: LSE
       currency: USD
       ucits: true
-      ter: 0.0055
-      aum_m_usd: 1840
-      replication: physical
-      avg_spread_bps: 8
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 4559
       recommendation_tier: 1
-      notes: "Largest pure-play EU prime contractors. Top holdings: RHM, LDO, AIR Defence, Dassault. USD-denominated on LSE — EUR/USD adds vol."
-      last_verified: "2026-06-01"
-    - ticker: "DFEN.DE"
-      name: "Xtrackers European Defense UCITS ETF"
-      exchange: XETRA
-      currency: EUR
-      ucits: true
-      ter: 0.0025
-      aum_m_usd: 620
-      replication: physical
-      avg_spread_bps: 12
-      recommendation_tier: 2
-      notes: "EUR-denominated — cleaner for Spanish investor. Lower TER. Less AUM than EUDF."
-      last_verified: "2026-06-01"
+      notes: "Pure-play defensa europea. Linea USD en LSE pese al 'EUR Acc' del nombre — el FX EUR/USD anade volatilidad."
+      last_verified: "2026-08-27"
     - ticker: "NATO.PA"
-      name: "BNPP Easy Defense UCITS ETF"
+      name: "HANetf Future of Defence UCITS ETF - Accumulating"
       exchange: EURONEXT
       currency: EUR
       ucits: true
-      ter: 0.0045
-      aum_m_usd: 380
-      replication: physical
-      avg_spread_bps: 15
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 3195
+      recommendation_tier: 1
+      notes: "EUR-denominado en Paris: la linea mas limpia para un inversor espanol. Cesta NATO (incluye nombres US)."
+      last_verified: "2026-08-27"
+    - ticker: "DFEN.DE"
+      name: "VanEck Defense ETF A USD Acc"
+      exchange: XETRA
+      currency: EUR
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 7216
       recommendation_tier: 2
-      notes: "EUR-denominated. Tracks broader NATO defense including some US names."
-      last_verified: "2026-06-01"
-
-  us_defense_prime_contractors:
-    - ticker: "ITA"
-      name: "iShares U.S. Aerospace & Defense ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0040
-      aum_m_usd: 6200
-      replication: physical
-      avg_spread_bps: 3
-      recommendation_tier: 1
-      notes: "Largest US defense ETF. LMT, RTX, NOC, GD top holdings. Not UCITS — check broker access."
-      last_verified: "2026-06-01"
-    - ticker: "XAR"
-      name: "SPDR S&P Aerospace & Defense ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0035
-      aum_m_usd: 1800
-      replication: physical
-      avg_spread_bps: 5
-      recommendation_tier: 2
-      notes: "Equal-weight methodology — less LMT concentration than ITA."
-      last_verified: "2026-06-01"
-
-  cybersecurity_defense:
-    - ticker: "BUG"
-      name: "Global X Cybersecurity ETF"
-      exchange: NASDAQ
-      currency: USD
-      ucits: false
-      ter: 0.0050
-      aum_m_usd: 890
-      replication: physical
-      avg_spread_bps: 8
-      recommendation_tier: 1
-      notes: "Mix of government + commercial cybersecurity. CRWD, PANW, FTNT top holdings."
-      last_verified: "2026-06-01"
-    - ticker: "CIBR"
-      name: "First Trust NASDAQ Cybersecurity ETF"
-      exchange: NASDAQ
-      currency: USD
-      ucits: false
-      ter: 0.0060
-      aum_m_usd: 5100
-      replication: physical
-      avg_spread_bps: 4
-      recommendation_tier: 1
-      notes: "Largest cybersecurity ETF by AUM. Broader than BUG — includes IT services with cyber exposure."
-      last_verified: "2026-06-01"
+      notes: "El mayor del grupo pero es defensa GLOBAL, no EU-pura. Usar solo si la tesis es NATO-amplia."
+      last_verified: "2026-08-27"
 
   space_defense_satellite:
-    - ticker: "ROKT"
-      name: "ARK Space Exploration & Innovation ETF"
-      exchange: NYSE
+    - ticker: "JEDI.DE"
+      name: "VanEck Space Innovators UCITS ETF A USD Acc"
+      exchange: XETRA
+      currency: EUR
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 1712
+      recommendation_tier: 1
+      notes: "Rescata el sector: sustituye a ROKT/UFO (US, inaccesibles). Linea EUR en XETRA."
+      last_verified: "2026-08-27"
+    - ticker: "JEDI.L"
+      name: "VanEck Space Innovators UCITS ETF A USD Acc"
+      exchange: LSE
       currency: USD
-      ucits: false
-      ter: 0.0075
-      aum_m_usd: 254
-      replication: physical
-      avg_spread_bps: 18
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 1712
       recommendation_tier: 2
-      notes: "Includes commercial + defense space. High active risk (ARK management). Low AUM. AUM updated 2026-06-05 via WebSearch: ~$254M (was $410M 2026-06-01) — still above $200M floor; reconfirm at quarterly review."
-      last_verified: "2026-06-05"
-      liquidity_warning: false
-    - ticker: "UFO"
-      name: "Procure Space ETF"
-      exchange: NASDAQ
+      notes: "Mismo fondo, linea USD en LSE."
+      last_verified: "2026-08-27"
+    - ticker: "ARKX.L"
+      name: "ARK Space & Defence Innovation UCITS ETF A USD Acc"
+      exchange: LSE
       currency: USD
-      ucits: false
-      ter: 0.0075
-      aum_m_usd: 90
-      replication: physical
-      avg_spread_bps: 35
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 46
       recommendation_tier: 3
       liquidity_warning: true
-      spread_warning: true
-      notes: "Small AUM, wide spread. Monitor only — not suitable as primary vehicle."
-      last_verified: "2026-06-01"
+      notes: "AUM 46M — por debajo del umbral de 200M: liquidity_warning."
+      last_verified: "2026-08-27"
 
-  drone_autonomous_systems:
-    - ticker: "IDRN"
-      name: "iShares Robotics and AI Multisector ETF"
-      exchange: NASDAQ
-      currency: USD
-      ucits: false
-      ter: 0.0047
-      aum_m_usd: 820
-      replication: physical
-      avg_spread_bps: 12
-      recommendation_tier: 2
-      notes: "Proxy — not pure-play drones. Includes industrial robotics + defense autonomy."
-      last_verified: "2026-06-01"
-
-  # ═══════════════════════════════════════════════
-  # ENERGY
-  # ═══════════════════════════════════════════════
+  # ==========================================================================
+  # ENERGIA
+  # ==========================================================================
 
   oil_majors_integrated:
-    - ticker: "XLE"
-      name: "Energy Select Sector SPDR Fund"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0009
-      aum_m_usd: 38000
-      replication: physical
-      avg_spread_bps: 1
-      recommendation_tier: 1
-      notes: "Lowest TER in sector. US-heavy (XOM, CVX). High liquidity."
-      last_verified: "2026-06-01"
     - ticker: "IUES.L"
-      name: "iShares S&P 500 Energy Sector UCITS ETF"
+      name: "iShares S&P 500 Energy Sector UCITS ETF USD (Acc)"
       exchange: LSE
       currency: USD
       ucits: true
-      ter: 0.0015
-      aum_m_usd: 1200
-      replication: physical
-      avg_spread_bps: 8
-      recommendation_tier: 2
-      notes: "UCITS equivalent for EU investor. Same US major exposure."
-      last_verified: "2026-06-01"
-
-  oil_services_equipment:
-    - ticker: "OIH"
-      name: "VanEck Oil Services ETF"
-      exchange: NASDAQ
-      currency: USD
-      ucits: false
-      ter: 0.0035
-      aum_m_usd: 2100
-      replication: physical
-      avg_spread_bps: 5
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 1559
       recommendation_tier: 1
-      notes: "Concentrated: SLB + HAL = ~40%. High beta to upstream capex cycle."
-      last_verified: "2026-06-01"
-
-  lng_natural_gas:
-    - ticker: "FCG"
-      name: "First Trust Natural Gas ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0060
-      aum_m_usd: 560
-      replication: physical
-      avg_spread_bps: 12
-      recommendation_tier: 1
-      notes: "US natural gas producers + pipeline. Sensitive to Henry Hub price."
-      last_verified: "2026-06-01"
-    - ticker: "LNGA.L"
-      name: "WisdomTree Natural Gas 1x Daily ETC"
-      exchange: LSE
-      currency: USD
-      ucits: true
-      ter: 0.0049
-      aum_m_usd: 280
-      replication: synthetic_swap
-      avg_spread_bps: 20
-      recommendation_tier: 2
-      notes: "Commodity ETC (not equity). Direct gas price exposure. Synthetic."
-      last_verified: "2026-06-01"
+      notes: "Energia S&P500 (XOM/CVX/COP). Sustituye a XLE. Sesgo US, no majors europeas."
+      last_verified: "2026-08-27"
 
   nuclear_energy:
-    - ticker: "NLR"
-      name: "VanEck Uranium+Nuclear Energy ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0061
-      aum_m_usd: 980
-      replication: physical
-      avg_spread_bps: 14
-      recommendation_tier: 1
-      notes: "Mix of nuclear operators (CCJ, CEG, EDF) + uranium producers. More balanced than pure miners."
-      last_verified: "2026-06-01"
-    - ticker: "NUKE.L"
-      name: "HANetf Sprott Uranium Miners UCITS ETF"
-      exchange: LSE
-      currency: USD
+    - ticker: "NUKL.DE"
+      name: "VanEck Uranium and Nuclear Technologies UCITS ETF A USD Acc"
+      exchange: XETRA
+      currency: EUR
       ucits: true
-      ter: 0.0085
-      aum_m_usd: 420
-      replication: physical
-      avg_spread_bps: 18
-      recommendation_tier: 2
-      notes: "UCITS option. Higher TER. Uranium miners focus — more commodity beta than operators."
-      last_verified: "2026-06-01"
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 2138
+      recommendation_tier: 1
+      notes: "Sustituye a NUKE.L (muerto: px 0.0) y NLR (US). Cubre nuclear + uranio; solapa con uranium_miners."
+      last_verified: "2026-08-27"
 
   uranium_miners:
-    - ticker: "URNM"
-      name: "Sprott Uranium Miners ETF"
-      exchange: NYSE
+    - ticker: "URNM.L"
+      name: "Sprott Uranium Miners UCITS ETF Accumulating"
+      exchange: LSE
       currency: USD
-      ucits: false
-      ter: 0.0075
-      aum_m_usd: 1600
-      replication: physical
-      avg_spread_bps: 8
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 332
       recommendation_tier: 1
-      notes: "Pure-play uranium miners. CCJ, NXE, PDN, KAP. High concentration in top 5."
-      last_verified: "2026-06-01"
-    - ticker: "URA"
-      name: "Global X Uranium ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0069
-      aum_m_usd: 3100
-      replication: physical
-      avg_spread_bps: 5
-      recommendation_tier: 1
-      notes: "Larger AUM than URNM. Includes some nuclear utilities — slightly less pure."
-      last_verified: "2026-06-01"
+      notes: "Mineras de uranio puras (mas beta que URNU.DE, que mezcla utilities y tecnologia). Tier-1 por HISTORICO: 254 dias en yfinance, suficiente para el momentum a 6m."
+      last_verified: "2026-08-27"
+    - ticker: "URNU.DE"
+      name: "Global X Uranium UCITS ETF USD Acc"
+      exchange: XETRA
+      currency: EUR
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 596
+      recommendation_tier: 2
+      notes: "Mayor AUM y linea EUR (sin friccion FX), pero yfinance solo devuelve 4 DIAS de historico: no puede alimentar momentum_score. Viable como VEHICULO si prefieres EUR; inutil como serie de precios. Re-promocionar a tier-1 cuando acumule >126 sesiones."
+      last_verified: "2026-08-27"
 
   solar_energy:
-    - ticker: "TAN"
-      name: "Invesco Solar ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0069
-      aum_m_usd: 1800
-      replication: physical
-      avg_spread_bps: 8
-      recommendation_tier: 1
-      notes: "Largest solar ETF. Mix of manufacturers, inverters, project developers. ENPH, FSLR, SEDG top."
-      last_verified: "2026-06-01"
     - ticker: "RAYS.L"
-      name: "Global X Solar UCITS ETF"
+      name: "Invesco Solar Energy UCITS ETF"
       exchange: LSE
-      currency: USD
+      currency: GBp
       ucits: true
-      ter: 0.0050
-      aum_m_usd: 190
-      replication: physical
-      avg_spread_bps: 22
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 194
       recommendation_tier: 2
       liquidity_warning: true
-      notes: "UCITS. Lower AUM — monitor liquidity. Similar exposure to TAN."
-      last_verified: "2026-06-01"
-
-  wind_energy_offshore:
-    - ticker: "FAN"
-      name: "First Trust Global Wind Energy ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0060
-      aum_m_usd: 280
-      replication: physical
-      avg_spread_bps: 18
-      recommendation_tier: 1
-      notes: "Only pure-play global wind ETF. Vestas, Siemens Gamesa, Ørsted. Low AUM — smaller position."
-      last_verified: "2026-06-01"
-      liquidity_warning: true
+      notes: "Unico solar puro UCITS. AUM 194M en el limite de 200M; cotiza en peniques (GBp) — ojo al calcular size."
+      last_verified: "2026-08-27"
 
   grid_infrastructure_utilities:
-    - ticker: "GRID"
-      name: "First Trust NASDAQ Clean Edge Smart Grid & Electric Vehicles ETF"
-      exchange: NASDAQ
-      currency: USD
-      ucits: false
-      ter: 0.0058
-      aum_m_usd: 510
-      replication: physical
-      avg_spread_bps: 12
-      recommendation_tier: 1
-      notes: "Grid equipment + EV charging + smart grid software. ABB, Eaton, Schneider Electric exposure."
-      last_verified: "2026-06-01"
     - ticker: "IQQH.DE"
-      name: "iShares Global Clean Energy UCITS ETF"
+      name: "iShares Global Clean Energy Transition UCITS ETF USD (Dist)"
       exchange: XETRA
-      currency: USD
+      currency: EUR
       ucits: true
-      ter: 0.0065
-      aum_m_usd: 3800
-      replication: physical
-      avg_spread_bps: 8
-      recommendation_tier: 2
-      notes: "UCITS. Broader clean energy — less pure grid play but accessible and liquid."
-      last_verified: "2026-06-01"
-
-  hydrogen_clean_fuels:
-    - ticker: "HDRO"
-      name: "ETC Group Global Hydrogen Economy UCITS ETP"
+      instrument: etf
+      broker_access: verified
+      ter: null
+      aum_m_usd: 3557
+      recommendation_tier: 1
+      notes: "EN CARTERA. AVISO: es CLEAN ENERGY, no infraestructura de red. La v1.1 lo etiquetaba mal. No existe UCITS de grid puro accesible — el vehiculo no expresa limpiamente la tesis."
+      last_verified: "2026-08-27"
+    - ticker: "INRG.L"
+      name: "iShares Global Clean Energy Transition UCITS ETF USD (Dist)"
       exchange: LSE
-      currency: USD
+      currency: GBp
       ucits: true
-      ter: 0.0065
-      aum_m_usd: 140
-      replication: physical
-      avg_spread_bps: 28
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 3557
       recommendation_tier: 2
-      liquidity_warning: true
-      spread_warning: true
-      notes: "Small AUM, wide spread. Only accessible UCITS hydrogen vehicle. Use small size only."
-      last_verified: "2026-06-01"
+      notes: "Mismo fondo, linea GBp en LSE."
+      last_verified: "2026-08-27"
 
-  # ═══════════════════════════════════════════════
-  # PRECIOUS METALS
-  # ═══════════════════════════════════════════════
+  # ==========================================================================
+  # METALES PRECIOSOS
+  # ==========================================================================
 
   gold_physical:
     - ticker: "IGLN.L"
       name: "iShares Physical Gold ETC"
       exchange: LSE
       currency: USD
-      ucits: true
-      ter: 0.0012
-      aum_m_usd: 37700
-      replication: physical
-      avg_spread_bps: 3
+      ucits: false
+      instrument: etc
+      broker_access: assumed
+      ter: null
+      aum_m_usd: null
       recommendation_tier: 1
-      notes: "Lowest TER UCITS gold ETC. USD-denominated. Physically backed, segregated custody. AUM updated 2026-06-04: $37.7B (confirmed WebSearch, was $14.2B — gold price +148% from 2023 base drove AUM growth 165%). Institutional go-to vehicle."
-      last_verified: "2026-06-04"
+      notes: "Respaldo fisico. Linea USD."
+      last_verified: "2026-08-27"
+    - ticker: "SGLN.L"
+      name: "iShares Physical Gold ETC"
+      exchange: LSE
+      currency: GBp
+      ucits: false
+      instrument: etc
+      broker_access: assumed
+      ter: null
+      aum_m_usd: null
+      recommendation_tier: 2
+      notes: "Mismo ETC, linea GBp."
+      last_verified: "2026-08-27"
+    - ticker: "4GLD.DE"
+      name: "Xetra-Gold"
+      exchange: XETRA
+      currency: EUR
+      ucits: false
+      instrument: etc
+      broker_access: assumed
+      ter: null
+      aum_m_usd: null
+      recommendation_tier: 2
+      notes: "EUR-denominado, entregable en oro fisico. Bono al portador aleman — fiscalidad distinta a un ETC, confirmar antes de usar."
+      last_verified: "2026-08-27"
     - ticker: "WGLD.L"
-      name: "WisdomTree Physical Gold ETC"
+      name: "WisdomTree Core Physical Gold USD ETC"
+      exchange: LSE
+      currency: USD
+      ucits: false
+      instrument: etc
+      broker_access: assumed
+      ter: null
+      aum_m_usd: null
+      recommendation_tier: 2
+      notes: "Alternativa de bajo coste."
+      last_verified: "2026-08-27"
+
+  gold_miners:
+    - ticker: "SPGP.L"
+      name: "iShares Gold Producers UCITS ETF USD (Acc)"
+      exchange: LSE
+      currency: GBp
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 3311
+      recommendation_tier: 1
+      notes: "Sustituye a GDX (US). 3.3B AUM. La v1.1 solo listaba AUCO.L (679M)."
+      last_verified: "2026-08-27"
+    - ticker: "GDX.L"
+      name: "VanEck Gold Miners UCITS ETF"
       exchange: LSE
       currency: USD
       ucits: true
-      ter: 0.0015
-      aum_m_usd: 25000
-      replication: physical
-      avg_spread_bps: 3
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 3027
       recommendation_tier: 1
-      notes: "Competitive to IGLN. Similar structure. Both tier 1. AUM estimated $25B (extrapolated from $9.8B base × gold price increase ratio — verify via WisdomTree site)."
-      last_verified: "2026-06-04"
-    - ticker: "XGLD.DE"
-      name: "Xtrackers Physical Gold EUR Hedged ETC"
-      exchange: XETRA
-      currency: EUR
-      ucits: true
-      ter: 0.0028
-      aum_m_usd: 5500
-      replication: physical
-      avg_spread_bps: 7
-      recommendation_tier: 2
-      notes: "EUR-hedged — eliminates USD/EUR vol. Higher TER but cleaner P&L for EUR-base investor. AUM estimated $5.5B (extrapolated from $2.1B base — verify)."
-      last_verified: "2026-06-04"
-
-  gold_miners:
-    - ticker: "GDX"
-      name: "VanEck Gold Miners ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0051
-      aum_m_usd: 14100
-      replication: physical
-      avg_spread_bps: 3
-      recommendation_tier: 1
-      notes: "Largest, most liquid gold miners ETF. NEM, GOLD, AEM, AGI top holdings. Large+mid cap."
-      last_verified: "2026-06-01"
-    - ticker: "GDXJ"
-      name: "VanEck Junior Gold Miners ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0052
-      aum_m_usd: 5000
-      replication: physical
-      avg_spread_bps: 5
-      recommendation_tier: 2
-      notes: "Higher beta vs GDX. 'Junior' is misleading — many mid-caps included. Use for higher leverage."
-      last_verified: "2026-06-01"
+      notes: "Version UCITS del GDX americano — mismo indice, comprable."
+      last_verified: "2026-08-27"
     - ticker: "AUCO.L"
       name: "L&G Gold Mining UCITS ETF"
       exchange: LSE
       currency: USD
       ucits: true
-      ter: 0.0065
-      aum_m_usd: 890
-      replication: physical
-      avg_spread_bps: 12
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 679
       recommendation_tier: 2
-      notes: "UCITS-compliant gold miners. Lower AUM than GDX. Similar exposure."
-      last_verified: "2026-06-01"
+      notes: "Alternativa; menor AUM."
+      last_verified: "2026-08-27"
 
   silver_physical:
     - ticker: "PHAG.L"
-      name: "WisdomTree Physical Silver ETC"
+      name: "WisdomTree Physical Silver"
       exchange: LSE
       currency: USD
-      ucits: true
-      ter: 0.0019
-      aum_m_usd: 1800
-      replication: physical
-      avg_spread_bps: 6
+      ucits: false
+      instrument: etc
+      broker_access: assumed
+      ter: null
+      aum_m_usd: null
       recommendation_tier: 1
-      notes: "Best UCITS silver ETC by AUM and spread. Physically backed."
-      last_verified: "2026-06-01"
-    - ticker: "XSLV.DE"
-      name: "Xtrackers Physical Silver ETC"
+      notes: "Respaldo fisico."
+      last_verified: "2026-08-27"
+    - ticker: "SSLN.L"
+      name: "iShares Physical Silver ETC"
+      exchange: LSE
+      currency: GBp
+      ucits: false
+      instrument: etc
+      broker_access: assumed
+      ter: null
+      aum_m_usd: null
+      recommendation_tier: 2
+      notes: "Alternativa, linea GBp."
+      last_verified: "2026-08-27"
+
+  # ==========================================================================
+  # METALES INDUSTRIALES Y AGRO
+  # ==========================================================================
+
+  copper_miners:
+    - ticker: "4COP.DE"
+      name: "Global X Copper Miners UCITS ETF USD Acc"
       exchange: XETRA
       currency: EUR
       ucits: true
-      ter: 0.0045
-      aum_m_usd: 420
-      replication: physical
-      avg_spread_bps: 12
+      instrument: etf
+      broker_access: verified
+      ter: null
+      aum_m_usd: 1130
+      recommendation_tier: 1
+      notes: "EN CARTERA. Equivalente UCITS de COPX. Linea EUR — sin friccion FX en el broker."
+      last_verified: "2026-08-27"
+    - ticker: "COPX.L"
+      name: "Global X Copper Miners UCITS ETF USD Acc"
+      exchange: LSE
+      currency: USD
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 1130
       recommendation_tier: 2
-      notes: "EUR-denominated. Lower AUM."
-      last_verified: "2026-06-01"
-
-  silver_miners:
-    - ticker: "SIL"
-      name: "Global X Silver Miners ETF"
-      exchange: NYSE
+      notes: "Mismo fondo, linea USD."
+      last_verified: "2026-08-27"
+    - ticker: "COPA.L"
+      name: "WisdomTree Copper"
+      exchange: LSE
       currency: USD
       ucits: false
-      ter: 0.0065
-      aum_m_usd: 890
-      replication: physical
-      avg_spread_bps: 14
-      recommendation_tier: 1
-      notes: "Only meaningful pure-play silver miners ETF. WPM, PAAS, FRTS top holdings. Low AUM — size carefully."
-      last_verified: "2026-06-01"
-
-  royalty_streaming_metals:
-    - ticker: "MRGR"
-      name: "No pure-play royalty ETF available"
-      exchange: N/A
-      currency: N/A
-      ucits: false
+      instrument: etc
+      broker_access: assumed
       ter: null
       aum_m_usd: null
-      replication: null
-      avg_spread_bps: null
       recommendation_tier: 3
-      notes: "No ETF covers royalty/streaming exclusively. Best proxy: GDX (contains WPM, RGLD at ~10-12% combined). Alternative: direct position in WPM (Wheaton Precious Metals) or RGLD (Royal Gold)."
-      last_verified: "2026-06-01"
-
-  # ═══════════════════════════════════════════════
-  # INDUSTRIAL METALS & BATTERY MATERIALS
-  # ═══════════════════════════════════════════════
-
-  copper_miners:
-    - ticker: "COPX"
-      name: "Global X Copper Miners ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0065
-      aum_m_usd: 2100
-      replication: physical
-      avg_spread_bps: 8
-      recommendation_tier: 1
-      notes: "Largest pure-play copper miners ETF. SCCO, FCX, TECK, ANTO top holdings. No physical copper."
-      last_verified: "2026-06-01"
-    - ticker: "COPA.L"
-      name: "WisdomTree Copper ETC"
-      exchange: LSE
-      currency: USD
-      ucits: true
-      ter: 0.0049
-      aum_m_usd: 640
-      replication: synthetic_swap
-      avg_spread_bps: 12
-      recommendation_tier: 2
-      notes: "Physical commodity exposure (not miners). Synthetic. Different thesis to COPX — pure price play."
-      last_verified: "2026-06-01"
-    - ticker: "COPX.L"
-      name: "Global X Copper Miners UCITS ETF"
-      exchange: LSE
-      currency: USD
-      ucits: true
-      ter: 0.0065
-      aum_m_usd: 380
-      replication: physical
-      avg_spread_bps: 16
-      recommendation_tier: 2
-      notes: "UCITS version of COPX. Lower AUM than US version but same exposure."
-      last_verified: "2026-06-01"
+      notes: "ETC sobre el COBRE, no sobre mineras: sin beta operativo. Usar solo para expresar la materia prima."
+      last_verified: "2026-08-27"
 
   lithium_miners:
-    - ticker: "LIT"
-      name: "Global X Lithium & Battery Tech ETF"
-      exchange: NYSE
+    - ticker: "VOLT.L"
+      name: "WisdomTree Battery Solutions UCITS ETF - USD Acc"
+      exchange: LSE
       currency: USD
-      ucits: false
-      ter: 0.0075
-      aum_m_usd: 1400
-      replication: physical
-      avg_spread_bps: 9
-      recommendation_tier: 1
-      notes: "Mix of lithium miners + battery manufacturers (CATL, Panasonic). Not a pure mining play."
-      last_verified: "2026-06-01"
-    - ticker: "BATT"
-      name: "Amplify Lithium & Battery Technology ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0059
-      aum_m_usd: 420
-      replication: physical
-      avg_spread_bps: 14
-      recommendation_tier: 2
-      last_verified: "2026-06-01"
-
-  rare_earth_miners:
-    - ticker: "REMX"
-      name: "VanEck Rare Earth/Strategic Metals ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0059
-      aum_m_usd: 580
-      replication: physical
-      avg_spread_bps: 16
-      recommendation_tier: 1
-      notes: "Only liquid rare earth ETF. MP Materials, Lynas, Energy Fuels. High China processing risk embedded."
-      last_verified: "2026-06-01"
-
-  steel_producers:
-    - ticker: "SLX"
-      name: "VanEck Steel ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0056
-      aum_m_usd: 110
-      replication: physical
-      avg_spread_bps: 22
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 166
       recommendation_tier: 2
       liquidity_warning: true
-      notes: "Low AUM — use small sizing. NUE, STLD, CLF, MT top holdings."
-      last_verified: "2026-06-01"
-
-  water_infrastructure:
-    - ticker: "PHO"
-      name: "Invesco Water Resources ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0060
-      aum_m_usd: 1800
-      replication: physical
-      avg_spread_bps: 7
-      recommendation_tier: 1
-      notes: "Water utilities + infrastructure equipment. Xylem, Veolia, Pentair."
-      last_verified: "2026-06-01"
-    - ticker: "WTRD.L"
-      name: "Lyxor World Water UCITS ETF"
+      notes: "Cadena de valor de baterias. AUM 166M < 200M: liquidity_warning."
+      last_verified: "2026-08-27"
+    - ticker: "LITU.L"
+      name: "Global X Lithium & Battery Tech UCITS ETF USD Acc"
       exchange: LSE
-      currency: EUR
+      currency: USD
       ucits: true
-      ter: 0.0060
-      aum_m_usd: 1100
-      replication: physical
-      avg_spread_bps: 10
-      recommendation_tier: 1
-      notes: "UCITS. EUR-denominated. Similar exposure to PHO."
-      last_verified: "2026-06-01"
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 117
+      recommendation_tier: 3
+      liquidity_warning: true
+      notes: "Equivalente UCITS de LIT. AUM 117M: liquidity_warning."
+      last_verified: "2026-08-27"
 
   agriculture_soft_commodities:
-    - ticker: "DBA"
-      name: "Invesco DB Agriculture Fund"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0085
-      aum_m_usd: 810
-      replication: synthetic_swap
-      avg_spread_bps: 10
+    - ticker: "SPAG.L"
+      name: "iShares Agribusiness UCITS ETF USD (Acc)"
+      exchange: LSE
+      currency: GBp
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 491
       recommendation_tier: 1
-      notes: "Commodity futures basket: wheat, corn, soybeans, sugar, coffee. Not equity."
-      last_verified: "2026-06-01"
-    - ticker: "MOO"
-      name: "VanEck Agribusiness ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0053
-      aum_m_usd: 680
-      replication: physical
-      avg_spread_bps: 11
-      recommendation_tier: 2
-      notes: "Equity play — agri companies (Deere, Corteva, Nutrien). Different from commodity DBA."
-      last_verified: "2026-06-01"
+      notes: "Rescata el sector: sustituye a MOO/DBA. Agronegocio (equity), no futuros de blandos."
+      last_verified: "2026-08-27"
 
-  # ═══════════════════════════════════════════════
-  # FINANCIALS
-  # ═══════════════════════════════════════════════
+  water_infrastructure:
+    - ticker: "IH2O.L"
+      name: "iShares Global Water UCITS ETF USD (Dist)"
+      exchange: LSE
+      currency: GBp
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 2196
+      recommendation_tier: 1
+      notes: "Sustituye a WTRD.L (no resuelve) y PHO (US)."
+      last_verified: "2026-08-27"
+
+  # ==========================================================================
+  # FINANCIERO
+  # ==========================================================================
 
   eu_retail_banking:
     - ticker: "EXV1.DE"
-      name: "iShares EURO STOXX Banks UCITS ETF"
+      name: "iShares STOXX Europe 600 Banks UCITS ETF (DE)"
       exchange: XETRA
       currency: EUR
       ucits: true
-      ter: 0.0016
-      aum_m_usd: 3200
-      replication: physical
-      avg_spread_bps: 5
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 3581
       recommendation_tier: 1
-      notes: "Best UCITS EU banking ETF. EUR-denominated. BNP, SAN, ING, UCG top holdings."
-      last_verified: "2026-06-01"
-    - ticker: "EUFN"
-      name: "iShares MSCI Europe Financials ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0048
-      aum_m_usd: 1100
-      replication: physical
-      avg_spread_bps: 9
-      recommendation_tier: 2
-      notes: "Broader than EXV1 — includes insurance and asset management. Less pure banking."
-      last_verified: "2026-06-01"
-
-  us_retail_banking:
-    - ticker: "KBE"
-      name: "SPDR S&P Bank ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0035
-      aum_m_usd: 1900
-      replication: physical
-      avg_spread_bps: 4
-      recommendation_tier: 1
-      notes: "Equal-weight US banks. Less concentration risk than market-cap weighted."
-      last_verified: "2026-06-01"
-    - ticker: "KRE"
-      name: "SPDR S&P Regional Banking ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0035
-      aum_m_usd: 3100
-      replication: physical
-      avg_spread_bps: 3
-      recommendation_tier: 1
-      notes: "Regional banks only — more Fed-rate-sensitive, less capital markets exposure."
-      last_verified: "2026-06-01"
-
-  fintech_payments:
-    - ticker: "FINX"
-      name: "Global X FinTech ETF"
-      exchange: NASDAQ
-      currency: USD
-      ucits: false
-      ter: 0.0068
-      aum_m_usd: 620
-      replication: physical
-      avg_spread_bps: 11
-      recommendation_tier: 1
-      notes: "Payments + lending + insurance tech. SQ, PYPL, ADYEN, NU."
-      last_verified: "2026-06-01"
-    - ticker: "IPAY"
-      name: "ETFMG Prime Mobile Payments ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0075
-      aum_m_usd: 290
-      replication: physical
-      avg_spread_bps: 14
-      recommendation_tier: 2
-      notes: "Narrower — pure digital payments. V, MA, PYPL, ADYEN. More focused than FINX."
-      last_verified: "2026-06-01"
+      notes: "Banca europea, EUR. Unica entrada de la v1.1 que sobrevive sin cambios."
+      last_verified: "2026-08-27"
 
   crypto_infrastructure:
-    - ticker: "BTCE.DE"
-      name: "ETC Group Physical Bitcoin ETP"
-      exchange: XETRA
-      currency: EUR
-      ucits: false
-      ter: 0.0200
-      aum_m_usd: 1100
-      replication: physical
-      avg_spread_bps: 12
-      recommendation_tier: 1
-      notes: "Physically backed BTC. Not UCITS but accessible on XETRA. Best EU option for BTC exposure."
-      last_verified: "2026-06-01"
-    - ticker: "MSTR"
-      name: "Strategy (MicroStrategy) — equity proxy"
-      exchange: NASDAQ
-      currency: USD
-      ucits: false
-      ter: null
-      aum_m_usd: null
-      replication: null
-      avg_spread_bps: null
-      recommendation_tier: 3
-      notes: "Not an ETF. Levered BTC equity proxy. Monitor as sentiment indicator only."
-      last_verified: "2026-06-01"
-
-  # ═══════════════════════════════════════════════
-  # TECHNOLOGY
-  # ═══════════════════════════════════════════════
-
-  semiconductors_design:
-    - ticker: "SOXX"
-      name: "iShares Semiconductor ETF"
-      exchange: NASDAQ
-      currency: USD
-      ucits: false
-      ter: 0.0035
-      aum_m_usd: 11200
-      replication: physical
-      avg_spread_bps: 2
-      recommendation_tier: 1
-      notes: "Most liquid semis ETF. NVDA, AVGO, AMD, QCOM, INTC. High NVDA concentration."
-      last_verified: "2026-06-01"
-    - ticker: "SMH"
-      name: "VanEck Semiconductor ETF"
-      exchange: NASDAQ
-      currency: USD
-      ucits: false
-      ter: 0.0035
-      aum_m_usd: 21000
-      replication: physical
-      avg_spread_bps: 2
-      recommendation_tier: 1
-      notes: "Largest semis ETF. Similar to SOXX. NVDA ~25% — very concentrated."
-      last_verified: "2026-06-01"
-    - ticker: "SEMI.L"
-      name: "iShares MSCI Global Semiconductors UCITS ETF"
+    - ticker: "DAPP.L"
+      name: "VanEck Crypto & Blockchain Innovators UCITS ETF A USD Acc"
       exchange: LSE
       currency: USD
       ucits: true
-      ter: 0.0035
-      aum_m_usd: 4250
-      replication: physical
-      avg_spread_bps: 8
-      recommendation_tier: 2
-      notes: "UCITS. Includes TSMC + non-US names. More geographically diversified than SOXX. AUM updated 2026-06-05 via WebSearch: total cross-listing ~$4.25B (LSE line alone ~$1.4B); was $2.4B 2026-06-01. Share-class ambiguity — reconfirm at quarterly review."
-      last_verified: "2026-06-05"
-
-  semiconductors_equipment:
-    - ticker: "SOXQ"
-      name: "No pure equipment ETF — use SOXX with equipment tilt"
-      exchange: N/A
-      currency: N/A
-      ucits: false
+      instrument: etf
+      broker_access: assumed
       ter: null
-      aum_m_usd: null
-      replication: null
-      avg_spread_bps: null
-      recommendation_tier: 3
-      notes: "No pure-play equipment ETF exists. SOXX includes AMAT, LRCX, KLAC at ~15% combined. Alternative: direct positions in ASML (best pure play) or KLA Corp."
-      last_verified: "2026-06-01"
-    - ticker: "ASML"
-      name: "ASML Holding NV — direct equity (EUV monopoly)"
-      exchange: EURONEXT
-      currency: EUR
-      ucits: false
-      ter: null
-      aum_m_usd: null
-      replication: null
-      avg_spread_bps: null
-      recommendation_tier: 2
-      notes: "Not an ETF. Single-name. Only company making EUV lithography. Track as sector proxy."
-      last_verified: "2026-06-01"
+      aum_m_usd: 511
+      recommendation_tier: 1
+      notes: "Equity de infraestructura cripto (mineras, exchanges). Sustituye a BTCE.DE (ETN) y MSTR (accion suelta)."
+      last_verified: "2026-08-27"
 
-  semiconductors_memory:
-    - ticker: "DRAM"
-      name: "Roundhill Memory ETF (DRAM/HBM/NAND IDMs)"
-      exchange: NASDAQ
+  # ==========================================================================
+  # TECNOLOGIA
+  # ==========================================================================
+
+  semiconductors_design:
+    - ticker: "SEMI.L"
+      name: "iShares MSCI Global Semiconductors UCITS ETF USD Acc"
+      exchange: LSE
+      currency: GBP
+      ucits: true
+      instrument: etf
+      broker_access: verified
+      ter: null
+      aum_m_usd: 5457
+      recommendation_tier: 1
+      notes: "EN CARTERA. Global; cubre tambien equipos (ASML) y memoria (SK Hynix, Micron)."
+      last_verified: "2026-08-27"
+    - ticker: "SMGB.L"
+      name: "VanEck Semiconductor UCITS ETF"
+      exchange: LSE
+      currency: GBP
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 8053
+      recommendation_tier: 1
+      notes: "Mayor AUM del grupo (8.05B). Equivalente UCITS de SMH."
+      last_verified: "2026-08-27"
+    - ticker: "SMH.L"
+      name: "VanEck Semiconductor UCITS ETF"
+      exchange: LSE
       currency: USD
-      ucits: false
-      ter: 0.0065
-      aum_m_usd: 13880
-      replication: physical
-      avg_spread_bps: null
-      recommendation_tier: 3
-      notes: "Pure-play memory ETF, ticker DRAM (corrected from inferred 'MEMU'). Launched 2026-04-02 — fastest ETF launch in history ($6.5B in 27 trading days), AUM $13.88B by early June 2026. ~75% in SK Hynix + Samsung + Micron; also Kioxia, Sandisk, Seagate, WDC. ⚠ US-domiciled, NON-UCITS → generally NOT purchasable by EU retail under PRIIPs/KID rules. For a Spanish investor this is the key access constraint — no UCITS pure-play exists yet. Tier 3 until a UCITS wrapper appears."
-      last_verified: "2026-06-04"
-    - ticker: "SMH"
-      name: "VanEck Semiconductor ETF (Micron ~5% — partial proxy)"
-      exchange: NASDAQ
-      currency: USD
-      ucits: false
-      ter: 0.0035
-      aum_m_usd: 21000
-      replication: physical
-      avg_spread_bps: 2
-      recommendation_tier: 3
-      notes: "Proxy only. Micron ~5% weight; SK Hynix/Samsung absent (US-listed focus). Use for liquidity, not pure exposure."
-      last_verified: "2026-06-01"
-    - ticker: "EWY"
-      name: "iShares MSCI South Korea ETF (SK Hynix proxy)"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0059
-      aum_m_usd: null
-      replication: physical
-      avg_spread_bps: null
-      recommendation_tier: 3
-      notes: "Indirect SK Hynix exposure via Korea index. Diluted by broad Korean equities. Proxy of last resort."
-      last_verified: "2026-06-04"
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 8053
+      recommendation_tier: 2
+      notes: "Mismo fondo, linea USD. OJO: no confundir con SMH de NASDAQ (US, no comprable)."
+      last_verified: "2026-08-27"
 
   ai_infrastructure_data_centers:
-    - ticker: "AIPO"
-      name: "Defiance AI & Power Infrastructure UCITS ETF"
+    - ticker: "XAIX.DE"
+      name: "Xtrackers Artificial Intelligence & Big Data UCITS ETF 1C"
       exchange: XETRA
       currency: EUR
       ucits: true
-      ter: 0.0069
-      aum_m_usd: null
-      replication: physical
-      avg_spread_bps: null
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 8556
       recommendation_tier: 1
-      notes: "Best-fit UCITS ETF for this sector. Tracks MarketVector US Listed AI & Power Infrastructure index — covers grid systems, data centers, nuclear, and AI computing hardware. Also listed on Borsa Italiana. Launched March 2026. Named Best New Thematic ETF at ETF.com Awards 2026. AUM and spread pending — verify before entry."
-      last_verified: "2026-06-04"
-    - ticker: "AINF"
-      name: "iShares AI Infrastructure UCITS ETF"
-      exchange: multiple
+      notes: "8.56B AUM, EUR. Sustituye a AIPO.DE (no resuelve) y BOTZ/SRVR (US)."
+      last_verified: "2026-08-27"
+    - ticker: "AIAI.L"
+      name: "L&G Artificial Intelligence UCITS ETF"
+      exchange: LSE
       currency: USD
       ucits: true
+      instrument: etf
+      broker_access: assumed
       ter: null
-      aum_m_usd: null
-      replication: physical
-      avg_spread_bps: null
-      recommendation_tier: 1
-      notes: "BlackRock pure-play AI infrastructure UCITS ETF, launched 2026. TER, AUM, and spread data pending verification. UCITS compliant. Preferred over BOTZ/SRVR for UCITS-constrained investors."
-      last_verified: "2026-06-04"
-    - ticker: "WTAI"
-      name: "WisdomTree Artificial Intelligence UCITS ETF"
-      exchange: multiple
+      aum_m_usd: 1918
+      recommendation_tier: 2
+      notes: "Alternativa, sesgo mas puro a IA."
+      last_verified: "2026-08-27"
+    - ticker: "WTAI.L"
+      name: "WisdomTree Artificial Intelligence UCITS ETF - USD Acc"
+      exchange: LSE
       currency: USD
       ucits: true
+      instrument: etf
+      broker_access: assumed
       ter: null
-      aum_m_usd: 800
-      replication: physical
-      avg_spread_bps: null
+      aum_m_usd: 1344
       recommendation_tier: 2
-      notes: "Broader AI value chain ($800M AUM). Tracks Nasdaq CTA Artificial Intelligence Index — covers hardware, infrastructure, and software. Dilutes pure infrastructure thesis with semiconductor and application layer exposure."
-      last_verified: "2026-06-04"
-    - ticker: "BOTZ"
-      name: "Global X Robotics & Artificial Intelligence ETF"
-      exchange: NASDAQ
-      currency: USD
-      ucits: false
-      ter: 0.0068
-      aum_m_usd: 2800
-      replication: physical
-      avg_spread_bps: 7
-      recommendation_tier: 3
-      notes: "NOT UCITS — restricted for Spanish investors. Broader than pure AI infra (includes robotics). Proxy for AI hardware. Only use if broker allows non-UCITS access."
-      last_verified: "2026-06-04"
-    - ticker: "SRVR"
-      name: "Pacer Data & Infrastructure Real Estate ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0060
-      aum_m_usd: 490
-      replication: physical
-      avg_spread_bps: 12
-      recommendation_tier: 3
-      notes: "NOT UCITS — restricted for Spanish investors. Data center REIT expression: EQIX, DLR, AMT. Interest-rate sensitive. Use only if UCITS alternatives unavailable."
-      last_verified: "2026-06-04"
-
-  cloud_software_saas:
-    - ticker: "CLOU"
-      name: "Global X Cloud Computing ETF"
-      exchange: NASDAQ
-      currency: USD
-      ucits: false
-      ter: 0.0068
-      aum_m_usd: 1100
-      replication: physical
-      avg_spread_bps: 9
-      recommendation_tier: 1
-      notes: "Pure SaaS/cloud. Salesforce, Workday, Snowflake, ServiceNow."
-      last_verified: "2026-06-01"
-    - ticker: "WCLD"
-      name: "WisdomTree Cloud Computing Fund"
-      exchange: NASDAQ
-      currency: USD
-      ucits: false
-      ter: 0.0045
-      aum_m_usd: 780
-      replication: physical
-      avg_spread_bps: 11
-      recommendation_tier: 2
-      notes: "Lower TER than CLOU. Similar exposure."
-      last_verified: "2026-06-01"
+      notes: "Alternativa."
+      last_verified: "2026-08-27"
 
   robotics_automation:
-    - ticker: "ROBO"
-      name: "ROBO Global Robotics & Automation ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0095
-      aum_m_usd: 1200
-      replication: physical
-      avg_spread_bps: 10
-      recommendation_tier: 1
-      notes: "Equal-weight, most diversified robotics ETF. High TER. ABB, Fanuc, Keyence."
-      last_verified: "2026-06-01"
-    - ticker: "IQQR.DE"
-      name: "iShares Automation & Robotics UCITS ETF"
-      exchange: XETRA
+    - ticker: "RBOT.L"
+      name: "iShares Automation & Robotics UCITS ETF USD (Acc)"
+      exchange: LSE
       currency: USD
       ucits: true
-      ter: 0.0040
-      aum_m_usd: 2900
-      replication: physical
-      avg_spread_bps: 7
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 5217
       recommendation_tier: 1
-      notes: "UCITS. Best combination of AUM and TER in robotics space."
-      last_verified: "2026-06-01"
+      notes: "CORRIGE UN ERROR GRAVE: la v1.1 ponia IQQR.DE como tier-1, que es iShares MSCI EASTERN EUROPE Capped — sector completamente distinto."
+      last_verified: "2026-08-27"
 
   cybersecurity_commercial:
-    - ticker: "CIBR"
-      name: "First Trust NASDAQ Cybersecurity ETF"
-      exchange: NASDAQ
-      currency: USD
-      ucits: false
-      ter: 0.0060
-      aum_m_usd: 5100
-      replication: physical
-      avg_spread_bps: 4
-      recommendation_tier: 1
-      notes: "Largest cybersecurity ETF. CRWD, PANW, FTNT, ZS, OKTA."
-      last_verified: "2026-06-01"
-    - ticker: "BUG"
-      name: "Global X Cybersecurity ETF"
-      exchange: NASDAQ
-      currency: USD
-      ucits: false
-      ter: 0.0050
-      aum_m_usd: 890
-      replication: physical
-      avg_spread_bps: 8
-      recommendation_tier: 2
-      notes: "Lower TER than CIBR. Similar exposure."
-      last_verified: "2026-06-01"
-    - ticker: "ISPY.L"
+    - ticker: "USPY.L"
       name: "L&G Cyber Security UCITS ETF"
       exchange: LSE
       currency: USD
       ucits: true
-      ter: 0.0069
-      aum_m_usd: 1600
-      replication: physical
-      avg_spread_bps: 9
-      recommendation_tier: 1
-      notes: "CORRECTED 2026-06-06: ISPY (ISIN IE00BYPLS672) is the L&G Cyber Security UCITS ETF (was mislabelled as iShares). Same fund as USPY (Frankfurt/Xetra line) — only the listing/currency differs. NOT the same as iShares LOCK (IE00BG0J4C88), a different fund/index. Both UCITS, accessible to a Spanish investor."
-      last_verified: "2026-06-06"
-    - ticker: "LOCK.L"
-      name: "iShares Digital Security UCITS ETF"
-      exchange: LSE
-      currency: USD
-      ucits: true
-      ter: 0.0040
-      aum_m_usd: 1600
-      replication: physical
-      avg_spread_bps: 9
-      recommendation_tier: 2
-      notes: "Added 2026-06-06: the actual iShares cyber/digital-security UCITS ETF (ISIN IE00BG0J4C88). Different index/holdings from L&G ISPY. Use if you specifically want the iShares exposure."
-      last_verified: "2026-06-06"
-
-  # ═══════════════════════════════════════════════
-  # HEALTHCARE
-  # ═══════════════════════════════════════════════
-
-  biotech_drug_development:
-    - ticker: "IBB"
-      name: "iShares Nasdaq Biotechnology ETF"
-      exchange: NASDAQ
-      currency: USD
-      ucits: false
-      ter: 0.0044
-      aum_m_usd: 7200
-      replication: physical
-      avg_spread_bps: 3
-      recommendation_tier: 1
-      notes: "Most liquid biotech ETF. Large-cap bias — AMGN, GILD, VRTX, REGN dominate."
-      last_verified: "2026-06-01"
-    - ticker: "XBI"
-      name: "SPDR S&P Biotech ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0035
-      aum_m_usd: 6400
-      replication: physical
-      avg_spread_bps: 3
-      recommendation_tier: 1
-      notes: "Equal-weight — more small/mid exposure than IBB. Higher beta, more clinical-stage risk."
-      last_verified: "2026-06-01"
-
-  genomics_precision_medicine:
-    - ticker: "ARKG"
-      name: "ARK Genomic Revolution ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0075
-      aum_m_usd: 1400
-      replication: physical
-      avg_spread_bps: 8
-      recommendation_tier: 2
-      notes: "Active management. High tracking error. CRISPR, Intellia, Pacific Biosciences. ARK risk."
-      last_verified: "2026-06-01"
-    - ticker: "GNOM"
-      name: "Global X Genomics & Biotechnology ETF"
-      exchange: NASDAQ
-      currency: USD
-      ucits: false
-      ter: 0.0050
-      aum_m_usd: 310
-      replication: physical
-      avg_spread_bps: 16
-      recommendation_tier: 2
-      notes: "Passive. Lower AUM than ARKG but systematic exposure."
-      last_verified: "2026-06-01"
-
-  medical_devices:
-    - ticker: "IHI"
-      name: "iShares U.S. Medical Devices ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0040
-      aum_m_usd: 4800
-      replication: physical
-      avg_spread_bps: 4
-      recommendation_tier: 1
-      notes: "Pure US medical devices. ABT, MDT, BSX, SYK, ISRG top holdings."
-      last_verified: "2026-06-01"
-
-  pharma_large_cap:
-    - ticker: "IHE"
-      name: "iShares U.S. Pharmaceuticals ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0040
-      aum_m_usd: 610
-      replication: physical
-      avg_spread_bps: 9
-      recommendation_tier: 1
-      notes: "US large pharma. JNJ, LLY, PFE, ABBV, MRK. Low TER but low AUM."
-      last_verified: "2026-06-01"
-    - ticker: "PPH"
-      name: "VanEck Pharmaceutical ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0036
-      aum_m_usd: 440
-      replication: physical
-      avg_spread_bps: 10
-      recommendation_tier: 2
-      notes: "Global pharma — includes Roche, Novartis, AZ. More international than IHE."
-      last_verified: "2026-06-01"
-
-  # ═══════════════════════════════════════════════
-  # REAL ASSETS & CONSUMER
-  # ═══════════════════════════════════════════════
-
-  real_estate_logistics:
-    - ticker: "PROL"
-      name: "No pure-play logistics REIT ETF"
-      exchange: N/A
-      currency: N/A
-      ucits: false
+      instrument: etf
+      broker_access: verified
       ter: null
       aum_m_usd: null
-      replication: null
-      avg_spread_bps: null
-      recommendation_tier: 3
-      notes: "No ETF focused exclusively on logistics REITs. INDS (Pacer Industrial REIT) is closest with ~$280M AUM — low liquidity. Alternative: direct position in PLD (Prologis) or GLP."
-      last_verified: "2026-06-01"
-
-  real_estate_data_centers:
-    - ticker: "SRVR"
-      name: "Pacer Data & Infrastructure Real Estate ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0060
-      aum_m_usd: 490
-      replication: physical
-      avg_spread_bps: 12
       recommendation_tier: 1
-      notes: "Data center + cell tower REITs. EQIX, DLR, AMT, CCI. Best available vehicle."
-      last_verified: "2026-06-01"
-
-  infrastructure_core:
-    - ticker: "IFRA"
-      name: "iShares U.S. Infrastructure ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0030
-      aum_m_usd: 1900
-      replication: physical
-      avg_spread_bps: 7
-      recommendation_tier: 1
-      notes: "US infrastructure: utilities, transportation, construction. Low TER."
-      last_verified: "2026-06-01"
-    - ticker: "INFR.L"
-      name: "iShares Global Infrastructure UCITS ETF"
+      notes: "EN CARTERA. Linea USD."
+      last_verified: "2026-08-27"
+    - ticker: "LOCK.L"
+      name: "iShares Digital Security UCITS ETF USD Acc"
       exchange: LSE
       currency: USD
       ucits: true
-      ter: 0.0065
-      aum_m_usd: 3100
-      replication: physical
-      avg_spread_bps: 8
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 1987
       recommendation_tier: 1
-      notes: "UCITS. Global infrastructure — toll roads, airports, utilities. Transurban, Enbridge, Vinci."
-      last_verified: "2026-06-01"
+      notes: "Mayor AUM del grupo."
+      last_verified: "2026-08-27"
+    - ticker: "ISPY.L"
+      name: "L&G Cyber Security UCITS ETF"
+      exchange: LSE
+      currency: GBp
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: null
+      recommendation_tier: 2
+      notes: "Mismo fondo que USPY.L, linea GBp."
+      last_verified: "2026-08-27"
 
-  luxury_goods:
-    - ticker: "LUXE.PA"
-      name: "Amundi S&P Global Luxury UCITS ETF"
+  cloud_software_saas:
+    - ticker: "WCLD.L"
+      name: "WisdomTree Cloud Computing UCITS ETF - USD Acc"
+      exchange: LSE
+      currency: USD
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 280
+      recommendation_tier: 2
+      notes: "Rescata el sector: equivalente UCITS de WCLD/CLOU. SaaS puro, alta beta."
+      last_verified: "2026-08-27"
+    - ticker: "DGTL.L"
+      name: "iShares Digitalisation UCITS ETF USD (Acc)"
+      exchange: LSE
+      currency: USD
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 761
+      recommendation_tier: 2
+      notes: "Mas amplio y mas liquido; menos puro en SaaS."
+      last_verified: "2026-08-27"
+
+  # ==========================================================================
+  # SALUD
+  # ==========================================================================
+
+  pharma_large_cap:
+    - ticker: "IUHE.AS"
+      name: "iShares S&P 500 Health Care Sector UCITS ETF EUR Hedged (Dist)"
       exchange: EURONEXT
       currency: EUR
       ucits: true
-      ter: 0.0025
-      aum_m_usd: 1400
-      replication: physical
-      avg_spread_bps: 8
+      instrument: etf
+      broker_access: verified
+      ter: null
+      aum_m_usd: null
       recommendation_tier: 1
-      notes: "UCITS. EUR-denominated. LVMH, Hermès, Kering, Richemont, Ferrari. Lowest TER in luxury."
-      last_verified: "2026-06-01"
-    - ticker: "GLUX.SW"
-      name: "Xtrackers MSCI World Consumer Discretionary UCITS ETF"
-      exchange: SIX
-      currency: USD
-      ucits: true
-      ter: 0.0025
-      aum_m_usd: 890
-      replication: physical
-      avg_spread_bps: 12
-      recommendation_tier: 2
-      notes: "Broader discretionary — not pure luxury. Use LUXE.PA for pure play."
-      last_verified: "2026-06-01"
-
-  consumer_india_em:
-    - ticker: "INDA"
-      name: "iShares MSCI India ETF"
-      exchange: NYSE
-      currency: USD
-      ucits: false
-      ter: 0.0064
-      aum_m_usd: 8900
-      replication: physical
-      avg_spread_bps: 4
-      recommendation_tier: 1
-      notes: "Largest India ETF. Broad exposure — financial, IT, consumer, energy."
-      last_verified: "2026-06-01"
-    - ticker: "NDIA.L"
-      name: "iShares MSCI India UCITS ETF"
+      notes: "EN CARTERA. Cubierto a EUR: elimina el FX pero cuesta el diferencial de tipos. Salud S&P500, no farma pura."
+      last_verified: "2026-08-27"
+    - ticker: "IUHC.L"
+      name: "iShares S&P 500 Health Care Sector UCITS ETF USD (Acc)"
       exchange: LSE
       currency: USD
       ucits: true
-      ter: 0.0065
-      aum_m_usd: 2100
-      replication: physical
-      avg_spread_bps: 10
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: null
+      recommendation_tier: 2
+      notes: "Mismo indice sin cobertura FX."
+      last_verified: "2026-08-27"
+
+  biotech_drug_development:
+    - ticker: "BTEC.L"
+      name: "iShares Nasdaq US Biotechnology UCITS ETF USD (Acc)"
+      exchange: LSE
+      currency: USD
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 1147
       recommendation_tier: 1
-      notes: "UCITS equivalent for EU investor."
-      last_verified: "2026-06-01"
-
-  # ═══════════════════════════════════════════════
-  # DEEP TECH — INVESTABLE
-  # ═══════════════════════════════════════════════
-
-  synthetic_biology:
-    - ticker: "ARKG"
-      name: "ARK Genomic Revolution ETF"
-      exchange: NYSE
+      notes: "Rescata el sector: equivalente UCITS de IBB. Sustituye a XBI/IBB (US)."
+      last_verified: "2026-08-27"
+    - ticker: "HEAL.L"
+      name: "iShares Healthcare Innovation UCITS ETF USD (Acc)"
+      exchange: LSE
       currency: USD
-      ucits: false
-      ter: 0.0075
-      aum_m_usd: 1400
-      replication: physical
-      avg_spread_bps: 8
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 1186
       recommendation_tier: 2
-      notes: "Closest proxy. Includes synbio companies (Ginkgo Bioworks, Twist Bioscience). High active risk."
-      last_verified: "2026-06-01"
+      notes: "Innovacion en salud (mas amplio: genomica + dispositivos). Absorbe genomics_precision_medicine y medical_devices, ya watch-only."
+      last_verified: "2026-08-27"
 
-  space_commercial:
-    - ticker: "ROKT"
-      name: "ARK Space Exploration & Innovation ETF"
-      exchange: NYSE
+  # ==========================================================================
+  # ACTIVOS REALES Y CONSUMO
+  # ==========================================================================
+
+  infrastructure_core:
+    - ticker: "INFR.L"
+      name: "iShares Global Infrastructure UCITS ETF USD (Dist)"
+      exchange: LSE
+      currency: GBp
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: null
+      recommendation_tier: 1
+      notes: "Infraestructura global cotizada."
+      last_verified: "2026-08-27"
+
+  luxury_goods:
+    - ticker: "GLUX.SW"
+      name: "Amundi Index Solutions - Amundi Global Luxury UCITS ETF EUR Acc"
+      exchange: SIX
+      currency: EUR
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: null
+      recommendation_tier: 1
+      notes: "EUR. Sustituye a LUXE.PA (no resuelve). Cotiza en SIX (Suiza) — confirmar acceso, es la plaza menos habitual del universo."
+      last_verified: "2026-08-27"
+    - ticker: "LUXU.L"
+      name: "Amundi Index Solutions - Amundi Global Luxury UCITS ETF USD Acc"
+      exchange: LSE
       currency: USD
-      ucits: false
-      ter: 0.0075
-      aum_m_usd: 254
-      replication: physical
-      avg_spread_bps: 18
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: null
       recommendation_tier: 2
-      notes: "Only meaningful space ETF. Includes Boeing, LMT — not pure commercial space. Low AUM. AUM updated 2026-06-05 via WebSearch: ~$254M (was $410M 2026-06-01); reconfirm at quarterly review."
-      last_verified: "2026-06-05"
+      notes: "Mismo fondo, linea USD en LSE."
+      last_verified: "2026-08-27"
 
-  longevity_biotech:
-    - ticker: "No pure-play ETF"
-      exchange: N/A
-      currency: N/A
-      ucits: false
+  consumer_india_em:
+    - ticker: "NDIA.L"
+      name: "iShares MSCI India UCITS ETF USD Acc"
+      exchange: LSE
+      currency: USD
+      ucits: true
+      instrument: etf
+      broker_access: assumed
       ter: null
-      aum_m_usd: null
-      replication: null
-      avg_spread_bps: null
-      recommendation_tier: 3
-      notes: "No longevity-specific ETF exists. Proxies: ARKG (genomics), XBI (biotech). Monitor for new launches."
-      last_verified: "2026-06-01"
-
-  # ═══════════════════════════════════════════════
-  # WATCH-ONLY — No ETF vehicle (by definition)
-  # ═══════════════════════════════════════════════
-
-  quantum_computing:
-    - ticker: "No investable ETF"
-      exchange: N/A
-      currency: N/A
-      ucits: false
-      ter: null
-      aum_m_usd: null
-      replication: null
-      avg_spread_bps: null
-      recommendation_tier: 3
-      notes: "Watch-only sector. No UCITS ETF with >50% pure quantum exposure. Monitor IonQ (IONQ), Rigetti (RGTI) as individual proxies. Trigger: first qualifying ETF launch."
-      last_verified: "2026-06-01"
-
-  nuclear_fusion:
-    - ticker: "No investable ETF"
-      exchange: N/A
-      currency: N/A
-      ucits: false
-      ter: null
-      aum_m_usd: null
-      replication: null
-      avg_spread_bps: null
-      recommendation_tier: 3
-      notes: "Watch-only. No public equity vehicle. TAE Technologies, Commonwealth Fusion — private only."
-      last_verified: "2026-06-01"
-
-  brain_computer_interface:
-    - ticker: "No investable ETF"
-      exchange: N/A
-      currency: N/A
-      ucits: false
-      ter: null
-      aum_m_usd: null
-      replication: null
-      avg_spread_bps: null
-      recommendation_tier: 3
-      notes: "Watch-only. Neuralink is private. Synchron, Blackrock Neurotech — private."
-      last_verified: "2026-06-01"
+      aum_m_usd: 5218
+      recommendation_tier: 1
+      notes: "Sustituye a INDA (US). 5.2B AUM."
+      last_verified: "2026-08-27"

@@ -10,17 +10,17 @@ invisible — the goal is full-universe coverage every cycle.
 
 1. Read `CLAUDE.md` for scoring methodology and rules.
 
-2. Read config files (the Tier-1 source of truth):
-   - `catalyx/config/sector_taxonomy.yaml` — all sector IDs and metadata
-   - `catalyx/config/scoring_weights.yaml` — composite formula and weights
-   - `catalyx/config/etf_universe.yaml` — ETF options per sector
-
-   Load runtime data via the repo summaries (read the JSON/YAML documents directly):
+2. **Load the compact digests. Do NOT read the config files.**
    ```
    uv run python -m catalyx.store.structural_catalyst_repo summary
    uv run python -m catalyx.store.catalyst_repo summary
    uv run python -m catalyx.store.sector_study_repo summary
    ```
+   `sector_taxonomy.yaml` (713 lines), `scoring_weights.yaml` (749) and `etf_universe.yaml` (759)
+   used to be read in full here — ~60–90k tokens per run to reproduce facts the Python already
+   owns and applies: `sector_scorer` reads the weights, `snapshot_repo` picks the primary ETF,
+   the repos read the taxonomy. Open one ONLY to answer a specific question the digests cannot
+   (e.g. "which UCITS vehicles exist for sector X?" → grep that sector in `etf_universe.yaml`).
 
 3. **Sector study freshness check (quality gate, not a coverage gate).**
 
@@ -28,26 +28,33 @@ invisible — the goal is full-universe coverage every cycle.
    A sector WITHOUT a study is not excluded — it ranks on its momentum baseline and is
    flagged `⚠ no study (momentum-only)` in the table.
 
-   A study is considered stale if `last_updated` is older than 7 days.
-
-   **Scope of this gate:** only the sectors that DO have a study file. Read their `last_updated` field.
-   For each study file found in `data/sector_studies/`:
-   - Parse `last_updated` and compute days since that date
-   - If > 7 days: mark stale
-
-   **If any existing study is stale, STOP HERE.** A stale study produces a misleading
-   full-dimension score (worse than an honest momentum baseline). Print a checklist:
+   **A study is stale when its DRIVER moved, not when the calendar moved.** Two triggers:
+   - **Driver moved** — the scan flagged strengthen / weaken / invalidation on any catalyst in
+     that study's `active_catalyst_ids`, or a lifecycle transition touched one. This is the real
+     trigger: a study whose drivers did not move is still correct however old it is.
+   - **Hard ceiling: `last_updated` > 45 days.** Not a refresh schedule — a backstop against a
+     study nobody has looked at in a season.
 
    ```
-   ⛔ HEATMAP BLOCKED — stale sector studies:
-   [ ] /catalyx-sector-study <sector_id>   ← last_updated: YYYY-MM-DD (N days old)
-   ...
-   Run the above commands, then re-run /catalyx-heatmap.
+   uv run python -m catalyx.store.sector_study_repo stale --days 45
    ```
 
-   If all existing studies are fresh (≤ 7 days), proceed. Sectors with NO study are never
-   blocked — they appear on the momentum baseline and are listed in the GAPS section (step 9)
-   as candidates for a study next cycle.
+   **This gate WARNS; it does not block.** The old rule ("any study > 7 days → ⛔ HEATMAP
+   BLOCKED") was unsatisfiable in practice and directly contradicted the review's own
+   movement-driven refresh policy: on 2026-08-28 all 26 studies were older than 7 days, so the
+   rule demanded 26 full refreshes before a ranking could be produced at all — precisely the
+   2M-token sweep the policy exists to avoid. A blocked heatmap also produces NO ranking, which
+   is strictly worse than a ranking with a few sectors flagged.
+
+   List the flagged sectors with their reason and carry them into the review's study work list:
+   ```
+   ⚠ studies to refresh (driver moved / > 45d):
+     <sector_id>   last_updated: YYYY-MM-DD (N days)  ← driver <catalyst_id> flagged <delta>
+   ```
+   Then PROCEED. Mark each such sector `⚠ stale study` in the ranking table so the reader
+   discounts its full-dimension score. Sectors with NO study are never blocked either — they
+   rank on the momentum baseline, flagged `⚠ no study (momentum-only)`, and are listed in the
+   GAPS section (step 9) as study candidates.
 
 4. **Run Python scoring pipeline (one call per module).**
 
@@ -76,22 +83,20 @@ invisible — the goal is full-universe coverage every cycle.
 
    These outputs are the authoritative scores. Do NOT recompute catalyst_alignment, momentum, or flow manually.
 
-5. **Apply crowding_risk from sector studies.**
+5. **Record the run, then read the ranking back from it.**
 
-   The sector_scorer defaults `crowding_risk` to 35. Override it per sector using `narrative_maturity`
-   from the sector study:
-   - `ignored`    → 10
-   - `emerging`   → 25
-   - `mainstream` → 55
-   - `crowded`    → 75
-   - `exhausted`  → 90
+   `sector_scorer --all` uses the default `crowding_risk` 35. Do NOT re-run it per sector with
+   `--crowd N` to apply each study's `narrative_maturity`: `snapshot_repo record` already does
+   exactly that (`_crowding_for`, using the same `crowding_from_maturity` map in
+   `scoring_weights.yaml`). Those N extra Bash calls produced a table that merely AGREED with the
+   run being recorded — and drifted from it whenever a study changed in between.
 
-   For each sector whose study has `narrative_maturity` set, re-run with the override:
+   The recorded run is the ranking. Step 11 records it; read it back with:
    ```bash
-   uv run python -m catalyx.scorer.sector_scorer <sector_id> --crowd <N> --json
+   uv run python -m catalyx.store.lake_query ranking --top-n 15
    ```
-
-   Mark each sector's crowding source: `🟢 study.narrative_maturity` or `⚠ default (35)`.
+   Crowding source per sector is implicit: `narrative_maturity` present → from the study;
+   absent → the 35 default. Flag the latter `⚠ default (35)` in the table.
 
 6. For `watch_only: true` sectors: compute trigger progress (N triggers met / total triggers).
    Do not score — only show trigger status.
@@ -106,11 +111,15 @@ invisible — the goal is full-universe coverage every cycle.
    - `flow_confirmation`: ⚠ default (50) — no ETF flow data yet
    - `crowding_risk`: 🟢 from study or ⚠ default (35)
 
-8. For the top 5 sectors, write a detailed block including:
-   - Which catalysts are driving alignment and why (cite specific catalyst IDs and their `catalyst_alignment` breakdown from the scorer output)
-   - The non-obvious finding (what the market has NOT priced)
-   - Best ETF vehicle for a Spanish investor (UCITS preference, flag AUM < $200M)
-   - What real-time data would change the ranking
+8. For the top 5 sectors, write ONE line each: the driving catalyst ids + the buyable UCITS
+   vehicle (flag AUM < $200M). Nothing else.
+
+   The old obligation here was a full prose block per top-5 sector — five "non-obvious findings",
+   five ETF analyses, five "what would change the ranking" paragraphs, every run. The ETF analysis
+   duplicates `etf_universe.yaml`, and four of the five findings were never read by anyone. **The
+   non-obvious finding is now written ONCE**, in the review's executive summary, for the book as a
+   whole. If a sector genuinely needs a narrative block, write it by hand into
+   `experiments/heatmap_blocks/<sector_id>.md` — `snapshot_repo` picks it up as `rationale_md`.
 
 9. Flag any sector where `catalyst_alignment > 75` but where the composite is pulling it down due to weak momentum or high crowding — these are "strong catalyst, bad timing" sectors worth monitoring.
 
@@ -184,7 +193,24 @@ invisible — the goal is full-universe coverage every cycle.
 - Never recommend an ETF without stating TER, AUM, UCITS status, and spread.
 - The non-obvious finding section is mandatory for each top-5 sector. If the reason a sector ranks high is obvious, the analysis adds no value.
 - If two adjacent sectors score similarly, explain the differentiation explicitly.
-- **Pre-calibration banner is mandatory.** The composite score weights (catalyst 0.35 / momentum 0.29 / flow 0.24 / crowding 0.12) are uncalibrated — they require N > 50 closed positions to validate. Until then, all composite scores carry calibration uncertainty. Include this notice at the top of every heatmap report and at the top of every ranking table: `⚠ PRE-CALIBRATION: weights unvalidated (0 closed positions). Scores indicate relative ordering, not precise conviction levels.`
+- **Calibration banner is mandatory — and it must carry the MEASURED number, not a promise.**
+  The old banner said "weights unvalidated (0 closed positions)" and could never clear: it was
+  tied to closing 50 positions, years away at this cadence. Calibration needs no closes — only a
+  run old enough to have forward history. Read the current reading:
+  ```bash
+  uv run python -m catalyx.scorer.calibration --offline
+  ```
+  Put its headline at the top of the report and above the ranking table, in this form:
+  `⚠ CALIBRATION: composite rank IC <X> over <N> sector(s), ~<E> independent window(s) — <verdict>.`
+  Rules for reading it honestly:
+  - Quote the **as-used** IC (the tool already negates `crowding_risk`, which enters the composite
+    inverted). Never quote a raw correlation for that dimension.
+  - An |IC| below `2 × se` is **noise** — say "indistinguishable from noise", never "the composite
+    is inverted". With ~26 sectors, `se ≈ 0.20`, so anything inside ±0.40 says nothing.
+  - Quote `effective_windows`, not the run count: runs weeks apart in one regime are ~one
+    observation. "6 runs" is not 6 samples.
+  - Calibration NEVER moves a weight by itself. Changing `scoring_weights.yaml` is a deliberate
+    human commit, made on several independent windows — not on one quarter.
 - **Regime / opportunity outputs (step 12) are RECOMMENDATIONS for human judgement, never auto-trades.** Python computes the facts (`regime_state`, the persistence dossier, the contagion-vs-idiosyncratic split, correlations); the escalation call (`contested` → regime change?) and the buy/rotate call are yours, made with WebSearch macro context. A `contested` sector keeps its full score and weight — it is a flag to watch, not an action. Only `breaking` (measured fundamental degradation) warrants a rotation recommendation.
 
 ## Output format

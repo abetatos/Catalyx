@@ -87,6 +87,51 @@ rule as the regime persistence layer). Free-text English is brittle to parse, so
 **structured eval fields on the invalidation** (§6): `comparator`, `threshold`, `consecutive_days`,
 keeping `condition` as the human description.
 
+### Family 1b — Capital-preservation floor + catalyst freshness (added 2026-08-04)
+
+Born from a real miss. A EUR grid position sat at **−21.7%** flagged only `watch`, and a GBP semis
+position *looked* like −24% but was really **−11%**. Three defects, three fixes — all in
+`exit_watcher`:
+
+1. **FX bug (the −24% was fake).** `_tax_view` marked `native_price × qty` against an EUR cost
+   basis, so a GBP/USD vehicle's drawdown was garbage (SEMI.L showed −23.8%; real EUR was −11.0%;
+   USPY.L showed +20.2%, real +4.4%). Fix: `assess` now FX-converts the vehicle columns to EUR via
+   `nav_engine._eur_prices` **before** marking (stops still evaluate in native currency — their
+   thresholds are native). A drawdown floor built on the buggy number would have "fired" on a
+   position that wasn't actually down.
+
+2. **The stops never fired.** The only price stops were `"−20% for 10 CONSECUTIVE trading days"`,
+   `review_and_reduce` severity, and the consecutive-day run **reset on any bounce** — an
+   oscillating −22% position never completed the window. Fix: a **two-tier floor on the EUR
+   drawdown vs real cost basis**, no consecutive-day gate — `reduce` at `drawdown_reduce_pct`
+   (−20), `exit` at `drawdown_exit_pct` (−30). (`evaluate_drawdown`.)
+
+3. **The `intact` verdict was 2 months stale.** `regime_state`/assumptions are Claude-set in the
+   review; the last review was 8 weeks before the drawdown. `intensity.last_updated` *looked* fresh
+   (trend-only recompute over stale indicator values). Fix: **catalyst freshness is a first-class
+   input** — `catalyst_freshness` reads each driving catalyst's `status_last_reviewed` (NOT
+   `intensity.last_updated`), the stalest driver governs, and `> catalyst_staleness_max_days` (45)
+   forces a re-verify even with no drawdown.
+
+**Doctrine — FRESHNESS DOMINATES, a drawdown is a trigger to re-verify, not an auto-sell**
+(`drawdown_overlay_action`). The floor never mechanically dumps a position:
+
+| Drawdown tier | Catalyst FRESH + intact | FRESH + weakening (regime contested/breaking or assumption violated) | STALE / unknown verdict |
+|---|---|---|---|
+| reduce (≤ −20%) | `warn` (fear selloff on a live thesis → hold/add is the call) | `reduce` | `warn` + **re-verify** |
+| exit (≤ −30%) | `warn` (mandatory manual review) | `exit` | protective `reduce` + **re-verify** |
+
+The contribution folds into `suggest_action` (`drawdown_action` / `reverify_required`), which only
+ever *raises* the recommendation — it stays recommend-only (§8.1). The user then re-verifies the
+catalyst against live data (as we did: AI-capex and grid were both intact/accelerating, so the
+selloffs were fear/rotation → hold/add, not sells) and acts via `/catalyx-close` or `/catalyx-open`.
+
+**Adaptive review cadence (the enforcement mechanism).** The freshness ceiling is what makes the
+review cadence *adaptive rather than fixed*: review when the market OR the clock asks (a floor of
+~30 days, pulled forward by a position moving >±10%, a −20% drawdown, or a VIX spike; a hard 45-day
+ceiling). If a review slips, `exit_watcher` flags every position whose catalyst verdict is past the
+ceiling — the discipline lives in the timestamp, not in memory.
+
 ### Family 2 — Exit timing (the *when*): mirror of `entry_timing`
 
 Once a discretionary exit/trim is decided, *now or wait?* Reuse `entry_timing`'s **pure math**

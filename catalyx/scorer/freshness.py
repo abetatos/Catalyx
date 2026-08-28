@@ -48,6 +48,9 @@ OVERDUE_DAYS = {
 # common cadence, so an unlabelled indicator is flagged rather than silently ignored.
 _DEFAULT_CADENCE = "monthly"
 
+# Catalysts whose state is terminal — excluded from the audit (see audit_indicators).
+_DEAD_STATUSES = ("deactivated", "merged", "archived", "invalidated")
+
 
 def _days_since(last_date: str | None, as_of: date) -> int | None:
     if not last_date:
@@ -58,7 +61,7 @@ def _days_since(last_date: str | None, as_of: date) -> int | None:
         return None
 
 
-def audit_indicators(as_of: date | None = None) -> list[dict]:
+def audit_indicators(as_of: date | None = None, include_inactive: bool = False) -> list[dict]:
     """Return one row per indicator across all structural catalysts, with a staleness verdict.
 
     Each row: catalyst_id, indicator_id, cadence, last_date, days_since, threshold, stale (bool),
@@ -69,6 +72,13 @@ def audit_indicators(as_of: date | None = None) -> list[dict]:
     rows: list[dict] = []
     for f in sorted(_STRUCTURAL_DIR.glob("*.yaml")):
         d = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        # A merged/deactivated catalyst is DEAD state: its indicators will never be refreshed
+        # again, so auditing them manufactures permanent "stale" rows that inflate the review's
+        # work list with work nobody should do. Same exclusion `structural_catalyst_repo` and
+        # `catalyst_review` already apply. (After the 2026-08-27 universe cut this was 18 of 66
+        # audited indicators — 5 merged catalysts' worth.)
+        if not include_inactive and d.get("status") in _DEAD_STATUSES:
+            continue
         cid = d.get("id") or d.get("catalyst_id") or f.stem
         for ind in d.get("indicators", []) or []:
             raw_cadence = (ind.get("check_frequency") or "").strip().lower()
@@ -97,9 +107,9 @@ def audit_indicators(as_of: date | None = None) -> list[dict]:
     return rows
 
 
-def overdue(as_of: date | None = None) -> list[dict]:
+def overdue(as_of: date | None = None, include_inactive: bool = False) -> list[dict]:
     """Just the stale indicators — the Step 2 refresh work list."""
-    return [r for r in audit_indicators(as_of) if r["stale"]]
+    return [r for r in audit_indicators(as_of, include_inactive) if r["stale"]]
 
 
 def main() -> None:
@@ -110,10 +120,13 @@ def main() -> None:
     p.add_argument("--json", action="store_true", help="machine-readable output for the skill")
     p.add_argument("--all", action="store_true", help="include fresh indicators, not just overdue")
     p.add_argument("--as-of", default=None, help="audit date YYYY-MM-DD (default today)")
+    p.add_argument("--include-inactive", action="store_true",
+                   help="also audit merged/deactivated catalysts (dead state; off by default)")
     args = p.parse_args()
 
     as_of = datetime.fromisoformat(args.as_of).date() if args.as_of else date.today()
-    rows = audit_indicators(as_of) if args.all else overdue(as_of)
+    rows = (audit_indicators(as_of, args.include_inactive) if args.all
+            else overdue(as_of, args.include_inactive))
 
     if args.json:
         print(json.dumps(rows, indent=2, default=str))

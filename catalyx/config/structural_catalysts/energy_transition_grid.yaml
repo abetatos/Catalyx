@@ -4,22 +4,23 @@
 id: struct_energy_transition_grid
 type: structural
 schema_version: "1.3"
-title: "Grid infrastructure as the binding constraint of energy transition"
+title: "Energy transition buildout (red, solar y almacenamiento)"
 description: >
   The energy transition (renewables, EVs, heat pumps) and the AI buildout are colliding
   at the grid level. Transmission and distribution infrastructure is the binding constraint:
-  solar and wind are being built faster than the grid can connect them; EV charging and
+  solar and wind are being built faster than the grid can connect them; EV charging
+  and
   data centers are adding load faster than grid capacity grows. Grid investment requires
   10-15 year lead times. This creates a structural multi-decade demand for: transformers,
-  cables, grid management software, and utility grid operators. Copper is the key physical
+  cables, grid management software, and utility grid operators. Copper is the key
+  physical
   commodity input. This structural catalyst spans: grid_infrastructure_utilities,
   copper_miners, and partially nuclear_energy (baseload).
 
 created_at: "2026-06-03T18:00:00Z"
 created_by: user
 onset_period: "2023-Q2"
-onset_evidence: "IEA 2023: grid investment must triple by 2030 to meet climate targets. Transformer lead times >2 years (vs
-  historical 3 months)."
+onset_evidence: "IEA 2023: grid investment must triple by 2030 to meet climate targets. Transformer lead times >2 years (vs historical 3 months)."
 
 catalyst_type: climate_transition
 catalyst_subtype: grid_electrification
@@ -27,13 +28,16 @@ geography: [US, EU, GLOBAL]
 thematic_tags: [grid, electrification, copper, infrastructure, energy_transition, ai_power]
 
 user_rank: 3
-user_notes: "Less crowded than pure AI play. Copper miners is the physical commodity expression; grid utilities is the regulated
-  infrastructure expression."
+user_notes: "Less crowded than pure AI play. Copper miners is the physical commodity expression; grid utilities is the regulated infrastructure expression."
 
 intensity:
-  current_score: 89.9
-  last_updated: "2026-06-29"
+  current_score: 85.6
+  last_updated: "2026-07-28"
   history:
+  - period: '2026-07-28'
+    score: 85.6
+    note: 'Computed 2026-07-28: avg=92.57 trend=↓↓ (falling 2+ consecutive) (was 89.9)'
+    computation_method: computed
   - period: 2026-Q2
     score: 89.9
     note: 'Computed 2026-06-29: avg=92.87 trend=↓ (falling 1 period) (was 92.9)'
@@ -99,15 +103,14 @@ indicators:
   name: "Copper price trend (spot, USD/tonne)"
   source: "LME spot price"
   check_frequency: monthly
-  current_value: 13357.50
+  current_value: 13871.0
   unit: USD_per_tonne
   direction: higher_is_stronger
   threshold_strong: 9000
   threshold_weak: 7000
   last_value: 13965
   last_date: "2026-06-29"
-  update_note: "WebSearch 2026-06-29: LME copper 3M $13,357.50/tonne, -6.2% MoM on USD strength + dual-hawkish Fed/ECB; still
-    far above strong threshold ($9,000). Copper-as-grid-input cost remains elevated."
+  update_note: "WebSearch 2026-06-29: LME copper 3M $13,357.50/tonne, -6.2% MoM on USD strength + dual-hawkish Fed/ECB; still far above strong threshold ($9,000). Copper-as-grid-input cost remains elevated."
 
   semaphore: 🟢
   value_history:
@@ -215,7 +218,7 @@ indicators:
     value: 9017.0
   - date: '2021-07-01'
     value: 9878.0
-  score: 95.2
+  score: 94.3
 deactivation_conditions:
 - id: deact_01
   condition: "Grid connection queue clears materially (lead times drop below 6 months for 2 consecutive quarters)."
@@ -228,4 +231,20 @@ deactivation_conditions:
 linked_event_catalyst_ids: []
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-06-03"
+status_last_reviewed: "2026-08-27"
+absorbed_catalyst_ids:
+- struct_solar_lcoe_deployment
+- struct_battery_storage_supercycle
+absorbed_at: '2026-08-27'
+absorbed_note: |
+  Consolidacion del universo v2.0 (2026-08-27). Este catalizador absorbe los ids de
+  arriba: compartian driver economico y se validaban/invalidaban con las mismas
+  noticias, por lo que sumaban peso duplicado en catalyst_alignment.
+
+  IMPORTANTE — los indicadores absorbidos NO se han copiado aqui. Su value_history
+  vive en el lake indexado por el catalyst_id ORIGINAL; moverlo a ciegas corromperia
+  la serie y falsearia el percentil empirico de intensity_engine. Los ficheros
+  fusionados se conservan intactos con status: merged. En el proximo /catalyx-update,
+  decidir explicitamente cual de estos indicadores merece promoverse a este fichero:
+    - struct_solar_lcoe_deployment (intensity 64.1): US utility-scale solar LCOE (BloombergNEF global benchmark, fixed-axis), US utility-scale solar capacity additions (annualized, GW), China polysilicon spot price (CNY/kg) — inverse signal: lower price = developer tailwind, not structural strength, North American utility-scale solar PPA price (USD/MWh, LevelTen Energy quarterly index)
+    - struct_battery_storage_supercycle (intensity 87.0): Lithium carbonate battery-grade spot (USD/t), Global grid-scale BESS annual installations (GWh), BESS share of total lithium demand (%), Global EV sales run-rate (millions units/yr)

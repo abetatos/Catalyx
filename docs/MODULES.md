@@ -1,0 +1,54 @@
+# CATALYX — Python module inventory
+
+> **Moved out of `CLAUDE.md` on 2026-08-28 (v3 Phase 4).** That file is loaded into context by the
+> main session AND by every subagent, and this table was ~11 KB of it — a per-run cost paid dozens
+> of times to answer a question ("which module does X, and what is its CLI?") that comes up only
+> when you are about to touch a module. Read this file then; do not paste it into a subagent brief.
+>
+> One line per module = function + CLI. Design rationale lives **inline in each file** and in the
+> cited `docs/DESIGN_*` / `PLAN_*`. All CLIs run as `uv run python -m <module>`.
+> Before citing a path, `ls`/glob to confirm it still exists.
+
+| Module | Path | Function + CLI |
+|---|---|---|
+| Catalyst reader | `store/catalyst_repo.py` | Reads `CatalystEvent` + `TaxonomyGapProposal` (`data/catalysts/`, `data/taxonomy_proposals/`). CLI `{summary,get,set-status}` |
+| Sector study reader | `store/sector_study_repo.py` | Reads `SectorStudy` (`data/sector_studies/`). CLI `{summary,get,stale}` |
+| Movement reader | `store/movement_repo.py` | Reads `Movement` (`data/movements/*.json`, Tier-1). Derives `positions()` + `catalyst_ledger()`; `ingest` backfills point-in-time `score_context` (no look-ahead) + write-throughs lake. CLI `{summary,get,positions,ledger,ingest}`. `docs/PLAN_movement_restructure.md` |
+| Structural catalyst reader | `store/structural_catalyst_repo.py` | Reads `StructuralCatalyst` (`config/structural_catalysts/*.yaml`). CLI `{summary,get}` |
+| Market data | `data/market_data.py` | yfinance ETF momentum fetcher → `data/snapshots/momentum_snapshot_*.json` + lake. CLI (no args) |
+| Intensity engine | `scorer/intensity_engine.py` | `intensity.current_score` from indicators. CLI `--all [--write-back]` |
+| Catalyst scorer | `scorer/catalyst_scorer.py` | confirms/contradicts/independent + decay → `catalyst_alignment`; emits `regime_state` (additive). CLI `<sector_id> [--all]` |
+| Structural monitor | `thesis/structural_monitor.py` | Fundamentals-health verdict feeding `regime_state` (intact/contested/breaking). `docs/DESIGN_catalyst_regime_discrimination.md`. CLI `[--all]` |
+| Momentum engine | `scorer/momentum_engine.py` | Cross-sectional percentile → `momentum_score`. CLI `[--snapshot path]` |
+| Sector scorer | `scorer/sector_scorer.py` | Composite orchestrator → full SectorSnapshot. CLI `<sector_id> [--all --flow N --crowd N]` |
+| Dislocation lens | `scorer/dislocation.py` | corr/beta engine → **opportunity** (panic dip) + **diversifier** (rotation target); call is Claude's. CLI `[--window 5 --lookback 90]` |
+| Entry timing | `scorer/entry_timing.py` | Recommend-only *when*: micro-tension (RSI/stretch/vol/state) + event overhang → `suggested_verdict`. Config `scoring_weights.yaml` `entry_timing`. CLI `<sector_id>\|--all [--json]` |
+| Technical study | `scorer/technical_study.py` | Opt-in deep pre-open TA dossier (superset of entry_timing: MA/MACD/Bollinger/ATR/S-R/volume/OBV/52w → `technical_posture`). Ephemeral. CLI `<sector_id> [--ticker TICK] [--json]` |
+| Exit watcher | `scorer/exit_watcher.py` | Sell-signal Family 1: evaluates `risk_discipline.invalidation[]` stops deterministically + assumptions + regime + **FX-correct EUR drawdown floor** (−20 reduce/−30 exit vs real cost, `nav_engine` FX) + **catalyst freshness** (`status_last_reviewed` age; >45d forces re-verify) + after-tax P&L → Exit/Reduce/Watch/Hold. Doctrine: freshness dominates, a drawdown triggers a re-verify not an auto-sell (§Family 1b). Recommend-only, persists `exit_signal`. `docs/DESIGN_sell_signals.md`. CLI `[--json] [--no-persist]` |
+| Position metrics | `execution/position_metrics.py` | **Measurement, never a decision.** Per position per run → lake `position_metrics`: EUR P&L split into **price / FX / named basis residual** (an identity — `entry_fx` implied by the cost basis, so it is the rate actually paid), drawdown **from peak** (not from cost — a different question than the stops ask), days held, vol since entry, and **score drift** vs the point-in-time `score_context` the position was opened on. Book → `book_metrics`: deployment, HHI, FX exposure, vol/Sharpe/maxDD/beta+corr from the real NAV, tracking error and `model_overlap_pct` vs the model book. Read-only, one shared price fetch. Runs in `post_run.sh` just before rebalance. CLI `[--run-id X] [--json] [--no-persist]` |
+| **Rebalance engine** | `execution/rebalance.py` | **Target vs actual, in € and after tax.** Model book (weights × deployable capital) vs the real book marked in EUR → per sector `gap_eur`, `rule_action`, `trade_eur`, CGT, `cost_drag_eur`, `net_edge_eur`. Actions are `SELL>REDUCE>TRIM>ADD>BUY>HOLD` in fixed precedence — **no watch/monitor/consider exists in the enum** (`BANNED_ACTION_WORDS`, test-enforced). Deployment ratio replaces cash-by-feel. **Thresholds FROZEN 2026-08-28** (`rebalance_rules.frozen`) — changing one is a config edit + a CHANGELOG line, never a mid-review adjustment. Deviations go to lake `override_log` and are **scored** ~21 trading days later as `(trade_chosen − trade_rule) × EUR forward return`, tallied by author; Claude's authorship is suspended arithmetically on a net-negative record (≥5 scored). Recommend-only. Config `scoring_weights.yaml` `rebalance_rules`. CLI `[--strategy X] [--json] [--no-persist]` · `override <sector> <action> --reason --author --trade-eur` · `overrides` |
+| Price cache | `data/prices.py` | **ONE fetch per run**, shared by every scorer + NAV (was ~15 independent yfinance calls). Lake `prices`/`price_meta`, drop-in `price_fn`. `CATALYX_PRICES_OFFLINE=1` serves the warm cache. CLI `{refresh,read,currencies}` |
+| Run state | `store/run_state.py` | The pre-review digest: book + positions + attention + tiered work list (`must`/`should`/`optional` re-verify) so the review searches only what is decision-relevant. Ranking filtered to sectors investable TODAY. CLI `[--write]` |
+| Calibration | `scorer/calibration.py` | Does the score predict forward returns? Per-run rank IC per dimension (as USED by the composite — crowding is inverted) + standard error + noise verdict + `effective_windows`, and rank-bucket forward returns shrunk toward 0 by sample size (the €-denominated input to `rebalance`). Needs zero closed positions. CLI `[--horizon-days N] [--write] [--json]` |
+| Catalyst lifecycle | `scorer/catalyst_lifecycle.py` | Deterministic status transitions (archive spent events, dormant/reactivate structurals, promotion candidates) — moved out of LLM judgment. Reversals only from scan evidence, never inferred. CLI `[--apply] [--deltas FILE]` |
+| Indicator update | `store/indicator_update.py` | Records an indicator observation deterministically: shifts `current→last`, stamps `last_date` + `status_last_reviewed`, archives the PRIOR reading to the lake (idempotent), surfaces the deactivation conditions when the reading moves against `direction` or crosses `threshold_weak`, then recomputes intensity ONCE per catalyst. Replaces 9 hand-executed steps that were writing history to the deprecated inline `value_history` the scorer no longer reads. CLI `{set,batch,maturity}` |
+| Catalyst review stamp | `store/catalyst_review.py` | The write path the freshness gate needs: stamps `status_last_reviewed` + append-only `review_log[]` (evidence mandatory for weakening/breaking). Never touches `status`. CLI `{stamp,batch,status}` |
+| Indicator freshness | `scorer/freshness.py` | Overdue-indicator audit; excludes dead catalysts (merged/deactivated/archived/invalidated) unless `--include-inactive`. CLI `{audit,overdue}` |
+| Tax engine | `execution/tax_engine.py` | Spanish CGT 2026 brackets (19/21/23/27%), incremental + YTD. CLI `--gain N [--ytd-prior N --loss N]` |
+| Outcome engine | `attribution/outcome.py` | Closed-experiment ledger: realized after-tax P&L + right-thesis×right-reason VERDICT + behavioral flags. Human inputs captured at `/catalyx-close`. Writes lake `validation/movement_outcome`. CLI `{evaluate <mov_id> [--write-back],summary,report}` |
+| Flow data | `data/flow_data.py` | shares_outstanding × NAV → `flow_confirmation`; W/W delta needs prior snapshot. CLI `[--write]` |
+| History backfill | `data/backfill_history.py` | Writes indicator history to the lake (activates percentile path). CLI `[--dry-run]`; one-off `--migrate-yaml` |
+| **Parquet lake** | `store/lake.py` | **Tier 2 source of truth.** Append-only partitioned parquet, git-committed. CLI `{tables,ls,read,seed-from-history}` |
+| Indicator history | `store/indicator_history.py` | Externalized `value_history` → lake table `indicator_history` by catalyst_id. `intensity_engine` reads here first |
+| Model portfolios | `execution/portfolio.py` | 4 strategies (`momentum`/`catalyx`/`equal_weight`/`low_crowding`) in `config/portfolios/*.yaml`: filter→rank→weight-transform (proportional/softmax)→cap→deadband. Records `portfolio_holding` + `portfolio_catalyst_exposure`. CLI `{profiles,build,build-all,show}` |
+| NAV engine | `execution/nav_engine.py` | Buy-and-hold NAV (indexed 100) model OR real vs **SPY** → lake `portfolio_nav`. CLI `{model,real,show}` |
+| Lake query | `store/lake_query.py` | Read-only DuckDB read-path (also the dashboard's data layer): `ranking,sector,moves,portfolios,holdings,ledger,lineage,catalyst-exposure,sql`. CLI same |
+| Dashboard (Pages) | `site/` + `scripts/build_site.py` + `.github/workflows/pages.yml` | Static DuckDB-WASM dashboard over the committed lake. Live: https://abetatos.github.io/Catalyx/ · Local: `uv run python scripts/build_site.py && python -m http.server -d dist 8000` |
+
+**Storage architecture — two tiers (parquet-first, no database).** See `docs/PLAN_lake_dvc_serving.md`.
+- **Tier 1 (git, hand-edited):** config YAML, schemas, and the JSON *documents* skills Read/Write directly (sector_studies, theses, catalysts, taxonomy_proposals). These stay JSON forever — they are the skill interface. The `*_repo.py` modules read these files directly and print digests; writing a file IS the registration (no import step).
+- **Tier 2 (parquet lake, git):** all computed time-series — momentum/flow snapshots, score_run/sector_snapshot/rank_event, indicator history, portfolios. Durable, versioned, queryable. Claude never Reads parquet directly — skills get tabular data via a Python CLI emitting JSON to stdout (`lake_query`, `snapshot_repo`).
+
+**SQLite was removed entirely (2026-06-05).** It used to be a Tier-3 query cache, but it was never the source of truth (the files and the lake are), and the `llm_log` table it carried is obsolete now that there is no self-hosted LLM. Reads/writes of computed series go through `catalyx.store.lake`. There is no `CATALYX_DB_URL`, no `init`, no SQLAlchemy.
+
+**Skills call Python modules** using `uv run python -m catalyx.<module> <command>` via Bash tool. This is the integration model — not a separate CLI for the user, but Python as a deterministic backend that skills invoke.

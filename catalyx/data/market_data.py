@@ -29,74 +29,63 @@ if sys.platform == "win32":
 
 console = Console(highlight=False)
 
-# Canonical sector → primary ETF tickers mapping.
-# Mirrors etf_universe.yaml recommendation_tier 1/2 picks. First ticker = preferred
-# (used by momentum_engine as the PRIMARY); the rest are alternatives.
+# Canonical sector → tradeable ETF tickers, mirroring etf_universe.yaml (v2.0).
 #
-# Coverage goal (v1.6): every INVESTABLE sector in sector_taxonomy.yaml that has a
-# liquid, yfinance-reliable proxy. Tickers are curated for yfinance reliability —
-# US-listed where possible (richer history), .L/.DE only when that is the cleanest
-# proxy. Each ticker is unique across sectors so two sectors never share a momentum
-# series. Sectors deliberately OMITTED (no pure-play / illiquid yfinance proxy):
-#   royalty_streaming_metals, cobalt_nickel, insurance_eu, asset_management,
-#   private_equity_listed, real_estate_logistics, synthetic_biology, longevity_biotech,
-#   hydrogen_clean_fuels (HDRO/HDRO.L not resolvable in yfinance, poor proxy anyway).
-# Watch-only sectors (quantum_computing, nuclear_fusion, brain_computer_interface,
-#   advanced_materials_metamaterials) are excluded by definition — no investable ETF.
+# ── CAMBIO DE DOCTRINA (2026-08-27, universo v2.0) ─────────────────────────────
+# Antes esta tabla priorizaba tickers US "por fiabilidad de yfinance": el momentum de
+# copper_miners salia de COPX (NYSE, USD), el de gold_miners de GDX, el de biotech de
+# XBI. Pero NINGUNO de esos se puede comprar desde Espana (US no-UCITS, PRIIPs). Se
+# rankeaba el heatmap sobre un instrumento y se operaba otro, en otra divisa — el
+# retorno medido no era el retorno obtenible.
+#
+# REGLA AHORA: chain[0] es el vehiculo REALMENTE COMPRABLE (tier-1 de etf_universe.yaml,
+# verificado contra yfinance). El momentum que puntua el heatmap es el que capturarias
+# de verdad, FX incluido. Los alternativos son otras lineas del mismo fondo o el tier-2.
+#
+# NOTA: esto es lo contrario de SECTOR_FLOW_TICKERS en flow_data.py, y a proposito.
+# Alli los proxies US son correctos porque yfinance solo expone `sharesOutstanding`
+# (= creacion/reembolso = flujo) en fondos US. Momentum = precio que operas (UCITS);
+# flujo = senal de demanda del tema (proxy US valido). No unificar las dos tablas.
+#
+# Cobertura: los 26 sectores investables de sector_taxonomy.yaml v2.0. Los 27 retirados
+# a watch-only quedan fuera por definicion — no tienen vehiculo comprable.
+# Tickers en GBp (RAYS.L, INRG.L, SPGP.L, SSLN.L, SPAG.L, IH2O.L, INFR.L) no dan
+# problema: el momentum es un RETORNO, y la escala peniques/libras se cancela.
 SECTOR_TICKERS: dict[str, list[str]] = {
-    # ── Defense ──────────────────────────────────────────────────────────────
-    "eu_defense_prime_contractors":  ["EUDF.L", "DFEN.DE"],
-    "us_defense_prime_contractors":  ["ITA", "XAR"],
-    "cybersecurity_defense":         ["CIBR", "BUG"],
-    "space_defense_satellite":       ["ROKT"],
-    "drone_autonomous_systems":      ["SHLD"],
-    # ── Energy ───────────────────────────────────────────────────────────────
-    "oil_majors_integrated":         ["XLE", "IUES.L"],
-    "oil_services_equipment":        ["OIH"],
-    "lng_natural_gas":               ["FCG"],
-    "nuclear_energy":                ["NLR"],
-    "uranium_miners":                ["URNM", "URA"],
-    "solar_energy":                  ["TAN"],
-    "wind_energy_offshore":          ["FAN"],
-    "grid_infrastructure_utilities": ["IQQH.DE", "GRID"],
-    # ── Precious metals ──────────────────────────────────────────────────────
-    "gold_physical":                 ["IGLN.L", "GLD"],
-    "gold_miners":                   ["GDX", "AUCO.L"],
-    "silver_physical":               ["PHAG.L", "SLV"],
-    "silver_miners":                 ["SIL"],
-    # ── Industrial metals & battery materials ────────────────────────────────
-    "copper_miners":                 ["COPX", "COPX.L"],
-    "lithium_miners":                ["LIT"],
-    "rare_earth_miners":             ["REMX"],
-    "steel_producers":               ["SLX"],
-    "water_infrastructure":          ["PHO"],
-    "agriculture_soft_commodities":  ["MOO", "DBA"],
-    # ── Financials ───────────────────────────────────────────────────────────
-    "eu_retail_banking":             ["EXV1.DE", "EUFN"],
-    "us_retail_banking":             ["KRE", "KBE"],
-    "fintech_payments":              ["FINX"],
-    "crypto_infrastructure":         ["BTCE.DE"],
-    # ── Technology ───────────────────────────────────────────────────────────
-    "semiconductors_design":         ["SEMI.L", "SMH"],
-    "semiconductors_equipment":      ["ASML"],
-    "semiconductors_foundry":        ["TSM"],
-    "semiconductors_memory":         ["DRAM"],
-    "ai_infrastructure_data_centers":["WTAI", "BOTZ"],
-    "cloud_software_saas":           ["CLOU", "WCLD"],
-    "robotics_automation":           ["ROBO"],
-    "cybersecurity_commercial":      ["ISPY.L"],
-    # ── Healthcare ───────────────────────────────────────────────────────────
-    "biotech_drug_development":      ["XBI", "IBB"],
-    "medical_devices":               ["IHI"],
-    "genomics_precision_medicine":   ["ARKG"],
-    "pharma_large_cap":              ["IHE", "PPH"],
-    # ── Real assets & consumer ───────────────────────────────────────────────
-    "real_estate_data_centers":      ["SRVR"],
-    "infrastructure_core":           ["IFRA", "INFR.L"],
-    "luxury_goods":                  ["GLUX.SW"],
-    "consumer_india_em":             ["INDA", "NDIA.L"],
-    # ── Deep tech (investable) ───────────────────────────────────────────────
-    "space_commercial":              ["UFO"],
+    # ── Defensa y espacio ────────────────────────────────────────────────────
+    "eu_defense_prime_contractors":  ["EUDF.L", "NATO.PA", "DFEN.DE"],
+    "space_defense_satellite":       ["JEDI.DE", "JEDI.L"],
+    # ── Energia ──────────────────────────────────────────────────────────────
+    "oil_majors_integrated":         ["IUES.L"],
+    "nuclear_energy":                ["NUKL.DE"],
+    "uranium_miners":                ["URNM.L", "URNU.DE"],   # URNU.DE solo tiene 4 dias de historico en yfinance
+    "solar_energy":                  ["RAYS.L"],
+    "grid_infrastructure_utilities": ["IQQH.DE", "INRG.L"],   # clean energy, no grid puro — ver aviso en etf_universe.yaml
+    # ── Metales preciosos ────────────────────────────────────────────────────
+    "gold_physical":                 ["IGLN.L", "4GLD.DE"],
+    "gold_miners":                   ["SPGP.L", "GDX.L", "AUCO.L"],
+    "silver_physical":               ["PHAG.L", "SSLN.L"],
+    # ── Metales industriales y agro ──────────────────────────────────────────
+    "copper_miners":                 ["4COP.DE", "COPX.L"],
+    "lithium_miners":                ["VOLT.L", "LITU.L"],
+    "agriculture_soft_commodities":  ["SPAG.L"],
+    "water_infrastructure":          ["IH2O.L"],
+    # ── Financiero ───────────────────────────────────────────────────────────
+    "eu_retail_banking":             ["EXV1.DE"],
+    "crypto_infrastructure":         ["DAPP.L"],
+    # ── Tecnologia ───────────────────────────────────────────────────────────
+    "semiconductors_design":         ["SEMI.L", "SMGB.L"],
+    "ai_infrastructure_data_centers":["XAIX.DE", "AIAI.L", "WTAI.L"],
+    "robotics_automation":           ["RBOT.L"],              # antes IQQR.DE = MSCI Eastern Europe (sector equivocado)
+    "cybersecurity_commercial":      ["USPY.L", "LOCK.L"],
+    "cloud_software_saas":           ["WCLD.L", "DGTL.L"],
+    # ── Salud ────────────────────────────────────────────────────────────────
+    "pharma_large_cap":              ["IUHE.AS", "IUHC.L"],
+    "biotech_drug_development":      ["BTEC.L", "HEAL.L"],
+    # ── Activos reales y consumo ─────────────────────────────────────────────
+    "infrastructure_core":           ["INFR.L"],
+    "luxury_goods":                  ["GLUX.SW", "LUXU.L"],
+    "consumer_india_em":             ["NDIA.L"],
 }
 
 # Weights from scoring_weights.yaml momentum_period_weights

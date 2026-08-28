@@ -50,6 +50,11 @@ TABLES: dict[str, tuple[str, list[str]]] = {
     # market snapshots (one partition per fetch date)
     "momentum":           ("market/momentum",            ["date"]),
     "flow":               ("market/flow",                ["date"]),
+    # shared price cache — ONE fetch per run feeds every scorer/NAV consumer (catalyx.data.prices).
+    # One partition per ticker: a refresh rewrites only the tickers whose window moved, so git
+    # stores a small diff instead of one giant re-written price table.
+    "prices":             ("market/prices",              ["ticker"]),
+    "price_meta":         ("market/price_meta",          ["ticker"]),
     # scoring history (one partition per run)
     "score_run":          ("scores/score_run",           ["run_id"]),
     "sector_snapshot":    ("scores/sector_snapshot",     ["run_id"]),
@@ -74,6 +79,29 @@ TABLES: dict[str, tuple[str, list[str]]] = {
     "movement_outcome":   ("validation/movement_outcome", ["mov_id"]),
     # validation / forward returns (grows; unpartitioned)
     "forward_returns":    ("validation/forward_returns", []),
+    # scoring calibration: per-run, per-dimension rank IC vs realized forward returns. This is
+    # how "do our scores predict anything" becomes a measured number instead of a banner — it
+    # needs zero closed positions, only a run old enough to have forward history.
+    "calibration":        ("validation/calibration",     ["run_id"]),
+    # rank-bucket forward returns (top3 / mid / rest) — the €-denominated twin of the IC, and the
+    # only calibration output a trade size can legitimately be multiplied by.
+    "calibration_bucket": ("validation/calibration_bucket", ["run_id"]),
+    # rebalance recommendations: target vs actual per sector with the rule action, the € to move
+    # and the after-tax net edge. Persisted per run so a recommendation can be audited later —
+    # did we follow it, and did it pay?
+    "rebalance":          ("portfolio/rebalance",         ["run_id"]),
+    # every deviation from a rule action, with author + reason. The anti-conservatism ledger:
+    # overrides are scored against the rule they replaced once the window matures.
+    "override_log":       ("portfolio/override_log",      ["run_id"]),
+    # per-position measurement, one row per held sector per run: EUR P&L split into price / FX /
+    # basis residual, drawdown from PEAK (not from cost — a different question than the stops
+    # ask), days held, vol since entry, and score drift vs the point-in-time score_context the
+    # position was opened on. Persisted so a metric can be compared to itself next month rather
+    # than re-derived in a conversation, which is how it stops being comparable.
+    "position_metrics":   ("portfolio/position_metrics",  ["run_id"]),
+    # the book-level twin of the above: deployment, HHI, FX exposure, vol/Sharpe/maxDD/beta from
+    # the real NAV series, tracking error and active share vs the `catalyx` model book.
+    "book_metrics":       ("portfolio/book_metrics",      ["run_id"]),
     # dislocation lens (opportunities + diversifiers) — one materialization per run
     "dislocation":        ("analysis/dislocation",       ["run_id"]),
     # entry-timing overlay (micro-tension + event overhang) — one materialization per run

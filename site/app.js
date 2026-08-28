@@ -1379,8 +1379,118 @@ async function renderData() {
   } catch (e) { err('report-out', e); }
 }
 
+// ── REBALANCE ────────────────────────────────────────────────────────────────
+// The only page that names amounts. It renders a decision the RULES made, not one this page made:
+// the action column is a closed enum with no hedging member, and any deviation shows up in the
+// override table below with an author. Recommend-only, like everything else in the app.
+const ACTION_CLASS = { SELL: 'r', REDUCE: 'r', TRIM: 'a', ADD: 'g', BUY: 'g', HOLD: '' };
+const eur = (v, d = 0) => (v === null || v === undefined || Number.isNaN(Number(v)))
+  ? '—' : (Number(v) < 0 ? '−€' : '€') + num(Math.abs(Number(v)), d);
+function actionPill(a) { return a ? `<span class="pill ${ACTION_CLASS[a] || ''}">${escapeHtml(a)}</span>` : '—'; }
+function freshPill(f) { const c = { fresh: 'g', stale: 'a', very_stale: 'r' }[f] || ''; return f ? `<span class="pill ${c}">${escapeHtml(String(f).replace('_', ' '))}</span>` : ''; }
+
+function renderRebalance() {
+  const R = OV.rebalance;
+  const card = (l, v, cls, sub) => `<div class="card"><div class="lbl">${l}</div><div class="big ${cls || ''}">${v}</div>${sub ? `<div class="lbl">${sub}</div>` : ''}</div>`;
+  if (!R || !(R.rows || []).length) {
+    $('reb-summary').innerHTML = '';
+    $('reb-table').innerHTML = '<p class="hint">No rebalance has been recorded yet. It is written by the review’s post-run step.</p>';
+    ['reb-metrics', 'reb-book', 'reb-overrides', 'reb-warn'].forEach((id) => { const el = $(id); if (el) el.innerHTML = ''; });
+    return;
+  }
+  const rows = R.rows, B = R.book || {}, M = R.metrics_by_sector || {};
+  const nAct = rows.filter((r) => r.rule_action !== 'HOLD').length;
+  const deployable = (B.total_capital_eur || 0) * (R.deploy_ratio || 0);
+  const under = deployable - (B.marked_eur || 0);
+
+  // ── summary strip: where the book stands against its own rule ──
+  const cards = [];
+  if (B.total_capital_eur != null) cards.push(card('committed capital', eur(B.total_capital_eur), '', `${num(B.deployed_pct, 0)}% deployed`));
+  if (R.deploy_ratio != null) cards.push(card('rule says deploy', num(R.deploy_ratio * 100, 0) + '%', '', eur(deployable) + ' at work'));
+  if (Math.abs(under) >= 1) cards.push(card(under > 0 ? 'under-deployed' : 'over-deployed', eur(Math.abs(under)), under > 0 ? 'neg' : 'a', 'vs what the rules say'));
+  cards.push(card('rule actions', String(nAct), nAct ? 'a' : 'pos', nAct ? 'rows that move money' : 'book matches the model'));
+  if (B.model_overlap_pct != null) cards.push(card('model overlap', num(B.model_overlap_pct, 0) + '%', '', 'of the target book actually held'));
+  cards.push(card('overrides', String((R.overrides || []).length), '', 'recorded deviations'));
+  $('reb-summary').innerHTML = cards.join('');
+
+  // A row for a sector that can no longer be bought is not a neutral row — say so loudly.
+  const dead = rows.filter((r) => String(r.flags || '').includes('not investable'));
+  $('reb-warn').innerHTML = dead.length
+    ? `<div class="card" style="border-left:3px solid var(--red)"><div class="lbl">not investable today</div>
+       <p class="hint" style="margin:4px 0 0">${dead.map((d) => escapeHtml(d.sector_id)).join(', ')} — the model book comes from a
+       run recorded before the current universe. Re-score before treating these as candidates.</p></div>`
+    : '';
+
+  // ── the table ──
+  $('reb-table').innerHTML = `<div class="tblwrap"><table>
+    <thead><tr><th>sector</th><th>ETF</th><th class="num">target</th><th class="num">actual</th>
+      <th class="num">gap</th><th>action</th><th class="num">trade</th><th class="num">CGT</th>
+      <th class="num">net edge</th><th>catalyst</th><th>why</th></tr></thead><tbody>
+    ${rows.map((r) => `<tr>
+      <td>${sectorLink(r.sector_id)}</td>
+      <td class="hint">${escapeHtml(r.etf || '—')}</td>
+      <td class="num">${num(r.target_pct, 1)}%</td>
+      <td class="num">${num(r.actual_pct, 1)}%</td>
+      <td class="num ${(r.gap_eur ?? 0) >= 0 ? '' : 'neg'}">${eur(r.gap_eur)}</td>
+      <td>${actionPill(r.rule_action)}</td>
+      <td class="num"><b>${r.trade_eur ? eur(r.trade_eur) : '—'}</b></td>
+      <td class="num">${r.tax_eur ? eur(r.tax_eur) : '—'}</td>
+      <td class="num">${r.net_edge_eur == null ? '—' : eur(r.net_edge_eur)}</td>
+      <td>${freshPill(r.catalyst_freshness)} ${regimePill(r.regime_state)}</td>
+      <td class="hint">${escapeHtml(r.reason || '')}</td></tr>`).join('')}
+    </tbody></table></div>`;
+
+  // ── per-position measurement ──
+  const mrows = Object.values(M);
+  $('reb-metrics').innerHTML = mrows.length ? `<div class="tblwrap"><table>
+    <thead><tr><th>sector</th><th class="num">held</th><th class="num">P&amp;L</th><th class="num">price</th>
+      <th class="num">FX</th><th class="num">peak DD</th><th class="num">vol</th><th class="num">score drift</th>
+      <th>catalyst</th></tr></thead><tbody>
+    ${mrows.map((m) => `<tr>
+      <td>${sectorLink(m.sector_id)} <span class="hint">${escapeHtml(m.currency || '')}</span></td>
+      <td class="num">${m.days_held == null ? '—' : m.days_held + 'd'}</td>
+      <td class="num ${(m.unrealized_eur ?? 0) >= 0 ? 'pos' : 'neg'}">${eur(m.unrealized_eur)}</td>
+      <td class="num ${(m.pnl_price_eur ?? 0) >= 0 ? 'pos' : 'neg'}">${eur(m.pnl_price_eur)}</td>
+      <td class="num ${(m.pnl_fx_eur ?? 0) >= 0 ? 'pos' : 'neg'}">${eur(m.pnl_fx_eur)}</td>
+      <td class="num neg">${num(m.max_drawdown_from_peak_pct, 1)}%</td>
+      <td class="num">${num(m.vol_since_entry_pct, 0)}%</td>
+      <td class="num ${(m.composite_drift ?? 0) >= 0 ? 'pos' : 'neg'}" title="${escapeHtml(m.drift_note || 'composite now vs at entry')}">${m.composite_drift == null ? '—' : signed(m.composite_drift, 1)}</td>
+      <td>${freshPill(m.catalyst_freshness)}</td></tr>`).join('')}
+    </tbody></table></div>` : '<p class="hint">Position metrics are written by the review’s post-run step.</p>';
+
+  // ── book shape ──
+  const bc = [];
+  if (B.vol_pct != null) bc.push(card('volatility', num(B.vol_pct, 1) + '%', '', 'annualized'));
+  if (B.sharpe != null) bc.push(card('Sharpe', num(B.sharpe, 2), (B.sharpe ?? 0) >= 0 ? 'pos' : 'neg', 'rf = 0'));
+  if (B.max_drawdown_pct != null) bc.push(card('max drawdown', num(B.max_drawdown_pct, 1) + '%', 'neg', 'peak-to-trough'));
+  if (B.beta_vs_spy != null) bc.push(card('beta vs SPY', num(B.beta_vs_spy, 2), '', B.corr_vs_spy != null ? 'correlation ' + num(B.corr_vs_spy, 2) : ''));
+  if (B.hhi != null) bc.push(card('concentration', num(B.hhi, 0), B.hhi > 2500 ? 'a' : '', 'HHI · one position = 10000'));
+  if (B.tracking_error_vs_model_pct != null) bc.push(card('tracking error', num(B.tracking_error_vs_model_pct, 1) + '%', '', 'vs the model book'));
+  const fx = B.fx_exposure_pct || {};
+  const fxTxt = Object.keys(fx).length ? Object.entries(fx).map(([k, v]) => `${k} ${num(v, 0)}%`).join(' · ') : '—';
+  $('reb-book').innerHTML = (bc.join('') ? `<div class="strip">${bc.join('')}</div>` : '')
+    + `<div class="card" style="margin-top:10px"><div class="lbl">currency exposure</div>
+       <div style="font-size:15px;margin:4px 0">${escapeHtml(fxTxt)}</div>
+       <p class="hint" style="margin:0">The book is denominated in EUR. Anything held in another listing
+       currency is a second position nobody wrote a thesis for — the split above says how large it is.</p></div>`;
+
+  // ── overrides ──
+  const ovr = R.overrides || [];
+  $('reb-overrides').innerHTML = ovr.length ? `<div class="tblwrap"><table>
+    <thead><tr><th>logged</th><th>sector</th><th>rule</th><th>chosen</th><th class="num">moved</th><th>by</th><th>reason</th></tr></thead>
+    <tbody>${ovr.map((o) => `<tr>
+      <td class="hint">${escapeHtml(String(o.logged_at || '').slice(0, 10))}</td>
+      <td>${sectorLink(o.sector_id)}</td>
+      <td>${actionPill(o.rule_action)}</td>
+      <td>${actionPill(o.chosen_action)}</td>
+      <td class="num">${o.chosen_trade_eur ? eur(o.chosen_trade_eur) : '—'}</td>
+      <td><span class="pill ${o.author === 'user' ? 'b' : ''}">${escapeHtml(o.author || '')}</span></td>
+      <td class="hint">${escapeHtml(o.reason || '')}</td></tr>`).join('')}</tbody></table></div>`
+    : '<p class="hint">No override recorded. Every non-HOLD row was either executed as the rule said, or the deviation was never written down — which is the one outcome this table cannot audit.</p>';
+}
+
 // ── router ──────────────────────────────────────────────────────────────────────
-const RENDER = { overview: renderOverview, sectors: renderSectors, timing: renderTiming, catalysts: renderCatalysts, positions: renderPositions, journal: renderDecisionJournal, portfolios: renderPortfolios, data: renderData };
+const RENDER = { overview: renderOverview, sectors: renderSectors, timing: renderTiming, catalysts: renderCatalysts, positions: renderPositions, rebalance: renderRebalance, journal: renderDecisionJournal, portfolios: renderPortfolios, data: renderData };
 function applyRoute(section, id) {
   LAST = { section, id };
   document.querySelectorAll('.navlink').forEach((el) => el.classList.toggle('active', el.dataset.route === section));

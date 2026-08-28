@@ -42,11 +42,20 @@ def _bake_docs(dist: Path) -> dict:
     structural + event catalysts, sector studies, movements (the real positions). Small (KB each)."""
     docs: dict[str, list] = {"catalysts_structural": [], "catalysts_event": [],
                              "studies": [], "movements": []}
+    # Universo v2.0 (2026-08-27): el dashboard muestra los catalizadores ACTIVOS. Los
+    # fusionados (status: merged) y los de contexto macro (role: macro_context) se
+    # conservan en disco por historia pero no puntuan en ningun sector, asi que
+    # contarlos aqui inflaba la cifra visible (18 cuando los activos son 12).
     for f in sorted(_STRUCTURAL_CAT.glob("*.yaml")):
         try:
-            docs["catalysts_structural"].append(yaml.safe_load(f.read_text(encoding="utf-8")))
+            doc = yaml.safe_load(f.read_text(encoding="utf-8"))
         except Exception:  # noqa: BLE001
-            pass
+            continue
+        if not doc:
+            continue
+        if doc.get("status") in ("merged", "deactivated") or doc.get("role") == "macro_context":
+            continue
+        docs["catalysts_structural"].append(doc)
     for src, key in ((_EVENT_CAT, "catalysts_event"), (_STUDIES, "studies"), (_MOVEMENTS, "movements")):
         if src.exists():
             for f in sorted(src.glob("*.json")):
@@ -567,6 +576,53 @@ def _bake_overview(dist: Path) -> dict:
                     "tax_due_eur, net_proceeds_eur, harvestable_loss_eur "
                     f"FROM exit_signal WHERE run_id = '{run_id}'")
                 ov["exit_signal"] = {"run_id": run_id, "by_etf": {r["etf"]: r for r in rows}}
+
+        # ── rebalance: the pipeline's target book vs the real one, in € and after tax ──
+        # The one page that names amounts. Baked from lake `rebalance` (recommendation per sector),
+        # `position_metrics` / `book_metrics` (the measurement behind each row), and `override_log`
+        # (every deviation from the rule, with author + reason). All recommend-only: the page shows
+        # what the rules say and what was actually chosen — executing stays a human action in
+        # /catalyx-open and /catalyx-close.
+        ov["rebalance"] = None
+        if has("rebalance"):
+            meta = q("SELECT max(run_id) AS run_id FROM rebalance")
+            rid = meta[0]["run_id"] if meta and meta[0].get("run_id") is not None else None
+            if rid is not None:
+                rows = q(
+                    "SELECT sector_id, etf, rank, score_rank, bucket, target_pct, actual_pct, "
+                    "gap_pp, target_eur, actual_eur, gap_eur, rule_action, reason, trade_eur, "
+                    "unrealized_pct, realized_gain_eur, expected_edge_eur, net_edge_eur, "
+                    "gate_note, regime_state, catalyst_freshness, exit_action, flags, "
+                    "tax_eur, spread_eur, cost_drag_eur, deploy_ratio, as_of "
+                    f"FROM rebalance WHERE run_id = '{rid}' ")
+                order = {"SELL": 0, "REDUCE": 1, "TRIM": 2, "ADD": 3, "BUY": 4, "HOLD": 5}
+                rows.sort(key=lambda r: (order.get(r.get("rule_action"), 9),
+                                         -abs(float(r.get("trade_eur") or 0))))
+                metrics = q("SELECT * FROM position_metrics "
+                            f"WHERE run_id = '{rid}'") if has("position_metrics") else []
+                bm = q(f"SELECT * FROM book_metrics WHERE run_id = '{rid}'") \
+                    if has("book_metrics") else []
+                overrides = q("SELECT run_id, sector_id, rule_action, chosen_action, "
+                              "chosen_trade_eur, author, reason, "
+                              "substr(CAST(logged_at AS VARCHAR),1,19) AS logged_at "
+                              "FROM override_log ORDER BY logged_at DESC") \
+                    if has("override_log") else []
+                book = bm[0] if bm else {}
+                fx = book.get("fx_exposure_pct")
+                if isinstance(fx, str):
+                    try:
+                        book["fx_exposure_pct"] = json.loads(fx)
+                    except Exception:  # noqa: BLE001
+                        book["fx_exposure_pct"] = None
+                ov["rebalance"] = {
+                    "run_id": rid,
+                    "as_of": rows[0].get("as_of") if rows else None,
+                    "deploy_ratio": rows[0].get("deploy_ratio") if rows else None,
+                    "rows": rows,
+                    "metrics_by_sector": {m["sector_id"]: m for m in metrics},
+                    "book": book,
+                    "overrides": overrides,
+                }
 
         # ── experiment ledger (closed positions scored as experiments) ──
         # One row per closed/trimmed movement: the right-thesis × right-reason verdict, after-tax

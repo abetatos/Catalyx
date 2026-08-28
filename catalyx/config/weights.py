@@ -253,6 +253,29 @@ _ENTRY_TIMING_DEFAULT = {
 }
 
 
+# ── Catalyst lifecycle (catalyst_lifecycle — deterministic status transitions) ──
+
+_CATALYST_LIFECYCLE_DEFAULT = {
+    "governance": "auto",
+    "event_driven_update_delta_pct": 0.10,
+    "event_promote_to_structural_cycles": 3,
+    "event_archive_strength_below": 20,
+    "event_archive_priced_in_min": 0.75,
+    "structural_dormant_intensity_below": 40,
+    "structural_dormant_consecutive_cycles": 2,
+    "structural_dormant_if_exhausted": True,
+}
+
+
+def catalyst_lifecycle() -> dict:
+    """Thresholds for the deterministic catalyst lifecycle (catalyst_lifecycle.py): when a spent
+    event is archived, when a weak structural goes dormant (and reactivates), and the governance
+    mode (`auto` applies, `ask` prompts). These rules used to be applied by LLM judgment inside
+    the review skill — pure arithmetic, so they moved to Python. See scoring_weights.yaml
+    `catalyst_lifecycle`."""
+    return _section("catalyst_lifecycle", _CATALYST_LIFECYCLE_DEFAULT)
+
+
 def entry_timing() -> dict:
     """Thresholds for the execution-timing overlay (entry_timing.py): RSI bounds, MA-stretch,
     realized-vol ratio, stabilization rule, and the near-term event-overhang window. NOT part of
@@ -265,6 +288,10 @@ def entry_timing() -> dict:
 _EXIT_SIGNALS_DEFAULT = {
     "lookback_days": 60,
     "approach_pct": 5.0,
+    "drawdown_reduce_pct": -20.0,
+    "drawdown_exit_pct": -30.0,
+    "catalyst_staleness_warn_days": 30,
+    "catalyst_staleness_max_days": 45,
 }
 
 
@@ -325,3 +352,43 @@ def dislocation() -> dict:
     opportunity lens. Recommend-only; NOT part of the composite. See scoring_weights.yaml
     `dislocation`."""
     return _section("dislocation", _DISLOCATION_DEFAULT)
+
+
+# ── Rebalance rules (rebalance.py — the decision table, not the LLM) ─────────
+
+_REBALANCE_RULES_DEFAULT = {
+    "deadband_pp": 2.0,
+    "min_ticket_eur": 150.0,
+    "max_position_pct": 12.0,
+    "spread_bps": 20.0,
+    "fee_eur": 0.0,
+    "add_if": {"rank_max": 5, "gap_pp_min": 3.0, "regime_not": ["breaking"]},
+    "buy_if": {"rank_max": 8, "gap_pp_min": 4.0, "regime_not": ["contested", "breaking"],
+               "maturity_not": ["exhausted"]},
+    "trim_if": {"overweight_pp_min": 4.0},
+    # ONE rung, rank-coupled, by the 2026-08-28 freeze: the default exit is trailing rank, and
+    # a fixed-gain trim of a position the model still leads is the disposition effect.
+    "profit_ladder": [{"gain_pct_min": 25.0, "rank_min": 6, "trim_fraction": 0.33}],
+    "sell_if_any": {"exit_watcher": ["exit"], "regime": ["breaking"],
+                    "catalyst_status": ["invalidated", "dormant"],
+                    "rank_out_of_top": 10, "rank_out_consecutive": 2},
+    "reduce_if_any": {"exit_watcher": ["reduce"], "reduce_fraction": 0.5},
+    "deployment": {"base": 0.70, "step_per_intact_sector": 0.05, "intact_min": 5,
+                   "intact_rank_max": 8, "vix_pause_above": 30.0, "vix_penalty": 0.20,
+                   "floor": 0.40, "ceiling": 1.00},
+    "net_edge_gate": {"applies_to_taxable_sales": True, "applies_to_purchases": False,
+                      "shrinkage_prior_windows": 6.0, "min_windows_to_gate": 3},
+    "overrides": {"authors_allowed": ["user", "claude"], "reason_required": True,
+                  "defer_is_an_override": True, "score_after_trading_days": 21,
+                  "claude_suspended_if": {"min_scored": 5, "net_edge_eur_below": 0.0}},
+}
+
+
+def rebalance_rules() -> dict:
+    """The rebalance decision table (rebalance.py): deadband, ticket size, the ADD/BUY/TRIM/
+    REDUCE/SELL conditions, the deployment ratio, and the after-tax gate. It exists to take the
+    position verdict OUT of LLM judgment — the model drifts to "hold / watch / consider", which
+    is how a book ends up 70% in cash while its own ranking disagrees. Five actions, fixed
+    precedence, every deviation logged as an override. See scoring_weights.yaml
+    `rebalance_rules` + docs/PLAN_v3_lean_pipeline_rebalance.md §4."""
+    return _section("rebalance_rules", _REBALANCE_RULES_DEFAULT)

@@ -48,13 +48,17 @@ user_notes: >
   key cap on intensity. Run intensity_engine after the first indicator refresh to replace bootstrap.
 
 intensity:
-  current_score: 57
-  computation_method: bootstrap
-  last_updated: "2026-07-01"
+  current_score: 87.0
+  computation_method: computed
+  last_updated: "2026-07-28"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: weaker than struct_solar_lcoe_deployment (64.1). Real
     oversupply→deficit inflection + BESS demand leg, but CATL/LFP overhang caps intensity mid-band.
   history:
+  - period: '2026-07-28'
+    score: 87.0
+    note: 'Computed 2026-07-28: avg=87.0 trend=→ (flat — insufficient history) (was 57)'
+    computation_method: computed
   - period: "2026-Q3"
     score: 57
     note: "Bootstrap at creation 2026-07-01. Lithium carbonate ~$25k/t (off $8.3k trough); BESS ~30% of Li demand; global BESS ~600 GWh 2026E."
@@ -86,6 +90,7 @@ indicators:
   - date: "2025-06-30"
     value: 8300
 
+  score: 87.0
 - id: ind_02
   name: "Global grid-scale BESS annual installations (GWh)"
   source: "BloombergNEF Energy Storage / S&P Global"
@@ -110,6 +115,7 @@ indicators:
   - date: "2023-12-31"
     value: 185
 
+  score: 90.0
 - id: ind_03
   name: "BESS share of total lithium demand (%)"
   source: "S&P Global Commodity Insights / BNEF"
@@ -134,6 +140,7 @@ indicators:
   - date: "2023-12-31"
     value: 14
 
+  score: 85.9
 - id: ind_04
   name: "Global EV sales run-rate (millions units/yr)"
   source: "Rho Motion / BNEF EV sales tracker"
@@ -158,6 +165,7 @@ indicators:
   - date: "2023-12-31"
     value: 14
 
+  score: 85.1
 deactivation_conditions:
 - id: deact_01
   condition: >
@@ -180,5 +188,9 @@ linked_structural_catalyst_ids:
 - struct_energy_transition_grid   # BESS firms renewables and relieves grid congestion; compounding but distinct (no indicator overlap)
 
 narrative_maturity: "emerging"
-status: active
-status_last_reviewed: "2026-07-01"
+status: merged
+status_last_reviewed: "2026-08-27"
+merged_into: struct_energy_transition_grid
+merged_at: '2026-08-27'
+merge_rationale: |
+  El almacenamiento es la condicion necesaria del despliegue renovable — sin BESS la solar no despacha. Modelarlo aparte creaba dos catalizadores que se validan o invalidan con las mismas noticias.

@@ -25,6 +25,17 @@ if [ -n "$REPORT" ]; then
   quiet python -m catalyx.store.snapshot_repo register-report "$REPORT" --type heatmap
 fi
 
+# entry_timing is SCOPED to the sectors a decision could touch this cycle (held ∪ top-N, from the
+# pre-run state digest). It answers "is this a good moment to enter THIS position" — scoring ~50
+# sectors to read 15 of them was pure cost. dislocation stays full-universe on purpose: its whole
+# job is cross-sectional (correlation, contagion vs idiosyncratic, low-correlation diversifiers),
+# so narrowing its input would change the ANSWER, not just the price.
+STATE="data/reports/state_$(date +%Y%m%d).json"
+SCOPE=""
+if [ -f "$STATE" ]; then
+  SCOPE=$(python3 -c "import json,sys;d=json.load(open('$STATE'));print(','.join(d['work_list']['sectors_decision_relevant']))" 2>/dev/null || true)
+fi
+
 echo "── OPPORTUNITY & REGIME FACTS — consume these; the escalation / buy / rotate calls are YOURS ──"
 echo ""
 echo "### regime_state + persistence (catalyst_scorer --all)"
@@ -33,8 +44,14 @@ echo ""
 echo "### fundamentals health (structural_monitor --all)"
 uv run python -m catalyx.thesis.structural_monitor --all
 echo ""
-echo "### dislocation — opportunities + diversifiers (persists lake table)"
+echo "### dislocation — opportunities + diversifiers (full universe by design; persists lake table)"
 uv run python -m catalyx.scorer.dislocation --window 5 --json
 echo ""
-echo "### entry_timing — micro-tension + event overhangs (persists lake table)"
-uv run python -m catalyx.scorer.entry_timing --all --json
+if [ -n "$SCOPE" ]; then
+  echo "### entry_timing — micro-tension + event overhangs (scoped to held ∪ top-N)"
+  uv run python -m catalyx.scorer.entry_timing --sectors "$SCOPE" --json
+else
+  echo "### entry_timing — micro-tension + event overhangs (no state digest → full universe)"
+  echo "    (run \`bash scripts/pre_run.sh\` first to scope this step)"
+  uv run python -m catalyx.scorer.entry_timing --all --json
+fi

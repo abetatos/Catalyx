@@ -381,16 +381,10 @@ user_rank_ordering:
   primary: algorithmic_score_desc
   tiebreak: user_rank_asc   # lower user_rank wins ties (1 = highest priority)
 
-# DEPRECATED (v1.5) — replaced by user_rank_ordering. Kept one major version per
-# Schema Change Protocol. No longer applied to display_priority.
-user_rank_multipliers:
-  deprecated: true
-  1: 1.40
-  2: 1.20
-  3: 1.00
-  4: 0.80
-  5: 0.60
-  default: 1.00  # unranked
+# `user_rank_multipliers` (×1.40…0.60 on display_priority) was REMOVED 2026-08-28. It was
+# deprecated in v1.5, kept one major version per the Schema Change Protocol, read by nothing,
+# and re-read as context every time this file was loaded. The formula is preserved in
+# CHANGELOG.md under the v1.5 entry if it is ever needed again.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MOMENTUM SCORE NORMALIZATION — v1.3
@@ -683,6 +677,20 @@ exit_signals:
                              # consecutive_days window with buffer; the longest stop today is 10d).
   approach_pct: 5.0          # a not-yet-breaching stop within this % of its threshold → "approaching"
                              # (about to cross) rather than "clear". Tunable single source of truth.
+  # ── Capital-preservation floor + catalyst freshness (added 2026-08-04, user-decided) ──
+  # A two-tier floor on the FX-correct EUR drawdown vs REAL cost basis — independent of the
+  # hand-authored per-movement price stops (which are native-currency and gated on 10 consecutive
+  # days, so an oscillating −22% position never fired). NOT a mechanical auto-sell: a breach is a
+  # trigger to RE-VERIFY the driving catalyst against live data (WebSearch), and only a FRESH-and-
+  # weakening verdict auto-acts. Fresh+intact (a fear selloff on a live thesis) only warns → the
+  # hold/add call stays Claude's. See exit_watcher.drawdown_overlay_action.
+  drawdown_reduce_pct: -20.0   # EUR drawdown at/below this → REDUCE tier (review/trim, re-verify)
+  drawdown_exit_pct: -30.0     # deeper: EXIT tier (protective; exit-bias once catalyst confirmed)
+  # Freshness of the catalyst's fundamental verdict (status_last_reviewed age, in days). The
+  # cadence is adaptive (review when the market OR the clock asks), and these are the ceiling that
+  # makes the discipline independent of memory: a stale verdict is never trusted blind.
+  catalyst_staleness_warn_days: 30   # older than this → 'stale' (nudge a re-verify)
+  catalyst_staleness_max_days: 45    # older than this → 'very_stale' (force a look even w/o drawdown)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Deep technical study (added 2026-06-08) — catalyx/scorer/technical_study.py
@@ -733,3 +741,130 @@ dislocation:
   min_opportunity_composite: 55.0  # opportunity: full-blend floor (NON-NEGOTIABLE — keep strict)
   max_diversifier_corr: 0.65     # diversifier: mean corr to the cluster ≤ this qualifies (was 0.5)
   min_diversifier_composite: 50.0  # diversifier: health floor, decoupled from opportunity (was 55)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# REBALANCE RULES (v3 Phase 2/3, 2026-08-28) — catalyx/execution/rebalance.py
+# ─────────────────────────────────────────────────────────────────────────────
+# WHY THIS BLOCK EXISTS. The end-of-review output used to be prose: "hold", "watch",
+# "consider a small add". That is the known LLM failure mode — an assistant defaults to the
+# option that cannot be blamed, which here means leaving 70% of the capital in cash while the
+# pipeline's own ranking says otherwise. The fix is not a prompt. Every position verdict is a
+# lookup in the table below, evaluated in Python, in a fixed precedence:
+#
+#     SELL > REDUCE > TRIM > ADD/BUY > HOLD
+#
+# The output enum has exactly those five members. There is no `watch`, no `monitor`, no
+# `consider`, no `optional` — a verdict that does not move money is HOLD, said once.
+# Deviating from the rule is allowed, but only as a recorded override (§4.3 of the plan):
+# it is written to the override log with an author and scored against the rule later.
+#
+# THRESHOLDS FROZEN 2026-08-28 (user delegated the call). They were drafts for one live run;
+# freezing them is what makes the table a rule instead of a suggestion — a threshold that moves
+# whenever a run dislikes its own output is a mood with a number attached. Three changes were
+# made at the freeze, all of them anti-conservatism (see the inline notes below):
+#   deployment.base 0.60 → 0.70 · deployment.floor 0.30 → 0.40 · profit_ladder second rung REMOVED
+#   sell_if_any.rank_out_of_top 12 → 10 (the universe halved on 08-27; the old cut no longer meant
+#   what it was chosen to mean).
+# To change one: edit here, say why in CHANGELOG.md, and expect the override tally to be the
+# evidence — not an argument in a review. `weights.py _REBALANCE_RULES_DEFAULT` mirrors these.
+rebalance_rules:
+  frozen: "2026-08-28"         # provenance only; nothing reads it, everything is dated by it
+  deadband_pp: 2.0             # |gap| below this (points of TOTAL capital) → HOLD, never trade
+  min_ticket_eur: 150.0        # below this a trade is spread + friction, not a position change
+  max_position_pct: 12.0       # ceiling per sector = conviction tier 1; a BUY is capped here
+  spread_bps: 20.0             # round-trip cost assumption (etf_universe v2.0 carries no
+                               # spread_bps; when it does, the per-ETF value wins)
+  fee_eur: 0.0                 # Revolut retail: no explicit commission on the ETF lines held
+
+  add_if:                      # already held, and the pipeline still ranks it a leader
+    rank_max: 5
+    gap_pp_min: 3.0
+    regime_not: [breaking]
+  buy_if:                      # not held at all — a new line needs a stronger case than an add
+    rank_max: 8
+    gap_pp_min: 4.0
+    regime_not: [contested, breaking]
+    maturity_not: [exhausted]
+  trim_if:
+    overweight_pp_min: 4.0     # above target by this many points → trim BACK TO target
+  # FROZEN DECISION (plan §7.2): the default exit is TRAILING RANK, not a fixed-gain ladder.
+  # The second rung ({gain_pct_min: 50, rank_min: 0}) was DELETED at the freeze: trimming a +50%
+  # position the model still ranks #1 is the disposition effect wearing a discipline costume, and
+  # it is the exact opposite of a momentum mandate. Concentration is already bounded twice without
+  # it — `max_position_pct` (12%) caps the line and `trim_if.overweight_pp_min` trims a winner back
+  # to target as it drifts. So the ladder survives only in its RANK-COUPLED form: a partial is
+  # taken when the gain is real AND the model has stopped calling it a leader.
+  profit_ladder:               # empty list disables the ladder entirely
+    - {gain_pct_min: 25.0, rank_min: 6, trim_fraction: 0.33}   # winner the model no longer leads
+  sell_if_any:
+    exit_watcher: [exit]
+    regime: [breaking]
+    catalyst_status: [invalidated, dormant]
+    rank_out_of_top: 10        # ranked below this… — 10 = `portfolios/catalyx.yaml max_positions`,
+                               # i.e. "the model book no longer holds it". Was 12, chosen on a
+                               # 53-sector universe; the 08-27 cut left 26, where top-12 is the
+                               # median and would have meant "sell the below-average half".
+    rank_out_consecutive: 2    # …on this many consecutive recorded runs
+  reduce_if_any:
+    exit_watcher: [reduce]
+    reduce_fraction: 0.5       # "reduce" = halve the line, not a token trim
+
+  # Anti-cash-hoarding. deploy_ratio = clamp(base + step·(n_intact_top − intact_min)
+  #                                          − vix_penalty·[VIX > vix_pause_above], floor, 1.0)
+  # Printed with its inputs every run, so "we are holding cash" becomes a number with a reason.
+  deployment:
+    base: 0.70                 # 0.60 → 0.70 at the freeze. This ratio applies to capital ALREADY
+                               # committed as risk capital in track_record.yaml — sizing for risk
+                               # happened when that number was set, so idle cash inside the
+                               # envelope is not prudence, it is an unchosen zero-return position.
+                               # Neutral state (5 intact top-8 sectors) now deploys 70%.
+    step_per_intact_sector: 0.05
+    intact_min: 5              # the neutral point of the step term
+    intact_rank_max: 8         # a sector counts as "intact top" only inside the model's top-8
+    vix_pause_above: 30.0      # the ONLY macro brake — no discretionary "market feels risky"
+    vix_penalty: 0.20
+    floor: 0.40                # 0.30 → 0.40. Binds only in the worst state (nothing intact AND
+                               # VIX > 30). It floors the TARGET, never forces a buy: a book whose
+                               # positions are all SELL by rule goes to cash through the SELL rows.
+    ceiling: 1.00
+
+  # Does the trade pay after tax? Asymmetric BY DESIGN, and the asymmetry is the point:
+  #   - a sale that REALIZES a gain pays Spanish CGT now, irreversibly → it must clear the gate
+  #   - a purchase from idle cash pays only the spread; gating it on an expected edge computed
+  #     from a rank IC that is still statistically noise would just re-import the conservatism
+  #     this block exists to remove. Cash drag is a certain cost; the edge estimate is not.
+  net_edge_gate:
+    applies_to_taxable_sales: true
+    applies_to_purchases: false
+    shrinkage_prior_windows: 6.0   # E[r] is shrunk by n_eff/(n_eff + this) toward ZERO while
+                                   # calibration has few INDEPENDENT windows (today: ~1 → ~14%)
+    min_windows_to_gate: 3         # …and below this many INDEPENDENT windows the gate does not
+                                   # BLOCK at all: it prints the cost and steps aside. Otherwise
+                                   # the arithmetic freezes the book — with no measurable edge the
+                                   # net is just "−(tax + spread)", so every taxable sale fails
+                                   # forever and an unmeasured quantity has quietly become a veto.
+                                   # 3 non-overlapping 63d windows ≈ 9 months of walk-forward.
+
+  # ── Overrides — the ONE sanctioned place to disagree with the table (plan §4.3/§7.3) ──
+  # FROZEN DECISION: both the user and Claude may override, and BOTH are scored. Making the
+  # user the only author sounds safer and is not: the model would keep proposing the same
+  # conservative deviation as prose in the review, unlogged and unscored, which is precisely the
+  # failure this table was built to remove. An override is cheap to record and expensive to
+  # repeat badly — that asymmetry is the whole design.
+  #
+  # An override is deviation from `rule_action`, including a DEFER ("next cycle"), which is how
+  # inaction usually disguises itself. It is scored against the action it replaced once the
+  # forward window has elapsed:
+  #     override_edge_eur = (trade_eur_chosen − trade_eur_rule) × EUR forward return since the run
+  # Positive = the deviation beat the rule. `rule_cost_eur` (the CGT + spread the rule would have
+  # paid) is reported ALONGSIDE, never added in: avoiding a taxable sale defers tax, it does not
+  # earn it, and folding a deferral into the score would let "I didn't sell" win by arithmetic.
+  overrides:
+    authors_allowed: [user, claude]
+    reason_required: true          # an override with no reason is not an override, it is a mood
+    defer_is_an_override: true     # "revisit next cycle" IS a deviation. Log it.
+    score_after_trading_days: 21   # ≈ one month of closes — enough for the price difference to
+                                   # mean something, short enough to feed back within a cycle.
+    claude_suspended_if:           # the escape hatch closes on evidence, not on argument
+      min_scored: 5                # …never on a sample of one bad call
+      net_edge_eur_below: 0.0      # cumulative, scored overrides authored by claude

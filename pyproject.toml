@@ -16,7 +16,11 @@ dependencies = [
     "duckdb>=1.1",        # lake read-path (same SQL runs in DuckDB-WASM in the browser)
 ]
 
-[project.optional-dependencies]
+# Dev tooling lives in a PEP-735 dependency-group (not an optional-extra): `uv sync` and
+# `uv run` install groups automatically, so `uv run pytest` works from a fresh checkout.
+# As an optional-extra it required `uv sync --extra dev`, which nobody ran — the suite was
+# unrunnable ("No module named pytest") despite the CHANGELOG claiming green tests.
+[dependency-groups]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",

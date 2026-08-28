@@ -495,21 +495,28 @@ def main() -> None:
     p = argparse.ArgumentParser(description="CATALYX entry-timing overlay (recommend-only)")
     p.add_argument("sector_id", nargs="?", help="sector_id to assess (omit with --all)")
     p.add_argument("--all", action="store_true", help="assess every sector with a study")
+    p.add_argument("--sectors", default=None,
+                   help="Comma-separated sector_ids — the SCOPED path (held ∪ top-N). Entry timing "
+                        "only ever informs a position you might actually take, so scoring ~50 "
+                        "sectors to read 15 was pure cost. Persists like --all.")
     p.add_argument("--no-persist", action="store_true",
-                   help="do not write the entry_timing lake table (only --all persists by default)")
+                   help="do not write the entry_timing lake table (only --all/--sectors persist)")
     p.add_argument("--json", action="store_true")
     args = p.parse_args()
 
-    if args.all:
+    scoped = [x.strip() for x in args.sectors.split(",") if x.strip()] if args.sectors else None
+    if scoped:
+        sector_ids = scoped
+    elif args.all:
         sector_ids = cs._all_sector_ids()
     elif args.sector_id:
         sector_ids = [args.sector_id]
     else:
-        p.error("provide a sector_id or --all")
+        p.error("provide a sector_id, --sectors, or --all")
 
     # Only the full-universe pipeline path persists (so a single-sector ad-hoc run at
     # /catalyx-open never overwrites the run partition with one sector).
-    r = assess(sector_ids, persist=args.all and not args.no_persist)
+    r = assess(sector_ids, persist=(args.all or bool(scoped)) and not args.no_persist)
     if args.json:
         print(json.dumps(r, indent=2, ensure_ascii=False, default=str))
         return

@@ -4,7 +4,7 @@
   "sector_id": "semiconductors_design",
   "sector_label": "Semiconductors — Fabless Design (Nvidia, AMD, Qualcomm)",
   "created_at": "2026-06-05",
-  "last_updated": "2026-06-29",
+  "last_updated": "2026-07-28",
   "study_type": "full",
   "taxonomy": {
     "parent_sector": "technology",
@@ -15,72 +15,72 @@
       "ai_infrastructure_data_centers",
       "cloud_software_saas"
     ],
-    "differentiation_note": "Fabless design houses (Nvidia, AMD, Qualcomm, Broadcom) hold zero manufacturing assets — they own the architecture IP and outsource fabrication entirely to TSMC and Samsung Foundry. This eliminates capex-cycle risk, depreciation drag, and node-transition execution risk that crushes foundries and IDMs; gross margins of 55–75% structurally exceed the 30–45% typical for fabs. The value driver here is IP monetization and silicon architecture innovation — a new GPU or ASIC generation earns pricing power independent of capacity additions. Semiconductors_equipment (ASML, AMAT) sells tools to foundries: its revenue lags design demand by 12–24 months and is gated by fab construction timelines, not software release cycles. Semiconductors_foundry (TSMC) bears Taiwan concentration risk, >$40B annual capex, and is a cost-plus supplier to the very companies in this sector. Semiconductors_memory (Hynix, Micron) manufactures commodity DRAM/NAND whose pricing is set by bit-supply cycles, not IP; memory IDMs are suppliers to fabless designers, not competitors. The net: semiconductors_design is the highest-margin, fastest-moving link in the semiconductor value chain and the primary beneficiary of the AI capex cycle — not a proxy for it."
+    "differentiation_note": "Fabless design houses (Nvidia, AMD, Qualcomm, Broadcom) hold zero manufacturing assets — they own the architecture IP and outsource fabrication entirely to TSMC and Samsung Foundry. This eliminates capex-cycle risk, depreciation drag, and node-transition execution risk that crushes foundries and IDMs; gross margins of 55–75% structurally exceed the 30–45% typical for fabs. The value driver here is IP monetization and silicon architecture innovation — a new GPU or ASIC generation earns pricing power independent of capacity additions. Semiconductors_equipment (ASML, AMAT) sells tools to foundries: its revenue lags design demand by 12–24 months and is gated by fab construction timelines, not software release cycles. Semiconductors_foundry (TSMC) bears Taiwan concentration risk, >$40B annual capex, and is a cost-plus supplier to the very companies in this sector — though TSMC's July 2026 +$100B Arizona commitment shows the foundry now co-investing in US capacity rather than purely reacting to design-house orders. Semiconductors_memory (Hynix, Micron) manufactures commodity DRAM/NAND whose pricing is set by bit-supply cycles, not IP; memory IDMs are suppliers to fabless designers (the 2026 HBM shortage is a supply constraint ON this sector, not a competing thesis). The net: semiconductors_design is the highest-margin, fastest-moving link in the semiconductor value chain and the primary beneficiary of the AI capex cycle — not a proxy for it."
   },
   "demand_drivers": [
-    "AI training and inference compute demand — hyperscaler combined capex ~$725B for 2026 (Microsoft $80B + Google $75B + Amazon $100B+ + Meta $60–65B + sovereign AI programs), with 70%+ of GPU spend flowing to Nvidia data center. Nvidia Q1 FY2027 (May 2026) revenue $81.6B (+85% YoY), Q2 guide $91B. Data center segment ~$76.6B — the single largest quarterly revenue figure for any chip company in history.",
-    "Inference workload acceleration post-training: as enterprise AI deployments proliferate (RAG, agentic frameworks, real-time applications), the inference chip TAM rivals training. AMD MI300/MI350 chips capturing ~10% AI data center share, primarily in inference workloads. AMD total AI revenue for 2026 guided well above $5B, confirming market expansion beyond Nvidia monopoly.",
-    "Broadcom AI ASIC revenue explosion: Broadcom AI chip revenue reached $8.4B in Q2 FY2026 (+106% YoY), with a $73B backlog from hyperscaler custom ASIC programs (Google, Meta, Apple, ByteDance). Custom silicon proliferation expands the fabless design TAM — ASIC programs are fabless design work co-executed with Broadcom/Marvell, not Nvidia GPU substitution.",
-    "Data center upgrade cycle — Blackwell architecture (B200/B300): hyperscalers transitioning from H100 to Blackwell. Existing clusters cannot run Blackwell workloads efficiently without full rack replacement. Power/cooling constraints pushed 30–50% of planned 2026 capacity to 2027–2028, extending the upgrade cycle duration and sustaining demand for longer.",
-    "Sovereign AI and geographic diversification: UAE ($1.4T AI target), Saudi Arabia (NEOM/Project Transcendence), France, Japan building national AI infrastructure, broadening revenue base beyond US hyperscalers. Incremental TAM expansion not in consensus estimates 12 months ago.",
-    "Edge AI and on-device inference: Qualcomm Snapdragon X Elite NPU, Apple M-series neural engine, and MediaTek Dimensity 9400 enabling LLM inference on mobile and PC endpoints. Qualcomm's AI PC TAM estimated at 300M+ units annually by 2027 — a second demand vector distinct from data center.",
-    "Global semiconductor market approaching $1 trillion: SIA projects $791.7B in 2025 global sales (+25.6% YoY), crossing $1T in 2026. SOX returned +90.03% YTD through H1 2026 (SOXX); FTXL (equal-weight semis) +100.06% YTD — confirms the trade broadening beyond Nvidia into the wider fabless ecosystem."
+    "AI training and inference compute demand — Big Four hyperscalers (Microsoft, Google, Amazon, Meta) now guide to combined FY2026 capex of up to $630B, +62% YoY vs $388B in 2025 (Amazon ~$200B, Microsoft $110–120B, Meta $115–135B, Google raised to $195–205B from $180–190B prior quarter). This directly reverses the 2026-06-05 'AI capex peak scare' — three consecutive earnings cycles (Q2 2026) confirmed guidance ACCELERATING, not decelerating. TSMC's 2026-07-16 earnings call added a further $100B to its Arizona buildout (total planned US investment $265B), citing AI demand still scaling.",
+    "AMD multi-supplier diversification: AMD +155.94% YTD 2026 on MI450/Helios rack-scale ramp; CEO Lisa Su: 'Data Center is now the primary driver of our revenue and earnings growth.' Anthropic's July 2026 agreement to buy 2GW of GPU capacity from AMD is the clearest evidence yet that hyperscalers/AI labs are actively building a multi-supplier compute stack rather than a Nvidia monopoly — expands the fabless design TAM beyond a single winner.",
+    "Broadcom AI ASIC backlog held, guidance NOT cut a second time: Broadcom held its $16B Q3 AI guide steady in its July 2026 update (no repeat of the June miss that triggered the sector selloff) — the fabless custom-ASIC franchise (Google, Meta, Apple, ByteDance programs) remains intact at the scale disclosed in Q2 FY2026 ($8.4B quarterly AI revenue, $73B backlog).",
+    "Memory-shortage-confirmed data center buildout: Micron's 2026-06-24 print confirmed the AI memory cycle is supply-bound, not sentiment — 81% gross margin, full 2026 HBM capacity sold out. DRAM contract prices +63% YoY, NAND +75% YoY (Goldman Sachs: most severe memory shortage in 15 years). This is a corroborating, independent data point for AI infrastructure demand — the compute buildout is physically constrained by more than GPU supply alone, evidence the capex is real spend, not vaporware guidance.",
+    "ASML July 2026 earnings: upgraded lithography-tool guidance cited as a leading indicator for continued fab investment tied to the AI buildout, reinforcing the demand signal one step upstream of design.",
+    "Sovereign AI and geographic diversification: UAE ($1.4T AI target), Saudi Arabia (NEOM/Project Transcendence), France, Japan building national AI infrastructure, broadening revenue base beyond US hyperscalers.",
+    "Edge AI and on-device inference: Qualcomm Snapdragon X Elite NPU, Apple M-series neural engine, and MediaTek Dimensity 9400 enabling LLM inference on mobile and PC endpoints — a second demand vector distinct from data center, largely undisturbed by the July data-center-stock volatility."
   ],
   "supply_constraints": [
-    "TSMC 2nm and CoWoS advanced packaging capacity: CoWoS utilization ~95%+ (sell-side estimates), with 12–18 month lead time for new capacity. TSMC N2 (2nm) ramping in H2 2026 — any yield or throughput shortfall directly constrains Nvidia B300 and AMD MI400 volumes.",
-    "HBM3E/HBM4 allocation from memory IDMs: Nvidia Blackwell B200 requires 8 stacks of HBM3E per GPU. SK Hynix 2026 HBM supply is sold out; HBM3E prices raised ~20% for 2026. Capacity allocation disputes between Nvidia and AMD become binding constraints on GPU availability.",
-    "Advanced packaging substrate scarcity: ABF (Ajinomoto Build-up Film) substrates for advanced flip-chip packages have 9–12 month lead time. ABF substrate demand growing 40% annually; Ibiden and Shinko Electric capacity-constrained through 2027.",
-    "US export controls — ongoing China revenue erosion: June 2026 BIS guidance extending controls to overseas Chinese-entity subsidiaries further reduces Nvidia China addressable market. China had represented ~20–25% of Nvidia data center revenue pre-controls. The June 2026 sell-off (SOX -8.8%, ~$1.3T wiped) on a single Broadcom guide miss ($16B Q3 AI guide vs $17.2B consensus) demonstrated how a guidance shortfall can trigger sector-level de-risking.",
-    "Rotation pressure (new June 2026): the market is actively rotating OUT of AI/tech into real economy (energy, industrials, materials). 'AI exhaustion' narrative is loud. Nvidia lost ~6% and briefly lost $5T valuation in late June. AMD -10.86% in a single session. Positioning risk is acute at current crowding levels.",
-    "ASIC co-design engineering talent: qualified AI ASIC co-design engineers are the primary bottleneck — not silicon capacity — limiting the rate at which new hyperscaler custom chips reach market."
+    "TSMC 2nm and CoWoS advanced packaging capacity: CoWoS utilization ~95%+ (sell-side estimates). TSMC's own July 2026 capex escalation ($100B added to Arizona, $265B total US) signals management sees the constraint persisting multi-year, not easing.",
+    "HBM3E/HBM4 allocation — now a hard-confirmed constraint, not a forecast: Micron's 2026-06-24 print confirmed 100% of 2026 HBM capacity is contracted/sold out across the industry; DRAM +63% / NAND +75% YoY pricing, HBM shortfall estimated 5.1% for 2026 (Goldman). Nvidia Blackwell (8 HBM3E stacks/GPU) and AMD MI400 volumes are both gated by the same allocation pool — this is now the single tightest binding constraint on GPU shipment volume for the remainder of 2026.",
+    "Advanced packaging substrate scarcity: ABF (Ajinomoto Build-up Film) substrates for advanced flip-chip packages remain a 9–12 month lead-time bottleneck; Ibiden and Shinko Electric capacity-constrained through 2027.",
+    "US export controls — ongoing China revenue erosion: the June 2026 BIS guidance extending controls to overseas Chinese-entity subsidiaries remains in force (unchanged this cycle); China represents a structurally shrinking share of Nvidia data center revenue.",
+    "Extreme two-way volatility as a market-structure constraint on conviction sizing: 2026 has recorded 34 daily moves >4% across SOXX/SMH — the June 'peak scare' selloff (SOX -8.8% single session) has since been invalidated by three earnings cycles of raised guidance, but July 2026 still produced a reported ~$3.3T sector-wide market-cap swing since June alongside a record $5.4B single-day SOXX inflow. Fundamentals are not the binding constraint on the position anymore — positioning churn and headline sensitivity are.",
+    "ASIC co-design engineering talent: qualified AI ASIC co-design engineers remain the primary bottleneck — not silicon capacity — limiting the rate at which new hyperscaler custom chips (Broadcom, Marvell programs) reach market."
   ],
   "cycle_position": {
-    "assessment": "Late upcycle with elevated rotation risk. Fundamentals remain exceptional — Nvidia Q2 guide $91B, Broadcom $73B ASIC backlog, hyperscaler $725B capex confirmed. But the market has entered a sentiment regime shift in June 2026: rotating out of AI/tech, Broadcom guide miss triggered $1.3T sector selloff. The alpha opportunity has shifted from thesis validation (confirmed) to entry timing and rotation management.",
-    "rationale": "SEMI.L closed at $17.07 on 2026-06-29 (+6.7% 1M, +80.8% 3M, momentum score 99.4/100 — still at the 99th percentile cross-sectionally despite the June rotation). SOX returned +90.03% YTD H1 2026. But the June 2026 narrative has shifted materially: the Broadcom Q3 AI guide miss ($16B vs $17.2B consensus) triggered the SOX -8.8% single-session crash, with Nvidia -6%, AMD -10.86%, Intel -11.28% — a ~$1.3T sector-wide selloff that represents the first instance where a guide miss was NOT recovered within the session. This is the canonical 'second derivative' inflection in a crowded upcycle. The fundamental thesis is intact (capex $725B confirmed, Nvidia Q1 beat, Q2 guide raised to $91B), but the sentiment regime has changed from 'buy every dip' to 'question the acceleration.' The July 2026 hyperscaler Q2 earnings (Microsoft, Google, Amazon, Meta) are the next binary event. OPEN POSITION in SEMI.L: the Broadcom miss does NOT constitute a deactivation of struct_ai_capex_supercycle; hold the position with close monitoring of July earnings. The +80.8% 3M return confirms the position is well into profit; tighten mental stop if July earnings produce a second consecutive AI guide miss.",
-    "last_assessed": "2026-06-29"
+    "assessment": "Late upcycle, mid-correction — fundamentals re-accelerating even as price corrects sharply. The June 2026 'AI capex peak scare' has been formally invalidated: three consecutive earnings cycles (Q2 2026) show hyperscaler guidance RAISED, not cut (Big Four combined ~$630B FY2026, +62% YoY; Google to $195–205B; TSMC +$100B Arizona; Broadcom held its $16B AI guide with no repeat miss). Yet SEMI.L fell -18.7% over the trailing month and sits -24.6% off its 52-week high as of 2026-07-28 — a valuation/positioning reset happening IN PARALLEL WITH, not because of, deteriorating fundamentals. This is the textbook signature of a crowded trade digesting good news rather than a thesis break: 34 daily moves >4% across SOXX/SMH in 2026, a reported ~$3.3T sector-wide market-cap swing since June, alongside a record $5.4B single-day SOXX inflow in July — capital is churning violently, not fleeing.",
+    "rationale": "SEMI.L closed at $13.85 on 2026-07-28 (-18.73% 1M, +16.62% 3M, +43.6% 6M, +120.1% 1Y; near 52w-high -24.58%; cross-sectional momentum_score 92.0/100 — still top-decile despite the pullback, because the 3M/6M/1Y legs remain exceptional even after the 1M drawdown). Composite score from `sector_scorer` = 84.1 (catalyst_alignment 91.2, momentum 92.0, flow_confirmation 73.7 via SMH proxy [+2.96% flow over 7d — net inflows continuing], crowding_risk 35.0 [penalty applied, category-derived from narrative_maturity=crowded]). regime_state = intact (structural_monitor: 0 weak indicators, no degrading signal on struct_ai_capex_supercycle, now at intensity 89.9). The non-obvious read: price and fundamentals have DECOUPLED in opposite directions this cycle — capex guidance accelerated while the stock corrected — which is a rotation/positioning story, not a demand story. OPEN POSITION in SEMI.L: hold. The thesis (struct_ai_capex_supercycle) strengthened this cycle (82.9→89.9); the pullback is a re-entry/scale-in signal territory for new capital, not an exit signal for the existing position. Next binary catalysts: Nvidia FQ2 FY2027 earnings (2026-08-26, not yet reported) and any Microsoft/Amazon/Meta Q2 capex commentary still pending as of this write.",
+    "last_assessed": "2026-07-28"
   },
   "key_metrics_to_monitor": [
     {
-      "metric": "Combined Big-4 hyperscaler capex guidance (Microsoft + Google + Amazon + Meta, quarterly)",
-      "unit": "USD billion per quarter",
-      "source": "Earnings transcripts (Q2 2026 due July–August 2026)",
-      "current": 87,
-      "comment": "Q1 2026 combined ~$87B. Root demand signal. July Q2 earnings is the next binary event: capex confirmation at $90B+ = bull continuation; guidance cut >10% = sector de-rating trigger. The Broadcom guide miss demonstrated that market is now discounting GUIDE misses, not just beats."
+      "metric": "Combined Big-4 hyperscaler FY2026 AI capex guidance (Microsoft + Google + Amazon + Meta)",
+      "unit": "USD billion, FY2026 guidance, YoY %",
+      "source": "Q2 2026 earnings transcripts (Alphabet reported 2026-07-16 window; others through late July)",
+      "current": 630,
+      "comment": "UPDATED 2026-07-28: Big Four combined guide now ~$630B (+62% YoY vs $388B 2025), up from the ~$87B single-quarter run-rate cited in June. This is the metric that invalidated cat_20260605_ai_capex_peak_scare. Next test: any guidance WALKBACK in Q3 2026 reporting (Oct–Nov) would be the first real deceleration signal since the cycle began."
     },
     {
       "metric": "Nvidia data center revenue quarterly (YoY and sequential growth)",
       "unit": "USD billion quarterly + YoY %",
-      "source": "Nvidia quarterly earnings (~August 2026, fiscal Q2 FY2027)",
-      "current": "Q1 FY2027: $81.6B total / $76.6B data center. Q2 guide: $91B",
-      "comment": "Q2 FY2027 guide of $91B implies ~+12% sequential growth — a deceleration from prior quarters. Key watch: does Q3 FY2027 guidance (August report) accelerate back above $100B (bull) or decelerate toward $80B (cycle warning)?"
+      "source": "Nvidia quarterly earnings — next report 2026-08-26 (FQ2 FY2027), NOT YET REPORTED as of this study",
+      "current": "Last reported: Q1 FY2027 $81.6B total / $76.6B data center; Q2 FY2027 guide $91B",
+      "comment": "Still the single most market-moving print in the sector. The Aug 26 report is the next binary event for the position — a guide back above $100B for FQ3 would confirm re-acceleration; a guide near or below $91B would read as the first real deceleration signal, distinct from the sentiment-only June scare."
     },
     {
       "metric": "Broadcom AI chip revenue and 12-month backlog",
       "unit": "USD billion quarterly / backlog",
-      "source": "Broadcom quarterly earnings",
-      "current": "Q2 FY2026: $8.4B (+106% YoY). Backlog: $73B",
-      "comment": "NEW primary metric (2026-06-29): Broadcom's ASIC business is now the second-largest fabless AI revenue stream after Nvidia. The Q3 guide of $16B vs consensus $17.2B triggered the June sell-off — Broadcom guidance is now a market-moving event for the entire sector."
+      "source": "Broadcom quarterly earnings / July 2026 guidance update",
+      "current": "Held $16B Q3 AI guide steady (no repeat miss); prior print Q2 FY2026 $8.4B (+106% YoY), backlog $73B",
+      "comment": "UPDATED 2026-07-28: the guide HOLD (not a further cut) is itself the signal — the June miss did not repeat. Watch the next full quarterly print (backlog trend) for confirmation the ASIC programs are still scaling, not just non-deteriorating."
     },
     {
-      "metric": "TSMC CoWoS advanced packaging utilization rate",
-      "unit": "capacity utilization %",
-      "source": "TSMC earnings, sell-side supply chain channel checks (UBS, JPMorgan)",
-      "current": "~95%+ (estimated)",
-      "comment": "The bottleneck for Blackwell GPU output. Loosening below 85% would signal supply catching up to demand — potentially bearish for pricing but bullish for volumes."
+      "metric": "TSMC CoWoS advanced packaging utilization + US capex commitment",
+      "unit": "capacity utilization % / USD billion cumulative US investment",
+      "source": "TSMC Q2 2026 earnings (2026-07-16)",
+      "current": "~95%+ utilization (estimated); US investment raised to $265B total (+$100B Arizona, 2026-07-16)",
+      "comment": "TSMC adding capex rather than pausing is a strong corroborating signal for sustained design-house order volume — a foundry does not pre-commit $100B against a demand air-pocket."
     },
     {
-      "metric": "SOX vs S&P 500 relative performance (rotation signal)",
-      "unit": "sector relative performance differential (pp YTD)",
-      "source": "Bloomberg / market data",
-      "current": "SOX +90% YTD H1 2026 vs S&P ~+15–20% — differential ~+70pp",
-      "comment": "NEW metric (2026-06-29): the June rotation narrative ('sell AI/tech, buy real economy') means SOX-vs-market premium is the key positioning indicator. Sustained SOX underperformance >10pp vs S&P 500 over 4–8 weeks signals a crowding unwind, not just a dip."
+      "metric": "SOX / SMH / SOXX relative performance and flow (rotation + positioning signal)",
+      "unit": "% YTD, single-day flow USD",
+      "source": "Yahoo Finance / Benzinga / Motley Fool, July 2026",
+      "current": "SOXX $5.4B single-day inflow (record, July 2026); SMH +$552M same day, AUM ~$69.8B; SOXX has outpaced SMH by ~23pp YTD 2026; 34 daily moves >4% across SOXX/SMH in 2026 (record)",
+      "comment": "UPDATED 2026-07-28, NEW framing: this is no longer a simple 'sector vs S&P' rotation gauge — 2026 volatility itself (34 >4% days) is now the crowding tell. Sustained net OUTFLOWS (not just volatility) over 4–8 weeks would be the real unwind signal; record inflows during a drawdown (as seen in July) is dip-buying, i.e. the crowded trade is still being defended, not abandoned."
     },
     {
       "metric": "Nvidia gross margin",
       "unit": "%",
-      "source": "Nvidia earnings",
+      "source": "Nvidia earnings — next report 2026-08-26",
       "current": 71.5,
-      "comment": "Q1 FY2027 gross margin ~71.5%. Pricing power sustained only if gross margin remains above 65%. Decline toward 60% signals competitive erosion (AMD, custom silicon, or foundry cost increases)."
+      "comment": "Last reported (Q1 FY2027) ~71.5%. No new print since June 29 study; carried forward. Decline toward 60% would signal competitive erosion (AMD, custom silicon, or foundry cost increases) — watch alongside the Aug 26 report."
     }
   ],
   "etf_analysis": [
@@ -95,9 +95,9 @@
       "avg_spread_bps": 8,
       "avg_daily_volume_m_usd": null,
       "top_10_concentration_pct": null,
-      "characteristics": "UCITS. LSE-listed. Tracks MSCI ACWI IMI Semiconductors & Semiconductor Equipment index — includes TSMC, Samsung, ASML alongside Nvidia/AMD/Qualcomm. Broader inclusion means some dilution from non-fabless names (foundry, equipment), but the only UCITS vehicle with meaningful AUM in this sector. AUM ~$4.25B. Closing price $17.07 on 2026-06-29 (+6.7% 1M, +80.8% 3M, momentum score 99.4/100). OPEN POSITION in the book (€500 MSCI World Semis). Tier 1 for UCITS-constrained Spanish investor — no better UCITS alternative exists for this sector.",
+      "characteristics": "UCITS. LSE-listed. Tracks MSCI ACWI IMI Semiconductors & Semiconductor Equipment index — includes TSMC, Samsung, ASML alongside Nvidia/AMD/Qualcomm. Closing price $13.85 on 2026-07-28 (-18.73% 1M, +16.62% 3M, +43.6% 6M, +120.1% 1Y, -24.58% off 52w high of $18.37; cross-sectional momentum_score 92.0/100). OPEN POSITION in the book (€500 MSCI World Semis, opened 2026-06-04). AUM figure ($4.25B) unchanged since 2026-06-05 confirmation — not reverified this cycle, flag for quarterly review given sector-wide flow volatility. Tier 1 for UCITS-constrained Spanish investor — no better UCITS alternative exists for this sector.",
       "recommendation_tier": 1,
-      "limitations": "UCITS: yes. AUM $4.25B — above $200M threshold, no liquidity warning. Spread 8bps — below 25bps, acceptable. Key limitation: includes TSMC (~10%) and ASML (~5%) which dilutes pure fabless exposure. A Spanish investor cannot access SMH or SOXX without PRIIP KID, making SEMI.L the de facto only UCITS vehicle. USD-denominated: EUR/USD adds ~5–8% annualized vol to EUR-base P&L. No EUR-hedged version available. Verify AUM via iShares UK site before additional entry."
+      "limitations": "UCITS: yes. AUM $4.25B (last verified 2026-06-05) — above $200M threshold, no liquidity warning. Spread 8bps — below 25bps, acceptable. Key limitation: includes TSMC (~10%) and ASML (~5%) which dilutes pure fabless exposure. A Spanish investor cannot access SMH or SOXX without PRIIP KID, making SEMI.L the de facto only UCITS vehicle. USD-denominated: EUR/USD adds ~5–8% annualized vol to EUR-base P&L. No EUR-hedged version available."
     },
     {
       "ticker": "SMH",
@@ -110,9 +110,9 @@
       "avg_spread_bps": 2,
       "avg_daily_volume_m_usd": null,
       "top_10_concentration_pct": null,
-      "characteristics": "Largest semiconductor ETF by AUM ($21B). Top holdings: Nvidia ~25%, TSMC ~10%, AVGO ~8%, AMD ~5%, QCOM ~4%. Closing $631.33 on 2026-06-29 (+6.0% 1M, +68.7% 3M, momentum score 97.9). Highest liquidity in the sector (2bps spread). Dominated by fabless/AI names but includes foundry (TSMC). Strong fabless/AI exposure.",
+      "characteristics": "Largest semiconductor ETF by structured AUM record ($21B); WebSearch 2026-07-28 reports current AUM has grown to ~$69.8B (not yet reconciled into etf_universe.yaml — flag for quarterly review, large discrepancy). Closing $548.55 on 2026-07-28 (-11.37% 1M, +8.31% 3M, +37.11% 6M, momentum_score 72.4 raw). Added $552M in inflows the same July day SOXX recorded its record $5.4B single-day inflow — evidence of continued institutional demand even mid-correction. Dominated by fabless/AI names but includes foundry (TSMC). Nvidia ~25% concentration means SMH is effectively a leveraged Nvidia bet.",
       "recommendation_tier": 2,
-      "limitations": "NOT UCITS. A Spanish retail investor cannot purchase SMH under PRIIPs regulations without a KID document, which VanEck has not issued for EU retail. This is a hard access constraint — not just a preference. Only accessible if broker has institutional/professional classification. If accessible: this is a better vehicle (lower spread, higher AUM). Nvidia ~25% concentration means SMH is effectively a leveraged Nvidia bet."
+      "limitations": "NOT UCITS. A Spanish retail investor cannot purchase SMH under PRIIPs regulations without a KID document, which VanEck has not issued for EU retail. This is a hard access constraint — not just a preference. If accessible: this is a better vehicle (lower spread, higher AUM, and per WebSearch has underperformed SOXX by ~23pp YTD 2026 — SOXX's equipment tilt captured more upside this cycle)."
     },
     {
       "ticker": "SOXX",
@@ -125,7 +125,7 @@
       "avg_spread_bps": 2,
       "avg_daily_volume_m_usd": null,
       "top_10_concentration_pct": null,
-      "characteristics": "Second-largest semiconductor ETF ($12B AUM). US-centric; TSMC small position (~3%). YTD H1 2026 up ~90.03% — the top-performing broad semis ETF in H1 2026. More US-domestic semiconductor exposure than SMH. Includes Intel, Micron alongside Nvidia/AMD/Qualcomm. Broader sector (includes memory, foundry, fabless) makes it less pure fabless than SMHX.",
+      "characteristics": "Second-largest semiconductor ETF ($12B structured AUM; WebSearch flags a $5.4B single-day inflow record in July 2026, implying meaningfully higher current AUM — reverify at quarterly review). US-centric; TSMC small position (~3%). Outpaced SMH by ~23pp YTD 2026 — its equipment tilt (AMAT, LRCX) captured upside SMH's design-house-heavy mix missed this cycle. Broader sector (includes memory, foundry, fabless) makes it less pure fabless than SMHX.",
       "recommendation_tier": 2,
       "limitations": "NOT UCITS — same PRIIPs restriction as SMH for Spanish retail. If accessible: the broader sector makes it a less pure fabless play than SMHX. Use SEMI.L as the UCITS substitute."
     },
@@ -140,35 +140,42 @@
       "avg_spread_bps": null,
       "avg_daily_volume_m_usd": null,
       "top_10_concentration_pct": null,
-      "characteristics": "Purest fabless-only vehicle — tracks MarketVector US Listed Fabless Semiconductor Index (pure fabless: Nvidia, AMD, Qualcomm, Broadcom, MediaTek, Marvell; excludes TSMC, Samsung, ASML). YTD H1 2026 the strongest-performing pure-fabless ETF. AUM and spread data not confirmed — likely below $200M given launch recency, which would trigger a liquidity_warning.",
+      "characteristics": "Purest fabless-only vehicle — tracks MarketVector US Listed Fabless Semiconductor Index (pure fabless: Nvidia, AMD, Qualcomm, Broadcom, MediaTek, Marvell; excludes TSMC, Samsung, ASML). No fresh AUM/spread data found this cycle — likely still below $200M given launch recency.",
       "recommendation_tier": 3,
       "limitations": "NOT UCITS — hard block for Spanish retail. AUM unknown — likely below $200M, liquidity_warning applies. Monitor for UCITS equivalent launch. Use SEMI.L as UCITS substitute at the cost of some foundry/equipment dilution."
     }
   ],
   "active_catalyst_ids": [
     "struct_ai_capex_supercycle",
+    "cat_20260728_hyperscaler_capex_guidance_raise",
     "cat_20260601_us_ai_chip_export_controls"
   ],
   "historical_catalyst_performance": {
-    "summary": "The fabless semiconductor sector has the most direct and consistent historical response to AI/compute demand catalysts of any sector in the CATALYX universe. Key regimes: (1) ChatGPT emergence (late 2022–2023): Nvidia +277% in 12 months; SOXX +88% Jan–Dec 2023 — fastest institutional repricing of a mega-cap sector on record. (2) Hyperscaler capex guidance escalation (2024–2025): each quarterly beat produced a 5–12% sector rally in 5 trading days, persistent for 30–60 days. DeepSeek scare (January 2026) produced -15% drawdowns recovered within 6 weeks. (3) Broadcom Q2 FY2026 guide miss (June 2026): Q3 AI guide $16B vs $17.2B consensus triggered SOX -8.8%, ~$1.3T market cap erased — Nvidia -6%, AMD -10.86%, Intel -11.28%. THIS IS THE FIRST GUIDE-MISS EVENT that was not intraday-recovered, marking a sentiment regime shift from 'buy every dip' to 'question the acceleration.' Export control announcements (2022–2026) produced -8 to -15% reactions with recovery over 4–8 weeks, diminishing reaction magnitude over time (fatigue). Historical beta of fabless design to AI capex catalyst events: approximately 2.5x the S&P 500 reaction (upside and downside).",
+    "summary": "The fabless semiconductor sector has the most direct and consistent historical response to AI/compute demand catalysts of any sector in the CATALYX universe. Key regimes: (1) ChatGPT emergence (late 2022–2023): Nvidia +277% in 12 months; SOXX +88% Jan–Dec 2023. (2) Hyperscaler capex guidance escalation (2024–2025): each quarterly beat produced a 5–12% sector rally in 5 trading days, persistent for 30–60 days. DeepSeek scare (January 2026) produced -15% drawdowns recovered within 6 weeks. (3) Broadcom Q2 FY2026 guide miss (June 2026): Q3 AI guide $16B vs $17.2B consensus triggered SOX -8.8%, ~$1.3T market cap erased — the first guide-miss event NOT intraday-recovered. (4) NEW — the June scare INVALIDATED by July 2026 earnings: Alphabet raised FY2026 capex to $195–205B, TSMC added $100B to Arizona, Broadcom held its Q3 guide with no repeat miss, and Big Four combined guidance rose to ~$630B (+62% YoY). Yet the STOCK reaction was the opposite of the historical pattern — instead of a 5–12% relief rally, SEMI.L fell a further -18.7% over the trailing month into 2026-07-28, with 34 daily moves >4% recorded across SOXX/SMH in 2026 and a reported ~$3.3T sector-wide market-cap swing since June. This is a new pattern for the sector: fundamentals-confirming news no longer producing a clean rally — it is instead producing extreme two-way volatility (record $5.4B single-day SOXX inflow occurring DURING the drawdown), consistent with a genuinely crowded, high-turnover positioning regime rather than a directional re-rating either way. Export control announcements (2022–2026) produced -8 to -15% reactions with recovery over 4–8 weeks, diminishing reaction magnitude over time (fatigue). Historical beta of fabless design to AI capex catalyst events: approximately 2.5x the S&P 500 reaction (upside and downside), though the July 2026 episode suggests that beta is compressing toward pure volatility rather than clean directional beta as the trade matures.",
     "key_catalyst_types_by_response_strength": [
       {
         "catalyst_type": "hyperscaler_capex_guidance_beat",
-        "typical_5d_return_pct": "+7 to +15",
+        "typical_5d_return_pct": "+7 to +15 (2023–2025 regime); no longer holding cleanly as of July 2026 — see guidance_raise_no_rally below",
         "persistence_days": "30–60",
-        "confidence": "high — consistent across 8 quarterly cycles 2023–2026"
+        "confidence": "high — consistent across 8 quarterly cycles 2023–2026, weakening confidence for 2026 H2"
+      },
+      {
+        "catalyst_type": "hyperscaler_capex_guidance_raise_no_rally (NEW, July 2026)",
+        "typical_5d_return_pct": "-5 to -19 over the following month despite the confirming news (SEMI.L -18.7% 1M through 2026-07-28)",
+        "persistence_days": "unresolved — single data point",
+        "confidence": "low — only one observed instance; flags a possible regime change from 'buy confirmation' to 'sell the news in a crowded, exhausted-adjacent trade'; needs a second instance to confirm the pattern"
       },
       {
         "catalyst_type": "nvidia_earnings_beat",
         "typical_5d_return_pct": "+5 to +12",
         "persistence_days": "20–45",
-        "confidence": "high — 6 consecutive beat-and-raise quarters 2024–2026"
+        "confidence": "high — 6 consecutive beat-and-raise quarters 2024–2026; next test 2026-08-26"
       },
       {
         "catalyst_type": "broadcom_ai_guide_miss",
         "typical_5d_return_pct": "-8 to -15 sector-wide",
-        "persistence_days": "7–30 (new — first instance June 2026)",
-        "confidence": "medium — single data point but $1.3T selloff suggests this is now a repeatable pattern"
+        "persistence_days": "7–30 (June 2026 instance)",
+        "confidence": "medium — single instance, and it did NOT repeat in the July guide update (held at $16B), so treat as an isolated shock rather than an established pattern"
       },
       {
         "catalyst_type": "export_control_tightening",
@@ -185,14 +192,15 @@
     ]
   },
   "risks": [
-    "AI rotation / momentum reversal (elevated as of June 2026): the market is actively rotating OUT of AI/technology into real economy names (energy, industrials, materials). The 'AI exhaustion' narrative has reached daily financial media coverage after the Broadcom guide miss. Nvidia's $5T valuation makes it a concentrated unwind target in any risk-off event. The June 2026 SOX -8.8% selloff on a single Broadcom guide miss demonstrates how fragile the crowded positioning is — a second consecutive guidance miss could trigger a 20–35% sector de-rating.",
-    "Hyperscaler capex guidance cut: the single most powerful deactivation risk. If Microsoft, Google, Amazon, or Meta guides to flat or lower AI capex for Q2/Q3 2026 due to ROI concerns, the sector could de-rate 20–35% in 30 days. The trigger is not an actual capex cut — it is a forward guidance revision. July 2026 Q2 earnings season is the live test.",
-    "Crowding and positioning reversal: semiconductors_design (specifically Nvidia) is the single most crowded institutional trade globally as of June 2026. Nvidia represents ~25% of SMH and is a top-5 holding in the majority of large-cap tech and growth funds. SOX +90% YTD creates a compression snap risk in any macro de-risking event.",
-    "AI efficiency breakthrough removing compute scaling requirement: a DeepSeek-style efficiency jump (>80% inference/training compute reduction) would structurally break the capex thesis. January 2026 version was absorbed, but a more durable breakthrough would not recover in 6 weeks. Fat-tail risk, low near-term probability, high impact.",
-    "Export control escalation and China revenue loss: progressive closure of China access reduces Nvidia TAM by $15–20B annually. If BIS restricts H20 chips to China, the revenue impact is immediate. MATCH Act (proposed US legislation) and Dutch Pax Silica alliance (June 23, 2026) both create additional legislative risk for ASML/AMAT/LRCX and indirectly for Nvidia's supply chain.",
-    "Custom silicon substitution (medium-term): Broadcom's $73B ASIC backlog illustrates both the risk and the opportunity — ASIC co-design benefits Broadcom/Marvell but compresses Nvidia market share long-term. If custom silicon reaches 40%+ of AI accelerator spend by 2028 (vs ~20% in 2026), Nvidia pricing power and market share erode materially."
+    "Sell-the-news / decoupled price-fundamentals risk (NEW, dominant as of July 2026): the historical pattern of 'confirming catalyst → 5–12% rally' broke in July 2026 — hyperscaler guidance RAISED across the board yet SEMI.L fell -18.7% over the month. If this repeats on the Nvidia 2026-08-26 print (a beat-and-raise that still sells off), it would confirm the sector has entered a genuinely exhausted-adjacent regime where good news is structurally unable to move price further — the single most important thing to watch over the next earnings cycle.",
+    "AI rotation / momentum reversal (elevated, evolving): 34 daily moves >4% across SOXX/SMH in 2026 (record), a reported ~$3.3T sector-wide market-cap swing since June, alongside a still-record $5.4B single-day SOXX inflow in July — capital is churning violently rather than fleeing outright, but the volatility itself now IS the crowding signal, distinct from the June 'AI exhaustion narrative' which has since been walked back by fundamentals.",
+    "Hyperscaler capex guidance cut: LARGELY DE-RISKED for the near-term as of 2026-07-28 — the June scare that motivated this risk has been invalidated by three earnings cycles of RAISED guidance (Big Four ~$630B, +62% YoY). Residual risk shifts to Q3 2026 reporting (Oct–Nov): a guidance WALKBACK after two consecutive raises would be the first credible deceleration signal since the cycle began in 2023.",
+    "Crowding and positioning reversal: semiconductors_design (specifically Nvidia) remains the single most crowded institutional trade globally. Nvidia is a top-5 holding in the majority of large-cap tech and growth funds. The July 2026 volatility (34 four-percent days) is itself evidence that positioning is now large enough to move markets on both confirming AND disconfirming news symmetrically — a hallmark of late-cycle crowding.",
+    "AI efficiency breakthrough removing compute scaling requirement: a DeepSeek-style efficiency jump (>80% inference/training compute reduction) would structurally break the capex thesis. Fat-tail risk, low near-term probability, high impact — unchanged this cycle.",
+    "Export control escalation and China revenue loss: progressive closure of China access reduces Nvidia TAM by $15–20B annually; unchanged this cycle (June 2026 BIS guidance remains the latest action).",
+    "Custom silicon substitution (medium-term, reinforced by new evidence): Broadcom's steady $16B guide and Anthropic's 2GW AMD deal both illustrate the multi-supplier trend accelerating — good for the sector aggregate TAM, but a structural headwind for Nvidia's specific market-share and pricing power if custom silicon + AMD combined reach 40%+ of AI accelerator spend by 2028 (vs ~20% in 2026)."
   ],
   "narrative_maturity": "crowded",
-  "narrative_trend": "stable",
-  "narrative_notes": "Maintained at 'crowded' (score_equiv: 80) as of 2026-06-29. Observable evidence: (1) SOX +90% YTD H1 2026, FTXL +100% YTD — performance gap vs market is itself a crowding signal broadcast daily. (2) The June 2026 'AI chip sell-off: $1.3T wiped out' coverage confirms the AI semiconductor thesis now generates market-crash-level financial media coverage on any negative event — a hallmark of 'crowded.' (3) SMH AUM ~$21B, SOXX ~$12B, SEMI.L ~$3.5B — far above $500M mainstream threshold. (4) Thesis is consensus at Goldman, JPMorgan, Morgan Stanley, Deloitte sector outlook. (5) 'AI exhaustion' and 'sell semis, buy real economy' narrative appearing in June 2026 financial media at daily frequency — this is the crowded→exhausted transition signal to watch. Why NOT exhausted: fundamental thesis intact (Nvidia Q2 guide $91B, Broadcom $73B backlog, hyperscaler $725B capex), earnings beats ongoing, rotation is positioning-driven not fundamental deterioration. Narrative_trend = stable (not increasing): the June sell-off did not shift sell-side from bullish to bearish — consensus remains buy-the-dip. Reclassify to exhausted if: (a) hyperscaler capex guidance cuts in July earnings, OR (b) two consecutive Nvidia guide misses, OR (c) ETF flows turn materially negative for >6 weeks."
+  "narrative_trend": "increasing",
+  "narrative_notes": "Maintained at 'crowded' (score_equiv: 80) but UPGRADED narrative_trend from 'stable' to 'increasing' as of 2026-07-28. Evidence for the trend change: (1) 2026 has recorded 34 daily moves >4% across SOXX/SMH — a volatility statistic that is itself a crowding tell (large, symmetric positioning reacting violently to both confirming and disconfirming headlines). (2) A reported ~$3.3T sector-wide market-cap swing since June, immediately followed by a record $5.4B single-day SOXX inflow — capital churning at a scale and speed consistent with an increasingly saturated, high-turnover trade, not a maturing-and-calming one. (3) The 'sell the news' pattern in July (raised guidance, falling stock) is a genuinely new signature — in a merely 'crowded' (not yet 'exhausted') market, confirming fundamentals still produce rallies; the fact this one didn't is the first data point suggesting migration toward 'exhausted' territory. Why NOT yet reclassified to exhausted: fundamentals remain unambiguously strong (capex raised across all Big Four, TSMC adding capex, Broadcom guide held, memory shortage confirms real physical demand), and the July inflow record shows dip-buying discipline is still intact rather than capitulation. Reclassify to exhausted if: (a) the Nvidia 2026-08-26 report is a beat-and-raise that STILL sells off (confirms the sell-the-news pattern is structural, not a one-off), OR (b) ETF flows turn materially and sustainedly negative for >6 weeks, OR (c) any Big Four hyperscaler issues an actual guidance CUT in Q3 2026 reporting."
 }

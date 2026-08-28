@@ -46,10 +46,55 @@ def get_catalyst(id: str) -> dict[str, Any] | None:
     return None
 
 
+def merged_map() -> dict[str, str]:
+    """`{absorbed_id: merged_into_id}` for every catalyst with `status: merged`."""
+    return {d["id"]: d["merged_into"] for d in _load_all()
+            if d.get("status") == "merged" and d.get("merged_into") and d.get("id")}
+
+
+def resolve(catalyst_id: str, _map: dict[str, str] | None = None) -> str:
+    """Follow `merged_into` to the catalyst that is actually SCORED today.
+
+    Movements keep the catalyst id they were opened against — correctly, that is the historical
+    record — but after the 2026-08-27 merges several of those ids are `status: merged` and
+    `compute_all()` skips them. Anything that asks "is this position's driver still healthy?"
+    must ask the SURVIVOR: re-verifying a merged file spends a search on a catalyst nothing
+    scores, and reading its `status_last_reviewed` yields a fresh-looking date (the merge stamped
+    it) for a thesis nobody has checked since.
+
+    Unknown ids pass through unchanged. Chains are followed; a cycle stops rather than hangs.
+    """
+    m = merged_map() if _map is None else _map
+    seen, cur = set(), catalyst_id
+    while cur in m and cur not in seen:
+        seen.add(cur)
+        cur = m[cur]
+    return cur
+
+
+def resolve_all(catalyst_ids) -> list[str]:
+    """`resolve` over a list, de-duplicated, order preserved. One YAML read for the whole list."""
+    m = merged_map()
+    out, seen = [], set()
+    for cid in catalyst_ids or []:
+        r = resolve(cid, m)
+        if r not in seen:
+            seen.add(r)
+            out.append(r)
+    return out
+
+
 # ── Summary ───────────────────────────────────────────────────────────────────
 
 def active_summary() -> str:
-    rows = [r for r in _load_all() if r.get("status") != "deactivated"]
+    # Universo v2.0: 'merged' (fusionado en otro catalizador) y role 'macro_context'
+    # (regimen sin vehiculo, no posicion) tampoco son activos. Antes solo se excluia
+    # 'deactivated', asi que los fusionados seguian inflando el resumen y el dashboard.
+    rows = [
+        r for r in _load_all()
+        if r.get("status") not in ("deactivated", "merged")
+        and r.get("role") != "macro_context"
+    ]
     rows.sort(key=lambda r: (r.get("intensity", {}) or {}).get("current_score") or 0, reverse=True)
 
     lines = [f"Structural Catalysts ({len(rows)}):"]

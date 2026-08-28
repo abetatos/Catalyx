@@ -44,7 +44,13 @@ _REPO_ROOT = Path(__file__).parents[2]
 _WEIGHTS_PATH = _REPO_ROOT / "catalyx" / "config" / "scoring_weights.yaml"
 _ETF_PATH = _REPO_ROOT / "catalyx" / "config" / "etf_universe.yaml"
 _STUDY_DIR = _REPO_ROOT / "data" / "sector_studies"
-_BLOCKS_DIR = _REPO_ROOT / "data" / "reports" / "heatmap_blocks"
+# Per-sector narrative blocks. Moved to experiments/ 2026-08-28 (v3 §2.6): the heatmap no
+# longer writes a prose block per top-5 sector each run (the "non-obvious finding" obligation
+# moved to the review's executive summary, once), so this is an archive of hand-written blocks,
+# not an output of the pipeline. Still read here so `rationale_md` keeps its value for the
+# sectors that have one — moving the directory without moving this pointer would have made the
+# column silently None, which is the kind of change nobody notices for months.
+_BLOCKS_DIR = _REPO_ROOT / "experiments" / "heatmap_blocks"
 _EVENT_CAT_DIR = _REPO_ROOT / "data" / "catalysts"
 
 
@@ -472,16 +478,24 @@ def validate_run(run_id: str | None = None, as_of: str | None = None,
     run_at = run.get("run_at")
     start = run_at.date().isoformat() if hasattr(run_at, "date") else str(run_at)[:10]
     end = as_of or datetime.now(timezone.utc).date().isoformat()
+    # A sector with no ETF stores primary_etf as NaN, and NaN is TRUTHY — so the old
+    # `if s.get("primary_etf")` guard let it through and `sorted()` then compared float to str,
+    # crashing the whole calibration. Require an actual non-empty string.
     rows = [(s["sector_id"], s.get("primary_etf"), s.get("composite"), s.get("rank"))
-            for _, s in snaps.iterrows() if s.get("primary_etf")]
+            for _, s in snaps.iterrows()
+            if isinstance(s.get("primary_etf"), str) and s["primary_etf"].strip()]
     tickers = sorted({t for _, t, _, _ in rows})
     if not tickers:
         return {"error": "no primary_etf stored in this run"}
 
-    # Fetch forward returns (best-effort; skip tickers yfinance can't resolve)
+    # Forward returns from the shared price cache (best-effort; skip unresolvable tickers).
+    # Served from the lake so a calibration re-run is REPRODUCIBLE — this number is the honest
+    # answer to "did the composite predict anything", and it must not shift because it was
+    # recomputed on a different afternoon.
+    from catalyx.data import prices
+
     fwd = {}
-    data = yf.download(tickers, start=start, end=end, progress=False, auto_adjust=True)
-    closes = data["Close"] if "Close" in data else data
+    closes = prices.read(tickers, start, end)
     for t in tickers:
         try:
             ser = closes[t].dropna() if hasattr(closes, "columns") else closes.dropna()
@@ -497,7 +511,11 @@ def validate_run(run_id: str | None = None, as_of: str | None = None,
                 "error": f"only {len(recs)} sectors had usable forward returns"}
 
     df = pd.DataFrame(recs)
-    rank_ic = float(df["composite"].corr(df["fwd_return"], method="spearman"))
+    # Spearman = Pearson on the RANKS. pandas' `method="spearman"` routes through scipy, which is
+    # not (and need not be) a dependency — so this call raised ModuleNotFoundError and the whole
+    # calibration had never once run. `.rank()` averages ties exactly like scipy, so the number is
+    # identical, with no new dependency for one correlation.
+    rank_ic = float(df["composite"].rank().corr(df["fwd_return"].rank()))
     top = df.nsmallest(top_n, "rank")["fwd_return"].mean()
     rest = df[~df.index.isin(df.nsmallest(top_n, "rank").index)]["fwd_return"].mean()
     return {
