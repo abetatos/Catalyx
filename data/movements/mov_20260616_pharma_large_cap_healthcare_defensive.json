@@ -1,0 +1,84 @@
+{
+  "$schema": "catalyx/schemas/movement.json",
+  "id": "mov_20260616_pharma_large_cap_healthcare_defensive",
+  "schema_version": "1.1",
+  "executed_at": "2026-06-16T00:00:00Z",
+  "action": "open",
+  "sector_id": "pharma_large_cap",
+  "vehicle": {
+    "etf": "IUHE.AS",
+    "isin": null,
+    "currency": "EUR"
+  },
+  "amount_eur": 500.0,
+  "qty": 72.27,
+  "price": 6.9182,
+  "fees": 0.0,
+  "attribution": [
+    {
+      "catalyst_id": "uncatalyzed",
+      "weight": 1.0
+    }
+  ],
+  "trigger": "reconsideration",
+  "conviction": "small",
+  "score_context": {
+    "run_id": null,
+    "rank": null,
+    "composite": null,
+    "catalyst_alignment": null,
+    "momentum": null,
+    "flow": null,
+    "crowding": null,
+    "regime_state": null
+  },
+  "risk_discipline": {
+    "invalidation": [
+      {
+        "id": "inv_01",
+        "condition": "IUHE.AS closes more than 20% below entry price for 10 consecutive trading days.",
+        "severity": "review_and_reduce",
+        "source": "market_data",
+        "triggered": false,
+        "triggered_at": null,
+        "stop_price_level": 5.5346,
+        "stop_price_ticker": "IUHE.AS",
+        "comparator": "below",
+        "threshold": 5.5346,
+        "consecutive_days": 10,
+        "eval_ticker": "IUHE.AS",
+        "eval_note": "Machine-checkable: IUHE.AS is the traded vehicle (EUR-quoted, no FX). Threshold 5.5346 EUR = entry 6.9182 EUR - 20%.",
+        "rationale": "A broad defensive healthcare beta position has no single-catalyst kill-switch; the discipline is a simple drawdown review — a 20%/10d fall means the defensive premise (lower drawdown than the market) has failed."
+      }
+    ],
+    "assumptions": [
+      {
+        "id": "asm_01",
+        "statement": "Broad US large-cap healthcare provides defensive, lower-beta exposure that diversifies the AI-capex-heavy book.",
+        "measurability": "Source: dislocation correlation engine (90d) + drawdown vs SPY. Falsified by: correlation to the AI cluster rises materially OR drawdown exceeds the market in a risk-off tape.",
+        "monitoring_source": "user_manual",
+        "check_frequency": "monthly",
+        "current_status": "holding",
+        "status_note": "Bought as a defensive diversifier, not on a specific catalyst (user-attributed as uncatalyzed)."
+      }
+    ],
+    "note": "Uncatalyzed defensive healthcare beta. IUHE.AS tracks the S&P 500 Health Care sector (broad: pharma ~30%, managed care ~20%, devices ~15%, biotech ~15%, tools ~10%). Filed under sector pharma_large_cap as the closest taxonomy proxy for large-cap-healthcare beta — the VEHICLE is broader than pure large-cap pharma; note this when reading pharma_large_cap position exposure. No catalyst attribution by user decision (defensive/quality rotation)."
+  },
+  "migrated_from_thesis_id": null,
+  "run_id": null,
+  "metadata": {
+    "created_at": "2026-07-31T00:00:00Z",
+    "created_by": "abetatos",
+    "attribution_note": "Uncatalyzed (weight 1.0) — user attributed this to defensive healthcare beta / quality rotation, not to a specific catalyst (GLP-1, patent-cliff M&A, and Section-232 tariffs were offered and declined).",
+    "fill_note": "Registered retroactively on 2026-07-31 from the user's broker (position opened 2026-06-16 but never recorded via /catalyx-open). Fill: €500 gross at IUHE.AS close 6.9182 EUR on 2026-06-16 -> qty 72.27, avg cost approx 6.9182 EUR/share. EUR-quoted (Amsterdam) so no FX on the mark. As of 2026-07-31 IUHE.AS approx 7.357 EUR -> value approx 531.7 EUR (+6.3%).",
+    "tax_entry_year": 2026,
+    "tags": [
+      "healthcare",
+      "defensive",
+      "diversifier",
+      "uncatalyzed",
+      "UCITS",
+      "retroactive_registration"
+    ]
+  }
+}
