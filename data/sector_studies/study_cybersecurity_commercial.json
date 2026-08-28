@@ -4,7 +4,7 @@
   "sector_id": "cybersecurity_commercial",
   "sector_label": "Commercial Cybersecurity (Enterprise B2B)",
   "created_at": "2026-06-05",
-  "last_updated": "2026-06-29",
+  "last_updated": "2026-07-28",
   "study_type": "full",
 
   "taxonomy": {
@@ -25,7 +25,8 @@
     "Fortinet Q1 2026: revenue +20% YoY; product revenue +41% YoY — the strongest product revenue growth in two years, driven by ASIC-based security appliance cycle and firewall refresh. Service revenue +11%. Fortinet is the most underappreciated performer in large-cap cyber: +86% YTD as of mid-2026, outpacing PANW (+58%) and CRWD (+46%), yet at a substantially lower valuation multiple.",
     "Platform consolidation wave: enterprise buyers collapsing multi-vendor point solutions into 2-3 dominant platforms. CRWD Q1 FY27: 49% of customers adopted 6+ modules, 34% adopted 7+, 24% adopted 8+ — cross-sell drives NRR expansion without new logo acquisition cost.",
     "New regulatory mandates creating non-discretionary spend: EU NIS2 Directive (October 2024 enforcement), US CMMC 2.0 (mandatory for DoD contractors by 2026-2027), SEC cyber disclosure rules (2024 effective), CIRCIA (critical infrastructure reporting), and Trump's AI Cybersecurity Executive Order (June 2026) advancing national cybersecurity standards. Compliance-driven demand is structurally different from discretionary IT spend and less sensitive to macro slowdowns.",
-    "Trump Post-Quantum Cryptography Executive Order (June 22, 2026): federal agencies must migrate high-value assets to post-quantum cryptography (PQC) by December 31, 2030 (key establishment) and 2031 (digital signatures). CISA and NSA must provide practical migration guidance. This creates a multi-year government AND commercial IT security upgrade cycle — vendors with PQC migration tooling (ISRG, Cloudflare, Palo Alto, IBM Security) will benefit; the order explicitly extends guidance to critical infrastructure operators."
+    "Trump Post-Quantum Cryptography Executive Order (June 22, 2026): federal agencies must migrate high-value assets to post-quantum cryptography (PQC) by December 31, 2030 (key establishment) and 2031 (digital signatures). CISA and NSA must provide practical migration guidance. This creates a multi-year government AND commercial IT security upgrade cycle — vendors with PQC migration tooling (ISRG, Cloudflare, Palo Alto, IBM Security) will benefit; the order explicitly extends guidance to critical infrastructure operators.",
+    "Analyst re-rating from 'AI risk' to 'AI beneficiary' consensus is VALIDATING, not creating, demand — but it matters for the thesis: Goldman Sachs (2026-07-21) raised CrowdStrike PT $182→$208 (+14.3%) and Palo Alto PT $330→$371 (+12.4%), explicitly reframing the sector as having 'shifted from being viewed as at risk from AI to being a clear beneficiary.' JPMorgan separately upgraded Qualys from Underweight to Neutral (PT $87→$139, then →$150 by 2026-07-27) citing AI-driven vulnerability-management demand tied to Chinese open-weight model advances. Two Tier-1 banks revising within the same 30-day window meets the CLAUDE.md analyst_model_revision registration bar (cat_20260728_cybersecurity_ai_beneficiary_revision, strength 72) — this removes a valuation overhang that previously capped multiples, but it is the same mechanism that closes the mispricing edge (see narrative_notes)."
   ],
 
   "supply_constraints": [
@@ -37,9 +38,9 @@
   ],
 
   "cycle_position": {
-    "assessment": "Mid-cycle acceleration — thesis is mainstream but sector is in fundamental re-acceleration, not late-cycle exhaustion.",
-    "rationale": "CIBR +~20% YTD as of late June 2026, outperforming the broader tech sector (XLK +~13%). The sector held up sharply relative to AI/semis which rotated out on macro concerns (strong USD, Fed hawkish hold, CPI 4.2%). The re-acceleration is fundamental: PANW quarterly revenue growth went 16% → 15% → 31% (sequential acceleration); CRWD net new ARR growth went from post-outage recovery to +32% YoY in Q1 FY27; FTNT delivered +41% product revenue growth on appliance refresh. ARR metrics are not decelerating into macro headwinds. The narrative is mainstream (Goldman/JPM publish base-case reports, CIBR AUM $5.1B+) but NOT crowded — the AI threat surface angle is still being digested by generalist investors. Key cycle risk: macro deterioration (recession) slows new enterprise platform deal closings with a 6-9 month warning period before ARR metrics reflect it. Current setup: positives from Trump PQC EO creating a new multi-year government/enterprise upgrade cycle; risk from elevated valuations (CRWD 90x+ NTM P/E). Monitor FTNT as the valuation-efficient expression of the same demand.",
-    "last_assessed": "2026-06-29"
+    "assessment": "Late mid-cycle, edge largely captured — fundamentals still accelerating, but the narrative re-rating (security as 'AI risk' → 'AI beneficiary') that provided the differentiated entry edge is now substantially priced in. This is no longer a mispricing bet; it is a momentum/quality continuation bet.",
+    "rationale": "CIBR is at a 52-week high ($88.55 as of 2026-07-24, range $60.07-$95.96), +28.5% YTD (vs +~20% YTD at the 2026-06-29 study) — the AUM base has grown from $5.1B (Jan 2026) to ~$13.15B (Jul 2026), a ~2.6x expansion in 7 months, consistent with the 'retail ETF inflows accelerating' crowded-narrative marker. CRWD and PANW are each up roughly 60-90%+ YTD (sources vary 59-80%+ depending on measurement date) and now trade at extreme forward multiples — CRWD ~152x forward P/E (up from ~90x NTM at the June study), PANW ~291x forward P/E. Two Tier-1 banks (Goldman Sachs 2026-07-21, JPMorgan 2026-06-30/07-27) revised cyber models upward within the same 30-day window, with GS explicitly stating the sector has 'shifted from being viewed as at risk from AI to being a clear beneficiary' — this is precisely the mispricing thesis that motivated the original USPY.L entry, and it is now the CONSENSUS view, not a contrarian one. The re-rating is also broadening beyond the two mega-caps into mid-cap vulnerability management (JPM's QLYS upgrade, Underweight→Neutral, PT $87→$150, stock +24.4% same-day) — a classic 'obvious names re-rate first, second-tier follows' late-narrative-maturation signal. Fundamentals are NOT decelerating (this is a re-rating on improving numbers, not stale-number multiple expansion), which keeps this short of 'exhausted', but the risk/reward has shifted: forward returns increasingly depend on continued fundamental beats or a genuinely NEW incremental catalyst rather than on the market catching up to an underappreciated thesis. Momentum score is extreme (~99), consistent with a crowded, well-owned trade rather than an early-cycle discovery. Monitor: any single mega-cap ARR/guidance miss is now a crowded-trade unwind risk, not just a stock-specific event.",
+    "last_assessed": "2026-07-28"
   },
 
   "key_metrics_to_monitor": [
@@ -72,18 +73,32 @@
       "comment": "Q1 2026: total revenue +20% YoY; product revenue +41% YoY. FTNT +86% YTD as of mid-2026, the strongest performer in large-cap cyber. Monitor product revenue as leading indicator of enterprise appliance refresh cycle."
     },
     {
-      "metric": "CIBR ETF YTD price return vs XLK",
-      "unit": "percent",
-      "source": "Bloomberg / Yahoo Finance (daily)",
-      "current": "~20",
-      "comment": "CIBR approximately +20% YTD as of late June 2026 (sources report 19.78-24.80% depending on date/methodology). XLK tech sector ~+13% YTD. Cyber outperforming tech broadly. Monitor spread — a sustained outperformance vs tech signals structural rerating, not just beta."
+      "metric": "CIBR ETF YTD price return / 52-week range position",
+      "unit": "percent / USD",
+      "source": "Investing.com / Yahoo Finance (daily)",
+      "current": "28.5",
+      "comment": "CIBR +28.5% YTD as of 2026-07-24, price $88.55, at a 52-week HIGH (range $60.07-$95.96). Up from ~+20% YTD at the 2026-06-29 study — acceleration, not deceleration, of the rally. A sustained print at/near 52-week highs is itself a crowded-narrative marker (retail momentum flows chase new highs)."
+    },
+    {
+      "metric": "CRWD / PANW forward P/E (valuation multiple)",
+      "unit": "x forward earnings",
+      "source": "Sell-side estimates via 24/7 Wall St / Yahoo Finance (2026-07)",
+      "current": "152 / 291",
+      "comment": "NEW metric added this cycle — the key crowding gauge. CRWD ~152x forward P/E (up from ~90x NTM in June), PANW ~291x forward P/E. Among the most expensive large-cap software multiples in the market. Monitor for >20% single-earnings-print compression as the crowded-trade-unwind signal."
     },
     {
       "metric": "L&G ISPY.L / USPY AUM",
       "unit": "EUR billions",
       "source": "JustETF / LGIM fund fact sheet",
       "current": "3.0",
-      "comment": "Fund AUM ~€3.0B as of June 2026 (JustETF data; USPY share class separately ~€2.46B). AUM has grown from $2.675B in January 2026, reflecting continued European institutional inflows into cyber. Track as measure of European institutional appetite for sector."
+      "comment": "Not independently re-verified this cycle (WebSearch returned no fresh July 2026 figure) — carried forward from the 2026-06-29 study (~€3.0B, up from $2.675B in January 2026). Given CIBR's AUM roughly doubled in the same window (see below), treat this figure as stale-and-likely-low; re-verify at next refresh."
+    },
+    {
+      "metric": "CIBR ETF AUM",
+      "unit": "USD billions",
+      "source": "ETF issuer / TradingView / Morningstar",
+      "current": "13.15",
+      "comment": "Grown from $5.1B (Jan 2026) → ~$11B (Mar 2026) → ~$13.15B (Jul 2026), a ~2.6x expansion in 7 months. This is the clearest single 'retail ETF inflows accelerating' crowded-narrative marker in scoring_weights.yaml's criteria."
     }
   ],
 
@@ -151,7 +166,8 @@
   ],
 
   "risks": [
-    "Valuation compression risk: CRWD trades at ~90x+ NTM P/E and 22x+ forward sales as of June 2026 — among the highest multiples in software. A deceleration in net new ARR growth from the current 32% trajectory (even to 20%) could trigger a 25-40% multiple compression in leading names, dragging ETF NAV regardless of underlying business quality. CRWD is 12-18% of CIBR by weight — the single largest ETF risk.",
+    "Valuation compression risk (ESCALATED this cycle): CRWD now trades at ~152x forward P/E (up from ~90x NTM in June) and PANW at ~291x forward P/E as of July 2026 — among the highest multiples in the market, not just software. A deceleration in net new ARR growth from the current 32% trajectory (even to 20%) could trigger a 25-40%+ multiple compression in leading names, dragging ETF NAV regardless of underlying business quality. CRWD is 12-18% of CIBR by weight — the single largest ETF risk.",
+    "Narrative crowding / edge already captured: the 'security is a loser to AI agents' mispricing that partly motivated the original USPY.L entry is CLOSING — Goldman Sachs (2026-07-21) and JPMorgan (2026-06-30/07-27) both reframed the sector as an AI beneficiary within the same 30-day window, and the re-rating is broadening into mid-caps (QLYS +24.4% on the JPM upgrade). CIBR is at a 52-week high, +28.5% YTD, AUM ~2.6x since January. narrative_maturity has been reassessed from 'mainstream' to 'crowded' this cycle. Forward returns now depend on continued fundamental beats or a genuinely NEW catalyst, not on the market discovering an underappreciated thesis — the asymmetry that justified the original entry has narrowed materially.",
     "Macro-driven new enterprise deal slippage: while ARR renewals are sticky (CRWD gross retention 97%), new platform deal closings are discretionary with 6-12 month sales cycles. In the current macro environment (CPI 4.2%, Fed hawkish hold, strong USD) CFO cost-cutting could slow new logo acquisition 6-9 months before ARR metrics reflect it — the signal arrives in pipeline data before earnings.",
     "Market rotation away from tech: the current macro regime (strong USD, Fed hawkish flip, CPI 4.2%) has driven rotation OUT of AI/tech into real economy sectors. Cybersecurity has held up relatively well (CIBR +~20% YTD vs XLK +~13%) but is not immune. If the rotation intensifies, valuation-expensive cyber names (CRWD, ZS) compress even without fundamental deterioration.",
     "Platform concentration and winner-takes-most dynamics: consolidation in 2-3 platforms means smaller vendors (SentinelOne, Varonis, Qualys) face structural revenue atrophy. CIBR and BUG hold some of these names — the platform bet is concentrated in top 3-5 holdings (50-60% of AUM), and their continued pricing power is essential for ETF performance.",
@@ -159,22 +175,24 @@
     "AI platform threat to legacy vendors from hyperscaler bundling: Microsoft Defender, Google Chronicle, and Amazon Security Lake are bundling cybersecurity capabilities into existing cloud contracts at marginal cost. Microsoft's integrated security stack is the most significant competitive overhang — it competes directly with standalone SIEM, XDR, and SASE vendors at no incremental spend for customers already on Azure/M365."
   ],
 
-  "narrative_maturity": "mainstream",
+  "narrative_maturity": "crowded",
 
   "narrative_trend": "increasing",
 
-  "narrative_notes": "Cybersecurity commercial remains firmly 'mainstream' per scoring_weights.yaml criteria: Goldman Sachs, JPMorgan, Morgan Stanley, Barclays, and First Trust all publish dedicated sector coverage with base-case overweight calls; CIBR ETF AUM $5.1B; Bloomberg runs near-daily coverage of CRWD and PANW earnings; the 'AI-driven cyber threat' thesis now appears explicitly in every major security vendor earnings call and quarterly Gartner/IDC forecasts. The 2026 re-acceleration (PANW revenue growth 31% in Q3 after two quarters at 15-16%, CRWD ARR net new ARR growth re-accelerating to +32%) has driven incremental analyst coverage upgrades from 'hold' to 'overweight' across the sector. Not yet 'crowded': COT positioning data does not yet show hedge fund concentration in cyber names approaching the AI semiconductor peak; retail ETF inflows are growing but not parabolic; ZS and SentinelOne still trade well below 2021 ATH multiples despite double-digit ARR growth. The narrative trend is 'increasing' because: (1) the Trump PQC Executive Order (June 22, 2026) added a new government-mandated upgrade cycle angle that is being freshly digested by the market; (2) FTNT's +86% YTD outperformance has drawn fresh coverage of the industrial/OT security angle; (3) Gartner's 'enterprises spend 17x more on AI tools than securing AI' finding is widely cited and driving incremental CISO conversations. Monitor for transition to 'crowded' if: hedge fund long positioning in CRWD+PANW exceeds 2021 levels, or retail ETF inflows into CIBR/ISPY exceed $500M/month.",
+  "narrative_notes": "UPGRADED from 'mainstream' to 'crowded' this cycle (2026-07-28) — the sector now trips several of the crowded criteria in scoring_weights.yaml that were explicitly flagged as NOT YET met at the 2026-06-29 study: (1) 'Bloomberg/CNBC daily coverage' — CRWD/PANW/OKTA moves generated near-weekly 24/7 Wall St / Yahoo Finance headline coverage through June-July 2026 (e.g. 'CrowdStrike Climbs 11%, Palo Alto Rises 7%', 'Palo Alto Just Soared 28% in a Month'); (2) 'Retail ETF inflows accelerating' — CIBR AUM grew from $5.1B (Jan 2026) to ~$13.15B (Jul 2026), ~2.6x in 7 months, and CIBR sits at a 52-week high (+28.5% YTD, price $88.55); (3) 'Top-10 hedge fund themes' — HedgeCo (Jul 2026) reports hedge funds explicitly rotating into cybersecurity as a 'secondary AI beneficiary', partly BECAUSE the primary AI-semiconductor trade is itself overcrowded — capital chasing a theme, not fresh discovery. The trigger event: Goldman Sachs (2026-07-21) and JPMorgan (2026-06-30, reiterated 2026-07-27) both revised cyber models upward within the same 30-day window (registered as cat_20260728_cybersecurity_ai_beneficiary_revision), with GS explicitly stating the sector 'has shifted from being viewed as at risk from AI to being a clear beneficiary' — this is precisely the mispricing thesis that motivated the original USPY.L entry, now becoming the CONSENSUS read rather than a contrarian one. The re-rating is broadening beyond the two mega-caps into mid-cap vulnerability management (JPM's QLYS Underweight→Neutral, PT $87→$150, stock +24.4% same-day) — the 'obvious names first, second-tier follows' pattern typical of late narrative maturation. NOT yet 'exhausted': the re-rating is happening on IMPROVING fundamentals (ARR/revenue still genuinely accelerating), not stale-number multiple expansion, and no source describes flows as parabolic/2021-SaaS-peak-like. Practical read: the differentiated 'AI risk vs AI beneficiary' mispricing edge that partly motivated the original entry IS NOW LARGELY CAPTURED — CRWD ~152x fwd P/E (was ~90x in June), PANW ~291x fwd P/E, CIBR at 52-week highs. Forward upside now depends on continued fundamental beats or a genuinely new catalyst, not on the market catching up. Monitor for transition to 'exhausted' if: CRWD/PANW forward multiples compress >20% on a single earnings miss (crowded-trade unwind), or a growth deceleration prints alongside still-elevated multiples.",
 
   "historical_catalyst_performance": {
     "summary": "Commercial cybersecurity ETFs have demonstrated a reliable 3-pattern response to their key catalyst types: (1) Major breach/ransomware events (Colonial Pipeline May 2021, Kaseya July 2021, SolarWinds aftermath): CIBR rallied 15-25% over 6-8 weeks following each major incident as enterprise procurement urgency spiked — the sector effectively benefits from the fear created by high-profile attacks on the share of the economy not yet protected. (2) Earnings accelerations with raised ARR guidance (CRWD post-FY26 recovery, ZS Q3 FY26, PANW Q3 FY26 +31%): names with accelerating ARR and raised guidance outperformed XLK tech benchmark by 10-20% in the 3 months following the print. (3) Regulatory mandate catalysts (NIS2, CMMC 2.0, Trump PQC EO): sector outperformed in the 60-90 day window around significant regulatory enforcement announcements, concentrated in government-adjacent commercial players (PANW Federal, CRWD Federal, Zscaler GSI). Key failure mode: when a major vendor causes a systemic outage (CRWD July 2024), the initial drawdown is severe (-25% in CRWD, -10% in CIBR within 30 days) but the recovery is rapid if customer retention holds — CRWD recovered >95% from its post-outage trough within 18 months, validating the platform switching cost thesis.",
     "response_to_major_breach_events": "Strong positive, 0-8 week lag. Major enterprise breaches are the fastest-moving catalyst type — they trigger emergency procurement cycles.",
     "response_to_regulatory_mandates": "Positive, 60-90 day lag. Compliance deadlines create non-discretionary budget lines; government mandate catalysts sustain over 12-24 months.",
     "response_to_rising_interest_rates": "Negative pressure on valuation multiples (high-multiple SaaS most affected), but partially offset by non-discretionary demand. Net effect: ETF underperforms high-multiple tech basket but outperforms cyclical sectors during rate hikes.",
-    "response_to_ai_narrative": "Strongly positive. Both as demand driver (AI-enabled threat attacks force enterprise upgrades) and as product differentiation (AI-native platforms command premium ARR and expansion rates)."
+    "response_to_ai_narrative": "Strongly positive. Both as demand driver (AI-enabled threat attacks force enterprise upgrades) and as product differentiation (AI-native platforms command premium ARR and expansion rates).",
+    "response_to_analyst_model_revision": "NEW pattern being tracked (first observation 2026-07-28): a cluster of ≥2 Tier-1 bank model revisions within a 30-day window (GS CRWD/PANW targets +12-14%, JPM QLYS target +59.8% then further to $150) produced an immediate, sizeable single-day move in the newly-covered name (QLYS +24.4%) and appears to be broadening the rally from mega-cap to mid-cap. Consistent with the 'analyst catch-up accelerates and then closes a mispricing' pattern — but only one instance observed so far; insufficient history to confirm typical lag/magnitude. Monitor the next 2-3 analyst-model-revision events in this sector to confirm the pattern before treating it as a reliable signal."
   },
 
   "active_catalyst_ids": [
     "struct_enterprise_cyber_spend_supercycle",
-    "cat_20260617_fed_hawkish_pivot"
+    "cat_20260617_fed_hawkish_pivot",
+    "cat_20260728_cybersecurity_ai_beneficiary_revision"
   ]
 }

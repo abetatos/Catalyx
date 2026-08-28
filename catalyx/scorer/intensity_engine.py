@@ -268,10 +268,30 @@ def compute_from_yaml(path: Path) -> dict:
     return result
 
 
-def compute_all() -> list[dict]:
-    """Compute intensity for every YAML in the structural_catalysts directory."""
+# Estados que NO se recomputan (universo v2.0, 2026-08-27). Recalcular su intensidad
+# era trabajo puro: ninguno llega a catalyst_alignment porque ningun sector study los
+# lista en active_catalyst_ids.
+#   merged        -> fusionado en otro catalizador; su fichero se conserva por historia
+#   deactivated   -> invalidado
+#   macro_context -> regimen que informa sizing/timing, no una posicion expresable
+_SKIP_STATUS = {"merged", "deactivated"}
+
+
+def compute_all(include_inactive: bool = False) -> list[dict]:
+    """Compute intensity for every ACTIVE YAML in the structural_catalysts directory.
+
+    include_inactive=True fuerza el barrido completo (auditoria, migraciones).
+    """
+    import yaml as _yaml
     results = []
     for f in sorted(_CATALYSTS_DIR.glob("*.yaml")):
+        if not include_inactive:
+            try:
+                head = _yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+            except Exception:
+                head = {}
+            if head.get("status") in _SKIP_STATUS or head.get("role") == "macro_context":
+                continue
         results.append(compute_from_yaml(f))
     return results
 

@@ -1,58 +1,116 @@
 # catalyx-sector-study
 
-Generate or update a SectorStudy for a given sector. Produces a structured bottom-up analysis JSON file.
+Generate or update a SectorStudy — the sector's fundamental file. **Two depths**, because a study
+is expensive and most refreshes do not need the deep version.
 
-Usage: `/catalyx-sector-study <sector_id>`
+Usage:
+- `/catalyx-sector-study <sector_id>` — **core refresh (default)**. ~2 WebSearches, ~3 KB.
+- `/catalyx-sector-study <sector_id> --deep` — full dossier. ~6 WebSearches, ~25 KB.
 
-## Steps
+## Which depth?
 
-1. Read config files:
-   - `CLAUDE.md` — sector_id validation rules
-   - `schemas/sector_study.json` — all required fields
-   - `catalyx/config/sector_taxonomy.yaml` — entry for `<sector_id>`
-   - `catalyx/config/etf_universe.yaml` — ETF entries for `<sector_id>`
+| Run `--deep` when | Run the default `core` when |
+|---|---|
+| The sector has **no study yet** (first time) | A periodic review refresh |
+| You are **about to open a position** in it | The driving catalyst moved and you need the new state |
+| **Quarterly** deep refresh | Anything else |
 
-   Load runtime data via the repo readers:
+**Why core is the default (schema 1.3):** only two study fields are read by any code —
+`active_catalyst_ids` (→ `catalyst_scorer`) and `narrative_maturity` (→ crowding in
+`snapshot_repo`). A full dossier costs ≈45k tokens to re-derive prose that nothing consumes, and
+`etf_analysis` duplicates `etf_universe.yaml` (the single source of truth). A sector without a
+fresh study still ranks — on its momentum baseline — so a cheap refresh is never a blind spot.
+
+---
+
+## Steps — CORE refresh (default)
+
+1. Read the contract + config:
+   - `schemas/sector_study.json` — set `study_type: "core"`, `schema_version: "1.3"`.
+   - `catalyx/config/sector_taxonomy.yaml` — the entry for `<sector_id>` (it already carries
+     `demand_drivers`; do NOT re-derive them into the study).
    ```
-   uv run python -m catalyx.store.structural_catalyst_repo summary
    uv run python -m catalyx.store.sector_study_repo get study_<sector_id>
    ```
-   If `get` returns "Not found", this is a new study. If it returns a record, this is an update — preserve `created_at` and only overwrite changed fields.
+   "Not found" → this is a new study, so run `--deep` instead. Otherwise preserve `created_at`
+   and every field you are not refreshing.
 
-2. If the sector has `watch_only: true`: use `study_type: "watch_only"`. Only fill `taxonomy`, `technology_maturity`, `risks`, and `etf_analysis` (with "no ETF available" entry). Focus on `watch_triggers` status.
-
-3. Run WebSearch for current information:
+2. **Two WebSearches, no more:**
    ```
-   "<sector_label> ETF performance 2026"
-   "<sector_label> supply demand outlook 2026"
-   "<sector primary company> earnings 2026"
-   "<sector_label> analyst estimate revision"
+   "<sector_label> outlook <MONTH YEAR>"
+   "<sector_label> analyst estimate revision <MONTH YEAR>"
    ```
 
-4. From the taxonomy and search results, populate:
-   - `demand_drivers[]`: list each driver as a specific, concrete statement. Not "demand is growing" but "China accounts for 55% of copper consumption and PMI has been above 50 for 6 consecutive months."
-   - `supply_constraints[]`: what limits supply response in the <5yr horizon?
-   - `cycle_position`: where in the cycle is this sector today? Be opinionated. Back it with data.
-   - `key_metrics_to_monitor[]`: 4-6 specific metrics with sources, units, and current values if available
-   - `etf_analysis[]`: from `etf_universe.yaml` — populate all fields. Flag AUM < $200M or spread > 25bps.
-   - `risks[]`: 4-6 specific risks. Not generic — each risk should be sector-specific.
-   - `analyst_narrative_score` (0-100): how saturated is this sector in mainstream media/analyst coverage? High = crowded narrative = less alpha. **Anchor to `scoring_weights.yaml` `narrative_maturity_levels.score_equiv`**: ignored→10, emerging→35, mainstream→60, crowded→80, exhausted→95. Set the integer closest to the matching level rather than a free-float number.
-   - `narrative_trend`: increasing / stable / decreasing
+3. Update only the decision-relevant fields:
+   - `active_catalyst_ids` — which registered catalysts drive this sector NOW. This is the field
+     the scorer reads; a catalyst that went dormant/archived must come out.
+   - `narrative_maturity` — the 5-level enum, anchored to `scoring_weights.yaml`
+     `narrative_maturity_levels.score_equiv` (ignored→10, emerging→35, mainstream→60, crowded→80,
+     exhausted→95) + `analyst_narrative_score` to the matching integer.
+   - `narrative_notes` — one or two sentences justifying the level with what you just read. A
+     level without a rationale is useless.
+   - `narrative_trend` — increasing / stable / decreasing.
+   - `key_metrics_to_monitor[]` — refresh `current` values for the metrics already listed.
+   - `risks[]` — keep the top 3–6; add one only if the search surfaced something genuinely new.
+   - `cycle_position` — update only if the search changed your read.
+   - `last_updated` → today.
 
-5. For `differentiation_note` in taxonomy block: this is the most important field. Explain specifically why this sector is NOT the same as adjacent sectors. If you cannot articulate a clear differentiation, flag it — it may mean the granularity of the taxonomy is wrong.
+4. Write `data/sector_studies/study_<sector_id>.json` and validate:
+   ```
+   uv run python -c "import json,jsonschema; jsonschema.validate(json.load(open('data/sector_studies/study_<sector_id>.json',encoding='utf-8')), json.load(open('schemas/sector_study.json')))"
+   ```
 
-6. For `historical_catalyst_performance`: use WebSearch to find how the sector responded historically to its key catalyst types.
+5. Print two lines: what changed vs the stored study (especially a `narrative_maturity` flip or a
+   catalyst added/removed), and the strongest active catalyst.
 
-7. Write to `data/sector_studies/study_<sector_id>.json` following `schemas/sector_study.json`.
+---
 
-8. If updating an existing study: preserve `created_at`, update `last_updated` to today. Only overwrite fields that have changed.
+## Steps — DEEP dossier (`--deep`)
 
-9. After writing, print a one-paragraph summary: sector position in cycle, strongest active catalyst, most important risk, best ETF vehicle.
-   (The written JSON is the source of truth — `sector_study_repo summary`/`get`/`stale` read `data/sector_studies/` directly. No import step.)
+Everything in the core refresh, plus the full bottom-up file. Set `study_type: "full"`.
+
+1. Also read `catalyx/config/etf_universe.yaml` for the sector's vehicles.
+   ```
+   uv run python -m catalyx.store.structural_catalyst_repo summary
+   ```
+
+2. Four additional WebSearches:
+   ```
+   "<sector_label> supply demand outlook <YEAR>"
+   "<sector primary company> earnings <YEAR>"
+   "<sector_label> ETF performance <YEAR>"
+   "<sector_label> <its key commodity or metric> forecast"
+   ```
+
+3. Populate the deep blocks:
+   - `demand_drivers[]` — specific and quantified. Not "demand is growing" but "China is 55% of
+     copper consumption and PMI has been above 50 for 6 consecutive months."
+   - `supply_constraints[]` — what limits supply response inside 5 years?
+   - `cycle_position` — be opinionated, back it with data.
+   - `technology_maturity`, `historical_catalyst_performance` — how the sector responded to this
+     catalyst type before.
+   - `taxonomy.differentiation_note` — **the most important field.** Why is this sector NOT the
+     same as its neighbours? Minimum 2 sentences. If you cannot articulate it, say so — it means
+     the taxonomy's granularity is wrong.
+   - `etf_analysis[]` — **DEPRECATED (schema 1.3), leave it out.** Cite `etf_universe.yaml`
+     instead; it is the single source of truth and the only one any code reads. Fix that file if a
+     vehicle is wrong or missing.
+
+4. For a `watch_only: true` sector: `study_type: "watch_only"`. Fill only `taxonomy`,
+   `technology_maturity`, `risks`, and the `watch_triggers` status.
+
+---
 
 ## Rules
 
-- `differentiation_note` must explain why this sector ≠ its adjacent sectors. Minimum 2 sentences. Required field — do not leave generic.
-- `demand_drivers` must be specific and quantified where possible. No driver should be vague.
-- ETF recommendations must flag UCITS status. For a Spanish investor, always prefer UCITS with AUM > $200M and spread < 20bps as tier 1.
-- `analyst_narrative_score` must be justified in `narrative_notes`. A score without a rationale is useless.
+- **Never fabricate a number.** An unknown TER/AUM/metric is `null` — the schema permits it
+  precisely so no one invents precision.
+- `differentiation_note` must explain why this sector ≠ its adjacent sectors (deep only, but it
+  carries over — never blank it in a core refresh).
+- `analyst_narrative_score` must be justified in `narrative_notes`.
+- ETF selection lives in `etf_universe.yaml`, never in the study. For a Spanish investor prefer
+  UCITS with AUM > $200M and spread < 20bps.
+- The written JSON **is** the registration — `sector_study_repo summary`/`get`/`stale` read the
+  directory directly. No import step.
+- A core refresh that finds nothing changed should say so in one line and still bump
+  `last_updated` — "checked, unchanged" is information; silence is not.

@@ -50,16 +50,21 @@ user_notes: >
   struct_cb_gold_accumulation (84). Run intensity_engine after the first indicator refresh to replace bootstrap.
 
 intensity:
-  current_score: 82
-  computation_method: bootstrap
-  last_updated: "2026-07-01"
+  current_score: 85.8
+  computation_method: computed
+  last_updated: "2026-07-28"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: on par with struct_cb_gold_accumulation (84), below
     struct_ai_capex_supercycle (89.9). Consensus/mainstream but TAM still expanding (oral + Medicare onset).
   history:
+  - period: '2026-07-28'
+    score: 85.8
+    note: 'Computed 2026-07-28: avg=85.85 trend=→ (flat — insufficient history) (was 82)'
+    computation_method: computed
   - period: "2026-Q3"
     score: 82
-    note: "Bootstrap at creation 2026-07-01. Oral orforglipron approved 2026-04-01; Medicare obesity coverage onset ~Jul 2026; ~39 molecules in development."
+    note: "Bootstrap at creation 2026-07-01. Oral orforglipron approved 2026-04-01; Medicare obesity coverage onset ~Jul 2026;
+      ~39 molecules in development."
     computation_method: bootstrap
 
 indicators:
@@ -87,6 +92,7 @@ indicators:
   - date: "2025-06-30"
     value: 5.4
 
+  score: 83.2
 - id: ind_02
   name: "Global GLP-1 / obesity-drug market size (analyst consensus, $B projected)"
   source: "Grand View Research / JPMorgan / Morgan Stanley sector notes"
@@ -111,6 +117,7 @@ indicators:
   - date: "2023-12-31"
     value: 100
 
+  score: 85.9
 - id: ind_03
   name: "GLP-1 / incretin molecules in clinical development (count)"
   source: "Company pipelines / Evaluate Pharma"
@@ -135,6 +142,7 @@ indicators:
   - date: "2023-12-31"
     value: 16
 
+  score: 89.5
 - id: ind_04
   name: "US Medicare/CMS obesity-drug covered lives (millions)"
   source: "CMS coverage determinations"
@@ -155,6 +163,7 @@ indicators:
   - date: "2025-12-31"
     value: 0
 
+  score: 84.8
 deactivation_conditions:
 - id: deact_01
   condition: >

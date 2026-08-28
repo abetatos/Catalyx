@@ -46,17 +46,22 @@ user_notes: >
   in confirmation and capped by tariff margin drag + EUR strength. Run intensity_engine after first refresh.
 
 intensity:
-  current_score: 67
-  computation_method: bootstrap
-  last_updated: "2026-07-01"
+  current_score: 70.4
+  computation_method: computed
+  last_updated: "2026-07-28"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: near struct_solar_lcoe_deployment (64.1); below
     struct_cb_gold_accumulation (84) because the recovery is only one-to-two quarters confirmed and
     tariff/FX drags cap the near-term upside.
   history:
+  - period: '2026-07-28'
+    score: 70.4
+    note: 'Computed 2026-07-28: avg=70.38 trend=→ (flat — insufficient history) (was 67)'
+    computation_method: computed
   - period: "2026-Q3"
     score: 67
-    note: "Bootstrap at creation 2026-07-01. Bain confirms Q3-2025 trough; LVMH +1% (first growth in >1yr); Richemont APAC +10% cc; China back to growth."
+    note: "Bootstrap at creation 2026-07-01. Bain confirms Q3-2025 trough; LVMH +1% (first growth in >1yr); Richemont APAC
+      +10% cc; China back to growth."
     computation_method: bootstrap
 
 indicators:
@@ -83,6 +88,7 @@ indicators:
   - date: "2024-12-31"
     value: -19
 
+  score: 70.0
 - id: ind_02
   name: "LVMH Fashion & Leather Goods organic growth (YoY %)"
   source: "LVMH quarterly revenue releases"
@@ -107,6 +113,7 @@ indicators:
   - date: "2025-03-31"
     value: -5
 
+  score: 68.0
 - id: ind_03
   name: "Richemont Asia-Pacific growth (constant FX, YoY %)"
   source: "Richemont quarterly/half-year results"
@@ -131,6 +138,7 @@ indicators:
   - date: "2025-03-31"
     value: -2
 
+  score: 84.5
 - id: ind_04
   name: "USD/CNY exchange rate (CNY appreciation = onshore-demand tailwind)"
   source: "ECB / Bloomberg USD/CNY"
@@ -156,6 +164,7 @@ indicators:
   - date: "2025-06-30"
     value: 7.25
 
+  score: 59.0
 deactivation_conditions:
 - id: deact_01
   condition: >

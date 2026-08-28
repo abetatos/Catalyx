@@ -39,13 +39,17 @@ user_notes: >
   are the primary confirmation; refresh quarterly against IQVIA/BioPharma deal trackers.
 
 intensity:
-  current_score: 80
-  computation_method: bootstrap
-  last_updated: "2026-07-01"
+  current_score: 84.0
+  computation_method: computed
+  last_updated: "2026-07-28"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: just below struct_ai_capex_supercycle (89.9). Durable
     LOE-driven takeout pressure with clear deal-flow indicators.
   history:
+  - period: '2026-07-28'
+    score: 84.0
+    note: 'Computed 2026-07-28: avg=84.05 trend=→ (flat — insufficient history) (was 80)'
+    computation_method: computed
   - period: "2026-Q3"
     score: 80
     note: "Bootstrap at creation 2026-07-01. Biopharma M&A ~$106B YTD by June; IQVIA FY forecast ~$140-160B; XBI +~50% 12m."
@@ -67,7 +71,7 @@ indicators:
   update_note: >
     ~$106B YTD by early June 2026 (annualizing to ~$140-160B). Threshold_strong $120B/yr-pace = active
     supercycle; threshold_weak $60B = normalized deal environment.
-  semaphore: 🟢
+  semaphore: 🟡
   value_history:
   - date: "2026-05-31"
     value: 106
@@ -76,6 +80,7 @@ indicators:
   - date: "2024-12-31"
     value: 70
 
+  score: 73.0
 - id: ind_02
   name: "XBI (equal-weight biotech) trailing 12-month total return (%)"
   source: "SPDR S&P Biotech ETF"
@@ -98,6 +103,7 @@ indicators:
   - date: "2025-12-31"
     value: 30
 
+  score: 90.0
 - id: ind_03
   name: "Average clinical-stage takeout premium (%)"
   source: "Fierce Pharma / deal disclosures"
@@ -119,6 +125,7 @@ indicators:
   - date: "2024-12-31"
     value: 42
 
+  score: 85.9
 - id: ind_04
   name: "Branded revenue at LOE risk by 2030 ($B)"
   source: "Evaluate Pharma / analyst LOE models"
@@ -139,6 +146,7 @@ indicators:
   - date: "2025-12-31"
     value: 250
 
+  score: 87.3
 deactivation_conditions:
 - id: deact_01
   condition: >

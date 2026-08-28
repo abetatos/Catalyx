@@ -8,7 +8,11 @@
   "study_type": "full",
   "taxonomy": {
     "parent_sector": "battery_metals",
-    "adjacent_sectors": ["copper_miners", "cobalt_nickel", "rare_earth_miners"],
+    "adjacent_sectors": [
+      "copper_miners",
+      "cobalt_nickel",
+      "rare_earth_miners"
+    ],
     "differentiation_note": "Lithium miners are a pure-play on battery chemistry demand — specifically the lithium-ion and lithium-iron-phosphate (LFP) cycle — where price is set by spot carbonate/hydroxide markets rather than LME-listed industrial metal contracts. Unlike copper miners, whose thesis is anchored in long-cycle electrification and AI data center infrastructure (multi-decade, low elasticity), lithium miners face a boom/bust supply cycle with a 2-3 year lag between price signal and new mine output, making them far more volatile: the 2021-2022 spike (lithium carbonate $10k → $80k/t) and the 2023-2024 collapse (back to $8k/t) compressed into 36 months. Unlike cobalt/nickel miners, where demand is being actively eroded by the chemistry shift from NMC to LFP cathodes, lithium demand grows regardless of which lithium-based chemistry wins — LFP actually consumes more lithium carbonate per kWh than NMC, so the shift away from nickel strengthens lithium demand while hollowing out cobalt. The investment thesis requires a firm view on the cycle position and the timing of deficit: entering too early in the supply glut phase destroyed capital in 2023-2024; the 2026 entry thesis is explicitly about the oversupply-to-deficit inflection."
   },
   "demand_drivers": [
@@ -77,7 +81,9 @@
       "comment": "Key upside-risk metric for the supply deficit thesis. If Jiangxi lepidolite restarts aggressively above $20k/t carbonate, it could front-run the deficit. Monitor permit issuance."
     }
   ],
-  "active_catalyst_ids": ["struct_battery_storage_supercycle"],
+  "active_catalyst_ids": [
+    "struct_energy_transition_grid"
+  ],
   "historical_catalyst_performance": {
     "summary": "Lithium miners are the highest-beta major commodity sector in response to their primary catalyst (lithium price), exhibiting 3-5x price leverage to spot moves — higher than gold miners' typical 2-3x leverage to gold. The 2021-2022 cycle is the benchmark: lithium carbonate rose ~800% from $8,000/t to $80,000/t peak (Nov 2022), and LIT ETF returned approximately +400% peak-to-trough over 2020-2022. The collapse from Nov 2022 to mid-2023 (carbonate -75% from peak) drove LIT down ~70% — demonstrating that the leverage is symmetric and brutal on the downside. The 2023-2024 bear market was driven by supply overcorrection (Chinese lepidolite buildout) meeting demand deceleration (EV growth slower than expected in Europe/US, Chinese NEV subsidy restructuring). Key historical pattern: miners lead spot prices by 3-6 months at cycle turns because equity markets reprice expected earnings before physical supply/demand clears. The current 2025-2026 recovery in equities (LIT +137% trailing 12M) is running ahead of the physical surplus resolution, consistent with this pattern. Precedent for the 2026 thesis: in the 2020-2021 entry window, buying miners at the bottom of the cycle (when carbonate was $6,000-8,000/t) before BESS and EV demand accelerated produced 5-10x returns in 18-24 months. The 2026 entry thesis is structurally similar but with lower expected upside given higher starting prices ($25k/t vs $8k/t) — the analog is more like a 2-3x opportunity in equities if the deficit scenario materializes.",
     "ev_demand_catalyst": "First clear evidence that global EV sales would surpass 5M annual units (2021 Q3) preceded the LIT peak by ~6 months — miners moved before the physical market cleared. Catalyst type: demand inflection, non-consensus.",
@@ -157,5 +163,6 @@
   ],
   "narrative_maturity": "emerging",
   "narrative_trend": "increasing",
-  "narrative_notes": "Classified as 'emerging' per scoring_weights.yaml narrative_maturity_levels criteria. The lithium rebound thesis is present in specialist research (BMI, Fastmarkets, S&P Global Commodity Insights, Sprott) and beginning to appear in generalist coverage (Nasdaq.com, Motley Fool, Kiplinger articles on lithium rebound in early 2026). However, it does NOT yet meet the 'mainstream' threshold: Goldman/JPM/MS have not published base-case sector upgrade reports on lithium as a primary sector call, and ETF AUM (LIT: $1.4B) reflects pre-crash positioning rather than fresh inflows to the rebound thesis. The 2021-2022 thesis was 'crowded' at peak; the 2026 re-entry is still in the 'emerging' phase — most retail and generalist institutional investors remain underweight after the 2023-2024 trauma. This is alpha-positive: the thesis is not yet priced into positioning. Note that 'emerging' is the MAXIMUM across all active catalysts per multi-catalyst aggregation rule — no active structural catalyst has been registered for lithium_miners in this system yet; active_catalyst_ids is empty pending /catalyx-scan confirmation."
+  "narrative_notes": "Classified as 'emerging' per scoring_weights.yaml narrative_maturity_levels criteria. The lithium rebound thesis is present in specialist research (BMI, Fastmarkets, S&P Global Commodity Insights, Sprott) and beginning to appear in generalist coverage (Nasdaq.com, Motley Fool, Kiplinger articles on lithium rebound in early 2026). However, it does NOT yet meet the 'mainstream' threshold: Goldman/JPM/MS have not published base-case sector upgrade reports on lithium as a primary sector call, and ETF AUM (LIT: $1.4B) reflects pre-crash positioning rather than fresh inflows to the rebound thesis. The 2021-2022 thesis was 'crowded' at peak; the 2026 re-entry is still in the 'emerging' phase — most retail and generalist institutional investors remain underweight after the 2023-2024 trauma. This is alpha-positive: the thesis is not yet priced into positioning. Note that 'emerging' is the MAXIMUM across all active catalysts per multi-catalyst aggregation rule — no active structural catalyst has been registered for lithium_miners in this system yet; active_catalyst_ids is empty pending /catalyx-scan confirmation.",
+  "_universe_v2_note": "active_catalyst_ids reconectado el 2026-08-27 (universo v2.0): catalizadores fusionados reapuntados a su superviviente, japan_carry_unwind retirado a contexto macro. Antes: ['struct_battery_storage_supercycle']"
 }

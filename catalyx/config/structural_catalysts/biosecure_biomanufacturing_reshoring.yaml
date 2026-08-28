@@ -38,13 +38,17 @@ user_notes: >
   cap; track Twist revenue + displaced-China disclosures as the confirmation.
 
 intensity:
-  current_score: 58
-  computation_method: bootstrap
-  last_updated: "2026-07-01"
+  current_score: 83.0
+  computation_method: computed
+  last_updated: "2026-07-28"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: below struct_enterprise_cyber_spend_supercycle (86). Real
     reshoring pull but slow commercial translation and weak ETF proxy.
   history:
+  - period: '2026-07-28'
+    score: 83.0
+    note: 'Computed 2026-07-28: avg=83.03 trend=→ (flat — insufficient history) (was 58)'
+    computation_method: computed
   - period: "2026-Q3"
     score: 58
     note: "Bootstrap at creation 2026-07-01. BIOSECURE Act enacted Dec 2025 (FY2026 NDAA); Twist Q2 FY2026 ~$110.7M (+19%); enforcement phasing to 2027."
@@ -73,6 +77,7 @@ indicators:
   - date: "2025-09-30"
     value: 93
 
+  score: 82.9
 - id: ind_02
   name: "DNA synthesis cost ($/base pair)"
   source: "NHGRI / industry synthesis-cost trackers"
@@ -95,6 +100,7 @@ indicators:
   - date: "2024-12-31"
     value: 0.12
 
+  score: 82.6
 - id: ind_03
   name: "US federal / DoD biomanufacturing contract commitments ($B cumulative)"
   source: "USASpending / DoD announcements"
@@ -115,6 +121,7 @@ indicators:
   - date: "2025-12-31"
     value: 1.0
 
+  score: 83.6
 deactivation_conditions:
 - id: deact_01
   condition: >
@@ -131,5 +138,9 @@ linked_structural_catalyst_ids:
 - struct_ai_drug_discovery
 
 narrative_maturity: "emerging"
-status: active
-status_last_reviewed: "2026-07-01"
+status: merged
+status_last_reviewed: "2026-08-27"
+merged_into: struct_ai_drug_discovery
+merged_at: '2026-08-27'
+merge_rationale: |
+  El reshoring de biomanufactura (BIOSECURE Act) es el brazo regulatorio/de cadena de suministro de la misma maduracion de plataforma biotech. Su sector objetivo (synthetic_biology) quedo watch-only en el universo v2.0 por falta de vehiculo.

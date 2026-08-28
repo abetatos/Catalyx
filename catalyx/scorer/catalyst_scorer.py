@@ -488,6 +488,14 @@ def main() -> None:
             if "error" in de:
                 print(f"    {de['event_id']} (direct event): ERROR — {de['error']}")
                 continue
+            # Un evento ya contado a traves de su structural enlazado se emite SIN
+            # strength_original/strength_decayed (no se decae por separado: seria doble
+            # conteo). El printer los asumia presentes y reventaba con KeyError, tumbando
+            # el `--all` completo antes de imprimir el JSON. Se muestra su `note`.
+            if "strength_original" not in de:
+                note = de.get("note", "not aggregated")
+                print(f"    {de['event_id']} (direct {de.get('relation', '?')} event): {note}")
+                continue
             ms = de.get("modified_score")
             ms_str = f"{ms:.1f}" if isinstance(ms, float) else "n/a (not aggregated)"
             print(

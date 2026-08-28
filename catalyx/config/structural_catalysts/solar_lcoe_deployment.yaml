@@ -94,7 +94,7 @@ user_notes: >
 
 intensity:
   current_score: 64.1
-  last_updated: "2026-06-29"
+  last_updated: "2026-07-28"
   computation_method: computed
   computation_note: >
     Bootstrap estimate at creation. Calibrated relative to struct_cb_gold_accumulation (76.1
@@ -103,6 +103,10 @@ intensity:
     that together suppress intensity below struct_ai_capex_supercycle (89.9). Run
     intensity_engine after first indicator updates to replace with computed value.
   history:
+  - period: '2026-07-28'
+    score: 64.1
+    note: 'Computed 2026-07-28: avg=71.08 trend=↓↓ (falling 2+ consecutive)'
+    computation_method: computed
   - period: 2026-Q2
     score: 64.1
     note: 'Computed 2026-06-29: avg=71.08 trend=↓↓ (falling 2+ consecutive) (was 68.1)'
@@ -117,8 +121,7 @@ intensity:
     computation_method: computed
   - period: "2026-Q2"
     score: 78
-    note: "Bootstrap at creation 2026-06-05. Anchor: similar to struct_cb_gold_accumulation (76.1). Bifurcated sector: utility-scale
-      record additions (bullish) offset by ITC cliff and polysilicon oversupply (bearish)."
+    note: "Bootstrap at creation 2026-06-05. Anchor: similar to struct_cb_gold_accumulation (76.1). Bifurcated sector: utility-scale record additions (bullish) offset by ITC cliff and polysilicon oversupply (bearish)."
     computation_method: bootstrap
 
 indicators:
@@ -306,5 +309,9 @@ linked_structural_catalyst_ids:
 
 
 narrative_maturity: "mainstream"
-status: active
-status_last_reviewed: "2026-06-05"
+status: merged
+status_last_reviewed: "2026-08-27"
+merged_into: struct_energy_transition_grid
+merged_at: '2026-08-27'
+merge_rationale: |
+  La caida del LCOE solar es el mecanismo de precio de la misma transicion energetica que ya modela energy_transition_grid. Se despliega solar porque es barato Y porque la red se electrifica: un solo driver, dos manifestaciones.

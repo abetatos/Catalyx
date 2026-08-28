@@ -7,13 +7,15 @@
   "created_at": "2026-06-05",
   "last_updated": "2026-06-05",
   "study_type": "full",
-
   "taxonomy": {
     "parent_sector": "financials",
-    "adjacent_sectors": ["fintech_payments", "asset_management_listed", "semiconductors_design"],
+    "adjacent_sectors": [
+      "fintech_payments",
+      "asset_management_listed",
+      "semiconductors_design"
+    ],
     "differentiation_note": "Crypto infrastructure ≠ fintech payments in two fundamental ways: (1) revenue driver — fintech payments derive revenue from transaction volume flowing through established card networks and banking rails (Visa, Mastercard, Adyen); crypto infrastructure derives revenue primarily from crypto asset price level and volatility, spot/derivatives trading fees on centralised exchanges (Coinbase Q1 2026: $1.4B revenue, ~75% from transaction fees tied to crypto market volumes), and Bitcoin mining economics (block subsidy + fees, which are functions of BTC price and hashrate, not merchant payment volumes); (2) regulatory regime and counterparty risk — fintech payments are regulated under PSD2/PCI-DSS frameworks with established consumer protection; crypto infrastructure operates under an evolving CFTC/SEC/CLARITY Act regime with material legal execution risk still embedded in valuations. Additionally, crypto infrastructure ≠ semiconductors despite miners consuming substantial compute hardware: the economic driver of miners is the Bitcoin protocol's halving schedule and network difficulty, not silicon supply/demand or AI chip allocations. The equity value of MARA or Riot Platforms is a function of BTC price and their AISC ($/BTC mined), not fab capacity or TSMC lead times."
   },
-
   "demand_drivers": [
     "Bitcoin price cycle — the single dominant demand driver for exchange volumes and miner economics. Bitcoin trading at ~$99,887 as of June 2026 (market cap ~$1.98T). BTC 11% down YTD in 2026 but +~50% vs June 2025. At current BTC price, miner revenue per TH/s (hashprice) approximately $0.06-0.07/day, compressed vs $0.12/day pre-halving April 2024 but supportable for efficient operators at ~34 W/T average network efficiency.",
     "Regulatory clarity structural inflection — GENIUS Act (stablecoins) signed July 2025 ended a decade of US regulatory ambiguity on stablecoins. CLARITY Act (Digital Asset Market Clarity Act) introduced in Senate Banking Committee May 2026 (278-page draft), creating a federal framework classifying tokens as securities vs commodities and establishing exchange/custodian standards. This is the most material structural catalyst: regulatory clarity enables institutional capital to deploy into crypto infrastructure equities that were previously compliance-blocked. Coinbase directly benefits as the regulated onramp.",
@@ -22,7 +24,6 @@
     "AI/HPC pivot by miners — MARA (72.2 EH/s hashrate, +33% YoY as of Q1 2026) and Riot Platforms ($33.2M data center revenue in Q1 2026, AMD exercised option for 25 MW HPC capacity) are converting idle mining infrastructure into AI high-performance computing colocation. This diversifies revenue away from pure BTC price dependency and re-rates miners from commodity-sensitive to infrastructure-sensitive multiples — a structural demand driver for miner equities independent of crypto prices.",
     "Stablecoin payment rail adoption — GENIUS Act creates a federal licensing framework enabling banks and non-banks to issue dollar-pegged stablecoins. Stablecoin transaction volumes growing ~40% YoY. Exchange fee revenue from stablecoin trading pairs (USDT, USDC) provides a lower-volatility revenue floor for exchanges even in bear markets."
   ],
-
   "supply_constraints": [
     "Post-halving miner margin compression — block reward at 3.125 BTC/block since April 2024. Network hashrate at 72+ EH/s (MARA alone). Higher difficulty = higher cost per BTC mined. Inefficient miners (>40 W/T) are below breakeven at BTC < $90,000; only operators at ~34 W/T or below remain profitable at current BTC price ($99,887) with network difficulty at all-time highs. Supply of profitable mining capacity is therefore constrained to large well-capitalised operators.",
     "Energy cost and access — Bitcoin mining is the most energy-intensive compute workload per unit of revenue. Large miners require 100s of MW of stranded or cheap power. Competition for power sites from AI data centers (1-3 MW per rack vs mining's lower density) is intensifying — Riot's Corsicana pivot illustrates both the opportunity and the tension. New mining capacity faces 12-24 month lead times for power interconnection.",
@@ -30,15 +31,12 @@
     "Exchange license concentration — Coinbase holds the dominant US regulated exchange position but faces global competition from Binance (non-US), Kraken, and OKX. New exchange entrants face regulatory barriers that protect incumbents but also limit the universe of investable equities (few liquid exchange ETFs exist at the sector level).",
     "Bitcoin protocol's fixed 21M cap — not a supply constraint on equities, but the finite supply underpins the scarcity narrative. The 28-year mining tail (final BTC mined ~2140) means transaction fee revenue must eventually replace block subsidies — a long-term miner business model risk."
   ],
-
   "technology_maturity": null,
-
   "cycle_position": {
     "assessment": "Mid-cycle bull market recovery — post-consolidation, not yet late-cycle euphoria",
     "rationale": "Bitcoin at ~$99,887 (June 2026), ~11% below Jan 2026 high but well above the $69K-$82K range of Q4 2025. The Crypto Fear & Greed Index sits at 11 (Extreme Fear) as of early June 2026 following 6 consecutive days of ETF outflows ($1.26B) after April's record inflows — a classic mid-cycle flush, not a cycle top. The Jan 2024 US spot ETF approval was the structural regime change; the post-halving (April 2024) supply shock is the cyclical tailwind. Historical pattern: BTC halving cycles produce price peaks ~12-18 months post-event, suggesting cycle peak in Q4 2026-Q1 2027 if the pattern holds. Exchange equities (COIN) and miner equities (MARA, RIOT) demonstrate >2x leverage to BTC price moves — April 2026 saw MARA +30%+, COIN +20% on a BTC recovery. Current positioning is cautious (extreme fear) while fundamentals (regulatory clarity, institutional ETF AUM, AI/HPC pivot) are constructively improving. Assessment: entry window into infrastructure equities is more attractive at current sentiment levels than at peak, but BTC price trajectory remains the non-negotiable variable.",
     "last_assessed": "2026-06-05"
   },
-
   "key_metrics_to_monitor": [
     {
       "metric": "Bitcoin spot price (BTC/USD)",
@@ -83,14 +81,13 @@
       "comment": "Binary regulatory catalyst. Senate Banking Committee released 278-page draft May 11, 2026. Floor vote timing unknown. Full passage materially expands addressable institutional capital for exchanges and custodians."
     }
   ],
-
   "etf_analysis": [
     {
       "ticker": "BTCE.DE",
       "name": "Bitwise Physical Bitcoin ETP (formerly ETC Group)",
       "exchange": "XETRA",
       "currency": "EUR",
-      "ter": 0.0200,
+      "ter": 0.02,
       "aum_m_usd": 740,
       "replication": "physical",
       "avg_spread_bps": 12,
@@ -116,7 +113,6 @@
       "limitations": "NOT AN ETF. Single-stock equity risk. Levered BTC — amplifies both upside and downside vs BTC. Convertible debt obligations create liquidation risk if BTC price falls significantly. Not accessible in UCITS format. Use only as a sentiment/positioning indicator. DO NOT size as a position vehicle — use BTCE.DE for BTC exposure instead."
     }
   ],
-
   "risks": [
     "BTC price cycle reversal — crypto infrastructure equities have 2-3x beta to Bitcoin. An 18% YTD BTC decline as of June 2026 has already compressed MARA/Riot revenues and triggered Q1 2026 miner BTC sales (Riot sold 3,778 BTC; MARA similarly liquidating holdings) to fund operations. A break below $80,000 BTC would push inefficient miners below breakeven and compress Coinbase trading volumes by 30-40% based on historical correlation.",
     "Regulatory binary — CLARITY Act failure or delay — The Senate Banking Committee draft (May 2026) includes contentious stablecoin yield provisions. Failure to pass or a significantly watered-down bill would remove the largest structural re-rating catalyst for crypto infrastructure equities. Estimated 6-9 month delay risk at minimum given Congressional calendar. This is not a terminal risk but would defer the institutional capital unlock.",
@@ -125,9 +121,10 @@
     "Mining centralisation and 51% attack concern — Network hashrate increasingly concentrated among 4-5 large listed miners (MARA, Riot, CleanSpark, Bitfarms). If top-3 miners control >33% of hashrate collectively, network security narrative risk rises — historically a negative price catalyst. Currently below risk threshold but watch post-consolidation.",
     "Spanish tax treatment of crypto assets — AEAT classifies crypto assets as a separate category with full CGT application (same 19-27% progressive brackets as financial assets from 2026). However, indirect exposure via ETPs (BTCE.DE) is taxed as a financial investment without the additional crypto reporting requirements (Modelo 721 for assets held outside Spain). Thesis using MSTR (US equity) requires Spanish US-source income declaration. Use BTCE.DE to keep within standard MIFID II investment reporting framework."
   ],
-
-  "active_catalyst_ids": ["cat_20260620_clarity_act_market_structure"],
-
+  "active_catalyst_ids": [
+    "cat_20260620_clarity_act_market_structure",
+    "struct_stablecoin_payment_rails"
+  ],
   "historical_catalyst_performance": {
     "summary": "Crypto infrastructure equities exhibit 3 historically recurring catalyst-return patterns. (1) Regulatory approval events: SEC spot Bitcoin ETF approval (January 10, 2024) drove COIN +40% in 3 weeks, MARA +60%, RIOT +55% — exchanges and miners front-ran the institutional flow narrative by 2-4 weeks before actual inflows materialised. (2) Bitcoin halving events: the April 2024 halving initially compressed miner revenues by 50% (block reward halved) but was followed by a 12-18 month bull cycle — MARA and Riot both saw 3-5x returns from May 2024 through January 2025 as BTC recovered to $105K. Historical halving cycles (2016, 2020, 2024) show consistent 12-18 month lag between halving and peak price. (3) Bitcoin price floor confirmation: at each BTC cycle low, crypto infrastructure equities trough at 40-60% discounts to their BTC-NAV replacement value — historically the best entry signal. Current Fear & Greed Index at 11 (Extreme Fear, June 2026) is structurally similar to October 2023 ($27K BTC, pre-ETF approval) and February 2022 ($37K, pre-bear bottom) — both preceded 40-70% sector rallies within 6 months. The most reliable alpha signal in this sector is identifying regulatory catalysts 2-4 weeks before mainstream announcement, as institutional capital flows immediately on event confirmation.",
     "btc_halving_2024": {
@@ -143,8 +140,8 @@
       "key_lesson": "Regulatory approval events are the single highest-conviction entry catalysts in this sector. Pre-event positioning (when approval probability is rising but not priced) produced the best risk/reward. Post-approval rallies typically run 4-8 weeks before consolidating."
     }
   },
-
   "narrative_maturity": "mainstream",
   "narrative_trend": "stable",
-  "narrative_notes": "Classified as MAINSTREAM (score_equiv: 60) rather than crowded. Rationale: Bitcoin and crypto infrastructure receive daily Bloomberg/FT/WSJ coverage, Goldman Sachs and JPMorgan publish crypto market reports, and ETF AUM exceeds $500M in theme (IBIT alone at $54B). These observable criteria clearly exceed the emerging threshold. However, not yet CROWDED because: (1) institutional Bitcoin ETF adoption is still early — Q1 2026 inflows of $18.7B are large but the Fear & Greed Index at 11 (Extreme Fear) indicates retail positioning is fearful, not greedy; (2) the CLARITY Act has not yet passed — the primary institutional re-rating catalyst is not yet priced in; (3) sell-side consensus is constructive but not unanimously bullish — debate about BTC as macro hedge is active; (4) crypto infrastructure equities (COIN, MARA, RIOT) are not in the top-10 most crowded hedge fund themes (AI semiconductors hold that title). The narrative is mainstream-level known but the position sizing is not yet at crowded levels. Narrative_trend: stable — coverage is persistent but not accelerating into a new euphoric phase given BTC's 11% YTD decline and the ETF outflow episode in May 2026."
+  "narrative_notes": "Classified as MAINSTREAM (score_equiv: 60) rather than crowded. Rationale: Bitcoin and crypto infrastructure receive daily Bloomberg/FT/WSJ coverage, Goldman Sachs and JPMorgan publish crypto market reports, and ETF AUM exceeds $500M in theme (IBIT alone at $54B). These observable criteria clearly exceed the emerging threshold. However, not yet CROWDED because: (1) institutional Bitcoin ETF adoption is still early — Q1 2026 inflows of $18.7B are large but the Fear & Greed Index at 11 (Extreme Fear) indicates retail positioning is fearful, not greedy; (2) the CLARITY Act has not yet passed — the primary institutional re-rating catalyst is not yet priced in; (3) sell-side consensus is constructive but not unanimously bullish — debate about BTC as macro hedge is active; (4) crypto infrastructure equities (COIN, MARA, RIOT) are not in the top-10 most crowded hedge fund themes (AI semiconductors hold that title). The narrative is mainstream-level known but the position sizing is not yet at crowded levels. Narrative_trend: stable — coverage is persistent but not accelerating into a new euphoric phase given BTC's 11% YTD decline and the ETF outflow episode in May 2026.",
+  "_universe_v2_note": "active_catalyst_ids reconectado el 2026-08-27 (universo v2.0): catalizadores fusionados reapuntados a su superviviente, japan_carry_unwind retirado a contexto macro. Antes: ['cat_20260620_clarity_act_market_structure']"
 }

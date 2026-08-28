@@ -94,68 +94,46 @@ _SNAPSHOTS_DIR = _REPO_ROOT / "data" / "snapshots"
 # Sectors with NO representative ETF at all (e.g. cobalt_nickel, semiconductors_foundry)
 # use the closest thematic approximation available, noted inline; if truly nothing fits
 # they are omitted and score a neutral 50 (still marked `estimated` in the dashboard).
+# Sectores retirados a watch-only en el universo v2.0 (2026-08-27) ya NO aparecen aqui:
+# sin vehiculo comprable no hay posicion, y por tanto no hay senal de flujo que usar.
+# chain[0] ES el vehiculo comprable de etf_universe.yaml v2.0 (antes varios chain[0]
+# eran ETFs US inaccesibles — y SECTOR_TICKERS, el alias de abajo, los exponia como
+# "primary tradeable ticker", que era falso).
 SECTOR_FLOW_TICKERS: dict[str, list[str]] = {
-    # ── DEFENSE / AEROSPACE ─────────────────────────────────────────────────────
-    "eu_defense_prime_contractors":   ["EUDF.L", "DFEN.DE", "NATO.PA"],  # region-specific (EU) — no clean US proxy; all UCITS
-    "us_defense_prime_contractors":   ["ITA", "XAR", "PPA"],
-    "cybersecurity_defense":          ["CIBR", "BUG", "IHAK"],
-    "cybersecurity_commercial":       ["CIBR", "BUG", "ISPY.L"],
-    "space_defense_satellite":        ["ROKT", "ARKX", "UFO"],
-    "space_commercial":               ["ROKT", "ARKX", "UFO"],
-    "drone_autonomous_systems":       ["SHLD", "ROBO", "BOTZ"],          # no pure drone ETF — defense-tech/robotics approximation
-    # ── ENERGY ──────────────────────────────────────────────────────────────────
-    "oil_majors_integrated":          ["XLE", "VDE", "IUES.L"],
-    "oil_services_equipment":         ["OIH", "XES", "PXJ"],
-    "lng_natural_gas":                ["FCG", "UNG", "LNGA.L"],
-    "nuclear_energy":                 ["NLR", "NUKZ", "NUKE.L"],
-    "uranium_miners":                 ["URNM", "URA", "URNJ"],
-    "solar_energy":                   ["TAN", "RAYS.L"],
-    "wind_energy_offshore":           ["FAN", "WNDY", "ICLN"],           # FAN/WNDY expose no shares — ICLN (broad clean energy) approximation
-    "grid_infrastructure_utilities":  ["IQQH.DE", "GRID", "XLU"],
-    "hydrogen_clean_fuels":           ["HYDR", "HJEN", "HDRO"],
-    # ── PRECIOUS METALS ─────────────────────────────────────────────────────────
-    "gold_physical":                  ["IGLN.L", "GLD", "IAU"],         # UCITS primary → GLD/IAU (same underlying) for the signal
-    "gold_miners":                    ["GDX", "GDXJ", "RING"],
+    # ── DEFENSA Y ESPACIO ───────────────────────────────────────────────────────
+    "eu_defense_prime_contractors":   ["EUDF.L", "NATO.PA", "DFEN.DE"],  # region-specific (EU) — sin proxy US limpio; puede quedarse en `estimated`
+    "space_defense_satellite":        ["JEDI.DE", "ROKT", "ARKX", "UFO"],
+    # ── ENERGIA ─────────────────────────────────────────────────────────────────
+    "oil_majors_integrated":          ["IUES.L", "XLE", "VDE"],
+    "nuclear_energy":                 ["NUKL.DE", "NLR", "NUKZ"],
+    "uranium_miners":                 ["URNM.L", "URNM", "URA", "URNJ"],  # URNU.DE degradado: 4 dias de historico
+    "solar_energy":                   ["RAYS.L", "TAN"],
+    "grid_infrastructure_utilities":  ["IQQH.DE", "ICLN", "GRID", "XLU"],  # IQQH.DE es clean energy → ICLN es su hermano US exacto
+    # ── METALES PRECIOSOS ───────────────────────────────────────────────────────
+    "gold_physical":                  ["IGLN.L", "GLD", "IAU"],
+    "gold_miners":                    ["SPGP.L", "GDX", "GDXJ", "RING"],
     "silver_physical":                ["PHAG.L", "SLV", "SIVR"],
-    "silver_miners":                  ["SIL", "SILJ", "SLVP"],
-    "royalty_streaming_metals":       ["GDX", "SGDM"],                   # no pure royalty ETF — gold-miner basket approximation (holds WPM/RGLD)
-    # ── INDUSTRIAL & BATTERY METALS ─────────────────────────────────────────────
-    "copper_miners":                  ["COPX", "CPER", "COPA.L"],
-    "lithium_miners":                 ["LIT", "BATT", "LITP"],
-    "cobalt_nickel":                  ["BATT", "LIT", "REMX"],          # no pure ETF — battery-metals approximation
-    "rare_earth_miners":              ["REMX", "MP"],                    # MP = MP Materials (single name, exposes shares) as fallback
-    "steel_producers":                ["SLX", "XME"],
-    "water_infrastructure":           ["PHO", "FIW", "WTRD.L"],
-    "agriculture_soft_commodities":   ["DBA", "MOO", "VEGI"],
-    # ── FINANCIALS ──────────────────────────────────────────────────────────────
-    "eu_retail_banking":              ["EXV1.DE", "EUFN"],               # EUFN is US-listed (→ shares) but holds EU financials
-    "us_retail_banking":              ["KBE", "KRE", "IAT"],
-    "insurance_eu":                   ["EUFN", "KIE"],                   # EU financials proxy (EUFN); KIE is US insurance (weaker)
-    "asset_management":               ["IAI"],                          # broker-dealers & asset managers
-    "fintech_payments":               ["FINX", "IPAY", "ARKF"],
-    "private_equity_listed":          ["PSP"],
-    "crypto_infrastructure":          ["IBIT", "BITO", "BTCE.DE"],      # IBIT/BITO = large US BTC ETFs (expose shares)
-    # ── TECHNOLOGY ──────────────────────────────────────────────────────────────
+    # ── METALES INDUSTRIALES Y AGRO ─────────────────────────────────────────────
+    "copper_miners":                  ["4COP.DE", "COPX", "CPER"],
+    "lithium_miners":                 ["VOLT.L", "LIT", "BATT"],
+    "agriculture_soft_commodities":   ["SPAG.L", "MOO", "VEGI"],           # SPAG.L es agronegocio (equity) → MOO, no DBA (futuros)
+    "water_infrastructure":           ["IH2O.L", "PHO", "FIW"],
+    # ── FINANCIERO ──────────────────────────────────────────────────────────────
+    "eu_retail_banking":              ["EXV1.DE", "EUFN"],                 # EUFN cotiza en US (→ expone shares) pero tiene financieras EU
+    "crypto_infrastructure":          ["DAPP.L", "DAPP", "BITQ"],          # DAPP US = mismo indice VanEck, expone shares
+    # ── TECNOLOGIA ──────────────────────────────────────────────────────────────
     "semiconductors_design":          ["SEMI.L", "SOXX", "SMH"],
-    "semiconductors_equipment":       ["SMH", "SOXX"],                   # no pure equipment ETF — SMH/SOXX hold AMAT/LRCX/KLAC
-    "semiconductors_foundry":         ["SMH", "SOXX"],                   # no pure foundry ETF — SMH is TSMC-heavy
-    "semiconductors_memory":          ["SMH", "DRAM", "EWY"],
-    "ai_infrastructure_data_centers": ["SRVR", "BOTZ", "WTAI"],
-    "cloud_software_saas":            ["CLOU", "WCLD", "IGV"],
-    "robotics_automation":            ["ROBO", "BOTZ", "IQQR.DE"],
-    # ── HEALTHCARE ──────────────────────────────────────────────────────────────
-    "biotech_drug_development":       ["IBB", "XBI"],
-    "medical_devices":                ["IHI", "IHF"],
-    "genomics_precision_medicine":    ["ARKG", "GNOM"],
-    "pharma_large_cap":               ["IHE", "PPH", "XPH"],
-    "longevity_biotech":              ["XBI", "ARKG", "IBB"],            # no pure longevity ETF — biotech/genomics approximation
-    "synthetic_biology":              ["ARKG", "GNOM"],                  # no pure synbio ETF — genomics approximation
-    # ── REAL ASSETS & CONSUMER ──────────────────────────────────────────────────
-    "real_estate_logistics":          ["INDS", "REZ"],
-    "real_estate_data_centers":       ["SRVR", "DTCR"],
-    "infrastructure_core":            ["IFRA", "PAVE", "INFR.L"],
-    "luxury_goods":                   ["LUXE.PA", "GLUX.SW"],           # no US pure-play luxury ETF — UCITS-only, may stay estimated
-    "consumer_india_em":              ["INDA", "SMIN", "NDIA.L"],
+    "ai_infrastructure_data_centers": ["XAIX.DE", "AIQ", "BOTZ"],
+    "robotics_automation":            ["RBOT.L", "ROBO", "BOTZ"],
+    "cybersecurity_commercial":       ["USPY.L", "CIBR", "BUG"],
+    "cloud_software_saas":            ["WCLD.L", "WCLD", "CLOU", "IGV"],
+    # ── SALUD ───────────────────────────────────────────────────────────────────
+    "pharma_large_cap":               ["IUHE.AS", "XLV", "IHE"],           # IUHE.AS sigue S&P500 Health Care → XLV es el hermano US exacto
+    "biotech_drug_development":       ["BTEC.L", "IBB", "XBI"],
+    # ── ACTIVOS REALES Y CONSUMO ────────────────────────────────────────────────
+    "infrastructure_core":            ["INFR.L", "IFRA", "PAVE"],
+    "luxury_goods":                   ["GLUX.SW", "LUXU.L"],               # sin ETF US de lujo puro — solo UCITS, puede quedarse en `estimated`
+    "consumer_india_em":              ["NDIA.L", "INDA", "SMIN"],
 }
 
 # Back-compat alias: the primary (tradeable) ticker per sector = first of each chain.

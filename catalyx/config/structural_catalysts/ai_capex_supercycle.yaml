@@ -5,7 +5,7 @@
 id: struct_ai_capex_supercycle
 type: structural
 schema_version: "1.3"
-title: "AI infrastructure capex supercycle"
+title: "AI infrastructure capex supercycle (computo, energia y cobre)"
 description: >
   Hyperscalers (Microsoft, Google, Amazon, Meta) and sovereign AI initiatives are in a
   multi-year capex cycle for AI training and inference infrastructure. This drives demand
@@ -18,8 +18,7 @@ description: >
 created_at: "2026-06-03T18:00:00Z"
 created_by: user
 onset_period: "2023-Q1"
-onset_evidence: "Microsoft $10B OpenAI investment announced Jan 2023. Google Bard launch. Hyperscaler capex guidance inflections
-  in Q1 2023 earnings."
+onset_evidence: "Microsoft $10B OpenAI investment announced Jan 2023. Google Bard launch. Hyperscaler capex guidance inflections in Q1 2023 earnings."
 
 catalyst_type: technology_adoption
 catalyst_subtype: ai_inference_buildout
@@ -27,13 +26,16 @@ geography: [US, EU, APAC, GLOBAL]
 thematic_tags: [ai, data_center, semiconductors, power, infrastructure, capex]
 
 user_rank: 2
-user_notes: "Most visible structural catalyst in the market. Risk of being priced in for semiconductors — focus on power,
-  cooling, networking as higher-alpha adjacent plays."
+user_notes: "Most visible structural catalyst in the market. Risk of being priced in for semiconductors — focus on power, cooling, networking as higher-alpha adjacent plays."
 
 intensity:
-  current_score: 82.9
-  last_updated: "2026-06-29"
+  current_score: 89.9
+  last_updated: "2026-07-28"
   history:
+  - period: '2026-07-28'
+    score: 89.9
+    note: 'Computed 2026-07-28: avg=89.87 trend=→ (flat) (was 82.9)'
+    computation_method: computed
   - period: 2026-Q2
     score: 82.9
     note: 'Computed 2026-06-29: avg=89.87 trend=↓↓ (falling 2+ consecutive)'
@@ -134,4 +136,18 @@ linked_event_catalyst_ids: []
 linked_structural_catalyst_ids:
 - struct_copper_datacenter_demand    # Commodity expression: copper miners as physical beneficiary
 status: active
-status_last_reviewed: "2026-06-01"
+status_last_reviewed: "2026-08-27"
+absorbed_catalyst_ids:
+- struct_copper_datacenter_demand
+absorbed_at: '2026-08-27'
+absorbed_note: |
+  Consolidacion del universo v2.0 (2026-08-27). Este catalizador absorbe los ids de
+  arriba: compartian driver economico y se validaban/invalidaban con las mismas
+  noticias, por lo que sumaban peso duplicado en catalyst_alignment.
+
+  IMPORTANTE — los indicadores absorbidos NO se han copiado aqui. Su value_history
+  vive en el lake indexado por el catalyst_id ORIGINAL; moverlo a ciegas corromperia
+  la serie y falsearia el percentil empirico de intensity_engine. Los ficheros
+  fusionados se conservan intactos con status: merged. En el proximo /catalyx-update,
+  decidir explicitamente cual de estos indicadores merece promoverse a este fichero:
+    - struct_copper_datacenter_demand (intensity 78.7): Combined hyperscaler AI capex guidance (Microsoft + Google + Amazon + Meta, $B quarterly), LME copper spot price (USD/tonne), LME copper warehouse inventory (tonnes) — low inventory = supply tightness, Data center copper demand estimate — analyst consensus (Wood Mackenzie / CRU)
