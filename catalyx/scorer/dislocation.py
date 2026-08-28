@@ -39,15 +39,15 @@ _BENCHMARK = "SPY"
 # ── Price source (injectable) ────────────────────────────────────────────────
 
 def yfinance_prices(tickers: list[str], start: str, end: str):
-    """Adjusted-close DataFrame (index=date, columns=tickers). Mirrors nav_engine."""
-    import pandas as pd
-    import yfinance as yf
+    """Adjusted-close DataFrame (index=date, columns=tickers). Mirrors nav_engine.
 
-    data = yf.download(tickers, start=start, end=end, progress=False, auto_adjust=True)
-    closes = data["Close"] if isinstance(data.columns, pd.MultiIndex) or "Close" in getattr(data, "columns", []) else data
-    if isinstance(closes, pd.Series):
-        closes = closes.to_frame(tickers[0])
-    return closes
+    Served from the shared lake cache (`catalyx.data.prices`) — this is also the default
+    price_fn that `entry_timing` and `exit_watcher` import, so all three read the SAME price
+    snapshot as the NAV engine within a run (v3 Phase 1, PLAN §2.1).
+    """
+    from catalyx.data import prices
+
+    return prices.read(list(tickers), start, end)
 
 
 # ── Pure math (unit-tested, no network) ──────────────────────────────────────

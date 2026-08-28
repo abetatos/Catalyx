@@ -222,8 +222,22 @@ def catalyst_freshness(catalyst_ids: list[str], today: date, warn_days: int, max
     """How old is the fundamental verdict on the catalyst(s) driving a position? Reads each
     structural catalyst's `status_last_reviewed` (the human judgement date — NOT `intensity.
     last_updated`, which can look fresh after a trend-only recompute over stale indicator values).
-    The STALEST driver governs. status ∈ {fresh, stale, very_stale, unknown}."""
+    The STALEST driver governs. status ∈ {fresh, stale, very_stale, unknown}.
+
+    Merged catalysts are resolved to their survivor first. A movement keeps the id it was opened
+    against, so after the 2026-08-27 merges a position could read its freshness off a
+    `status: merged` file whose `status_last_reviewed` the merge itself had just stamped — a
+    fresh-looking date for a thesis nobody re-verified, on a catalyst `compute_all()` no longer
+    scores. Exactly the false all-clear this function exists to prevent."""
     get_fn = get_fn or structural_catalyst_repo.get_catalyst
+    original = list(catalyst_ids or [])
+    try:
+        catalyst_ids = structural_catalyst_repo.resolve_all(catalyst_ids)
+    except Exception:  # noqa: BLE001 — a missing/unreadable YAML dir must not break the assess
+        catalyst_ids = original
+    # Say so when the answer came from a different catalyst than the movement names, otherwise the
+    # row reads as a verdict on an id whose file was never opened.
+    redirected = [c for c in original if c not in catalyst_ids] or None
     reviewed, indicator_dates = [], []
     for cid in catalyst_ids or []:
         try:
@@ -242,12 +256,14 @@ def catalyst_freshness(catalyst_ids: list[str], today: date, warn_days: int, max
     freshest_ind = max(indicator_dates).isoformat() if indicator_dates else None
     if not reviewed:
         return {"status": "unknown", "review_age_days": None, "last_reviewed": None,
-                "freshest_indicator_date": freshest_ind, "n_catalysts": len(catalyst_ids or [])}
+                "freshest_indicator_date": freshest_ind, "n_catalysts": len(catalyst_ids or []),
+                "evaluated_ids": list(catalyst_ids or []), "merged_from": redirected}
     oldest = min(reviewed)                          # stalest driver = the trust ceiling
     age = (today - oldest).days
     status = "very_stale" if age > max_days else ("stale" if age > warn_days else "fresh")
     return {"status": status, "review_age_days": age, "last_reviewed": oldest.isoformat(),
-            "freshest_indicator_date": freshest_ind, "n_catalysts": len(catalyst_ids or [])}
+            "freshest_indicator_date": freshest_ind, "n_catalysts": len(catalyst_ids or []),
+            "evaluated_ids": list(catalyst_ids or []), "merged_from": redirected}
 
 
 # ── Lake read: regime per sector (latest run) ─────────────────────────────────

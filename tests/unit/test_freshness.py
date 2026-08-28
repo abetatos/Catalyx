@@ -83,3 +83,31 @@ def test_overdue_returns_only_stale(patched_dir):
     ])
     overdue = freshness.overdue(AS_OF)
     assert {r["indicator_id"] for r in overdue} == {"ind_stale"}
+
+
+def test_merged_and_deactivated_catalysts_are_not_audited(tmp_path, monkeypatch):
+    """A merged catalyst's indicators will never be refreshed again, so auditing them
+    manufactures permanent 'stale' rows that inflate the review's work list with dead work.
+    (Real case: 18 of 66 audited indicators after the 2026-08-27 universe cut.)"""
+    import yaml
+
+    from catalyx.scorer import freshness as fr
+
+    d = tmp_path / "structural"
+    d.mkdir()
+    (d / "live.yaml").write_text(yaml.safe_dump({
+        "id": "struct_live", "status": "active",
+        "indicators": [{"id": "ind_01", "check_frequency": "monthly", "last_date": "2020-01-01"}],
+    }), encoding="utf-8")
+    (d / "gone.yaml").write_text(yaml.safe_dump({
+        "id": "struct_gone", "status": "merged",
+        "indicators": [{"id": "ind_01", "check_frequency": "monthly", "last_date": "2020-01-01"}],
+    }), encoding="utf-8")
+    monkeypatch.setattr(fr, "_STRUCTURAL_DIR", d)
+
+    ids = {r["catalyst_id"] for r in fr.audit_indicators()}
+    assert ids == {"struct_live"}
+    assert {r["catalyst_id"] for r in fr.overdue()} == {"struct_live"}
+    # …but the dead state is still inspectable on demand.
+    assert {r["catalyst_id"] for r in fr.audit_indicators(include_inactive=True)} == \
+        {"struct_live", "struct_gone"}

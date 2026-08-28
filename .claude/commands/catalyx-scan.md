@@ -18,31 +18,25 @@ events + taxonomy gaps**. The review consumes this output instead of repeating t
 every pass and is the context the review consumes in scheduled mode. Taxonomy-agnostic, so it does
 not bias Pass 1.
 
-Keep these GENERIC — each line is its own query; broad framings surface more ideas than narrow
-ones. Always include Trump / US / Europe framings, since most market-moving policy now routes
+**SIX queries, one per line.** Keep them GENERIC — broad framings surface more ideas than narrow
+ones — and keep the Trump / US-admin / Europe framing, since most market-moving policy now routes
 through US executive action and the European economy.
 
 ```
-Macro / Central Banks:
-- "Fed interest rate decision [MONTH YEAR]"
-- "ECB rate policy [MONTH YEAR]"
-- "US CPI inflation [MONTH YEAR]"
-- "USD DXY dollar index [MONTH YEAR]"
-
-Geopolitical / big economies:
-- "Trump news [MONTH YEAR]"
-- "US administration policy [MONTH YEAR]"
-- "Europe economy [MONTH YEAR]"
-- "China economy [MONTH YEAR]"
-- "Russia Ukraine war news [MONTH YEAR]"
-- "China Taiwan geopolitical [MONTH YEAR]"
-
-Commodities:
-- "LME copper price [MONTH YEAR]"
-- "gold price USD [MONTH YEAR]"
-- "WGC central bank gold purchases [MONTH YEAR]"
-- "oil price OPEC [MONTH YEAR]"
+1. "Fed interest rate decision US CPI inflation [MONTH YEAR]"
+2. "ECB rate policy Europe economy [MONTH YEAR]"
+3. "Trump administration policy markets [MONTH YEAR]"
+4. "China economy stimulus [MONTH YEAR]"
+5. "copper gold oil price [MONTH YEAR]"
+6. "geopolitical risk markets [MONTH YEAR]"          # Russia/Ukraine, Taiwan, Middle East
 ```
+
+This was **14 queries** until 2026-08-28. The four commodity queries and the four macro ones
+returned largely the same articles — a single search engine does not reward splitting "LME copper"
+and "gold price" into separate calls when the result set is macro news either way. Merged 14 → 6.
+If a merged query comes back thin on something that MATTERS THIS RUN (a held position's
+commodity, a live rate decision), split that one and only that one — spend the search where a
+decision hangs on it, not on a fixed list.
 
 **Output of C0:** a short bullet summary of the current macro/geopolitical state. Carry any fresh
 theme it surfaces into Pass 1, and any development touching a known catalyst into the Pass 2 refresh.
@@ -62,17 +56,20 @@ The taxonomy gap proposals section shows all existing gaps. Use `get <gap_id>` f
 
 ### Step D2 — Run broad market WebSearch queries
 
-These queries are intentionally generic — they are designed to surface what the market is pricing, not what the taxonomy already knows about.
+**THREE queries.** Intentionally generic — they surface what the market is pricing, not what the
+taxonomy already knows about.
 
 ```
-"best performing ETF sectors this week"
-"sector ETF biggest movers [MONTH YEAR]"
-"sector ETF inflows outflows [MONTH YEAR]"
-"emerging investment theme [MONTH YEAR]"
-"new sector rally [MONTH YEAR]"
-"analyst initiates coverage [sector] [MONTH YEAR]"
-"[MONTH YEAR] sector rotation trade"
+1. "best performing sector ETFs biggest movers [MONTH YEAR]"
+2. "emerging investment theme new sector rally [MONTH YEAR]"
+3. "sector rotation trade analyst initiates coverage [MONTH YEAR]"
 ```
+
+Was 7 until 2026-08-28. The three "what moved" variants (best performing / biggest movers /
+inflows-outflows) returned overlapping result sets, and the discovery pass is a NET, not a census:
+its job is to catch a theme the taxonomy has no word for, and a theme large enough to matter shows
+up in any of these framings. Cheap breadth beats redundant depth here — the expensive verification
+happens in Pass 2, and only for what survives.
 
 ### Step D3 — Identify themes from signal output
 
@@ -129,21 +126,25 @@ uv run python -m catalyx.store.structural_catalyst_repo summary
 ```
 Use `get <id>` on either repo for full detail when a specific record is needed.
 
-### Step C2 — Run sector-specific WebSearch queries
+### Step C2 — Sector queries, SCOPED to the work list
 
-```
-"central bank policy rate decision" last 7 days
-"defense spending NATO announcement" last 30 days
-"semiconductor export controls chips" last 30 days
-"copper supply disruption mine" last 30 days
-"AI data center capex investment announced" last 30 days
-"ECB Federal Reserve forward guidance" last 14 days
-"geopolitical escalation sanctions" last 14 days
-"commodity supply OPEC production" last 14 days
-```
+**Do not run a fixed list.** `scripts/pre_run.sh` already wrote `data/reports/state_<date>.json`
+with a tiered work list computed from the book and the freshness audit. Read it and query only:
 
-(The generic Trump / US / Europe / big-economy framings already ran in Step C0 — reuse those
-findings here rather than repeating them.)
+- `work_list.must_reverify` — drives an open position. **One query each, always.** Money is at
+  risk on these; they are the reason the scan exists.
+- `work_list.should_reverify` — stale AND driving a decision-relevant sector. One query each,
+  budget permitting.
+- `work_list.optional_reverify` — **no query.** Nothing this cycle depends on them; they collapse
+  into the C2b "no change" line.
+
+The old fixed eight (`"copper supply disruption mine"`, `"defense spending NATO announcement"`, …)
+were written when the catalyst set was different, and they ran identically whether or not the book
+held anything in that sector. Today `must` is typically 3–5 queries — one per driving catalyst.
+
+Write each query around the catalyst's own evidence, e.g.
+`"<catalyst indicator or thesis claim> [MONTH YEAR]"`. Reuse the C0 findings instead of
+re-searching the generic Trump / US / Europe / big-economy framings.
 
 **Analyst model revision queries — run every scan (position close signal):**
 ```
@@ -161,7 +162,7 @@ Also run one query per sector that appeared in the Discovery Pass output, to che
 
 The inventory loaded in C1 lists every active catalyst (event + structural). **Do NOT run a fresh
 search per catalyst.** Read the C0 + C2 findings already in hand and refresh only the catalysts
-those findings actually TOUCH — a full per-row sweep over all ~30 catalysts with no new evidence is
+those findings actually TOUCH — a full per-row sweep over every catalyst with no new evidence is
 wasted output. For each catalyst a finding touches, emit a delta row:
 
 - **Strengthen / weaken:** does the fresh evidence move the catalyst's intensity up or down vs its
@@ -237,6 +238,33 @@ Present a unified summary table after both passes:
 
 If any structural catalyst's `indicators` appear to have changed materially, flag it explicitly:
 "Recommend updating `intensity.current_score` for `<id>` — evidence: [cite]".
+
+---
+
+## Machine-readable output — `data/reports/scan_deltas_<date>.json`
+
+Alongside the markdown above, ALWAYS write this file. It is the hop that closes the loop: the scan
+already forms a per-catalyst judgement, and until this existed it only printed it — which is why
+every catalyst read `very_stale` in `exit_watcher` even in the runs that had just re-verified them.
+
+```json
+[{"catalyst_id": "struct_nato_rearmament",
+  "verdict": "intact",
+  "evidence": "NATO Hague 5% target reaffirmed; RHM order book +19% YoY",
+  "source": "Rheinmetall Q2 2026 report",
+  "indicators": [{"id": "ind_02", "value": 0.19, "note": "Q2 print"}]}]
+```
+
+- One entry per catalyst you actually LOOKED AT — including the `no change` ones (that is what
+  makes their freshness honest). Never write an entry for a catalyst you did not check.
+- `verdict` ∈ `intact | strengthening | weakening | breaking | invalidated`. `weakening` and
+  `breaking` REQUIRE `evidence` — the stamp is rejected without it.
+- `indicators[]` only when the search produced an actual number. No number → omit the key; a
+  verdict-only entry stamps freshness and records nothing numeric.
+
+Three consumers read this one file (the review runs them; do not run them from here):
+`indicator_update batch` (values) · `catalyst_review batch` (freshness stamps) ·
+`catalyst_lifecycle --deltas` (reversals, which are evidence and are never inferred).
 
 ---
 

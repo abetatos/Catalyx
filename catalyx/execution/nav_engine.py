@@ -32,22 +32,20 @@ _NAV_TABLE = "portfolio_nav"
 # ── Price source (injectable) ────────────────────────────────────────────────
 
 def yfinance_prices(tickers: list[str], start: str, end: str):
-    """Default price_fn: adjusted-close DataFrame (index=date, columns=tickers).
+    """Default price_fn: adjusted-close DataFrame (index=date, columns=tickers), NATIVE ccy.
 
-    yfinance's `end` is EXCLUSIVE, which silently drops the last day of every window —
-    e.g. asking [start, today] never returns today's close, so a curve that should end
-    today loses its final (and on a 1-trading-day window, its ONLY) point. We push end
-    out by one calendar day so the caller's `end` is treated inclusively.
+    Served from the shared lake cache (`catalyx.data.prices`), which fetches from yfinance only
+    the dates it does not already hold. Kept under this name because it IS the default price_fn
+    of every NAV call and of `dislocation`/`entry_timing`/`exit_watcher` downstream — routing it
+    here makes one run of the pipeline read ONE consistent price snapshot instead of ~15
+    independent fetches that could each see a different close (v3 Phase 1, PLAN §2.1).
+
+    The end-exclusive yfinance quirk (asking [start, today] never returned today's close) is now
+    handled once inside `prices.yfinance_fetch`, not per call site.
     """
-    import pandas as pd
-    import yfinance as yf
+    from catalyx.data import prices
 
-    end_excl = (date.fromisoformat(end[:10]) + timedelta(days=1)).isoformat()
-    data = yf.download(tickers, start=start, end=end_excl, progress=False, auto_adjust=True)
-    closes = data["Close"] if isinstance(data.columns, pd.MultiIndex) or "Close" in getattr(data, "columns", []) else data
-    if isinstance(closes, pd.Series):
-        closes = closes.to_frame(tickers[0])
-    return closes
+    return prices.read(list(tickers), start, end)
 
 
 # ── FX → EUR (the book, and every comparison, is denominated in EUR) ──────────
@@ -58,15 +56,11 @@ def yfinance_prices(tickers: list[str], start: str, end: str):
 # NAV(t) = Σ w_i · [p_i(t)·fx_i(t)] / [p_i(t0)·fx_i(t0)]. CLAUDE.md: all P&L in EUR.
 
 def _default_ccy_fn(tickers: list[str]) -> dict[str, str]:
-    """{ticker: listing currency}. Best-effort via yfinance; unknown → 'EUR' (no conversion)."""
-    import yfinance as yf
-    out: dict[str, str] = {}
-    for t in tickers:
-        try:
-            out[t] = (yf.Ticker(t).fast_info.get("currency") or "EUR")
-        except Exception:
-            out[t] = "EUR"
-    return out
+    """{ticker: listing currency}. Cached in the lake — a listing currency never changes, but
+    this used to cost one `yf.Ticker(t).fast_info` round-trip PER TICKER on every NAV/exit run."""
+    from catalyx.data import prices
+
+    return prices.currencies(list(tickers))
 
 
 def _default_fx_fn(currencies, start: str, end: str) -> dict:

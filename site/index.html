@@ -86,7 +86,9 @@
     table { border-collapse:collapse; width:100%; font-size:13px; }
     th,td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); }
     th { color:var(--muted); font-weight:600; }
-    td.num { text-align:right; font-variant-numeric:tabular-nums; }
+    td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+    /* wide tables (rebalance) scroll inside their own box rather than pushing the page sideways */
+    .tblwrap { overflow-x:auto; }
     .err { color:var(--red); background:#ffebe9; border:1px solid #ffcecb; padding:10px 12px;
            border-radius:8px; white-space:pre-wrap; font-family:ui-monospace,monospace; font-size:12px; }
 
@@ -203,6 +205,7 @@
     <a class="navlink" data-route="timing"><span class="ic">⏱</span> Entry timing</a>
     <a class="navlink" data-route="catalysts"><span class="ic">◆</span> Catalysts</a>
     <a class="navlink" data-route="positions"><span class="ic">€</span> Positions</a>
+    <a class="navlink" data-route="rebalance"><span class="ic">⇄</span> Rebalance</a>
     <a class="navlink" data-route="journal"><span class="ic">✎</span> Decision Journal</a>
     <a class="navlink" data-route="portfolios"><span class="ic">◔</span> Portfolios</a>
     <div class="navsep">Advanced</div>
@@ -378,6 +381,54 @@
         own</b> — where to add next so you diversify the book instead of doubling the same bet. From the
         dislocation correlation engine (90d yfinance returns) anchored to your holdings, not the metrics alone.</p>
       <div id="pos-rotation"></div>
+    </section>
+
+    <!-- ── REBALANCE — the pipeline's target book vs the real one, in € and after tax ── -->
+    <section class="section" id="s-rebalance">
+      <h1 class="head">Rebalance</h1>
+      <p class="sub">What the pipeline says the book <b>should</b> hold, next to what it <b>does</b> hold —
+        in euros, after Spanish capital-gains tax. Every action comes from a fixed rule table, not from a
+        judgement call, and every deviation from it is recorded and priced a month later.</p>
+
+      <div class="card" style="margin-bottom:16px;border-left:3px solid var(--accent)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+          <b style="font-size:13px">Six actions, fixed precedence</b>
+          <span class="pill">SELL › REDUCE › TRIM › ADD › BUY › HOLD</span>
+          <span class="pill g">recommend-only</span>
+        </div>
+        <p class="hint" style="margin:0">There is no <i>watch</i>, <i>monitor</i> or <i>consider</i> in the
+          output: a verdict that does not move money is <b>HOLD</b>, said once. Thresholds are frozen in
+          config, so a row cannot be argued away in the moment — it can only be <b>overridden on the
+          record</b>, with an author and a reason, and scored against the rule it replaced ~21 trading days
+          later. Nothing here executes; buying and selling stays a human action.</p>
+      </div>
+
+      <div id="reb-summary" class="strip"></div>
+      <div id="reb-warn" style="margin:12px 0"></div>
+
+      <h2>Target vs actual</h2>
+      <p class="hint">Target = the model book's weights scaled by the rule's <b>deployment ratio</b>;
+        actual = the real book marked in EUR. <code>net edge</code> is the expected gain of the trade minus
+        its cost (CGT + spread) — shown for information while the edge estimate is still statistically thin,
+        and only allowed to block a <b>taxable sale</b>, never a purchase.</p>
+      <div id="reb-table"></div>
+
+      <h2>Position measurement</h2>
+      <p class="hint">Why each row looks the way it does. <b>Price / FX</b> splits the EUR P&amp;L into the
+        sector move and the currency move — a non-EUR vehicle is two positions, and only one of them was a
+        thesis. <b>Peak DD</b> measures from the position's own high, not from cost. <b>Score drift</b> is
+        today's composite minus the composite the pipeline gave that sector <i>on the day it was bought</i>:
+        price is the market's opinion, drift is the model's.</p>
+      <div id="reb-metrics"></div>
+
+      <h2>Book shape</h2>
+      <div id="reb-book"></div>
+
+      <h2>Overrides</h2>
+      <p class="hint">Every recorded deviation from the rule table, with its author. Each is priced against
+        the action it replaced once the forward window matures — the escape hatch stays open, and it keeps
+        a scorecard.</p>
+      <div id="reb-overrides"></div>
     </section>
 
     <!-- ── DECISION JOURNAL ── -->

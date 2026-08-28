@@ -9,6 +9,358 @@
 
 ---
 
+## Position & book metrics + the dashboard Rebalance tab (2026-08-28, v3 Phase 2 completion)
+
+**Why:** the book was measured in exactly two ways — `invested_eur` (what went in) and a NAV curve
+(how the whole thing moved). Everything between them was either absent or re-derived by hand inside
+a review and never written down, and a number recomputed conversationally each month cannot be
+compared to itself across months, which is the only thing that makes it useful.
+
+**New `catalyx/execution/position_metrics.py`** → lake `position_metrics` + `book_metrics`, one row
+per held sector per run, run by `post_run.sh` immediately before `rebalance` (it explains the rows
+rebalance is about to act on). Three of its numbers did not exist anywhere before:
+
+1. **The price/FX split.** A EUR investor holding a GBP or USD vehicle owns two positions — the
+   sector thesis and the currency — and `unrealized_eur` cannot say which one is working. The
+   decomposition is an identity, not an estimate:
+   `price = qty × (P_now − P_entry) × fx_entry`, `fx = qty × P_now × (fx_now − fx_entry)`, and a
+   third **named** `basis_residual_eur` for fees and cost-basis rounding. The three sum exactly to
+   the EUR P&L. `entry_fx` is implied by the cost basis (EUR/unit ÷ native/unit), so the rate used
+   is the one actually paid and no FX history is needed; an EUR listing is pinned to 1.0, otherwise
+   fee rounding prints a phantom currency effect on a domestic vehicle.
+2. **Score drift** — today's composite/rank vs the point-in-time `score_context` the position was
+   opened on. Price is the market's opinion; drift is your own model's. First run:
+   `grid_infrastructure_utilities` at **−37.4**, the position the exit watcher already flags.
+3. **Max drawdown from PEAK**, not from cost. `exit_watcher` measures against the cost basis
+   because its stops are written that way; a position that ran +40% and gave back to +5% reads as a
+   healthy +5% there and a −25% round trip here. Both true, and only the second explains the feel.
+
+Book level: deployment, HHI, FX exposure by listing currency, and vol / Sharpe / max DD / beta from
+the real NAV series, plus tracking error and overlap vs the `catalyx` model.
+
+**Two defects the plan did not anticipate, both surfaced by running it.**
+*(a) The NAV table splices three curves.* `portfolio_nav` stores `backtest`, `live` and `forward`
+rows under the SAME `portfolio_id`; reading them all sorted by date interleaves two different
+curves and manufactures ±18% daily moves out of nothing — the first run reported a **95.5% tracking
+error** that way (22.3% once fixed). `_nav_series` now takes a mode and dedupes by date, and a test
+pins it. *(b) Active share was quietly answering a different question.* The textbook ½Σ|w−b|
+assumes both books sum to 100%; ours do not (the real book is a % of total capital, the model is
+fully deployed), so it measures "how far apart are the two books" and not "how much of the model do
+we own". Both are now reported under separate names — `active_share_pct` 49.3% and
+`model_overlap_pct` **15.9%** — because one number pretending to answer both is how a book ends up
+looking diversified and being concentrated. Same reason `corr_vs_spy` is now printed beside
+`beta_vs_spy`: the real book's beta is exactly **1.00**, which reads as "we track the index" and is
+a coincidence of being twice as volatile at half the correlation (0.50).
+
+**Dashboard `#/rebalance` tab** (§3.5), baked by `build_site.py` from lake `rebalance` +
+`position_metrics` + `book_metrics` + `override_log`: target vs actual with the action, € to move,
+CGT and net edge per row; the per-position measurement table; the book-shape strip with the
+currency split; and the override log with its authors. Sectors that are no longer buyable are
+flagged in red rather than dropped. English-only, recommend-only — nothing on the page executes.
+
+375 tests green (+17). **This completes the v3 plan.**
+
+## Context & maintenance hygiene (2026-08-28, v3 Phase 4)
+
+**Why:** `CLAUDE.md` had grown to **54.9 KB**, and it is loaded by the main session AND by every
+subagent a review spawns — so a scan, eight studies and four phase subagents paid for it a dozen
+times per run. Most of that weight was the module table: ~11 KB answering "which module does X and
+what is its CLI?", a question that arises only when you are about to touch a module.
+
+**CLAUDE.md 54.9 KB → 19.7 KB (−64%).** The module inventory moved **verbatim** to
+`docs/MODULES.md`; `Recent Changes` collapsed from five multi-paragraph rows to five one-line rows
+pointing at this file; the storage/architecture prose compressed; the duplicated
+"Files Claude reads for each task" table merged into "Key Files"; the "Feedback Loop — Review
+Checklist" section deleted as a third copy of the pipeline order. **The ≤15 KB target in the plan
+was not reached, deliberately.** What is left is rules that bind on every run — broker reality
+(PRIIPs), the one-driver rule, Spanish CGT, the five AI-scoring rules, the fixed-precedence action
+enum — and a rule moved into a file nobody opens is not a rule, it is a rule that will be broken
+politely. Two dangling references to a `docs/SPEC_v1.1.md` that does not exist were repointed at
+`tax_engine.py` and `CHANGELOG.md`.
+
+**Deleted for being wrong, not merely long.** CLAUDE.md's "Data files state" block still described
+June — `theses/ ← vacío`, one catalyst event, a `catalyst_dashboard_20260603.md` — as the current
+state of `data/`. And the review skill's Step 1.5b spelled out every lifecycle transition rule
+(archive a spent event, dormant a weak structural, promote a repeat) for the LLM to apply by hand,
+six weeks after `catalyst_lifecycle.py` took them over deterministically, closing with a note that
+"the deterministic home is a future module". Stale documentation of a solved problem is worse than
+no documentation: it invites solving it again, by hand, differently.
+
+**Review skill 651 → 296 lines (−55%).** Every rule now owned by Python was deleted from the prose
+and replaced by the command plus what to report. What was kept is exactly what needs judgement: the
+study work-list triggers, the regime/opportunity/entry-timing reads, the evidence standard per
+assumption, the override discipline, and the two AskUserQuestion steps.
+
+**New `scripts/review_report.py`.** Most of `monthly_review_<date>.md` was Claude re-typing numbers
+it had just read — the ranking, the NAV lines, the rebalance rows, the exposure ledger, the tax
+snapshot, the overdue indicators. Re-typing costs tokens and introduces the one error class a review
+cannot absorb: a transcription that silently disagrees with the lake it came from. The generator is
+read-only over the lake (no scorer, no price fetch, no persist) and emits those sections directly,
+leaving explicit `<!-- CLAUDE: … -->` markers for the parts that are actually reasoning: macro
+context, executive summary + non-obvious finding, the evidence line per position, override reasons,
+and the two decision blocks. It also **marks ranked sectors that are not investable today** rather
+than dropping them — 7 of the current top-15 come from a run that predates the 08-27 universe cut,
+and a top-of-table row telling you to buy something unbuyable is not a neutral row.
+
+**`pre_run.sh --check` — the weekly heartbeat.** Runs the same deterministic chain into the log and
+prints only if a human is needed: a rule action, a position the exit watcher flags (named), a stale
+catalyst verdict, a pending lifecycle transition, or a book move past ±10%. Exit 0 = quiet,
+10 = attention. Search-free, so it is safe unattended — and silent by construction, because a job
+that speaks every week teaches you to ignore it. First live check: 6 rule actions, 2 flagged
+positions, 24 stale verdicts, 1 pending transition. The plan's weekly **cron was offered and
+declined** — the heartbeat is run by hand.
+
+358 tests green (unchanged — this phase moved prose, not logic).
+
+## Thresholds frozen + the override log gets scored (2026-08-28, v3 Phase 3)
+
+**Why:** the rule table shipped with its numbers marked "DRAFTS UNTIL FROZEN BY THE USER", and a
+threshold that can move whenever a run dislikes its own output is not a rule — it is a mood with a
+number attached. The user delegated the call ("congélalos, tú tienes permiso"). Freezing is the
+step that makes §4.1 binding; the four changes made at the freeze all push the same direction the
+whole v3 plan does, away from the model's default conservatism.
+
+| | draft | frozen | why |
+|---|---|---|---|
+| `deployment.base` | 0.60 | **0.70** | the ratio applies to capital already sized for risk in `track_record.yaml`. Sizing happened when that number was set; idle cash inside the envelope is not prudence, it is an unchosen zero-return position |
+| `deployment.floor` | 0.30 | **0.40** | binds only with nothing intact AND VIX > 30. It floors the TARGET and never forces a buy — a book whose positions are all SELL by rule still goes to cash through the SELL rows |
+| `profit_ladder` | 2 rungs | **1, rank-coupled** | the `rank_min: 0` rung trimmed a +50% position the model still ranked #1: the disposition effect wearing a discipline costume, and the opposite of a momentum mandate. Concentration is already bounded twice, by `max_position_pct` (12%) and by `trim_if.overweight_pp_min` |
+| `sell_if_any.rank_out_of_top` | 12 | **10** | = `portfolios/catalyx.yaml max_positions`, i.e. "the model book no longer holds it". 12 was chosen against a 53-sector universe; after the 08-27 cut to 26 it meant "sell the below-average half" |
+
+Live effect: the rule now says deploy **70% → €7,000** against €3,046 actually at work —
+**€3,954 under-deployed**, up from €2,954 under the draft. Same 6 non-HOLD actions.
+
+**The two open design questions were answered, not deferred.** *Ladder vs trailing rank
+(plan §7.2):* trailing rank is the default exit; the ladder survives only rank-coupled, pinned by a
+test that fails if a rank-free rung is ever re-added, so that decision has to be argued again rather
+than drifting back. *Who may override (§7.3):* **both the user and Claude, both scored.** Making the
+user the sole author sounds safer and is not — the model would keep proposing the same conservative
+deviation as prose inside the review, unlogged and unscored, which is precisely the failure the
+table exists to remove. An override is cheap to record and expensive to repeat badly.
+
+**Override scoring (§4.3), the part that keeps the escape hatch honest.** An override log nobody
+prices is a comment field. `rebalance.score_overrides` compares the two worlds as a difference of
+EXPOSURES — everything else about them is identical, so their P&L difference is exactly that gap
+times the vehicle's EUR return since the run:
+
+    override_edge_eur = (trade_eur_chosen − trade_eur_rule) × forward_return_pct / 100
+
+Declining a −€500 SELL is +€500 of retained exposure: a 10% fall means the override cost €50.
+Declining a +€500 BUY carries the opposite sign. `rule_cost_eur` (the CGT + spread the rule action
+would have paid) is reported *beside* the edge and never added into it — deferring tax is not
+earning it, and folding a deferral in would let "I didn't sell" win by arithmetic. An override
+younger than `score_after_trading_days` (21) is PENDING with its age shown, never scored: a
+four-day price difference is a coin, and letting it into the tally would suspend on noise.
+`log_override` now stores `chosen_trade_eur` rather than inferring it, refuses an author outside
+`authors_allowed`, and refuses an empty reason. Claude's suspension is arithmetic — net-negative
+over ≥5 scored overrides and `--author claude` raises.
+
+**Wiring.** New CLI subcommands `rebalance override <sector> <action> --reason … --author … --trade-eur …`
+and `rebalance overrides` (the tally); the bare invocation is unchanged so `post_run.sh` and every
+existing call site keep working. `pre_run.sh` prints the tally as its last block — before any
+reasoning, so a review knows what its own last "let us give it another cycle" cost before it
+proposes the next one. `build()` carries the tally with the table, and `render()` emits a
+Python-generated `SUMMARY` line (deployed % vs rule and floor · N rule actions · override tally)
+because a summary composed by hand is a summary that quietly drops the inconvenient number.
+
+**Review skill (§4.4).** Step 6 gets the real override command including `DEFER` — "revisit next
+cycle" IS a deviation and is the form conservatism usually takes, invisible unless logged. Step 9:
+a Wait/Skip on a sector the table marked BUY/ADD is logged as a user override, not to police the
+decision but to price it later; a deferral that is never recorded cannot be wrong, which is exactly
+why it accumulates. The report template's Open Positions table now has `rule_action` / `trade €` /
+`net edge €` columns with the banned words named inline, plus an "Overrides this run" table, and the
+executive summary's mandatory first line is the `SUMMARY` row verbatim.
+
+358 tests green (+12).
+
+## Scan → update in one hop, and the kill list (2026-08-28, v3 Phase 1 completion)
+
+**Why:** applying a scan was the most repetitive thing the review did — one conversational turn per
+indicator across ~44 indicators, each re-deriving the same nine bookkeeping steps. And it was
+**drifting**: the skill still instructed Claude to append the prior reading to the inline
+`value_history`, but schema 1.4 moved history to the parquet lake and `intensity_engine` reads the
+lake first. Every hand-applied observation therefore looked recorded while the empirical percentile
+never saw it — a failure invisible by construction.
+
+**New `catalyx/store/indicator_update.py`** (`set` / `batch` / `maturity`): shifts
+`current_value → last_value`, stamps `last_date` and `status_last_reviewed`, archives the PRIOR
+reading to the lake, and recomputes intensity ONCE per touched catalyst. Idempotent — re-applying
+the same observation is a no-op, because `intensity_engine`'s percentile weights by row count, so a
+duplicate silently re-weights history. Direction-aware: `weakened()` and `crossed_weak_threshold()`
+read the indicator's own `direction`, and only when a reading actually moves against the thesis are
+the catalyst's deactivation conditions printed verbatim for the human to judge. (The first cut
+matched condition text against `indicator_id` — no condition in any YAML contains one, so it would
+have been dead code that nobody would notice never firing.)
+
+**One file, three consumers.** `/catalyx-scan` now writes `data/reports/scan_deltas_<date>.json`
+(`catalyst_id`, `verdict`, `evidence`, `source`, optional `indicators[]`), read by
+`indicator_update batch` (values), `catalyst_review batch` (freshness stamps) and
+`catalyst_lifecycle --deltas` (reversals, which are evidence and are never inferred). Review Step 2
+is now those three commands instead of N conversational updates.
+
+**Merged catalysts were reaching two places they must not.** (a) `run_state`'s work list put
+`struct_copper_datacenter_demand` on MUST — a `status: merged` catalyst that `compute_all()` skips,
+i.e. a WebSearch spent on something nothing scores. (b) `exit_watcher.catalyst_freshness` read that
+same merged file's `status_last_reviewed`, which the 2026-08-27 merge had itself just stamped — a
+fresh-looking date for a thesis nobody re-verified, which is precisely the false all-clear that
+function exists to prevent. New `structural_catalyst_repo.resolve`/`resolve_all` follow
+`merged_into` (chains handled, cycles terminate) and both call sites now ask the survivor. The
+freshness result carries `evaluated_ids` + `merged_from` so a row never reads as a verdict on an id
+whose file was never opened. Movements keep their original attribution — that is the historical
+record and it stays.
+
+**Scan slimmed:** C0 14 → 6 queries (the four commodity and four macro queries returned overlapping
+result sets — one search engine does not reward splitting "LME copper" from "gold price"), Discovery
+7 → 3 (the pass is a net, not a census: a theme big enough to matter shows up in any framing), and
+C2's fixed eight sector queries replaced by the `state_<date>.json` work list — `must_reverify`
+always, `should` budget permitting, `optional` never. Budget ≈ 15 searches, was ~40.
+
+**Kill list.** `/catalyx-dashboard` removed as a review step (last written 2026-06-30, skipped in
+practice since; the digests + site + report §1 carry it three times over). Heatmap step 2 no longer
+re-reads `sector_taxonomy.yaml` + `scoring_weights.yaml` + `etf_universe.yaml` (2,221 lines,
+~60–90k tokens per run to reproduce facts the Python already applies); step 5's per-sector
+`sector_scorer --crowd N` re-runs are gone because `snapshot_repo.record` already applies crowding
+from `narrative_maturity` via the same map — the ranking is now read back from the recorded run
+(`lake_query ranking`), which also removes the drift between the displayed table and the persisted
+one. The per-top-5 prose block became one line each, with the "non-obvious finding" written once
+for the book. `user_rank_multipliers` deleted (deprecated in v1.5, read by nothing, re-read as
+context every load). `data/reports/heatmap_blocks/` and `llm_vs_pipeline_stability_20260604.md`
+moved to `experiments/` **and `snapshot_repo._BLOCKS_DIR` repointed** — moving them alone would have
+made `rationale_md` silently None.
+
+**One kill-list item was NOT executed as planned.** Review Step 11 (watch-only triggers) was listed
+as "dead". It is not: after the 2026-08-27 cut there are ~30 watch-only sectors and a fired trigger
+is precisely how one returns to the investable universe. What was actually wrong is the *sweep* — 30
+WebSearches to report "no change" 29 times, the worst cost-per-decision step in the review. Step 11
+is now findings-driven: a watch sector is checked only when the scan's Discovery pass surfaces a
+matching theme, or a `retired_reason` is directly addressed. Usually one line, zero extra searches.
+
+346 tests green (+20).
+
+## Rebalance engine — target vs actual, in € and after tax (2026-08-28, v3 Phase 2)
+
+**Why:** the review ended in prose. The pipeline computed a model book to two decimals and then
+the recommendation was an adjective — "hold", "watch it", "consider a small add". Two failures in
+one: no number ever said HOW MUCH, and an LLM asked for a verdict drifts to whichever option
+cannot be blamed, which in a portfolio means holding cash and holding losers. The real book was
+30% deployed (€3,046 of €10,000) with no decision anywhere that had chosen that.
+
+**What shipped:** `catalyx/execution/rebalance.py` — per sector: `target_pct` (model weights ×
+deployable capital), `actual_pct` (marked to market in EUR), `gap_eur`, a `rule_action` from the
+decision table, `trade_eur`, `realized_gain_eur`/`tax_eur` (Spanish CGT, YTD-aware),
+`cost_drag_eur`, `expected_edge_eur`, `net_edge_eur`. Book level: deployment ratio with its
+inputs, turnover, HHI, cash before/after. The action enum is `SELL > REDUCE > TRIM > ADD > BUY >
+HOLD` in fixed precedence — there is no `watch`, `monitor`, `consider` or `optional`, and
+`BANNED_ACTION_WORDS` is asserted by a test so the ban is enforced rather than hoped for.
+Deviating is allowed only as a recorded override (lake `override_log`: run, sector, rule action,
+chosen action, reason, author) so it can be scored against the rule it replaced.
+
+New config `rebalance_rules` in `scoring_weights.yaml` (thresholds are DRAFTS until the user
+freezes them) + `weights.rebalance_rules()`. New lake tables `rebalance`, `override_log`,
+`calibration_bucket`. `calibration.py` gained rank-bucket forward returns (`bucket_returns`,
+`bucket_of`, `shrink_factor`, `expected_returns`) — an IC is a correlation and cannot be
+multiplied by a trade size; a bucket's mean forward return can. Wired as the last step of
+`scripts/post_run.sh`, on stdout in full: it IS the review's Step 6/9 table.
+
+**Three fixes forced by running it against the real book — all of them anti-conservatism:**
+
+1. **The after-tax gate cannot bind on an unmeasured edge.** With ~1 independent calibration
+   window E[r]≈0, so `net_edge = −(tax + spread)` and every taxable sale fails — the gate would
+   have become a permanent, invisible ban on ever taking a profit. It now blocks only once
+   calibration has `min_windows_to_gate` (3) independent 63d windows; below that it prints the
+   cost and stands aside. An unmeasured quantity must never acquire a veto.
+2. **The gate binds sales, not purchases** (`net_edge_gate.applies_to_purchases: false`). A sale
+   pays CGT now and irreversibly — that is the user's "¿renta vender?". A purchase out of idle
+   cash pays only the spread, and gating it on a noise-grade edge estimate would reimport the
+   conservatism through the back door. Cash drag is a certain cost; the edge estimate is not.
+3. **A stale catalyst verdict alone does not trim a winner.** `exit_watcher.reverify_required`
+   fires on staleness even with no drawdown (`drawdown_overlay_action("clear", "very_stale", …)`
+   → `warn, True`), so the first cut halved a +13.4% cybersecurity position because its YAML was
+   60 days old. REDUCE now requires staleness **and** a drawdown tier of reduce/exit — the
+   2026-08-04 doctrine as actually written. Staleness alone surfaces as a row `flag`, not an
+   action.
+
+**Also fixed while wiring it:** model books are read from the last recorded run, which predates
+the 2026-08-27 universe cut — 4 of its 10 names (`cybersecurity_defense`,
+`genomics_precision_medicine`, `longevity_biotech`, `semiconductors_equipment`) are no longer
+investable. They are dropped from the trade list and NAMED in a warning, because a BUY
+recommendation for an unbuyable sector is worse than none: it looks actionable. A second warning
+fires on rank-streak SELLs, whose stored ranks were recorded when the scored universe was a
+different size ("outside the top-12" is not the same cut across universes). Bucket assignment
+uses the **universe composite rank** (`sector_snapshot.rank`), not `rank_in_portfolio` — the
+model book ranks only its ~10 selections, while the buckets were measured across all investable
+sectors; feeding one into the other compares two different orderings.
+
+**First live output** (offline cache, model book from `run_20260728_103246`): committed €10,000,
+deployed €3,046 (30%), rule says deploy 60% → €6,000 (5 intact leaders that are investable
+today), so the book is **€2,954 under-deployed**. 6 non-HOLD actions. 326 tests green (+30).
+
+## Schema migration — `sector_study` 1.2 → 1.3 (2026-08-27)
+
+**Why:** a 25 KB sector study fed the scorers exactly two fields — `catalyst_scorer` reads
+`active_catalyst_ids`, `snapshot_repo` reads `narrative_maturity` (→ crowding). Nothing in the
+codebase read `demand_drivers`, `etf_analysis`, `key_metrics_to_monitor`, `cycle_position`,
+`supply_constraints` or `historical_catalyst_performance` (verified by grep across
+`catalyx/`, `scripts/`, `site/`). Yet `demand_drivers` and `etf_analysis` were REQUIRED, so every
+refresh had to be a full dossier: ≈45k tokens and 6 WebSearches per sector, ~350–450k tokens per
+review. See `docs/PLAN_v3_lean_pipeline_rebalance.md` §2.5.
+
+**Changes**
+- `study_type` gains **`core`** (now the default): the cheap, decision-relevant refresh —
+  `active_catalyst_ids`, `narrative_maturity` + `narrative_notes`, `cycle_position`,
+  `key_metrics_to_monitor`, `risks`, `last_updated`. ~0.7–3 KB, 2 WebSearches.
+  `full` is unchanged and stays the deep dossier (creation, pre-open, quarterly).
+- `demand_drivers` + `etf_analysis` removed from top-level `required`, and re-required
+  **conditionally** via `allOf/if-then` when `study_type == "full"` — so a study that claims to be
+  full still has to carry them.
+- `etf_analysis` marked **`deprecated: true`**: it duplicated `catalyx/config/etf_universe.yaml`,
+  which is the single source of truth and the only one any code reads (`snapshot_repo._primary_etf`).
+  Kept readable for one major version per the Schema Change Protocol.
+- `schema_version` `const: "1.2"` → `enum: ["1.2", "1.3"]`. **No data migration needed** — all 26
+  existing studies stay tagged 1.2 and validate unchanged; new/refreshed studies write 1.3.
+
+**Two pre-existing validation bugs fixed in passing** (schema validation for studies was
+effectively dead — 16 of 26 files failed against 1.2, before any change here):
+- `$schema` was not declared as a property while `additionalProperties: false` was set, so every
+  study carrying the repo-wide `"$schema"` pointer was invalid. `movement.json` already declared
+  it; sector_study now follows the same precedent.
+- Underscore-prefixed human annotations (e.g. `_universe_v2_note`) now validate via
+  `patternProperties: {"^_": …}` instead of failing the whole document.
+- In the deprecated `etf_analysis` block, `ter` / `aum_m_usd` / `spread_bps` / `replication` accept
+  `null`. An unknown TER was honestly recorded as null and the schema demanded a number — the rule
+  is never to claim false precision, so the schema now permits the honest gap.
+
+**Result:** 26/26 studies validate (was 10/26). A `core` study is ~714 bytes vs ~25,000.
+
+---
+
+## v2.26 — 2026-08-27 — Poda del universo: comprabilidad como filtro maestro
+
+> Rotated from the CLAUDE.md `Recent Changes` table. The rule it established — a sector is
+> investable only if a UCITS vehicle can actually be bought from Spain — lives permanently
+> in CLAUDE.md §Critical Implementation Rules ("Broker reality").
+
+| Date | File | Version | Change |
+|---|---|---|---|
+| 2026-08-27 | `catalyx/config/{etf_universe.yaml,sector_taxonomy.yaml}` + `catalyx/data/{market_data,flow_data}.py` + `catalyx/config/structural_catalysts/*.yaml` + `catalyx/scorer/{intensity_engine,catalyst_scorer}.py` + `catalyx/store/structural_catalyst_repo.py` + `data/sector_studies/` + `.claude/commands/{catalyx-open,catalyx-review,catalyx-scan}.md` + `tests/unit/test_flow_data.py` | **v2.26** | **Poda del universo — comprabilidad como filtro maestro (user).** Disparado por una queja real: "muchos catalizadores duplicados, muchos ETF que no tengo disponibles en Revolut, el proceso cuesta muchísimo". El diagnóstico encontró tres defectos, el tercero grave. **(1) 66 de 96 ETFs eran US no-UCITS** (`ITA`,`XLE`,`GDX`,`XBI`,`COPX`,`TAN`,`LIT`,`ROBO`…) — inaccesibles para retail EEA por PRIIPs. No es Revolut, es regulatorio. **(2) Errores de IDENTIDAD**: el `name` no era el fondo del ticker — `IQQR.DE` listado como robótica tier-1 es *iShares MSCI Eastern Europe Capped*; `LNGA.L` listado como LNG $280M es *WisdomTree Natural Gas 2x Daily Leveraged* ($10M, decaimiento diario); `DFEN.DE`/`EUDF.L`/`NATO.PA`/`IQQH.DE` todos mal atribuidos; `NUKE.L`,`WTRD.L`,`AIPO.DE`,`XGLD.DE`,`XSLV.DE`,`LUXE.PA` muertos o inexistentes. Y **3 de los 5 ETFs realmente en cartera** (`4COP.DE`,`USPY.L`,`IUHE.AS`) **no estaban en el fichero**: el universo describía un mercado que no se opera. **(3) El momentum se medía sobre ETFs US no comprables** — `SECTOR_TICKERS` ponía `COPX` de chain[0] para copper_miners mientras la posición real es `4COP.DE` (otra divisa): se rankeaba el heatmap con un retorno no obtenible, y `flow_data.SECTOR_TICKERS` exponía esos mismos tickers US como "primary tradeable ticker". **Reconstrucción:** `etf_universe.yaml` v2.0 = 26 sectores / 51 entradas, **todas verificadas contra yfinance** (longName/currency/exchange/AUM), nuevos campos `broker_access` (verified|assumed) e `instrument` (etf|etc), `ter: null` a propósito (los TER de la v1.1 pertenecían a fondos que resultaron ser otros). Rescates UCITS para sectores con catalizador vivo: `JEDI.DE` (espacio), `NUKL.DE`+`URNU.DE`/`URNM.L` (nuclear/uranio), `BTEC.L`+`HEAL.L` (biotech), `WCLD.L` (cloud), `SPAG.L` (agro), `DAPP.L` (cripto), `RBOT.L` (robótica, corrige el error de IQQR.DE), `XAIX.DE` (IA, $8.6B), `SPGP.L`/`GDX.L` (mineras de oro, vs los $679M de AUCO.L), `IH2O.L` (agua), `GLUX.SW`/`LUXU.L` (lujo). `sector_taxonomy.yaml` v2.0: **investable 53→26**; los 27 retirados quedan watch-only con `retired_2026_08_27` + `retired_reason` (nada se borra, Schema Change Protocol) y sus 27 estudios se archivan en `data/sector_studies/_archive/`. Catalizadores **18→12 activos**, fusionados por *driver compartido* (no por vehículo): `copper_datacenter_demand`→`ai_capex_supercycle`; `solar_lcoe`+`battery_storage`→`energy_transition_grid`; `crispr`+`biosecure`→`ai_drug_discovery`; `japan_carry_unwind`→`role: macro_context` (no hay ETF que exprese un unwind del carry — es régimen, no posición); `stablecoin_payment_rails` re-apuntado a crypto_infrastructure al caer fintech_payments. Los absorbidos conservan `status: merged`+`merged_into`+`merge_rationale` y **sus indicadores NO se copian** (su `value_history` vive en el lake bajo el id original; moverla falsearía el percentil de `intensity_engine`) — quedan listados en `absorbed_note` para decidirlos en el próximo `/catalyx-update`. `compute_all()` y `structural_catalyst_repo` ahora saltan merged/macro_context. **Bug preexistente arreglado de paso:** `catalyst_scorer --all` moría con `KeyError: 'strength_original'` al imprimir un evento contado vía su structural enlazado (afectaba a 8 sectores, entre ellos `pharma_large_cap` y `eu_defense_prime_contractors`) — tumbaba el run entero antes de emitir el JSON. Nuevo gate de vehículo obligatorio en `/catalyx-open` (ticker debe estar en el universo + verificación yfinance antes de escribir el Movement). El test de amplitud de flow_data (`>= 45 sectores`, que premiaba justo el defecto eliminado) se sustituye por dos invariantes de alineación: cobertura == sectores investables, y chain[0] ∈ etf_universe. **Coste por ciclo:** sectores puntuados 53→26, estudios 53→26, catalizadores a refrescar 18→12, indicadores 66→44. 214 tests verdes. |
+
+## v2.25 — 2026-08-04 — Exit watcher: FX-correct EUR drawdown floor + catalyst-freshness gate
+
+> Rotated verbatim from the CLAUDE.md `Recent Changes` table. Doctrine detail lives in
+> `docs/DESIGN_sell_signals.md` §Family 1b.
+
+| Date | File | Version | Change |
+|---|---|---|---|
+| 2026-08-04 | `catalyx/scorer/exit_watcher.py` + `catalyx/config/{scoring_weights.yaml,weights.py}` + `tests/unit/test_exit_watcher.py` + `docs/DESIGN_sell_signals.md` | v2.25 | **Exit watcher: FX-correct EUR drawdown floor + catalyst-freshness gate (user).** Triggered by a real miss — a EUR grid position sat at −21.7% flagged only `watch`, and a GBP semis position *looked* like −24% but was really −11%. Three defects fixed, all in `exit_watcher`. **(1) FX bug:** `_tax_view` marked `native_price × qty` against an EUR cost basis, so every non-EUR vehicle's P&L/drawdown was garbage (SEMI.L showed −23.8%, real EUR −11.0%; USPY.L +20.2%, real +4.4% — and its CGT estimate was inflated too). `assess` now FX-converts the vehicle columns to EUR via `nav_engine._eur_prices` before marking (stops still evaluate in NATIVE currency — their thresholds are native). **(2) Stops never fired:** the only price stops were "−20% for 10 CONSECUTIVE days" (`review_and_reduce`, and the run reset on any bounce — grid oscillated at −22% for weeks at 6/10). Added a **two-tier floor on the EUR drawdown vs real cost** (`evaluate_drawdown`): `reduce` at `drawdown_reduce_pct` −20, `exit` at `drawdown_exit_pct` −30, no consecutive-day gate. **(3) Stale verdict:** `regime_state`/assumptions are Claude-set and were 2 months old (`intensity.last_updated` looked fresh after a trend-only recompute). Added **catalyst freshness as a first-class input** (`catalyst_freshness`): reads each driving catalyst's `status_last_reviewed` (NOT `intensity.last_updated`), stalest driver governs, `>catalyst_staleness_max_days` 45 → `very_stale`. **Doctrine — freshness dominates, a drawdown is a trigger to RE-VERIFY not an auto-sell** (`drawdown_overlay_action`): only a FRESH+weakening verdict auto-acts (reduce/exit); FRESH+intact only `warn`s (a fear selloff on a live thesis → hold/add is Claude's call); a STALE verdict + drawdown forces a re-verify (protective reduce on the exit tier). Folds into `suggest_action` via `drawdown_action`/`reverify_required` — only ever RAISES the recommendation, stays recommend-only. Live run confirmed the fix: whole book's catalyst verdicts 60-64d stale → all flagged RE-VERIFY; WebSearch showed AI-capex ($700-900B 2026, +36% YoY) and grid (transformer lead times 48-60mo) both intact/accelerating → the selloffs were fear/rotation, hold/add not sells. New `exit_signals` config: `drawdown_reduce_pct`/`drawdown_exit_pct`/`catalyst_staleness_{warn,max}_days`. 213 tests green (+9). Adaptive review cadence (30d floor / ±10%-move or VIX pull-forward / 45d ceiling) documented in `DESIGN_sell_signals.md §Family 1b`; optional CronCreate automation pending user confirmation. |
+
+## v2.24 — 2026-07-28 — Token-cost reduction pass
+
+> Rotated verbatim from the CLAUDE.md `Recent Changes` table.
+
+| Date | File | Version | Change |
+|---|---|---|---|
+| 2026-07-28 | `CLAUDE.md` + `CHANGELOG.md` + `.claude/commands/{catalyx-review,catalyx-scan,catalyx-heatmap}.md` + `.claude/{settings.json,hooks/guard.py}` + `scripts/{post_run,score_run}.sh` | v2.24 | **Token-cost reduction pass (user).** Three fronts. **(1) Context load:** CLAUDE.md 100KB→43KB (−57%, ~14k tokens saved EVERY session) — Recent Changes trimmed 26→5 rows (21 moved verbatim to the CHANGELOG archive, zero loss), the Repo Structure roadmap-tree collapsed to real files only, "What Designed/Missing" cut to open TODOs only, and the module table's inline design essays compressed to one line/module (every CLI kept exact). **(2) Execution cost:** `/catalyx-review` Step 3 default flipped from "study ALL ~46 sectors every cycle" (2M+ tokens) to **movement-driven + decision-relevant** refresh (open positions + scan-flagged drivers + stale entry-candidates + never-studied); a sector without a fresh study still ranks on its momentum baseline, so nothing is missed. Full-universe sweep is now opt-in (`full-studies`). New **EXECUTION MODEL** section: bulk-WebSearch / many-file phases (scan, studies, heatmap+portfolio, opportunities, position reviews, watch triggers) run in **subagents that return only digests**, so the main conversation stays a thin orchestrator holding compact summaries; only the two AskUserQuestion steps (9 open-recs, 12 gap review) stay in main (subagents can't ask the user). `/catalyx-scan`: C2b refresh no longer sweeps all ~30 catalysts (only findings-touched; the rest collapse to one "no change" line), analyst-revision queries 5→2 scoped to held sectors. **(3) Hooks + consolidation:** the `.claude/settings.json` hooks were **dead** (PowerShell + `$env:TOOL_OUTPUT`, neither exists on macOS/Linux) → ported to a cross-platform `.claude/hooks/guard.py` (reads the hook JSON on stdin) driving the schema/taxonomy/structural edit reminders + a new post-`snapshot_repo record` reminder. Two new shared scripts collapse narrated Bash chains into one call each: **`scripts/post_run.sh`** (Step 5b: portfolio build-all → per-strategy nav model/live → real nav → rotation; verbose → `data/reports/post_run_<date>.log`, compact NAV digest → stdout) and **`scripts/score_run.sh`** (record run + register-report → the 4 opportunity/regime scorers — the chain `catalyx-heatmap` steps 11-12 and `/catalyx-review` Step 5c BOTH narrated identically; now deduped, record/register → log, scorer JSON → stdout). `catalyx-open` left as-is (short, interactive, decision-heavy — not a delegation target). No schema/pipeline-contract change. |
+
 ## v2.21 — 2026-06-08 — Portfolio-anchored catalyst exposure over time
 
 > Rotated out of the CLAUDE.md Recent Changes table (2026-08-04) when it reached 6 entries. Verbatim row:
@@ -390,3 +742,5 @@ Introduced in this session with scoring stability rules (v1.2 additions), confir
 | 2026-06-05 | `catalyx/execution/portfolio.py` + `nav_engine.py` + `config/portfolios/*` (4 strategies) + `site/*` (redesign) + `catalyx-monthly-review.md` (Step 5b) | v2.5 | **Portfolio strategies + market comparison + dashboard redesign.** Portfolios are now 4 distinct **strategies** (momentum/conviction/equal/low_crowding) — replaces the 3 risk profiles that produced near-identical weights; each holding records `entry_price`. `nav_engine` gained `--backtest-days` (trailing backtest of current holdings vs **SPY**) → all 4 beat the market over 180d (momentum +41.9% vs SPY +11.4%). Fixed `holdings_nav` so newly-listed ETFs (no window history) are held as cash instead of poisoning the whole series via row-wise dropna. **Dashboard v3:** light/clean theme (was dark), cards + progress bars + sparklines (catalysts show indicator score-bars + history sparklines; portfolios show NAV-vs-SPY sparkline + "batimos mercado"), studies as structured docs (no raw JSON), event-catalyst summary fixed (was reading the wrong field → now `description`). Consolidated the duplicate dev run. Monthly-review Step 5b builds portfolios + NAV. 82 tests green. |
 | 2026-06-05 | `site/index.html` + `site/app.js` (new) + `scripts/build_site.py` (new) + `.github/workflows/pages.yml` (new) | v2.4 | **Fase F — DuckDB-WASM dashboard, LIVE on GitHub Pages.** Static site reads the committed parquet lake in-browser (no backend): ranking, sector history, model portfolios, rank moves, lineage, SQL console. `build_site.py` bakes parquet + manifest into `dist/`; Actions deploys to **https://abetatos.github.io/Catalyx/** on push. Replaced the prior Evidence.dev `dashboard/` (removed `deploy-dashboard.yml` — both were deploying to the same Pages URL). Fixes during bring-up: tz-safe `substr(snapshot_at::VARCHAR,1,10)` (lake mixes tz-aware/naive timestamps → `CAST … AS DATE` fails in DuckDB), `portfolio_nav` guard (graceful when no NAV yet), and inlined SQL literals instead of DuckDB-WASM prepared statements (bind path was breaking the parameterised tabs). Committed scoped to self-contained files; tree WIP untouched. |
 | 2026-06-05 | `catalyx/store/lake_query.py` (new) + `snapshot_repo.py` (reads → lake) | v2.3 | **Fase E — unified DuckDB read-path.** `lake_query`: read-only analytical queries over the lake (the page's data layer; DuckDB-WASM will run the same SQL in-browser) — `sector_history`, `latest_ranking`, `rank_moves`, `portfolio_compare`, `portfolio_holdings`, `lineage_for_trade` (trade → run → reports + snapshot), ad-hoc `sql`. Defensive: empty table → empty result. `snapshot_repo.history/list_runs/rank_events` repointed from SQLite to the lake (parquet-first reads complete; SQLite now only a cache + external-tool surface). Verified on the real lake (ranking, sector history, portfolio aggregates). 5 new tests, 82 total green. |
+
+| 2026-06-08 | `catalyx/config/track_record.yaml` (`total_capital_eur`) + `catalyx/config/weights.py` (`total_capital_eur()`) + `scripts/build_site.py` + `site/{app.js,index.html}` | v2.22 | **Positions page: committed-capital + cash model, and reframed the book's framing (user).** Two asks. **(1) Capital plan.** The real book is now funded with an explicit **€10,000 committed up front, deployed progressively as catalysts fire** — not a vague "invested" number. New `total_capital_eur` in `track_record.yaml` (read via `weights.total_capital_eur()`); `build_site` bakes `total_capital_eur` + **`cash_eur`** (= committed − cost basis of open positions) + `deployed_pct` into `positions`. The Positions summary strip gained a **committed-capital** card (with `% deployed`) and a **cash** card (dry powder · awaiting catalysts) — cash is now a first-class variable on the page. Today: €10k committed / €1.5k invested / **€8.5k cash** / 15% deployed. **(2) Framing.** Replaced the "⚠ entry by design — entry was *deliberately bad*, opened into the selloff, book *starts underwater on purpose*, a test of luck" box with a **"Capital plan — €10,000 committed · long-horizon · catalyst-driven"** card: capital deployed progressively, positions sized to conviction and held while the thesis holds — a long-term thesis-driven book, not short-term trading. (Per the user: the old copy read like gambling; this is long-term investing and the dashboard is meant to show rigor.) 180 tests green. |

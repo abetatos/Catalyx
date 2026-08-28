@@ -278,3 +278,24 @@ def test_assess_fx_marks_non_eur_vehicle_in_eur(tmp_path):
     assert pos["catalyst_freshness"]["status"] == "unknown"
     assert pos["drawdown"]["reverify_required"] is True
     assert pos["suggested_action"] == "reduce"
+
+
+def test_freshness_reads_the_survivor_not_the_merged_catalyst(monkeypatch):
+    """A merged catalyst's `status_last_reviewed` was stamped BY THE MERGE — reading it gives a
+    fresh-looking date for a thesis nobody re-verified, on a file compute_all() no longer scores.
+    """
+    from catalyx.scorer import exit_watcher as ew
+    from catalyx.store import structural_catalyst_repo as scr
+
+    monkeypatch.setattr(scr, "merged_map", lambda: {"struct_old": "struct_new"})
+    catalysts = {
+        "struct_old": {"id": "struct_old", "status": "merged",
+                       "status_last_reviewed": "2026-08-27"},          # stamped by the merge
+        "struct_new": {"id": "struct_new", "status": "active",
+                       "status_last_reviewed": "2026-05-01"},          # the real, stale verdict
+    }
+    out = ew.catalyst_freshness(["struct_old"], date(2026, 8, 28), 30, 45,
+                                get_fn=catalysts.get)
+    assert out["status"] == "very_stale"                 # not the merge's fresh-looking stamp
+    assert out["evaluated_ids"] == ["struct_new"]
+    assert out["merged_from"] == ["struct_old"]
