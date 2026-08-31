@@ -111,3 +111,57 @@ def test_merged_and_deactivated_catalysts_are_not_audited(tmp_path, monkeypatch)
     # …but the dead state is still inspectable on demand.
     assert {r["catalyst_id"] for r in fr.audit_indicators(include_inactive=True)} == \
         {"struct_live", "struct_gone"}
+
+
+# ── E1 — a spending row must be able to carry the age of its own evidence ────
+
+def _catalysts(tmp_path, monkeypatch, spec: dict):
+    """{catalyst_id: [(indicator_id, cadence, last_date), …]} → a temp structural dir."""
+    import yaml
+
+    from catalyx.scorer import freshness as fr
+
+    d = tmp_path / "structural"
+    d.mkdir()
+    for cid, inds in spec.items():
+        (d / f"{cid}.yaml").write_text(yaml.safe_dump({
+            "id": cid, "status": "active",
+            "indicators": [{"id": i, "check_frequency": c, "last_date": l} for i, c, l in inds],
+        }), encoding="utf-8")
+    monkeypatch.setattr(fr, "_STRUCTURAL_DIR", d)
+    return fr
+
+
+def test_blind_is_a_harder_state_than_stale_and_needs_twice_the_cadence(tmp_path, monkeypatch):
+    """One missed quarter is a late reading. Two is a catalyst whose intensity is describing a
+    world nobody has looked at — and `struct_china_luxury_recovery` was funding a €1,020 BUY at
+    240 days over a quarterly cadence."""
+    from datetime import date
+
+    fr = _catalysts(tmp_path, monkeypatch, {
+        "c_fresh": [("i1", "monthly", "2026-08-20")],
+        "c_stale": [("i1", "quarterly", "2026-05-01")],    # 122d, over 95 but under 2×95
+        "c_blind": [("i1", "quarterly", "2025-09-30")],    # 335d, far past 2×95
+    })
+    got = fr.by_catalyst(as_of=date(2026, 8, 31))
+    assert got["c_fresh"]["status"] == "fresh"
+    assert got["c_stale"]["status"] == "stale"
+    assert got["c_blind"]["status"] == "blind"
+    # The number is days OVER the cadence, not days since the reading — the same convention §8
+    # uses, so "240d" means "240 days later than it was due", not "240 days old".
+    assert got["c_blind"]["label"] == "blind (240d)"          # 335d since − 95d quarterly
+    assert got["c_stale"]["label"] == "stale (27d)"           # 122d since − 95d quarterly
+
+
+def test_a_never_observed_indicator_outranks_any_finite_lateness(tmp_path, monkeypatch):
+    """A missing `last_date` is the most blind state there is. Sorting it as zero days over would
+    let the catalyst nobody ever measured report `fresh`."""
+    from datetime import date
+
+    fr = _catalysts(tmp_path, monkeypatch, {
+        "c": [("late", "monthly", "2026-07-01"), ("never", "monthly", None)],
+    })
+    got = fr.by_catalyst(as_of=date(2026, 8, 31))["c"]
+    assert got["status"] == "blind" and got["worst_indicator_id"] == "never"
+    assert "never observed" in got["label"]
+    assert got["n_stale"] == 2 and got["n_indicators"] == 2

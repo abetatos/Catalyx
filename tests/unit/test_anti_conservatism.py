@@ -160,6 +160,58 @@ def test_the_generated_report_itself_passes_its_own_lint():
     assert rr.lint_prose(rr.build("2026-08-28")) == []
 
 
+# ── F2 — the report cannot claim to be finished with its judgement half empty ─
+
+def test_an_unanswered_marker_is_a_finding_and_an_answered_one_is_not():
+    rr = _report_module()
+    empty = "## 4. Open positions\n\n<!-- CLAUDE: one line of EVIDENCE per position. -->\n\n## 4b. Risk\n"
+    assert [f["section"] for f in rr.lint_completeness(empty)] == ["4. Open positions"]
+
+    # The marker STAYS in the file — it is the anchor for regenerating without losing the prose,
+    # so a section is answered by writing under it, never by deleting it.
+    answered = empty.replace("-->\n", "-->\ncopper: LME stocks checked 2026-08-30, still falling.\n")
+    assert rr.lint_completeness(answered) == []
+
+
+def test_a_freshly_generated_report_is_incomplete_by_construction():
+    """The two lints are orthogonal and each must be able to fail alone: a report can be fully
+    written and hedged, or unhedged only because nothing was written. v4.9's review passed
+    `--check` clean with all five judgement sections blank."""
+    rr = _report_module()
+    text = rr.build("2026-08-28")
+    assert rr.lint_prose(text) == [], "a blank report has no hedges — that is the whole problem"
+    sections = [f["section"] for f in rr.lint_completeness(text)]
+    # Every marker the generator emitted is unanswered — counted from the text, not hardcoded, so
+    # the assertion is about the lint and not about how many conditions the book happens to trip.
+    # A marker opens its own line; the header MENTIONS the syntax mid-sentence and is not one.
+    emitted = sum(1 for ln in text.splitlines() if ln.lstrip().startswith("<!-- CLAUDE:"))
+    assert len(sections) == emitted, sections
+    assert any("Executive summary" in s for s in sections)
+    assert any("Open positions" in s for s in sections)
+
+
+def test_a_conditional_marker_tracks_its_condition_in_both_directions():
+    """Overrides logged THIS run and cap breaches are conditional. Demanding prose where the
+    honest answer is "nothing breached" is how a lint teaches people to write filler — but the
+    marker must appear the moment there IS something to say, so the expectation is read off the
+    book rather than frozen into the test."""
+    from catalyx.store import movement_repo
+
+    rr = _report_module()
+    text = rr.build("2026-08-28")
+
+    # No deliberate override is pending on this book, so that marker stays out.
+    assert "for each override logged THIS run" not in text
+    for f in rr.lint_completeness(text):
+        assert "Overrides" not in f["section"]
+
+    proposed = [{"sector_id": r.get("sector_id"), "trade_eur": r.get("trade_eur")}
+                for r in rr._rebalance_rows() if r.get("rule_action") in ("BUY", "ADD")]
+    breached = any(c["over"] for c in movement_repo.cap_check(proposed))
+    assert ("cap and by how much" in text) is breached
+    assert ("breaches the cap" in text) is breached
+
+
 # ── B4 — the rule scorecard: the table audits itself too ─────────────────────
 #
 # `calibration` measures the ranking. `score_overrides` measures the deviations. Nothing measured

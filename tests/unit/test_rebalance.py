@@ -536,7 +536,7 @@ def test_the_evidence_line_refuses_to_dress_up_a_thin_sample(cfg):
 # ── A5: partials stop arriving as a surprise ─────────────────────────────────
 
 def test_both_rungs_are_reported_because_their_units_are_not_comparable(cfg):
-    rows = [{"sector_id": "held", "actual_eur": 1000.0, "gap_pp": -1.0, "rank": 3,
+    rows = [{"sector_id": "held", "actual_eur": 1000.0, "gap_pp": -1.0, "score_rank": 3,
              "unrealized_pct": 13.4, "rule_action": "HOLD"}]
     p = rb.partial_rungs(rows, cfg)[0]
     assert p["overweight"]["need_pp"] == pytest.approx(3.0)      # 4pp rung, 1pp above target
@@ -548,17 +548,22 @@ def test_both_rungs_are_reported_because_their_units_are_not_comparable(cfg):
 
 
 def test_a_missing_rank_never_silently_satisfies_the_ladder(cfg):
-    rows = [{"sector_id": "held", "actual_eur": 1000.0, "gap_pp": 0.0, "rank": None,
+    rows = [{"sector_id": "held", "actual_eur": 1000.0, "gap_pp": 0.0, "score_rank": None,
              "unrealized_pct": 80.0, "rule_action": "HOLD"}]
     p = rb.partial_rungs(rows, cfg)[0]
     assert p["ladder"]["gain_met"] is True
     assert p["ladder"]["rank_ok"] is False, "an absent rank must not be read as 'rank ≥ 6'"
+    # A NaN off a parquet round-trip is the same gap — it must neither satisfy the leg nor
+    # render as a number ("rank nan" shipped once).
+    rows[0]["score_rank"] = float("nan")
+    p = rb.partial_rungs(rows, cfg)[0]
+    assert p["rank"] is None and p["ladder"]["rank_ok"] is False
 
 
 def test_a_firing_rung_is_marked_live_and_cash_only_rows_are_skipped(cfg):
-    rows = [{"sector_id": "held", "actual_eur": 1000.0, "gap_pp": -6.0, "rank": 8,
+    rows = [{"sector_id": "held", "actual_eur": 1000.0, "gap_pp": -6.0, "score_rank": 8,
              "unrealized_pct": 30.0, "rule_action": "TRIM"},
-            {"sector_id": "not_held", "actual_eur": 0.0, "gap_pp": 5.0, "rank": 2,
+            {"sector_id": "not_held", "actual_eur": 0.0, "gap_pp": 5.0, "score_rank": 2,
              "unrealized_pct": None, "rule_action": "BUY"}]
     parts = rb.partial_rungs(rows, cfg)
     assert [p["sector_id"] for p in parts] == ["held"]
@@ -654,7 +659,30 @@ def test_a_sector_scored_every_run_is_unaffected_by_the_rescore_rule(cfg):
                score_rank=14)
     d = rb.decide_action(row, cfg)
     assert d["action"] == "SELL" and "#14" in d["reason"], \
-        "the reason must name the rank it fired on — the rk column is the MODEL rank and is blank here"
+        "the reason must name the rank it fired on"
+
+
+def test_the_rk_column_never_contradicts_the_reason_beside_it(cfg):
+    """ONE rank semantic — the universe rank — everywhere it is rendered.
+
+    The `rk` column used to show the MODEL-BOOK rank, which is absent for exactly the sectors the
+    model dropped: every row whose reason cited a number rendered `rk` blank. Papering over that
+    with a marked `~11` fallback made the column mean two different things depending on the row.
+    """
+    rows = [{"sector_id": "sold", "etf": "S.L", "rank": None, "score_rank": 11,
+             "target_pct": 0.0, "actual_pct": 10.5, "gap_eur": -1050.0, "rule_action": "SELL",
+             "trade_eur": -1050.0, "breakeven_pct": 1.12,
+             "reason": "ranked below top-10 (#11) for 4 consecutive runs"}]
+    line = rb._render_rows(rows)[0]
+    assert " 11 " in line and "~" not in line, "the column shows the number the reason names"
+    assert "None" not in line and "nan" not in line
+
+    # A sector nobody scored this run has no rank. That is a gap, and it renders as one — never
+    # as a number borrowed from somewhere else.
+    rows[0].update(score_rank=None, reason="regime broken")
+    assert "—" in rb._render_rows(rows)[0]
+    rows[0]["score_rank"] = float("nan")
+    assert "nan" not in rb._render_rows(rows)[0]
 
 
 def test_two_runs_on_the_same_day_are_one_observation(tmp_path):
@@ -672,3 +700,246 @@ def test_two_runs_on_the_same_day_are_one_observation(tmp_path):
     st = rb._rank_streaks(10, n_runs=4, lake_dir=tmp_path)["s"]
     assert st["n_runs"] == 2, "the two same-day runs must collapse to one observation"
     assert st["streak"] == 2
+
+
+# ── E1: the row carries the age of the evidence it spends on, and nothing else ─
+
+def test_a_blind_catalyst_qualifies_the_buy_it_funds_but_never_vetoes_it(cfg):
+    """The 2026-08-31 review ordered €1,020 into `luxury_goods` on the same page that listed its
+    catalyst's indicators as unobserved since 2025-09-30. Both facts were printed; neither knew
+    about the other.
+
+    The fix is a COLUMN, not a rule. `decide_action` must not read it: the freshness doctrine is
+    that stale data is a reason to re-verify, never a reason to stop acting — turning a
+    maintenance failure into a trading prohibition is the conservative bias Phase C fights.
+    """
+    ctx = _row(held=False, gap_pp=10.2, rank=8)
+    baseline = rb.decide_action(ctx, cfg)
+    for status in ("fresh", "stale", "blind", None):
+        ctx["data_age_status"] = status
+        ctx["data_age"] = None if status is None else f"{status} (240d)"
+        assert rb.decide_action(ctx, cfg) == baseline, \
+            "the data age qualifies the row; it must not change the action"
+
+
+def test_a_sector_inherits_the_stalest_driver_it_pays_for(monkeypatch):
+    """A book is only as current as the worst catalyst behind it — reporting the freshest one
+    would let a live indicator launder a dead one sharing the same position."""
+    from catalyx.execution import portfolio
+    from catalyx.scorer import freshness
+    from catalyx.store import structural_catalyst_repo as scr
+
+    monkeypatch.setattr(portfolio, "_sector_catalyst_map",
+                        lambda: {"mixed": ["c_fresh", "c_blind"], "clean": ["c_fresh"],
+                                 "orphan": [], "absorbed": ["c_old"]})
+    monkeypatch.setattr(freshness, "by_catalyst", lambda: {
+        "c_fresh": {"status": "fresh", "label": "fresh"},
+        "c_blind": {"status": "blind", "label": "blind (240d)"},
+        "c_live": {"status": "stale", "label": "stale (30d)"}})
+    # A merged catalyst's own file can never be refreshed again; the survivor holds the live
+    # indicators, so the age must be read through `merged_into`.
+    monkeypatch.setattr(scr, "merged_map", lambda: {"c_old": "c_live"})
+
+    got = rb._data_age_by_sector()
+    assert got["mixed"]["label"] == "blind (240d)"
+    assert got["clean"]["label"] == "fresh"
+    assert got["absorbed"]["label"] == "stale (30d)", "a merged id must resolve to its survivor"
+    # An uncatalyzed sector has no structural driver whose age could qualify it. A blank is the
+    # honest answer; inventing a status would be worse than the gap.
+    assert "orphan" not in got
+
+
+# ── F1: the table says what it rests on when its own evidence is not it ──────
+
+def test_the_prior_is_named_only_when_the_ranking_has_not_earned_the_table():
+    """The 2026-08-31 review demanded eight trades toward a ranking it reported as ordering
+    nothing (IC −0.050, top3−rest −5.84pp), and called not doing them a breach. Both can be
+    right — being invested in leaders is a different prior from THIS ranking working — but the
+    document never separated them, so it read as self-contradictory.
+    """
+    thin = {"verdict": "NONE", "why": "~1 independent window(s) < the 3 the gate requires"}
+    sp = rb.selection_prior(thin, 0.0)
+    assert sp and "NAMES" in sp["note"] and "λ=0.00" in sp["note"]
+    # The asymmetry is the point: size is already shrunk, selection is not — say which is which.
+    assert "SIZE" in sp["note"] and "override" in sp["note"]
+
+    adverse = rb.selection_prior({"verdict": "ADVERSE", "why": "top3 sits BELOW rest"}, 0.0)
+    assert adverse and adverse["verdict"] == "ADVERSE"
+
+    # Once the edge is measured the table rests on the measurement, and the line would be noise.
+    assert rb.selection_prior({"verdict": "MEASURED", "why": "over ~9 windows"}, 0.4) is None
+    assert rb.selection_prior(None, 0.0) is None
+
+
+def test_naming_the_prior_changes_no_action(cfg):
+    """It is a sentence, not a gate. Gating the SELECTION on an unmeasured IC would be a new
+    policy, and the policy is the user's to set — v5 §6 records that rejection."""
+    ctx = _row(held=False, gap_pp=10.2, rank=8)
+    before = rb.decide_action(ctx, cfg)
+    rb.selection_prior({"verdict": "ADVERSE", "why": "x"}, 0.0)
+    assert rb.decide_action(ctx, cfg) == before
+
+
+# ── E3: one standing decision, one DEFER ─────────────────────────────────────
+
+def test_the_same_standing_decision_is_not_re_logged_every_run():
+    """The dedup was scoped to the PRIOR run, so a rule that keeps asking and a human that keeps
+    declining wrote a fresh DEFER each time: three pipeline runs in a week produced 30 rows for
+    10 decisions, and the tally measured how often the pipeline ran."""
+    prior = [{"sector_id": "luxury_goods", "rule_action": "BUY", "trade_eur": 1020.0,
+              "run_id": "run_20260828_000000"}]
+    first = rb.unrecorded_deviations(prior, [], [], since="2026-07-28", until="2026-08-28")
+    assert [u["sector_id"] for u in first] == ["luxury_goods"]
+
+    standing = [{"sector_id": "luxury_goods", "rule_action": "BUY", "author": "unrecorded",
+                 "logged_at": "2026-08-28"}]
+    again = rb.unrecorded_deviations(prior, [], [], since="2026-08-28", until="2026-08-31",
+                                     open_defers=standing)
+    assert again == [], "the same silence must not be charged twice"
+
+
+def test_acting_settles_the_defer_so_the_next_refusal_is_a_new_decision():
+    """A movement AFTER the defer resolves it. If the rule then asks again and is declined again,
+    that is a second decision and owes its own row."""
+    prior = [{"sector_id": "luxury_goods", "rule_action": "BUY", "trade_eur": 1020.0}]
+    standing = [{"sector_id": "luxury_goods", "rule_action": "BUY", "author": "unrecorded",
+                 "logged_at": "2026-08-01"}]
+    moves = [{"sector_id": "luxury_goods", "executed_at": "2026-08-10"}]
+    out = rb.unrecorded_deviations(prior, moves, [], since="2026-08-28", until="2026-08-31",
+                                   open_defers=standing)
+    assert [u["sector_id"] for u in out] == ["luxury_goods"]
+
+    # A DIFFERENT action on the same sector is also a different decision.
+    out = rb.unrecorded_deviations([{"sector_id": "luxury_goods", "rule_action": "SELL",
+                                     "trade_eur": -500.0}], [], [],
+                                   since="2026-08-28", open_defers=standing)
+    assert [u["rule_action"] for u in out] == ["SELL"]
+
+
+# ── E2: the streak counts review cycles, not adjacent runs ───────────────────
+
+def test_a_week_of_iteration_cannot_manufacture_a_sell_streak():
+    """v4.3 collapsed two runs of one afternoon. Same defect one scale up: copper's four runs were
+    06-30, 07-05, 07-28, 08-28 — gaps of five days to a month — so `rank_out_consecutive: 2` meant
+    "ten days" or "two months" depending on how busy the quarter had been."""
+    dense = ["20260801", "20260804", "20260807", "20260810"]
+    assert rb._cycle_runs(dense, 4, 21) == ["20260810"], "four runs in ten days are one cycle"
+
+    spaced = ["20260501", "20260601", "20260701", "20260801"]
+    assert rb._cycle_runs(spaced, 4, 21) == spaced
+
+    # Walking backwards keeps the LATEST reading — the one the decision is actually about.
+    mixed = ["20260612", "20260630", "20260705", "20260728", "20260828"]
+    assert rb._cycle_runs(mixed, 4, 21) == ["20260612", "20260705", "20260728", "20260828"]
+    assert "20260630" not in rb._cycle_runs(mixed, 4, 21), "5 days after 06-30 is the same cycle"
+
+
+def test_the_sell_reason_names_the_calendar_span_not_just_a_count(cfg):
+    """"3 consecutive cycles" covered anything from ten days to two months before the floor, and
+    the reader could not tell which."""
+    row = _row(held=True, rank=None, rank_out_streak=3, rank_missing_runs=0, rank_runs=4,
+               score_rank=14, rank_streak_days=54)
+    d = rb.decide_action(row, cfg)
+    assert d["action"] == "SELL"
+    assert "3 consecutive review cycles (54d)" in d["reason"] and "#14" in d["reason"]
+
+    # No span recorded (an old partition) degrades to the count alone, never to a made-up number.
+    row["rank_streak_days"] = None
+    assert "(54d)" not in rb.decide_action(row, cfg)["reason"]
+
+
+def test_the_span_helper_measures_calendar_days_between_first_and_last():
+    assert rb._span_days(["20260705", "20260728", "20260828"]) == 54
+    assert rb._span_days(["20260828"]) == 0
+
+
+# ── F3: the cash row is a ledger, not a reprimand ────────────────────────────
+
+def test_the_cash_row_flips_its_label_when_holding_cash_was_right():
+    """`forgone` was hardcoded, so a quarter in which sitting out was the correct call printed
+    identically to one in which it was expensive. A ledger that can only reprove is not one."""
+    up = rb.cash_drag(10_000.0, 2.8, "2026-06-16", 76, model_return_pct=3.6)
+    assert up["verdict"] == "cost" and up["headline"] == "CASH DRAG"
+    assert "forgone" in up["note"] and "avoided" not in up["note"]
+
+    down = rb.cash_drag(10_000.0, -4.0, "2026-06-16", 76, model_return_pct=-5.0)
+    assert down["verdict"] == "saved" and down["headline"] == "CASH THAT SAVED YOU"
+    assert "avoided" in down["note"] and "forgone" not in down["note"]
+    # The € is an absolute amount beside a signed word — never a "-€500 forgone".
+    assert "€500 avoided" in down["note"] and "€400 avoided" in down["note"]
+
+
+def test_the_headline_follows_the_policy_on_trial_not_the_benchmark():
+    """The question the cash row answers is not "should I have been invested?" but "should I have
+    executed THIS table?" — so the model book leads when both are available."""
+    split = rb.cash_drag(10_000.0, 2.0, "2026-06-16", 76, model_return_pct=-1.0)
+    assert split["verdict"] == "saved", "the model book decides the headline"
+    assert "€200 forgone" in split["note"], "the benchmark leg keeps its own honest sign"
+    assert "€100 avoided" in split["note"]
+
+    # With no model curve the benchmark carries it alone — degraded, never invented.
+    only_bench = rb.cash_drag(10_000.0, 2.0, "2026-06-16", 76)
+    assert only_bench["verdict"] == "cost" and only_bench["model_forgone_eur"] is None
+    assert "model book" not in only_bench["note"]
+
+
+# ── G1: the spread is a property of the ticker, not a constant ───────────────
+
+def test_a_per_vehicle_spread_wins_over_the_global_and_absence_inherits_it(cfg):
+    """`b/e 0.20%` printed identically on 7 of 8 action rows: a column that cannot tell a liquid
+    IUHE.AS from a thin JEDI.DE is not telling you anything. The comment beside `spread_bps` has
+    promised the per-ETF override since v3; nothing passed it."""
+    flat = rb.cost_drag(-1000.0, 0.0, cfg)
+    wide = rb.cost_drag(-1000.0, 0.0, cfg, spread_bps=60.0)
+    assert wide["spread_eur"] == pytest.approx(6.0)
+    assert wide["spread_eur"] > flat["spread_eur"]
+    assert rb.breakeven_pct(wide["cost_drag_eur"], -1000.0) > \
+        rb.breakeven_pct(flat["cost_drag_eur"], -1000.0)
+
+    # None is not zero — an unmeasured vehicle inherits the global, it does not trade for free.
+    assert rb.cost_drag(-1000.0, 0.0, cfg, spread_bps=None) == flat
+
+
+def test_the_universe_accessor_reads_only_observed_values():
+    """The field is deliberately empty today: a yfinance snapshot returned ask < bid on SEMI.L
+    and off-hours quotes elsewhere, and an invented number here is worse than the honest default
+    — the b/e would stop being constant and look informative while being noise."""
+    from catalyx.config import weights as w
+
+    got = w.spread_bps_by_ticker()
+    assert isinstance(got, dict)
+    assert all(isinstance(v, float) for v in got.values())
+    # Whatever is populated, the sector→vehicle tickers must be the keys, never sector ids.
+    assert not any("_" in k for k in got), "keys are tickers, not sector ids"
+
+
+def test_the_model_counterfactual_never_mixes_nav_modes(tmp_path):
+    """`portfolio_nav` holds backtest / live / forward rows under the SAME portfolio_id, at
+    overlapping dates and on DIFFERENT NAV bases. Reading the window without pinning the mode
+    took the first row from one series and the last from another: this book reported −16.88%
+    where `live` returned +0.20%, a €1,179 "saving" that never happened. Same defect v3.5 fixed
+    in `portfolio_compare` — the table cannot express the constraint, so every read repeats it.
+    """
+    import pandas as pd
+
+    from catalyx.store import lake
+
+    rows = [{"portfolio_id": "catalyx", "mode": "backtest", "date": "2026-06-16", "nav": 124.6},
+            {"portfolio_id": "catalyx", "mode": "backtest", "date": "2026-07-30", "nav": 124.0},
+            {"portfolio_id": "catalyx", "mode": "live", "date": "2026-06-16", "nav": 103.39},
+            {"portfolio_id": "catalyx", "mode": "live", "date": "2026-08-31", "nav": 103.60}]
+    lake.append_partition("portfolio_nav", pd.DataFrame(rows), {"portfolio_id": "catalyx"},
+                          overwrite=True, lake_dir=tmp_path)
+    got = rb._model_return_pct("2026-06-16", "2026-08-31", "catalyx", lake_dir=tmp_path)
+    assert got == pytest.approx(0.2, abs=0.01), "live is the record; mixing bases invents a return"
+
+    # With only a backtest series it reports the backtest honestly rather than nothing…
+    only_bt = [r for r in rows if r["mode"] == "backtest"]
+    lake.append_partition("portfolio_nav", pd.DataFrame(only_bt), {"portfolio_id": "catalyx"},
+                          overwrite=True, lake_dir=tmp_path)
+    assert rb._model_return_pct("2026-06-16", "2026-08-31", "catalyx",
+                                lake_dir=tmp_path) == pytest.approx(-0.48, abs=0.01)
+    # …and one lone point is not a return.
+    lake.append_partition("portfolio_nav", pd.DataFrame(only_bt[:1]), {"portfolio_id": "catalyx"},
+                          overwrite=True, lake_dir=tmp_path)
+    assert rb._model_return_pct("2026-06-16", "2026-08-31", "catalyx", lake_dir=tmp_path) is None

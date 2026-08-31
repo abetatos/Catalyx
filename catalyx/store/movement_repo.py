@@ -41,6 +41,7 @@ _SELL_ACTIONS = ("trim", "close")
 
 _MOVEMENT_TABLE = "movement"
 _PERF_TABLE = "catalyst_performance"
+_UNCATALYZED_ID = "uncatalyzed"
 
 
 # ── read ─────────────────────────────────────────────────────────────────────
@@ -118,35 +119,233 @@ def positions(movements_dir: Path | None = None) -> dict:
 
 # ── derived: catalyst ledger ─────────────────────────────────────────────────
 
-def catalyst_ledger(movements_dir: Path | None = None) -> list[dict]:
-    """Per-catalyst exposure + realized P&L, splitting each movement by attribution weight so
-    no catalyst is double-counted. Unrealized P&L needs a price mark — left to the dashboard /
-    nav layer; here we report invested exposure and realized P&L (the closed part of the record)."""
+def effective_attribution(m: dict) -> tuple[list[dict], str | None, set[str]]:
+    """The attribution to use for PRESENT-TENSE questions, and the date it was decided.
+
+    `attribution[]` answers "why was this opened" — a dated judgement, frozen, the input the
+    validation loop scores. `reattribution[]` (schema 1.3) is the append-only log of what the
+    position is held for NOW. The last entry wins; the original is never touched. Returns
+    (attribution, as_of, deliberately_not_attributed) — the third is what a human reviewed and
+    decided NOT to claim, so a drift report can stop re-raising a question already answered.
+    """
+    entries = m.get("reattribution") or []
+    if not entries:
+        return list(m.get("attribution", [])), None, set()
+    last = max(entries, key=lambda e: str(e.get("as_of") or ""))
+    return (list(last.get("attribution") or m.get("attribution", [])),
+            str(last.get("as_of") or "") or None,
+            {str(c) for c in (last.get("not_attributed") or [])})
+
+
+def catalyst_ledger(movements_dir: Path | None = None,
+                    resolve_merged: bool = True) -> list[dict]:
+    """Per-catalyst credit and per-catalyst RISK — two different numbers, and the cap needs the
+    second one.
+
+    `invested_eur` splits each movement by attribution weight: the P&L-attribution number, so no
+    catalyst is credited twice for one euro of return. `exposure_eur` is the FULL position behind
+    every driver it names: the risk number, and the one `correlated_catalyst_cap` must read.
+
+    Using the weight-split number as a risk cap gets the sign of the incentive backwards. The grid
+    position (€500, split 0.7 grid / 0.3 AI capex) contributed €150 to the AI-capex row — but if
+    AI capex breaks, the whole €500 is at risk. Nobody owns 30% of a utilities ETF. Worse: naming
+    a SECOND driver on a position LOWERED its weight on the first, so declaring more exposure
+    bought you more headroom. On this book that understated the largest correlated bucket by €350
+    (€1,650 reported vs €2,000 real, against a €2,000 cap).
+
+    Unrealized P&L needs a price mark — left to the dashboard / nav layer; here we report
+    exposure and realized P&L (the closed part of the record).
+
+    A MERGE MUST COLLAPSE THE BUCKETS. `attribution[].catalyst_id` is frozen at the moment the
+    movement was written; a catalyst merged afterwards keeps its absorbed id in that record — as
+    it must, since the lake indexes its indicator history by that id. But the LEDGER is a risk
+    control, and reporting an absorbed id as its own row is precisely the double count
+    `correlated_catalyst_cap` exists to prevent.
+
+    On this book it was not hypothetical. `struct_copper_datacenter_demand` was merged into
+    `struct_ai_capex_supercycle`, and §6 reported them as two rows — €1,000 and €650 — of one
+    economic driver. Combined they are **€1,650 (16.5%) against a 20% cap**, so the ledger
+    published €1,350 of headroom where €350 existed, on the single largest exposure in the book.
+    CLAUDE.md already required following `merged_into` before reading a catalyst; the ledger was
+    the one reader that did not.
+
+    `absorbed_ids` names which retired ids fed each row, so the collapse is auditable and a
+    reader can still tie a number back to the movement file that produced it.
+    """
+    merged: dict[str, str] = {}
+    if resolve_merged:
+        try:
+            from catalyx.store import structural_catalyst_repo as scr
+            merged = scr.merged_map()
+        except Exception:                                      # pragma: no cover - defensive
+            merged = {}
+
     led: dict[str, dict] = {}
     for m in load_all(movements_dir):
         eur = float(m.get("amount_eur") or 0.0)
         is_buy = m["action"] in _BUY_ACTIONS
-        for a in m.get("attribution", []):
-            cid = a["catalyst_id"]
+        attribution, reattributed_at, _ = effective_attribution(m)
+        for a in attribution:
+            raw = a["catalyst_id"]
+            cid = merged.get(raw, raw)
             w = float(a.get("weight") or 0.0)
-            e = led.setdefault(cid, {"catalyst_id": cid, "invested_eur": 0.0, "realized_eur": 0.0,
-                                     "n_movements": 0, "sectors": set()})
+            e = led.setdefault(cid, {"catalyst_id": cid, "invested_eur": 0.0, "exposure_eur": 0.0,
+                                     "realized_eur": 0.0, "n_movements": 0, "sectors": set(),
+                                     "absorbed": set(), "reattributed": set()})
             e["n_movements"] += 1
             e["sectors"].add(m.get("sector_id"))
+            if raw != cid:
+                e["absorbed"].add(raw)
+            if reattributed_at:
+                e["reattributed"].add(m.get("sector_id"))
             if is_buy:
                 e["invested_eur"] += w * eur
+                e["exposure_eur"] += eur
             # realized P&L attribution on closes/trims is computed at close time (Fase 2
             # return_decomposer); the opening record alone carries no realized P&L.
     out = []
     for e in led.values():
         out.append({
             "catalyst_id": e["catalyst_id"],
+            "exposure_eur": round(e["exposure_eur"], 2),
             "invested_eur": round(e["invested_eur"], 2),
             "realized_eur": round(e["realized_eur"], 2),
             "n_movements": e["n_movements"],
             "sectors": sorted(s for s in e["sectors"] if s),
+            "absorbed_ids": sorted(e["absorbed"]),
+            "reattributed_sectors": sorted(s for s in e["reattributed"] if s),
         })
-    return sorted(out, key=lambda x: -x["invested_eur"])
+    return sorted(out, key=lambda x: -x["exposure_eur"])
+
+
+def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[dict]:
+    """The book's exposure AFTER the proposed table, against `correlated_catalyst_cap`.
+
+    The cap has always been a check on what a NEW position may take — "headroom is what a new
+    position in that catalyst may still take" — and the rebalance table is where new positions are
+    proposed. But the two lived in different sections and nobody joined them, so a table could
+    print €1,560 of buys into a bucket with €0 of headroom and read as compliant. On this book it
+    did: executing as printed puts `struct_ai_capex_supercycle` at 35.6% against a 20% cap.
+
+    Which drivers a proposed trade lands on depends on whether the position exists yet:
+      · BUY  — not held, so there is no attribution to read. Today's structural drivers from the
+        sector study are the honest estimate of what the money would be exposed to.
+      · ADD  — held, so the position's effective attribution governs, INCLUDING a driver the
+        review deliberately declined. Re-deriving it from the study would quietly overrule a
+        judgement someone already wrote down with a reason.
+
+    Returns one row per affected catalyst. `over` is the flag; enforcement (`warn` vs `block`)
+    stays with the caller, exactly as for the standing cap.
+    """
+    try:
+        from catalyx.config import weights
+        from catalyx.execution import portfolio
+        from catalyx.store import structural_catalyst_repo as scr
+        smap, merged = portfolio._sector_catalyst_map(), scr.merged_map()
+        structural = {str(d.get("id")) for d in scr._load_all() if d.get("id")}
+        cap_pct = float(weights.correlated_catalyst_cap()["max_combined_pct"])
+        total = float(weights.total_capital_eur() or 0.0)
+    except Exception:                                          # pragma: no cover - defensive
+        return []
+    if not total:
+        return []
+
+    held: dict[str, dict] = {}
+    for m in load_all(movements_dir):
+        if m["action"] in _BUY_ACTIONS:
+            held.setdefault(str(m.get("sector_id") or ""), m)
+
+    current = {r["catalyst_id"]: r["exposure_eur"] for r in catalyst_ledger(movements_dir)}
+    added: dict[str, float] = {}
+    by_catalyst: dict[str, set] = {}
+    for p in proposed or []:
+        eur = float(p.get("trade_eur") or 0.0)
+        sid = str(p.get("sector_id") or "")
+        if eur <= 0 or not sid:
+            continue
+        mov = held.get(sid)
+        if mov is not None:
+            attribution, _, _ = effective_attribution(mov)
+            drivers = {merged.get(a["catalyst_id"], a["catalyst_id"]) for a in attribution}
+        else:
+            drivers = {merged.get(c, c) for c in (smap.get(sid) or [])}
+        for c in drivers & structural:
+            added[c] = added.get(c, 0.0) + eur
+            by_catalyst.setdefault(c, set()).add(sid)
+
+    out = []
+    for cid, add_eur in added.items():
+        post = current.get(cid, 0.0) + add_eur
+        pct = post / total * 100.0
+        out.append({
+            "catalyst_id": cid,
+            "current_eur": round(current.get(cid, 0.0), 2),
+            "proposed_eur": round(add_eur, 2),
+            "post_eur": round(post, 2),
+            "post_pct": round(pct, 1),
+            "cap_pct": cap_pct,
+            "over_by_eur": round(post - cap_pct / 100.0 * total, 2),
+            "over": pct > cap_pct,
+            "sectors": sorted(by_catalyst.get(cid, ())),
+        })
+    return sorted(out, key=lambda r: -r["post_pct"])
+
+
+def attribution_drift(movements_dir: Path | None = None) -> list[dict]:
+    """Open positions whose RECORDED attribution no longer matches today's sector→catalyst map.
+
+    Two different questions live in this file and must not be conflated:
+      · `attribution[]` — WHY the position was opened. A dated judgement, the input the validation
+        loop scores. Rewriting it would destroy the record, so nothing here rewrites it.
+      · today's sector study — WHAT the position is exposed to now.
+
+    They drift, and the drift is invisible until it matters. `pharma_large_cap` was opened
+    2026-06-16 as a defensive line with `attribution: [uncatalyzed 1.0]`; its study now names
+    three active catalysts, two of which (`struct_biopharma_patent_cliff_ma`) it shares with
+    `biotech_drug_development` — a €978 BUY sitting on the same table. The cap check cannot see
+    that overlap while the €500 is filed under `uncatalyzed`.
+
+    Surfacing it is the fix; the resolution is a human one, and both halves of it are recorded in
+    `reattribution[]` (schema 1.3): `attribution[]` for what the position IS now held for, and
+    `not_attributed[]` for a driver the review looked at and declined to claim. A declined driver
+    stops appearing here — a check that re-raises a question already answered teaches its reader
+    to skip the table, which is worse than not running it.
+
+    STRUCTURAL ONLY. `correlated_catalyst_cap` is written "per shared primary STRUCTURAL
+    catalyst" — event catalysts decay and are not what makes two positions rise and fall
+    together. Reporting every `cat_*` a study happens to list would bury the two cases that
+    matter under a dozen that do not.
+    """
+    try:
+        from catalyx.execution import portfolio
+        from catalyx.store import structural_catalyst_repo as scr
+        smap, merged = portfolio._sector_catalyst_map(), scr.merged_map()
+        structural = {str(d.get("id")) for d in scr._load_all() if d.get("id")}
+    except Exception:                                          # pragma: no cover - defensive
+        return []
+
+    held = {h["sector_id"] for h in positions(movements_dir).get("holdings", [])}
+    out = []
+    for m in load_all(movements_dir):
+        sid = str(m.get("sector_id") or "")
+        if sid not in held or m["action"] not in _BUY_ACTIONS:
+            continue
+        attribution, reattributed_at, declined = effective_attribution(m)
+        recorded = {merged.get(a["catalyst_id"], a["catalyst_id"]) for a in attribution}
+        declined = {merged.get(c, c) for c in declined}
+        current = {merged.get(c, c) for c in (smap.get(sid) or [])} & structural
+        missing = sorted(current - recorded - declined)
+        if not missing:
+            continue
+        out.append({
+            "sector_id": sid, "movement_id": m.get("id"),
+            "amount_eur": float(m.get("amount_eur") or 0.0),
+            "recorded": sorted(recorded), "current": sorted(current), "unattributed": missing,
+            "uncatalyzed": recorded == {_UNCATALYZED_ID},
+            "reattributed_at": reattributed_at,
+        })
+    return sorted(out, key=lambda r: -r["amount_eur"])
+
 
 
 # ── point-in-time score context ──────────────────────────────────────────────
@@ -242,7 +441,9 @@ def ingest(write_back: bool = False, movements_dir: Path | None = None,
     led = catalyst_ledger(movements_dir)
     if led:
         ldf = pd.DataFrame(led)
-        ldf["sectors"] = ldf["sectors"].apply(lambda s: ",".join(s))
+        for col in ("sectors", "absorbed_ids", "reattributed_sectors"):
+            if col in ldf.columns:
+                ldf[col] = ldf[col].apply(lambda s: ",".join(s or []))
         ldf["as_of"] = as_of
         lake.append_partition(_PERF_TABLE, ldf, {"as_of": as_of}, overwrite=True, lake_dir=lake_dir)
 

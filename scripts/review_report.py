@@ -98,11 +98,20 @@ def section_ranking(top_n: int) -> str:
     if moves:
         # Only the moves worth a sentence. The full list is one `lake_query moves` away, and a
         # 30-row table of ±3 rank wobbles reads as signal when it is the ranking breathing.
-        big = [m for m in moves if abs(float(m.get("delta") or 0)) >= 5][:12]
-        if big:
+        big = [m for m in moves if abs(float(m.get("delta") or 0)) >= 5]
+        ups = sum(1 for m in big if float(m.get("delta") or 0) > 0)
+        # A one-directional sweep is the DENOMINATOR moving (universe cut, scoring edit), not the
+        # world. Printing it as twelve independent "rank_up" findings invites reading it as
+        # twelve findings. Say what it is, once, and stop showing the rows.
+        if len(big) >= 5 and (ups == len(big) or ups == 0):
+            direction = "UP" if ups else "DOWN"
+            out += ["", f"> ⚠ all {len(big)} moves of |Δ| ≥ 5 this run are {direction} — that is "
+                        f"the denominator moving (universe or scoring change), not {len(big)} "
+                        f"independent findings. Rows withheld; see `lake_query moves`."]
+        elif big:
             out += ["", "**Biggest rank moves this run** (|Δ| ≥ 5)", "",
-                    _table(big, [("sector_id", "sector"), ("event_type", "event"),
-                                 ("from_rank", "was"), ("to_rank", "now"), ("delta", "Δ")])]
+                    _table(big[:12], [("sector_id", "sector"), ("event_type", "event"),
+                                      ("from_rank", "was"), ("to_rank", "now"), ("delta", "Δ")])]
     if n_dead:
         out += ["", f"> ⚠ {n_dead} of the top-{top_n} are **not investable today** (no buyable "
                     f"UCITS vehicle under the current taxonomy). This run predates the universe "
@@ -128,10 +137,9 @@ def section_portfolios() -> str:
                         ("benchmark_etf", "vs"), ("vs_benchmark_pct", "vs bench pp")],
                  {"nav": _num(2), "return_pct": _num(2), "mwr_pct": _num(2),
                   "vs_benchmark_pct": _num(2)})
-    notes = ["_`vs bench pp` is the DIFFERENCE in index points, not the benchmark's own return — "
-             "a book at −1% while the benchmark is at +4% reads −5pp here._",
-             "_TWR neutralizes contributions (comparable to the benchmark); MWR is the IRR on "
-             "your actual cash flows. Neither is the broker's mark-to-market vs cost._"]
+    notes = ["_`vs bench pp` = difference in points (book −1% vs benchmark +4% reads −5pp). TWR "
+             "neutralizes contributions; MWR is the IRR on your cash flows; neither is the "
+             "broker's mark vs cost._"]
 
     # Two curves that stop on different days are not comparable, and this table sorts them by
     # return as if they were. post_run.sh rebuilds the model NAVs each run; between runs they lag.
@@ -165,7 +173,10 @@ def _rebalance_rows(lake_dir: Path | None = None) -> list[dict]:
     df = df[df["run_id"] == latest]
     from catalyx.execution.rebalance import PRECEDENCE
     order = {a: i for i, a in enumerate(PRECEDENCE)}
-    rows = df.to_dict("records")
+    # NaN → None at the parquet boundary, once. Downstream code checks `is None`, and a NaN that
+    # survives it renders as a value ("rank nan") instead of the gap it is.
+    rows = [{k: (None if isinstance(v, float) and v != v else v) for k, v in r.items()}
+            for r in df.to_dict("records")]
     rows.sort(key=lambda r: (order.get(str(r.get("rule_action")), 9),
                              -abs(float(r.get("trade_eur") or 0))))
     return rows
@@ -175,12 +186,15 @@ def section_rebalance() -> str:
     rows = _safe(lambda: _rebalance_rows(), [])
     if not rows:
         return _MISSING
-    cols = [("sector_id", "sector"), ("etf", "ETF"), ("rank", "rk"), ("target_pct", "target %"),
+    # `rk` is the rank in this run's FULL ranking — one semantic, no per-row fallback. The
+    # model-book rank stays internal; a column that switches meaning per row obscures both.
+    cols = [("sector_id", "sector"), ("etf", "ETF"), ("score_rank", "rk"), ("target_pct", "target %"),
             ("actual_pct", "actual %"), ("gap_eur", "gap €"), ("rule_action", "**action**"),
             ("trade_eur", "trade €"), ("tax_eur", "CGT €"), ("breakeven_pct", "b/e %"),
-            ("reason", "reason")]
+            # The age of the evidence, next to the reason that rests on it (plan v5 E1).
+            ("data_age", "data"), ("reason", "reason")]
     fmt = {k: _num(1) for k in ("target_pct", "actual_pct")}
-    fmt.update({k: _num(0) for k in ("gap_eur", "trade_eur", "tax_eur")})
+    fmt.update({k: _num(0) for k in ("gap_eur", "trade_eur", "tax_eur", "score_rank")})
     fmt["breakeven_pct"] = _num(2)
     body = _table(rows, cols, fmt)
 
@@ -198,28 +212,27 @@ def section_rebalance() -> str:
         verb = "DEPLOY" if act_eur > 0 else ("RAISE" if act_eur < 0 else "HOLD")
         body += (f"\n| **CASH** | — | — | {cash_t / total * 100:.1f} | "
                  f"{cash_a / total * 100:.1f} | {-act_eur:,.0f} | **{verb}** | {-act_eur:,.0f} "
-                 f"| 0 | — | rule holds {cash_t / total * 100:.0f}% in cash; you hold "
+                 f"| 0 | — | — | rule holds {cash_t / total * 100:.0f}% in cash; you hold "
                  f"{cash_a / total * 100:.0f}% |")
         body += (f"\n| **TOTAL** | | | {tgt_pct + cash_t / total * 100:.1f} | "
-                 f"{act_pct + cash_a / total * 100:.1f} | 0 | | | | | |")
+                 f"{act_pct + cash_a / total * 100:.1f} | 0 | | | | | | |")
 
     depl = r0.get("deploy_ratio")
     note = (f"\n\nRule deployment ratio this run: **{float(depl):.0%}** of committed capital."
             if depl is not None else "")
     note += _tilt_note(r0.get("book_tilt_lambda"))
     note += _gate_note()
+    note += _prior_note(r0.get("book_tilt_lambda"))
+    # The rationale behind each column lives in the module docstrings and the CHANGELOG — the
+    # report states semantics once, in one line, and does not re-teach them every run.
     return body + note + (
-        "\n\n> `b/e %` is the **breakeven**: the friction of the trade (CGT + spread) as a "
-        "percentage of the capital it moves — what the destination must outperform the source by "
-        "for the rotation to have been worth making. It replaces `net edge €`, which multiplied "
-        "the trade by a rank-bucket mean return one noisy window old and printed ±€1 beside a "
-        "real tax bill. The forecast is still in the lake; it no longer drives the table."
-        "\n\n> Actions come from `rebalance.decide_action`, fixed precedence "
-        "`SELL > REDUCE > TRIM > RE-SCORE > ADD > BUY > HOLD`. `RE-SCORE` moves no money — it is "
-        "what a rank-based SELL degrades to when the sector was absent from too many recent "
-        "runs to have a rank worth selling on. `watch`/`monitor`/`consider` are not in the "
-        "enum. Deviating is allowed **only** as a logged override "
-        "(`rebalance override <sector> <action> --reason … --author …`).")
+        "\n\n_`rk` = rank in this run's full ranking · `b/e %` = friction (CGT + spread) ÷ capital "
+        "moved — what the destination must beat the source by · `data` = age of the catalyst "
+        "evidence behind the score (`stale`/`blind` qualify the row and send it to the scan's "
+        "refresh list; they never veto it — old data is a reason to re-verify, not to stop "
+        "acting). Actions: fixed precedence "
+        "`SELL > REDUCE > TRIM > RE-SCORE > ADD > BUY > HOLD`; deviating only as a logged override "
+        "(`rebalance override <sector> <action> --reason … --author …`)._")
 
 
 def section_swaps() -> str:
@@ -257,11 +270,8 @@ def section_swaps() -> str:
         f"**{rebalance.breakeven_pct(total_f, total_m):.2f}%** over {h} days."
         f"\n\n**Evidence for the spread these swaps are betting on:** "
         f"{(ev or {}).get('line', 'n/a')}"
-        f"\n\n> Every input above is observable today — tax bracket, spread, notional. Nothing is "
-        f"forecast. The rule fires on its own trigger (rank-out, regime, exit watcher), never on "
-        f"an expected return; the breakeven is the claim being accepted — that the rank signal is "
-        f"worth more than the friction over {h} days. It is checkable against the realized spread "
-        f"one horizon later, which a point estimate is not.")
+        f"\n\n_Every input is observable today; the breakeven is checkable against the realized "
+        f"spread one horizon ({h}d) later._")
 
 
 def section_partials() -> str:
@@ -285,7 +295,7 @@ def section_partials() -> str:
         elif lad.get("rank_ok"):
             lad_s = "model no longer leads it ✓"
         elif pr.get("rank") is None:
-            lad_s = "rank unknown"
+            lad_s = "no rank this run"
         else:
             lad_s = f"still a leader (rank {pr['rank']} < {lad.get('rank_min')})"
         gain_s = ("gain MET" if lad.get("gain_met") else
@@ -294,7 +304,7 @@ def section_partials() -> str:
         ow = pr.get("overweight") or {}
         out.append({
             "sector_id": pr["sector_id"],
-            "unrealized_pct": pr.get("unrealized_pct"), "rank": pr.get("rank"),
+            "unrealized_pct": pr.get("unrealized_pct"),
             "ladder": f"{gain_s} · {lad_s}",
             "overweight": (f"MET ({ow.get('over_pp'):+.1f}pp)" if ow.get("met")
                            else f"needs {ow.get('need_pp'):+.1f}pp more"),
@@ -304,18 +314,14 @@ def section_partials() -> str:
     reduce_pct = float((cfg.get("reduce_if_any", {}) or {}).get("reduce_fraction", 0.5)) * 100
     ladder_trim = next((float(r.get("trim_fraction")) for r in (cfg.get("profit_ladder") or [])
                         if r.get("trim_fraction")), None)
-    body = _table(out, [("sector_id", "sector"), ("unrealized_pct", "gain %"), ("rank", "rk"),
+    body = _table(out, [("sector_id", "sector"), ("unrealized_pct", "gain %"),
                         ("ladder", f"ladder rung — {lab}"),
                         ("overweight", "overweight rung"), ("live", "firing?")],
                   {"unrealized_pct": _num(1)})
     return body + (
-        f"\n\n> **The whole partial-sale vocabulary:** SELL = 100% of the line · REDUCE = "
-        f"{reduce_pct:.0f}% · TRIM = back to target"
-        + (f" (or {ladder_trim * 100:.0f}% on a ladder rung)" if ladder_trim else "")
-        + ". The two rungs are reported separately because they are measured in different units — "
-        "points of TOTAL capital above target, versus % gain ON the position — and the ladder's "
-        "rank leg is not a quality test: it fires once the model has STOPPED leading the name, so "
-        "a rank-1 position failing it is the rule working.")
+        f"\n\n_SELL = 100% of the line · REDUCE = {reduce_pct:.0f}% · TRIM = back to target"
+        + (f" ({ladder_trim * 100:.0f}% on a ladder rung)" if ladder_trim else "")
+        + ". The rank leg fires once the model has STOPPED leading the name._")
 
 
 def _tilt_note(lam) -> str:
@@ -330,13 +336,8 @@ def _tilt_note(lam) -> str:
     head = f"\n\n**Tilt λ = {lam:.2f}** — "
     if lam < 0.05:
         return head + (
-            "the model selects the NAMES; the sizing is neutral (inverse-vol) because the "
-            "ranking's measured rank IC has not earned a tilt. **Gross deployment is unchanged** "
-            "— λ moves how the working capital is split, never how much of it is at work."
-            "\n\n> λ = clamp(IC / target, 0, 1) × n_eff/(n_eff + prior). A negative IC clamps to "
-            "zero and never inverts the book: shorting your own ranking on one non-overlapping "
-            "window is a superstition with a minus sign. As independent windows accumulate and "
-            "the IC turns positive, the conviction tilt returns — earned, not assumed.")
+            "sizing is neutral (inverse-vol); the measured rank IC has not earned a conviction "
+            "tilt. Gross deployment is unchanged — λ only splits the working capital.")
     return head + (f"{lam:.0%} of the model's conviction tilt is applied; the remaining "
                    f"{1 - lam:.0%} is shrunk toward the neutral book by the measured rank IC "
                    f"and the number of independent windows behind it.")
@@ -362,12 +363,26 @@ def _gate_note() -> str:
     return (f"\n\n**After-tax gate: {'ARMED' if g.get('armed') else 'stands aside'}** — composite "
             f"rank IC {'n/a' if ic is None else f'{ic:+.3f}'}"
             + (f" (se {g['ic_se']:.3f} → {g.get('ic_verdict')})" if g.get("ic_se") else "")
-            + f", ~{g.get('windows')} independent window(s). {g.get('why')}."
-            + ("\n\n> The gate may block a taxable sale whose expected edge does not cover CGT + "
-               "spread. It arms only on a joint condition — enough independent windows, |IC| above "
-               "a floor, **and a positive sign**. A negative IC disables it rather than inverting "
-               "it: a ranking that orders backwards is a scoring problem to fix, never a licence "
-               "to trade the ranking upside down."))
+            + f", ~{g.get('windows')} independent window(s). {g.get('why')}.")
+
+
+def _prior_note(lam) -> str:
+    """Name what the deployment pressure rests on when the ranking's own edge is not it (v5 F1).
+
+    §3 asks for eight trades toward a ranking the same page reports as ordering nothing. Both can
+    be true — being invested in leaders is a different prior from THIS ranking working — but until
+    now the document never separated them, so it read as self-contradictory.
+    """
+    from catalyx.config import weights
+    from catalyx.execution import rebalance
+    from catalyx.scorer import calibration
+
+    ev = _safe(lambda: rebalance.rank_edge_evidence(calibration.expected_returns(),
+                                                    weights.rebalance_rules()), None)
+    if not isinstance(ev, dict):
+        return ""
+    sp = rebalance.selection_prior(ev, lam)
+    return "" if not sp else f"\n\n> **{sp['note']}**"
 
 
 def section_inaction() -> str:
@@ -390,11 +405,23 @@ def section_inaction() -> str:
         friction = min((float(x.get("cost_drag_eur") or 0.0) for x in rows
                         if str(x.get("rule_action")) not in ("HOLD", "RE-SCORE")
                         and float(x.get("cost_drag_eur") or 0.0) > 0), default=None)
-        out.append(f"**CASH DRAG** — €{cash:,.0f} idle since {idle_since} ({days}d). "
-                   f"The benchmark returned **{bench:+.2f}%** over that window → "
-                   f"**€{float(drag):,.0f} forgone**."
+        # Two counterfactuals, and a headline that flips with the sign (plan v5 F3): the benchmark
+        # answers "should I have been invested?", the model book answers the question actually on
+        # trial — "should I have executed THIS table?". A ledger that can only reprove is not one.
+        mdl, mdl_eur = r0.get("book_model_return_pct"), r0.get("book_cash_model_forgone_eur")
+        verdict = r0.get("book_cash_verdict")
+        head = ("CASH DRAG" if verdict == "cost" else
+                "CASH THAT SAVED YOU" if verdict == "saved" else "CASH")
+        out.append(f"**{head}** — €{cash:,.0f} idle since {idle_since} ({days}d)."
                    + (f" For scale, the smallest friction blocking a trade below is "
                       f"€{friction:,.2f}." if friction else ""))
+        out.append(f"- vs benchmark (**{bench:+.2f}%**) → €{abs(float(drag)):,.0f} "
+                   f"{'forgone' if float(drag) > 0 else 'avoided'}")
+        if mdl is not None and mdl == mdl and mdl_eur is not None and mdl_eur == mdl_eur:
+            out.append(f"- vs the `{r0.get('strategy')}` model book (**{float(mdl):+.2f}%**) → "
+                       f"€{abs(float(mdl_eur)):,.0f} "
+                       f"{'forgone' if float(mdl_eur) > 0 else 'avoided'} — **the policy this "
+                       f"table implements**, and the one the deployment rule argues for")
     pp, runs = r0.get("book_shortfall_pp"), r0.get("book_shortfall_runs")
     if pp is not None and pp == pp:
         breached = bool(r0.get("book_shortfall_breached"))
@@ -405,17 +432,23 @@ def section_inaction() -> str:
                       "reviews without a written reason is exactly what the deployment ratio was "
                       "built to make visible." if breached else
                       "Below the persistence limit."))
+    # One line per run, not one row per deviation: what the review acts on is "the last run asked
+    # for N things and got none of them", and the 10-row list said that ten times.
     unrec = _safe(_unrecorded_rows, [])
     if unrec:
-        out.append(f"\n**UNRECORDED DEVIATIONS ({len(unrec)})** — rows a previous run "
-                   f"recommended that produced no movement and no override. Logged as DEFER by "
-                   f"`unrecorded` and priced ~21 trading days later, exactly like a deliberate "
-                   f"deviation.\n")
-        out.append("| run | sector | rule said | logged |")
-        out.append("|---|---|---|---|")
-        for u in unrec[:15]:
-            out.append(f"| {u.get('run_id')} | {u.get('sector_id')} | {u.get('rule_action')} | "
-                       f"{str(u.get('logged_at'))[:10]} |")
+        by_run: dict[str, list[dict]] = {}
+        for u in unrec:
+            by_run.setdefault(str(u.get("run_id")), []).append(u)
+        out.append(f"**UNRECORDED DEVIATIONS ({len(unrec)})** — recommended, never executed, never "
+                   f"overridden. Logged as DEFER by `unrecorded` and priced ~21 trading days "
+                   f"later, exactly like a deliberate deviation.")
+        for run_id, group in sorted(by_run.items()):
+            acts: dict[str, int] = {}
+            for u in group:
+                acts[str(u.get("rule_action"))] = acts.get(str(u.get("rule_action")), 0) + 1
+            out.append(f"- `{run_id}` → {len(group)} action(s): "
+                       + " · ".join(f"{n}×{a}" for a, n in sorted(acts.items()))
+                       + f" ({', '.join(sorted(str(u.get('sector_id')) for u in group))})")
     return "\n".join(out) if out else "_nothing to price._"
 
 
@@ -447,12 +480,24 @@ def section_overrides() -> str:
     for author, t in sorted((res.get("tally") or {}).items()):
         lines.append(f"- **{author}**: {t['n']} scored · {t['wins']} beat the rule · "
                      f"net €{t['net_eur']:,.0f}")
-    if res.get("pending"):
-        lines.append(f"- {len(res['pending'])} logged but not yet scored "
+    # Two counters that measure different things, and looked contradictory side by side: the
+    # backlog is every deviation waiting for its window; the claude line is the SUSPENSION gate,
+    # which needs `min_scored` scored ones before it means anything (plan v5 §0.2 D4).
+    pending = res.get("pending") or []
+    if pending:
+        lines.append(f"- **backlog**: {len(pending)} logged, none scoreable yet "
                      f"(< 21 trading days — a shorter window is a coin, not evidence)")
-    lines.append(f"- {res['claude']['why']}")
-    if not res["scored"] and not res.get("pending"):
+    lines.append(f"- **suspension gate**: {res['claude']['why']}")
+    if not res["scored"] and not pending:
         lines = [res["note"]]
+
+    # A DELIBERATE deviation is the only thing that owes the reader a written reason. The
+    # `unrecorded` DEFERs are auto-logged precisely BECAUSE nobody wrote one, and §4c already
+    # names them — asking for prose here too would be asking twice for the same silence.
+    chosen = [p for p in pending if str(p.get("author")) != "unrecorded"]
+    if chosen:
+        lines.append("\n<!-- CLAUDE: for each override logged THIS run, one line: what the rule "
+                     "said, what you chose, and the evidence the rule was missing. -->")
     return "\n".join(lines)
 
 
@@ -481,11 +526,9 @@ def section_scorecard() -> str:
         body.append(f"| **{r['action']}** | {r['n']} | {_f(r['mean_forward_pct'])} | "
                     f"{_f(r['vs_hold_pp'])} | {_f(r['rule_edge_pp'])} | {r['verdict']} |")
     body.append("")
-    body.append(f"> {sc.get('note')} A positive **rule edge** means the rule was right: the "
-                f"forward return is signed by the direction the rule moved money, so a SELL "
-                f"scores well when the vehicle then fell. The scorecard is evidence for a config "
-                f"edit, never an edit — `rebalance_rules.frozen` still means a threshold moves by "
-                f"a commit and a CHANGELOG line.")
+    body.append(f"_{sc.get('note')} Positive **rule edge** = the rule was right (the forward "
+                f"return is signed by the direction it moved money). Evidence for a config edit, "
+                f"never an edit — `rebalance_rules.frozen` still needs a commit._")
     if res.get("pending"):
         body.append(f"\n> {len(res['pending'])} row(s) still pending a complete window.")
     return "\n".join(body)
@@ -521,10 +564,8 @@ def section_positions() -> str:
                    "pnl_price_eur": _num(0), "pnl_fx_eur": _num(0),
                    "max_drawdown_from_peak_pct": _num(1), "composite_drift": _num(1)})
     return body + (
-        "\n\n> `price €` + `FX €` (+ fees) = the EUR P&L: a non-EUR vehicle is two positions and "
-        "only one of them was a thesis. `peak DD` is measured from the position's own high, not "
-        "from cost. `score drift` is today's composite minus the one the pipeline gave that sector "
-        "on the day it was bought — negative means the model has stopped believing it.")
+        "\n\n_`price €`+`FX €` = EUR P&L · `peak DD` from the position's own high · `score drift` "
+        "= composite today − composite at purchase (negative = the model stopped believing it)._")
 
 
 def section_risk() -> str:
@@ -564,11 +605,8 @@ def section_risk() -> str:
     except Exception:                                          # pragma: no cover - defensive
         tail = ""
     return body + tail + (
-        "\n\n> `RC_i = w_i·(Σw)_i / σ_p`, summing to 100% by construction — the shares are "
-        "exhaustive and comparable. Two €500 lines are not two equal bets, and every output "
-        "before this described them as the same size. A **negative** contribution is a real "
-        "property, not an artefact: that position is lowering total volatility, which is the "
-        "first thing to defend before trimming it. Measurement only — nothing here recommends.")
+        "\n\n_Risk shares sum to 100%; a negative share LOWERS book vol — defend it before "
+        "trimming it. Measurement only, nothing here recommends._")
 
 
 def _position_metric_rows(lake_dir: Path | None = None) -> dict:
@@ -581,34 +619,120 @@ def _position_metric_rows(lake_dir: Path | None = None) -> dict:
     return {str(r["sector_id"]): r for r in df.to_dict("records")}
 
 
+def _cap_check_note() -> str:
+    """The cap applied to the table above §6, not only to the book below it.
+
+    §6 checked what is held; §3 proposes what to buy; joining them was left to the reader, so a
+    table could route new money into a bucket that had no headroom left and still read as
+    compliant. Silent when nothing breaches.
+    """
+    from catalyx.store import movement_repo
+
+    rows = _safe(lambda: _rebalance_rows(), [])
+    proposed = [{"sector_id": r.get("sector_id"), "trade_eur": r.get("trade_eur")}
+                for r in rows if r.get("rule_action") in ("BUY", "ADD")]
+    checked = _safe(lambda: movement_repo.cap_check(proposed), [])
+    breaches = [c for c in checked if c["over"]]
+    if not breaches:
+        return ""
+    out = ["\n\n**⚠ The proposed table breaches the cap** — exposure if every BUY/ADD above is "
+           "executed as printed.\n",
+           "| catalyst | held € | proposed € | after € | after % | over by € | from |",
+           "|---|---|---|---|---|---|---|"]
+    for c in breaches:
+        out.append(f"| {c['catalyst_id']} | {c['current_eur']:,.0f} | {c['proposed_eur']:,.0f} | "
+                   f"{c['post_eur']:,.0f} | **{c['post_pct']:.1f}** | {c['over_by_eur']:,.0f} | "
+                   f"{', '.join(c['sectors'])} |")
+    out.append("\n_A BUY lands on the structural drivers its sector study names (no position "
+               "exists yet to attribute); an ADD lands on the held position's own attribution, "
+               "declined drivers included. Sizing down, dropping a name, or an explicit "
+               "`correlation_note` — the cap is `warn`, so it does not decide, but it cannot be "
+               "passed silently either._")
+    return "\n".join(out)
+
+
+def _drift_note() -> str:
+    """Where a position's RECORDED attribution no longer matches its study's structural drivers.
+
+    The attribution is the dated record of WHY a line was opened and is never rewritten — it is
+    what the validation loop scores. But the cap is a check on what the book is exposed to TODAY,
+    and it cannot see an overlap filed under a catalyst nobody attributed. Naming the gap is the
+    fix; closing it is a human decision, taken in `/catalyx-open` or left standing on purpose.
+    """
+    from catalyx.store import movement_repo
+
+    rows = _safe(lambda: movement_repo.attribution_drift(), [])
+    if not rows:
+        return ""
+    out = ["\n\n**Attribution drift** — held positions whose recorded attribution omits a "
+           "structural driver their study now names. The cap above cannot count an overlap that "
+           "nobody attributed.\n",
+           "| sector | € | recorded | unattributed today |", "|---|---|---|---|"]
+    for r in rows:
+        rec = ", ".join(r["recorded"]) or "—"
+        out.append(f"| {r['sector_id']} | {r['amount_eur']:,.0f} | "
+                   + (f"**{rec}**" if r["uncatalyzed"] else rec)
+                   + f" | {', '.join(r['unattributed'])} |")
+    out.append("\n_The opening attribution is never rewritten. Close a row by appending a dated "
+               "`reattribution[]` entry to the movement (schema 1.3) — claiming the driver, or "
+               "listing it in `not_attributed[]` with the reason it does not apply._")
+    return "\n".join(out)
+
+
 def section_exposure() -> str:
     """Combined exposure per catalyst against the correlated-catalyst cap.
 
-    The `sectors` column rendered `—` on every row for as long as it existed: it asked for
-    `n_sectors`, and `catalyst_ledger` returns `sectors`. And the % of capital and the cap — the
-    only two numbers that make this a CHECK rather than a list — were never here at all.
+    Reads `exposure_eur` — the FULL position behind each driver — not the weight-split
+    `invested_eur`, which answers a different question (P&L credit). A cap fed the split number
+    shrinks a bucket every time a position honestly declares a second driver; see
+    `movement_repo.catalyst_ledger`. Rows therefore sum to MORE than the book: one euro exposed to
+    two drivers is at risk in both, and that is the point of the check.
+
+    Read LIVE from the movement files, not from the `catalyst_performance` snapshot: that
+    partition is written at ingest and freezes the merge map of the day it ran, which is the
+    defect this section exists to survive.
     """
     from catalyx.config import weights
-    from catalyx.store import lake_query
+    from catalyx.store import movement_repo
 
-    rows = _safe(lambda: lake_query.catalyst_ledger(), [])
+    rows = _safe(lambda: movement_repo.catalyst_ledger(), [])
     cap = weights.correlated_catalyst_cap()
     total = weights.total_capital_eur() or 0.0
     for r in rows:
-        inv = float(r.get("invested_eur") or 0.0)
-        r["pct_of_capital"] = round(inv / total * 100.0, 2) if total else None
-        r["headroom_eur"] = round(cap["max_combined_pct"] / 100.0 * total - inv, 2) \
+        exp = float(r.get("exposure_eur") or 0.0)
+        r["pct_of_capital"] = round(exp / total * 100.0, 2) if total else None
+        r["headroom_eur"] = round(cap["max_combined_pct"] / 100.0 * total - exp, 2) \
             if total else None
         over = (r["pct_of_capital"] or 0) > cap["max_combined_pct"]
         r["pct_str"] = (f"{r['pct_of_capital']:.1f} ⚠ OVER CAP" if over
                         else f"{r['pct_of_capital']:.1f}") if r["pct_of_capital"] is not None else "—"
-    out = _table(rows, [("catalyst_id", "catalyst"), ("invested_eur", "invested €"),
+        # A merged catalyst keeps its absorbed id in the movement's frozen attribution. Naming
+        # what was collapsed keeps the row tied to the files that produced it.
+        r["catalyst_str"] = (f"{r['catalyst_id']} (+{', '.join(r['absorbed_ids'])})"
+                             if r.get("absorbed_ids") else r["catalyst_id"])
+        r["sectors"] = ", ".join(r.get("sectors") or []) or "—"
+    out = _table(rows, [("catalyst_str", "catalyst"), ("exposure_eur", "exposure €"),
                         ("pct_str", "% of capital"), ("headroom_eur", "headroom €"),
-                        ("realized_eur", "realized €"), ("sectors", "sectors")],
-                 {"invested_eur": _num(0), "realized_eur": _num(0), "headroom_eur": _num(0)})
-    return out + (f"\n\n_Cap: **{cap['max_combined_pct']:.0f}%** combined per shared primary "
-                  f"catalyst (`correlated_catalyst_cap`, enforcement `{cap['enforcement']}`). "
-                  f"Headroom is what a NEW position in that catalyst may still take._")
+                        ("invested_eur", "P&L credit €"), ("sectors", "sectors")],
+                 {"exposure_eur": _num(0), "invested_eur": _num(0), "headroom_eur": _num(0)})
+    out += (f"\n\n_Cap: **{cap['max_combined_pct']:.0f}%** combined per shared primary "
+            f"catalyst (`correlated_catalyst_cap`, enforcement `{cap['enforcement']}`). "
+            f"**exposure €** is the whole position behind each driver — rows sum to more than the "
+            f"book on purpose, since a position with two drivers is at risk in both; **P&L credit "
+            f"€** is the same money split by attribution weight and is NOT what the cap reads. "
+            f"Headroom is what a NEW position in that catalyst may still take. A merged catalyst "
+            f"is ONE row: its absorbed ids are named in parentheses._")
+    forward = _cap_check_note()
+    out += forward
+    out += _drift_note()
+    # The marker is emitted only when a cap is actually breached — held OR proposed. A lint that
+    # demands prose where the honest answer is "nothing breached" trains people to write filler.
+    if forward or any((r.get("pct_of_capital") or 0) > cap["max_combined_pct"] for r in rows):
+        out += (f"\n\n<!-- CLAUDE: name each catalyst over the {cap['max_combined_pct']:.0f}% cap "
+                f"and by how much, held and after the proposed table. Enforcement is "
+                f"`{cap['enforcement']}` — a breach under `warn` requires an explicit "
+                f"correlation_note, not a silent pass. -->")
+    return out
 
 
 def section_tax() -> str:
@@ -628,22 +752,38 @@ def section_tax() -> str:
 
 
 def section_freshness() -> str:
+    """One row per CATALYST, not per indicator. A 41-row indicator dump reads as noise and costs
+    tokens every review; what the review acts on is 'which catalyst is running blind, and how
+    blind'. The full per-indicator list is one `freshness` CLI call away."""
     from catalyx.scorer import freshness
 
     rows = _safe(lambda: freshness.overdue(), [])
     if not rows:
         return "_(no overdue indicators)_"
-    # `check_frequency` / `overdue_by` were never keys of `freshness.overdue()` — both columns
-    # rendered blank on every row. The cadence is `cadence`; "overdue by" is derived.
+    by_cat: dict[str, list[dict]] = {}
     for r in rows:
-        d, lim = r.get("days_since"), r.get("threshold_days")
-        r["overdue_by"] = (f"{int(d) - int(lim)}d" if d is not None and lim is not None else None)
-        if r.get("cadence_mislabeled"):
-            r["cadence"] = f"{r.get('cadence')} ⚠mislabel"
-    return _table(rows, [("catalyst_id", "catalyst"), ("indicator_id", "indicator"),
-                         ("last_date", "last observed"), ("cadence", "cadence"),
-                         ("days_since", "days"), ("threshold_days", "limit"),
-                         ("overdue_by", "overdue by")])
+        by_cat.setdefault(str(r.get("catalyst_id")), []).append(r)
+    out = []
+    for cid, group in by_cat.items():
+        def _over(r):
+            d, lim = r.get("days_since"), r.get("threshold_days")
+            return int(d) - int(lim) if d is not None and lim is not None else 0
+        worst = max(group, key=_over)
+        out.append({
+            "catalyst_id": cid, "n": len(group),
+            "worst": f"{worst.get('indicator_id')} — {_over(worst)}d over its "
+                     f"{worst.get('cadence')} cadence",
+            "last_date": worst.get("last_date"),
+            "mislabels": sum(1 for r in group if r.get("cadence_mislabeled")) or None,
+        })
+    out.sort(key=lambda r: -int(r["worst"].split("— ")[1].split("d")[0]))
+    total = sum(r["n"] for r in out)
+    return _table(out, [("catalyst_id", "catalyst"), ("n", "overdue"),
+                        ("worst", "worst indicator"), ("last_date", "last observed"),
+                        ("mislabels", "⚠mislabel")]) + (
+        f"\n\n_{total} overdue indicator(s) across {len(out)} catalyst(s) — full list: "
+        f"`uv run python -m catalyx.scorer.freshness`. A catalyst scored off overdue indicators "
+        f"is scored off the past._")
 
 
 # ── Assembly ─────────────────────────────────────────────────────────────────
@@ -706,9 +846,6 @@ def build(as_of: str, top_n: int = 15) -> str:
 
 {section_overrides()}
 
-<!-- CLAUDE: for each override logged THIS run, one line: what the rule said, what you chose, and
-     the evidence the rule was missing. -->
-
 ## 5b. Rule scorecard — what the table's own actions earned
 
 {section_scorecard()}
@@ -716,9 +853,6 @@ def build(as_of: str, top_n: int = 15) -> str:
 ## 6. Catalyst exposure
 
 {section_exposure()}
-
-<!-- CLAUDE: flag any catalyst whose combined allocation breaches `correlated_catalyst_cap`
-     (default 20%), with the breach amount. Flexible warning unless enforcement is "block". -->
 
 ## 7. Tax snapshot YTD
 
@@ -788,21 +922,77 @@ def lint_prose(text: str) -> list[dict]:
     return findings
 
 
+# ── F2 — the report does not get to claim it is finished (plan v5 §3 F2) ────
+#
+# `lint_prose` polices the prose that IS there. Nothing policed the prose that is NOT: the
+# 2026-08-31 review shipped with all five judgement markers intact and passed `--check` clean.
+# The deterministic half has had a generator, a lake and 490 tests behind it since v3; the
+# judgement half — the executive summary, the macro read, the evidence line under each SELL, the
+# opening candidates, the taxonomy decisions — had no check at all. An empty skeleton is worse
+# than a visibly unfinished report: §4 orders two SELLs and the place where the evidence
+# supporting them (or the override disputing them) would go is blank.
+
+def lint_completeness(text: str) -> list[dict]:
+    """Judgement markers with no prose behind them. [] when every marker has been answered.
+
+    A marker is answered by ≥1 non-blank line between its closing `-->` and the next heading.
+    The marker itself STAYS in the file — it is the anchor that lets the report be regenerated
+    without losing what was written, so removing it is not how a section gets marked done.
+    """
+    lines = text.splitlines()
+    findings, section, i = [], "", 0
+    while i < len(lines):
+        line = lines[i].strip()
+        if line.startswith("#"):
+            section = lines[i].lstrip("# ").strip()
+        elif line.startswith("<!-- CLAUDE:"):
+            start = i
+            while i < len(lines) and "-->" not in lines[i]:
+                i += 1
+            # Everything up to the next heading belongs to this marker's section.
+            body, j = [], i + 1
+            while j < len(lines) and not lines[j].lstrip().startswith("#"):
+                if lines[j].strip():
+                    body.append(lines[j].strip())
+                j += 1
+            if not body:
+                findings.append({"line": start + 1, "section": section or "(untitled)"})
+            i = j - 1
+        i += 1
+    return findings
+
+
 def check(path: Path) -> int:
-    """Exit code for `--check`: 0 clean, 1 hedged. Prints the offending lines."""
+    """Exit code for `--check`: 0 clean, 1 hedged or unfinished. Prints what is wrong.
+
+    Two orthogonal lints, and either can fail alone: a report can be fully written and hedged, or
+    unhedged because nothing was written. A freshly generated report fails completeness by
+    construction — which is why `post_run.sh` does not run this and `/catalyx-review` does, at the
+    point where the document is declared finished.
+    """
     if not path.exists():
         print(f"✗ {path} does not exist — generate it first")
         return 1
-    findings = lint_prose(path.read_text(encoding="utf-8"))
-    if not findings:
-        print(f"✓ {path} — no hedged verdicts in the decision sections")
+    text = path.read_text(encoding="utf-8")
+    hedges, empty = lint_prose(text), lint_completeness(text)
+    if not hedges and not empty:
+        print(f"✓ {path} — every judgement section answered, no hedged verdicts")
         return 0
-    print(f"✗ {path} — {len(findings)} hedged line(s) in sections where a decision is stated.\n"
-          f"  A verdict that does not move money is HOLD, said once. \"Revisit next cycle\" is a "
-          f"DEFER: log it as an override with an author and a reason, do not write it as an "
-          f"adverb.\n")
-    for f in findings:
-        print(f"  L{f['line']:<5} [{f['hedge']}] §{f['section']}\n         {f['text'][:150]}")
+    if empty:
+        print(f"✗ {path} — INCOMPLETE: {len(empty)} judgement section(s) with no prose behind the "
+              f"marker.\n  The deterministic half is done. The report is not — and a table of "
+              f"verdicts with no evidence under it is the half that cannot be checked.\n")
+        for f in empty:
+            print(f"  L{f['line']:<5} §{f['section']}")
+        if hedges:
+            print()
+    if hedges:
+        print(f"✗ {path} — {len(hedges)} hedged line(s) in sections where a decision is stated.\n"
+              f"  A verdict that does not move money is HOLD, said once. \"Revisit next cycle\" is "
+              f"a DEFER: log it as an override with an author and a reason, do not write it as an "
+              f"adverb.\n")
+        for f in hedges:
+            print(f"  L{f['line']:<5} [{f['hedge']}] §{f['section']}\n         {f['text'][:150]}")
     return 1
 
 
@@ -812,7 +1002,8 @@ def main() -> None:
     ap.add_argument("--top", type=int, default=15, help="sectors in the ranking table")
     ap.add_argument("--stdout", action="store_true", help="print instead of writing the file")
     ap.add_argument("--check", action="store_true",
-                    help="lint the COMMITTED report for hedged verdicts (plan v4 C5) and exit")
+                    help="lint the COMMITTED report — hedged verdicts (v4 C5) AND unanswered "
+                         "judgement markers (v5 F2) — and exit")
     args = ap.parse_args()
 
     out_path = Path("data/reports") / f"review_{args.date.replace('-', '')}.md"

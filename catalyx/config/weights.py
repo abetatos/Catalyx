@@ -420,6 +420,42 @@ def rebalance_rules() -> dict:
     return _section("rebalance_rules", _REBALANCE_RULES_DEFAULT)
 
 
+def spread_bps_by_ticker() -> dict[str, float]:
+    """`{ticker: spread_bps}` for every universe entry that carries an observed value.
+
+    WHY (plan v5 §4 G1). `rebalance_rules.spread_bps` is one constant for every venue, and the
+    comment beside it has said since v3 that a per-ETF value should win when the universe carries
+    one. Nothing passed it, so the rebalance table printed an identical `b/e 0.20%` on seven of
+    eight action rows — a column that cannot tell a liquid IUHE.AS from a thin JEDI.DE is not
+    telling you anything. Absent entries inherit the global, so an unpopulated universe behaves
+    exactly as before.
+    """
+    import yaml
+
+    path = _WEIGHTS_PATH.with_name("etf_universe.yaml")
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except (FileNotFoundError, yaml.YAMLError):                # pragma: no cover - defensive
+        return {}
+    sectors = data.get("etf_universe", data)
+    out: dict[str, float] = {}
+    if not isinstance(sectors, dict):
+        return out
+    for entry in sectors.values():
+        etfs = (entry if isinstance(entry, list)
+                else (entry.get("etfs") or []) if isinstance(entry, dict) else [])
+        for e in etfs:
+            if not isinstance(e, dict):
+                continue
+            bps, tk = e.get("spread_bps"), e.get("ticker")
+            if tk and bps is not None:
+                try:
+                    out[str(tk)] = float(bps)
+                except (TypeError, ValueError):                # pragma: no cover - defensive
+                    continue
+    return out
+
+
 # ── Risk-metric reliability (position_metrics, build_site) ───────────────────
 
 _RISK_METRICS_DEFAULT = {

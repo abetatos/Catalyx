@@ -14,6 +14,249 @@
 
 
 
+## Closing the drift found the cap reading the wrong number, on the wrong book (2026-08-31, v5.2)
+
+v5.1 printed the attribution drift and left the decision to the user. The user took it — "cerramos
+el drift" — and closing it properly required fixing two things underneath, because re-attributing a
+position with the old accounting would have made the book look SAFER.
+
+**The mechanism: `reattribution[]`, append-only (schema movement 1.3).** `attribution[]` answers
+why a line was opened — a dated judgement, the input the validation loop scores — so nothing
+rewrites it. What was missing was anywhere to record the present-tense answer. Each entry carries
+`as_of`, the new `attribution[]`, an optional `not_attributed[]` and a `rationale`; latest `as_of`
+wins; readers go through `movement_repo.effective_attribution()`. `not_attributed[]` exists because
+a check that re-raises a question already answered teaches its reader to skip the table: a driver
+the review looked at and declined must stop appearing, with the reason on the file rather than in
+somebody's habit.
+
+**The two decisions.** `copper_miners` €1,000 → `struct_ai_capex_supercycle` 0.65 /
+`struct_energy_transition_grid` 0.35 (grid electrification drives copper demand independently of
+datacenter racks and would survive an AI capex pause; datacenter was the opening thesis and stays
+primary). `pharma_large_cap` €500 → `uncatalyzed` 0.5 / `struct_biopharma_patent_cliff_ma` 0.5,
+**declining** `struct_glp1_obesity_supercycle` in writing — it was opened as a defensive line with
+no catalyst and half of that is still true, so `uncatalyzed` keeps its weight instead of being
+retconned into a thesis it never had; and a broad large-cap pharma ETF is not a GLP-1 vehicle.
+
+**What that exposed: the cap was reading the P&L number.** `catalyst_ledger` splits each movement
+by attribution weight — correct for CREDIT, so one euro of return is not credited twice — and §6
+fed that split to `correlated_catalyst_cap`. But the grid position (€500, 0.7 grid / 0.3 AI capex)
+contributed **€150** to the AI-capex row, while if AI capex breaks the whole €500 is at risk. Nobody
+owns 30% of a utilities ETF. Worse, the incentive ran backwards: naming a second driver LOWERED the
+weight on the first, so honesty bought headroom. Re-attributing copper under the old accounting
+would have *reduced* reported AI-capex exposure. New `exposure_eur` — the full position behind every
+driver it names — is what the cap reads; `invested_eur` stays as P&L credit, relabelled in §6 so
+nobody reads the wrong one. Rows now sum to more than the book, on purpose. On this book the
+correlated bucket was understated by €350 *before* any re-attribution: **€1,650 reported against
+€2,000 real, on a €2,000 cap.**
+
+**And then the number that mattered.** §6 checks what is held; §3 proposes what to buy; nothing
+joined them, though the cap's own sentence is "headroom is what a NEW position may still take". New
+`cap_check()` prices the proposed table: executing the current one as printed puts
+`struct_ai_capex_supercycle` at **35.6%** against the 20% cap — €1,560 of new money into a bucket
+whose headroom is exactly **€0** — and `struct_energy_transition_grid` at 23.7%. Resolution differs
+by action type, and it has to: a BUY has no position yet, so the sector study's structural drivers
+are the honest estimate; an ADD is held, so its recorded attribution governs — including a declined
+driver, which re-deriving from the study would quietly overrule. The §6 marker now fires on a
+breach held OR proposed.
+
+Two smaller things found on the way. `_try` in `run_digest` reported an empty result as MISSING,
+so the drift check listed itself as a hole in the run at the exact moment it came back clean —
+`empty_ok` for checks, where nothing found IS the result. And two anti-conservatism tests asserted
+"this book breaches no cap", which was true when written and is now false: both were rewritten to
+read the expectation off the book (`("cap and by how much" in text) is breached`) instead of
+freezing a fact about one day's data into a test of a mechanism. 517 tests green (+4).
+
+---
+
+## The cap was being evaded by the merge it was built to survive (2026-08-31, v5.1)
+
+Chasing the loose end v5.0 left open — "§6 lists `pharma_large_cap` as `uncatalyzed` while its
+study names three catalysts" — found a bigger and different defect, and the note in CLAUDE.md had
+the mechanism wrong. It was not a point-in-time sector map in `catalyst_exposure_rows`; §6 reads
+`movement_repo.catalyst_ledger`, which buckets by each movement's own frozen `attribution[]`.
+
+**`struct_copper_datacenter_demand` is `merged_into: struct_ai_capex_supercycle`, and the ledger
+reported them as two rows.** €1,000 under the absorbed id, €650 under the survivor — one economic
+driver, published as two. Combined it is **€1,650 = 16.5% against a 20% cap**, so §6 advertised
+**€1,350 of headroom where €350 existed**, on the single largest exposure in the book. The one
+control designed to stop correlated double-counting was being evaded by exactly the event it was
+meant to survive.
+
+CLAUDE.md already required it: *"usa `structural_catalyst_repo.resolve()` para seguir un
+`merged_into` antes de leer la frescura de un catalizador"*, and *"dos catalizadores que suben y
+bajan por la misma razón … burlan el `correlated_catalyst_cap` (que existe justo para eso)"*.
+`run_state` applies `resolve_all` and its comment names the 2026-08-27 merges by date. The ledger
+was the one reader that did not. It now resolves through `merged_map()` (one YAML read, not one per
+id — the v5.0 lesson) and reports `absorbed_ids` so the collapse stays auditable and every number
+still ties back to the movement file that produced it. `resolve_merged=False` returns the raw
+record: the movement files are untouched and the validation loop still scores what was written.
+
+**Second, the smaller half, unchanged by design.** `pharma_large_cap` was opened 2026-06-16 as a
+defensive line with a literal `attribution: [{uncatalyzed, 1.0}]`; its study now names three active
+drivers, one of which — `struct_biopharma_patent_cliff_ma` — it shares with the €978
+`biotech_drug_development` BUY on the same table. The cap cannot see an overlap filed under
+`uncatalyzed`. The fix is NOT to rewrite the attribution: it is the dated record of *why* the line
+was opened and the input the validation loop scores. New `attribution_drift()` names the gap
+instead — recorded vs today's structural drivers, per held position — and §6 prints it under the
+cap table. Event catalysts are excluded because the cap is written "per shared primary STRUCTURAL
+catalyst"; listing every `cat_*` a study mentions buried the two real cases under a dozen that are
+not. Today: copper missing `struct_energy_transition_grid`, pharma missing two. Closing them is a
+human decision in `/catalyx-open`, or leaving them standing — knowingly.
+
+§6 and the digest now read the ledger LIVE from the movement files rather than the
+`catalyst_performance` partition, which freezes the merge map of the day it was written — the same
+class of defect one layer down. The partition itself is fixed on the next `ingest` (already run).
+
+513 tests green (+2).
+
+---
+
+## Data-action coherence: no dead data funds a live buy in silence (2026-08-31, v5.0)
+
+All seven items of `docs/PLAN_v5_data_action_coherence.md`, in the plan's own order. Nothing here
+edits a frozen `rebalance_rules` threshold; §6 of the plan records what was rejected and why.
+
+**F2 — the report can no longer claim to be finished.** `review_20260831.md` shipped with all five
+judgement markers blank and passed `--check` clean: `lint_prose` policed the prose that WAS there,
+nothing policed the prose that was not. New `lint_completeness` — a `<!-- CLAUDE: … -->` with no
+prose between it and the next heading is a finding, and the marker STAYS in the file (it is the
+anchor that lets the report regenerate without losing what was written). Two orthogonal lints,
+either can fail alone. Found while implementing: two of the seven markers are CONDITIONAL — "for
+each override logged THIS run" and "flag any catalyst over the cap" — and demanding prose where the
+honest answer is *nothing breached* is how a lint teaches people to write filler. The generator
+already knows, so `section_overrides` emits its marker only when a DELIBERATE override is pending
+(the `unrecorded` DEFERs are auto-logged precisely because nobody wrote one, and §4c already names
+them), and `section_exposure` only when a cap is actually breached.
+
+**E1 — the row carries the age of the evidence it spends on.** §8 listed 41 overdue indicators and
+§3, 130 lines earlier, ordered €1,020 into `luxury_goods` — whose `catalyst_alignment` of 70.4 IS
+the `intensity.current_score` of `struct_china_luxury_recovery`, two of whose indicators had not
+been observed since 2025-09-30. Both facts were printed; neither knew about the other.
+`catalyst_freshness` existed but only for OPEN positions, so a BUY — the row that commits new
+capital — arrived with nothing qualifying it. New `freshness.by_catalyst()` (a three-level verdict:
+`fresh` · `stale` · `blind` = nothing inside 2× the cadence) + `rebalance._data_age_by_sector()`,
+which takes the WORST status among a sector's catalysts (a book is only as current as the stalest
+driver it pays for) and resolves `merged_into` first. The result on this book is the finding:
+**every BUY rests on stale or blind evidence, four of them 148–240 days blind.** It is a COLUMN,
+not a rule — `decide_action` does not read it, test-enforced, because the freshness doctrine is
+that stale data is a reason to re-verify, never to stop acting. Also found: `scr.resolve()` reloads
+every YAML per call, so the first cut cost **2.9s** per run; `merged_map()` once is 259ms.
+
+**F1 — the table says what it rests on.** The review demanded eight trades toward a ranking the
+same page reported as ordering nothing (IC −0.050, top3−rest −5.84pp) and called not doing them a
+breach. Both can be right — being invested in leaders is a different prior from THIS ranking
+working — but the document never separated them, so it read as self-contradictory. New
+`selection_prior()` prints one line when the evidence is NONE or ADVERSE, and nothing when it is
+MEASURED: the rule picks NAMES on an edge not yet established while the SIZE is already
+neutralized (λ=0), and accepting the rows is accepting that prior. A sentence, not a gate —
+gating the SELECTION would be a new policy, and the policy is the user's to set.
+
+**E3 — one standing decision, one DEFER.** The dedup was scoped to the PRIOR run, so a rule that
+keeps asking and a human that keeps declining wrote a fresh DEFER every run: three pipeline
+executions in a week produced 30 rows for 10 decisions, and the tally measured how often the
+pipeline ran. `unrecorded_deviations` now takes `open_defers` and skips a (sector, action) already
+on the clock, keeping its original `logged_at` — the 21-day window has to run from when you
+stopped acting. A movement after the defer settles it, so the next refusal is a new decision. §5's
+two counters are labelled `backlog` and `suspension gate`; they measure different things and
+looked contradictory side by side.
+
+**E2 — the streak counts review cycles.** v4.3 collapsed two runs of one afternoon; same defect one
+scale up. The four runs behind copper's SELL were 06-30, 07-05, 07-28, 08-28 — gaps of five days to
+a month — so `rank_out_consecutive: 2` meant "ten days" or "two months" depending on how busy the
+quarter had been. A threshold whose meaning depends on your working rhythm is not frozen, whatever
+section it sits in. New `_cycle_runs` walks backwards keeping the latest reading and requires
+`min_gap_days: 21`; the reason now names the calendar span (`for 3 consecutive review cycles
+(54d)`). **No action changes**: copper's streak goes 4 → 3 and still fires, grid's 3 → 4.
+
+**F3 — the cash row becomes a ledger instead of a reprimand.** Two defects: `forgone` was
+hardcoded, so a quarter in which sitting out was CORRECT printed identically to one in which it was
+expensive; and the counterfactual was SPY, when the decision on trial is "should I have executed
+THIS table?". Both fixed — the label flips (`CASH DRAG` / `CASH THAT SAVED YOU`), the model book
+leads when available, and each leg keeps its own honest sign. The two numbers disagree by 14×:
+**€196 forgone vs the benchmark, €14 vs the `catalyx` book.** The benchmark had been overstating
+the cost of inaction by an order of magnitude.
+
+*Found while writing F3, in code written the same hour:* `portfolio_nav` holds backtest / live /
+forward rows under the SAME `portfolio_id`, at overlapping dates and on different NAV bases (~124
+backtest vs ~103 live). Reading the window without pinning the mode took the first row from one
+series and the last from another and reported **−16.88%**, i.e. a €1,179 "saving" from holding cash
+that never happened. It is exactly the defect v3.5 fixed in `portfolio_compare`, reintroduced at a
+new read — the table cannot express the constraint, so every read must repeat it. Pinned by a test
+with three modes in one fixture.
+
+**G1 — the spread is a property of the ticker.** `b/e 0.20%` printed identically on seven of eight
+action rows; a column that cannot tell a liquid `IUHE.AS` from a thin `JEDI.DE` is not telling you
+anything. `cost_drag` has accepted a per-ETF override since v3 and its comment promised the
+universe would carry one — nothing passed it. New `weights.spread_bps_by_ticker()`, and the vehicle
+is now resolved BEFORE the costs so the lookup can happen. **The field is deliberately still
+empty:** populating it from a yfinance snapshot returned `ask < bid` on SEMI.L and off-hours quotes
+of 463bps / 193bps elsewhere, and an invented number here is worse than the honest default — the
+b/e would stop being constant and look informative while being noise. Recorded in the config
+comment, on the same standard `name` and `ter` already hold; it is filled by hand at the quarterly
+spread review. Absent entries inherit the global, so today's output is unchanged.
+
+511 tests green (+18). Report 13,486 → 14,565 bytes: F2's conditional markers and v4.9's trims paid
+for E1's column, F1's line and F3's second counterfactual, so the judgement half got cheaper to
+check while the deterministic half got strictly more honest.
+
+---
+
+## A column that meant two things, and three blocks that said one thing N times (2026-08-31, v4.9)
+
+Two defects, one cause: a fallback introduced to *hide* a missing value instead of naming it.
+
+**`rk` meant the model-book rank on some rows and nothing on others.** The model book contains
+only the sectors the model kept, so `rank` is null for exactly the sectors it dropped — i.e. blank
+on every row whose reason cites a number. The 2026-08-31 review printed `rk` empty beside
+"ranked below top-10 (#11) for 4 consecutive runs". v4.3 papered over it in `rebalance.render`
+with a marked fallback (`~11` = "not in the book, universe rank 11"), and **that patch is the
+defect**: a column whose semantics change per row obscures more than it says, it needs a legend
+line to be read at all, and the other renderer — `scripts/review_report.py`, which produces the
+document the user actually reads — never got it, so the two diverged within a week of the fix.
+
+Now **one semantic in all three renderers** (CLI table, report §3, digest `actions[]`): the
+universe rank for this run — the number the reasons cite and §1 of the report shows. The
+model-book rank stays internal, where it is unambiguous. `_REBALANCE_FIELDS` carries `score_rank`
+and no longer carries `rank`; the digest used to ship `"rank": null` beside `"reason": "…(#11)…"`.
+
+**Underneath the fallback was a real bug.** `partial_rungs` read the *model-book* rank for its
+ladder's rank leg — the leg that means "the model has STOPPED leading this name". It was therefore
+blind precisely when it should fire: copper, #11 in the universe and dropped from the book,
+rendered `still a leader (rank nan < 6)` — the opposite of the truth, about a rank nobody had. Two
+things were wrong: the leg read the wrong rank, and a pandas NaN off the parquet round-trip
+survived an `is None` guard and printed as a value. Fixed with `_clean_rank` at every rank read and
+a NaN→None pass at the parquet boundary in `_rebalance_rows`. `render`'s row loop is extracted to
+`_render_rows`, pure, so the column semantics are pinned by a test with no lake.
+
+**Overkill removed, no reading lost.** Three blocks stated one fact N times:
+
+- §8 went from **41 indicator rows to 13 catalyst rows** — per catalyst, how many indicators are
+  overdue and which is worst, by how much, against which cadence. What the review acts on is
+  "which catalyst is running blind, and how blind"; the full per-indicator list is one
+  `catalyx.scorer.freshness` call away.
+- Unrecorded deviations aggregate **by run** ("`run_20260728_103246` → 10 action(s): 3×ADD ·
+  5×BUY · 2×SELL"), instead of printing the same run id on ten rows.
+- A rank sweep where **every** |Δ| ≥ 5 move points the same way is no longer printed as N
+  findings. Twenty `rank_up` and zero `rank_down` is the DENOMINATOR moving — a universe cut or a
+  scoring edit — and rendering it as twenty independent sector stories trains the reader to
+  discount the table. It is now stated as the one fact it is, in both the report and the digest
+  (`_rank_moves` → `{uniform_sweep, n, direction, note}`; **2,491 → 235 bytes**). A genuinely
+  mixed run still prints its rows.
+
+The explanatory blockquotes restated, every single run, the rationale that already lives in the
+module docstring and in this file — why the breakeven replaced `net edge €`, why λ clamps rather
+than inverts, why both rungs are reported. That reasoning is worth writing once, not re-paying for
+monthly: what remains is one line of semantics per section. In the digest, the rung definitions are
+hoisted out of the rows (they come from ONE config; repeating label + `rank_min` per position said
+the rule five times to state five distances once).
+
+Measured, same information: report **19,431 → 14,054 bytes** (−28%), `run_<date>.json`
+**24,289 → 19,917** (−18%). 492 tests green (+4), pinning that the `rk` column never contradicts
+the reason beside it, that a NaN rank renders as a gap and never satisfies the ladder, that a
+uniform sweep is one fact, and that the rung labels belong to the run rather than to each row.
+
+---
+
 ## Two review steps deleted, and a test suite that stops depending on your shell (2026-08-31, v4.8)
 
 Step 10 of `docs/PLAN_v4_rigor_and_lean_metrics.md` (§5 D-c–D-f) — the last one. **v4 is complete.**

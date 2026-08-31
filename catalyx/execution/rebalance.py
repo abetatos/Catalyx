@@ -161,11 +161,14 @@ def decide_action(row: dict, cfg: dict) -> dict:
         streak = int(row.get("rank_out_streak") or 0)
         need = int(sell.get("rank_out_consecutive", 2) or 2)
         if streak >= need:
+            # Name the span, not just the count: "3 consecutive cycles" covered anything from ten
+            # days to two months before the cycle floor, and the reader could not tell which.
+            span = row.get("rank_streak_days")
             return {"action": "SELL",
-                    "reason": f"ranked below top-{sell.get('rank_out_of_top')} "
-                              f"(#{row.get('score_rank')}) for {streak} consecutive runs"
-                    if row.get("score_rank") else
-                    f"ranked below top-{sell.get('rank_out_of_top')} for {streak} consecutive runs"}
+                    "reason": f"ranked below top-{sell.get('rank_out_of_top')}"
+                              + (f" (#{row['score_rank']})" if row.get("score_rank") else "")
+                              + f" for {streak} consecutive review cycles"
+                              + (f" ({span}d)" if span else "")}
 
         # ── REDUCE — capital preservation, incl. the 2026-08-04 re-verify doctrine.
         if _in(row.get("exit_action"), reduce_cfg.get("exit_watcher")):
@@ -414,6 +417,40 @@ def rank_edge_evidence(exp: dict | None, cfg: dict) -> dict:
                      f"{'n/a' if spread is None else f'{spread:+.2f}pp'} → {verdict} ({why})")}
 
 
+def selection_prior(evidence: dict | None, tilt_lambda: float | None) -> dict | None:
+    """What the table's own deployment pressure rests on, when the ranking's evidence is not it.
+
+    WHY (plan v5 §3 F1). The 2026-08-31 review printed, on one page, that its ranking orders
+    nothing (IC −0.050, top3−rest −5.84pp) AND that eight trades toward that ranking must be
+    executed, with §4c calling the shortfall a breach. Both can be right — the prior that being
+    invested pays is not the prior that YOUR ordering pays — but the document never separated
+    them, so a fair reader concludes the system contradicts itself.
+
+    The asymmetry is deliberate policy and stays: SIZE is already neutralized by λ (B1), while
+    SELECTION runs at full conviction. What was missing was saying so. This is a sentence, not a
+    gate: gating the selection would be a new policy, and the policy is the user's to set.
+
+    Returns None when the evidence is MEASURED — then the table rests on the measurement and the
+    line would be noise.
+    """
+    ev = evidence or {}
+    verdict = ev.get("verdict")
+    if verdict not in ("NONE", "ADVERSE"):
+        return None
+    lam = 0.0 if tilt_lambda is None or tilt_lambda != tilt_lambda else float(tilt_lambda)
+    return {
+        "verdict": verdict,
+        "tilt_lambda": lam,
+        "note": (
+            f"WHAT THIS TABLE RESTS ON — the ranking's measured edge is {verdict} "
+            f"({ev.get('why')}). The deployment asked for below does not rest on it: the rule "
+            f"picks NAMES on an edge not yet established, while the SIZE of each name is already "
+            f"neutralized (λ={lam:.2f}, inverse-vol). Accepting the rows is accepting that prior "
+            f"— that being invested in ranked leaders pays even before this ranking has shown it "
+            f"orders. The registered alternative is an override naming the deployment shortfall."),
+    }
+
+
 def swap_ledger(rows: list[dict], cfg: dict, horizon_days: int | None = None,
                 spread_bps: float | None = None) -> list[dict]:
     """Pair the € the table wants sold with the € it wants bought, and price each swap.
@@ -466,6 +503,45 @@ def swap_ledger(rows: list[dict], cfg: dict, horizon_days: int | None = None,
     return out
 
 
+def _wrap(text: str, width: int, indent: str, first: str) -> list[str]:
+    """Wrap a paragraph for the fixed-width table output. `first` labels the first line."""
+    import textwrap
+
+    lines = textwrap.wrap(text, width=width) or [text]
+    return [first + lines[0]] + [indent + ln for ln in lines[1:]]
+
+
+def _render_rows(rows: list[dict]) -> list[str]:
+    """One decision per line. Pure, so the column semantics are testable without a lake."""
+    out = []
+    for row in rows:
+        # The hurdle, not a forecast: what this trade's friction costs as a % of the capital it
+        # moves. `net€` is still in the JSON and the lake; it left the table on purpose.
+        be = row.get("breakeven_pct")
+        be_s = "—" if be is None else f"{be:.2f}"
+        # ONE semantic, no fallback: the universe rank this run — the number every reason cites
+        # and §1 of the report shows. The model-book rank stays internal (it exists only for book
+        # members, so a column carrying both meant two things depending on the row).
+        sr = _clean_rank(row.get("score_rank"))
+        # How old is the evidence this row is spending on. It sits beside the reason on purpose:
+        # the justification and the age of what justifies it belong in one glance.
+        age = row.get("data_age")
+        out.append(f"{row['sector_id'][:30]:<30} {str(row.get('etf') or '—')[:9]:<9} "
+                   f"{(str(sr) if sr is not None else '—'):>4} "
+                   f"{row['target_pct']:>6.1f} {row['actual_pct']:>6.1f} {row['gap_eur']:>8.0f} "
+                   f"{row['rule_action']:<7} {row['trade_eur']:>8.0f} {be_s:>6} "
+                   f"{(age if age and age == age else '—'):<13} {row['reason']}")
+    return out
+
+
+def _clean_rank(v) -> int | None:
+    """A rank is an int or it is missing. A pandas NaN slipping through an `is None` check once
+    printed `still a leader (rank nan < 6)` — a claim about a rank nobody had."""
+    if v is None or (isinstance(v, float) and v != v):
+        return None
+    return int(v)
+
+
 def partial_rungs(rows: list[dict], cfg: dict) -> list[dict]:
     """Distance to EACH partial-sale rung, per held position.
 
@@ -486,7 +562,10 @@ def partial_rungs(rows: list[dict], cfg: dict) -> list[dict]:
     for r in rows:
         if float(r.get("actual_eur") or 0.0) <= 0:
             continue
-        gain, rank = r.get("unrealized_pct"), r.get("rank")
+        # The rank leg means "the model has STOPPED leading this name" — that is a statement
+        # about the RANKING, so it reads the universe rank. The model-book rank is None/NaN for
+        # exactly the names the model dropped, i.e. blind exactly when the leg should fire.
+        gain, rank = r.get("unrealized_pct"), _clean_rank(r.get("score_rank"))
         over_pp = -float(r.get("gap_pp") or 0.0)          # positive = above target
 
         # The next UNMET ladder rung (they are sorted ascending; a met rung is already an action).
@@ -657,32 +736,59 @@ def shortfall_status(history: list[dict], cfg: dict) -> dict:
 
 
 def cash_drag(idle_eur: float, bench_return_pct: float | None, since: str | None,
-              days: int | None = None) -> dict:
-    """What the idle cash cost while it was idle, in the same units as the friction beside it.
+              days: int | None = None, model_return_pct: float | None = None,
+              model_id: str = "catalyx") -> dict:
+    """What holding the idle cash cost — or saved — while it was idle, against two yardsticks.
 
     Not a reprimand — an entry in the same ledger as the €16 of spread that stops a rotation.
     The point is comparability: one of those two numbers has been printed on every row since v3
     and the other has never been printed at all, and the book has been at ~30% for months.
 
-    `bench_return_pct` is the BENCHMARK's own return over the idle window (a market return the
-    cash could have earned by doing nothing but being invested), never the book's.
+    TWO COUNTERFACTUALS (plan v5 §3 F3). `bench_return_pct` answers "should I have been in the
+    market?"; `model_return_pct` — the model book this table implements — answers the question
+    actually on trial: "should I have executed THIS table?". The second is the one the deployment
+    rule is arguing for, and it already exists (it feeds `execution_alpha_pp`).
+
+    AND THE LABEL FLIPS. A ledger that can only reprove is not a ledger: when the counterfactual
+    fell, holding cash was the right call and the row says so with the sign it earned.
     """
     idle = float(idle_eur or 0.0)
-    forgone = None if bench_return_pct is None else round(idle * float(bench_return_pct) / 100.0, 2)
+
+    def _forgone(pct):
+        return None if pct is None else round(idle * float(pct) / 100.0, 2)
+
+    forgone, model_forgone = _forgone(bench_return_pct), _forgone(model_return_pct)
+    # The headline follows whichever counterfactual we have that is closest to the decision:
+    # the model book IS the policy on trial; the benchmark is the fallback.
+    lead = model_forgone if model_forgone is not None else forgone
+    verdict = None if lead is None else ("cost" if lead > 0 else "saved")
+    head = ("CASH DRAG" if verdict == "cost" else
+            "CASH THAT SAVED YOU" if verdict == "saved" else "CASH")
+    lines = [f"€{idle:,.0f} idle" + (f" since {since}" if since else "")
+             + (f" ({days}d)" if days else "")]
+    if forgone is not None:
+        lines.append(f"vs benchmark ({float(bench_return_pct):+.2f}%) → "
+                     f"€{abs(forgone):,.0f} {'forgone' if forgone > 0 else 'avoided'}")
+    if model_forgone is not None:
+        lines.append(f"vs the `{model_id}` model book ({float(model_return_pct):+.2f}%) → "
+                     f"€{abs(model_forgone):,.0f} "
+                     f"{'forgone' if model_forgone > 0 else 'avoided'} — the policy this table "
+                     f"implements")
     return {"idle_eur": round(idle, 2), "since": since, "days": days,
             "benchmark_return_pct": (None if bench_return_pct is None
                                      else round(float(bench_return_pct), 2)),
-            "forgone_eur": forgone,
-            "note": (f"€{idle:,.0f} idle" + (f" since {since}" if since else "")
-                     + (f" ({days}d)" if days else "")
-                     + ("" if forgone is None else
-                        f" · benchmark {float(bench_return_pct):+.2f}% over that window "
-                        f"→ €{forgone:,.0f} forgone"))}
+            "model_return_pct": (None if model_return_pct is None
+                                 else round(float(model_return_pct), 2)),
+            "model_id": model_id,
+            "forgone_eur": forgone, "model_forgone_eur": model_forgone,
+            "verdict": verdict, "headline": head,
+            "note": " · ".join(lines)}
 
 
 def unrecorded_deviations(prior_rows: list[dict], movements: list[dict],
                           overrides: list[dict], since: str | None,
-                          until: str | None = None) -> list[dict]:
+                          until: str | None = None,
+                          open_defers: list[dict] | None = None) -> list[dict]:
     """Rows the previous run told you to trade, with no movement and no override to show for it.
 
     An override is only logged if the narrator remembers to log it, and the cheapest way to be
@@ -693,22 +799,45 @@ def unrecorded_deviations(prior_rows: list[dict], movements: list[dict],
     `movements` are the executed records (`data/movements/*.json`), matched by `sector_id` and an
     `executed_at` inside the interval. Rows whose action moves no money (HOLD, RE-SCORE) are not
     deviations — nothing was asked of them.
+
+    ONE DECISION, ONE DEFER (plan v5 §2 E3). The dedup used to be scoped to the PRIOR run only,
+    so a standing decision — "the rule keeps saying BUY luxury and you keep not buying" — wrote a
+    fresh DEFER every run: three pipeline executions in a week produced 30 rows for 10 decisions,
+    and the tally measured how often the pipeline ran rather than how often a rule was declined.
+    `open_defers` carries the unrecorded overrides already logged; a (sector, action) among them
+    is the SAME ongoing silence until a movement in that sector settles it, and it keeps its
+    original `logged_at` — the clock has to run from when you stopped acting, not from the last
+    time somebody re-ran the pipeline.
     """
     moved, logged = set(), set()
+    latest_move: dict[str, str] = {}
     for m in movements or []:
         at = str(m.get("executed_at") or "")[:10]
-        if not at or (since and at < str(since)[:10]) or (until and at > str(until)[:10]):
+        if not at:
             continue
-        moved.add(str(m.get("sector_id")))
+        sid_m = str(m.get("sector_id"))
+        latest_move[sid_m] = max(latest_move.get(sid_m, ""), at)
+        if (since and at < str(since)[:10]) or (until and at > str(until)[:10]):
+            continue
+        moved.add(sid_m)
     for o in overrides or []:
         logged.add(str(o.get("sector_id")))
+    standing = set()
+    for o in open_defers or []:
+        sid_o, act_o = str(o.get("sector_id")), str(o.get("rule_action") or "")
+        at = str(o.get("logged_at") or "")[:10]
+        # A movement AFTER the defer settles it: the decision was finally taken, so the next
+        # time the rule asks it is a new decision and deserves its own row.
+        if latest_move.get(sid_o, "") > at:
+            continue
+        standing.add((sid_o, act_o))
     out = []
     for r in prior_rows or []:
         action = str(r.get("rule_action") or "")
         sid = str(r.get("sector_id") or "")
         if action in ("HOLD", "RE-SCORE", "") or not sid or sid == "CASH":
             continue
-        if sid in moved or sid in logged:
+        if sid in moved or sid in logged or (sid, action) in standing:
             continue
         out.append({"sector_id": sid, "rule_action": action,
                     "trade_eur": float(r.get("trade_eur") or 0.0),
@@ -756,13 +885,39 @@ def _snapshot_ranks(run_id: str, lake_dir: Path | None = None) -> dict[str, int]
             if r["rank"] == r["rank"]}
 
 
-def _rank_streaks(out_of_top: int, n_runs: int = 4, lake_dir: Path | None = None) -> dict[str, dict]:
+def _cycle_runs(dates: list[str], n_runs: int, min_gap_days: int) -> list[str]:
+    """The last `n_runs` review CYCLES among `dates` (`YYYYMMDD`, ascending).
+
+    v4.3 collapsed two runs of the same afternoon into one observation. Same defect, one scale up:
+    the four runs behind copper's SELL were 06-30, 07-05, 07-28 and 08-28 — gaps of five days to a
+    month — so `rank_out_consecutive: 2` meant "ten days" or "two months" depending on how busy
+    the quarter had been. A threshold whose meaning depends on your working rhythm is not frozen,
+    whatever section of the config it sits in. Walking from the most recent backwards keeps the
+    latest reading (the one the decision is about) rather than an arbitrary anchor.
+    """
+    kept: list[str] = []
+    last: date | None = None
+    for d in reversed(dates):
+        try:
+            cur = date(int(d[:4]), int(d[4:6]), int(d[6:8]))
+        except (ValueError, IndexError):                       # pragma: no cover - defensive
+            continue
+        if last is None or (last - cur).days >= min_gap_days:
+            kept.append(d)
+            last = cur
+        if len(kept) == n_runs:
+            break
+    return list(reversed(kept))
+
+
+def _rank_streaks(out_of_top: int, n_runs: int = 4, lake_dir: Path | None = None,
+                  min_gap_days: int = 21) -> dict[str, dict]:
     """Per sector: the out-of-cut streak AND how many of those runs actually scored it.
 
-    ONE RUN PER DAY. Run ids are `run_<YYYYMMDD>_<HHMMSS>`, so re-running the pipeline twice in an
-    afternoon used to write two "consecutive runs" — and `rank_out_consecutive: 2` meant a single
-    day of iteration could manufacture a SELL by itself. The rule's intent is consecutive review
-    CYCLES, so only the last run of each date counts.
+    ONE RUN PER REVIEW CYCLE. Run ids are `run_<YYYYMMDD>_<HHMMSS>`, so re-running the pipeline
+    twice in an afternoon used to write two "consecutive runs" — and `rank_out_consecutive: 2`
+    meant a single day of iteration could manufacture a SELL by itself. Runs closer together than
+    `min_gap_days` are one cycle; see `_cycle_runs` for why the day-level fix was not enough.
     """
     from catalyx.store import lake
     df = lake.read_table("sector_snapshot", lake_dir=lake_dir)
@@ -771,15 +926,72 @@ def _rank_streaks(out_of_top: int, n_runs: int = 4, lake_dir: Path | None = None
     by_date: dict[str, str] = {}
     for rid in sorted(df["run_id"].unique()):
         by_date[str(rid)[4:12]] = str(rid)                  # later run of a date wins
-    runs = [by_date[d] for d in sorted(by_date)][-n_runs:]
+    dates = _cycle_runs(sorted(by_date), n_runs, min_gap_days)
+    runs = [by_date[d] for d in dates]
     df = df[df["run_id"].isin(runs)]
     out = {}
     for sid, grp in df.groupby("sector_id"):
         grp = grp.set_index("run_id").reindex(runs)
         hist = [None if r != r else int(r) for r in grp["rank"]]     # NaN → None
-        out[str(sid)] = {"streak": rank_out_streak(hist, out_of_top),
-                         "history": hist, **rank_coverage(hist)}
+        streak = rank_out_streak(hist, out_of_top)
+        out[str(sid)] = {"streak": streak, "history": hist,
+                         # Calendar span the streak actually covers, so the reason can say it.
+                         "streak_days": _span_days(dates[-streak:]) if streak else 0,
+                         **rank_coverage(hist)}
     return out
+
+
+def _span_days(dates: list[str]) -> int | None:
+    """Calendar days between the first and last `YYYYMMDD` in the list."""
+    if len(dates) < 2:
+        return 0
+    try:
+        first, last = dates[0], dates[-1]
+        return (date(int(last[:4]), int(last[4:6]), int(last[6:8]))
+                - date(int(first[:4]), int(first[4:6]), int(first[6:8]))).days
+    except (ValueError, IndexError):                           # pragma: no cover - defensive
+        return None
+
+
+def _data_age_by_sector() -> dict[str, dict]:
+    """{sector_id: {status, label}} — how old is the evidence behind this sector's score.
+
+    WHY (plan v5 §2 E1). The review printed 41 overdue indicators in §8 and, 130 lines earlier,
+    ordered €1,020 into `luxury_goods` — whose `catalyst_alignment` of 70.4 IS the intensity of
+    `struct_china_luxury_recovery`, two of whose indicators had not been observed since
+    2025-09-30. Both facts were on the page; neither knew about the other.
+
+    A sector inherits the WORST status among its active catalysts: a book is only as current as
+    the stalest driver it is paying for. `uncatalyzed` sectors return nothing — there is no
+    structural catalyst whose age could qualify the row, and inventing one would be worse than
+    the blank.
+
+    This QUALIFIES a row. It never votes: `decide_action` does not read it, by design. The
+    freshness doctrine is that stale data is a reason to RE-VERIFY, not to stop acting — turning
+    a maintenance failure into a trading prohibition is the conservative bias Phase C exists to
+    fight.
+    """
+    try:
+        from catalyx.execution import portfolio
+        from catalyx.scorer import freshness
+        from catalyx.store import structural_catalyst_repo as scr
+
+        by_cat = freshness.by_catalyst()
+        # `resolve()` reloads every YAML on each call; the map is the same read done once. Per
+        # sector × per catalyst that was 2.9s, against 53ms for the whole freshness audit.
+        merged = scr.merged_map()
+        order = {"fresh": 0, "stale": 1, "blind": 2}
+        out: dict[str, dict] = {}
+        for sid, cids in (portfolio._sector_catalyst_map() or {}).items():
+            # Follow a `merged_into` first: the surviving catalyst holds the live indicators, and
+            # reading the absorbed one's file would report a staleness nobody can ever fix.
+            rows = [by_cat.get(scr.resolve(c, merged) or c) for c in (cids or [])]
+            rows = [r for r in rows if r]
+            if rows:
+                out[str(sid)] = max(rows, key=lambda r: order.get(r["status"], 0))
+        return out
+    except Exception:                                          # pragma: no cover - defensive
+        return {}
 
 
 def _catalyst_status(catalyst_ids: list[str]) -> str | None:
@@ -926,6 +1138,49 @@ def _benchmark_return_pct(since: str | None, until: str | None,
         return None
 
 
+def _model_return_pct(since: str | None, until: str | None, model_id: str = "catalyx",
+                      lake_dir: Path | None = None) -> float | None:
+    """The model book's own return over [since, until], from the persisted NAV curve.
+
+    This is the counterfactual that matches the decision (plan v5 F3): the question the cash row
+    is on trial for is not "should I have been in the market?" but "should I have executed THIS
+    table?", and the `catalyx` book is exactly that policy. No price fetch — the curve is already
+    in the lake, rebuilt by `post_run.sh` every run.
+
+    ONE MODE, ALWAYS. `portfolio_nav` holds backtest / live / forward rows under the SAME
+    portfolio_id, at overlapping dates and on different NAV bases (this book: ~124 backtest vs
+    ~103 live). Reading the window without pinning the mode took the first row from one series
+    and the last from another and reported **−16.88%** where `live` returned **+0.20%** — a
+    €1,179 "saving" that never happened. It is the same defect v3.5 fixed in `portfolio_compare`;
+    the fix has to be repeated at every read, because the table cannot express the constraint.
+    `live` is the record, `backtest` is reference-only, and MIXING them is never right.
+    """
+    from catalyx.store import lake
+
+    try:
+        df = lake.read_table("portfolio_nav", lake_dir=lake_dir)
+        if df.empty or not since:
+            return None
+        d = df[df["portfolio_id"] == model_id].copy()
+        d["date"] = d["date"].astype(str).str[:10]
+        d = d[(d["date"] >= str(since)[:10])
+              & (d["date"] <= str(until or date.today().isoformat())[:10])]
+        if "mode" in d.columns:
+            for mode in ("live", None, "backtest"):
+                sub = d[d["mode"].isna()] if mode is None else d[d["mode"] == mode]
+                if len(sub) >= 2:
+                    d = sub
+                    break
+            else:
+                return None
+        d = d.sort_values("date")
+        if len(d) < 2 or not float(d["nav"].iloc[0]):
+            return None
+        return round((float(d["nav"].iloc[-1]) / float(d["nav"].iloc[0]) - 1.0) * 100.0, 2)
+    except Exception:                                          # pragma: no cover - defensive
+        return None
+
+
 def _prior_run(run_id: str | None, lake_dir: Path | None = None) -> tuple[str | None, list[dict]]:
     """(run_id, rows) of the most recent recorded run STRICTLY BEFORE `run_id`."""
     from catalyx.store import lake
@@ -953,6 +1208,20 @@ def _overrides_for_run(run_id: str | None, lake_dir: Path | None = None) -> list
     if df.empty or "run_id" not in df.columns or not run_id:
         return []
     return df[df["run_id"] == run_id].to_dict("records")
+
+
+def _unrecorded_defers(lake_dir: Path | None = None) -> list[dict]:
+    """Every auto-logged DEFER already on the clock, across all runs — the standing decisions a
+    new run must not re-log (plan v5 E3)."""
+    from catalyx.store import lake
+
+    try:
+        df = lake.read_table(_OVERRIDE_TABLE, lake_dir=lake_dir)
+    except Exception:                                          # pragma: no cover - defensive
+        return []
+    if df.empty or "author" not in df.columns:
+        return []
+    return df[df["author"] == "unrecorded"].to_dict("records")
 
 
 def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None = None,
@@ -1045,6 +1314,12 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
     gate = gate_status(exp, ic_stat, cfg)
     gate_evaluable = gate["armed"]
 
+    data_age = _data_age_by_sector()
+    # Observed round-trip cost per vehicle; an absent entry inherits the global (plan v5 G1).
+    try:
+        spread_by_ticker = weights.spread_bps_by_ticker()
+    except Exception:                                          # pragma: no cover - defensive
+        spread_by_ticker = {}
     sell_cfg = cfg.get("sell_if_any", {}) or {}
     streaks = _rank_streaks(int(sell_cfg.get("rank_out_of_top", 12)), lake_dir=lake_dir)
     score_ranks = _snapshot_ranks(run_id, lake_dir=lake_dir) if run_id else {}
@@ -1085,11 +1360,11 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
             "reverify_required": ((p or {}).get("drawdown") or {}).get("reverify_required"),
             "drawdown_tier": ((p or {}).get("drawdown") or {}).get("tier"),
             "rank_out_streak": (streaks.get(sid) or {}).get("streak", 0),
+            "rank_streak_days": (streaks.get(sid) or {}).get("streak_days"),
             "rank_missing_runs": (streaks.get(sid) or {}).get("missing", 0),
             "rank_runs": (streaks.get(sid) or {}).get("n_runs"),
-            # The universe rank, so a rank-out SELL names the number it fired on. The `rank`
-            # column is the MODEL-BOOK rank and is absent for exactly the sectors the model
-            # dropped — i.e. blank on every row whose reason cites a rank.
+            # The universe rank — what every rendered `rk` column shows and every rank-out
+            # reason names. `rank` (model-book) stays internal: it exists only for book members.
             "score_rank": score_ranks.get(sid),
         }
         decision = decide_action(ctx, cfg)
@@ -1113,7 +1388,15 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
                 tax_eur = tax_engine.compute_tax(gross_gain=realized_gain,
                                                  ytd_prior=max(0.0, realized_ytd)).tax_due
 
-        costs = cost_drag(trade_eur, tax_eur, cfg)
+        # The vehicle is resolved NOW, not read off the frozen model row (plan v4 §0.2 D3).
+        # A held position keeps the ticker actually owned — that is a fact, not a recommendation.
+        # It is resolved BEFORE the costs because the spread is a property of the ticker, not of
+        # the sector: one flat 20bps printed the same b/e on 7 of 8 rows (plan v5 G1).
+        vehicle_today = _buyable_vehicle(sid)
+        etf = (p or {}).get("etf") or vehicle_today
+        vehicle_at_run = m.get("primary_etf")
+
+        costs = cost_drag(trade_eur, tax_eur, cfg, spread_bps=spread_by_ticker.get(str(etf)))
         bucket = calibration.bucket_of(score_ranks.get(sid))
         edge = expected_edge(trade_eur, buckets.get(bucket) if bucket else None)
         net = round(edge - costs["cost_drag_eur"], 2) if edge is not None else None
@@ -1122,12 +1405,6 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         if gated["final_action"] != action:
             decision = {"action": gated["final_action"], "reason": gated["gate_note"]}
             action, trade_eur = gated["final_action"], 0.0
-
-        # The vehicle is resolved NOW, not read off the frozen model row (plan v4 §0.2 D3).
-        # A held position keeps the ticker actually owned — that is a fact, not a recommendation.
-        vehicle_today = _buyable_vehicle(sid)
-        etf = (p or {}).get("etf") or vehicle_today
-        vehicle_at_run = m.get("primary_etf")
 
         rows.append({
             "sector_id": sid, "etf": etf,
@@ -1153,6 +1430,11 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
             "gate_note": gated["gate_note"],
             "regime_state": ctx["regime_state"],
             "catalyst_freshness": ((p or {}).get("catalyst_freshness") or {}).get("status"),
+            # How old is the data behind the score this row is spending on (plan v5 §2 E1)?
+            # `catalyst_freshness` above only exists for OPEN positions, so a BUY — the row that
+            # commits new capital — used to arrive with no qualification of its evidence at all.
+            "data_age": (data_age.get(sid) or {}).get("label"),
+            "data_age_status": (data_age.get(sid) or {}).get("status"),
             "exit_action": ctx["exit_action"],
             "flags": ";".join(f for f in [
                 "re-verify catalyst" if ctx["reverify_required"] else None,
@@ -1290,14 +1572,18 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
             if idle_since else None
     except ValueError:                                         # pragma: no cover - defensive
         days_idle = None
-    drag = cash_drag(cash_actual, _benchmark_return_pct(idle_since, as_of), idle_since, days_idle)
+    drag = cash_drag(cash_actual, _benchmark_return_pct(idle_since, as_of), idle_since, days_idle,
+                     model_return_pct=_model_return_pct(idle_since, as_of, strategy,
+                                                        lake_dir=lake_dir),
+                     model_id=strategy)
 
     # The deviation nobody wrote down. Read from the filesystem, not from the narrator.
     prior_run_id, prior_rows = _prior_run(run_id, lake_dir=lake_dir)
     prior_as_of = str((prior_rows[0].get("as_of") if prior_rows else "") or "")[:10] or None
     unrecorded = unrecorded_deviations(prior_rows, movements,
                                        _overrides_for_run(prior_run_id, lake_dir=lake_dir),
-                                       since=prior_as_of, until=as_of)
+                                       since=prior_as_of, until=as_of,
+                                       open_defers=_unrecorded_defers(lake_dir=lake_dir))
 
     if short["breached"]:
         warnings.append(f"DEPLOYMENT SHORTFALL — {short['note']}. Declining a row IS the override; "
@@ -1312,6 +1598,9 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         "as_of": as_of, "strategy": strategy, "run_id": run_id,
         "book": book_metrics, "warnings": warnings, "overrides": overrides,
         "swaps": swaps, "rank_edge_evidence": evidence, "partials": partials,
+        # What the deployment pressure rests on, when the ranking's own edge is not it (v5 F1).
+        "selection_prior": selection_prior(evidence,
+                                           (book_metrics.get("model") or {}).get("tilt_lambda")),
         "shortfall": short, "cash_drag": drag,
         "unrecorded": unrecorded, "prior_run_id": prior_run_id,
         "gate": gate, "composite_ic": ic_stat,
@@ -1364,6 +1653,12 @@ def persist(result: dict, lake_dir: Path | None = None) -> int:
              "book_cash_idle_since": (result.get("cash_drag") or {}).get("since"),
              "book_cash_idle_days": (result.get("cash_drag") or {}).get("days"),
              "book_bench_return_pct": (result.get("cash_drag") or {}).get("benchmark_return_pct"),
+             # The counterfactual that matches the decision: the model book this table implements
+             # (plan v5 F3). `verdict` is `cost` or `saved` — the label flips with the sign.
+             "book_model_return_pct": (result.get("cash_drag") or {}).get("model_return_pct"),
+             "book_cash_model_forgone_eur": (result.get("cash_drag") or {}).get(
+                 "model_forgone_eur"),
+             "book_cash_verdict": (result.get("cash_drag") or {}).get("verdict"),
              "book_shortfall_pp": (result.get("shortfall") or {}).get("shortfall_pp"),
              "book_shortfall_runs": (result.get("shortfall") or {}).get("runs_breached"),
              "book_shortfall_breached": (result.get("shortfall") or {}).get("breached")}
@@ -1891,7 +2186,8 @@ def render(res: dict) -> str:
     # alone was priced nowhere, which is a standing thumb on the scale for doing nothing.
     drag = res.get("cash_drag") or {}
     if drag.get("idle_eur"):
-        out.append(f"CASH DRAG {drag['note']}")
+        out += _wrap(drag["note"], width=96, indent=" " * 20,
+                     first=f"{drag.get('headline', 'CASH'):<20}")
     short = res.get("shortfall") or {}
     if short.get("breached"):
         out.append(f"SHORTFALL {short['note']}")
@@ -1902,29 +2198,17 @@ def render(res: dict) -> str:
     # "TRIM" that halves a line from one that shaves 4pp off it.
     rf = float((res.get("fractions") or {}).get("reduce", 0.5)) * 100
     lf = res.get("fractions", {}).get("ladder_trim")
-    out.append("COLUMNS  rk = model-book rank · ~N = not in the model book, universe rank N · "
-               "b/e% = friction ÷ capital moved")
+    out.append("COLUMNS  rk = rank in this run's full ranking (— = not scored this run) · "
+               "b/e% = friction ÷ capital moved · data = age of the catalyst evidence behind "
+               "the score (qualifies the row, never vetoes it)")
     out.append(f"SIZING   SELL = 100% of the line · REDUCE = {rf:.0f}% · TRIM = back to target"
                + (f" (or {float(lf) * 100:.0f}% on a ladder rung)" if lf else ""))
     out.append("")
 
     hdr = f"{'sector':<30} {'vehicle':<9} {'rk':>4} {'tgt%':>6} {'act%':>6} {'gap€':>8} " \
-          f"{'ACTION':<7} {'trade€':>8} {'b/e%':>6}  reason"
+          f"{'ACTION':<7} {'trade€':>8} {'b/e%':>6} {'data':<13} reason"
     out += [hdr, "-" * len(hdr)]
-    for row in res["rows"]:
-        # The hurdle, not a forecast: what this trade's friction costs as a % of the capital it
-        # moves. `net€` is still in the JSON and the lake; it left the table on purpose.
-        be = row.get("breakeven_pct")
-        be_s = "—" if be is None else f"{be:.2f}"
-        # `rank` is the MODEL-BOOK rank and is absent for exactly the sectors the model dropped —
-        # i.e. blank on every row whose reason cites a rank. Fall back to the universe rank,
-        # marked `~`, so the column never contradicts the sentence beside it.
-        rk = (str(row["rank"]) if row.get("rank")
-              else (f"~{row['score_rank']}" if row.get("score_rank") else "—"))
-        out.append(f"{row['sector_id'][:30]:<30} {str(row.get('etf') or '—')[:9]:<9} "
-                   f"{rk:>4} "
-                   f"{row['target_pct']:>6.1f} {row['actual_pct']:>6.1f} {row['gap_eur']:>8.0f} "
-                   f"{row['rule_action']:<7} {row['trade_eur']:>8.0f} {be_s:>6}  {row['reason']}")
+    out += _render_rows(res["rows"])
     # The CASH row is a POSITION, priced like any other: the table is a closed book or it is two
     # unrelated lists. Its action is the € the rules want moved out of cash and into the rows
     # above — printed as an action, never as a footnote (plan v4 §4 C1).
@@ -1932,7 +2216,7 @@ def render(res: dict) -> str:
     cash_verb = "DEPLOY" if cash_act > 0 else ("RAISE" if cash_act < 0 else "HOLD")
     out.append(f"{'CASH':<30} {'—':<9} {'—':>4} "
                f"{b['cash_target_pct']:>6.1f} {b['cash_actual_pct']:>6.1f} "
-               f"{-cash_act:>8.0f} {cash_verb:<7} {-cash_act:>8.0f} {'—':>7}  "
+               f"{-cash_act:>8.0f} {cash_verb:<7} {-cash_act:>8.0f} {'—':>6} {'—':<13} "
                f"rule holds {b['cash_target_pct']:.0f}% in cash; you hold "
                f"{b['cash_actual_pct']:.0f}% — already allocated on the rows above; "
                f"declining a row IS the override, not the cash")
@@ -2002,7 +2286,7 @@ def render(res: dict) -> str:
                 if lad["rank_ok"]:
                     rk_s = "model no longer leads it ✓"
                 elif p["rank"] is None:
-                    rk_s = "rank unknown"
+                    rk_s = "no rank this run"
                 else:
                     rk_s = f"still a leader (rank {p['rank']} < {lad['rank_min']})"
                 gain_s = ("gain MET" if lad["gain_met"] else
@@ -2027,6 +2311,10 @@ def render(res: dict) -> str:
                    + (f" (se {g['ic_se']:.3f} → {g.get('ic_verdict')})" if g.get("ic_se") else "")
                    + f" · ~{g.get('windows')} window(s)")
         out.append(f"         {g.get('why')}")
+    sp = res.get("selection_prior")
+    if sp:
+        out.append("")
+        out += _wrap(sp["note"], width=96, indent="         ", first="PRIOR    ")
     out.append(_summary_line(res))
     for w in res.get("warnings", []):
         out.append(f"⚠ {w}")

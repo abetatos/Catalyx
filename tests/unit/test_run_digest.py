@@ -75,6 +75,51 @@ def test_actions_come_out_in_rule_precedence_and_holds_are_separated(tmp_path, m
     assert reb["cash_action_eur"] == 1_000.0
 
 
+def test_the_action_row_carries_the_rank_its_own_reason_cites(tmp_path, monkeypatch):
+    """`rank` is the MODEL-BOOK rank — null for exactly the rows the model dropped, i.e. every row
+    whose reason names a number. The digest carried `rank: null` beside "…(#11)…" for a version."""
+    monkeypatch.setattr(rd, "_REPORTS", tmp_path / "reports")
+    _seed_rebalance(tmp_path, [
+        {"sector_id": "a", "rule_action": "SELL", "trade_eur": -500.0, "rank": None,
+         "score_rank": 11, "reason": "ranked below top-10 (#11) for 4 consecutive runs"},
+    ])
+    row = rd.build(as_of="2026-08-28", lake_dir=tmp_path)["rebalance"]["actions"][0]
+    assert row["score_rank"] == 11, "the row must name the rank its reason fired on"
+    assert "rank" not in row, "the model-book rank is internal — two rank columns is one too many"
+
+
+def test_a_one_directional_sweep_is_one_fact_not_twenty_findings():
+    """Every |Δ| ≥ 5 move pointing the same way is the denominator moving, not N sector stories.
+    Carrying the rows invites reading it as N findings, and costs a KB of context to do it."""
+    sweep = [{"sector_id": f"s{i}", "delta": 10 + i, "event_type": "rank_up"} for i in range(8)]
+    out = rd._rank_moves(sweep)
+    assert isinstance(out, dict) and out["uniform_sweep"] is True
+    assert out["n"] == 8 and out["direction"] == "up"
+
+    # A genuinely mixed run still reports its rows — that IS N findings.
+    mixed = sweep[:4] + [{"sector_id": "x", "delta": -9, "event_type": "rank_down"}]
+    assert isinstance(rd._rank_moves(mixed), list) and len(rd._rank_moves(mixed)) == 5
+    # Wobble below the threshold is the ranking breathing, not a move.
+    assert rd._rank_moves([{"sector_id": "s", "delta": 3}]) == []
+
+
+def test_the_rung_definitions_are_stated_once_not_per_position(tmp_path, monkeypatch):
+    """They come from ONE config, so repeating them per row said the rule N times to say N
+    distances once — the exact overkill this file exists to avoid."""
+    parts = [{"sector_id": "a", "etf": "A.L", "unrealized_pct": 5.0, "rank": 11, "action": "SELL",
+              "live": True,
+              "ladder": {"label": "+25% & rank ≥ 6 → trim 33%", "need_gain_pct": 20.0,
+                         "gain_met": False, "rank_ok": True, "rank_min": 6},
+              "overweight": {"label": "≥ 4pp above target", "over_pp": 10.5, "need_pp": None,
+                             "met": True}}]
+    out = rd._partials(parts)
+    assert out["partial_rungs"]["ladder_rank_min"] == 6
+    assert "label" not in json.dumps(out["partials"]), "labels belong to the run, not to the row"
+    # A met rung carries no distance — None is "already there", not a missing reading.
+    assert out["partials"][0]["overweight_need_pp"] is None
+    assert out["partials"][0]["ladder_need_gain_pct"] == 20.0
+
+
 def test_the_written_file_is_valid_json_and_round_trips(tmp_path, monkeypatch):
     monkeypatch.setattr(rd, "_REPORTS", tmp_path / "reports")
     _seed_rebalance(tmp_path, [{"sector_id": "a", "rule_action": "BUY", "trade_eur": 100.0}])
