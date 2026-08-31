@@ -1,7 +1,7 @@
 {
   "$schema": "catalyx/schemas/movement.json",
   "id": "mov_20260616_pharma_large_cap_healthcare_defensive",
-  "schema_version": "1.1",
+  "schema_version": "1.3",
   "executed_at": "2026-06-16T00:00:00Z",
   "action": "open",
   "sector_id": "pharma_large_cap",
@@ -20,17 +20,37 @@
       "weight": 1.0
     }
   ],
+  "reattribution": [
+    {
+      "as_of": "2026-08-31",
+      "attribution": [
+        {
+          "catalyst_id": "uncatalyzed",
+          "weight": 0.5
+        },
+        {
+          "catalyst_id": "struct_biopharma_patent_cliff_ma",
+          "weight": 0.5
+        }
+      ],
+      "not_attributed": [
+        "struct_glp1_obesity_supercycle"
+      ],
+      "rationale": "Opened 2026-06-16 as a defensive line, trigger `reconsideration`, conviction small — no catalyst, and that half is still true, so `uncatalyzed` keeps 0.5 rather than being retconned into a thesis it never had. What the opening record hid is real though: struct_biopharma_patent_cliff_ma drives large-cap pharma M&A appetite AND is shared with biotech_drug_development, where the current table carries a EUR978 BUY. Filed under `uncatalyzed` the cap could not see that overlap at all. DECLINED: struct_glp1_obesity_supercycle — the study names it as a sector narrative, but a broad large-cap pharma ETF is not a GLP-1 vehicle (that supercycle is concentrated in two names this fund does not overweight). Claiming it would inflate the GLP-1 bucket with money that will not move on GLP-1 news.",
+      "author": "user"
+    }
+  ],
   "trigger": "reconsideration",
   "conviction": "small",
   "score_context": {
-    "run_id": null,
-    "rank": null,
-    "composite": null,
-    "catalyst_alignment": null,
-    "momentum": null,
-    "flow": null,
-    "crowding": null,
-    "regime_state": null
+    "run_id": "run_20260612_151007",
+    "rank": 37,
+    "composite": 34.0,
+    "catalyst_alignment": 0.0,
+    "momentum": 53.4,
+    "flow": 54.7,
+    "crowding": 55.0,
+    "regime_state": "intact"
   },
   "risk_discipline": {
     "invalidation": [
