@@ -70,12 +70,12 @@ indicators:
   source: "ICE / Bloomberg DXY"
   source_url_template: "https://www.marketwatch.com/investing/index/dxy"
   check_frequency: weekly
-  current_value: 99.407
+  current_value: 99.413
   unit: dxy_index
   direction: lower_is_stronger
   threshold_strong: 97
   threshold_weak: 104
-  last_value: 101.3
+  last_value: 99.407
   last_date: "2026-08-31"
   update_note: >-
     auto: ICE DXY (yfinance)
@@ -145,7 +145,7 @@ indicators:
   direction: lower_is_stronger
   threshold_strong: 92
   threshold_weak: 97
-  last_value: 94.5
+  last_value: 95.7
   last_date: "2026-08-21"
   update_note: >-
     auto: INR/USD (FRED DEXINUS)

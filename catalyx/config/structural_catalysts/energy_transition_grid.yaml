@@ -33,12 +33,12 @@ user_notes: "Less crowded than pure AI play. Copper miners is the physical commo
   infrastructure expression."
 
 intensity:
-  current_score: 84.0
+  current_score: 85.4
   last_updated: "2026-08-31"
   history:
   - period: '2026-08-31'
-    score: 84.0
-    note: 'Computed 2026-08-31: avg=91.03 trend=↓↓ (falling 2+ consecutive) (was 88.1)'
+    score: 85.4
+    note: 'Computed 2026-08-31: avg=92.37 trend=↓↓ (falling 2+ consecutive) (was 84.0)'
     computation_method: computed
   - period: '2026-07-28'
     score: 85.6
@@ -106,14 +106,14 @@ indicators:
   name: "Copper price trend (spot, USD/tonne)"
   source: "LME spot price"
   check_frequency: monthly
-  current_value: 14418.0
+  current_value: 14746.7035
   unit: USD_per_tonne
   direction: higher_is_stronger
   threshold_strong: 9000
   threshold_weak: 7000
-  last_value: 14759.9313
+  last_value: 14418.0
   last_date: "2026-08-31"
-  update_note: "spot 2026-08-30, 6.54 USD/lb converted"
+  update_note: "auto: COMEX copper front month, USD/lb → USD/tonne"
 
   semaphore: 🟢
   value_history:
@@ -221,7 +221,7 @@ indicators:
     value: 9017.0
   - date: '2021-07-01'
     value: 9878.0
-  score: 90.6
+  score: 94.6
 deactivation_conditions:
 - id: deact_01
   condition: "Grid connection queue clears materially (lead times drop below 6 months for 2 consecutive quarters)."

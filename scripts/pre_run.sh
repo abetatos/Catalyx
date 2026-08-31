@@ -107,6 +107,36 @@ except Exception as exc:
 
 move = book.get("unrealized_pct")
 alerts = []
+
+# Adaptive review cadence (doctrine 2026-08-04): ~30d floor pulled forward by the triggers
+# below, HARD 45d ceiling regardless. The ceiling is what stops a quiet market from silencing
+# the heartbeat forever. Age = days since the last recorded score run.
+REVIEW_FLOOR_D, REVIEW_CEILING_D = 30, 45
+review_age = None
+try:
+    from catalyx.store import lake
+    runs = lake.read_table("score_run")
+    if not runs.empty:
+        last = str(runs.sort_values("run_id")["run_at"].iloc[-1])[:10]
+        review_age = (date.today() - date.fromisoformat(last)).days
+except Exception:
+    pass
+if review_age is not None and review_age >= REVIEW_CEILING_D:
+    alerts.append(f"last score run is {review_age}d old — past the hard {REVIEW_CEILING_D}d ceiling")
+
+# VIX at/above the deployment ramp = the market is hot enough to pull the review forward.
+try:
+    from catalyx.config import weights as _w
+    from catalyx.data import prices as _p
+    vix_start = float((_w.rebalance_rules().get("deployment") or {}).get("vix_ramp_start", 25.0))
+    ser = _p.read(["^VIX"], str(date.today().replace(day=1)), str(date.today()),
+                  allow_fetch=False)
+    if ser is not None and not ser.empty:
+        vix = float(ser["^VIX"].dropna().iloc[-1])
+        if vix >= vix_start:
+            alerts.append(f"VIX {vix:.1f} ≥ {vix_start:.0f} (deployment ramp) — hot tape pull-forward")
+except Exception:
+    pass
 if n_actions:
     alerts.append(f"{n_actions} rule action(s) on the book — {summary}")
 flagged = att.get("positions_needing_action") or []

@@ -153,7 +153,7 @@ indicators:
   direction: lower_is_stronger
   threshold_strong: 6.9
   threshold_weak: 7.4
-  last_value: 7.25
+  last_value: 6.721
   last_date: "2026-08-21"
   update_note: >-
     auto: USD/CNY (FRED DEXCHUS)

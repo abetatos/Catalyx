@@ -14,6 +14,21 @@
 
 
 
+## v7.1 — La pipeline corre sola: heartbeat launchd, sin LLM (2026-08-31)
+
+El sistema entero esperaba a que alguien abriera sesión. Ahora `scripts/heartbeat.sh` corre
+**mar+vie 08:12** vía launchd (`scripts/launchd/com.catalyx.heartbeat.plist`, instalado con
+`--install`): refresca COT + valoración (+ Trends si el snapshot supera 28d — fuente
+rate-limited), aplica los indicadores auto-observables por `indicator_update` (dedup-safe) con
+write-back, y corre `pre_run.sh --check`. Exit 10 → **notificación de macOS**; el silencio es un
+resultado, no un fallo. `pre_run --check` gana los dos disparadores que faltaban de la doctrina
+de cadencia adaptativa (2026-08-04): **techo duro de 45 días** desde el último score run (lo que
+impide que un mercado quieto silencie el heartbeat para siempre) y **VIX ≥ vix_ramp_start (25)**
+como pull-forward de mercado caliente. Frontera respetada: la intelligence sigue siendo la
+sesión — el ping dice «abre `/catalyx-review`», jamás opera. El CronCreate pendiente en la
+memoria del 2026-08-04 queda descartado con causa: es solo-de-sesión y expira a 7 días —
+no puede sostener una cadencia de 30-45d.
+
 ## v7.0 — Contenido de señal: 9 columnas candidatas, medidas desde hoy, peso 0 (2026-08-31)
 
 Ejecuta `docs/PLAN_v7_signal_content.md` fases M, N y O (N3 incluida: pytrends resultó operativo,

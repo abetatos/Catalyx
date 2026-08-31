@@ -70,15 +70,10 @@
   "attention": {
     "positions_needing_action": [],
     "stale_verdicts": 10,
-    "stale_indicators": 32,
+    "stale_indicators": 31,
     "pending_lifecycle": 0
   },
   "stale_verdicts": [
-    {
-      "catalyst_id": "struct_nato_rearmament",
-      "age_days": 91,
-      "freshness": "very_stale"
-    },
     {
       "catalyst_id": "struct_commercial_space_supercycle",
       "age_days": 87,
@@ -123,6 +118,11 @@
       "catalyst_id": "cat_20260724_trump_global_tariff_phase",
       "age_days": null,
       "freshness": "unknown"
+    },
+    {
+      "catalyst_id": "cat_20260817_hormuz_reescalation",
+      "age_days": null,
+      "freshness": "unknown"
     }
   ],
   "stale_indicators": [
@@ -151,13 +151,6 @@
       "catalyst_id": "struct_ai_drug_discovery",
       "indicator": "ind_03",
       "last_date": "2025-12-31",
-      "overdue_by": null,
-      "cadence": null
-    },
-    {
-      "catalyst_id": "struct_biopharma_patent_cliff_ma",
-      "indicator": "ind_02",
-      "last_date": "2026-05-31",
       "overdue_by": null,
       "cadence": null
     },
@@ -356,56 +349,56 @@
     {
       "sector_id": "cloud_software_saas",
       "rank": 1,
-      "composite": 66.1,
+      "composite": 66.2,
       "momentum": 98.1,
       "narrative_maturity": "crowded"
     },
     {
       "sector_id": "pharma_large_cap",
       "rank": 2,
-      "composite": 62.1,
+      "composite": 62.5,
       "momentum": 71.2,
       "narrative_maturity": "crowded"
     },
     {
       "sector_id": "biotech_drug_development",
       "rank": 3,
-      "composite": 60.1,
+      "composite": 60.2,
       "momentum": 90.4,
       "narrative_maturity": "mainstream"
     },
     {
       "sector_id": "robotics_automation",
       "rank": 4,
-      "composite": 60.0,
-      "momentum": 82.7,
+      "composite": 59.5,
+      "momentum": 78.8,
       "narrative_maturity": "mainstream"
     },
     {
-      "sector_id": "cybersecurity_commercial",
-      "rank": 5,
-      "composite": 57.3,
-      "momentum": 94.2,
-      "narrative_maturity": "crowded"
-    },
-    {
       "sector_id": "semiconductors_design",
-      "rank": 6,
-      "composite": 56.8,
-      "momentum": 78.8,
+      "rank": 5,
+      "composite": 57.5,
+      "momentum": 82.7,
       "narrative_maturity": "crowded"
     },
     {
       "sector_id": "water_infrastructure",
-      "rank": 7,
-      "composite": 56.8,
+      "rank": 6,
+      "composite": 56.9,
       "momentum": 55.8,
       "narrative_maturity": "emerging"
     },
     {
+      "sector_id": "cybersecurity_commercial",
+      "rank": 7,
+      "composite": 56.5,
+      "momentum": 94.2,
+      "narrative_maturity": "crowded"
+    },
+    {
       "sector_id": "ai_infrastructure_data_centers",
       "rank": 8,
-      "composite": 54.7,
+      "composite": 54.8,
       "momentum": 67.3,
       "narrative_maturity": "crowded"
     }
@@ -431,12 +424,7 @@
         "why": "drives an open position"
       }
     ],
-    "should_reverify": [
-      {
-        "catalyst_id": "struct_nato_rearmament",
-        "why": "stale very_stale · drives a decision-relevant sector"
-      }
-    ],
+    "should_reverify": [],
     "optional_reverify": [
       "cat_20260314_private_credit_redemption_crisis",
       "cat_20260603_nato_defense_gdp",
@@ -446,6 +434,7 @@
       "cat_20260620_clarity_act_market_structure",
       "cat_20260630_drc_cobalt_export_quota",
       "cat_20260724_trump_global_tariff_phase",
+      "cat_20260817_hormuz_reescalation",
       "struct_commercial_space_supercycle"
     ],
     "sectors_decision_relevant": [
