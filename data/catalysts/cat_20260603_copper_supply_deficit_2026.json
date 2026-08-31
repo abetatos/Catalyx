@@ -73,6 +73,12 @@
       "verdict": "intact",
       "evidence": "Copper $6.54/lb on 2026-08-30, +1.67% MoM and +45.02% YoY, supported by a weaker dollar. Sell-side targets now straddle spot: JPMorgan $14,800/t by Dec-2026 (above the ~$14,418/t spot) and Goldman $11,400 for 2026 (already breached) — the deficit thesis is being repriced INTO the models, which is the early form of the analyst_model_revision exit signal for the copper line.",
       "source": "TradingEconomics copper 2026-08-30; JPMorgan and Goldman Sachs 2026 copper forecasts (accessed 2026-08-31)"
+    },
+    {
+      "date": "2026-08-31",
+      "verdict": "intact",
+      "evidence": "Copper $6.54/lb on 2026-08-30, +1.67% MoM and +45.02% YoY, supported by a weaker dollar. Sell-side targets now straddle spot: JPMorgan $14,800/t by Dec-2026 (above the ~$14,418/t spot) and Goldman $11,400 for 2026 (already breached) — the deficit thesis is being repriced INTO the models, which is the early form of the analyst_model_revision exit signal for the copper line.",
+      "source": "TradingEconomics copper 2026-08-30; JPMorgan and Goldman Sachs 2026 copper forecasts (accessed 2026-08-31)"
     }
   ]
 }

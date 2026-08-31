@@ -33,12 +33,12 @@ user_notes: "Less crowded than pure AI play. Copper miners is the physical commo
   infrastructure expression."
 
 intensity:
-  current_score: 88.1
+  current_score: 84.0
   last_updated: "2026-08-31"
   history:
   - period: '2026-08-31'
-    score: 88.1
-    note: 'Computed 2026-08-31: avg=95.13 trend=↓↓ (falling 2+ consecutive) (was 86.5)'
+    score: 84.0
+    note: 'Computed 2026-08-31: avg=91.03 trend=↓↓ (falling 2+ consecutive) (was 88.1)'
     computation_method: computed
   - period: '2026-07-28'
     score: 85.6
@@ -74,7 +74,7 @@ indicators:
   direction: higher_is_stronger
   threshold_strong: 12
   threshold_weak: 6
-  last_value: 20
+  last_value: 24.0
   last_date: "2026-08-31"
 
   semaphore: 🟢
@@ -83,7 +83,7 @@ indicators:
     value: 22
   - date: '2025-12-31'
     value: 18
-  score: 95.0
+  score: 91.2
   update_note: median of quoted EU HV manufacturer ranges (18-32 months), up from 20
 - id: ind_02
   name: "EU grid investment announced (€B, rolling 12M)"
@@ -106,14 +106,14 @@ indicators:
   name: "Copper price trend (spot, USD/tonne)"
   source: "LME spot price"
   check_frequency: monthly
-  current_value: 14759.9313
+  current_value: 14418.0
   unit: USD_per_tonne
   direction: higher_is_stronger
   threshold_strong: 9000
   threshold_weak: 7000
-  last_value: 14418.0
+  last_value: 14759.9313
   last_date: "2026-08-31"
-  update_note: "auto: COMEX copper front month, USD/lb → USD/tonne"
+  update_note: "spot 2026-08-30, 6.54 USD/lb converted"
 
   semaphore: 🟢
   value_history:
@@ -221,7 +221,7 @@ indicators:
     value: 9017.0
   - date: '2021-07-01'
     value: 9878.0
-  score: 99.1
+  score: 90.6
 deactivation_conditions:
 - id: deact_01
   condition: "Grid connection queue clears materially (lead times drop below 6 months for 2 consecutive quarters)."
@@ -252,6 +252,14 @@ absorbed_note: |
     - struct_solar_lcoe_deployment (intensity 64.1): US utility-scale solar LCOE (BloombergNEF global benchmark, fixed-axis), US utility-scale solar capacity additions (annualized, GW), China polysilicon spot price (CNY/kg) — inverse signal: lower price = developer tailwind, not structural strength, North American utility-scale solar PPA price (USD/MWh, LevelTen Energy quarterly index)
     - struct_battery_storage_supercycle (intensity 87.0): Lithium carbonate battery-grade spot (USD/t), Global grid-scale BESS annual installations (GWh), BESS share of total lithium demand (%), Global EV sales run-rate (millions units/yr)
 review_log:
+- date: '2026-08-31'
+  verdict: strengthening
+  evidence: 'European HV transformer lead times have extended past the stored 20 months: Efacec 20-28, Pauwels 24-32, TMC
+    20-28, Schneider France 18-26 months (US OEMs 48-60). Root cause is grain-oriented electrical steel - global GOES capacity
+    has not expanded with transformer demand and even willing manufacturers wait 12-18 months for their own raw material,
+    which makes the bottleneck structural rather than a backlog that clears. Copper $6.54/lb on 2026-08-30 = $14,418/t, +1.67%
+    MoM, +45.0% YoY - confirms ind_03 exactly.'
+  source: GridReadiness Transformer Lead Times Europe 2026; TradingEconomics copper 2026-08-30
 - date: '2026-08-31'
   verdict: strengthening
   evidence: 'European HV transformer lead times have extended past the stored 20 months: Efacec 20-28, Pauwels 24-32, TMC

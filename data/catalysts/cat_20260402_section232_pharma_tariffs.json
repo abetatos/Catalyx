@@ -67,6 +67,12 @@
       "verdict": "intact",
       "evidence": "The tariff MATERIALISED rather than being walked back: the 100% Section 232 tariff on patented pharmaceuticals and biologics took effect 2026-07-31 (2026-09-29 for smaller companies not named in the Proclamation). Not walked back, but now a realised event - the stored is_priced_in of 0.75 looks right and the remaining alpha is in the relief channel, not the tariff: Lilly and Novo both filed comment on the tariff impact and then agreed MFN pricing with the administration, i.e. price concessions traded for tariff relief.",
       "source": "Crowell & Moring client alert (effective 2026-07-31); Foley Hoag alert on the April 2026 Proclamation; AMCP federal update"
+    },
+    {
+      "date": "2026-08-31",
+      "verdict": "intact",
+      "evidence": "The tariff MATERIALISED rather than being walked back: the 100% Section 232 tariff on patented pharmaceuticals and biologics took effect 2026-07-31 (2026-09-29 for smaller companies not named in the Proclamation). Not walked back, but now a realised event - the stored is_priced_in of 0.75 looks right and the remaining alpha is in the relief channel, not the tariff: Lilly and Novo both filed comment on the tariff impact and then agreed MFN pricing with the administration, i.e. price concessions traded for tariff relief.",
+      "source": "Crowell & Moring client alert (effective 2026-07-31); Foley Hoag alert on the April 2026 Proclamation; AMCP federal update"
     }
   ]
 }

@@ -39,7 +39,7 @@ user_notes: >
   are the primary confirmation; refresh quarterly against IQVIA/BioPharma deal trackers.
 
 intensity:
-  current_score: 86.0
+  current_score: 87.5
   computation_method: computed
   last_updated: "2026-08-31"
   computation_note: >
@@ -47,8 +47,8 @@ intensity:
     LOE-driven takeout pressure with clear deal-flow indicators.
   history:
   - period: '2026-08-31'
-    score: 86.0
-    note: 'Computed 2026-08-31: avg=84.05 trend=↑ (rising 1 period) (was 84.0)'
+    score: 87.5
+    note: 'Computed 2026-08-31: avg=85.47 trend=↑ (rising 1 period) (was 86.0)'
     computation_method: computed
   - period: '2026-07-28'
     score: 84.0
@@ -90,16 +90,15 @@ indicators:
   source: "SPDR S&P Biotech ETF"
   source_url_template: "https://www.ssga.com/"
   check_frequency: monthly
-  current_value: 50
+  current_value: 80.3
   unit: percent_ttm
   direction: higher_is_stronger
   threshold_strong: 25
   threshold_weak: 0
-  last_value: 40
-  last_date: "2026-05-31"
-  update_note: >
-    XBI +~50% trailing 12m, largely on the M&A bid re-rating clinical-stage names. Threshold_strong +25%;
-    threshold_weak 0%.
+  last_value: 50
+  last_date: "2026-08-31"
+  update_note: >-
+    TTM total return %, computed from adjusted closes
   semaphore: 🟢
   value_history:
   - date: "2026-05-31"
@@ -107,7 +106,7 @@ indicators:
   - date: "2025-12-31"
     value: 30
 
-  score: 90.0
+  score: 95.7
 - id: ind_03
   name: "Average clinical-stage takeout premium (%)"
   source: "Fierce Pharma / deal disclosures"
@@ -174,6 +173,20 @@ narrative_maturity: "mainstream"
 status: active
 status_last_reviewed: "2026-08-31"
 review_log:
+- date: '2026-08-31'
+  verdict: intact
+  evidence: XBI trailing-12M total return +80.3% (computed from yfinance adjusted closes, 2026-08-31) vs 50 stored on 
+    2026-05-31 - the takeout-premium environment is intact and the sector re-rating has accelerated; note this also 
+    raises the priced-in/crowding side of the thesis.
+  source: yfinance XBI adjusted closes, computed 2026-08-31
+- date: '2026-08-31'
+  verdict: intact
+  evidence: "No new YTD print surfaced: the $106bn / 201 deals figure is still the 2026-06-04 CNBC number already stored in
+    ind_01, so this indicator is ~3 months stale even after re-verification. What IS new: average deal value $527.3m in 2026
+    vs $365m in 2025 (+44%), and a reported shift from 'platform premium' to 'execution premium' - acquirers now prioritising
+    assets reaching EPS accretion in 24-36 months. LOE exposure quoted at >$230bn by 2030 by this source vs the $265bn stored
+    in ind_04; different methodology, NOT written as an update."
+  source: CNBC 2026-06-04; IQVIA Biopharma M&A Outlook 2026; Vision Life Sciences patent-cliff guide
 - date: '2026-08-31'
   verdict: intact
   evidence: "No new YTD print surfaced: the $106bn / 201 deals figure is still the 2026-06-04 CNBC number already stored in

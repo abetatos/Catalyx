@@ -200,4 +200,13 @@ linked_event_catalyst_ids:
 - cat_20260603_nato_defense_gdp
 - cat_20260603_nato_hague_5pct_gdp
 status: active
-status_last_reviewed: "2026-06-01"
+status_last_reviewed: "2026-08-31"
+review_log:
+- date: '2026-08-31'
+  verdict: strengthening
+  evidence: Rheinmetall order backlog at record EUR 80.4bn in early Aug 2026 (was EUR 73bn in May), new nominations 
+    +476% YoY to EUR 11.37bn; F-35, ammunition and missile capacity expansions due through 2027; FY2026 sales growth 
+    guided up to +45%. Combined 3-company revenue growth print not yet available for ind_02 - RHM-only, so no numeric 
+    written.
+  source: defence-industry.eu 2026-08 (EUR 80.4bn backlog); miningmetalnews 2026-05-26 (EUR 73bn); CNBC 2026-03-11 (FY26
+    guidance)

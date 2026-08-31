@@ -70,6 +70,12 @@
       "verdict": "intact",
       "evidence": "The revision thesis this event captured was confirmed by the tape: CrowdStrike's 2026-08-26 print (revenue +26% to $1.47bn, net-new ARR +73% YoY, FY guide to ~$6bn) was read by CNBC explicitly as 'AI is a cybersecurity tailwind, not a threat', and 24/7 Wall St notes it re-rated the whole group into Palo Alto's 2026-09-01 print.",
       "source": "CNBC 2026-08-26; 24/7 Wall St 2026-08-30 (accessed 2026-08-31)"
+    },
+    {
+      "date": "2026-08-31",
+      "verdict": "intact",
+      "evidence": "The revision thesis this event captured was confirmed by the tape: CrowdStrike's 2026-08-26 print (revenue +26% to $1.47bn, net-new ARR +73% YoY, FY guide to ~$6bn) was read by CNBC explicitly as 'AI is a cybersecurity tailwind, not a threat', and 24/7 Wall St notes it re-rated the whole group into Palo Alto's 2026-09-01 print.",
+      "source": "CNBC 2026-08-26; 24/7 Wall St 2026-08-30 (accessed 2026-08-31)"
     }
   ]
 }

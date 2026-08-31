@@ -65,6 +65,12 @@
     },
     {
       "date": "2026-08-31",
+      "verdict": "strengthening",
+      "evidence": "Fed held at 3.50-3.75% for a fifth consecutive meeting in July 2026, and Chair Warsh used Jackson Hole to flag that underlying inflation is NOT slowing; CME FedWatch put roughly 55% odds on a 25bp HIKE at the September meeting vs ~45% hold - the market is now pricing a hike, not a cut. Corroborated by the ECB, which raised all three key rates 25bp on 2026-06-11 (first hike in three years, effective 2026-06-17) on energy-driven inflation. NOTE: search results for US CPI were contaminated by September-2024 articles quoting 2.5% headline; the 2026-dated sources put CPI nearer 3.5% YoY. The 2.5% figure was NOT used.",
+      "source": "Jackson Hole remarks (Warsh) via Yahoo Finance/Motley Fool Aug 2026; ECB monetary policy decisions 2026-06-11 and 2026-07-23"
+    },
+    {
+      "date": "2026-08-31",
       "verdict": "intact",
       "evidence": "Fed held the funds rate at 3.50-3.75% for a fifth consecutive meeting in July 2026 with markets assigning roughly one-in-three odds to a HIKE; Chair Warsh used Jackson Hole to flag that underlying inflation is not slowing. CPI running +3.5% YoY as of August 2026 with the effective funds rate at 3.63%. The hawkish-pivot thesis is confirmed, not fading. DATA HYGIENE: search returned a '+2.5% August CPI' figure that traces to 2024-dated articles (fxstreet/tradingview 2024 URLs) — discarded, not recorded.",
       "source": "TradingEconomics US Fed Funds Rate; Jackson Hole 2026 remarks (Warsh); Investing.com sector-rotation note 2026-08-24 (accessed 2026-08-31)"

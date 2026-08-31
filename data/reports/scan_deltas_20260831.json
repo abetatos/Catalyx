@@ -120,5 +120,24 @@
     "direction": "strengthening",
     "evidence": "The revision thesis this event captured was confirmed by the tape: CrowdStrike's 2026-08-26 print (revenue +26% to $1.47bn, net-new ARR +73% YoY, FY guide to ~$6bn) was read by CNBC explicitly as 'AI is a cybersecurity tailwind, not a threat', and 24/7 Wall St notes it re-rated the whole group into Palo Alto's 2026-09-01 print.",
     "source": "CNBC 2026-08-26; 24/7 Wall St 2026-08-30 (accessed 2026-08-31)"
+  },
+  {
+    "catalyst_id": "struct_nato_rearmament",
+    "verdict": "strengthening",
+    "evidence": "Rheinmetall order backlog at record EUR 80.4bn in early Aug 2026 (was EUR 73bn in May), new nominations +476% YoY to EUR 11.37bn; F-35, ammunition and missile capacity expansions due through 2027; FY2026 sales growth guided up to +45%. Combined 3-company revenue growth print not yet available for ind_02 - RHM-only, so no numeric written.",
+    "source": "defence-industry.eu 2026-08 (EUR 80.4bn backlog); miningmetalnews 2026-05-26 (EUR 73bn); CNBC 2026-03-11 (FY26 guidance)"
+  },
+  {
+    "catalyst_id": "struct_biopharma_patent_cliff_ma",
+    "verdict": "intact",
+    "evidence": "XBI trailing-12M total return +80.3% (computed from yfinance adjusted closes, 2026-08-31) vs 50 stored on 2026-05-31 - the takeout-premium environment is intact and the sector re-rating has accelerated; note this also raises the priced-in/crowding side of the thesis.",
+    "source": "yfinance XBI adjusted closes, computed 2026-08-31",
+    "indicators": [
+      {
+        "id": "ind_02",
+        "value": 80.3,
+        "note": "TTM total return %, computed from adjusted closes"
+      }
+    ]
   }
 ]

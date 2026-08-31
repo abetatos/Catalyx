@@ -157,6 +157,14 @@ review_log:
   source: CNBC 2026-08-26 Nvidia Q2 FY2027 earnings; Fortune 2026-08-27 (Nvidia CFO); Goldman Sachs hyperscaler capex 
     projection
 - date: '2026-08-31'
+  verdict: strengthening
+  evidence: 'Nvidia FQ2-2027 (quarter ended Aug 2026) data-center revenue $89.0bn, ~92% of total, of which $49bn hyperscaler
+    +13% sequential; guided FQ3 total revenue $108.0bn, a +$11.8bn sequential step. Top-5 hyperscaler capex path put at $1.3tn
+    for 2027 vs $800bn prior year (+62%). CFO: about half of data-center business now comes from customers BEYOND the hyperscalers
+    - the demand base is broadening, not narrowing, which is the specific bear case this print rebuts.'
+  source: CNBC 2026-08-26 Nvidia Q2 FY2027 earnings; Fortune 2026-08-27 (Nvidia CFO); Goldman Sachs hyperscaler capex 
+    projection
+- date: '2026-08-31'
   verdict: intact
   evidence: Combined FY2026 capex guidance across the big-4 hyperscalers climbed to $720-745bn; 2027 consensus ~$934bn 
     (Google $284.8bn, Amazon $256.5bn, Microsoft $207.6bn, Meta $185.6bn), with JPMorgan at $1.0tn and Goldman at 

@@ -1,0 +1,41 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20260817_hormuz_reescalation",
+  "schema_version": "1.2",
+  "type": "event",
+  "created_at": "2026-08-31T00:00:00Z",
+  "detected_at": "2026-08-31T00:00:00Z",
+  "event_date": "2026-08-17T00:00:00Z",
+  "source": {
+    "type": "news_article",
+    "url": "https://tefs.com/en/knowledge-base/geopolitical-risks-keep-markets-on-edge-21-08-2026",
+    "publication": "TEFS / Moneta Markets / ucapital August 2026 outlook",
+    "published_at": "2026-08-21T00:00:00Z"
+  },
+  "catalyst_type": "geopolitical",
+  "catalyst_subtype": "war_escalation",
+  "description": "Re-escalation of the US-Iran confrontation around the Strait of Hormuz: the 60-day ceasefire expired and a tanker was seized in the Strait on 2026-08-17/18, followed by tougher US sanctions on Iran. Brent held ~$94/bbl (2026-08-24) and WTI above $84.50 with supply-disruption risk repricing. This is a NEW discrete development on the same driver as cat_20260228_hormuz_closure (archived, fully priced-in): that event documented the February closure; this one captures the August ceasefire breakdown, which was partially expected (markets stayed notably bullish per BofA FMS 2026-08-18).",
+  "geography": ["IRN", "USA", "MENA", "GLOBAL"],
+  "magnitude": "high",
+  "novelty_score": 20,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": false,
+    "nov_02_new_sector": false,
+    "nov_03_new_source": false,
+    "nov_04_changes_rate": true,
+    "nov_05_consensus_surprise_gt50": false
+  },
+  "strength_score": 68,
+  "consensus_surprise": 0.4,
+  "is_priced_in_estimate": 0.5,
+  "relation_to_structural": "independent",
+  "decay_halflife_days": 60,
+  "related_catalyst_ids": [],
+  "affected_sectors": ["oil_majors_integrated", "eu_defense_prime_contractors"],
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": null,
+  "user_rank": null,
+  "user_notes": "Registrado por el refresh v7 del 2026-08-31 (C0 lo destapó). Mismo driver económico que cat_20260228_hormuz_closure pero desarrollo discreto NUEVO (expiración de tregua + captura de tanquero), no un des-archivado: el evento de febrero queda archived y fully-priced; este decae desde el 2026-08-17. is_priced_in 0.5: Brent ya en $94 pero el riesgo de disrupción de suministro sigue repricing (sanciones nuevas). Si se firma una tregua nueva, status: invalidated.",
+  "tags": ["geopolitical", "oil", "hormuz", "iran", "sanctions"]
+}

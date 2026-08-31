@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-31T17:58:32.496750",
+  "generated_at": "2026-08-31T19:50:21.888332",
   "date": "2026-08-31",
   "source": "yfinance",
   "sectors": {
@@ -22,16 +22,16 @@
       "alternatives": [
         {
           "ticker": "NATO.PA",
-          "current_price": 18.6162,
+          "current_price": 18.6028,
           "currency": "USD",
-          "return_1m_pct": 3.32,
-          "return_3m_pct": 2.27,
-          "return_6m_pct": 10.8,
+          "return_1m_pct": 3.24,
+          "return_3m_pct": 2.2,
+          "return_6m_pct": 10.72,
           "return_1y_pct": null,
           "high_52w": 19.8795,
           "low_52w": 15.1352,
-          "near_52w_high_pct": -6.35,
-          "momentum_score": 59.0,
+          "near_52w_high_pct": -6.42,
+          "momentum_score": 58.9,
           "data_points": 252,
           "last_date": "2026-08-31"
         },
@@ -551,16 +551,16 @@
     "robotics_automation": {
       "primary": {
         "ticker": "RBOT.L",
-        "current_price": 21.565,
+        "current_price": 21.4154,
         "currency": "USD",
-        "return_1m_pct": 10.96,
-        "return_3m_pct": 3.01,
-        "return_6m_pct": 27.42,
-        "return_1y_pct": 41.22,
+        "return_1m_pct": 10.19,
+        "return_3m_pct": 2.29,
+        "return_6m_pct": 26.53,
+        "return_1y_pct": 40.24,
         "high_52w": 22.3,
         "low_52w": 14.88,
-        "near_52w_high_pct": -3.3,
-        "momentum_score": 70.6,
+        "near_52w_high_pct": -3.97,
+        "momentum_score": 69.5,
         "data_points": 255,
         "last_date": "2026-08-31"
       },
@@ -619,16 +619,16 @@
       "alternatives": [
         {
           "ticker": "DGTL.L",
-          "current_price": 12.1116,
+          "current_price": 12.102,
           "currency": "USD",
-          "return_1m_pct": 6.24,
-          "return_3m_pct": 7.37,
-          "return_6m_pct": 23.37,
-          "return_1y_pct": 5.04,
+          "return_1m_pct": 6.16,
+          "return_3m_pct": 7.29,
+          "return_6m_pct": 23.27,
+          "return_1y_pct": 4.96,
           "high_52w": 12.265,
           "low_52w": 9.105,
-          "near_52w_high_pct": -1.25,
-          "momentum_score": 70.0,
+          "near_52w_high_pct": -1.33,
+          "momentum_score": 69.9,
           "data_points": 255,
           "last_date": "2026-08-31"
         }
@@ -687,18 +687,18 @@
       "alternatives": [
         {
           "ticker": "HEAL.L",
-          "current_price": 10.855,
+          "current_price": 10.5616,
           "currency": "USD",
-          "return_1m_pct": 10.96,
-          "return_3m_pct": 22.14,
-          "return_6m_pct": 19.02,
-          "return_1y_pct": 35.9,
+          "return_1m_pct": 8.35,
+          "return_3m_pct": 20.81,
+          "return_6m_pct": 14.64,
+          "return_1y_pct": 31.24,
           "high_52w": 10.94,
           "low_52w": 7.895,
-          "near_52w_high_pct": -0.78,
-          "momentum_score": 77.8,
-          "data_points": 254,
-          "last_date": "2026-08-27"
+          "near_52w_high_pct": -3.46,
+          "momentum_score": 74.6,
+          "data_points": 255,
+          "last_date": "2026-08-31"
         }
       ]
     },

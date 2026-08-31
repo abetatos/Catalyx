@@ -63,6 +63,12 @@
       "verdict": "strengthening",
       "evidence": "The shortage has extended its duration rather than resolving: all three major HBM suppliers confirm sold-out capacity through 2026, with SK Hynix describing HBM, DRAM and NAND as 'essentially sold out' for the year, and tight DRAM supply now expected to persist BEYOND 2026. Chinese conventional-DRAM relief lands only in consumer devices, not the HBM bottleneck.",
       "source": "AI Frontiers HBM export-controls analysis; SoftwareSeni China DRAM export controls; SiliconAnalysts capex reallocation"
+    },
+    {
+      "date": "2026-08-31",
+      "verdict": "strengthening",
+      "evidence": "The shortage has extended its duration rather than resolving: all three major HBM suppliers confirm sold-out capacity through 2026, with SK Hynix describing HBM, DRAM and NAND as 'essentially sold out' for the year, and tight DRAM supply now expected to persist BEYOND 2026. Chinese conventional-DRAM relief lands only in consumer devices, not the HBM bottleneck.",
+      "source": "AI Frontiers HBM export-controls analysis; SoftwareSeni China DRAM export controls; SiliconAnalysts capex reallocation"
     }
   ]
 }

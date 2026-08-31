@@ -62,6 +62,12 @@
       "verdict": "intact",
       "evidence": "Controls in force and China substitution is not arriving on schedule: case-by-case licensing for Nvidia H200 / AMD MI325X since January 2026, on top of China-wide controls on advanced packaging SME, HBM and DRAM. Chinese producers are expected to make ~7m HBM3 dies in 2026 - enough for only ~600k H100-class accelerators, far short of domestic demand - and are not expected to ship HBM at volume through 2026-2027.",
       "source": "AI Frontiers, High-Bandwidth Memory: The Critical Gaps in US Export Controls; CRS R48642"
+    },
+    {
+      "date": "2026-08-31",
+      "verdict": "intact",
+      "evidence": "Controls in force and China substitution is not arriving on schedule: case-by-case licensing for Nvidia H200 / AMD MI325X since January 2026, on top of China-wide controls on advanced packaging SME, HBM and DRAM. Chinese producers are expected to make ~7m HBM3 dies in 2026 - enough for only ~600k H100-class accelerators, far short of domestic demand - and are not expected to ship HBM at volume through 2026-2027.",
+      "source": "AI Frontiers, High-Bandwidth Memory: The Critical Gaps in US Export Controls; CRS R48642"
     }
   ]
 }
