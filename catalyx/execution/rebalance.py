@@ -42,14 +42,17 @@ import argparse
 import json
 import re
 import sys
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from catalyx.config import weights
 
 # Fixed precedence. A row is decided once, by the FIRST rule that fires in this order — so a
 # breaking regime is never quietly outranked by "but it is underweight".
-PRECEDENCE = ("SELL", "REDUCE", "TRIM", "ADD", "BUY", "HOLD")
+# RE-SCORE sits with the sell-side actions on purpose: it is what a rank-out SELL degrades to
+# when the rank behind it was never measured, and it moves no money. Putting it beside HOLD would
+# bury a work item at the bottom of the table under the rows that do move money.
+PRECEDENCE = ("SELL", "REDUCE", "TRIM", "RE-SCORE", "ADD", "BUY", "HOLD")
 _TABLE = "rebalance"
 _OVERRIDE_TABLE = "override_log"
 
@@ -143,12 +146,26 @@ def decide_action(row: dict, cfg: dict) -> dict:
         if _in(row.get("catalyst_status"), sell.get("catalyst_status")):
             return {"action": "SELL",
                     "reason": f"driving catalyst {row.get('catalyst_status')}"}
+        # RE-SCORE — "we do not know" is a real state (plan v4 §3 B3). It comes AFTER the
+        # fundamental sells (a broken thesis is a sell whatever its rank did) and BEFORE the
+        # rank-streak sell, because the rank streak is exactly the verdict that missing data
+        # cannot support.
+        rescore = cfg.get("rescore_if", {}) or {}
+        missing = int(row.get("rank_missing_runs") or 0)
+        if missing >= int(rescore.get("missing_runs_min", 2) or 2):
+            return {"action": "RE-SCORE",
+                    "reason": f"absent from {missing} of the last "
+                              f"{row.get('rank_runs') or rescore.get('lookback_runs', 4)} scored "
+                              f"runs — no rank to sell on. Re-score before deciding."}
+
         streak = int(row.get("rank_out_streak") or 0)
         need = int(sell.get("rank_out_consecutive", 2) or 2)
         if streak >= need:
             return {"action": "SELL",
-                    "reason": f"ranked below top-{sell.get('rank_out_of_top')} for "
-                              f"{streak} consecutive runs"}
+                    "reason": f"ranked below top-{sell.get('rank_out_of_top')} "
+                              f"(#{row.get('score_rank')}) for {streak} consecutive runs"
+                    if row.get("score_rank") else
+                    f"ranked below top-{sell.get('rank_out_of_top')} for {streak} consecutive runs"}
 
         # ── REDUCE — capital preservation, incl. the 2026-08-04 re-verify doctrine.
         if _in(row.get("exit_action"), reduce_cfg.get("exit_watcher")):
@@ -247,8 +264,54 @@ def expected_edge(trade_eur: float, bucket_pct: float | None) -> float | None:
     return round(trade_eur * bucket_pct / 100.0, 2)
 
 
+def gate_status(exp: dict | None, ic: dict | None, cfg: dict) -> dict:
+    """May the after-tax gate BLOCK a sale this run? A joint condition, not a window count.
+
+    THE FAILURE THIS PREVENTS (plan v4 §0.2 D5). `min_windows_to_gate` alone armed the gate on
+    arithmetic that had never been checked for direction. The bucket table it would use is built
+    from the same ranking whose composite IC is currently −0.05 against an se of 0.20 — so
+    `E[r|top3] (-0.056) < E[r|rest] (+0.779)`, and the moment the third independent window landed
+    the gate would have begun BLOCKING sales out of the bottom bucket and WAVING THROUGH sales out
+    of the top. It would have inverted the profit-taking rule, silently, on a sample the
+    calibration module's own output labels `noise`.
+
+    Three separate things must all hold, and each failure is reported by name:
+      1. enough independent windows — an unmeasured quantity must never become a veto (v3);
+      2. |IC| above a floor — an IC indistinguishable from zero orders nothing;
+      3. IC POSITIVE — a negative IC disables the gate, it never inverts it. "Our ranking is
+         backwards" is a scoring problem to fix, not a licence to trade the ranking upside down.
+    """
+    g = cfg.get("net_edge_gate", {}) or {}
+    req = g.get("requires", {}) or {}
+    min_w = int(req.get("min_independent_windows", g.get("min_windows_to_gate", 3)))
+    min_ic = float(req.get("min_abs_ic", 0.20))
+    need_positive = bool(req.get("ic_sign_must_be_positive", True))
+
+    windows = int((exp or {}).get("effective_windows") or 0)
+    ic_val = (ic or {}).get("ic")
+    fails = []
+    if windows < min_w:
+        fails.append(f"~{windows} independent window(s) < {min_w}")
+    if ic_val is None:
+        fails.append("composite IC not measured")
+    else:
+        if abs(float(ic_val)) < min_ic:
+            fails.append(f"|IC| {abs(float(ic_val)):.3f} < {min_ic:.2f} — the ranking orders nothing")
+        if need_positive and float(ic_val) < 0:
+            fails.append(f"IC {float(ic_val):+.3f} is NEGATIVE — arming would invert the rule, "
+                         f"not enforce it")
+    return {
+        "armed": not fails, "windows": windows, "ic": ic_val,
+        "ic_se": (ic or {}).get("se"), "ic_verdict": (ic or {}).get("verdict"),
+        "requires": {"min_independent_windows": min_w, "min_abs_ic": min_ic,
+                     "ic_sign_must_be_positive": need_positive},
+        "why": ("armed: the ranking has measured, positively-signed edge" if not fails
+                else "STANDS ASIDE — " + "; ".join(fails)),
+    }
+
+
 def apply_gate(action: str, trade_eur: float, tax_eur: float, net_edge: float | None,
-               cfg: dict, evaluable: bool = True) -> dict:
+               cfg: dict, evaluable: bool = True, why: str | None = None) -> dict:
     """Does the trade survive the after-tax test? Only taxable SALES are gated (see module doc).
 
     A loss-making sale realizes no tax (it banks a harvestable offset), so it faces only the
@@ -271,8 +334,8 @@ def apply_gate(action: str, trade_eur: float, tax_eur: float, net_edge: float | 
     gated = bool(g.get("applies_to_taxable_sales", True)) and is_sale and taxable
     if gated and not evaluable:
         return {"gated": False, "passes": True, "final_action": action,
-                "gate_note": "after-tax gate not evaluable (calibration has no window yet) — "
-                             "the rule action stands, cost shown for the record"}
+                "gate_note": (why or "after-tax gate not evaluable") +
+                             " — the rule action stands, cost shown for the record"}
     if not gated and (trade_eur > 0 and not g.get("applies_to_purchases", False)):
         return {"gated": False, "passes": True, "final_action": action,
                 "gate_note": "purchase — gated on ticket size and the deployment floor, "
@@ -289,6 +352,219 @@ def apply_gate(action: str, trade_eur: float, tax_eur: float, net_edge: float | 
     }
 
 
+def leg_friction(trade_eur: float, tax_eur: float, cfg: dict,
+                 spread_bps: float | None = None) -> dict:
+    """Everything one leg of a trade costs, in €. Observable today — nothing is estimated."""
+    bps = float(spread_bps if spread_bps is not None else cfg.get("spread_bps", 20.0))
+    spread = abs(float(trade_eur or 0.0)) * bps / 10_000.0
+    fee = float(cfg.get("fee_eur", 0.0))
+    return {"tax_eur": round(float(tax_eur or 0.0), 2), "spread_eur": round(spread, 2),
+            "fee_eur": round(fee, 2),
+            "friction_eur": round(float(tax_eur or 0.0) + spread + fee, 2)}
+
+
+def breakeven_pct(friction_eur: float, moved_eur: float) -> float | None:
+    """The % the redeployed capital must OUTPERFORM by, just to cover the friction of moving it.
+
+    THE POINT (plan v4 §2 A3). `net_edge_eur` answered "does this pay?" by multiplying the trade
+    by a rank-bucket mean return one noisy window old — ±€1 on a €900 trade, printed beside a real
+    €12 tax bill. That number is not wrong, it is UNFALSIFIABLE, and per D5 it turns actively
+    harmful the moment the gate arms on a bucket table whose top3 currently sits BELOW its rest.
+
+    A breakeven needs no forecast: tax bracket, spread and notional are all observable now. It
+    converts the question from one the model cannot answer ("what will this earn?") into one the
+    user can ("is my rank signal worth more than 1.4% over 63 days?") — and it is checkable
+    against the realized spread a horizon later, which an expected-return point estimate is not.
+    """
+    moved = abs(float(moved_eur or 0.0))
+    if moved < 1e-9:
+        return None
+    return round(abs(float(friction_eur or 0.0)) / moved * 100.0, 3)
+
+
+def rank_edge_evidence(exp: dict | None, cfg: dict) -> dict:
+    """What the lake actually measured about the spread a swap is betting on.
+
+    Reported beside every breakeven so the hurdle is never read in a vacuum: a 1.4% hurdle is
+    cheap against a signal worth 5pp and unpayable against one whose sign is not yet established.
+    States the measured spread, its sample, and — when the sample is too thin or the sign is
+    inverted — says NONE rather than dressing the number up.
+    """
+    exp = exp or {}
+    raw = exp.get("raw") or {}
+    top3, rest = raw.get("top3"), raw.get("rest")
+    n = int(exp.get("effective_windows") or 0)
+    min_w = int((cfg.get("net_edge_gate", {}) or {}).get("min_windows_to_gate", 3))
+    horizon = exp.get("horizon_days")
+    spread = None if (top3 is None or rest is None) else round(float(top3) - float(rest), 3)
+
+    if spread is None:
+        verdict, why = "NONE", "no calibration window has closed yet"
+    elif n < min_w:
+        verdict, why = "NONE", (f"~{n} independent window(s) < the {min_w} the gate requires — "
+                                f"the sign is not established")
+    elif spread <= 0:
+        verdict, why = "ADVERSE", ("measured top3 sits BELOW rest — the rank signal has not paid "
+                                   "over the windows measured so far")
+    else:
+        verdict, why = "MEASURED", f"over ~{n} independent {horizon}d window(s)"
+    return {"spread_pp": spread, "effective_windows": n, "horizon_days": horizon,
+            "verdict": verdict, "why": why,
+            "line": (f"rank-bucket top3−rest = "
+                     f"{'n/a' if spread is None else f'{spread:+.2f}pp'} → {verdict} ({why})")}
+
+
+def swap_ledger(rows: list[dict], cfg: dict, horizon_days: int | None = None,
+                spread_bps: float | None = None) -> list[dict]:
+    """Pair the € the table wants sold with the € it wants bought, and price each swap.
+
+    Greedy, largest first: a sale funds the largest buy it can, then the next. This is not an
+    execution plan — the user may fund a buy from cash instead — it is the LEDGER that makes the
+    swap's hurdle explicit. Tax rides with the sell leg and is pro-rated across the legs it funds,
+    because a sale's CGT is paid once however many buys it feeds.
+    """
+    sells = sorted(({"row": r, "left": abs(float(r.get("trade_eur") or 0.0))}
+                    for r in rows if float(r.get("trade_eur") or 0.0) < 0),
+                   key=lambda d: -d["left"])
+    buys = sorted(({"row": r, "left": float(r.get("trade_eur") or 0.0)}
+                   for r in rows if float(r.get("trade_eur") or 0.0) > 0),
+                  key=lambda d: -d["left"])
+    out: list[dict] = []
+    for s in sells:
+        sell_total = s["left"] or 1.0
+        sell_tax = float(s["row"].get("tax_eur") or 0.0)
+        for b in buys:
+            if s["left"] < 1.0 or b["left"] < 1.0:
+                continue
+            moved = min(s["left"], b["left"])
+            # A leg below the engine's own minimum ticket is spread, not a rotation — the same
+            # threshold `size_trade` uses to refuse to print a €40 order. The unpaired remainder
+            # is not lost: it lands in cash, which the CASH row already prices.
+            if moved < float(cfg.get("min_ticket_eur", 150.0)):
+                continue
+            # CGT pro-rated to the slice of the sale this leg carries.
+            tax = sell_tax * (moved / sell_total)
+            f_sell = leg_friction(moved, tax, cfg, spread_bps)
+            f_buy = leg_friction(moved, 0.0, cfg, spread_bps)
+            friction = round(f_sell["friction_eur"] + f_buy["friction_eur"], 2)
+            out.append({
+                "from_sector": s["row"].get("sector_id"), "from_etf": s["row"].get("etf"),
+                "to_sector": b["row"].get("sector_id"), "to_etf": b["row"].get("etf"),
+                "from_action": s["row"].get("rule_action"), "to_action": b["row"].get("rule_action"),
+                "moved_eur": round(moved, 2),
+                "tax_eur": round(tax, 2),
+                "spread_eur": round(f_sell["spread_eur"] + f_buy["spread_eur"], 2),
+                "fee_eur": round(f_sell["fee_eur"] + f_buy["fee_eur"], 2),
+                "friction_eur": friction,
+                "breakeven_pct": breakeven_pct(friction, moved),
+                "horizon_days": horizon_days,
+            })
+            s["left"] -= moved
+            b["left"] -= moved
+    # A sale that funds no buy still moves capital to cash; a buy funded from cash pays only its
+    # own spread. Both are already priced on their own row — the ledger only pairs what pairs.
+    return out
+
+
+def partial_rungs(rows: list[dict], cfg: dict) -> list[dict]:
+    """Distance to EACH partial-sale rung, per held position.
+
+    WHY (plan v4 §2 A5). The ladder is sound policy but the review never showed the DISTANCE to
+    it, so a partial arrived as a surprise and could not be planned around.
+
+    Both rungs are reported, never a "nearest": they are measured in different units — one in
+    points of TOTAL capital above target, the other in % gain ON THE POSITION — and collapsing
+    them to one number would compare quantities that are not comparable. The ladder's rank
+    condition is reported separately from its gain condition for the same reason: a rung can be
+    one good week away on gain and permanently out of reach on rank, and those are not the same
+    situation.
+    """
+    trim = cfg.get("trim_if", {}) or {}
+    over_min = float(trim.get("overweight_pp_min", 4.0))
+    ladder = sorted(cfg.get("profit_ladder") or [], key=lambda r: float(r.get("gain_pct_min", 0)))
+    out: list[dict] = []
+    for r in rows:
+        if float(r.get("actual_eur") or 0.0) <= 0:
+            continue
+        gain, rank = r.get("unrealized_pct"), r.get("rank")
+        over_pp = -float(r.get("gap_pp") or 0.0)          # positive = above target
+
+        # The next UNMET ladder rung (they are sorted ascending; a met rung is already an action).
+        lad = None
+        for rung in ladder:
+            need_gain = float(rung.get("gain_pct_min", 0))
+            need_rank = int(rung.get("rank_min", 0) or 0)
+            met_gain = gain is not None and gain >= need_gain
+            lad = {
+                "label": (f"+{need_gain:.0f}%"
+                          + (f" & rank ≥ {need_rank}" if need_rank else "")
+                          + f" → trim {float(rung.get('trim_fraction', 0)) * 100:.0f}%"),
+                "need_gain_pct": None if (gain is None or met_gain) else round(need_gain - gain, 2),
+                "gain_met": met_gain,
+                "rank_ok": need_rank == 0 or (rank is not None and rank >= need_rank),
+                "rank_min": need_rank,
+            }
+            if not met_gain:
+                break                                     # the next one you could reach
+
+        out.append({
+            "sector_id": r.get("sector_id"), "etf": r.get("etf"),
+            "unrealized_pct": gain, "rank": rank, "actual_pct": r.get("actual_pct"),
+            "action": r.get("rule_action"),
+            "live": r.get("rule_action") in ("TRIM", "REDUCE", "SELL"),
+            "ladder": lad,
+            "overweight": {
+                "label": f"≥ {over_min:.0f}pp above target",
+                "over_pp": round(over_pp, 2),
+                "need_pp": None if over_pp >= over_min else round(over_min - over_pp, 2),
+                "met": over_pp >= over_min,
+            },
+        })
+    return out
+
+
+def close_target_weights(weights_pct: list[float], max_position_pct: float,
+                         max_dropped_pct: float = 40.0) -> dict:
+    """Rescale the surviving model weights so the TARGET BOOK closes on 100% of deployable.
+
+    THE BUG THIS EXISTS TO KILL (plan v4 §0.2 D2). `portfolio_holding` sums to exactly 100%.
+    `build()` then removes the names that are not buyable today and computed
+    `target_eur = weight_pct/100 × deployable` on what was left — so the dropped weight simply
+    evaporated. On 2026-08-28 that was 36.1% of the model book: the deploy rule asked for €7,000
+    at work, the targets summed to €4,476, and executing EVERY rule action left the book at 38%
+    against a 70% rule. The deployment ratio is the module's anti-cash-hoarding device; a missing
+    renormalization made it unreachable by construction.
+
+    Two guards, and both matter more than the rescale itself:
+
+    `max_dropped_pct` caps how much concentration a universe cut is allowed to cause. Rescaling
+    a book that lost 60% of its weight would triple the remaining positions — that is not a
+    weighting decision, it is a scoring problem wearing a weighting costume, and the caller must
+    see it (`incomplete`) rather than have it quietly executed.
+
+    `max_position_pct` is re-applied AFTER the rescale via `water_fill`, because rescaling can
+    push a name through the ceiling it had already cleared. Weight the cap sheds becomes CASH,
+    not another position: the cap is a risk limit, and spending it elsewhere would negate it.
+
+    Returns `weights` (same order, summing to `pool_pct` ≤ 100), plus the audit trail.
+    """
+    kept = sum(w for w in weights_pct if w)
+    if kept <= 0:
+        return {"weights": [0.0] * len(weights_pct), "pool_pct": 0.0, "residual_pct": 100.0,
+                "scale": 1.0, "capped": False, "incomplete": True}
+    residual = max(0.0, 100.0 - kept)
+    max_scale = 100.0 / max(1e-9, 100.0 - float(max_dropped_pct))
+    scale = min(100.0 / kept, max_scale)
+    capped = (100.0 / kept) > max_scale
+    pool_pct = kept * scale                                   # ≤ 100 by construction
+    from catalyx.execution.portfolio import water_fill   # same cap logic as the model builder
+
+    fr = water_fill(list(weights_pct), float(max_position_pct) / 100.0)
+    out = [round(f * pool_pct, 4) for f in fr]
+    return {"weights": out, "pool_pct": round(sum(out), 4), "residual_pct": round(residual, 2),
+            "scale": round(scale, 4), "capped": capped, "incomplete": capped}
+
+
 def hhi(weights_pct: list[float]) -> float | None:
     """Herfindahl on percentage weights (0–1). Concentration as a number, not an adjective."""
     tot = sum(w for w in weights_pct if w)
@@ -298,19 +574,149 @@ def hhi(weights_pct: list[float]) -> float | None:
 
 
 def rank_out_streak(rank_history: list[int | None], out_of_top: int) -> int:
-    """Consecutive MOST-RECENT runs a sector has ranked below `out_of_top`.
+    """Consecutive MOST-RECENT runs a sector was SCORED and ranked below `out_of_top`.
 
-    Counted from the newest backwards and reset by any run inside the cut, so one bad print
-    never accumulates into a sell signal — the same "from the newest only" convention as
+    Counted from the newest backwards and reset by any run inside the cut, so one bad print never
+    accumulates into a sell signal — the same "from the newest only" convention as
     catalyst_lifecycle.consecutive_below.
+
+    A `None` — the sector was absent from that run's `sector_snapshot` — also BREAKS the streak
+    (plan v4 §0.2 D6). It used to count as "outside the cut", which meant a sector that was never
+    scored accumulated a sell signal out of data nobody collected; a universe reshaping could
+    manufacture a SELL on a position without a single measurement behind it. Missing is missing.
+    Enough missing runs is its own state, and `rank_coverage` reports it as RE-SCORE.
     """
     streak = 0
     for r in reversed(rank_history or []):
-        if r is None or r > out_of_top:
+        if r is None or r <= out_of_top:
+            break
+        streak += 1
+    return streak
+
+
+def rank_coverage(rank_history: list[int | None]) -> dict:
+    """How much of the recent history actually MEASURED this sector."""
+    hist = list(rank_history or [])
+    missing = sum(1 for r in hist if r is None)
+    return {"n_runs": len(hist), "scored": len(hist) - missing, "missing": missing,
+            "missing_recent": next((i for i, r in enumerate(reversed(hist)) if r is not None),
+                                   len(hist))}
+
+
+# ── Anti-conservatism: the cost of NOT acting (plan v4 §4 C1/C3/C4) ─────────
+#
+# v3 built the machinery that makes a bad action visible: a rule table, banned words, an override
+# log, a suspension arithmetic. What it never built is the machinery that makes INACTION visible.
+# Friction is printed to the cent on every row; the cost of leaving €6,954 idle for 73 days is
+# printed nowhere. That asymmetry is not neutral — it is a thumb on the scale for doing nothing,
+# every single run, and these three functions are its counterweight.
+
+def shortfall_pp(deployed_eur: float, deployable_eur: float, total_capital_eur: float) -> float:
+    """How many points of TOTAL capital the book sits below what the deploy rule asks for.
+
+    Points of total capital, not a ratio of the target: a book at 30% against a 85% rule is
+    55pp short, and that is the number the persistence rule counts. Negative = over-deployed.
+    """
+    denom = float(total_capital_eur or 0.0)
+    if denom <= 0:
+        return 0.0
+    return round((float(deployable_eur or 0.0) - float(deployed_eur or 0.0)) / denom * 100.0, 2)
+
+
+def shortfall_status(history: list[dict], cfg: dict) -> dict:
+    """Has the book been under-deployed long enough that silence stops being an option?
+
+    `history` is one record per RECORDED RUN, oldest first, each `{as_of, shortfall_pp}`. The
+    rule: more than `max_shortfall_pp` below the deploy ratio for `max_shortfall_runs`
+    consecutive runs, and the review must either execute the rows or log an override naming the
+    shortfall itself. A shortfall that survives two reviews without a written reason is exactly
+    what the deployment ratio was built to make visible, and it has been surviving silently.
+    """
+    d = (cfg or {}).get("deployment", {}) or {}
+    max_pp = float(d.get("max_shortfall_pp", 10.0))
+    max_runs = int(d.get("max_shortfall_runs", 2))
+    hist = [h for h in (history or []) if h.get("shortfall_pp") is not None]
+    streak, since = 0, None
+    for h in reversed(hist):                       # newest first — count back while it breaches
+        if float(h["shortfall_pp"]) > max_pp:
             streak += 1
+            since = h.get("as_of") or since
         else:
             break
-    return streak
+    current = float(hist[-1]["shortfall_pp"]) if hist else 0.0
+    breached = streak >= max_runs
+    return {
+        "shortfall_pp": round(current, 2), "runs_breached": streak, "since": since,
+        "max_shortfall_pp": max_pp, "max_shortfall_runs": max_runs,
+        "breached": breached,
+        "note": (f"{current:.1f}pp below the deploy rule for {streak} consecutive recorded run(s) "
+                 f"(limit {max_pp:.0f}pp × {max_runs}) — execute the rows or log an override "
+                 f"naming the shortfall" if breached else
+                 f"{current:.1f}pp below the rule, {streak} consecutive run(s) over "
+                 f"{max_pp:.0f}pp (limit {max_runs})")}
+
+
+def cash_drag(idle_eur: float, bench_return_pct: float | None, since: str | None,
+              days: int | None = None) -> dict:
+    """What the idle cash cost while it was idle, in the same units as the friction beside it.
+
+    Not a reprimand — an entry in the same ledger as the €16 of spread that stops a rotation.
+    The point is comparability: one of those two numbers has been printed on every row since v3
+    and the other has never been printed at all, and the book has been at ~30% for months.
+
+    `bench_return_pct` is the BENCHMARK's own return over the idle window (a market return the
+    cash could have earned by doing nothing but being invested), never the book's.
+    """
+    idle = float(idle_eur or 0.0)
+    forgone = None if bench_return_pct is None else round(idle * float(bench_return_pct) / 100.0, 2)
+    return {"idle_eur": round(idle, 2), "since": since, "days": days,
+            "benchmark_return_pct": (None if bench_return_pct is None
+                                     else round(float(bench_return_pct), 2)),
+            "forgone_eur": forgone,
+            "note": (f"€{idle:,.0f} idle" + (f" since {since}" if since else "")
+                     + (f" ({days}d)" if days else "")
+                     + ("" if forgone is None else
+                        f" · benchmark {float(bench_return_pct):+.2f}% over that window "
+                        f"→ €{forgone:,.0f} forgone"))}
+
+
+def unrecorded_deviations(prior_rows: list[dict], movements: list[dict],
+                          overrides: list[dict], since: str | None,
+                          until: str | None = None) -> list[dict]:
+    """Rows the previous run told you to trade, with no movement and no override to show for it.
+
+    An override is only logged if the narrator remembers to log it, and the cheapest way to be
+    conservative is to be quiet. This makes quiet structural rather than voluntary: the NEXT run
+    reads the previous run's non-HOLD rows and asks the filesystem, not the narrator, whether
+    anything happened.
+
+    `movements` are the executed records (`data/movements/*.json`), matched by `sector_id` and an
+    `executed_at` inside the interval. Rows whose action moves no money (HOLD, RE-SCORE) are not
+    deviations — nothing was asked of them.
+    """
+    moved, logged = set(), set()
+    for m in movements or []:
+        at = str(m.get("executed_at") or "")[:10]
+        if not at or (since and at < str(since)[:10]) or (until and at > str(until)[:10]):
+            continue
+        moved.add(str(m.get("sector_id")))
+    for o in overrides or []:
+        logged.add(str(o.get("sector_id")))
+    out = []
+    for r in prior_rows or []:
+        action = str(r.get("rule_action") or "")
+        sid = str(r.get("sector_id") or "")
+        if action in ("HOLD", "RE-SCORE", "") or not sid or sid == "CASH":
+            continue
+        if sid in moved or sid in logged:
+            continue
+        out.append({"sector_id": sid, "rule_action": action,
+                    "trade_eur": float(r.get("trade_eur") or 0.0),
+                    "run_id": r.get("run_id"), "as_of": r.get("as_of"),
+                    "reason": (f"run {r.get('run_id')} said {action} {sid} "
+                               f"€{abs(float(r.get('trade_eur') or 0.0)):,.0f}. "
+                               f"No movement, no override.")})
+    return out
 
 
 # ── Assembly (I/O) ───────────────────────────────────────────────────────────
@@ -350,19 +756,29 @@ def _snapshot_ranks(run_id: str, lake_dir: Path | None = None) -> dict[str, int]
             if r["rank"] == r["rank"]}
 
 
-def _rank_streaks(out_of_top: int, n_runs: int = 4, lake_dir: Path | None = None) -> dict[str, int]:
-    """Per sector, how many of the most recent runs it has ranked outside the cut."""
+def _rank_streaks(out_of_top: int, n_runs: int = 4, lake_dir: Path | None = None) -> dict[str, dict]:
+    """Per sector: the out-of-cut streak AND how many of those runs actually scored it.
+
+    ONE RUN PER DAY. Run ids are `run_<YYYYMMDD>_<HHMMSS>`, so re-running the pipeline twice in an
+    afternoon used to write two "consecutive runs" — and `rank_out_consecutive: 2` meant a single
+    day of iteration could manufacture a SELL by itself. The rule's intent is consecutive review
+    CYCLES, so only the last run of each date counts.
+    """
     from catalyx.store import lake
     df = lake.read_table("sector_snapshot", lake_dir=lake_dir)
     if df.empty or "rank" not in df.columns:
         return {}
-    runs = sorted(df["run_id"].unique())[-n_runs:]
+    by_date: dict[str, str] = {}
+    for rid in sorted(df["run_id"].unique()):
+        by_date[str(rid)[4:12]] = str(rid)                  # later run of a date wins
+    runs = [by_date[d] for d in sorted(by_date)][-n_runs:]
     df = df[df["run_id"].isin(runs)]
     out = {}
     for sid, grp in df.groupby("sector_id"):
         grp = grp.set_index("run_id").reindex(runs)
         hist = [None if r != r else int(r) for r in grp["rank"]]     # NaN → None
-        out[str(sid)] = rank_out_streak(hist, out_of_top)
+        out[str(sid)] = {"streak": rank_out_streak(hist, out_of_top),
+                         "history": hist, **rank_coverage(hist)}
     return out
 
 
@@ -394,6 +810,58 @@ def _investable_sectors() -> set[str]:
         return set()
 
 
+def _buyable_vehicle(sector_id: str) -> str | None:
+    """The UCITS ticker for a sector TODAY, or None. Resolved at table time, never read off the
+    stored `portfolio_holding.primary_etf` — that ticker is frozen at the run that built the
+    model book, so a universe cut leaves the € recommendation pointing at a vehicle the account
+    cannot buy. See `snapshot_repo.primary_etf`."""
+    try:
+        from catalyx.store import snapshot_repo
+        return snapshot_repo.primary_etf(sector_id)
+    except Exception:
+        return None
+
+
+def _substitutes(run_id: str | None, exclude: set[str], investable: set[str], n: int,
+                 lake_dir: Path | None = None) -> list[dict]:
+    """The next `n` investable, buyable sectors by composite that the book does not already hold.
+
+    A name dropped for being unbuyable should not shrink the book — the model asked for
+    `max_positions` lines and the universe has 26 investable sectors to fill them from. Taking
+    the substitute from the same run's `sector_snapshot` keeps the selection rule identical to
+    `portfolio.build_model_holdings` (composite descending, one vehicle each); only the entry
+    point differs. Without this, a universe cut silently converts a 10-name book into a 6-name
+    one and calls the concentration a decision.
+    """
+    from catalyx.store import lake
+
+    if not run_id or n <= 0:
+        return []
+    df = lake.read_table("sector_snapshot", lake_dir=lake_dir)
+    if df.empty or "run_id" not in df.columns:
+        return []
+    df = df[df["run_id"] == run_id]
+    if df.empty or "composite" not in df.columns:
+        return []
+    out, seen_etf = [], set()
+    for _, r in df.sort_values("composite", ascending=False).iterrows():
+        if len(out) >= n:
+            break
+        sid = str(r["sector_id"])
+        if sid in exclude or (investable and sid not in investable):
+            continue
+        etf = _buyable_vehicle(sid)
+        if not etf or etf in seen_etf:
+            continue
+        seen_etf.add(etf)
+        out.append({"sector_id": sid, "primary_etf": etf,
+                    "composite": float(r["composite"]) if r["composite"] == r["composite"] else 0.0,
+                    "narrative_maturity": r.get("narrative_maturity"),
+                    "regime_state": r.get("regime_state") or "intact",
+                    "substituted": True})
+    return out
+
+
 def _vix_last() -> float | None:
     try:
         from catalyx.data import prices
@@ -402,6 +870,89 @@ def _vix_last() -> float | None:
         return round(float(col.iloc[-1]), 2) if col is not None and len(col) else None
     except Exception:
         return None
+
+
+def _shortfall_history(lake_dir: Path | None = None, n_runs: int = 8) -> list[dict]:
+    """One record per RECORDED run (latest run of each date), oldest first, with its shortfall.
+
+    Deduped by date for the same reason `_rank_streaks` is: two runs on one afternoon are one
+    review, and a persistence rule that counts them as two would fire a day early.
+    """
+    from catalyx.store import lake
+
+    try:
+        df = lake.read_table(_TABLE, lake_dir=lake_dir)
+    except Exception:
+        return []
+    need = {"run_id", "book_total_capital_eur", "book_deployable_eur", "book_cash_actual_eur"}
+    if df.empty or not need <= set(df.columns):
+        return []
+    # Keyed by the REVIEW date (`as_of`), not by run id: two rebalance computations on one
+    # afternoon are one review, and a persistence rule that counted them as two would fire a
+    # run early — the same defect v4.3 fixed in `_rank_streaks`.
+    by_date: dict[str, dict] = {}
+    for rid in sorted(str(x) for x in df["run_id"].unique()):
+        r = df[df["run_id"] == rid].iloc[0]
+        total = float(r["book_total_capital_eur"] or 0.0)
+        cash = float(r["book_cash_actual_eur"] or 0.0)
+        as_of = str(r["as_of"])[:10] if "as_of" in df.columns and r.get("as_of") is not None \
+            else f"{rid[4:8]}-{rid[8:10]}-{rid[10:12]}"
+        by_date[as_of] = {"run_id": rid, "as_of": as_of,
+                          "deployed_eur": round(total - cash, 2),
+                          "deployable_eur": float(r["book_deployable_eur"] or 0.0),
+                          "shortfall_pp": shortfall_pp(total - cash, r["book_deployable_eur"],
+                                                       total)}
+    return [by_date[d] for d in sorted(by_date)[-n_runs:]]
+
+
+def _benchmark_return_pct(since: str | None, until: str | None,
+                          ticker: str = "SPY") -> float | None:
+    """The benchmark's own return over [since, until]. None when the window is unusable.
+
+    SPY is the measuring stick every model book already reports against — it is not a purchase
+    recommendation (it is not UCITS), it is the market return the idle cash declined.
+    """
+    if not since:
+        return None
+    try:
+        from catalyx.data import prices
+        df = prices.read([ticker], str(since)[:10],
+                         str(until or date.today().isoformat())[:10])
+        col = df[ticker].dropna() if df is not None and ticker in getattr(df, "columns", []) else None
+        if col is None or len(col) < 2 or not float(col.iloc[0]):
+            return None
+        return round((float(col.iloc[-1]) / float(col.iloc[0]) - 1.0) * 100.0, 2)
+    except Exception:
+        return None
+
+
+def _prior_run(run_id: str | None, lake_dir: Path | None = None) -> tuple[str | None, list[dict]]:
+    """(run_id, rows) of the most recent recorded run STRICTLY BEFORE `run_id`."""
+    from catalyx.store import lake
+
+    try:
+        df = lake.read_table(_TABLE, lake_dir=lake_dir)
+    except Exception:
+        return None, []
+    if df.empty or "run_id" not in df.columns:
+        return None, []
+    prior = sorted(str(x) for x in df["run_id"].unique() if not run_id or str(x) < str(run_id))
+    if not prior:
+        return None, []
+    rid = prior[-1]
+    return rid, df[df["run_id"] == rid].to_dict("records")
+
+
+def _overrides_for_run(run_id: str | None, lake_dir: Path | None = None) -> list[dict]:
+    from catalyx.store import lake
+
+    try:
+        df = lake.read_table(_OVERRIDE_TABLE, lake_dir=lake_dir)
+    except Exception:
+        return []
+    if df.empty or "run_id" not in df.columns or not run_id:
+        return []
+    return df[df["run_id"] == run_id].to_dict("records")
 
 
 def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None = None,
@@ -420,14 +971,54 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
     book = exit_fn()
     positions = {p["sector_id"]: p for p in book.get("positions", []) if p.get("sector_id")}
 
-    # The model book is read from the LAST RECORDED RUN, which may predate a taxonomy change.
-    # A BUY recommendation for a sector that is no longer buyable is worse than no
-    # recommendation: it looks actionable. Drop them from the trade list, but SAY so — a silent
-    # filter would just move the error out of sight. Held positions always stay on the table.
+    # The model book is read from the LAST RECORDED RUN, which may predate a taxonomy change or
+    # a universe cut. A BUY recommendation for a sector that is no longer buyable is worse than
+    # no recommendation: it looks actionable. Two independent reasons a model name can fail here,
+    # and BOTH are checked — the sector-level `investable` flag lives in the taxonomy and can lag
+    # `etf_universe.yaml`, which is why 2026-08-28 printed `BUY biotech €891` against IBB for a
+    # sector the taxonomy called investable. Held positions always stay on the table.
     investable = _investable_sectors()
-    dropped = [m["sector_id"] for m in model
-               if investable and m["sector_id"] not in investable and m["sector_id"] not in positions]
+    dropped, no_vehicle = [], []
+    for m in model:
+        sid = m["sector_id"]
+        if sid in positions:
+            continue
+        if investable and sid not in investable:
+            dropped.append(sid)
+        elif _buyable_vehicle(sid) is None:
+            dropped.append(sid)
+            no_vehicle.append(sid)
+    dropped_weight_pct = round(sum(float(m.get("weight_pct") or 0.0) for m in model
+                                   if m["sector_id"] in dropped), 2)
+    dropped_weights = sorted((float(m.get("weight_pct") or 0.0) for m in model
+                              if m["sector_id"] in dropped), reverse=True)
     model = [m for m in model if m["sector_id"] not in dropped]
+
+    # SUBSTITUTE before rescaling: a dropped name's weight goes to the next investable, buyable
+    # sector by composite, not to the incumbents. Only what substitution cannot cover is
+    # rescaled (`close_target_weights`), so a universe cut cannot masquerade as a conviction
+    # increase in the six names that happened to survive it.
+    subs = _substitutes(run_id, {m["sector_id"] for m in model} | set(positions), investable,
+                        n=len(dropped), lake_dir=lake_dir)
+    for w, s in zip(dropped_weights, subs):
+        s["weight_pct"] = w
+    model = model + subs
+
+    # Re-rank the book that ACTUALLY exists. `rank_in_portfolio` is the model's own ordering and
+    # the `add_if`/`buy_if` ceilings read it as "does the model still call this a leader". After
+    # removing 4 of 10 names those stored ranks describe a book nobody holds — cybersecurity at
+    # "rank 6 of 10" is rank 4 of the 6 that survived. Ranks are re-derived from composite, the
+    # same key `portfolio.build_model_holdings` ranks on.
+    model.sort(key=lambda m: -float(m.get("composite") or 0.0))
+    for i, m in enumerate(model, 1):
+        m["rank_in_portfolio"] = i
+
+    # Close the book: rescale what substitution could not replace, re-cap per position.
+    max_dropped = float(cfg.get("max_dropped_pct", 40.0))
+    closed = close_target_weights([float(m.get("weight_pct") or 0.0) for m in model],
+                                  float(cfg.get("max_position_pct", 12.0)), max_dropped)
+    for m, w in zip(model, closed["weights"]):
+        m["weight_pct_effective"] = w
 
     # Deployment: how much of the committed capital should be at work, per rule. Counted AFTER
     # the investable filter — a leader we cannot buy is not a reason to deploy more capital.
@@ -447,8 +1038,12 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
 
     # The gate may only BLOCK once the edge term is measured on enough independent windows.
     # Below that it prints the cost and stands aside — see apply_gate's docstring.
-    min_windows = int((cfg.get("net_edge_gate", {}) or {}).get("min_windows_to_gate", 3))
-    gate_evaluable = int(exp.get("effective_windows", 0) or 0) >= min_windows
+    try:
+        ic_stat = calibration.composite_ic(lake_dir=lake_dir)
+    except Exception:                                          # pragma: no cover - defensive
+        ic_stat = {}
+    gate = gate_status(exp, ic_stat, cfg)
+    gate_evaluable = gate["armed"]
 
     sell_cfg = cfg.get("sell_if_any", {}) or {}
     streaks = _rank_streaks(int(sell_cfg.get("rank_out_of_top", 12)), lake_dir=lake_dir)
@@ -465,7 +1060,10 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         mv = tax_view.get("market_value_eur")
         invested = (p or {}).get("invested_eur")
 
-        target_eur = round(float(m.get("weight_pct", 0.0)) / 100.0 * deployable, 2)
+        # `weight_pct_effective` is the CLOSED weight (post substitution + rescale + cap); the
+        # raw `weight_pct` is the frozen model weight and no longer sums to the book.
+        target_eur = round(float(m.get("weight_pct_effective",
+                                       m.get("weight_pct", 0.0)) or 0.0) / 100.0 * deployable, 2)
         actual_eur = round(float(mv), 2) if mv is not None else (
             round(float(invested), 2) if invested is not None else 0.0)
         denom = total_capital or 1.0
@@ -486,7 +1084,13 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
             "unrealized_pct": tax_view.get("unrealized_pct"),
             "reverify_required": ((p or {}).get("drawdown") or {}).get("reverify_required"),
             "drawdown_tier": ((p or {}).get("drawdown") or {}).get("tier"),
-            "rank_out_streak": streaks.get(sid, 0),
+            "rank_out_streak": (streaks.get(sid) or {}).get("streak", 0),
+            "rank_missing_runs": (streaks.get(sid) or {}).get("missing", 0),
+            "rank_runs": (streaks.get(sid) or {}).get("n_runs"),
+            # The universe rank, so a rank-out SELL names the number it fired on. The `rank`
+            # column is the MODEL-BOOK rank and is absent for exactly the sectors the model
+            # dropped — i.e. blank on every row whose reason cites a rank.
+            "score_rank": score_ranks.get(sid),
         }
         decision = decide_action(ctx, cfg)
         action = decision["action"]
@@ -513,28 +1117,50 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         bucket = calibration.bucket_of(score_ranks.get(sid))
         edge = expected_edge(trade_eur, buckets.get(bucket) if bucket else None)
         net = round(edge - costs["cost_drag_eur"], 2) if edge is not None else None
-        gate = apply_gate(action, trade_eur, tax_eur, net, cfg, evaluable=gate_evaluable)
-        if gate["final_action"] != action:
-            decision = {"action": gate["final_action"], "reason": gate["gate_note"]}
-            action, trade_eur = gate["final_action"], 0.0
+        gated = apply_gate(action, trade_eur, tax_eur, net, cfg, evaluable=gate_evaluable,
+                           why=gate["why"])
+        if gated["final_action"] != action:
+            decision = {"action": gated["final_action"], "reason": gated["gate_note"]}
+            action, trade_eur = gated["final_action"], 0.0
+
+        # The vehicle is resolved NOW, not read off the frozen model row (plan v4 §0.2 D3).
+        # A held position keeps the ticker actually owned — that is a fact, not a recommendation.
+        vehicle_today = _buyable_vehicle(sid)
+        etf = (p or {}).get("etf") or vehicle_today
+        vehicle_at_run = m.get("primary_etf")
 
         rows.append({
-            "sector_id": sid, "etf": (p or {}).get("etf") or m.get("primary_etf"),
+            "sector_id": sid, "etf": etf,
+            "vehicle_at_run": vehicle_at_run if vehicle_at_run != etf else None,
             "rank": rank, "score_rank": score_ranks.get(sid), "bucket": bucket,
             "target_pct": target_pct, "actual_pct": actual_pct, "gap_pp": gap_pp,
             "target_eur": target_eur, "actual_eur": actual_eur, "gap_eur": gap_eur,
+            # Room left under the per-position ceiling once this row is at its target — the third
+            # number Step 9's forced choice needs (plan v4 §4 C2), so "execute a smaller size" is
+            # priced rather than guessed.
+            "cap_headroom_eur": round(max(0.0, total_capital * float(cfg["max_position_pct"]) / 100.0
+                                          - max(target_eur, actual_eur)), 2),
             "rule_action": action, "reason": decision["reason"],
             "trade_eur": trade_eur,
             "unrealized_pct": tax_view.get("unrealized_pct"),
             "realized_gain_eur": realized_gain,
             "expected_edge_eur": edge, "net_edge_eur": net,
-            "gate_note": gate["gate_note"],
+            # The number the DECISION table shows (plan v4 §2 A3). expected_edge/net_edge stay in
+            # the JSON and the lake — they are the calibration panel's input — but they left the
+            # table, because a forecast the data cannot support does not belong beside a real tax
+            # bill. This one is arithmetic on observables: friction ÷ capital actually moved.
+            "breakeven_pct": breakeven_pct(costs["cost_drag_eur"], trade_eur),
+            "gate_note": gated["gate_note"],
             "regime_state": ctx["regime_state"],
             "catalyst_freshness": ((p or {}).get("catalyst_freshness") or {}).get("status"),
             "exit_action": ctx["exit_action"],
             "flags": ";".join(f for f in [
                 "re-verify catalyst" if ctx["reverify_required"] else None,
                 "not investable today" if sid not in investable and investable else None,
+                "substituted into the book" if m.get("substituted") else None,
+                (f"model book named {vehicle_at_run} — not buyable today, using {etf}"
+                 if vehicle_at_run and vehicle_at_run != etf and not p else None),
+                "no buyable UCITS vehicle" if not etf else None,
             ] if f),
             "override": None, "override_reason": None,
             **{k: costs[k] for k in ("tax_eur", "spread_eur", "cost_drag_eur")},
@@ -547,27 +1173,72 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
     buys = round(sum(r["trade_eur"] for r in rows if r["trade_eur"] > 0), 2)
     sells = round(-sum(r["trade_eur"] for r in rows if r["trade_eur"] < 0), 2)
     after = round(invested_now + buys - sells, 2)
+    # THE BOOK CLOSES. `Σ target% + cash target% = 100` and `Σ actual% + cash actual% = 100`,
+    # both by construction — that identity is what makes "the ideal book vs mine" a comparison
+    # rather than two unrelated lists, and its absence is what let the deployment rule ask for
+    # 70% while the targets summed to 45% (plan v4 §0.2 D2). Pinned by a test.
+    target_total = round(sum(r["target_eur"] for r in rows), 2)
+    denom = total_capital or 1.0
+    cash_target = round(total_capital - target_total, 2)
+    cash_actual = round(total_capital - invested_now, 2)
     book_metrics = {
         "total_capital_eur": round(total_capital, 2),
         "deployed_eur": invested_now,
-        "deployed_pct": round(invested_now / (total_capital or 1) * 100, 2),
+        "deployed_pct": round(invested_now / denom * 100, 2),
         "deploy_ratio": ratio,
         "deployable_eur": deployable,
+        "target_eur": target_total,
+        "target_pct": round(target_total / denom * 100, 2),
+        "cash_target_eur": cash_target,
+        "cash_target_pct": round(cash_target / denom * 100, 2),
+        "cash_eur": cash_actual,
+        "cash_actual_pct": round(cash_actual / denom * 100, 2),
         "under_deployed_eur": round(deployable - invested_now, 2),
-        "cash_eur": round(total_capital - invested_now, 2),
+        # What the CASH row's action is worth: the € the table wants moved out of cash and into
+        # the rows above. Reported as an ACTION, not as a footnote (plan v4 §4 C1).
+        "cash_action_eur": round(cash_actual - cash_target, 2),
         "buys_eur": buys, "sells_eur": sells,
-        "turnover_pct": round((buys + sells) / (total_capital or 1) * 100, 2),
+        "turnover_pct": round((buys + sells) / denom * 100, 2),
         "deployed_after_eur": after,
-        "deployed_after_pct": round(after / (total_capital or 1) * 100, 2),
+        "deployed_after_pct": round(after / denom * 100, 2),
         "hhi_sector": hhi([r["actual_pct"] for r in rows]),
         "n_actions": sum(1 for r in rows if r["rule_action"] != "HOLD"),
+        "model": {
+            "n_holdings": len(model),
+            "dropped": sorted(dropped),
+            "dropped_weight_pct": dropped_weight_pct,
+            "no_vehicle": sorted(no_vehicle),
+            "substituted": [s["sector_id"] for s in subs],
+            "residual_pct": closed["residual_pct"],
+            "rescale": closed["scale"],
+            "incomplete": closed["incomplete"],
+            # What sizing regime produced these targets. None on books built before v4.5.
+            "tilt_lambda": next((float(m["tilt_lambda"]) for m in model
+                                 if m.get("tilt_lambda") == m.get("tilt_lambda")     # NaN-safe
+                                 and m.get("tilt_lambda") is not None), None),
+        },
     }
 
     warnings = []
     if dropped:
-        warnings.append(f"{len(dropped)} model sector(s) dropped — no longer investable under the "
-                        f"current taxonomy: {', '.join(sorted(dropped))}. The model book comes from "
-                        f"run {run_id}; re-run the scorer to rebuild it on today's universe.")
+        why = f"{len(dropped)} model sector(s) dropped ({dropped_weight_pct:.1f}% of the model " \
+              f"book): {', '.join(sorted(dropped))}."
+        if no_vehicle:
+            why += (f" Of those, {', '.join(sorted(no_vehicle))} pass the taxonomy's "
+                    f"`investable` flag but have NO buyable UCITS vehicle in etf_universe.yaml.")
+        if subs:
+            why += (f" Substituted in by composite: {', '.join(s['sector_id'] for s in subs)}.")
+        if closed["residual_pct"]:
+            why += (f" {closed['residual_pct']:.1f}% could not be substituted and was rescaled "
+                    f"across the incumbents (×{closed['scale']:.3f}).")
+        why += f" The model book comes from run {run_id}; re-run the scorer to rebuild it."
+        warnings.append(why)
+    if closed["incomplete"] and model:
+        warnings.append(f"MODEL BOOK INCOMPLETE — more than {max_dropped:.0f}% of the model "
+                        f"weight was unbuyable and could not be substituted. The rescale was "
+                        f"CAPPED so the survivors are not silently concentrated; the target book "
+                        f"deliberately closes below the deploy rule. This is a scoring problem "
+                        f"(re-score on today's universe), not a weighting one.")
     n_model_universe = len(model) + len(dropped)
     if investable and n_model_universe and abs(len(investable) - n_model_universe) > 0:
         warnings.append(f"rank-based SELL triggers read ranks recorded when the scored universe "
@@ -586,9 +1257,74 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
     except Exception as exc:                                   # pragma: no cover - defensive
         overrides = {"error": str(exc)}
 
+    # The swap ledger and the partials block: the two questions the user asked the table to
+    # answer — "¿renta vender?" and "¿parciales?" — neither of which needs a forecast.
+    swaps = swap_ledger(rows, cfg, horizon_days=exp.get("horizon_days"))
+    evidence = rank_edge_evidence(exp, cfg)
+    partials = partial_rungs(rows, cfg)
+
+    # ── What NOT acting costs (plan v4 §4 C1/C3/C4) ─────────────────────────────────────────
+    as_of = date.today().isoformat()
+    # The current run is not in the lake yet — it persists after this returns — so it is appended
+    # by hand; otherwise the persistence rule would always be one run behind the book it reads.
+    # Deduped by REVIEW DATE only. Not by run_id: a review can re-use an earlier score run, and
+    # excluding that run_id would silently delete the previous review from its own history — which
+    # is precisely the kind of quiet reset the persistence rule exists to prevent.
+    hist = [h for h in _shortfall_history(lake_dir=lake_dir) if h.get("as_of") != as_of]
+    hist.append({"run_id": run_id, "as_of": as_of,
+                 "shortfall_pp": shortfall_pp(invested_now, deployable, total_capital)})
+    short = shortfall_status(hist, cfg)
+    short["history"] = hist[-6:]
+
+    # Idle SINCE the book last changed, which is a movement date, not a run date: a review that
+    # recommends and is not executed does not restart the clock — that is the whole point.
+    try:
+        from catalyx.store import movement_repo
+        movements = movement_repo.load_all()
+    except Exception:                                          # pragma: no cover - defensive
+        movements = []
+    last_move = max((str(m.get("executed_at") or "")[:10] for m in movements), default=None) or None
+    idle_since = last_move or (short.get("since") or None)
+    try:
+        days_idle = (date.fromisoformat(as_of) - date.fromisoformat(idle_since)).days \
+            if idle_since else None
+    except ValueError:                                         # pragma: no cover - defensive
+        days_idle = None
+    drag = cash_drag(cash_actual, _benchmark_return_pct(idle_since, as_of), idle_since, days_idle)
+
+    # The deviation nobody wrote down. Read from the filesystem, not from the narrator.
+    prior_run_id, prior_rows = _prior_run(run_id, lake_dir=lake_dir)
+    prior_as_of = str((prior_rows[0].get("as_of") if prior_rows else "") or "")[:10] or None
+    unrecorded = unrecorded_deviations(prior_rows, movements,
+                                       _overrides_for_run(prior_run_id, lake_dir=lake_dir),
+                                       since=prior_as_of, until=as_of)
+
+    if short["breached"]:
+        warnings.append(f"DEPLOYMENT SHORTFALL — {short['note']}. Declining a row IS the override; "
+                        f"leaving the shortfall unaddressed for another run is a decision nobody "
+                        f"signed.")
+    if unrecorded:
+        warnings.append(f"{len(unrecorded)} UNRECORDED DEVIATION(S) from run {prior_run_id}: "
+                        + ", ".join(f"{u['rule_action']} {u['sector_id']}" for u in unrecorded)
+                        + ". No movement, no override — logged as DEFER by `unrecorded`.")
+
     return {
-        "as_of": date.today().isoformat(), "strategy": strategy, "run_id": run_id,
+        "as_of": as_of, "strategy": strategy, "run_id": run_id,
         "book": book_metrics, "warnings": warnings, "overrides": overrides,
+        "swaps": swaps, "rank_edge_evidence": evidence, "partials": partials,
+        "shortfall": short, "cash_drag": drag,
+        "unrecorded": unrecorded, "prior_run_id": prior_run_id,
+        "gate": gate, "composite_ic": ic_stat,
+        # The entire partial-sale vocabulary, in one place, so the table can state it before the
+        # verdicts instead of leaving the reader to infer what "TRIM" moved.
+        "min_ticket_eur": float(cfg.get("min_ticket_eur", 150.0)),
+        "fractions": {
+            "sell": 1.0,
+            "reduce": float((cfg.get("reduce_if_any", {}) or {}).get("reduce_fraction", 0.5)),
+            "trim": "back to target",
+            "ladder_trim": next((float(r.get("trim_fraction")) for r in (cfg.get("profit_ladder") or [])
+                                 if r.get("trim_fraction")), None),
+        },
         "calibration": {k: exp.get(k) for k in
                         ("effective_windows", "shrink", "horizon_days", "raw", "buckets", "note")},
         "rows": rows,
@@ -609,12 +1345,62 @@ def persist(result: dict, lake_dir: Path | None = None) -> int:
     if not run_id or not result.get("rows"):
         return 0
     computed_at = datetime.now(timezone.utc).isoformat()
-    rows = [{**r, "run_id": run_id, "strategy": result["strategy"], "as_of": result["as_of"],
-             "deploy_ratio": result["book"]["deploy_ratio"]["ratio"],
-             "computed_at": computed_at} for r in result["rows"]]
+    b = result["book"]
+    # The book-level constants ride along on every row so the CASH and TOTAL lines can be
+    # rebuilt from the lake alone. `review_report` renders §3 from this table without re-running
+    # the engine, and a target book that does not carry its own cash side does not close.
+    const = {"deploy_ratio": b["deploy_ratio"]["ratio"],
+             "book_total_capital_eur": b["total_capital_eur"],
+             "book_deployable_eur": b["deployable_eur"],
+             "book_cash_target_eur": b["cash_target_eur"],
+             "book_cash_actual_eur": b["cash_eur"],
+             "book_cash_action_eur": b["cash_action_eur"],
+             # WHICH sizing regime produced these targets — a target book read back six months
+             # from now must say whether its dispersion was earned or assumed.
+             "book_tilt_lambda": (b.get("model") or {}).get("tilt_lambda"),
+             # The cost of NOT acting, persisted beside the cost of acting. `review_report` and
+             # the run digest render both from this table and neither may fetch a price to do it.
+             "book_cash_drag_eur": (result.get("cash_drag") or {}).get("forgone_eur"),
+             "book_cash_idle_since": (result.get("cash_drag") or {}).get("since"),
+             "book_cash_idle_days": (result.get("cash_drag") or {}).get("days"),
+             "book_bench_return_pct": (result.get("cash_drag") or {}).get("benchmark_return_pct"),
+             "book_shortfall_pp": (result.get("shortfall") or {}).get("shortfall_pp"),
+             "book_shortfall_runs": (result.get("shortfall") or {}).get("runs_breached"),
+             "book_shortfall_breached": (result.get("shortfall") or {}).get("breached")}
+    rows = [{**r, **const, "run_id": run_id, "strategy": result["strategy"],
+             "as_of": result["as_of"], "computed_at": computed_at} for r in result["rows"]]
     lake.append_partition(_TABLE, pd.DataFrame(rows), {"run_id": run_id},
                           overwrite=True, lake_dir=lake_dir)
+    _log_unrecorded(result, lake_dir=lake_dir)
     return len(rows)
+
+
+def _log_unrecorded(result: dict, lake_dir: Path | None = None) -> int:
+    """Write the previous run's silent deviations into the override log as DEFERs.
+
+    The cheapest way to be conservative is to be quiet, and until now quiet was free: an override
+    existed only if the narrator chose to write one, and after three reviews with non-HOLD rows
+    the log was empty. This makes the record structural — the deviation is logged by the run that
+    DETECTS it, against the run that recommended it, so `override_edge` prices it ~21 trading days
+    later exactly like a deliberate one.
+
+    Idempotent by construction: `unrecorded_deviations` skips any sector that already has an
+    override for that run, so a second call finds nothing left to write.
+    """
+    prior = result.get("prior_run_id")
+    if not prior:
+        return 0
+    n = 0
+    for u in result.get("unrecorded") or []:
+        try:
+            log_override(prior, u["sector_id"], u["rule_action"], "DEFER",
+                         reason=u["reason"] + " Detected by the run of "
+                                f"{result.get('as_of')}; nobody wrote this decision down.",
+                         author="unrecorded", chosen_trade_eur=0.0, lake_dir=lake_dir)
+            n += 1
+        except Exception:                                      # pragma: no cover - defensive
+            continue
+    return n
 
 
 def log_override(run_id: str, sector_id: str, rule_action: str, chosen_action: str,
@@ -809,6 +1595,222 @@ def score_overrides(lake_dir: Path | None = None, cfg: dict | None = None,
                     "it, never added: deferring tax is not earning it."}
 
 
+# ── The rule scorecard — the table audits itself too (plan v4 §3 B4) ────────
+#
+# `calibration` measures the RANKING. `score_overrides` measures the DEVIATIONS. Nothing measured
+# the table itself, and that asymmetry quietly made it unfalsifiable: every time a human departed
+# from the rules the departure was priced, while the rules kept their authority by never being
+# scored. This closes the loop — same horizon discipline, same refusal to read a verdict off a
+# sample too small to have one.
+#
+# It never changes a threshold. `rebalance_rules.frozen` still means what it says: a scorecard is
+# evidence for a config edit with a CHANGELOG line, never a mid-review adjustment.
+
+# Which way the money moved. A rule that says SELL is RIGHT when the vehicle then falls, so the
+# raw forward return has to be signed by the action before it can be read as skill.
+MONEY_IN = ("ADD", "BUY")
+MONEY_OUT = ("SELL", "REDUCE", "TRIM")
+
+
+def action_direction(action: str) -> int | None:
+    """+1 the rule put money in · −1 it took money out · None it moved none (HOLD, RE-SCORE)."""
+    if action in MONEY_IN:
+        return 1
+    if action in MONEY_OUT:
+        return -1
+    return None
+
+
+def _mean_se(values: list[float]) -> tuple[float | None, float | None]:
+    n = len(values)
+    if n == 0:
+        return None, None
+    mean = sum(values) / n
+    if n < 2:
+        return round(mean, 3), None
+    var = sum((v - mean) ** 2 for v in values) / (n - 1)
+    return round(mean, 3), round((var ** 0.5) / (n ** 0.5), 3)
+
+
+def decision_scorecard(scored: list[dict], cfg: dict | None = None) -> dict:
+    """Per rule_action: n, mean forward return, the HOLD baseline, and the SIGNED rule edge.
+
+    `scored` is one record per priced row: `{rule_action, forward_return_pct, as_of}`.
+
+    HOLD is the baseline on purpose — the question a rule table has to answer is not "did the
+    names go up" (that is beta, and the deploy ratio owns it) but "did acting beat leaving the
+    book alone", which is the only comparison the table can claim credit for.
+    """
+    c = (cfg or {}).get("scorecard", {}) or {}
+    min_n = int(c.get("min_n", 5))
+    min_windows = int(c.get("min_effective_windows", 2))
+    horizon = int(c.get("horizon_days", 63))
+
+    by_action: dict[str, list[float]] = {}
+    for r in scored or []:
+        v = r.get("forward_return_pct")
+        if v is None or v != v:
+            continue
+        by_action.setdefault(str(r.get("rule_action")), []).append(float(v))
+
+    # Non-overlapping run dates — five runs inside one horizon are one observation, exactly as
+    # `calibration.aggregate` counts them.
+    starts = sorted({str(r.get("as_of"))[:10] for r in scored or [] if r.get("as_of")})
+    effective, last = 0, None
+    for st in starts:
+        try:
+            d = date.fromisoformat(st)
+        except ValueError:
+            continue
+        if last is None or (d - last).days >= horizon:
+            effective += 1
+            last = d
+
+    hold_mean, _ = _mean_se(by_action.get("HOLD", []))
+    rows = []
+    for action in PRECEDENCE:
+        vals = by_action.get(action, [])
+        if not vals:
+            continue
+        mean, se = _mean_se(vals)
+        direction = action_direction(action)
+        vs_hold = None if (mean is None or hold_mean is None) else round(mean - hold_mean, 3)
+        edge = None if (vs_hold is None or direction is None) else round(vs_hold * direction, 3)
+        if direction is None:
+            verdict = "baseline" if action == "HOLD" else "no money moved"
+        elif effective < min_windows:
+            verdict = f"~{effective} independent window(s) — not scoreable yet"
+        elif len(vals) < min_n:
+            verdict = f"n={len(vals)} < {min_n} — not scoreable yet"
+        elif edge is None or se is None:
+            verdict = "unmeasured"
+        elif abs(edge) < 2 * se:
+            verdict = "noise"
+        else:
+            verdict = "the rule paid" if edge > 0 else "the rule cost"
+        rows.append({"action": action, "n": len(vals), "mean_forward_pct": mean, "se": se,
+                     "vs_hold_pp": vs_hold, "rule_edge_pp": edge, "direction": direction,
+                     "verdict": verdict})
+    scoreable = effective >= min_windows
+    return {"rows": rows, "hold_mean_pct": hold_mean, "n_scored": sum(r["n"] for r in rows),
+            "effective_windows": effective, "horizon_days": horizon,
+            "min_n": min_n, "min_effective_windows": min_windows, "scoreable": scoreable,
+            "note": ("rule_edge_pp = (mean forward return − the HOLD baseline) × the direction the "
+                     "rule moved money, so POSITIVE always means the rule was right. "
+                     + (f"~{effective} non-overlapping {horizon}d window(s) — below the "
+                        f"{min_windows} this table needs before any row earns a verdict."
+                        if not scoreable else
+                        f"~{effective} non-overlapping {horizon}d window(s)."))}
+
+
+def score_decisions(lake_dir: Path | None = None, cfg: dict | None = None, price_fn=None,
+                    as_of: str | None = None, ccy_fn=None, fx_fn=None) -> dict:
+    """Price every recorded rule_action over a COMPLETE forward horizon and tally by action.
+
+    Exactly parallel to `score_overrides`, and deliberately so: the deviations and the rules they
+    deviate from are now audited by the same clock, on the same lake, with the same honesty about
+    sample size. An incomplete window is reported as pending, never scored — a five-day price
+    difference is a coin.
+    """
+    from catalyx.execution import nav_engine
+    from catalyx.store import lake
+
+    cfg = cfg or weights.rebalance_rules()
+    horizon = int((cfg.get("scorecard", {}) or {}).get("horizon_days", 63))
+    as_of = as_of or date.today().isoformat()
+    today = date.fromisoformat(as_of)
+
+    try:
+        reb = lake.read_table(_TABLE, lake_dir=lake_dir)
+    except Exception:
+        reb = None
+    if reb is None or reb.empty:
+        return {"as_of": as_of, "scored": [], "pending": [], "horizon_days": horizon,
+                "scorecard": decision_scorecard([], cfg),
+                "note": "no rebalance run recorded — nothing to score"}
+
+    items = []
+    for _, r in reb.iterrows():
+        run_as_of = _run_as_of(str(r.get("run_id")), str(r.get("as_of") or "")[:10] or None)
+        if not run_as_of:
+            continue
+        items.append({"run_id": str(r.get("run_id")), "sector_id": str(r.get("sector_id")),
+                      "etf": r.get("etf"), "rule_action": str(r.get("rule_action")),
+                      "trade_eur": float(r.get("trade_eur") or 0.0), "as_of": run_as_of})
+
+    # No complete window → no price fetch. The scorecard is computed on every run and for months
+    # the honest answer will be "not yet"; paying for a download to print that would be a fixed
+    # cost on a fixed non-answer.
+    horizon_cut = (today - timedelta(days=horizon)).isoformat()
+    any_complete = any(i["as_of"] <= horizon_cut for i in items)
+    tickers = sorted({str(i["etf"]) for i in items
+                      if i["etf"] and str(i["etf"]) != "nan"}) if any_complete else []
+    px = None
+    if tickers:
+        start = min(i["as_of"] for i in items)
+        fn = price_fn or nav_engine.yfinance_prices
+        try:
+            native = fn(tickers, start, as_of)
+            px = nav_engine._eur_prices(native, start, as_of,
+                                        ccy_fn or nav_engine._default_ccy_fn,
+                                        fx_fn or nav_engine._default_fx_fn)
+        except Exception:                                      # pragma: no cover - defensive
+            px = None
+
+    scored, pending = [], []
+    for it in items:
+        try:
+            end = (date.fromisoformat(it["as_of"]) + timedelta(days=horizon)).isoformat()
+        except ValueError:                                     # pragma: no cover - defensive
+            continue
+        complete = end <= today.isoformat()
+        ret = None
+        if complete and px is not None and it["etf"] in getattr(px, "columns", []):
+            col = px[str(it["etf"])].dropna()
+            win = col[(col.index >= it["as_of"]) & (col.index <= end)] if len(col) else col
+            if len(win) >= 2 and float(win.iloc[0]):
+                ret = round((float(win.iloc[-1]) / float(win.iloc[0]) - 1.0) * 100.0, 3)
+        it["forward_return_pct"] = ret
+        it["window_complete"] = complete
+        if ret is not None:
+            scored.append(it)
+        else:
+            it["status"] = ("window open — "
+                            f"{max(0, (date.fromisoformat(end) - today).days)}d to go"
+                            if not complete else
+                            ("no vehicle on the row — cannot price" if not it["etf"]
+                             else "no usable price history in the window"))
+            pending.append(it)
+
+    return {"as_of": as_of, "horizon_days": horizon, "scored": scored, "pending": pending,
+            "scorecard": decision_scorecard(scored, cfg),
+            "note": "The table is now audited on the same clock as the deviations from it. This "
+                    "scores the rules; it never changes one — `rebalance_rules.frozen` still "
+                    "means a threshold moves by config edit and a CHANGELOG line."}
+
+
+def render_scorecard(res: dict) -> str:
+    sc = res.get("scorecard") or {}
+    out = [f"RULE SCORECARD — what the table's own actions earned "
+           f"({res.get('horizon_days')}d forward, {res.get('as_of')})", ""]
+    if not sc.get("rows"):
+        out.append(f"  nothing scoreable yet: {len(res.get('pending') or [])} row(s) pending, "
+                   f"no complete {res.get('horizon_days')}d window.")
+        return "\n".join(out)
+    out.append(f"  {'action':<9}{'n':>4}{'mean fwd':>10}{'vs HOLD':>10}{'rule edge':>11}  verdict")
+    for r in sc["rows"]:
+        def _pp(v, suffix=""):
+            return "—" if v is None else f"{v:+.2f}{suffix}"
+        out.append(f"  {r['action']:<9}{r['n']:>4}{_pp(r['mean_forward_pct'], '%'):>10}"
+                   f"{_pp(r['vs_hold_pp'], 'pp'):>10}{_pp(r['rule_edge_pp'], 'pp'):>11}  "
+                   f"{r['verdict']}")
+    out.append("")
+    out.append(f"  {sc.get('note')}")
+    if res.get("pending"):
+        out.append(f"  {len(res['pending'])} row(s) pending a complete window.")
+    return "\n".join(out)
+
+
 def render_overrides(res: dict) -> str:
     out = [f"OVERRIDE LOG — deviations from the rule, scored ({res['as_of']})", ""]
     if not res["scored"] and not res["pending"]:
@@ -868,26 +1870,163 @@ def render(res: dict) -> str:
     out.append(f"CAPITAL  committed {_eur(b['total_capital_eur'])} · deployed "
                f"{_eur(b['deployed_eur'])} ({b['deployed_pct']:.0f}%) · cash {_eur(b['cash_eur'])}")
     out.append(f"RULE     deploy {r['ratio']:.0%} → {_eur(b['deployable_eur'])}   [{r['why']}]")
+    mdl = b.get("model") or {}
+    if mdl.get("dropped"):
+        out.append(f"MODEL    {mdl['n_holdings']} names · {mdl['dropped_weight_pct']:.1f}% of the "
+                   f"model book was unbuyable → {len(mdl['substituted'])} substituted, "
+                   f"{mdl['residual_pct']:.1f}% rescaled (×{mdl['rescale']:.3f})")
+    lam = mdl.get("tilt_lambda")
+    if lam is not None:
+        out.append(f"TILT     λ={lam:.2f} — "
+                   + ("the model picks the NAMES; sizing is neutral (inverse-vol) until the "
+                      "ranking's IC earns a tilt. Gross deployment is unchanged."
+                      if lam < 0.05 else
+                      f"{lam:.0%} of the model's conviction tilt applied, {1 - lam:.0%} shrunk "
+                      f"toward the neutral book"))
     gap = b["under_deployed_eur"]
     if abs(gap) >= 1:
         word = "UNDER-deployed" if gap > 0 else "OVER-deployed"
         out.append(f"         {word} by {_eur(abs(gap))} vs what the rules say should be at work")
+    # Friction is priced to the cent on every row below; until now the cost of leaving the cash
+    # alone was priced nowhere, which is a standing thumb on the scale for doing nothing.
+    drag = res.get("cash_drag") or {}
+    if drag.get("idle_eur"):
+        out.append(f"CASH DRAG {drag['note']}")
+    short = res.get("shortfall") or {}
+    if short.get("breached"):
+        out.append(f"SHORTFALL {short['note']}")
     out.append("")
 
-    hdr = f"{'sector':<34} {'rk':>3} {'tgt%':>6} {'act%':>6} {'gap€':>8} " \
-          f"{'ACTION':<7} {'trade€':>8} {'net€':>7}  reason"
+    # The partial-sale vocabulary, stated ONCE before any verdict is read: three fractions are
+    # the whole language (plan v4 §2 A5), and a reader who does not know them cannot tell a
+    # "TRIM" that halves a line from one that shaves 4pp off it.
+    rf = float((res.get("fractions") or {}).get("reduce", 0.5)) * 100
+    lf = res.get("fractions", {}).get("ladder_trim")
+    out.append("COLUMNS  rk = model-book rank · ~N = not in the model book, universe rank N · "
+               "b/e% = friction ÷ capital moved")
+    out.append(f"SIZING   SELL = 100% of the line · REDUCE = {rf:.0f}% · TRIM = back to target"
+               + (f" (or {float(lf) * 100:.0f}% on a ladder rung)" if lf else ""))
+    out.append("")
+
+    hdr = f"{'sector':<30} {'vehicle':<9} {'rk':>4} {'tgt%':>6} {'act%':>6} {'gap€':>8} " \
+          f"{'ACTION':<7} {'trade€':>8} {'b/e%':>6}  reason"
     out += [hdr, "-" * len(hdr)]
     for row in res["rows"]:
-        net = "—" if row["net_edge_eur"] is None else f"{row['net_edge_eur']:.0f}"
-        out.append(f"{row['sector_id'][:34]:<34} {str(row['rank'] or '—'):>3} "
+        # The hurdle, not a forecast: what this trade's friction costs as a % of the capital it
+        # moves. `net€` is still in the JSON and the lake; it left the table on purpose.
+        be = row.get("breakeven_pct")
+        be_s = "—" if be is None else f"{be:.2f}"
+        # `rank` is the MODEL-BOOK rank and is absent for exactly the sectors the model dropped —
+        # i.e. blank on every row whose reason cites a rank. Fall back to the universe rank,
+        # marked `~`, so the column never contradicts the sentence beside it.
+        rk = (str(row["rank"]) if row.get("rank")
+              else (f"~{row['score_rank']}" if row.get("score_rank") else "—"))
+        out.append(f"{row['sector_id'][:30]:<30} {str(row.get('etf') or '—')[:9]:<9} "
+                   f"{rk:>4} "
                    f"{row['target_pct']:>6.1f} {row['actual_pct']:>6.1f} {row['gap_eur']:>8.0f} "
-                   f"{row['rule_action']:<7} {row['trade_eur']:>8.0f} {net:>7}  {row['reason']}")
+                   f"{row['rule_action']:<7} {row['trade_eur']:>8.0f} {be_s:>6}  {row['reason']}")
+    # The CASH row is a POSITION, priced like any other: the table is a closed book or it is two
+    # unrelated lists. Its action is the € the rules want moved out of cash and into the rows
+    # above — printed as an action, never as a footnote (plan v4 §4 C1).
+    cash_act = b["cash_action_eur"]
+    cash_verb = "DEPLOY" if cash_act > 0 else ("RAISE" if cash_act < 0 else "HOLD")
+    out.append(f"{'CASH':<30} {'—':<9} {'—':>4} "
+               f"{b['cash_target_pct']:>6.1f} {b['cash_actual_pct']:>6.1f} "
+               f"{-cash_act:>8.0f} {cash_verb:<7} {-cash_act:>8.0f} {'—':>7}  "
+               f"rule holds {b['cash_target_pct']:.0f}% in cash; you hold "
+               f"{b['cash_actual_pct']:.0f}% — already allocated on the rows above; "
+               f"declining a row IS the override, not the cash")
+    out.append(f"{'TOTAL':<30} {'':<9} {'':>4} "
+               f"{b['target_pct'] + b['cash_target_pct']:>6.1f} "
+               f"{b['deployed_pct'] + b['cash_actual_pct']:>6.1f} "
+               f"{0:>8.0f}")
     out.append("")
     out.append(f"ACTIONS  {b['n_actions']} non-HOLD · buys {_eur(b['buys_eur'])} · "
                f"sells {_eur(b['sells_eur'])} · turnover {b['turnover_pct']:.1f}% → deployed after "
                f"{b['deployed_after_pct']:.0f}%")
+    # What the LAST run asked for and never got. Read from the movements on disk, not from the
+    # review's own account of itself.
+    unrec = res.get("unrecorded") or []
+    if unrec:
+        out.append("")
+        out.append(f"UNRECORDED DEVIATIONS — run {res.get('prior_run_id')} recommended "
+                   f"{len(unrec)} action(s) that produced no movement and no override. Each is "
+                   f"logged as a DEFER authored `unrecorded` and priced in ~21 trading days.")
+        for u in unrec:
+            out.append(f"  {u['rule_action']:<7}{u['sector_id']:<34}"
+                       f"€{abs(u['trade_eur']):>8,.0f}  not executed, not overridden")
     c = res["calibration"]
+
+    swaps = res.get("swaps") or []
+    if swaps:
+        ev = res.get("rank_edge_evidence") or {}
+        h = swaps[0].get("horizon_days")
+        out.append("")
+        out.append(f"SWAP LEDGER — what each rotation costs to make, and the hurdle it must clear"
+                   f"{f' over {h}d' if h else ''}")
+        for w in swaps:
+            out.append(f"  {str(w['from_action']):<6} {str(w['from_sector'])[:32]:<32} "
+                       f"{_eur(w['moved_eur']):>9}  →  {str(w['to_action']):<4} "
+                       f"{str(w['to_sector'])[:32]}")
+            out.append(f"         friction €{w['friction_eur']:,.2f} "
+                       f"(CGT €{w['tax_eur']:,.2f} + spread €{w['spread_eur']:,.2f})"
+                       f"  →  BREAKEVEN {w['breakeven_pct']:.2f}%: {w['to_sector']} must beat "
+                       f"{w['from_sector']} by that much{f' over {h}d' if h else ''}")
+        total_f = round(sum(w["friction_eur"] for w in swaps), 2)
+        total_m = round(sum(w["moved_eur"] for w in swaps), 2)
+        unpaired = round(b["sells_eur"] - total_m, 2)
+        out.append(f"  TOTAL  {_eur(total_m)} rotated · friction €{total_f:,.2f} · "
+                   f"weighted breakeven {breakeven_pct(total_f, total_m):.2f}%"
+                   + (f" · {_eur(unpaired)} of the sells pairs with no buy above the "
+                      f"€{float(res.get('min_ticket_eur') or 0):.0f} ticket and lands "
+                      f"in cash" if unpaired >= 1 else ""))
+        out.append(f"  EVIDENCE for that spread: {ev.get('line')}")
+        out.append(f"  The rule fires on its own trigger, not on an expected return. The "
+                   f"breakeven is the claim you are accepting: that the rank signal is worth "
+                   f"more than the friction. That claim is testable a horizon later.")
+
+    if res.get("partials"):
+        out.append("")
+        out.append("PARTIALS — distance to each rung (a partial should never arrive as a surprise)")
+        lab = next((p["ladder"]["label"] for p in res["partials"] if p.get("ladder")), "—")
+        out.append(f"  {'sector':<30} {'gain':>7} {'rk':>3}  {'ladder ' + lab:<44}"
+                   f"{'overweight ' + res['partials'][0]['overweight']['label']:<26} ")
+        for p in res["partials"]:
+            g = "—" if p["unrealized_pct"] is None else f"{p['unrealized_pct']:+.1f}%"
+            lad = p.get("ladder")
+            if not lad:
+                lad_s = "no ladder configured"
+            else:
+                # The rank leg is NOT a pass/fail on quality — the rung fires once the model has
+                # STOPPED leading the name. Rank 1 failing it is the rule working, not a problem.
+                if lad["rank_ok"]:
+                    rk_s = "model no longer leads it ✓"
+                elif p["rank"] is None:
+                    rk_s = "rank unknown"
+                else:
+                    rk_s = f"still a leader (rank {p['rank']} < {lad['rank_min']})"
+                gain_s = ("gain MET" if lad["gain_met"] else
+                          f"needs {lad['need_gain_pct']:+.1f}%" if lad["need_gain_pct"] is not None
+                          else "gain unknown")
+                lad_s = f"{gain_s} · {rk_s}"
+            ow = p["overweight"]
+            ow_s = (f"MET ({ow['over_pp']:+.1f}pp)" if ow["met"]
+                    else f"needs {ow['need_pp']:+.1f}pp more")
+            live = f"  → {p['action']} LIVE" if p["live"] else ""
+            out.append(f"  {str(p['sector_id'])[:30]:<30} {g:>7} "
+                       f"{str(p['rank'] or '—'):>3}  {lad_s:<44}{ow_s:<24}{live}")
+
+    out.append("")
     out.append(f"EDGE     bucket E[r] {c.get('buckets')} — {c.get('note')}")
+    out.append(f"         (kept for calibration; it does NOT drive the table — see BREAKEVEN)")
+    g = res.get("gate") or {}
+    if g:
+        ic = g.get("ic")
+        out.append(f"GATE     after-tax gate {'ARMED' if g.get('armed') else 'STANDS ASIDE'} · "
+                   f"composite IC {'n/a' if ic is None else f'{ic:+.3f}'}"
+                   + (f" (se {g['ic_se']:.3f} → {g.get('ic_verdict')})" if g.get("ic_se") else "")
+                   + f" · ~{g.get('windows')} window(s)")
+        out.append(f"         {g.get('why')}")
     out.append(_summary_line(res))
     for w in res.get("warnings", []):
         out.append(f"⚠ {w}")
@@ -897,7 +2036,7 @@ def render(res: dict) -> str:
 
 
 def main() -> None:
-    """Three commands. The default (no subcommand) is the report, so `post_run.sh` and every
+    """Four commands. The default (no subcommand) is the report, so `post_run.sh` and every
     existing call site keep working unchanged."""
     argv = sys.argv[1:]
     sub = argv[0] if argv and not argv[0].startswith("-") else None
@@ -946,6 +2085,17 @@ def main() -> None:
         a = ap.parse_args(argv)
         res = score_overrides()
         print(json.dumps(res, indent=2, default=str) if a.json else render_overrides(res))
+        return
+
+    if sub == "scorecard":
+        ap = argparse.ArgumentParser(prog="rebalance scorecard",
+                                     description="Score the TABLE's own actions over a complete "
+                                                 "forward window, against the HOLD baseline.")
+        ap.add_argument("command")
+        ap.add_argument("--json", action="store_true")
+        a = ap.parse_args(argv)
+        res = score_decisions()
+        print(json.dumps(res, indent=2, default=str) if a.json else render_scorecard(res))
         return
 
     ap = argparse.ArgumentParser(description="Target vs actual book, with rule actions and "

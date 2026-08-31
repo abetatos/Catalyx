@@ -67,6 +67,20 @@ def _bake_docs(dist: Path) -> dict:
     return {k: len(v) for k, v in docs.items()}
 
 
+def _scorecard_block() -> dict | None:
+    """The rule scorecard, or None. Guarded: a forward-price failure must not fail the build."""
+    try:
+        from catalyx.execution import rebalance
+        res = rebalance.score_decisions()
+        sc = res.get("scorecard") or {}
+        return {"rows": sc.get("rows"), "horizon_days": res.get("horizon_days"),
+                "effective_windows": sc.get("effective_windows"),
+                "scoreable": sc.get("scoreable"), "n_pending": len(res.get("pending") or []),
+                "note": sc.get("note")}
+    except Exception:                                          # noqa: BLE001
+        return None
+
+
 def _records(df) -> list[dict]:
     """DataFrame → JSON-safe list of dicts (numpy → native, NaN → null, datetime → ISO)."""
     return json.loads(df.to_json(orient="records", date_format="iso"))
@@ -82,7 +96,14 @@ def _downsample(values: list, n: int = 40) -> list:
 
 
 def _series_metrics(navs: list) -> dict | None:
-    """Annualized volatility, Sharpe (rf=0) and max drawdown from a NAV series."""
+    """Annualized volatility, Sharpe (rf=0) and max drawdown from a NAV series.
+
+    Ships `n` and the Sharpe's 95% half-width alongside the point estimate, plus a `reliable`
+    flag from scoring_weights.yaml `risk_metrics`. Two months of daily data give a Sharpe with a
+    confidence interval several times the estimate; rendering "0.78" next to SPY without saying
+    so is how noise gets read as skill. The UI dims the number when `reliable` is false rather
+    than hiding it — the shape of the curve is still worth seeing.
+    """
     import math
     xs = [v for v in navs if v is not None]
     if len(xs) < 3:
@@ -97,10 +118,24 @@ def _series_metrics(navs: list) -> dict | None:
     for v in xs:
         peak = max(peak, v)
         mdd = min(mdd, v / peak - 1)
+    sharpe = round(mean / sd * math.sqrt(252), 2) if sd else None
+    ci = None
+    if sharpe is not None:
+        s_d = sharpe / math.sqrt(252)
+        ci = round(1.96 * math.sqrt((1 + s_d ** 2 / 2) / n) * math.sqrt(252), 2)
+    try:
+        from catalyx.config import weights
+        min_days = int(weights.risk_metrics().get("min_days_for_sharpe", 120))
+    except Exception:  # noqa: BLE001
+        min_days = 120
     return {
         "vol_pct": round(sd * math.sqrt(252) * 100, 1),
-        "sharpe": round(mean / sd * math.sqrt(252), 2) if sd else None,
+        "sharpe": sharpe,
+        "sharpe_ci95": ci,
         "max_drawdown_pct": round(mdd * 100, 1),
+        "n_days": n,
+        "min_days": min_days,
+        "reliable": n >= min_days,
     }
 
 
@@ -356,7 +391,8 @@ def _bake_overview(dist: Path) -> dict:
             for row in q("SELECT DISTINCT portfolio_id FROM portfolio_nav ORDER BY portfolio_id"):
                 pid = row["portfolio_id"]
                 rows = q(
-                    "SELECT date, nav, benchmark_nav, return_pct, vs_benchmark_pct, benchmark_etf, kind, mode "
+                    "SELECT date, nav, benchmark_nav, return_pct, vs_benchmark_pct, benchmark_etf, kind, mode, "
+                    "value_eur, net_contributed_eur, mwr_pct "
                     f"FROM portfolio_nav WHERE portfolio_id = '{pid}' ORDER BY date"
                 )
                 if not rows:
@@ -382,9 +418,19 @@ def _bake_overview(dist: Path) -> dict:
                     "live_points": len(live),
                     # while 'accruing', the curve shown is the hypothetical backtest (flag it as such)
                     "is_reference_curve": track_mode == "accruing",
+                    # For kind='real' this is the TIME-WEIGHTED return: contributions neutralized,
+                    # so it is what may be compared to the benchmark. It is NOT the broker's P&L —
+                    # `mwr_pct` and `return_pct_vs_cost` below answer the other two questions, and
+                    # the UI labels all three rather than picking one and calling it "return".
                     "return_pct": last.get("return_pct"),
                     "vs_benchmark_pct": last.get("vs_benchmark_pct"),
                     "benchmark_etf": last.get("benchmark_etf"),
+                    "mwr_pct": last.get("mwr_pct"),
+                    "value_eur": last.get("value_eur"),
+                    "net_contributed_eur": last.get("net_contributed_eur"),
+                    "return_pct_vs_cost": (
+                        round((last["value_eur"] / last["net_contributed_eur"] - 1) * 100, 2)
+                        if last.get("value_eur") and last.get("net_contributed_eur") else None),
                     "metrics": _series_metrics([s["nav"] for s in shown]),
                     "bench_metrics": _series_metrics([s["benchmark_nav"] for s in shown]),
                     "n_days": len(shown),
@@ -592,10 +638,15 @@ def _bake_overview(dist: Path) -> dict:
                     "SELECT sector_id, etf, rank, score_rank, bucket, target_pct, actual_pct, "
                     "gap_pp, target_eur, actual_eur, gap_eur, rule_action, reason, trade_eur, "
                     "unrealized_pct, realized_gain_eur, expected_edge_eur, net_edge_eur, "
+                    "breakeven_pct, "
                     "gate_note, regime_state, catalyst_freshness, exit_action, flags, "
-                    "tax_eur, spread_eur, cost_drag_eur, deploy_ratio, as_of "
+                    "tax_eur, spread_eur, cost_drag_eur, cap_headroom_eur, "
+                    "deploy_ratio, book_tilt_lambda, book_cash_drag_eur, book_cash_idle_since, "
+                    "book_cash_idle_days, book_bench_return_pct, book_shortfall_pp, "
+                    "book_shortfall_runs, book_shortfall_breached, as_of "
                     f"FROM rebalance WHERE run_id = '{rid}' ")
-                order = {"SELL": 0, "REDUCE": 1, "TRIM": 2, "ADD": 3, "BUY": 4, "HOLD": 5}
+                from catalyx.execution.rebalance import PRECEDENCE
+                order = {a: i for i, a in enumerate(PRECEDENCE)}
                 rows.sort(key=lambda r: (order.get(r.get("rule_action"), 9),
                                          -abs(float(r.get("trade_eur") or 0))))
                 metrics = q("SELECT * FROM position_metrics "
@@ -618,10 +669,23 @@ def _bake_overview(dist: Path) -> dict:
                     "run_id": rid,
                     "as_of": rows[0].get("as_of") if rows else None,
                     "deploy_ratio": rows[0].get("deploy_ratio") if rows else None,
+                    "tilt_lambda": rows[0].get("book_tilt_lambda") if rows else None,
+                    # The cost of NOT acting, alongside the cost of acting (plan v4 §4 C1/C4).
+                    "inaction": ({
+                        "cash_drag_eur": rows[0].get("book_cash_drag_eur"),
+                        "idle_since": rows[0].get("book_cash_idle_since"),
+                        "idle_days": rows[0].get("book_cash_idle_days"),
+                        "benchmark_return_pct": rows[0].get("book_bench_return_pct"),
+                        "shortfall_pp": rows[0].get("book_shortfall_pp"),
+                        "shortfall_runs": rows[0].get("book_shortfall_runs"),
+                        "shortfall_breached": rows[0].get("book_shortfall_breached"),
+                    } if rows else None),
                     "rows": rows,
                     "metrics_by_sector": {m["sector_id"]: m for m in metrics},
                     "book": book,
                     "overrides": overrides,
+                    # The table's own record beside the deviations from it (plan v4 §3 B4).
+                    "scorecard": _scorecard_block(),
                 }
 
         # ── experiment ledger (closed positions scored as experiments) ──

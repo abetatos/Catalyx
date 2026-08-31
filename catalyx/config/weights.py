@@ -188,6 +188,15 @@ _PORTFOLIO_WEIGHTING_DEFAULT = {
     "transform": "proportional",
     "sharpness": 0.25,
     "rebalance_deadband_pct": 1.0,
+    # Risk-budgeted sizing. 0 = the pre-v4 behaviour (vol ignored); see scoring_weights.yaml.
+    "vol_tilt_alpha": 0.0,
+    "vol_lookback_days": 120,
+    "min_vol_pct": 5.0,
+    # Skill shrinkage. False = the pre-v4 behaviour (λ=1, the tilt is taken on trust).
+    "tilt_shrinkage": False,
+    "tilt_ic_target": 0.20,
+    "tilt_prior_windows": 3.0,
+    "tilt_lambda_floor": 0.0,
 }
 
 
@@ -226,6 +235,19 @@ def total_capital_eur() -> float | None:
     fire; the rest is cash). From track_record.yaml `total_capital_eur`, or None."""
     v = track_record().get("total_capital_eur")
     return float(v) if v is not None else None
+
+
+def correlated_catalyst_cap() -> dict:
+    """Max combined allocation across positions sharing a primary catalyst, as a PERCENT.
+
+    The YAML stores `max_combined_pct: 0.20`, i.e. a fraction under a `_pct` name. Every caller
+    that compares it to a real percentage (an exposure of 10.0 for 10%) silently never breaches.
+    Normalized here, once, so the unit is the one the field name promises.
+    """
+    c = _section("correlated_catalyst_cap", {"max_combined_pct": 0.20, "enforcement": "warn"})
+    v = float(c.get("max_combined_pct", 0.20))
+    return {"max_combined_pct": v * 100.0 if v <= 1.0 else v,
+            "enforcement": str(c.get("enforcement", "warn"))}
 
 
 # ── Entry-timing overlay (entry_timing) ──────────────────────────────────────
@@ -375,10 +397,14 @@ _REBALANCE_RULES_DEFAULT = {
     "reduce_if_any": {"exit_watcher": ["reduce"], "reduce_fraction": 0.5},
     "deployment": {"base": 0.70, "step_per_intact_sector": 0.05, "intact_min": 5,
                    "intact_rank_max": 8, "vix_pause_above": 30.0, "vix_penalty": 0.20,
-                   "floor": 0.40, "ceiling": 1.00},
+                   "floor": 0.40, "ceiling": 1.00,
+                   # Persistence rule: a shortfall this large surviving this many recorded
+                   # reviews must be executed or overridden in writing (plan v4 §4 C1).
+                   "max_shortfall_pp": 10.0, "max_shortfall_runs": 2},
     "net_edge_gate": {"applies_to_taxable_sales": True, "applies_to_purchases": False,
                       "shrinkage_prior_windows": 6.0, "min_windows_to_gate": 3},
-    "overrides": {"authors_allowed": ["user", "claude"], "reason_required": True,
+    "scorecard": {"horizon_days": 63, "min_n": 5, "min_effective_windows": 2},
+    "overrides": {"authors_allowed": ["user", "claude", "unrecorded"], "reason_required": True,
                   "defer_is_an_override": True, "score_after_trading_days": 21,
                   "claude_suspended_if": {"min_scored": 5, "net_edge_eur_below": 0.0}},
 }
@@ -392,3 +418,17 @@ def rebalance_rules() -> dict:
     precedence, every deviation logged as an override. See scoring_weights.yaml
     `rebalance_rules` + docs/PLAN_v3_lean_pipeline_rebalance.md §4."""
     return _section("rebalance_rules", _REBALANCE_RULES_DEFAULT)
+
+
+# ── Risk-metric reliability (position_metrics, build_site) ───────────────────
+
+_RISK_METRICS_DEFAULT = {
+    "min_days_for_sharpe": 120,
+    "min_days_for_vol": 30,
+}
+
+
+def risk_metrics() -> dict:
+    """Sample-size floors below which vol/Sharpe/beta are shown as indicative, not as findings.
+    See scoring_weights.yaml `risk_metrics` for why a two-month Sharpe is not a measurement."""
+    return _section("risk_metrics", _RISK_METRICS_DEFAULT)

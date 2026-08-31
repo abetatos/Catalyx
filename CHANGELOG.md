@@ -9,6 +9,703 @@
 
 ---
 
+
+
+
+
+
+## Two review steps deleted, and a test suite that stops depending on your shell (2026-08-31, v4.8)
+
+Step 10 of `docs/PLAN_v4_rigor_and_lean_metrics.md` (§5 D-c–D-f) — the last one. **v4 is complete.**
+
+**D-c — two steps deleted, not shortened.** Step 4 ran the two catalyst summaries that
+`/catalyx-scan` already reads in C1: 4.5 KB per review to restate what step 0/1 carried forward.
+Step 11 swept 31 non-investable sectors and its own instruction was to write "no watch trigger
+surfaced" — a watch trigger firing IS an investability event, so it belongs in Step 12 and nowhere
+else. The dashboard moved from 8.5 to **5.5**: the user reads the book — the rebalance table, the
+risk contributions, the cost of not acting — *before* the positions are argued about, so the
+evidence arrives ahead of the argument instead of after it. (`structural_monitor` stays: the merge
+was rejected on 2026-08-28 and the reason is recorded in the plan.)
+
+**D-d — the study step reads a digest, not a dossier.** New `sector_study_repo.core()` /
+`core_all()` + `core [--all] [--json]`. A study is ~20 KB and there are 27; exactly **two** of
+their fields are consumed anywhere — `narrative_maturity` (→ `crowding_risk` in `snapshot_repo`,
+→ the exhaustion test in `catalyst_lifecycle`) and `active_catalyst_ids` (→ the catalyst→sector map
+in `portfolio.catalyst_exposure_rows`). Everything else is the RESEARCH: the reason those two
+values are what they are, which belongs in front of a human rewriting the study, not in the context
+of a run that will read two fields. **25,187 → 2,047 bytes** for one study; `core --all` is a
+26-line table. `age_days` travels inside the digest on purpose — a stale study is worse than none
+because it injects confident, wrong full-dimension scores, so the freshness must arrive in the same
+breath as the value it qualifies, never one CLI call away.
+
+**D-e — context hygiene.** CLAUDE.md's TODO block claimed two SectorStudies were missing; both have
+existed for weeks. Replaced with a **measured state** table — deployed 30% vs an 85% rule · real
+book TWR −1.88% vs SPY +4.19% (**−6.07pp**) · composite IC −0.050 on 1 independent window ·
+scorecard not yet scoreable — four numbers no agent should have to rediscover, and the reason
+several rules read the way they do. The repo map's "414 tests" is now 483, and the review skill's
+subagent briefs name **one input file and one output shape** each instead of restating the pipeline
+order; the order is in the skill and the state is in `run_<date>.json`, and the restatement is the
+part that grew every time a step was added.
+
+**D-f — time, not tokens.** `post_run.sh` ran `nav_engine live` as a **shell loop over four
+strategies**: four interpreter startups, four import graphs and four passes over the same warm price
+cache, to answer four questions about that one cache. New `nav_engine live-all` does it in one
+process — **10.4s → 1.9s**, identical numbers.
+
+And the dev-environment defect, which was subtler than "the group is undeclared" (that was fixed in
+v3): with `CATALYX_PRICES_OFFLINE=1` exported in the shell, `uv run pytest` **failed six tests**
+that inject their own `fetch_fn` and touch no network at all. The temptation is to make the offline
+switch yield to an injected fetcher — rejected: a kill switch an argument can override is not a
+kill switch, and `test_offline_read_never_calls_the_backend` pins exactly that strictness. The real
+defect is that a suite's result depended on the shell it was launched from, so new `tests/conftest.py`
+clears the runtime switches per test; the one test that is *about* offline behaviour still sets it
+itself with `monkeypatch`. **No production behaviour changed.** 488 tests green (+5), passing
+identically with and without the variable exported.
+
+## The rule table becomes falsifiable (2026-08-31, v4.7)
+
+Step 9 of `docs/PLAN_v4_rigor_and_lean_metrics.md` (§3 B4). `calibration` measured the RANKING.
+`score_overrides` measured the DEVIATIONS. Nothing measured the **table**. Every time a human
+departed from the rules the departure was priced 21 trading days later and tallied by author, while
+the rules kept their authority by never being scored at all — a one-sided ledger that made the
+table unfalsifiable by construction, which is the one property this project refuses everywhere else.
+
+New `rebalance.score_decisions()` + `decision_scorecard()`, exactly parallel to `score_overrides`:
+same lake, same clock, same refusal to read a verdict off a sample too small to have one.
+
+```
+RULE SCORECARD — what the table's own actions earned (63d forward)
+  action     n  mean fwd   vs HOLD   rule edge  verdict
+```
+
+Three decisions inside it that decide whether the number means anything:
+
+**HOLD is the baseline, not a row.** The question a rule table can answer is not "did the names go
+up" — that is beta, and `deploy_ratio` owns it — but "did acting beat leaving the book alone". A
+BUY that matches the HOLD mean scores **0.00pp**: matching the baseline is the baseline, not skill.
+
+**The forward return is signed by the direction the rule moved money** (`action_direction`: +1 for
+ADD/BUY, −1 for SELL/REDUCE/TRIM, `None` for HOLD and RE-SCORE, which move none). A SELL into a
+−5% move is the rule being RIGHT, and an unsigned table would print it as the worst row on the
+page. So `rule_edge_pp = (mean − HOLD mean) × direction`, and positive always means right.
+
+**A verdict needs both n and independent windows.** `min_n: 5` and `min_effective_windows: 2`,
+where effective windows counts NON-OVERLAPPING horizons exactly as `calibration.aggregate` does:
+five runs inside one 63-day window are one observation. Below either bar every row reads
+`not scoreable yet`; above them, an edge inside 2·se reads `noise`. Today: **nothing scoreable** —
+24 recorded rows, no complete 63d window, first verdicts ~63 days after the earliest recorded run.
+Saying so is the point; a scorecard that produced a verdict on this sample would be worse than none.
+
+Cost discipline: with no complete window there is **no price fetch at all** — for months the honest
+answer is "not yet", and paying for a download to print a fixed non-answer is a fixed cost on
+nothing (test-enforced with a `price_fn` that raises). And the scorecard never changes a threshold:
+`rebalance_rules.frozen` still means a rule moves by a config edit and a CHANGELOG line.
+
+Surfaced on `rebalance scorecard`, report **§5b**, the run digest and a dashboard section beside
+the overrides table. Two docstrings corrected while wiring it: `review_report.py` and `run_digest`
+both claimed to fetch no price, and both have read one since v3 through `score_overrides` — an
+override's edge is a *forward* return and no lake table can hold it until the window closes. The
+claim now names its two exceptions instead of being quietly false. 483 tests green (+10).
+
+## Quiet stops being free (2026-08-29, v4.6)
+
+Step 8 of `docs/PLAN_v4_rigor_and_lean_metrics.md` (§4 C1–C5). v3 built everything that makes a bad
+ACTION visible: a rule table, banned words, an override log, a suspension arithmetic. It built
+nothing that makes INACTION visible. Every row has printed its friction to the cent since v3; the
+cost of leaving €6,953 idle for 74 days was printed nowhere. That asymmetry is not neutral — it is
+a standing thumb on the scale for doing nothing, on every run.
+
+**C4 — the idle cash is priced in the same units as the friction.** New `rebalance.cash_drag()`,
+on the book strip, in the report, the digest and the dashboard:
+
+```
+CASH DRAG €6,953 idle since 2026-06-16 (74d) · benchmark +3.03% over that window → €211 forgone
+```
+
+Idle *since the book last changed* — a movement date, not a run date: a review that recommends and
+is not executed does not restart the clock. Beside it, the report names the smallest friction
+blocking a trade on the table (**€0.78**), because the comparison is the entire point. An
+unmeasurable benchmark leaves the cost `None`, never €0 — "the cash cost nothing" is a claim, and
+printing it because the price cache was cold is exactly how inaction gets a free pass.
+
+**C1 — the shortfall is an action with a persistence rule.** `UNDER-deployed by €5,453` printed for
+months as a line of text nobody had to answer. New `shortfall_pp()` (points of TOTAL capital: a book
+at 30% against an 85% rule is **54.5pp** short, not "35% of the way there") + `shortfall_status()`
+with `deployment.max_shortfall_pp: 10.0` × `max_shortfall_runs: 2`. Breached today. Counted per
+REVIEW DATE, never per run id — two runs in one afternoon are one review, and a single compliant
+review resets the streak, because a book that moves is not the failure being described. The CASH
+row now says where the money already is: *"already allocated on the rows above; declining a row IS
+the override, not the cash."*
+
+**C3 — the deviation nobody wrote down.** An override existed only if the narrator chose to write
+one, and after three reviews with non-HOLD rows the log was **empty**. Now `unrecorded_deviations()`
+asks the filesystem instead of the narrator: the next run reads the previous run's non-HOLD rows,
+matches them against `data/movements/*.json` in the interval and against the override log, and
+`_log_unrecorded` writes what is left as DEFERs authored **`unrecorded`** — against the run that
+recommended them, so `override_edge` prices them ~21 trading days later exactly like a deliberate
+deviation. Idempotent by construction (a logged override clears the row). The first run found
+**10**: the whole of run 20260728's table — 2 SELLs, 3 ADDs, 5 BUYs — executed as nothing and
+recorded as nothing.
+
+**C2 — Step 9 loses its costless default.** `Open now / Wait / Skip` becomes three priced branches:
+*Execute €target* · *Execute a smaller size — state it* · *Decline — state the evidence*. "Wait" is
+gone: it is the option that is never wrong today and never right in the record, because it writes
+nothing, so nothing scores it, so it costs nothing to choose forever. Every branch now produces a
+logged decision. New `cap_headroom_eur` per row so the smaller size is priced rather than guessed.
+
+**C5 — the language rule enforced in the generator, not in the prompt.** `BANNED_ACTION_WORDS` was
+enforced on `rebalance`'s own output, where hedging was never possible — a rule table cannot hedge.
+Hedging lives in the prose appended at the `<!-- CLAUDE: … -->` markers. New
+`review_report.py --check`: `lint_prose()` fails the committed report on `watch`/`monitor`/
+`consider`/`revisit`/`next cycle`/`for now`/`cautious` inside the sections where a decision is
+stated, and stays silent in the macro-context sections, where analysis is allowed to be tentative
+(policing hedges there would only teach the narrator to write confidently about what it does not
+know). Tables, blockquotes and code are skipped. The generator gets no exemption from the rule it
+enforces — pinned by a test that lints the generated report itself, which cost one "for now" in the
+new §4c.
+
+New report section **§4c "The cost of not acting"**, a `CASH DRAG` / `SHORTFALL` pair on the book
+strip and the digest, two dashboard cards, and a "Not acting has a price too" methodology block.
+Persisted, so nothing downstream re-fetches a price to render it: `book_cash_drag_eur`,
+`book_cash_idle_since|days`, `book_bench_return_pct`, `book_shortfall_pp|runs|breached`.
+473 tests green (+16).
+
+## The tilt is now earned, not assumed (2026-08-28, v4.5)
+
+Step 7 of `docs/PLAN_v4_rigor_and_lean_metrics.md` (§3 B1). The pipeline fused two decisions into
+one number, and only one of them had a justification.
+
+| Decision | Justified by | Where it lives now |
+|---|---|---|
+| **How much is at work** (beta) | the equity risk premium — not this model's skill | `deploy_ratio`, untouched |
+| **How the working capital is tilted** (alpha) | this model's *measured* rank IC | shrunk by λ |
+
+The conviction softmax was dispersing weights exactly as aggressively on a composite rank IC of
+**−0.050 (se 0.200, ONE non-overlapping 63-day window)** as it would on an IC of +0.4. That is
+paying concentration risk — the most expensive thing a book can buy — for an ordering that has
+never been shown to order anything.
+
+```
+w_final ∝ neutral + λ · (model − neutral)
+λ = clamp(IC / tilt_ic_target, 0, 1) · n_eff/(n_eff + tilt_prior_windows)
+```
+
+Two independent haircuts, because two different things can be wrong with a tilt: the ranking may
+not order returns (the IC leg), and it may not have been measured often enough for its IC to mean
+anything (the credibility leg — the same `shrink_factor` the bucket table already uses). Today
+both fail: `λ = 0.00`.
+
+**λ = 0 is not "no model".** The model still selects the names, applies every filter, dedupes the
+vehicles and enforces `max_position_pct`. It declines only to also *size* them. And it is not a
+retreat to cash: both legs carry the same names at the same gross, so the book stays at the 85%
+the deploy rule asks for — test-pinned (`test_lambda_never_changes_how_much_is_deployed`), because
+"the model is unproven" quietly becoming "hold cash" is the exact conservatism this plan exists to
+prevent. What λ=0 costs is dispersion, and only dispersion:
+
+```
+sector                                 λ=1     λ=0     Δpp
+pharma_large_cap                     15.88   13.22   -2.66
+biotech_drug_development             15.16   10.98   -4.18
+semiconductors_design                10.01    7.37   -2.64
+cybersecurity_commercial             10.49    8.71   -1.78
+water_infrastructure                  9.80   13.38   +3.58
+luxury_goods                          9.40   11.98   +2.58
+robotics_automation                   7.17    9.32   +2.15
+GROSS                               100.01   99.98
+```
+
+Top/bottom ratio 2.58× → 1.82×. The residual spread is **not** flat weighting: `vol_tilt` (v4.4)
+runs after the shrinkage, so the neutral book is *risk*-neutral, not naively equal-weight — vol is
+a measurement, not a view, and it keeps applying when the view is withdrawn.
+
+**A negative IC clamps λ to zero; it never goes negative.** Shorting your own ranking on n_eff=1
+is a superstition with a minus sign. This is the same asymmetry v4.3 gave `net_edge_gate`: a
+backwards ranking is a scoring problem to fix, never a licence to trade the ranking upside down.
+
+**The regime haircut rides on the NEUTRAL leg too.** If neutral were flat, shrinking to λ=0 would
+have silently undone the `contested` overlay and re-risked the very name the overlay de-risked.
+The overlay is a risk statement, not a conviction one, and only the conviction leg is shrunk.
+
+New: `calibration.skill_lambda()` (+ `composite_ic(dimension=…)`, now also returning
+`effective_windows`, and `_effective_windows()` — three runs six days apart over one 63-day
+horizon are ONE observation, and the row count was the wrong denominator), and
+`portfolio.skill_shrink()`. A `momentum`-weighted book shrinks by the **momentum** IC (−0.114),
+not the composite's: the shrink measures the column actually doing the ranking. Config
+`portfolio_weighting.tilt_shrinkage|tilt_ic_target|tilt_prior_windows|tilt_lambda_floor`, per-book
+overridable; the code default is `False` (λ=1, the pre-v4 behaviour byte-for-byte), so a book opts
+in through YAML.
+
+λ is **persisted**, not just displayed: `portfolio_holding.tilt_lambda` and
+`rebalance.book_tilt_lambda`, so a target book read back in six months says whether its dispersion
+was earned or assumed. Surfaced on the rebalance table (`TILT` line), report §3, the run digest
+and the dashboard (a `tilt earned (λ)` card beside the deploy-ratio card, plus a
+"Two decisions, kept apart" methodology block). 457 tests green (+11).
+
+## Two €500 lines were never two equal bets (2026-08-28, v4.4)
+
+Step 6 of `docs/PLAN_v4_rigor_and_lean_metrics.md` (§2 A4). The composite decided WHAT to own and
+with how much conviction, and then the euro amount ignored the one input that makes two euros
+comparable. On this book `semiconductors_design` (vol 55%) and `pharma_large_cap` (vol 18%) were
+sized as the same bet; semis carries ~3× the risk per euro spent.
+
+**Measurement first: risk contribution on every position.** New `position_metrics.risk_contribution`
+— `RC_i = w_i·(Σw)_i / σ_p`, from the covariance of daily EUR returns over a window common to every
+held vehicle, summing to 100% by Euler's theorem so the shares are exhaustive and comparable.
+
+```
+RISK CONTRIBUTION — where the book's volatility comes from (60 common days, annualized)
+  sector                          etf       capital %   vol %   risk %  note
+  copper_miners                   4COP.DE        34.9    43.2     52.9  1.5x its capital share
+  semiconductors_design           SEMI.L         15.1    55.5     25.5  1.7x its capital share
+  cybersecurity_commercial        USPY.L         18.6    36.1     14.0
+  grid_infrastructure_utilities   IQQH.DE        12.9    30.5     11.4
+  pharma_large_cap                IUHE.AS        18.5    17.8     -3.8  NEGATIVE — lowers book vol
+  BOOK                                          100.0    25.6    100.0  effective N 4.3 on 5 positions
+```
+
+Two things this says that nothing in the pipeline could say before. **`copper_miners` carries 53%
+of the book's risk on 35% of its capital** — the single largest risk position, and the one the
+table wants to SELL. And **`pharma_large_cap`'s contribution is negative**: it is anticorrelated
+enough with the rest to *lower* total volatility. The rule table wants to ADD to it, which is
+right, but for a reason nothing could previously articulate — and which is the first thing that
+would need defending if the position ever came up for a trim. A negative contribution is a real
+property, not an artefact to clamp away.
+
+`effective_n = 1/HHI` joins it: 5 positions at these weights behave like **4.3** equal ones, which
+is the number a concentration limit is actually about. One division.
+
+**Then the sizing.** New `portfolio.vol_tilt`: `w_i ∝ transform(score_i) / σ_i^α`, applied BEFORE
+`water_fill`, so `max_position_pct` and the deadband keep meaning exactly what they said.
+`portfolio_weighting.vol_tilt_alpha: 0.5` — `α = 0` is the previous behaviour byte-for-byte
+(and stays the code default, so a book opts in via config), `α = 1` is full inverse-vol, which
+would systematically underweight precisely the high-beta sectors a catalyst-driven mandate exists
+to own. 0.5 halves the risk dispersion without turning a momentum book into a low-vol fund.
+
+Effect on the model book, stated rather than buried — the largest single move is 3pp and nothing
+is reordered:
+
+| sector | α=0 | α=0.5 | Δ |
+|---|---:|---:|---:|
+| pharma_large_cap (vol 18%) | 13.7 | 15.9 | +2.2 |
+| water_infrastructure | 7.4 | 9.8 | +2.4 |
+| biotech_drug_development | 13.1 | 15.2 | +2.1 |
+| semiconductors_design (vol 50%) | 13.0 | 10.0 | −3.0 |
+| space_defense_satellite | 8.5 | 6.2 | −2.4 |
+
+Details that matter for correctness. A **missing** vol takes the median of the ones present — never
+zero (which divides into an infinite weight) and never one (which would read as risk-free);
+`min_vol_pct: 5.0` does the same job for a stale or flat series. Vol is measured on the sector's
+OWN traded vehicle, per the broker-reality rule — scoring COPX and buying 4COP.DE measures a risk
+you do not carry. And `_sector_vols` reads the price cache with `allow_fetch=False`: the portfolio
+builder is not a fetch site, and a cold ticker drops to the median rather than opening a network
+round-trip inside a weighting loop.
+
+Surfaced in `position_metrics` (new block), report §4b, the run digest, and the dashboard's
+measurement table (capital vs risk columns, amber when risk exceeds capital share, green when
+negative) plus two new book cards. 446 tests green (+11).
+
+
+## Two ways the table could fire on data nobody collected (2026-08-28, v4.3)
+
+Step 5 of `docs/PLAN_v4_rigor_and_lean_metrics.md` (§3 B2 + B3). Both defects had the same shape:
+an absent or unmeasured quantity resolving into a confident verdict.
+
+**B2 — the after-tax gate was armed to fire backwards.** `net_edge_gate` stood aside while
+`effective_windows < min_windows_to_gate (3)`, which correctly stopped an unmeasured quantity from
+becoming a veto. But a window COUNT cannot see DIRECTION, and the bucket table the gate would use
+when it armed is built from the same ranking whose composite IC is **−0.050 against an se of
+0.200** — `top3` at −0.056 sitting below `rest` at +0.779. The moment the third independent window
+landed (~9 months out, per the config's own comment) the gate would have begun blocking sales out
+of the bottom bucket and waving through sales out of the top: it would have **inverted** the
+profit-taking rule, silently, on a sample the calibration module labels `noise`.
+
+New `calibration.composite_ic()` (mean IC over COMPLETE windows, with se and verdict) and
+`rebalance.gate_status()`, which arms only on a joint condition, naming each failure:
+
+```
+GATE  after-tax gate STANDS ASIDE · composite IC -0.050 (se 0.200 → noise) · ~1 window(s)
+      STANDS ASIDE — ~1 independent window(s) < 3; |IC| 0.050 < 0.20 — the ranking orders
+      nothing; IC -0.050 is NEGATIVE — arming would invert the rule, not enforce it
+```
+
+The sign condition is the new one and it is deliberately asymmetric: a negative IC **disables**
+the gate, it never inverts it. "Our ranking is backwards" is a scoring problem to fix, not a
+licence to trade the ranking upside down. Config lives under `net_edge_gate.requires`
+(`min_independent_windows`, `min_abs_ic: 0.20` ≈ 1·se at n=26, `ic_sign_must_be_positive`), and
+the status is now printed on the table, in the report §3 and in the run digest — a gate that does
+not fire is a decision too, and it is the reason the rule actions stand unmodified.
+
+**B3 — a missing rank was being read as a verdict.** `rank_out_streak` counted `None` as "outside
+the cut", so a sector absent from a run's `sector_snapshot` — including absent because the
+universe changed shape — accumulated a sell signal out of measurements nobody took. Fixed: a gap
+BREAKS the streak, and enough gaps get their own action.
+
+`RE-SCORE` joins the enum as a first-class, non-money action: `SELL > REDUCE > TRIM > **RE-SCORE**
+> ADD > BUY > HOLD`. It sits with the sell-side actions on purpose — it is what a rank-out SELL
+degrades to, and parking it beside HOLD would bury a work item under the rows that move money. It
+fires AFTER the fundamental sells (a broken thesis is a sell whatever its rank did) and BEFORE the
+rank-streak sell, which is exactly the verdict missing data cannot support. Config `rescore_if`
+(`lookback_runs: 4`, `missing_runs_min: 2`).
+
+**What the plan got wrong about this run, corrected here.** D6 claimed today's two SELLs
+(`copper_miners`, `grid_infrastructure_utilities`) fire on a rank that does not exist, "35% of the
+deployed book decided by a missing value". They do not. Both sectors are scored every run — copper
+at #11, grid at #14 — and the `rk = —` that prompted the claim is the **model-book** rank, blank
+for precisely the sectors the model dropped, i.e. blank on every row whose reason cites a rank.
+The defect in `rank_out_streak` is real and is now fixed; the reading of this book's rows was not.
+The table no longer permits the confusion: the `rk` column falls back to the universe rank marked
+`~11`, and the reason names the number it fired on (`ranked below top-10 (#11)`).
+
+**Found while fixing it.** Run ids are `run_<YYYYMMDD>_<HHMMSS>` and `_rank_streaks` counted every
+one, so re-running the pipeline twice in an afternoon wrote two "consecutive runs" — and
+`rank_out_consecutive: 2` meant a single day of iteration could manufacture a SELL by itself.
+Today's lake has exactly that: two runs stamped 2026-08-28. Only the last run of each date now
+counts, which is what "consecutive review cycles" always meant; grid's streak drops 4 → 3 and stays
+above the threshold on its own merits.
+
+Also added: a `COLUMNS` legend line, and the six order-maps that restated the action enum by hand
+(report, digest, dashboard) now import `PRECEDENCE` — a seventh action added in one place and
+forgotten in another sorts to the bottom silently. Dashboard pill, precedence strip and copy updated.
+435 tests green (+11), including one that pins the old `rank_out_streak([5, None]) == 1` assertion
+inverted, with the reason written where the next reader will find it.
+
+
+## A hurdle you can check instead of a forecast you cannot (2026-08-28, v4.2)
+
+Step 4 of `docs/PLAN_v4_rigor_and_lean_metrics.md` (§2 A3 + A5) — the user's two questions,
+*"¿renta vender?"* and *"¿parciales?"*, answered without asking the model to predict anything.
+
+**A3 — `net_edge_eur` left the decision table.** It answered "does this trade pay?" by multiplying
+the trade by `E[r | rank bucket]`, a mean over ~1 non-overlapping 63-day window, shrunk 86% toward
+zero for exactly that reason. The result was ±€1 on a €900 trade, printed in a column beside a real
+€11 tax bill. The number was never *wrong* — it was **unfalsifiable**, and per the plan's D5 it
+turns actively harmful the moment the gate arms, because today's bucket table has `top3` at −0.056
+sitting BELOW `rest` at +0.779.
+
+Replaced by a **breakeven**, which needs no forecast: `friction ÷ capital actually moved`, where
+friction is CGT + spread + fees — all observable today. New `leg_friction`, `breakeven_pct`,
+`swap_ledger` and `rank_edge_evidence`; the table's `net€` column became `b/e%`, and so did the
+dashboard's and the report's.
+
+```
+SWAP LEDGER — what each rotation costs to make, and the hurdle it must clear over 63d
+  SELL   copper_miners                       €1,020  →  BUY  biotech_drug_development
+         friction €15.47 (CGT €11.39 + spread €4.08)  →  BREAKEVEN 1.52%
+  TOTAL  €1,412 rotated · friction €17.03 · weighted breakeven 1.21%
+         · €42 of the sells pairs with no buy above the €150 ticket and lands in cash
+  EVIDENCE for that spread: rank-bucket top3−rest = -5.84pp → NONE
+         (~1 independent window(s) < the 3 the gate requires — the sign is not established)
+```
+
+Three properties the old number did not have. Every input is observable now. The output is a
+**hurdle the user accepts or rejects with their own view** — which is the judgement a human should
+make and a model should not. And it is checkable against the realized spread one horizon later,
+which a point estimate never is.
+
+The evidence line is deliberately blunt: it says `NONE` on a thin sample and `ADVERSE` when the
+measured top3 sits below rest, rather than dressing either up. It is **not** a veto — the rule
+still fires on its own trigger (rank-out, regime, exit watcher), and an unmeasured quantity must
+never resolve to inaction. Stating the hurdle and stating that the evidence for clearing it is not
+yet established are two facts; turning them into a softened verdict is the conservatism this plan
+exists to remove.
+
+Details that cost a second pass. The ledger pairs sells to buys largest-first and **pro-rates CGT
+across the legs one sale funds** — charging each leg the full bill turned €20 of tax into €40 of
+phantom friction. Legs below `min_ticket_eur` are skipped, since `size_trade` would refuse to print
+that order anyway; the unpaired remainder lands in cash, which the CASH row already prices, and the
+TOTAL line says so rather than letting the ledger quietly under-sum the sells.
+
+**A5 — partials stop arriving as a surprise.** New `partial_rungs` reports, per held line, the
+distance to **both** rungs:
+
+```
+PARTIALS — distance to each rung
+  sector                            gain  rk  ladder +25% & rank ≥ 6 → trim 33%           overweight ≥ 4pp
+  copper_miners                    +6.2%   —  needs +18.8% · rank unknown                 MET (+10.6pp)  → SELL LIVE
+  pharma_large_cap                +12.8%   1  needs +12.2% · still a leader (rank 1 < 6)   needs +8.6pp more
+  cybersecurity_commercial        +13.4%   4  needs +11.6% · still a leader (rank 4 < 6)   needs +8.1pp more
+```
+
+Both rungs, never a "nearest": they are measured in different units — points of TOTAL capital above
+target versus % gain ON the position — and collapsing them to one number compares quantities that
+are not comparable. The first cut of this did exactly that and the overweight rung won every row,
+hiding the ladder entirely.
+
+The rank leg is phrased as what it means. `rank_min: 6` fires once the model has **stopped** leading
+a name, so pharma at rank 1 failing it is the rule working; a bare `rank ✗` read as a defect. A
+**missing** rank never satisfies it — that would let a +80% position with no model rank trigger a
+trim on absent data (the open B3 defect; two SELLs already fire on `rk = —` this run).
+
+And the sizing vocabulary is now printed once, above the verdicts: `SELL = 100% of the line ·
+REDUCE = 50% · TRIM = back to target (or 33% on a ladder rung)`. Three fractions are the entire
+partial-sale language and they had never appeared together, so a reader could not tell which "TRIM"
+halved a line and which shaved 4pp off it.
+
+Both blocks are pure functions over the rebalance rows, so `review_report.py` and `run_digest`
+rebuild them from the **persisted lake partition** instead of re-running the engine — which reads
+VIX, and would have broken `review_report`'s own "fetches no price" contract. Report §3b/§3c,
+dashboard column and copy, run digest and the review skill's Step 6 all updated. 424 tests green
+(+10).
+
+
+## The run says what it found once, in one file (2026-08-28, v4.1)
+
+Step 3 of `docs/PLAN_v4_rigor_and_lean_metrics.md` (§5 D-a + D-b). No formula changed and no
+threshold moved — this is entirely about what a review costs to run.
+
+**D-a — four scorers were printing their whole working, every run.** `sector_scorer` and
+`catalyst_scorer`, `momentum_engine` and `intensity_engine` each rendered a human table and then
+appended `--- JSON output ---` plus the complete result dict, unconditionally. All four already
+had `--json`. So the dump was never the machine path — it was the table's toll, and across the
+universe it is enormous: `sector_scorer --all --json` is **97 KB**, `catalyst_scorer --all --json`
+**78 KB**, of which the ranking reads four fields per sector and the review reads five. Deleted in
+all four; `--json` is untouched and is still the way to get the full trace for one sector.
+
+Two new `--digest` paths for the calls that are made across the whole universe every run:
+
+- `sector_scorer --digest` → `rank · sector_id · composite · momentum · vehicle`, one line each.
+  The vehicle comes from `snapshot_repo.primary_etf`, so a sector with no buyable UCITS wrapper
+  reads `— (not buyable)` in the same place a decision would look for its ticker.
+- `catalyst_scorer --digest` → `alignment · regime_state · confirms · contradicts · ⚠ regime review`.
+  The per-event decay trace that made up the other 76 KB is in the lake and re-derivable per sector.
+
+`dislocation` and `entry_timing` needed no code — they already printed a table by default and
+`score_run.sh` was asking them for `--json` anyway. Dropped. And the heatmap's separate
+`momentum_engine --json` pass (12.5 KB) computed nothing `sector_scorer` does not: it re-scored
+the same snapshot to print a column the composite already carries. Removed from the skill, kept as
+a CLI for the raw 1m/3m/6m returns.
+
+Measured on this run, the deterministic payload a review pushes through context:
+
+| call | before | after |
+|---|---:|---:|
+| `sector_scorer --universe` (review Step 3) | 100,086 | 2,214 |
+| `momentum_engine` (heatmap) | 12,577 | — |
+| `sector_scorer --all` (heatmap) | 97,275 | 2,214 |
+| `catalyst_scorer --all` (score_run) | 77,646 | 2,090 |
+| `structural_monitor --all` | 2,047 | 2,047 |
+| `dislocation` | 9,718 | 2,261 |
+| `entry_timing` (scoped) | 5,152 | 1,483 |
+| **total** | **~297 KB** | **~12 KB** |
+
+≈ 74k tokens a run, recovered on every run from here. Nothing is lost: everything deleted is either
+persisted in the lake or one scoped `--json` away.
+
+**The one merge the plan asked for and did not get.** D-c proposed folding `structural_monitor
+--all` into the catalyst digest on the grounds that it duplicates `regime_state`. It does not.
+`structural_monitor` is indexed by STRUCTURAL catalyst and carries `intensity`, the weak-indicator
+count and the intensity drop against the degrade threshold; the digest is indexed by SECTOR. Only
+the regime label overlaps, and at 2 KB the rest is the cheapest fundamentals gate in the pipeline.
+Kept, with the reason recorded here so it is not re-proposed.
+
+**D-b — one state file per run.** New `catalyx/store/run_digest.py`, called last in `post_run.sh`,
+writes `data/reports/run_<date>.json`: book, attention, work list, the scan deltas' counts,
+ranking + rank moves, the NAV comparison including `execution_alpha_pp`, book metrics,
+per-position metrics, the whole rebalance table with its cash constants lifted out of the rows,
+catalyst exposure, and the override tally. It is read-only over the lake and the Tier-1 files —
+no scorer, no fetch, nothing persisted but itself — so it assembles only what the run already
+computed and costs nothing to re-print.
+
+The point is not the file; it is what the skill no longer has to say. The review was threading
+`state_<date>.json`, `scan_deltas_<date>.json`, three stdout digests, the NAV lines and the
+rebalance table through its own context by hand, and every step ever added made it restate more of
+that plumbing. Now it reads one file, and `run_digest` re-prints a ~25-line summary for free
+instead of re-running a CLI. Deliberately NOT merged: `scripts/review_report.py` keeps reading the
+lake directly rather than the digest, so the report can never quote a digest that went stale
+between the two calls.
+
+414 tests green (+10) — including a source-level test that no scorer may reintroduce an
+unconditional JSON dump, since that regression fails nothing at runtime.
+
+
+## The target book closes, and the benchmark is read the right way up (2026-08-28, v4.0)
+
+First two steps of `docs/PLAN_v4_rigor_and_lean_metrics.md` (§2 A1/A2, §2 A6 + §0.2 D7). The plan
+was written after measuring the pipeline end to end; these are the two defects everything else was
+being compared against.
+
+**D1 — the benchmark line was printed with the wrong meaning, and the conclusion was inverted.**
+`vs_benchmark_pct` is `nav − benchmark_nav`, a DIFFERENCE in index points. `nav_engine`'s real-book
+CLI printed it under a bare benchmark label:
+
+```
+TWR (selection, vs benchmark) = -0.9555%   [SPY -5.3939%]
+```
+
+which reads as "SPY fell 5.4% and we only fell 1%". The lake says `benchmark_nav = 104.4384`: SPY
+returned **+4.44%** and the book was **5.39pp behind it**. The misreading had already reached prose
+— CHANGELOG v3.5 above repeats it verbatim. All three CLIs now print three named numbers through
+one renderer (`_bench_line`): the book's return, the benchmark's own return, and the differential
+in pp. `last_benchmark_return_pct` ships on every result dict.
+
+**A second defect was hiding inside it.** `lake_query.portfolio_compare` takes the latest stored row
+per portfolio and sorts by return — but model NAVs are only rebuilt when `post_run.sh` runs, so the
+model rows were stamped 2026-07-30 against a real row stamped 2026-08-27. Five curves side by side,
+stopping on different days, sorted by returns measured over different windows. Rebuilt to a common
+date the ranking reverses:
+
+| book | TWR to 2026-08-27 | vs SPY (+4.44%) |
+|---|---|---|
+| momentum (model) | +3.89% | −0.55pp |
+| catalyx (model) | +3.88% | −0.56pp |
+| low_crowding (model) | +2.90% | −1.54pp |
+| equal_weight (model) | +2.61% | −1.83pp |
+| **real** | **−0.96%** | **−5.39pp** |
+
+New: **execution alpha**, the real book against the model book it implements, computed only when
+both curves end on the same date (a calendar gap must never be reported as skill). Today
+**−4.84pp** — the rule table has been right and the deviations from it expensive. That number did
+not exist anywhere in the pipeline, and it is the one v3 was built to answer.
+
+**D2 — the target book leaked 36% of its weight, so the deployment rule was unreachable.**
+`portfolio_holding` sums to exactly 100%. `build()` dropped the names that are not buyable today
+and computed `target_eur = weight_pct/100 × deployable` on the survivors, so the dropped weight
+evaporated: the deploy rule asked for €7,000 at work, the targets summed to €4,476, and executing
+EVERY rule action left the book at 38% against a 70% rule. The deployment ratio is this module's
+anti-cash-hoarding device; a missing renormalization made it arithmetically impossible to satisfy.
+
+Fixed in three ordered steps, none of which silently concentrates the book:
+1. **Substitution first** — a dropped name's weight goes to the next investable, buyable sector by
+   composite from the same run's `sector_snapshot` (`_substitutes`). The model asked for 10 lines
+   and the universe has 26 to fill them from; a universe cut is not a decision to concentrate.
+2. **Then rescale the residual** (`close_target_weights`, pure + tested), capped by the new
+   `max_dropped_pct` (40%). Past that the rescale stops and the run says `MODEL BOOK INCOMPLETE`
+   and closes deliberately below the rule — a ranking whose top decile is unbuyable is a scoring
+   problem, not a weighting one.
+3. **Re-cap per position** with the model builder's own `water_fill`; what the cap sheds becomes
+   cash, never another position.
+
+`rank_in_portfolio` is now re-derived from composite over the book that actually exists. The stored
+ranks described a 10-name book after 4 had been removed, and `add_if`/`buy_if` read them as "does
+the model still call this a leader".
+
+**The table now closes.** `Σ target% + cash% = 100` and `Σ actual% + cash% = 100`, both pinned by
+tests, with **CASH as a priced row carrying its own action** (`DEPLOY €5,454`) instead of a
+footnote nobody has to answer.
+
+**Side effect, deliberate and worth stating.** `deploy_ratio` counts intact sectors inside the
+model's top-8, and the leak had been truncating that count to the 6 survivors. On a complete book
+it reads 8 → the rule moves **70% → 85%**. No threshold was edited; the frozen rule is simply being
+evaluated on the book it was always meant to see.
+
+**D3 — the table recommended vehicles that cannot be bought.** It printed `BUY
+biotech_drug_development €891` against **IBB** and `BUY ai_infrastructure €567` against **AIPO**,
+both US non-UCITS. Two causes, both fixed: the ticker was read off a `portfolio_holding` row frozen
+before the 08-27 universe cut (now re-resolved at table time from `etf_universe.yaml`), and
+`snapshot_repo._primary_etf` fell back to the non-UCITS pool when a sector had no UCITS entry (now
+`primary_etf`, UCITS-only, returning `None` — a fact a caller can act on, where a US ticker is a
+recommendation that looks actionable and is not). A sector missing a buyable vehicle is dropped
+through the same substitution path as a non-investable one. Pinned by a test in the shape of
+`BANNED_ACTION_WORDS`: no row with `rule_action != HOLD` may name an unbuyable vehicle.
+
+Today's table: `BTEC.L`, `XAIX.DE`, `WCLD.L`, plus `GLUX.SW` / `RBOT.L` / `JEDI.DE` / `IH2O.L`
+substituted in — 10 model names, all buyable, closing at 100%.
+
+**D7 — report plumbing that rendered blank or misleading.** §6 catalyst exposure asked for
+`n_sectors` where the ledger returns `sectors` (the column was `—` on every row since it was
+written) and carried neither a % of capital nor the cap — the only two numbers that make it a
+CHECK; it now shows both plus headroom €, with the breach flagged inline. §8 asked for
+`check_frequency`/`overdue_by`, neither of which `freshness.overdue()` emits; now `cadence`,
+`limit` and a derived `overdue by`, with `⚠mislabel` surfaced. New `weights.correlated_catalyst_cap()`
+normalizes `max_combined_pct: 0.20` to the percent its name promises — every caller comparing an
+exposure of `10.0` against `0.20` had a check that could never fire.
+
+404 tests green (+8).
+
+## Real book: time-weighted curve, MWR, and a sample-size gate (2026-08-28, v3.5)
+
+**Trigger.** The user asked a methodological question: a portfolio updated every N days — are
+Sharpe and volatility being computed over the whole series, or only over the update points?
+
+**The answer, and the worse thing behind it.** The series was already daily: `nav_engine` builds
+from the daily price frame, and the model leg's `mode='live'` already chained segment returns
+across rebalances correctly. But `compute_real_nav` did something the model leg never did — it
+read `movement_repo.positions()` (a SNAPSHOT of what is held today) and projected those
+quantities backwards to the first movement, dividing by today's total cost:
+
+```python
+nav_series = 100.0 * value / total_cost   # h["qty"] of TODAY, applied to EVERY date
+```
+
+The book was built in three tranches (€1500 on 06-05, +€1000 on 06-08, +€500 on 06-16), so the
+curve modelled €3000 of exposure from day one and gave SEMI.L — bought on the 16th — a full
+position on the 5th. Every number derived from that curve described a portfolio nobody held, and
+v3.4 had just widened the blast radius: `position_metrics._book_metrics` began sourcing
+vol/Sharpe/maxDD/beta/corr/tracking-error from it and persisting them to `book_metrics` for
+month-over-month comparison.
+
+**Fix — derive the path from the ledger, not from a snapshot.** Three primitives in `nav_engine`:
+
+- `daily_ledger(movements, index)` — qty per ETF and external EUR flow per DAY, from ALL
+  movements. Closed positions included: they own the stretch of curve during which they were
+  actually held, and dropping them is survivorship bias in the track record.
+- `twr_series(value, flow)` — time-weighted NAV, `r_t = V_t / (V_{t−1} + F_t) − 1`. Contributions
+  are neutralized, so a €500 top-up is not read as performance.
+- `xirr(flows)` — money-weighted IRR by bisection on NPV; returns None rather than diverging when
+  the flows do not bracket a root.
+
+**Three questions, three numbers, each labelled.** A single "return" for a book that receives
+contributions has to lie about at least two of them:
+
+| | value | answers |
+|---|---|---|
+| TWR | −0.96% (SPY −5.39%) | is the selection any good? |
+| MWR (IRR, ann.) | +7.16% | what did MY money earn, given its timing? |
+| vs cost | +1.53% | what the broker shows |
+
+**Convention: START-of-day.** Booking flows at the close (`(V_t − F_t)/V_{t−1}`) silently drops
+the first day of every new position. That is not a rounding difference: 4COP.DE was bought at
+60.62 on 2026-06-05 and closed at 56.41 the same day, a real −6.9% on €1000 that the end-of-day
+convention erases. Between two defensible conventions, the one that cannot flatter the record by
+construction is the right default.
+
+`value_eur` / `flow_eur` / `net_contributed_eur` are persisted per date and `mwr_pct` on the final
+row, so the divergence between the three numbers is auditable instead of asserted.
+
+**Found while fixing — execution prices logged from stale quotes.** Three of the five movements
+carry a `price` that matches the PRIOR session's close, not that day's (IUHE.AS to the cent:
+6.918 = 6.918; 4COP.DE 60.62 vs a 60.57 prior close and a 56.41 same-day close). Because `qty` is
+derived from that price, either the share count or the amount is wrong, and only the broker
+statement can say which. New `execution_price_checks` reports it as a warning on every real-NAV
+run — repairing it silently would invent a cost basis, and picking the convention that hides it
+would be the same flattering this entry just removed.
+
+**Sample size, stated instead of implied.** No construction fix makes 59 daily observations
+sufficient: the standard error of an annualized Sharpe is ≈ √((1+Ŝ²/2)/n)·√252, which puts this
+book at **0.95 ± 4.05** (95%). New `sharpe_ci95` + `metrics_reliability` in `position_metrics`,
+`n_days`/`sharpe_ci95`/`reliable` from `build_site._series_metrics`, and config `risk_metrics`
+(`min_days_for_sharpe: 120`, `min_days_for_vol: 30`). The dashboard prints the interval beside the
+ratio and flags "59/120 — indicative"; the curve's shape stays visible, the false precision does not.
+
+**No daily capture required.** The whole series re-derives from scratch at any time: qty from the
+movement files (written the day a trade happens — the only irrecoverable input), prices and FX
+from the `prices` cache, which backfills whatever history yfinance still serves (~4.5 years for
+these vehicles, `auto_adjust=True`, so total return). Recomputing in `post_run.sh`, which already
+invokes it, is enough.
+
+**Found in the follow-up audit.** Three more, all real:
+
+- **The gate covered one of four render sites.** The dashboard prints Sharpe in four places, and
+  only the portfolio-detail strip had been fixed — including the Positions page, the one view of
+  the actual book. All four now carry the interval or the "indicative" flag.
+- **`daily_ledger` did not cap an oversized sale.** `movement_repo.positions()` caps a `close`
+  larger than the held quantity and warns; the ledger did not, so a hand-authored typo would have
+  left a negative qty and silently marked a short position across the curve.
+- **`lake_query.portfolio_compare` ignored `mode` (pre-existing, v3.4-era).** backtest/live/forward
+  share a portfolio_id AND a last date, so the tie broke arbitrarily and the review report could
+  show a model book's HYPOTHETICAL backtest return beside the real book's actual one. It was:
+  the model books read **+25.0% / +24.0% / +19.0%** where their live walk-forward record is
+  **−3.1% / −4.4% / −4.8% / −4.9%**. With live preferred (the rule `position_metrics._nav_series`
+  already applied), the real book's −0.96% TWR is the best of the five, not the worst. `mode` and
+  `mwr_pct` are probed rather than assumed, so older partitions still read.
+
+**Files:** `catalyx/execution/nav_engine.py`, `catalyx/execution/position_metrics.py`,
+`catalyx/config/{scoring_weights.yaml,weights.py}`, `scripts/build_site.py`, `site/app.js`,
+`catalyx/store/lake_query.py`, `scripts/review_report.py`,
+`tests/unit/{test_nav_and_trades,test_position_metrics,test_lake_query}.py`. 396 tests green (+29).
+
+---
+
 ## Position & book metrics + the dashboard Rebalance tab (2026-08-28, v3 Phase 2 completion)
 
 **Why:** the book was measured in exactly two ways — `invested_eur` (what went in) and a NAV curve

@@ -98,6 +98,44 @@ def sharpe(returns: list[float], rf_annual: float = 0.0) -> float | None:
     return round(excess / sd * math.sqrt(_TRADING_DAYS), 2)
 
 
+def sharpe_ci95(sharpe_ann: float | None, n: int) -> float | None:
+    """Half-width of the 95% confidence interval around an ANNUALIZED Sharpe from `n` daily obs.
+
+        SE(Ŝ_daily) ≈ √((1 + Ŝ²_daily/2) / n),   annualized by ×√252
+
+    A Sharpe is an estimate, and over a short window it is a very bad one: this book's 59 daily
+    observations put the interval at roughly ±4.6 around a point estimate of 0.78 — the number is
+    not "0.78", it is "somewhere between awful and superb". Reporting the ratio without its error
+    invites reading two months of noise as skill, which is the single easiest way to conclude that
+    a strategy works. Roughly 3 years of daily data are needed before a Sharpe of 1 clears zero.
+    """
+    if sharpe_ann is None or n < 3:
+        return None
+    s_daily = sharpe_ann / math.sqrt(_TRADING_DAYS)
+    se_daily = math.sqrt((1.0 + s_daily ** 2 / 2.0) / n)
+    return round(1.96 * se_daily * math.sqrt(_TRADING_DAYS), 2)
+
+
+def metrics_reliability(n: int) -> dict:
+    """Is a risk metric from `n` daily observations worth reading? Sample size, stated plainly.
+
+    Not a p-value ritual — just a floor that stops the dashboard printing two decimals of noise
+    as though it were a measurement. `min_days` comes from scoring_weights.yaml `risk_metrics`.
+    """
+    from catalyx.config import weights
+
+    cfg = weights.risk_metrics()
+    min_days = int(cfg.get("min_days_for_sharpe", 120))
+    return {
+        "nav_points": n,
+        "min_days_for_sharpe": min_days,
+        "reliable": n >= min_days,
+        "note": None if n >= min_days else
+                f"{n}/{min_days} daily observations — risk metrics are indicative only, "
+                f"the confidence interval is wider than the estimate",
+    }
+
+
 def max_drawdown(navs: list[float]) -> dict:
     """Worst peak-to-trough of the series, and where it happened (indices)."""
     if len(navs) < 2:
@@ -191,6 +229,74 @@ def hhi(weights_pct: list[float]) -> float | None:
     if not total:
         return None
     return round(sum((w / total * 100.0) ** 2 for w in ws), 1)
+
+
+def covariance(series: list[list[float]]) -> list[list[float]] | None:
+    """Annualized covariance matrix of aligned daily return series. None if too short."""
+    n = len(series)
+    if n == 0:
+        return None
+    m = min(len(x) for x in series)
+    if m < 2:
+        return None
+    cols = [x[-m:] for x in series]
+    means = [sum(c) / m for c in cols]
+    cov = [[0.0] * n for _ in range(n)]
+    for i in range(n):
+        for j in range(i, n):
+            c = sum((cols[i][k] - means[i]) * (cols[j][k] - means[j]) for k in range(m)) / (m - 1)
+            cov[i][j] = cov[j][i] = c * _TRADING_DAYS
+    return cov
+
+
+def risk_contribution(weights_pct: list[float], series: list[list[float]]) -> dict | None:
+    """Each position's share of the BOOK's volatility: `RC_i = w_i·(Σw)_i / σ_p`, summing to 100%.
+
+    WHY THIS EXISTS (plan v4 §2 A4). Two €500 lines are not two equal bets: on this book
+    `semiconductors_design` carries ~3x the vol per euro of `pharma_large_cap`, and every output
+    the pipeline produced described them as the same size. Capital share answers "how much did I
+    spend"; risk contribution answers "how much of what can go wrong is this one" — and they are
+    routinely far apart. `Σ RC_i = 100%` by construction (Euler's theorem on a homogeneous-degree-1
+    risk measure), so the shares are exhaustive and comparable.
+
+    A contribution can be **negative**: a position anticorrelated enough with the rest LOWERS book
+    volatility, and that is a real property worth defending before trimming it. Nothing here is a
+    recommendation — it is the measurement that makes one arguable.
+    """
+    w = [float(x or 0.0) / 100.0 for x in weights_pct]
+    total = sum(w)
+    if not w or total <= 0:
+        return None
+    cov = covariance(series)
+    if cov is None or len(cov) != len(w):
+        return None
+    sigma_w = [sum(cov[i][j] * w[j] for j in range(len(w))) for i in range(len(w))]
+    var = sum(w[i] * sigma_w[i] for i in range(len(w)))
+    if var <= 0:
+        return None
+    vol_p = var ** 0.5
+    contrib = [w[i] * sigma_w[i] / vol_p for i in range(len(w))]
+    denom = sum(contrib)
+    return {
+        "book_vol_pct": round(vol_p * 100.0, 2),
+        # Normalized so the column sums to exactly 100 even after rounding — the whole point of
+        # the decomposition is that it is exhaustive.
+        "contribution_pct": [round(c / denom * 100.0, 2) if denom else None for c in contrib],
+        "marginal_pct": [round(sigma_w[i] / vol_p * 100.0, 2) for i in range(len(w))],
+        "vol_pct": [round((cov[i][i] ** 0.5) * 100.0, 2) for i in range(len(w))],
+        "gross_pct": round(total * 100.0, 2),
+    }
+
+
+def effective_n(hhi_value: float | None) -> float | None:
+    """`1/HHI` — how many equally-sized positions this book behaves like. One division.
+
+    5 positions at 33/17/17/17/17 is not a 5-position book; it is a 4.3-position book, and the
+    difference is the part a concentration limit is actually about.
+    """
+    if not hhi_value:
+        return None
+    return round(1.0 / (float(hhi_value) / 10_000.0), 2)
 
 
 def score_drift(entry: dict | None, now: dict | None) -> dict:
@@ -392,8 +498,39 @@ def build(run_id: str | None = None, lake_dir: Path | None = None, exit_fn=None,
             "drawdown_tier": (p.get("drawdown") or {}).get("tier"),
         })
 
+    # RISK CONTRIBUTION (plan v4 §2 A4). Capital share says how much was SPENT; this says how
+    # much of what can go wrong is each line. They are routinely far apart, and only one of them
+    # was ever reported. Computed on a COMMON window across every held vehicle — a per-position
+    # "vol since entry" cannot be summed, because each is measured over a different period.
+    rc = None
+    if eur is not None and len(rows) > 1:
+        cols = [r["etf"] for r in rows if r.get("etf") in getattr(eur, "columns", [])]
+        if len(cols) == len(rows):
+            common = eur[cols].dropna()
+            series = [daily_returns([float(v) for v in common[c]]) for c in cols]
+            if all(len(x) >= 2 for x in series):
+                # Shares of the INVESTED book, so the column is directly comparable to the
+                # capital column beside it and both sum to 100.
+                mv = [float(r.get("market_value_eur") or 0.0) for r in rows]
+                gross = sum(mv) or 1.0
+                rc = risk_contribution([m / gross * 100.0 for m in mv], series)
+                if rc:
+                    rc["window_days"] = len(common)
+                    for r, cap, contrib, marg, vol in zip(
+                            rows, mv, rc["contribution_pct"], rc["marginal_pct"], rc["vol_pct"]):
+                        r["capital_pct_of_book"] = round(cap / gross * 100.0, 2)
+                        r["risk_contribution_pct"] = contrib
+                        r["marginal_risk_pct"] = marg
+                        r["vol_common_window_pct"] = vol
+
+    book = _book_metrics(rows, run_id, lake_dir=lake_dir)
+    book["effective_n"] = effective_n(book.get("hhi"))
+    if rc:
+        book["book_vol_from_cov_pct"] = rc["book_vol_pct"]
+        book["risk_window_days"] = rc["window_days"]
+
     return {"as_of": as_of, "run_id": run_id, "positions": rows,
-            "book": _book_metrics(rows, run_id, lake_dir=lake_dir),
+            "book": book, "risk": rc,
             "note": "Measurement only — no recommendation, no action. `pnl_price_eur` + "
                     "`pnl_fx_eur` + `basis_residual_eur` sum to the EUR P&L exactly; the residual "
                     "is fees and cost-basis rounding, not a modelling error."}
@@ -446,8 +583,13 @@ def _book_metrics(rows: list[dict], run_id: str | None, lake_dir: Path | None = 
         "n_positions": len(rows),
         "hhi": hhi([float(r.get("market_value_eur") or 0.0) for r in rows]),
         "fx_exposure_pct": fx_exposure(rows),
+        # The curve these come from is TIME-WEIGHTED (nav_engine.twr_series): contributions are
+        # neutralized, so a €500 top-up is not read as a +17% day. Before 2026-08-28 this series
+        # was today's holdings projected backwards, and every ratio below described a book that
+        # was never held.
         "vol_pct": annualized_vol(r_ret),
         "sharpe": sharpe(r_ret),
+        "sharpe_ci95": sharpe_ci95(sharpe(r_ret), len(r_ret)),
         "max_drawdown_pct": max_drawdown(navs)["max_drawdown_pct"],
         "beta_vs_spy": beta(r_ret, b_ret),
         # Reported BESIDE beta on purpose. beta = corr × (vol_book / vol_bench), so a book that is
@@ -459,6 +601,12 @@ def _book_metrics(rows: list[dict], run_id: str | None, lake_dir: Path | None = 
         "active_share_pct": active_share(actual, target) if target else None,
         "model_overlap_pct": model_overlap(actual, target) if target else None,
         "nav_points": len(navs),
+        # TWR vs MWR vs broker view — see nav_engine.compute_real_nav. `twr_pct` is the curve's
+        # endpoint (comparable to SPY and to the model leg); `unrealized_eur` above is the
+        # broker's view. They answer different questions and will not agree.
+        "twr_pct": round(navs[-1] - 100.0, 2) if navs else None,
+        "metrics_reliable": metrics_reliability(len(r_ret))["reliable"],
+        "metrics_note": metrics_reliability(len(r_ret))["note"],
     }
 
 
@@ -506,12 +654,37 @@ def render(res: dict) -> str:
                    f"{_f(r['composite_drift'], 1):>7} "
                    f"{str(r['catalyst_freshness'] or '—'):<11} "
                    f"{str(r['exit_action'] or '—'):<7}")
+    rc = res.get("risk")
+    if rc:
+        out += ["", f"RISK CONTRIBUTION — where the book's volatility actually comes from "
+                    f"({rc['window_days']} common trading days, annualized)"]
+        h2 = f"  {'sector':<30} {'etf':<9} {'capital %':>10} {'vol %':>8} {'risk %':>8}  note"
+        out += [h2, "  " + "-" * (len(h2) - 2)]
+        for r in sorted(res["positions"], key=lambda x: -(x.get("risk_contribution_pct") or 0)):
+            cap, contrib = r.get("capital_pct_of_book"), r.get("risk_contribution_pct")
+            if contrib is None:
+                continue
+            note = ""
+            if contrib < 0:
+                note = "NEGATIVE — anticorrelated enough to LOWER book vol"
+            elif cap and contrib >= cap * 1.3:
+                note = f"{contrib / cap:.1f}x its capital share"
+            out.append(f"  {str(r['sector_id'])[:30]:<30} {str(r.get('etf') or '—')[:9]:<9} "
+                       f"{_f(cap, 1):>10} {_f(r.get('vol_common_window_pct'), 1):>8} "
+                       f"{_f(contrib, 1):>8}  {note}")
+        out.append(f"  {'BOOK':<30} {'':<9} {100.0:>10.1f} "
+                   f"{rc['book_vol_pct']:>8.1f} {100.0:>8.1f}  "
+                   f"effective N {_f(b.get('effective_n'), 1)} on {b['n_positions']} positions")
+        out.append("  Capital share says what was spent; risk share says how much of what can go "
+                   "wrong is this line. Measurement only.")
+
     out += ["", f"BOOK     {b['n_positions']} positions · marked €{b['marked_eur']:,.0f} · "
                 f"deployed {_f(b['deployed_pct'], 0)}% · unrealized €{b['unrealized_eur']:,.0f}",
             f"RISK     vol {_f(b['vol_pct'], 1)}% · Sharpe {_f(b['sharpe'], 2)} · "
             f"maxDD {_f(b['max_drawdown_pct'], 1)}% · vs SPY beta {_f(b['beta_vs_spy'], 2)} "
             f"corr {_f(b['corr_vs_spy'], 2)} ({b['nav_points']} NAV points)",
-            f"SHAPE    HHI {_f(b['hhi'], 0)} · model overlap {_f(b['model_overlap_pct'], 1)}% "
+            f"SHAPE    HHI {_f(b['hhi'], 0)} (effective N {_f(b.get('effective_n'), 1)}) · "
+            f"model overlap {_f(b['model_overlap_pct'], 1)}% "
             f"(active share {_f(b['active_share_pct'], 1)}%) · tracking error "
             f"{_f(b['tracking_error_vs_model_pct'], 1)}%",
             f"FX       {b['fx_exposure_pct'] or '—'}", "", res["note"]]

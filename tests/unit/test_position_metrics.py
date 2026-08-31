@@ -173,3 +173,79 @@ def test_nav_series_keeps_the_last_write_per_date(tmp_path):
                           overwrite=True, lake_dir=tmp_path)
     series = pm._nav_series("real", lake_dir=tmp_path)
     assert len(series) == 1 and series[0]["nav"] == 91.0
+
+
+# ── Sample-size honesty (2026-08-28) ─────────────────────────────────────────
+
+def test_sharpe_ci_swamps_the_estimate_on_a_short_sample():
+    """59 daily observations cannot distinguish a Sharpe of 0.78 from zero."""
+    ci = pm.sharpe_ci95(0.78, 59)
+    assert ci > 4.0 and ci > abs(0.78)
+
+
+def test_sharpe_ci_tightens_with_history():
+    assert pm.sharpe_ci95(1.0, 756) < pm.sharpe_ci95(1.0, 59)
+
+
+def test_sharpe_ci_none_without_a_sharpe():
+    assert pm.sharpe_ci95(None, 500) is None
+
+
+def test_metrics_reliability_gates_a_two_month_book():
+    r = pm.metrics_reliability(59)
+    assert r["reliable"] is False and "59/" in r["note"]
+
+
+def test_metrics_reliability_passes_with_enough_history():
+    r = pm.metrics_reliability(400)
+    assert r["reliable"] is True and r["note"] is None
+
+
+# ── A4: risk contribution — capital share is not risk share ──────────────────
+
+def _series(n, seed, scale=0.02, base=None):
+    import random
+    rnd = random.Random(seed)
+    if base is None:
+        return [rnd.gauss(0, scale) for _ in range(n)]
+    return [-b * 0.85 + rnd.gauss(0, scale / 6) for b in base]
+
+
+def test_risk_contributions_are_exhaustive_and_sum_to_a_hundred():
+    a, b = _series(250, 1), _series(250, 2, 0.01)
+    rc = pm.risk_contribution([60.0, 40.0], [a, b])
+    assert rc is not None
+    assert sum(rc["contribution_pct"]) == pytest.approx(100.0, abs=0.05)
+    assert rc["book_vol_pct"] > 0
+
+
+def test_a_volatile_line_carries_more_risk_than_its_capital_share():
+    # THE POINT of A4: two lines sized the same in euros are not the same bet. The loud one must
+    # show a risk share above its capital share, or the column adds nothing.
+    loud, quiet = _series(250, 3, 0.03), _series(250, 4, 0.005)
+    rc = pm.risk_contribution([50.0, 50.0], [loud, quiet])
+    assert rc["contribution_pct"][0] > 50.0 > rc["contribution_pct"][1]
+
+
+def test_an_anticorrelated_position_can_lower_book_risk():
+    # A NEGATIVE contribution is a real property, not a bug to clamp away: the position is
+    # reducing total volatility, and that is the first thing to defend before trimming it.
+    a = _series(250, 5, 0.03)
+    hedge = _series(250, 6, 0.03, base=a)
+    rc = pm.risk_contribution([70.0, 30.0], [a, hedge])
+    assert rc["contribution_pct"][1] < 0
+
+
+def test_risk_contribution_degrades_rather_than_guessing():
+    assert pm.risk_contribution([], []) is None
+    assert pm.risk_contribution([100.0], [[0.01]]) is None          # one observation
+    assert pm.risk_contribution([0.0, 0.0], [_series(50, 7), _series(50, 8)]) is None
+
+
+def test_effective_n_is_the_honest_concentration_number():
+    # 5 positions at 33/17/17/17/17 is a 4.3-position book, and that gap is what a concentration
+    # limit is actually about.
+    h = pm.hhi([3333.0, 1667.0, 1667.0, 1667.0, 1667.0])
+    assert pm.effective_n(h) == pytest.approx(4.5, abs=0.1)
+    assert pm.effective_n(pm.hhi([1000.0] * 4)) == pytest.approx(4.0, abs=0.01)
+    assert pm.effective_n(None) is None

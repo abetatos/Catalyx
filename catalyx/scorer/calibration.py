@@ -224,6 +224,108 @@ def expected_returns(lake_dir: Path | None = None, prior_windows: float = 6.0) -
                     f"shrunk toward 0 by {shrink:.2f} (prior {prior_windows:g} windows)"}
 
 
+def composite_ic(lake_dir: Path | None = None, dimension: str = "composite") -> dict:
+    """The measured rank IC of one scoring dimension, with its standard error and verdict.
+
+    `expected_returns` answers "what did each bucket earn?"; this answers the prior question,
+    "does the ranking order anything at all?". The rebalance gate needs both (plan v4 §3 B2): a
+    bucket table built on a ranking whose IC is negative will systematically invert the rule it
+    is supposed to enforce, and a window COUNT cannot see that — only the sign can.
+
+    Averaged over COMPLETE windows only; an open window has no forward return to correlate with.
+    `effective_windows` counts NON-OVERLAPPING horizons among those: three runs six days apart
+    over one 63-day horizon are one observation, and the tilt shrinkage (B1) divides by that
+    honest denominator, never by the row count.
+    """
+    from catalyx.store import lake
+
+    empty = {"ic": None, "se": None, "n_windows": 0, "effective_windows": 0, "n_sectors": None,
+             "dimension": dimension, "verdict": "unmeasured",
+             "note": "no complete calibration window yet"}
+    try:
+        df = lake.read_table(_TABLE, lake_dir=lake_dir)
+    except Exception:
+        return empty
+    if df.empty or "dimension" not in df.columns:
+        return empty
+    df = df[df["dimension"] == dimension]
+    if "window_complete" in df.columns:
+        df = df[df["window_complete"].fillna(False).astype(bool)]
+    ics = [float(v) for v in df.get("as_used_ic", []) if v == v]
+    if not ics:
+        return empty
+    ses = [float(v) for v in df.get("se", []) if v == v]
+    ic = round(sum(ics) / len(ics), 4)
+    se = round(sum(ses) / len(ses), 4) if ses else None
+    n_sec = int(df["n_sectors"].dropna().iloc[0]) if "n_sectors" in df.columns \
+        and not df["n_sectors"].dropna().empty else None
+    return {"ic": ic, "se": se, "n_windows": len(ics),
+            "effective_windows": _effective_windows(df),
+            "n_sectors": n_sec, "dimension": dimension,
+            "verdict": ic_verdict(ic, se),
+            "note": (f"mean {dimension} rank IC {ic:+.3f} over {len(ics)} complete window(s)"
+                     + (f", se ≈ {se:.3f} (n={n_sec})" if se else "")
+                     + f" → {ic_verdict(ic, se)}")}
+
+
+def _effective_windows(df) -> int:
+    """Non-overlapping horizons among the rows of `df` (columns `start`, `horizon_days`)."""
+    try:
+        starts = sorted(date.fromisoformat(str(x)[:10]) for x in df["start"].dropna())
+    except Exception:
+        return 0
+    if not starts:
+        return 0
+    horizons = [int(h) for h in df.get("horizon_days", []) if h == h]
+    horizon = horizons[0] if horizons else DEFAULT_HORIZON_DAYS
+    n, last = 0, None
+    for s in starts:
+        if last is None or (s - last).days >= horizon:
+            n += 1
+            last = s
+    return n
+
+
+def skill_lambda(lake_dir: Path | None = None, dimension: str = "composite",
+                 ic_target: float = 0.20, prior_windows: float = 3.0,
+                 floor: float = 0.0) -> dict:
+    """How much of the model's conviction tilt is EARNED — λ ∈ [0, 1] (plan v4 §3 B1).
+
+        λ = clamp(IC / ic_target, 0, 1) · n_eff/(n_eff + prior_windows)
+
+    Two independent haircuts, because two different things can be wrong with a tilt:
+    the ranking may not order returns (the IC leg), and it may not have been measured
+    often enough for its IC to mean anything (the credibility leg, the same
+    `shrink_factor` the bucket table already uses).
+
+    A NEGATIVE IC clamps to zero; it never goes negative. Shorting your own ranking on one
+    non-overlapping window is a superstition with a minus sign — the honest response to an
+    anti-signal that small is to stop sizing on it, not to size on its inverse.
+
+    λ decides only HOW the working capital is tilted. It never touches how much is at work:
+    the neutral book is the same names at the same gross, so `deploy_ratio` is untouched.
+    """
+    m = composite_ic(lake_dir=lake_dir, dimension=dimension)
+    ic, target = m.get("ic"), float(ic_target)
+    n_eff = int(m.get("effective_windows") or 0)
+    cred = shrink_factor(n_eff, prior_windows)
+    ic_leg = 0.0 if (ic is None or target <= 0) else max(0.0, min(1.0, ic / target))
+    lam = round(max(float(floor), ic_leg * cred), 4)
+    if ic is None:
+        why = f"{dimension} IC unmeasured → tilt not earned yet"
+    elif ic <= 0:
+        why = (f"{dimension} IC {ic:+.3f} ≤ 0 → no tilt earned "
+               f"(a negative IC removes conviction, it never inverts the book)")
+    else:
+        why = (f"{dimension} IC {ic:+.3f} / target {target:.2f} = {ic_leg:.2f}, "
+               f"credibility {cred:.2f} on {n_eff} independent window(s)")
+    return {"lambda": lam, "ic": ic, "se": m.get("se"), "verdict": m.get("verdict"),
+            "dimension": dimension, "n_windows": m.get("n_windows"), "effective_windows": n_eff,
+            "credibility": cred, "ic_target": target, "prior_windows": float(prior_windows),
+            "floor": float(floor),
+            "note": f"λ = {lam:.2f} — {why}"}
+
+
 # ── Data assembly ────────────────────────────────────────────────────────────
 
 def _investable_sectors() -> set[str]:

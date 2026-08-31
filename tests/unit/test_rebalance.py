@@ -218,7 +218,12 @@ def test_rank_out_streak_counts_from_the_newest_and_resets_on_a_good_run():
     assert rb.rank_out_streak([20, 25, 30], 12) == 3
     assert rb.rank_out_streak([30, 25, 5], 12) == 0        # back inside the cut → reset
     assert rb.rank_out_streak([5, 30, 30], 12) == 2
-    assert rb.rank_out_streak([5, None], 12) == 1          # absent from the ranking = outside it
+    # v4 B3: absent from the ranking is MISSING DATA, not evidence of being outside it. This
+    # assertion used to read `== 1` — that is the defect: a sector nobody scored accumulated a
+    # sell signal out of measurements that were never taken.
+    assert rb.rank_out_streak([5, None], 12) == 0
+    assert rb.rank_out_streak([30, 30, None], 12) == 0     # the gap breaks it, however bad the past
+    assert rb.rank_out_streak([None, 30, 30], 12) == 2     # …but only the runs after it count
     assert rb.rank_out_streak([], 12) == 0
 
 
@@ -337,3 +342,333 @@ def test_an_override_younger_than_the_window_is_pending_not_scored(tmp_path, cfg
     assert not res["scored"] and len(res["pending"]) == 1
     assert "4/21 trading days" in res["pending"][0]["status"]
     assert res["tally"] == {}
+
+
+# ── The book closes (plan v4 §2 A1) ──────────────────────────────────────────
+#
+# `portfolio_holding` sums to 100%. The engine then drops the names that are not buyable today,
+# and until 2026-08-28 it computed `target_eur = weight_pct/100 × deployable` on the survivors —
+# so the dropped weight evaporated. 36.1% of the model book vanished that day: the deploy rule
+# asked for €7,000 at work while the targets summed to €4,476, and executing EVERY rule action
+# left the book at 38% against a 70% rule. These tests pin the identity that makes the table a
+# comparison instead of two unrelated lists.
+
+def test_the_target_book_closes_on_a_hundred_percent():
+    out = rb.close_target_weights([40.0, 30.0, 30.0], max_position_pct=100.0)
+    assert sum(out["weights"]) == pytest.approx(100.0)
+    assert out["residual_pct"] == 0.0 and out["scale"] == pytest.approx(1.0)
+
+
+def test_dropped_weight_is_redistributed_never_lost():
+    # Two of four names removed: 100 − 35 = 65 survives and must be rescaled back to 100.
+    out = rb.close_target_weights([40.0, 25.0], max_position_pct=100.0)
+    assert sum(out["weights"]) == pytest.approx(100.0)
+    assert out["scale"] == pytest.approx(100.0 / 65.0, abs=1e-4)
+    assert out["residual_pct"] == pytest.approx(35.0)
+    # Relative conviction is preserved — a universe cut must not reorder the book.
+    assert out["weights"][0] / out["weights"][1] == pytest.approx(40.0 / 25.0, abs=1e-4)
+
+
+def test_a_gutted_model_book_is_reported_not_silently_concentrated():
+    # Only 20% of the model survives. Rescaling ×5 would turn a universe cut into a conviction
+    # increase in whatever happened to remain; the rescale is capped and the caller is told.
+    out = rb.close_target_weights([12.0, 8.0], max_position_pct=100.0, max_dropped_pct=40.0)
+    assert out["incomplete"] is True and out["capped"] is True
+    assert sum(out["weights"]) < 100.0                # closes BELOW the rule, deliberately
+    assert out["scale"] == pytest.approx(100.0 / 60.0, abs=1e-4)
+
+
+def test_the_position_cap_survives_the_rescale_and_its_excess_becomes_cash():
+    # Rescaling can push a name through a ceiling it had already cleared. The cap is a risk
+    # limit: what it sheds is cash, never another position.
+    out = rb.close_target_weights([50.0, 10.0], max_position_pct=12.0)
+    assert max(out["weights"]) <= 12.0 + 1e-9
+    assert sum(out["weights"]) < 100.0
+
+
+def test_an_empty_model_book_does_not_divide_by_zero():
+    out = rb.close_target_weights([], max_position_pct=12.0)
+    assert out["weights"] == [] and out["incomplete"] is True
+
+
+# ── The vehicle is resolved at table time (plan v4 §2 A2) ────────────────────
+
+def _seed_lake(tmp_path, weights_pct):
+    import pandas as pd
+
+    from catalyx.store import lake
+
+    run = "run_20260828_000000"
+    holdings = [{"portfolio_id": "catalyx", "run_id": run, "sector_id": f"sec_{i}",
+                 "rank_in_portfolio": i + 1, "weight_pct": w, "composite": 90.0 - i,
+                 "primary_etf": f"OLD{i}", "narrative_maturity": "emerging",
+                 "regime_state": "intact"}
+                for i, w in enumerate(weights_pct)]
+    lake.append_partition("portfolio_holding", pd.DataFrame(holdings),
+                          {"portfolio_id": "catalyx", "run_id": run}, overwrite=True,
+                          lake_dir=tmp_path)
+    snap = [{"run_id": run, "sector_id": f"sec_{i}", "rank": i + 1, "composite": 90.0 - i,
+             "narrative_maturity": "emerging", "regime_state": "intact"}
+            for i in range(len(weights_pct) + 3)]
+    lake.append_partition("sector_snapshot", pd.DataFrame(snap), {"run_id": run},
+                          overwrite=True, lake_dir=tmp_path)
+    return run
+
+
+def _build(tmp_path, monkeypatch, cfg, buyable, investable=None):
+    monkeypatch.setattr(rb, "_buyable_vehicle", lambda sid: buyable.get(sid))
+    monkeypatch.setattr(rb, "_investable_sectors",
+                        lambda: investable if investable is not None else set(buyable))
+    monkeypatch.setattr(rb, "_vix_last", lambda: 15.0)
+    return rb.build(strategy="catalyx", cfg=cfg, lake_dir=tmp_path, total_capital=10_000.0,
+                    exit_fn=lambda: {"positions": [], "realized_ytd_eur": 0.0},
+                    expected_fn=lambda: {"buckets": {}, "effective_windows": 0},
+                    overrides_fn=lambda: {"tally": {}, "total_net_eur": 0.0, "scored": [],
+                                          "pending": [], "claude": {}})
+
+
+def test_no_action_row_may_name_a_vehicle_that_cannot_be_bought(tmp_path, monkeypatch, cfg):
+    # 2026-08-28 printed `BUY biotech_drug_development €891` against IBB — a US non-UCITS ETF —
+    # because the ticker was read off a model book frozen before the universe cut. The ban is
+    # only real if something checks it, exactly like BANNED_ACTION_WORDS.
+    _seed_lake(tmp_path, [40.0, 35.0, 25.0])
+    buyable = {"sec_0": "AAA.L", "sec_1": "BBB.DE", "sec_2": None,
+               "sec_3": "CCC.L", "sec_4": "DDD.L", "sec_5": "EEE.L"}
+    res = _build(tmp_path, monkeypatch, cfg, buyable, investable=set(buyable))
+    for row in res["rows"]:
+        if row["rule_action"] != "HOLD":
+            assert row["etf"], f"{row['sector_id']} carries no buyable vehicle"
+            assert not row["etf"].startswith("OLD"), "vehicle read off the frozen model book"
+
+
+def test_build_closes_target_plus_cash_to_a_hundred(tmp_path, monkeypatch, cfg):
+    _seed_lake(tmp_path, [40.0, 35.0, 25.0])
+    buyable = {"sec_0": "AAA.L", "sec_1": "BBB.DE", "sec_2": None,
+               "sec_3": "CCC.L", "sec_4": "DDD.L", "sec_5": "EEE.L"}
+    b = _build(tmp_path, monkeypatch, cfg, buyable, investable=set(buyable))["book"]
+    assert b["target_pct"] + b["cash_target_pct"] == pytest.approx(100.0, abs=0.01)
+    assert b["deployed_pct"] + b["cash_actual_pct"] == pytest.approx(100.0, abs=0.01)
+
+
+def test_an_unbuyable_name_is_substituted_not_deleted(tmp_path, monkeypatch, cfg):
+    # The model asked for 3 lines. One vehicle disappeared; the book must still be 3 lines wide,
+    # filled from the same run's ranking — a universe cut is not a decision to concentrate.
+    _seed_lake(tmp_path, [40.0, 35.0, 25.0])
+    buyable = {"sec_0": "AAA.L", "sec_1": "BBB.DE", "sec_2": None,
+               "sec_3": "CCC.L", "sec_4": "DDD.L", "sec_5": "EEE.L"}
+    res = _build(tmp_path, monkeypatch, cfg, buyable, investable=set(buyable))
+    mdl = res["book"]["model"]
+    assert mdl["n_holdings"] == 3
+    assert mdl["dropped"] == ["sec_2"] and mdl["substituted"] == ["sec_3"]
+    assert mdl["dropped_weight_pct"] == pytest.approx(25.0)
+    assert mdl["residual_pct"] == 0.0          # substitution covered it; nothing to rescale
+
+
+# ── A3: the breakeven replaces a forecast the data cannot support ────────────
+
+def test_breakeven_is_friction_over_the_capital_that_actually_moves(cfg):
+    # €1,000 rotated with €12 CGT and 20bps each way = €12 + €2 + €2 = €16 → 1.6%.
+    f_sell = rb.leg_friction(1000.0, 12.0, cfg)
+    f_buy = rb.leg_friction(1000.0, 0.0, cfg)
+    total = f_sell["friction_eur"] + f_buy["friction_eur"]
+    assert total == pytest.approx(16.0)
+    assert rb.breakeven_pct(total, 1000.0) == pytest.approx(1.6)
+
+
+def test_a_breakeven_needs_no_forecast_and_never_divides_by_zero(cfg):
+    # The whole point of A3: every input is observable today. A zero-notional trade has no
+    # hurdle — it must return None, not inf and not 0 (which would read as "free").
+    assert rb.breakeven_pct(10.0, 0.0) is None
+    assert rb.breakeven_pct(0.0, 1000.0) == 0.0
+
+
+def test_the_swap_ledger_pairs_sells_to_buys_and_prorates_the_tax(cfg):
+    rows = [
+        {"sector_id": "out", "etf": "O.L", "rule_action": "SELL", "trade_eur": -1000.0,
+         "tax_eur": 20.0},
+        {"sector_id": "in_a", "etf": "A.L", "rule_action": "BUY", "trade_eur": 600.0},
+        {"sector_id": "in_b", "etf": "B.L", "rule_action": "BUY", "trade_eur": 400.0},
+    ]
+    swaps = rb.swap_ledger(rows, cfg, horizon_days=63)
+    assert [(w["from_sector"], w["to_sector"]) for w in swaps] == [("out", "in_a"), ("out", "in_b")]
+    assert [w["moved_eur"] for w in swaps] == [600.0, 400.0]
+    # One sale pays its CGT once however many buys it funds — so the legs must SPLIT it, never
+    # each carry the full bill (which would double-count €20 into €40 of phantom friction).
+    assert sum(w["tax_eur"] for w in swaps) == pytest.approx(20.0)
+
+
+def test_a_swap_leg_below_the_minimum_ticket_is_not_a_rotation(cfg):
+    rows = [{"sector_id": "out", "rule_action": "SELL", "trade_eur": -1000.0, "tax_eur": 0.0},
+            {"sector_id": "big", "rule_action": "BUY", "trade_eur": 900.0},
+            {"sector_id": "dust", "rule_action": "BUY", "trade_eur": 100.0}]
+    swaps = rb.swap_ledger(rows, cfg, horizon_days=63)
+    # €100 is below the €150 ticket the engine itself refuses to print as an order; pairing it
+    # would put a rotation in the ledger that `size_trade` would never let happen.
+    assert [w["to_sector"] for w in swaps] == ["big"]
+
+
+def test_every_sale_row_carries_a_hurdle_and_the_forecast_stays_out_of_the_table(tmp_path,
+                                                                                monkeypatch, cfg):
+    _seed_lake(tmp_path, [40.0, 35.0, 25.0])
+    res = _build(tmp_path, monkeypatch, cfg,
+                 {f"sec_{i}": f"S{i}.L" for i in range(6)})
+    for row in res["rows"]:
+        if row["trade_eur"]:
+            assert row["breakeven_pct"] is not None, f"{row['sector_id']} has no hurdle"
+            assert row["breakeven_pct"] >= 0
+    # net_edge_eur is NOT deleted — it feeds the calibration panel — it just stopped driving.
+    assert all("net_edge_eur" in r for r in res["rows"])
+    assert "b/e%" in rb.render(res) and "net€" not in rb.render(res)
+
+
+def test_the_evidence_line_refuses_to_dress_up_a_thin_sample(cfg):
+    thin = rb.rank_edge_evidence({"raw": {"top3": 5.0, "rest": 1.0}, "effective_windows": 1,
+                                  "horizon_days": 63}, cfg)
+    assert thin["verdict"] == "NONE", "a 1-window sample must not be reported as a measured edge"
+    adverse = rb.rank_edge_evidence({"raw": {"top3": -0.4, "rest": 5.4}, "effective_windows": 9,
+                                     "horizon_days": 63}, cfg)
+    assert adverse["verdict"] == "ADVERSE" and adverse["spread_pp"] < 0
+    good = rb.rank_edge_evidence({"raw": {"top3": 5.0, "rest": 1.0}, "effective_windows": 9,
+                                  "horizon_days": 63}, cfg)
+    assert good["verdict"] == "MEASURED" and good["spread_pp"] == pytest.approx(4.0)
+
+
+# ── A5: partials stop arriving as a surprise ─────────────────────────────────
+
+def test_both_rungs_are_reported_because_their_units_are_not_comparable(cfg):
+    rows = [{"sector_id": "held", "actual_eur": 1000.0, "gap_pp": -1.0, "rank": 3,
+             "unrealized_pct": 13.4, "rule_action": "HOLD"}]
+    p = rb.partial_rungs(rows, cfg)[0]
+    assert p["overweight"]["need_pp"] == pytest.approx(3.0)      # 4pp rung, 1pp above target
+    assert p["ladder"]["need_gain_pct"] == pytest.approx(11.6)   # 25% rung, +13.4% so far
+    # Rank 3 fails the rung's `rank_min: 6` — which is the rule WORKING (the ladder fires only
+    # once the model has stopped leading the name), so this must not read as a blocked position.
+    assert p["ladder"]["rank_ok"] is False
+    assert p["live"] is False
+
+
+def test_a_missing_rank_never_silently_satisfies_the_ladder(cfg):
+    rows = [{"sector_id": "held", "actual_eur": 1000.0, "gap_pp": 0.0, "rank": None,
+             "unrealized_pct": 80.0, "rule_action": "HOLD"}]
+    p = rb.partial_rungs(rows, cfg)[0]
+    assert p["ladder"]["gain_met"] is True
+    assert p["ladder"]["rank_ok"] is False, "an absent rank must not be read as 'rank ≥ 6'"
+
+
+def test_a_firing_rung_is_marked_live_and_cash_only_rows_are_skipped(cfg):
+    rows = [{"sector_id": "held", "actual_eur": 1000.0, "gap_pp": -6.0, "rank": 8,
+             "unrealized_pct": 30.0, "rule_action": "TRIM"},
+            {"sector_id": "not_held", "actual_eur": 0.0, "gap_pp": 5.0, "rank": 2,
+             "unrealized_pct": None, "rule_action": "BUY"}]
+    parts = rb.partial_rungs(rows, cfg)
+    assert [p["sector_id"] for p in parts] == ["held"]
+    assert parts[0]["live"] is True
+    assert parts[0]["overweight"]["met"] is True
+    assert parts[0]["ladder"]["rank_ok"] is True
+
+
+def test_the_sizing_vocabulary_is_stated_before_any_verdict(tmp_path, monkeypatch, cfg):
+    _seed_lake(tmp_path, [40.0, 35.0, 25.0])
+    res = _build(tmp_path, monkeypatch, cfg, {f"sec_{i}": f"S{i}.L" for i in range(6)})
+    text = rb.render(res)
+    assert "SIZING" in text
+    # All three fractions, or the reader cannot tell what a TRIM moved.
+    assert "SELL = 100%" in text and "REDUCE = 50%" in text and "back to target" in text
+    assert text.index("SIZING") < text.index("ACTION"), "the vocabulary must precede the verdicts"
+
+
+# ── B2: the gate arms on significance, never on a window count alone ─────────
+
+def _exp(windows):
+    return {"effective_windows": windows, "buckets": {}, "raw": {}, "horizon_days": 63}
+
+
+def test_the_gate_refuses_to_arm_on_a_negative_ic(cfg):
+    # THE FAILURE THIS PINS (plan D5): with enough windows and a decent |IC| the old guard would
+    # have armed — on a ranking whose top bucket earns LESS than its bottom. Arming there does not
+    # enforce the profit-taking rule, it inverts it.
+    g = rb.gate_status(_exp(5), {"ic": -0.35, "se": 0.2, "verdict": "noise"}, cfg)
+    assert g["armed"] is False
+    assert "NEGATIVE" in g["why"]
+
+
+def test_the_gate_refuses_to_arm_on_an_ic_indistinguishable_from_zero(cfg):
+    g = rb.gate_status(_exp(5), {"ic": 0.05, "se": 0.2, "verdict": "noise"}, cfg)
+    assert g["armed"] is False and "orders nothing" in g["why"]
+
+
+def test_the_gate_still_refuses_to_arm_on_a_thin_sample(cfg):
+    # v3's insight survives intact: an UNMEASURED quantity must never become a veto.
+    g = rb.gate_status(_exp(1), {"ic": 0.40, "se": 0.2, "verdict": "signal"}, cfg)
+    assert g["armed"] is False and "independent window" in g["why"]
+
+
+def test_the_gate_arms_only_when_all_three_conditions_hold(cfg):
+    g = rb.gate_status(_exp(4), {"ic": 0.31, "se": 0.2, "verdict": "weak"}, cfg)
+    assert g["armed"] is True
+    assert g["requires"]["ic_sign_must_be_positive"] is True
+
+
+def test_a_standing_aside_gate_says_why_on_the_row(cfg):
+    res = rb.apply_gate("SELL", -1000.0, 50.0, -60.0, cfg, evaluable=False,
+                        why="STANDS ASIDE — IC -0.050 is NEGATIVE")
+    assert res["final_action"] == "SELL", "an unmeasured gate must never turn a rule into inaction"
+    assert "NEGATIVE" in res["gate_note"]
+
+
+# ── B3: a missing rank is missing data, not a verdict ────────────────────────
+
+def test_rank_coverage_separates_scored_runs_from_absent_ones():
+    c = rb.rank_coverage([12, None, None, 14])
+    assert c == {"n_runs": 4, "scored": 2, "missing": 2, "missing_recent": 0}
+
+
+def test_a_sector_absent_from_too_many_runs_gets_rescore_not_sell(cfg):
+    row = _row(held=True, rank=None, rank_out_streak=4, rank_missing_runs=2, rank_runs=4,
+               gap_pp=-8.0)
+    d = rb.decide_action(row, cfg)
+    assert d["action"] == "RE-SCORE"
+    assert "no rank to sell on" in d["reason"]
+
+
+def test_rescore_never_outranks_a_broken_thesis(cfg):
+    # A missing rank is a reason not to trust a RANK-based sell. It is not a reason to keep
+    # holding something whose regime has broken — that sell never depended on the rank.
+    row = _row(held=True, rank=None, rank_missing_runs=4, rank_runs=4, regime_state="breaking")
+    assert rb.decide_action(row, cfg)["action"] == "SELL"
+    row = _row(held=True, rank=None, rank_missing_runs=4, rank_runs=4, exit_action="exit")
+    assert rb.decide_action(row, cfg)["action"] == "SELL"
+
+
+def test_rescore_is_in_the_enum_and_moves_no_money(cfg):
+    assert "RE-SCORE" in rb.PRECEDENCE
+    assert rb.PRECEDENCE.index("RE-SCORE") < rb.PRECEDENCE.index("HOLD"), \
+        "a work item must not sort below the rows that move money"
+    assert rb.size_trade("RE-SCORE", 5000.0, 1000.0, cfg)["trade_eur"] == 0.0
+    for w in rb.BANNED_ACTION_WORDS:
+        assert w not in "RE-SCORE".lower()
+
+
+def test_a_sector_scored_every_run_is_unaffected_by_the_rescore_rule(cfg):
+    row = _row(held=True, rank=None, rank_out_streak=3, rank_missing_runs=0, rank_runs=4,
+               score_rank=14)
+    d = rb.decide_action(row, cfg)
+    assert d["action"] == "SELL" and "#14" in d["reason"], \
+        "the reason must name the rank it fired on — the rk column is the MODEL rank and is blank here"
+
+
+def test_two_runs_on_the_same_day_are_one_observation(tmp_path):
+    import pandas as pd
+
+    from catalyx.store import lake
+
+    # `rank_out_consecutive: 2` means two consecutive review CYCLES. Re-running the pipeline twice
+    # in an afternoon used to write two "consecutive runs" and could manufacture a SELL by itself.
+    for rid, rank in (("run_20260801_090000", 20), ("run_20260828_102303", 20),
+                      ("run_20260828_102925", 20)):
+        lake.append_partition("sector_snapshot",
+                              pd.DataFrame([{"run_id": rid, "sector_id": "s", "rank": rank}]),
+                              {"run_id": rid}, overwrite=True, lake_dir=tmp_path)
+    st = rb._rank_streaks(10, n_runs=4, lake_dir=tmp_path)["s"]
+    assert st["n_runs"] == 2, "the two same-day runs must collapse to one observation"
+    assert st["streak"] == 2

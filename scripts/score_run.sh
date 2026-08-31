@@ -36,22 +36,25 @@ if [ -f "$STATE" ]; then
   SCOPE=$(python3 -c "import json,sys;d=json.load(open('$STATE'));print(','.join(d['work_list']['sectors_decision_relevant']))" 2>/dev/null || true)
 fi
 
+# DIGESTS, not raw JSON (v4, plan D-a). These four calls used to emit ~190 KB of JSON per run, of
+# which the review reads a handful of fields per sector; the rest is per-event trace that is already
+# in the lake and re-derivable with one scoped `--json` call when a single sector is being debugged.
 echo "── OPPORTUNITY & REGIME FACTS — consume these; the escalation / buy / rotate calls are YOURS ──"
 echo ""
 echo "### regime_state + persistence (catalyst_scorer --all)"
-uv run python -m catalyx.scorer.catalyst_scorer --all --json
+uv run python -m catalyx.scorer.catalyst_scorer --all --digest
 echo ""
 echo "### fundamentals health (structural_monitor --all)"
 uv run python -m catalyx.thesis.structural_monitor --all
 echo ""
 echo "### dislocation — opportunities + diversifiers (full universe by design; persists lake table)"
-uv run python -m catalyx.scorer.dislocation --window 5 --json
+uv run python -m catalyx.scorer.dislocation --window 5
 echo ""
 if [ -n "$SCOPE" ]; then
   echo "### entry_timing — micro-tension + event overhangs (scoped to held ∪ top-N)"
-  uv run python -m catalyx.scorer.entry_timing --sectors "$SCOPE" --json
+  uv run python -m catalyx.scorer.entry_timing --sectors "$SCOPE"
 else
   echo "### entry_timing — micro-tension + event overhangs (no state digest → full universe)"
   echo "    (run \`bash scripts/pre_run.sh\` first to scope this step)"
-  uv run python -m catalyx.scorer.entry_timing --all --json
+  uv run python -m catalyx.scorer.entry_timing --all
 fi

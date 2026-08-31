@@ -252,6 +252,10 @@ def main() -> None:
     parser.add_argument("--snapshot", type=Path, default=None,
                         help="Explicit momentum snapshot path.")
     parser.add_argument("--json", action="store_true", help="Output raw JSON only.")
+    parser.add_argument("--digest", action="store_true",
+                        help="One compact line per sector (id composite momentum etf). This is what "
+                             "the review's work list actually reads; the full JSON is 100 KB of "
+                             "which ~4 fields are consumed.")
     args = parser.parse_args()
 
     if args.universe:
@@ -276,6 +280,17 @@ def main() -> None:
         print(json.dumps(results if len(results) > 1 else results[0], indent=2, ensure_ascii=False))
         return
 
+    if args.digest:
+        # The work-list view: rank + the one dimension that drives candidacy + the vehicle it would
+        # be bought through (None = not buyable → not a candidate, whatever it scores). Nothing else.
+        # Local import: snapshot_repo imports this module.
+        from catalyx.store.snapshot_repo import primary_etf
+        for i, r in enumerate(sorted(results, key=lambda x: x["composite"], reverse=True), 1):
+            print(f"{i:>3} {r['sector_id']:<45} comp={r['composite']:<6.1f} "
+                  f"mom={r['score_breakdown']['momentum']:<6.1f} "
+                  f"etf={primary_etf(r['sector_id']) or '— (not buyable)'}")
+        return
+
     print("CATALYX — Sector Scorer\n")
     hdr = f"  {'sector_id':<45} {'composite':>9}  {'ca':>6}  {'mom':>6}  {'flow':>6}  {'crowd':>6}  {'inst_sp':>7}"
     print(hdr)
@@ -297,8 +312,6 @@ def main() -> None:
             for e in r["errors"]:
                 print(f"    ! {e}", file=sys.stderr)
 
-    print("\n--- JSON output ---")
-    print(json.dumps(results if len(results) > 1 else results[0], indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":

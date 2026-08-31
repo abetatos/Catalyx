@@ -29,7 +29,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -133,6 +133,115 @@ def conviction_transform(raw: list[float], transform: str, sharpness: float) -> 
     if std < 1e-9:
         return [1.0] * n
     return [math.exp(sharpness * (x - mean) / std) for x in raw]
+
+
+def skill_shrink(model: list[float], neutral: list[float], lam: float) -> list[float]:
+    """Blend the model's conviction tilt toward a neutral book by λ (plan v4 §3 B1).
+
+        w_final ∝ neutral + λ · (model − neutral)
+
+    Two decisions were fused in one number. **How much is at work** is beta, justified by the
+    equity risk premium and not by this model's skill — that is `deploy_ratio` and it is not
+    touched here: both legs carry the same names at the same gross, so λ=0 deploys exactly as
+    much as λ=1. **How the working capital is tilted** is alpha, and its only justification is
+    the measured rank IC of the ranking doing the tilting. Today that IC is −0.05 against an
+    se of 0.20 on one non-overlapping window, and the softmax was dispersing weights just as
+    aggressively as it would on an IC of +0.4.
+
+    λ=0 is not "no model": the model still chose the names, the filters and the cap. It is the
+    model declining to also size them until the ordering has earned it. λ=1 is the pre-v4
+    behaviour byte-for-byte.
+
+    Both legs are normalized before blending so λ is a true mix and not a function of whatever
+    scale `conviction_transform` happened to return; the result is rescaled to the model's
+    total, which `water_fill` ignores but a human reading the intermediate does not.
+    """
+    n = len(model)
+    if n == 0 or lam >= 1.0:
+        return list(model)
+    lam = max(0.0, float(lam))
+    tm, tn = sum(model), sum(neutral)
+    if tm <= 0 or tn <= 0:
+        return list(model)
+    out = [(nv / tn) + lam * ((mv / tm) - (nv / tn)) for mv, nv in zip(model, neutral)]
+    tot = sum(out)
+    return [x * tm / tot for x in out] if tot else list(model)
+
+
+def vol_tilt(scores: list[float], vols_pct: list[float | None], alpha: float,
+             min_vol_pct: float = 5.0) -> list[float]:
+    """Divide the weighting scores by `σ^alpha` — risk-budgeted sizing (plan v4 §2 A4).
+
+    The composite decides WHAT to own and with how much conviction; before this, the euro amount
+    then ignored the only input that makes two euros comparable. On the 2026-08-28 book
+    `semiconductors_design` (vol 55%) and `pharma_large_cap` (vol 18%) were sized as the same bet,
+    and semis carried ~3x the risk per euro spent.
+
+    `alpha = 0` is the old behaviour exactly (returns `scores` untouched, so the default is a
+    no-op until a book opts in). `alpha = 1` is full inverse-vol, which systematically underweights
+    precisely the high-beta sectors a catalyst-driven mandate exists to own — hence 0.5, which
+    halves the risk dispersion without turning a momentum book into a low-vol fund.
+
+    A MISSING vol takes the median of the ones present, never a zero or a one: an unknown must not
+    divide into an infinite weight, and it must not be silently treated as risk-free either. The
+    floor `min_vol_pct` does the same job for a stale or flat series.
+    """
+    if not scores or alpha <= 0:
+        return list(scores)
+    known = sorted(float(v) for v in vols_pct if v)
+    if not known:
+        return list(scores)
+    mid = len(known) // 2
+    median = known[mid] if len(known) % 2 else (known[mid - 1] + known[mid]) / 2.0
+    out = []
+    for sc, v in zip(scores, vols_pct):
+        sigma = max(float(v) if v else median, float(min_vol_pct))
+        out.append(float(sc) / (sigma ** alpha))
+    # Rescale to the original total so the numbers stay on a familiar scale; water_fill only
+    # cares about ratios, but a legible intermediate is worth the one division.
+    tot_in, tot_out = sum(scores), sum(out)
+    return [x * tot_in / tot_out for x in out] if tot_out else out
+
+
+def _sector_vols(tickers: list[str], lookback_days: int, as_of: str | None = None,
+                 price_fn=None) -> dict[str, float]:
+    """Annualized vol per traded vehicle over a COMMON recent window. {} when unavailable.
+
+    Reads the shared price cache the run already warmed — no extra fetch — and fails soft: a
+    ticker with no usable history simply does not appear, and `vol_tilt` substitutes the median.
+    """
+    from datetime import timedelta
+
+    tickers = [t for t in dict.fromkeys(tickers) if t]
+    if not tickers:
+        return {}
+    end = date.fromisoformat(as_of) if as_of else date.today()
+    start = end - timedelta(days=int(lookback_days * 1.6) + 10)   # calendar → ~lookback trading
+    try:
+        from catalyx.data import prices
+        # `allow_fetch=False` on purpose: the portfolio builder is not a fetch site. `pre_run.sh`
+        # warms the cache once per run and everything downstream reads it, so a cold ticker here
+        # drops to the median vol rather than opening a network round-trip inside a weighting loop.
+        frame = (price_fn(tickers, start.isoformat(), end.isoformat()) if price_fn
+                 else prices.read(tickers, start.isoformat(), end.isoformat(), allow_fetch=False))
+    except Exception:
+        return {}
+    if frame is None or getattr(frame, "empty", True):
+        return {}
+    out = {}
+    for t in tickers:
+        if t not in frame.columns:
+            continue
+        col = [float(v) for v in frame[t].dropna()][-lookback_days:]
+        if len(col) < 30:
+            continue
+        rets = [col[i] / col[i - 1] - 1.0 for i in range(1, len(col)) if col[i - 1]]
+        if len(rets) < 20:
+            continue
+        mean = sum(rets) / len(rets)
+        var = sum((r - mean) ** 2 for r in rets) / (len(rets) - 1)
+        out[t] = round((var ** 0.5) * (252 ** 0.5) * 100.0, 2)
+    return out
 
 
 # ── Build ────────────────────────────────────────────────────────────────────
@@ -329,6 +438,33 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
     deadband = float(c.get("rebalance_deadband_pct", pw.get("rebalance_deadband_pct", 0.0)))
     if weighting != "equal":
         scores = conviction_transform(scores, transform, sharpness)
+    # SKILL SHRINKAGE: how far the tilt is allowed to depart from neutral is set by the measured
+    # rank IC of the very column doing the ranking, not assumed. The neutral leg carries the
+    # regime haircut, so a contested sector stays de-risked even at λ=0 — the overlay is a risk
+    # statement, not a conviction one, and only the conviction leg is being shrunk.
+    lam_info = None
+    if weighting != "equal" and bool(c.get("tilt_shrinkage", pw.get("tilt_shrinkage", False))):
+        from catalyx.scorer import calibration
+        lam_info = calibration.skill_lambda(
+            lake_dir=lake_dir, dimension=("momentum" if weighting == "momentum" else "composite"),
+            ic_target=float(c.get("tilt_ic_target", pw.get("tilt_ic_target", 0.20))),
+            prior_windows=float(c.get("tilt_prior_windows", pw.get("tilt_prior_windows", 3.0))),
+            floor=float(c.get("tilt_lambda_floor", pw.get("tilt_lambda_floor", 0.0))))
+        neutral = [(1.0 - contested_haircut) if (veto_on and contested_action == "redistribute"
+                                                and st == "contested") else 1.0
+                   for st in states]
+        scores = skill_shrink(scores, neutral, lam_info["lambda"])
+    # RISK BUDGET: divide by σ^alpha before the cap, so `max_position_pct` still means what it
+    # says and the deadband is untouched. alpha 0 (the default) leaves `scores` identical.
+    alpha = float(c.get("vol_tilt_alpha", pw.get("vol_tilt_alpha", 0.0)))
+    vols_used: dict[str, float] = {}
+    if alpha > 0:
+        vols_used = _sector_vols(
+            [str(r.get("primary_etf") or "") for _, r in df.iterrows()],
+            int(c.get("vol_lookback_days", pw.get("vol_lookback_days", 120))))
+        scores = vol_tilt(scores, [vols_used.get(str(r.get("primary_etf") or ""))
+                                   for _, r in df.iterrows()],
+                          alpha, float(c.get("min_vol_pct", pw.get("min_vol_pct", 5.0))))
     weights = water_fill(scores, float(c["max_position_pct"]) / 100.0)
     if veto_on and contested_action == "cash":
         # gross-down: trim contested FINAL weights; the freed weight stays as cash (not
@@ -366,6 +502,7 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
             "narrative_maturity": r.get("narrative_maturity"),
             "regime_state": r.get("regime_state", "intact"),
             "weight_pct": round(w * 100.0, 2),
+            "tilt_lambda": (lam_info or {}).get("lambda"),
             "entry_price": entry_prices.get(r["sector_id"]),
             "built_at": built_at,
         })
@@ -392,7 +529,8 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
 
     return {"portfolio_id": portfolio_id, "run_id": run_id, "config_version": cfg_ver,
             "positions": len(rows), "cash_pct": cash_pct, "overlay": risk_overlay,
-            "contested": n_contested, "holdings": rows, "catalyst_exposure": exposure}
+            "contested": n_contested, "tilt": lam_info,
+            "holdings": rows, "catalyst_exposure": exposure}
 
 
 def show_holdings(portfolio_id: str, run_id: str | None = None, lake_dir: Path | None = None) -> dict:
@@ -422,6 +560,11 @@ def _print_holdings(res: dict) -> None:
           f"cfg={res.get('config_version','?')}  positions={res.get('positions', len(res['holdings']))}"
           + (f"  cash={res['cash_pct']}%" if res.get('cash_pct') is not None else "")
           + overlay_str)
+    tilt = res.get("tilt")
+    if tilt:
+        print(f"    tilt λ={tilt['lambda']:.2f}  ({tilt['note'].split('— ', 1)[-1]})"
+              + ("  → neutral book: the model picks the names, not the sizes"
+                 if tilt["lambda"] < 0.05 else ""))
     print(f"    {'#':<3}{'sector_id':<34}{'etf':<10}{'wt%':>7}{'comp':>7}{'mom':>7}  {'maturity':<11}regime")
     for h in res["holdings"]:
         print(f"    {h['rank_in_portfolio']:<3}{h['sector_id']:<34}{str(h['primary_etf']):<10}"

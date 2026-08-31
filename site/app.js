@@ -270,7 +270,7 @@ function portfolioCard(p) {
     <div class="big ${(p.return_pct ?? 0) >= 0 ? 'pos' : 'neg'}">${signed(p.return_pct)}%</div>
     <div style="margin:6px 0">${sp}</div>
     <div class="lbl">vs ${p.benchmark_etf || 'SPY'} <span class="pill ${beat ? 'g' : 'r'}">${signed(p.vs_benchmark_pct)}pp</span></div>
-    <div class="lbl" style="margin-top:3px">Sharpe ${num(m.sharpe, 2)} · vol ${num(m.vol_pct)}% · maxDD ${num(m.max_drawdown_pct)}%</div>
+    <div class="lbl" style="margin-top:3px">Sharpe ${num(m.sharpe, 2)}${m.reliable === false ? '<span title="too few observations to read as a measurement">*</span>' : ''} · vol ${num(m.vol_pct)}% · maxDD ${num(m.max_drawdown_pct)}%</div>
   </a>`;
 }
 // Compact register of the REAL book on the Overview — summary strip + a few holdings,
@@ -894,8 +894,10 @@ function renderPfCompare() {
   }
 
   // ── comparison table: return%, vs SPY pp, vol, Sharpe, maxDD per book (+ SPY baseline row) ──
+  // Sharpe carries its ± when the sample is too short to read it as a measurement (see
+  // build_site._series_metrics) — a bare ratio over ~2 months invites reading noise as skill.
   const metricCols = (mt) => mt
-    ? `<td class="num">${num(mt.vol_pct)}%</td><td class="num">${num(mt.sharpe, 2)}</td><td class="num neg">${num(mt.max_drawdown_pct)}%</td>`
+    ? `<td class="num">${num(mt.vol_pct)}%</td><td class="num"${mt.reliable === false ? ' title="indicative — ' + mt.n_days + '/' + mt.min_days + ' daily observations"' : ''}>${num(mt.sharpe, 2)}${mt.sharpe_ci95 != null ? ' <span class="lbl">±' + num(mt.sharpe_ci95, 2) + '</span>' : ''}</td><td class="num neg">${num(mt.max_drawdown_pct)}%</td>`
     : '<td class="num">—</td><td class="num">—</td><td class="num">—</td>';
   const rows = colored.map((s) => {
     const beat = (s.vs_benchmark_pct ?? 0) >= 0;
@@ -932,8 +934,10 @@ function renderPositions() {
   const mc = (l, v, cls, sub) => `<div class="card"><div class="lbl">${l}</div><div class="big ${cls || ''}">${v}</div>${sub ? `<div class="lbl">${sub}</div>` : ''}</div>`;
   const beat = (book && (book.vs_benchmark_pct ?? 0) >= 0);
 
-  // ── summary strip — headline is MARK-TO-MARKET vs cost (your real unrealized P&L), not the
-  //    entry-date-indexed NAV (which is ~flat for a young book and never marks against avg cost) ──
+  // ── summary strip — headline is MARK-TO-MARKET vs cost (your real unrealized P&L). The NAV
+  //    curve beside it is TIME-WEIGHTED (nav_engine.twr_series): it neutralizes contributions so
+  //    it can be compared to SPY, which is precisely why it does NOT equal this P&L. Both are
+  //    shown, labelled, along with the money-weighted IRR — one "return" would misstate two. ──
   const mv = pos.market_value_eur;            // qty × last price, summed (best-effort fetch)
   const up = pos.unrealized_eur, upct = pos.unrealized_pct;
   const cap = pos.total_capital_eur, cash = pos.cash_eur;
@@ -950,11 +954,16 @@ function renderPositions() {
   }
   cards.push(mc('realized P&L', '€' + num(pos.realized_eur, 0), (pos.realized_eur ?? 0) >= 0 ? 'pos' : 'neg', 'closed legs'));
   if (book && book.vs_benchmark_pct != null) cards.push(mc('vs ' + (book.benchmark_etf || 'SPY'), signed(book.vs_benchmark_pct) + 'pp', beat ? 'pos' : 'neg', beat ? 'beating market' : 'below market · since inception'));
+  // The book's own return is TIME-WEIGHTED (contributions neutralized) — the only one comparable
+  // to SPY. MWR and the broker view answer different questions and are labelled as such.
+  if (book && book.return_pct != null) cards.push(mc('return (time-weighted)', signed(book.return_pct) + '%', (book.return_pct ?? 0) >= 0 ? 'pos' : 'neg', 'contributions neutralized'));
+  if (book && book.mwr_pct != null) cards.push(mc('your money (IRR)', signed(book.mwr_pct) + '%', book.mwr_pct >= 0 ? 'pos' : 'neg', 'money-weighted · ann.'));
   // risk metrics — same set shown on the model portfolio cards (annualized vol, Sharpe, max drawdown)
   if (m.vol_pct != null) cards.push(mc('volatility', num(m.vol_pct) + '%', '', 'annualized'));
-  if (m.sharpe != null) cards.push(mc('Sharpe', num(m.sharpe, 2), (m.sharpe ?? 0) >= 0 ? 'pos' : 'neg', 'risk-adjusted · rf=0'));
+  if (m.sharpe != null) cards.push(mc('Sharpe', num(m.sharpe, 2) + (m.sharpe_ci95 != null ? ' ±' + num(m.sharpe_ci95, 2) : ''), '', m.reliable === false ? `indicative — ${m.n_days}/${m.min_days} days` : 'risk-adjusted · rf=0'));
   if (m.max_drawdown_pct != null) cards.push(mc('max drawdown', num(m.max_drawdown_pct) + '%', 'neg', 'peak-to-trough'));
-  $('pos-summary').innerHTML = cards.join('');
+  $('pos-summary').innerHTML = cards.join('')
+    + (m.reliable === false ? `<p class="hint" style="margin:8px 0 0">⚠️ ${m.n_days} daily observations — the Sharpe's 95% interval (±${num(m.sharpe_ci95, 2)}) is wider than the estimate. Read the curve, not the ratio; ~${m.min_days} days before these read as findings.</p>` : '');
 
   // ── NAV vs SPY — axed line chart (gridlines + dated x-axis + legend), auto y-range so the
   //    ~100±x curve isn't flattened against a 0 baseline. Falls back to a hint until ≥2 points. ──
@@ -1249,12 +1258,15 @@ function selectPortfolio(pid) {
     <h2 style="margin-top:0">${escapeHtml(p.name || pid)} ${trackPill(p)} <span class="lbl" style="font-weight:400">${trackLine}</span></h2>
     ${accruingNote}
     <div class="strip">
-      ${mc('total return', signed(p.return_pct) + '%', (p.return_pct ?? 0) >= 0 ? 'pos' : 'neg')}
+      ${mc(p.kind === 'real' ? 'return (time-weighted)' : 'total return', signed(p.return_pct) + '%', (p.return_pct ?? 0) >= 0 ? 'pos' : 'neg', p.kind === 'real' ? 'contributions neutralized' : '')}
+      ${p.kind === 'real' && p.mwr_pct != null ? mc('your money (IRR)', signed(p.mwr_pct) + '%', p.mwr_pct >= 0 ? 'pos' : 'neg', 'money-weighted, ann.') : ''}
+      ${p.kind === 'real' && p.return_pct_vs_cost != null ? mc('vs cost', signed(p.return_pct_vs_cost) + '%', p.return_pct_vs_cost >= 0 ? 'pos' : 'neg', 'broker view') : ''}
       ${mc('vs ' + (p.benchmark_etf || 'SPY'), signed(p.vs_benchmark_pct) + 'pp', beat ? 'pos' : 'neg', beat ? 'beat market' : 'below market')}
       ${mc('volatility (ann.)', num(m.vol_pct) + '%', '', 'SPY ' + num(bm.vol_pct) + '%')}
-      ${mc('Sharpe', num(m.sharpe, 2), '', 'SPY ' + num(bm.sharpe, 2))}
+      ${mc('Sharpe', num(m.sharpe, 2) + (m.sharpe_ci95 != null ? ' ±' + num(m.sharpe_ci95, 2) : ''), '', m.reliable === false ? `indicative — ${m.n_days}/${m.min_days} days` : 'SPY ' + num(bm.sharpe, 2))}
       ${mc('max drawdown', num(m.max_drawdown_pct) + '%', 'neg', 'SPY ' + num(bm.max_drawdown_pct) + '%')}
     </div>
+    ${m.reliable === false ? `<p class="hint" style="margin:8px 0 0">⚠️ Risk metrics run on ${m.n_days} daily observations. The Sharpe's 95% interval (±${num(m.sharpe_ci95, 2)}) is wider than the estimate itself — read the curve's shape, not the ratio. Roughly ${m.min_days} days before these read as findings.</p>` : ''}
     <div class="card" style="margin-top:16px">
       <h3 style="margin-top:0">How the weights are built</h3>
       ${p.description ? `<div class="md">${md(p.description)}</div>` : ''}
@@ -1383,7 +1395,8 @@ async function renderData() {
 // The only page that names amounts. It renders a decision the RULES made, not one this page made:
 // the action column is a closed enum with no hedging member, and any deviation shows up in the
 // override table below with an author. Recommend-only, like everything else in the app.
-const ACTION_CLASS = { SELL: 'r', REDUCE: 'r', TRIM: 'a', ADD: 'g', BUY: 'g', HOLD: '' };
+// RE-SCORE is amber, not red: it moves no money, it names missing data as work to do.
+const ACTION_CLASS = { SELL: 'r', REDUCE: 'r', TRIM: 'a', 'RE-SCORE': 'a', ADD: 'g', BUY: 'g', HOLD: '' };
 const eur = (v, d = 0) => (v === null || v === undefined || Number.isNaN(Number(v)))
   ? '—' : (Number(v) < 0 ? '−€' : '€') + num(Math.abs(Number(v)), d);
 function actionPill(a) { return a ? `<span class="pill ${ACTION_CLASS[a] || ''}">${escapeHtml(a)}</span>` : '—'; }
@@ -1395,7 +1408,7 @@ function renderRebalance() {
   if (!R || !(R.rows || []).length) {
     $('reb-summary').innerHTML = '';
     $('reb-table').innerHTML = '<p class="hint">No rebalance has been recorded yet. It is written by the review’s post-run step.</p>';
-    ['reb-metrics', 'reb-book', 'reb-overrides', 'reb-warn'].forEach((id) => { const el = $(id); if (el) el.innerHTML = ''; });
+    ['reb-metrics', 'reb-book', 'reb-overrides', 'reb-scorecard', 'reb-warn'].forEach((id) => { const el = $(id); if (el) el.innerHTML = ''; });
     return;
   }
   const rows = R.rows, B = R.book || {}, M = R.metrics_by_sector || {};
@@ -1407,10 +1420,26 @@ function renderRebalance() {
   const cards = [];
   if (B.total_capital_eur != null) cards.push(card('committed capital', eur(B.total_capital_eur), '', `${num(B.deployed_pct, 0)}% deployed`));
   if (R.deploy_ratio != null) cards.push(card('rule says deploy', num(R.deploy_ratio * 100, 0) + '%', '', eur(deployable) + ' at work'));
+  // λ: how much of the model's conviction tilt is earned. It splits the working capital; it
+  // never changes how much of it is at work — that is the deploy ratio card beside it.
+  if (R.tilt_lambda != null) cards.push(card('tilt earned (λ)', num(R.tilt_lambda, 2), '',
+    R.tilt_lambda < 0.05 ? 'names from the model, sizing neutral' : 'conviction tilt applied'));
   if (Math.abs(under) >= 1) cards.push(card(under > 0 ? 'under-deployed' : 'over-deployed', eur(Math.abs(under)), under > 0 ? 'neg' : 'a', 'vs what the rules say'));
   cards.push(card('rule actions', String(nAct), nAct ? 'a' : 'pos', nAct ? 'rows that move money' : 'book matches the model'));
   if (B.model_overlap_pct != null) cards.push(card('model overlap', num(B.model_overlap_pct, 0) + '%', '', 'of the target book actually held'));
   cards.push(card('overrides', String((R.overrides || []).length), '', 'recorded deviations'));
+  // The cost of NOT acting, on the same strip as the cost of acting. Every row below prices its
+  // friction to the cent; until v4.6 the idle cash was priced nowhere, and that asymmetry reads
+  // as a recommendation to do nothing.
+  const IA = R.inaction || {};
+  if (IA.cash_drag_eur != null) {
+    cards.push(card('cash drag', eur(IA.cash_drag_eur), 'neg',
+      `idle ${IA.idle_days != null ? Math.round(IA.idle_days) + 'd' : ''} · benchmark ${num(IA.benchmark_return_pct, 2)}%`));
+  }
+  if (IA.shortfall_breached) {
+    cards.push(card('shortfall persists', num(IA.shortfall_pp, 1) + 'pp', 'neg',
+      `${Math.round(IA.shortfall_runs || 0)} reviews — execute or override`));
+  }
   $('reb-summary').innerHTML = cards.join('');
 
   // A row for a sector that can no longer be bought is not a neutral row — say so loudly.
@@ -1425,7 +1454,7 @@ function renderRebalance() {
   $('reb-table').innerHTML = `<div class="tblwrap"><table>
     <thead><tr><th>sector</th><th>ETF</th><th class="num">target</th><th class="num">actual</th>
       <th class="num">gap</th><th>action</th><th class="num">trade</th><th class="num">CGT</th>
-      <th class="num">net edge</th><th>catalyst</th><th>why</th></tr></thead><tbody>
+      <th class="num">b/e %</th><th>catalyst</th><th>why</th></tr></thead><tbody>
     ${rows.map((r) => `<tr>
       <td>${sectorLink(r.sector_id)}</td>
       <td class="hint">${escapeHtml(r.etf || '—')}</td>
@@ -1435,16 +1464,26 @@ function renderRebalance() {
       <td>${actionPill(r.rule_action)}</td>
       <td class="num"><b>${r.trade_eur ? eur(r.trade_eur) : '—'}</b></td>
       <td class="num">${r.tax_eur ? eur(r.tax_eur) : '—'}</td>
-      <td class="num">${r.net_edge_eur == null ? '—' : eur(r.net_edge_eur)}</td>
+      <td class="num">${r.breakeven_pct == null ? '—' : num(r.breakeven_pct, 2) + '%'}</td>
       <td>${freshPill(r.catalyst_freshness)} ${regimePill(r.regime_state)}</td>
       <td class="hint">${escapeHtml(r.reason || '')}</td></tr>`).join('')}
     </tbody></table></div>`;
+
+  // Risk share above capital share = amber (this line is a bigger bet than it looks); a NEGATIVE
+  // contribution is green — the position is lowering total book volatility, not adding to it.
+  const riskClass = (m) => {
+    if (m.risk_contribution_pct == null) return '';
+    if (m.risk_contribution_pct < 0) return 'pos';
+    if (m.capital_pct_of_book && m.risk_contribution_pct >= m.capital_pct_of_book * 1.3) return 'neg';
+    return '';
+  };
 
   // ── per-position measurement ──
   const mrows = Object.values(M);
   $('reb-metrics').innerHTML = mrows.length ? `<div class="tblwrap"><table>
     <thead><tr><th>sector</th><th class="num">held</th><th class="num">P&amp;L</th><th class="num">price</th>
-      <th class="num">FX</th><th class="num">peak DD</th><th class="num">vol</th><th class="num">score drift</th>
+      <th class="num">FX</th><th class="num">peak DD</th><th class="num">vol</th>
+      <th class="num">capital</th><th class="num">risk</th><th class="num">score drift</th>
       <th>catalyst</th></tr></thead><tbody>
     ${mrows.map((m) => `<tr>
       <td>${sectorLink(m.sector_id)} <span class="hint">${escapeHtml(m.currency || '')}</span></td>
@@ -1454,6 +1493,8 @@ function renderRebalance() {
       <td class="num ${(m.pnl_fx_eur ?? 0) >= 0 ? 'pos' : 'neg'}">${eur(m.pnl_fx_eur)}</td>
       <td class="num neg">${num(m.max_drawdown_from_peak_pct, 1)}%</td>
       <td class="num">${num(m.vol_since_entry_pct, 0)}%</td>
+      <td class="num">${m.capital_pct_of_book == null ? '—' : num(m.capital_pct_of_book, 1) + '%'}</td>
+      <td class="num ${riskClass(m)}" title="share of the book's volatility this position accounts for (RC_i = w_i·(Σw)_i / σ_p; the column sums to 100%)">${m.risk_contribution_pct == null ? '—' : num(m.risk_contribution_pct, 1) + '%'}</td>
       <td class="num ${(m.composite_drift ?? 0) >= 0 ? 'pos' : 'neg'}" title="${escapeHtml(m.drift_note || 'composite now vs at entry')}">${m.composite_drift == null ? '—' : signed(m.composite_drift, 1)}</td>
       <td>${freshPill(m.catalyst_freshness)}</td></tr>`).join('')}
     </tbody></table></div>` : '<p class="hint">Position metrics are written by the review’s post-run step.</p>';
@@ -1461,10 +1502,11 @@ function renderRebalance() {
   // ── book shape ──
   const bc = [];
   if (B.vol_pct != null) bc.push(card('volatility', num(B.vol_pct, 1) + '%', '', 'annualized'));
-  if (B.sharpe != null) bc.push(card('Sharpe', num(B.sharpe, 2), (B.sharpe ?? 0) >= 0 ? 'pos' : 'neg', 'rf = 0'));
+  if (B.sharpe != null) bc.push(card('Sharpe', num(B.sharpe, 2) + (B.sharpe_ci95 != null ? ' ±' + num(B.sharpe_ci95, 2) : ''), '', B.metrics_reliable === false ? `indicative — ${B.nav_points} days` : 'rf = 0'));
   if (B.max_drawdown_pct != null) bc.push(card('max drawdown', num(B.max_drawdown_pct, 1) + '%', 'neg', 'peak-to-trough'));
   if (B.beta_vs_spy != null) bc.push(card('beta vs SPY', num(B.beta_vs_spy, 2), '', B.corr_vs_spy != null ? 'correlation ' + num(B.corr_vs_spy, 2) : ''));
-  if (B.hhi != null) bc.push(card('concentration', num(B.hhi, 0), B.hhi > 2500 ? 'a' : '', 'HHI · one position = 10000'));
+  if (B.hhi != null) bc.push(card('concentration', num(B.hhi, 0), B.hhi > 2500 ? 'a' : '', B.effective_n != null ? `HHI · behaves like ${num(B.effective_n, 1)} equal positions` : 'HHI · one position = 10000'));
+  if (B.book_vol_from_cov_pct != null) bc.push(card('book vol (holdings)', num(B.book_vol_from_cov_pct, 1) + '%', '', `from the covariance of ${num(B.risk_window_days, 0)} common days`));
   if (B.tracking_error_vs_model_pct != null) bc.push(card('tracking error', num(B.tracking_error_vs_model_pct, 1) + '%', '', 'vs the model book'));
   const fx = B.fx_exposure_pct || {};
   const fxTxt = Object.keys(fx).length ? Object.entries(fx).map(([k, v]) => `${k} ${num(v, 0)}%`).join(' · ') : '—';
@@ -1487,6 +1529,30 @@ function renderRebalance() {
       <td><span class="pill ${o.author === 'user' ? 'b' : ''}">${escapeHtml(o.author || '')}</span></td>
       <td class="hint">${escapeHtml(o.reason || '')}</td></tr>`).join('')}</tbody></table></div>`
     : '<p class="hint">No override recorded. Every non-HOLD row was either executed as the rule said, or the deviation was never written down — which is the one outcome this table cannot audit.</p>';
+
+  // ── rule scorecard: the deviations were always scored; the rules they deviate from were not ──
+  const SC = R.scorecard;
+  const scEl = $('reb-scorecard');
+  if (scEl) {
+    if (SC && (SC.rows || []).length) {
+      scEl.innerHTML = `<div class="tblwrap"><table>
+        <thead><tr><th>action</th><th class="num">n</th><th class="num">mean fwd %</th><th class="num">vs HOLD</th><th class="num">rule edge</th><th>verdict</th></tr></thead>
+        <tbody>${SC.rows.map((r) => `<tr>
+          <td>${actionPill(r.action)}</td>
+          <td class="num">${r.n}</td>
+          <td class="num">${signed(r.mean_forward_pct, 2)}%</td>
+          <td class="num">${signed(r.vs_hold_pp, 2)}pp</td>
+          <td class="num ${r.rule_edge_pp == null ? '' : (r.rule_edge_pp > 0 ? 'pos' : 'neg')}">${r.rule_edge_pp == null ? '—' : signed(r.rule_edge_pp, 2) + 'pp'}</td>
+          <td class="hint">${escapeHtml(r.verdict || '')}</td></tr>`).join('')}</tbody></table></div>
+        <p class="hint" style="margin:8px 0 0">${escapeHtml(SC.note || '')}</p>`;
+    } else if (SC) {
+      scEl.innerHTML = `<p class="hint">Nothing scoreable yet — ${SC.n_pending || 0} recorded row(s), no complete
+        ${SC.horizon_days}-day forward window. The first verdicts land about ${SC.horizon_days} days after the
+        earliest recorded run.</p>`;
+    } else {
+      scEl.innerHTML = '';
+    }
+  }
 }
 
 // ── router ──────────────────────────────────────────────────────────────────────

@@ -434,8 +434,6 @@ def main() -> None:
                 )
         print()
 
-    print("--- JSON output ---")
-    print(json.dumps(results if len(results) > 1 else results[0], indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":

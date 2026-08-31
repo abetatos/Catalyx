@@ -392,15 +392,52 @@
 
       <div class="card" style="margin-bottom:16px;border-left:3px solid var(--accent)">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
-          <b style="font-size:13px">Six actions, fixed precedence</b>
-          <span class="pill">SELL › REDUCE › TRIM › ADD › BUY › HOLD</span>
+          <b style="font-size:13px">Seven actions, fixed precedence</b>
+          <span class="pill">SELL › REDUCE › TRIM › RE-SCORE › ADD › BUY › HOLD</span>
           <span class="pill g">recommend-only</span>
         </div>
         <p class="hint" style="margin:0">There is no <i>watch</i>, <i>monitor</i> or <i>consider</i> in the
-          output: a verdict that does not move money is <b>HOLD</b>, said once. Thresholds are frozen in
+          output: a verdict that does not move money is <b>HOLD</b>, said once. The one exception is
+          <b>RE-SCORE</b>, which also moves no money but is not a verdict at all — it is what a rank-based
+          SELL degrades to when the sector was absent from too many recent runs to have a rank worth
+          selling on. &ldquo;We do not know&rdquo; is a real state, and it used to arrive disguised as a
+          sell. Thresholds are frozen in
           config, so a row cannot be argued away in the moment — it can only be <b>overridden on the
           record</b>, with an author and a reason, and scored against the rule it replaced ~21 trading days
           later. Nothing here executes; buying and selling stays a human action.</p>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+          <b style="font-size:13px">Not acting has a price too</b>
+          <span class="pill">cash drag</span>
+          <span class="pill">shortfall persistence</span>
+          <span class="pill">unrecorded deviations</span>
+        </div>
+        <p class="hint" style="margin:0">Every row above carries its friction to the cent, and for a
+          long time the cost of leaving the cash alone was carried nowhere — an asymmetry that reads,
+          run after run, as a recommendation to do nothing. So the idle capital is priced against the
+          benchmark it declined, a deployment shortfall that survives two recorded reviews has to be
+          executed or <b>overridden in writing</b>, and any row a previous run recommended that
+          produced no trade and no override is logged automatically as a deferral and scored ~21
+          trading days later. Being quiet used to be the cheapest way to be cautious; it is now
+          simply another entry in the ledger.</p>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+          <b style="font-size:13px">Two decisions, kept apart</b>
+          <span class="pill">deploy ratio = how much is at work</span>
+          <span class="pill">&lambda; = how it is tilted</span>
+        </div>
+        <p class="hint" style="margin:0">How much capital is at work is <b>beta</b> — it is justified by
+          the equity risk premium, not by this model being right, so it stays at the rule&rsquo;s deploy
+          ratio. How that capital is <b>tilted</b> between the names is <b>alpha</b>, and its only
+          justification is the measured rank IC of the ranking doing the tilting. &lambda; shrinks the
+          tilt toward a neutral book by that measurement: at <b>&lambda; = 0</b> the model still selects
+          the names, applies the filters and the cap, and the book is still fully deployed — it simply
+          declines to also size them until the ordering has earned it. A negative IC clamps &lambda; to
+          zero and never inverts the book.</p>
       </div>
 
       <div id="reb-summary" class="strip"></div>
@@ -408,15 +445,23 @@
 
       <h2>Target vs actual</h2>
       <p class="hint">Target = the model book's weights scaled by the rule's <b>deployment ratio</b>;
-        actual = the real book marked in EUR. <code>net edge</code> is the expected gain of the trade minus
-        its cost (CGT + spread) — shown for information while the edge estimate is still statistically thin,
-        and only allowed to block a <b>taxable sale</b>, never a purchase.</p>
+        actual = the real book marked in EUR. <code>b/e %</code> is the <b>breakeven</b>: the trade's friction
+        (CGT + spread) as a percentage of the capital it moves — what the destination has to outperform the
+        source by for the rotation to have been worth making. Every input is observable today, so the number
+        is checkable against the realized spread one horizon later. It replaced an expected-gain estimate
+        that multiplied the trade by a rank-bucket mean return one noisy window old; that estimate is still
+        recorded, it just no longer drives the table.</p>
       <div id="reb-table"></div>
 
       <h2>Position measurement</h2>
       <p class="hint">Why each row looks the way it does. <b>Price / FX</b> splits the EUR P&amp;L into the
         sector move and the currency move — a non-EUR vehicle is two positions, and only one of them was a
-        thesis. <b>Peak DD</b> measures from the position's own high, not from cost. <b>Score drift</b> is
+        thesis. <b>Capital</b> vs <b>risk</b> is the pair that matters most here: capital share says what was
+        spent, risk share says how much of the book&rsquo;s volatility this line accounts for
+        (<code>RC_i = w_i&middot;(&Sigma;w)_i / &sigma;_p</code>, the column sums to 100%). They are routinely far
+        apart, and a <b>negative</b> risk share is a real property &mdash; that position is anticorrelated
+        enough to <i>lower</i> total volatility, which is the first thing to defend before trimming it.
+        <b>Peak DD</b> measures from the position's own high, not from cost. <b>Score drift</b> is
         today's composite minus the composite the pipeline gave that sector <i>on the day it was bought</i>:
         price is the market's opinion, drift is the model's.</p>
       <div id="reb-metrics"></div>
@@ -429,6 +474,17 @@
         the action it replaced once the forward window matures — the escape hatch stays open, and it keeps
         a scorecard.</p>
       <div id="reb-overrides"></div>
+
+      <h2>Rule scorecard</h2>
+      <p class="hint">The other half of that ledger. Deviations have been priced since the day the override
+        log existed; the rules they deviate <i>from</i> were not, and a table whose own record is never
+        priced keeps its authority by never being tested. Each recorded action is scored over a complete
+        forward window against the <b>HOLD baseline</b> — not &ldquo;did the names go up&rdquo;, which is
+        beta, but &ldquo;did acting beat leaving the book alone&rdquo;, which is the only thing a rule table
+        can claim credit for. The forward return is signed by the direction the rule moved money, so a
+        positive <b>rule edge</b> always means the rule was right and a SELL scores well when the vehicle
+        then fell. It is evidence for a config edit, never an edit: thresholds stay frozen.</p>
+      <div id="reb-scorecard"></div>
     </section>
 
     <!-- ── DECISION JOURNAL ── -->
