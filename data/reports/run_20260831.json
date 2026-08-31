@@ -23,8 +23,8 @@
   },
   "attention": {
     "positions_needing_action": [],
-    "stale_verdicts": 16,
-    "stale_indicators": 37,
+    "stale_verdicts": 10,
+    "stale_indicators": 31,
     "pending_lifecycle": 0
   },
   "work_list": {
@@ -47,97 +47,41 @@
         "why": "drives an open position"
       }
     ],
-    "should_reverify": [
-      {
-        "catalyst_id": "cat_20260402_section232_pharma_tariffs",
-        "why": "stale unknown · drives a decision-relevant sector"
-      },
-      {
-        "catalyst_id": "cat_20260601_us_ai_chip_export_controls",
-        "why": "stale unknown · drives a decision-relevant sector"
-      },
-      {
-        "catalyst_id": "cat_20260620_clarity_act_market_structure",
-        "why": "stale unknown · drives a decision-relevant sector"
-      },
-      {
-        "catalyst_id": "cat_20260624_memory_shortage_confirmed",
-        "why": "stale unknown · drives a decision-relevant sector"
-      },
-      {
-        "catalyst_id": "struct_glp1_obesity_supercycle",
-        "why": "stale very_stale · drives a decision-relevant sector"
-      },
-      {
-        "catalyst_id": "struct_nato_rearmament",
-        "why": "stale very_stale · drives a decision-relevant sector"
-      }
-    ],
+    "should_reverify": [],
     "optional_reverify": [
       "cat_20260314_private_credit_redemption_crisis",
       "cat_20260603_nato_defense_gdp",
       "cat_20260603_nato_hague_5pct_gdp",
       "cat_20260611_super_el_nino_2026",
       "cat_20260612_spacex_ipo_listing",
+      "cat_20260620_clarity_act_market_structure",
       "cat_20260630_drc_cobalt_export_quota",
       "cat_20260724_trump_global_tariff_phase",
-      "struct_china_luxury_recovery",
-      "struct_commercial_space_supercycle",
-      "struct_em_capital_attraction_india"
+      "cat_20260817_hormuz_reescalation",
+      "struct_commercial_space_supercycle"
     ],
     "sectors_decision_relevant": [
       "ai_infrastructure_data_centers",
       "biotech_drug_development",
       "cloud_software_saas",
       "copper_miners",
-      "crypto_infrastructure",
       "cybersecurity_commercial",
-      "gold_miners",
       "pharma_large_cap",
       "robotics_automation",
-      "semiconductors_design"
+      "semiconductors_design",
+      "water_infrastructure"
     ],
     "note": "Spend searches on must_reverify, then should_reverify. optional_reverify collapses to a single 'no change' line with NO search, and every sector outside sectors_decision_relevant ranks on its momentum baseline. Skipping is explicit here so 'we did not look' never reads as 'nothing changed'."
   },
   "lifecycle_transitions": [],
   "stale_verdicts": [
     {
-      "catalyst_id": "struct_nato_rearmament",
-      "age_days": 91,
-      "freshness": "very_stale"
-    },
-    {
       "catalyst_id": "struct_commercial_space_supercycle",
       "age_days": 87,
       "freshness": "very_stale"
     },
     {
-      "catalyst_id": "struct_china_luxury_recovery",
-      "age_days": 61,
-      "freshness": "very_stale"
-    },
-    {
-      "catalyst_id": "struct_em_capital_attraction_india",
-      "age_days": 61,
-      "freshness": "very_stale"
-    },
-    {
-      "catalyst_id": "struct_glp1_obesity_supercycle",
-      "age_days": 61,
-      "freshness": "very_stale"
-    },
-    {
       "catalyst_id": "cat_20260314_private_credit_redemption_crisis",
-      "age_days": null,
-      "freshness": "unknown"
-    },
-    {
-      "catalyst_id": "cat_20260402_section232_pharma_tariffs",
-      "age_days": null,
-      "freshness": "unknown"
-    },
-    {
-      "catalyst_id": "cat_20260601_us_ai_chip_export_controls",
       "age_days": null,
       "freshness": "unknown"
     },
@@ -167,11 +111,6 @@
       "freshness": "unknown"
     },
     {
-      "catalyst_id": "cat_20260624_memory_shortage_confirmed",
-      "age_days": null,
-      "freshness": "unknown"
-    },
-    {
       "catalyst_id": "cat_20260630_drc_cobalt_export_quota",
       "age_days": null,
       "freshness": "unknown"
@@ -180,12 +119,17 @@
       "catalyst_id": "cat_20260724_trump_global_tariff_phase",
       "age_days": null,
       "freshness": "unknown"
+    },
+    {
+      "catalyst_id": "cat_20260817_hormuz_reescalation",
+      "age_days": null,
+      "freshness": "unknown"
     }
   ],
   "scan": {
     "path": "data/reports/scan_deltas_20260831.json",
-    "n_indicator_updates": 5,
-    "n_catalyst_reviews": 13,
+    "n_indicator_updates": 6,
+    "n_catalyst_reviews": 15,
     "n_lifecycle": 0,
     "n_new_catalysts": 0
   },
@@ -203,9 +147,9 @@
     {
       "sector_id": "pharma_large_cap",
       "rank": 2,
-      "composite": 62.2,
+      "composite": 62.5,
       "momentum": 71.2,
-      "catalyst_alignment": 88.9,
+      "catalyst_alignment": 90.1,
       "crowding_risk": 75.0,
       "narrative_maturity": "crowded",
       "primary_etf": "IUHE.AS"
@@ -223,28 +167,18 @@
     {
       "sector_id": "robotics_automation",
       "rank": 4,
-      "composite": 60.1,
-      "momentum": 82.7,
+      "composite": 59.5,
+      "momentum": 78.8,
       "catalyst_alignment": 95.5,
       "crowding_risk": 55.0,
       "narrative_maturity": "mainstream",
       "primary_etf": "RBOT.L"
     },
     {
-      "sector_id": "cybersecurity_commercial",
-      "rank": 5,
-      "composite": 57.4,
-      "momentum": 94.2,
-      "catalyst_alignment": 84.0,
-      "crowding_risk": 75.0,
-      "narrative_maturity": "crowded",
-      "primary_etf": "USPY.L"
-    },
-    {
       "sector_id": "semiconductors_design",
-      "rank": 6,
-      "composite": 56.9,
-      "momentum": 78.8,
+      "rank": 5,
+      "composite": 57.5,
+      "momentum": 82.7,
       "catalyst_alignment": 95.0,
       "crowding_risk": 75.0,
       "narrative_maturity": "crowded",
@@ -252,8 +186,8 @@
     },
     {
       "sector_id": "water_infrastructure",
-      "rank": 7,
-      "composite": 56.8,
+      "rank": 6,
+      "composite": 56.9,
       "momentum": 55.8,
       "catalyst_alignment": 94.4,
       "crowding_risk": 25.0,
@@ -261,9 +195,19 @@
       "primary_etf": "IH2O.L"
     },
     {
+      "sector_id": "cybersecurity_commercial",
+      "rank": 7,
+      "composite": 56.5,
+      "momentum": 94.2,
+      "catalyst_alignment": 79.0,
+      "crowding_risk": 75.0,
+      "narrative_maturity": "crowded",
+      "primary_etf": "USPY.L"
+    },
+    {
       "sector_id": "ai_infrastructure_data_centers",
       "rank": 8,
-      "composite": 54.7,
+      "composite": 54.8,
       "momentum": 67.3,
       "catalyst_alignment": 96.2,
       "crowding_risk": 75.0,
@@ -273,7 +217,7 @@
     {
       "sector_id": "crypto_infrastructure",
       "rank": 9,
-      "composite": 54.2,
+      "composite": 54.3,
       "momentum": 59.6,
       "catalyst_alignment": 89.3,
       "crowding_risk": 55.0,
@@ -305,7 +249,7 @@
       "rank": 12,
       "composite": 49.8,
       "momentum": 40.4,
-      "catalyst_alignment": 95.8,
+      "catalyst_alignment": 95.7,
       "crowding_risk": 75.0,
       "narrative_maturity": "crowded",
       "primary_etf": "4COP.DE"
@@ -323,22 +267,22 @@
     {
       "sector_id": "lithium_miners",
       "rank": 14,
-      "composite": 48.9,
+      "composite": 48.5,
       "momentum": 21.2,
-      "catalyst_alignment": 86.5,
+      "catalyst_alignment": 84.0,
       "crowding_risk": 25.0,
       "narrative_maturity": "emerging",
       "primary_etf": "VOLT.L"
     },
     {
-      "sector_id": "consumer_india_em",
+      "sector_id": "luxury_goods",
       "rank": 15,
-      "composite": 48.0,
-      "momentum": 44.2,
-      "catalyst_alignment": 61.5,
-      "crowding_risk": 25.0,
-      "narrative_maturity": "emerging",
-      "primary_etf": "NDIA.L"
+      "composite": 48.3,
+      "momentum": 32.7,
+      "catalyst_alignment": 78.7,
+      "crowding_risk": 55.0,
+      "narrative_maturity": "mainstream",
+      "primary_etf": "GLUX.SW"
     }
   ],
   "rank_moves": [
@@ -448,15 +392,15 @@
     "beta_vs_spy": 1.05,
     "corr_vs_spy": 0.52,
     "tracking_error_vs_model_pct": 20.28,
-    "active_share_pct": 47.35,
-    "model_overlap_pct": 15.81,
+    "active_share_pct": 53.0,
+    "model_overlap_pct": 10.16,
     "nav_points": 62,
     "twr_pct": -1.43,
     "metrics_reliable": false,
     "metrics_note": "61/120 daily observations — risk metrics are indicative only, the confidence interval is wider than the estimate",
-    "run_id": "run_20260831_164517",
+    "run_id": "run_20260831_175643",
     "as_of": "2026-08-31",
-    "computed_at": "2026-08-31T16:45:29.474828+00:00",
+    "computed_at": "2026-08-31T18:12:25.272681+00:00",
     "effective_n": 3.56,
     "book_vol_from_cov_pct": 25.64,
     "risk_window_days": 60.0,
@@ -501,10 +445,10 @@
       "days_held": 84,
       "max_drawdown_from_peak_pct": -10.63,
       "composite_at_entry": 77.1,
-      "composite_now": 57.4,
-      "composite_drift": -19.7,
-      "rank_now": 5,
-      "rank_drift": 0.0,
+      "composite_now": 56.5,
+      "composite_drift": -20.6,
+      "rank_now": 7,
+      "rank_drift": 2.0,
       "catalyst_freshness": "fresh",
       "regime_state": "intact",
       "exit_action": "hold",
@@ -525,10 +469,10 @@
       "days_held": 84,
       "max_drawdown_from_peak_pct": -28.19,
       "composite_at_entry": 72.8,
-      "composite_now": 56.9,
-      "composite_drift": -15.9,
-      "rank_now": 6,
-      "rank_drift": -3.0,
+      "composite_now": 57.5,
+      "composite_drift": -15.3,
+      "rank_now": 5,
+      "rank_drift": -4.0,
       "catalyst_freshness": "fresh",
       "regime_state": "intact",
       "exit_action": "hold",
@@ -549,8 +493,8 @@
       "days_held": 76,
       "max_drawdown_from_peak_pct": -3.82,
       "composite_at_entry": 34.0,
-      "composite_now": 62.2,
-      "composite_drift": 28.2,
+      "composite_now": 62.5,
+      "composite_drift": 28.5,
       "rank_now": 2,
       "rank_drift": -35.0,
       "catalyst_freshness": "unknown",
@@ -563,7 +507,7 @@
     }
   ],
   "rebalance": {
-    "run_id": "run_20260831_164517",
+    "run_id": "run_20260831_175643",
     "strategy": "catalyx",
     "deploy_ratio": 0.75,
     "total_capital_eur": 10000.0,
@@ -582,8 +526,8 @@
     "model_return_pct": 0.83,
     "cash_model_forgone_eur": 61.16,
     "cash_verdict": "cost",
-    "n_actions": 6,
-    "n_hold": 1,
+    "n_actions": 8,
+    "n_hold": 0,
     "actions": [
       {
         "sector_id": "copper_miners",
@@ -603,6 +547,23 @@
         "data_age": "stale (88d)"
       },
       {
+        "sector_id": "cybersecurity_commercial",
+        "etf": "USPY.L",
+        "score_rank": 7,
+        "target_pct": 0.0,
+        "actual_pct": 5.65,
+        "gap_eur": -564.57,
+        "rule_action": "TRIM",
+        "trade_eur": -564.57,
+        "tax_eur": 12.27,
+        "breakeven_pct": 2.373,
+        "reason": "5.7pp above target",
+        "regime_state": "intact",
+        "exit_action": "hold",
+        "flags": "",
+        "data_age": "blind (51d)"
+      },
+      {
         "sector_id": "pharma_large_cap",
         "etf": "IUHE.AS",
         "score_rank": 2,
@@ -620,21 +581,21 @@
         "data_age": "blind (148d)"
       },
       {
-        "sector_id": "cybersecurity_commercial",
-        "etf": "USPY.L",
+        "sector_id": "semiconductors_design",
+        "etf": "SEMI.L",
         "score_rank": 5,
-        "target_pct": 12.91,
-        "actual_pct": 5.65,
-        "gap_eur": 726.93,
+        "target_pct": 8.27,
+        "actual_pct": 4.6,
+        "gap_eur": 367.18,
         "rule_action": "ADD",
-        "trade_eur": 726.93,
+        "trade_eur": 367.18,
         "tax_eur": 0.0,
         "breakeven_pct": 0.199,
-        "reason": "rank 5, 7.3pp under target",
+        "reason": "rank 5, 3.7pp under target",
         "regime_state": "intact",
         "exit_action": "hold",
         "flags": "",
-        "data_age": "blind (51d)"
+        "data_age": "stale (88d)"
       },
       {
         "sector_id": "biotech_drug_development",
@@ -654,17 +615,34 @@
         "data_age": "blind (148d)"
       },
       {
+        "sector_id": "water_infrastructure",
+        "etf": "IH2O.L",
+        "score_rank": 6,
+        "target_pct": 14.87,
+        "actual_pct": 0.0,
+        "gap_eur": 1486.5,
+        "rule_action": "BUY",
+        "trade_eur": 1486.5,
+        "tax_eur": 0.0,
+        "breakeven_pct": 0.2,
+        "reason": "rank 6, not held, 14.9pp under target",
+        "regime_state": "intact",
+        "exit_action": null,
+        "flags": "",
+        "data_age": "stale (88d)"
+      },
+      {
         "sector_id": "robotics_automation",
         "etf": "RBOT.L",
         "score_rank": 4,
-        "target_pct": 14.76,
+        "target_pct": 12.81,
         "actual_pct": 0.0,
-        "gap_eur": 1476.0,
+        "gap_eur": 1281.0,
         "rule_action": "BUY",
-        "trade_eur": 1476.0,
+        "trade_eur": 1281.0,
         "tax_eur": 0.0,
         "breakeven_pct": 0.2,
-        "reason": "rank 4, not held, 14.8pp under target",
+        "reason": "rank 4, not held, 12.8pp under target",
         "regime_state": "intact",
         "exit_action": null,
         "flags": "",
@@ -688,9 +666,7 @@
         "data_age": "stale (88d)"
       }
     ],
-    "holds": [
-      "semiconductors_design"
-    ],
+    "holds": [],
     "swaps": [
       {
         "from_sector": "copper_miners",
@@ -705,6 +681,21 @@
         "fee_eur": 0.0,
         "friction_eur": 13.87,
         "breakeven_pct": 1.32,
+        "horizon_days": 63
+      },
+      {
+        "from_sector": "cybersecurity_commercial",
+        "from_etf": "USPY.L",
+        "to_sector": "biotech_drug_development",
+        "to_etf": "BTEC.L",
+        "from_action": "TRIM",
+        "to_action": "BUY",
+        "moved_eur": 449.12,
+        "tax_eur": 9.76,
+        "spread_eur": 1.8,
+        "fee_eur": 0.0,
+        "friction_eur": 11.56,
+        "breakeven_pct": 2.574,
         "horizon_days": 63
       }
     ],
@@ -734,6 +725,17 @@
         "overweight_need_pp": null
       },
       {
+        "sector_id": "cybersecurity_commercial",
+        "etf": "USPY.L",
+        "unrealized_pct": 12.91,
+        "rank": 7,
+        "action": "TRIM",
+        "live": true,
+        "ladder_need_gain_pct": 12.09,
+        "ladder_rank_ok": true,
+        "overweight_need_pp": null
+      },
+      {
         "sector_id": "pharma_large_cap",
         "etf": "IUHE.AS",
         "unrealized_pct": 11.27,
@@ -745,25 +747,14 @@
         "overweight_need_pp": 13.44
       },
       {
-        "sector_id": "cybersecurity_commercial",
-        "etf": "USPY.L",
-        "unrealized_pct": 12.91,
-        "rank": 5,
-        "action": "ADD",
-        "live": false,
-        "ladder_need_gain_pct": 12.09,
-        "ladder_rank_ok": false,
-        "overweight_need_pp": 11.26
-      },
-      {
         "sector_id": "semiconductors_design",
         "etf": "SEMI.L",
         "unrealized_pct": -7.99,
-        "rank": 6,
-        "action": "HOLD",
+        "rank": 5,
+        "action": "ADD",
         "live": false,
         "ladder_need_gain_pct": 32.99,
-        "ladder_rank_ok": true,
+        "ladder_rank_ok": false,
         "overweight_need_pp": 7.67
       }
     ],
@@ -838,17 +829,19 @@
     {
       "catalyst_id": "struct_ai_capex_supercycle",
       "current_eur": 1500.0,
-      "proposed_eur": 2381.25,
-      "post_eur": 3881.25,
-      "post_pct": 38.8,
+      "proposed_eur": 4039.93,
+      "post_eur": 5539.93,
+      "post_pct": 55.4,
       "cap_pct": 30.0,
-      "over_by_eur": 881.25,
+      "over_by_eur": 2539.93,
       "over": true,
-      "risk_ctr_pct": 50.55,
-      "risk_standalone_vol_pct": 11.05,
+      "risk_ctr_pct": 73.7,
+      "risk_standalone_vol_pct": 14.47,
       "sectors": [
         "cloud_software_saas",
-        "robotics_automation"
+        "robotics_automation",
+        "semiconductors_design",
+        "water_infrastructure"
       ]
     }
   ],
@@ -858,7 +851,7 @@
   },
   "scorecard": {
     "horizon_days": 63,
-    "n_pending": 61,
+    "n_pending": 69,
     "rows": [],
     "effective_windows": 0,
     "scoreable": false,
