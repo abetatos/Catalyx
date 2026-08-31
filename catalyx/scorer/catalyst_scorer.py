@@ -455,6 +455,12 @@ def main() -> None:
         "--json", action="store_true",
         help="Output raw JSON only"
     )
+    parser.add_argument(
+        "--digest", action="store_true",
+        help="One line per sector: alignment, regime_state, confirm/contradict counts. This is "
+             "everything the review consumes; the full --all JSON is ~78 KB of per-event trace "
+             "that only matters when a single sector is being debugged."
+    )
     args = parser.parse_args()
 
     if args.all or args.sector_id is None:
@@ -464,6 +470,18 @@ def main() -> None:
 
     if args.json:
         print(json.dumps(results if len(results) > 1 else results[0], indent=2, ensure_ascii=False))
+        return
+
+    if args.digest:
+        print(f"{'sector_id':<45}{'align':>7}{'regime':>11}{'conf':>6}{'contra':>7}  review?")
+        for r in sorted(results, key=lambda x: x.get("catalyst_alignment") or 0.0, reverse=True):
+            rels = [ev.get("relation") for sc in r.get("breakdown", []) for ev in sc.get("events", [])]
+            rels += [de.get("relation") for de in r.get("direct_events", [])]
+            n_conf = sum(1 for x in rels if x == "confirms")
+            n_contra = sum(1 for x in rels if x == "contradicts")
+            flag = " ⚠ regime review" if r.get("regime_review_recommended") else ""
+            print(f"{r['sector_id']:<45}{r.get('catalyst_alignment') or 0.0:>7.1f}"
+                  f"{str(r.get('regime_state') or '—'):>11}{n_conf:>6}{n_contra:>7}{flag}")
         return
 
     print("CATALYX — Catalyst Alignment Scorer\n")
@@ -505,8 +523,6 @@ def main() -> None:
             )
         print()
 
-    print("--- JSON output ---")
-    print(json.dumps(results if len(results) > 1 else results[0], indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":

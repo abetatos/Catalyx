@@ -90,8 +90,20 @@ def _crowding_for(maturity: str | None) -> float:
     return float(weights.crowding_from_maturity().get(maturity, 35))
 
 
-def _primary_etf(sector_id: str) -> str | None:
-    """Best primary ETF ticker for a sector: prefer UCITS + recommendation_tier 1."""
+def primary_etf(sector_id: str) -> str | None:
+    """The vehicle this sector is actually BUYABLE through, or None. One definition, one place.
+
+    UCITS only. The old implementation fell back to the non-UCITS pool (`pool = ucits or etfs`)
+    when a sector had no UCITS entry, which is how `BUY biotech_drug_development €891` came to be
+    printed against **IBB** — a US ETF that PRIIPs makes impossible for this account — on
+    2026-08-28, while `etf_universe.yaml` had carried BTEC.L since the 08-27 universe cut.
+
+    A silent fallback to an unbuyable ticker is strictly worse than `None`: `None` is a fact the
+    caller can act on (drop the sector, substitute another), a US ticker is a recommendation that
+    looks actionable and is not. Sector-level `investable` is NOT the same guarantee — that flag
+    lives in the taxonomy and can lag the universe file — so the vehicle is resolved here, from
+    `etf_universe.yaml`, every time it is needed.
+    """
     try:
         data = yaml.safe_load(_ETF_PATH.read_text(encoding="utf-8")) or {}
     except FileNotFoundError:
@@ -101,9 +113,13 @@ def _primary_etf(sector_id: str) -> str | None:
     if not isinstance(etfs, list) or not etfs:
         return None
     ucits = [e for e in etfs if e.get("ucits")]
-    pool = ucits or etfs
-    pool = sorted(pool, key=lambda e: e.get("recommendation_tier", 9))
-    return pool[0].get("ticker")
+    if not ucits:
+        return None
+    return sorted(ucits, key=lambda e: e.get("recommendation_tier", 9))[0].get("ticker")
+
+
+# Internal alias kept so the existing call sites read unchanged.
+_primary_etf = primary_etf
 
 
 def _rationale_md(sector_id: str) -> str | None:

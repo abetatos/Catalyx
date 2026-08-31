@@ -257,8 +257,6 @@ def main() -> None:
             f"6m={rr.get('return_6m', 'n/a')})"
         )
 
-    print("\n--- JSON output ---")
-    print(json.dumps(result, indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":

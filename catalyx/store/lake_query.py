@@ -83,18 +83,60 @@ def rank_moves(top_n: int = 10, lake_dir: Path | None = None) -> list[dict]:
     return df.to_dict(orient="records")
 
 
-def portfolio_compare(lake_dir: Path | None = None) -> list[dict]:
-    """Latest NAV/return per portfolio (model and real) — the risk-profile comparison."""
+def portfolio_compare(lake_dir: Path | None = None, model_id: str = "catalyx") -> list[dict]:
+    """Latest NAV/return per portfolio (model and real) — the risk-profile comparison.
+
+    `return_pct` on the real book is TIME-WEIGHTED (contributions neutralized), which is what
+    makes it comparable to the model books and to the benchmark; `mwr_pct` is the money-weighted
+    IRR carried on that book's final row. See nav_engine.compute_real_nav.
+    """
     if not _has("portfolio_nav", lake_dir):
         return []
+    # `portfolio_nav` holds backtest / live / forward rows under the SAME portfolio_id, and they
+    # share a last date — so ordering by date alone broke ties arbitrarily and this table could
+    # show a model book's HYPOTHETICAL backtest return next to the real book's actual one, or
+    # flip between them run to run. Same rule position_metrics._nav_series already applies: live
+    # is the record, backtest is reference-only until live history accrues.
+    #
+    # Both `mode` and `mwr_pct` are probed rather than assumed: the lake is append-only and older
+    # partitions predate them, so a hard reference would break reading historical data.
+    cols = set(_df("SELECT * FROM portfolio_nav LIMIT 0", None, lake_dir).columns)
+    sel = ["portfolio_id", "kind", "date", "nav", "return_pct", "benchmark_etf", "vs_benchmark_pct"]
+    sel += [c for c in ("mode", "mwr_pct") if c in cols]
+    order = ("CASE WHEN mode = 'live' THEN 0 WHEN mode IS NULL THEN 1 "
+             "     WHEN mode = 'backtest' THEN 2 ELSE 3 END, date DESC") if "mode" in cols \
+        else "date DESC"
     df = _df(
-        "SELECT portfolio_id, kind, date, nav, return_pct, benchmark_etf, vs_benchmark_pct "
-        "FROM portfolio_nav "
-        "QUALIFY row_number() OVER (PARTITION BY portfolio_id ORDER BY date DESC) = 1 "
+        f"SELECT {', '.join(sel)} FROM portfolio_nav "
+        f"QUALIFY row_number() OVER (PARTITION BY portfolio_id ORDER BY {order}) = 1 "
         "ORDER BY return_pct DESC",
         None, lake_dir,
     )
-    return df.to_dict(orient="records")
+    rows = df.to_dict(orient="records")
+
+    # EXECUTION ALPHA — the real book against the model book it is meant to implement.
+    # The cheapest honest self-assessment in the repo, and nothing computed it: on 2026-08-27 the
+    # real book was 5.4pp behind SPY and 3.8pp AHEAD of `catalyx`, i.e. the human's deviations
+    # from the rule table had been worth +3.8pp. A table that scores overrides but never scores
+    # the rules they deviate from is a one-sided ledger.
+    #
+    # Only computed when both curves END ON THE SAME DATE. Model NAVs are rebuilt by post_run.sh
+    # and can lag the real book by a run; differencing two curves that stop on different days
+    # reports a calendar gap as skill.
+    real = next((r for r in rows if r.get("kind") == "real"), None)
+    model = next((r for r in rows if r.get("portfolio_id") == model_id
+                  and r.get("kind") != "real"), None)
+    if real is not None and model is not None:
+        same_day = str(real.get("date"))[:10] == str(model.get("date"))[:10]
+        real["execution_alpha_vs"] = model_id
+        real["execution_alpha_pp"] = (
+            round(float(real["return_pct"]) - float(model["return_pct"]), 2)
+            if same_day and real.get("return_pct") is not None
+            and model.get("return_pct") is not None else None)
+        real["execution_alpha_note"] = None if same_day else (
+            f"not comparable — real book to {str(real.get('date'))[:10]}, {model_id} to "
+            f"{str(model.get('date'))[:10]}. Re-run scripts/post_run.sh.")
+    return rows
 
 
 def portfolio_holdings(portfolio_id: str, lake_dir: Path | None = None) -> list[dict]:

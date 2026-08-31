@@ -205,3 +205,18 @@ def test_the_real_universe_file_yields_the_whole_book():
     # shrinking the cache to benchmarks.
     got = prices.universe_tickers()
     assert len(got) > 20, f"only {len(got)} tickers parsed from the real etf_universe.yaml"
+
+
+def test_the_offline_switch_cannot_leak_in_from_the_developers_shell():
+    """D-f: the suite's result must not depend on the environment it was launched from.
+
+    `CATALYX_PRICES_OFFLINE=1` is a HARD kill switch — `refresh` honours it even when the caller
+    injects its own `fetch_fn`, which is the right contract, because a kill switch an argument can
+    override is not a kill switch. The consequence was that six tests injecting a fake fetcher and
+    touching no network failed if that variable happened to be exported. `tests/conftest.py` clears
+    it per test; the one test that is ABOUT offline behaviour sets it itself.
+    """
+    import os
+
+    assert os.environ.get("CATALYX_PRICES_OFFLINE") is None
+    assert prices._offline() is False

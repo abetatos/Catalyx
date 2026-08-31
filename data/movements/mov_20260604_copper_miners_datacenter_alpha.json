@@ -1,7 +1,7 @@
 {
   "$schema": "catalyx/schemas/movement.json",
   "id": "mov_20260604_copper_miners_datacenter_alpha",
-  "schema_version": "1.1",
+  "schema_version": "1.3",
   "executed_at": "2026-06-05T00:00:00Z",
   "action": "open",
   "sector_id": "copper_miners",
@@ -11,17 +11,34 @@
     "currency": "EUR"
   },
   "amount_eur": 1000.0,
-  "qty": 16.50,
+  "qty": 16.5,
   "price": 60.62,
   "fees": 0.0,
-
   "attribution": [
-    { "catalyst_id": "struct_copper_datacenter_demand", "weight": 1.0 }
+    {
+      "catalyst_id": "struct_copper_datacenter_demand",
+      "weight": 1.0
+    }
   ],
-
+  "reattribution": [
+    {
+      "as_of": "2026-08-31",
+      "attribution": [
+        {
+          "catalyst_id": "struct_ai_capex_supercycle",
+          "weight": 0.65
+        },
+        {
+          "catalyst_id": "struct_energy_transition_grid",
+          "weight": 0.35
+        }
+      ],
+      "rationale": "Opened 2026-06-05 on struct_copper_datacenter_demand, since merged into struct_ai_capex_supercycle — the merge is why the id changes, not a change of mind. What IS new: the study now also names struct_energy_transition_grid, and grid electrification is a distinct economic driver of copper demand (transmission build-out, not datacenter racks) that would survive an AI capex pause. Datacenter demand was the opening thesis and stays primary at 0.65. Weights split P&L credit only; both drivers carry the full EUR1,000 in the cap.",
+      "author": "user"
+    }
+  ],
   "trigger": "new_catalyst",
   "conviction": "medium",
-
   "score_context": {
     "run_id": null,
     "rank": null,
@@ -32,7 +49,6 @@
     "crowding": null,
     "regime_state": null
   },
-
   "risk_discipline": {
     "invalidation": [
       {
@@ -130,15 +146,21 @@
     ],
     "note": "Migrated from legacy thesis_20260603_copper_miners_datacenter_alpha (v4). Full position €1,000, bought on the dip 2026-06-04 — no rebalance (held in full). asm_02 (supply tightness) is weakening but that is a monitoring flag, not an exit. Re-rating mechanism: Goldman/JPM/BofA moving DC copper demand from scenario to base case (6–18 months after specialist reports). Horizon 8–52 weeks."
   },
-
   "migrated_from_thesis_id": "thesis_20260603_copper_miners_datacenter_alpha",
   "run_id": null,
-
   "metadata": {
     "created_at": "2026-06-06T00:00:00Z",
     "created_by": "abetatos",
     "fill_note": "€1,000 full amount, bought on the dip 2026-06-05 (Fri). Vehicle is WisdomTree Copper — Revolut labels it '4COP'; the yfinance-resolvable listing is 4COP.DE (Xetra, EUR). amount_eur=1000 is authoritative; actual fill price €60.62 → qty 16.50 (user-confirmed 2026-06-06; current ≈€55.49).",
     "tax_entry_year": 2026,
-    "tags": ["copper", "data_center", "AI", "structural", "commodities", "mispricing", "narrative_trade"]
+    "tags": [
+      "copper",
+      "data_center",
+      "AI",
+      "structural",
+      "commodities",
+      "mispricing",
+      "narrative_trade"
+    ]
   }
 }

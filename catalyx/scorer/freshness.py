@@ -112,6 +112,63 @@ def overdue(as_of: date | None = None, include_inactive: bool = False) -> list[d
     return [r for r in audit_indicators(as_of, include_inactive) if r["stale"]]
 
 
+# `blind` is a harder state than `stale`: nothing observed within TWICE the cadence. One missed
+# quarter is a late reading; two is a catalyst whose intensity score is describing a world nobody
+# has looked at. The multiple is deliberate — a single overdue quarterly indicator would otherwise
+# tar a catalyst that is merely a few weeks late.
+BLIND_MULTIPLE = 2.0
+
+
+def by_catalyst(as_of: date | None = None, include_inactive: bool = False) -> dict[str, dict]:
+    """Per catalyst: how blind is it, and which indicator is the worst offender.
+
+    WHY (plan v5 §2 E1). §8 of the review listed 41 overdue indicators and §3 ordered €1,020 into
+    `luxury_goods` on the same page — where the `catalyst_alignment` that justified it IS the
+    intensity of a catalyst two of whose indicators had not been observed since 2025-09-30. Both
+    facts were printed and neither knew about the other. This is the rollup that lets a spending
+    row carry its own data age.
+
+    Status is a THREE-level verdict, never a number: `fresh` · `stale` (something overdue) ·
+    `blind` (nothing inside `BLIND_MULTIPLE` × its cadence). It qualifies an action; it never
+    takes one — a stale reading is a reason to re-verify, not a reason to stop buying.
+    """
+    out: dict[str, dict] = {}
+    for r in audit_indicators(as_of, include_inactive):
+        cid = str(r["catalyst_id"])
+        c = out.setdefault(cid, {"catalyst_id": cid, "n_indicators": 0, "n_stale": 0,
+                                 "worst_days_over": 0, "worst_indicator_id": None,
+                                 "worst_cadence": None, "worst_last_date": None,
+                                 "status": "fresh"})
+        c["n_indicators"] += 1
+        if not r["stale"]:
+            continue
+        c["n_stale"] += 1
+        # A missing `last_date` is the most blind state there is — it has never been observed at
+        # all — so it outranks any finite lateness rather than sorting as zero days over.
+        days, lim = r.get("days_since"), r.get("threshold_days") or 0
+        over = float("inf") if days is None else int(days) - int(lim)
+        if over > c["worst_days_over"] or c["worst_indicator_id"] is None:
+            c.update(worst_days_over=over, worst_indicator_id=r.get("indicator_id"),
+                     worst_cadence=r.get("cadence"), worst_last_date=r.get("last_date"),
+                     worst_threshold_days=lim)
+    for c in out.values():
+        if not c["n_stale"]:
+            continue
+        lim = c.get("worst_threshold_days") or 0
+        # days_since = threshold + days_over; blind once that exceeds BLIND_MULTIPLE × cadence.
+        c["status"] = ("blind" if c["worst_days_over"] == float("inf")
+                       or lim + c["worst_days_over"] > BLIND_MULTIPLE * lim else "stale")
+        if c["worst_days_over"] == float("inf"):
+            c["worst_days_over"] = None
+            c["label"] = f"blind ({c['worst_indicator_id']} never observed)"
+        else:
+            c["label"] = f"{c['status']} ({c['worst_days_over']:.0f}d)"
+    for c in out.values():
+        c.setdefault("label", "fresh")
+        c.pop("worst_threshold_days", None)
+    return out
+
+
 def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")

@@ -550,6 +550,42 @@ portfolio_weighting:
                                 # (z-range ≈ ±1.8 → ratio ≈ exp(0.25·3.3) ≈ 2.3x before the cap)
   rebalance_deadband_pct: 1.0   # |target − held| < this (pp) → keep held (no trade)
 
+  # RISK-BUDGETED SIZING (plan v4 §2 A4).  w_i ∝ transform(score_i) / σ_i^alpha
+  # The composite decides WHAT to own and with how much conviction; the euro amount then ignored
+  # the only input that makes two euros comparable. On the 2026-08-28 book `semiconductors_design`
+  # (vol 55%) and `pharma_large_cap` (vol 18%) were sized as if they were the same bet — semis
+  # carries ~3x the risk per euro.
+  #   alpha = 0    → today's behaviour (score-proportional, vol ignored)
+  #   alpha = 0.5  → DEFAULT: halves the risk dispersion without turning a momentum book into a
+  #                  low-vol fund. Full inverse-vol (1.0) systematically underweights exactly the
+  #                  high-beta sectors a catalyst-driven mandate exists to own.
+  # water_fill at `max_position_pct` runs AFTER the tilt, so the cap and the deadband are
+  # untouched. Vol is annualized over `vol_lookback_days` of the sector's OWN traded vehicle; a
+  # sector with no usable price history falls back to the median vol, never to zero (which would
+  # divide into an infinite weight).
+  vol_tilt_alpha: 0.5
+  vol_lookback_days: 120
+  min_vol_pct: 5.0              # floor, so a stale/flat series cannot manufacture a huge weight
+
+  # SKILL SHRINKAGE (plan v4 §3 B1).  w_final ∝ neutral + λ·(model − neutral)
+  # The pipeline fused two decisions into one number. HOW MUCH IS AT WORK is beta — justified by
+  # the equity risk premium, not by this model's skill — and stays with `deploy_ratio`. HOW THE
+  # WORKING CAPITAL IS TILTED is alpha, and its only justification is the measured rank IC of the
+  # column doing the ranking. That IC is currently −0.05 against se 0.20 on ONE non-overlapping
+  # window, and the softmax was dispersing weights exactly as hard as it would on an IC of +0.4.
+  #   λ = clamp(IC / tilt_ic_target, 0, 1) · n_eff/(n_eff + tilt_prior_windows)
+  # A negative IC clamps λ to 0; it never inverts the book (shorting your own ranking on n_eff=1
+  # is a superstition with a minus sign). λ=0 is NOT "no model": the model still selects the
+  # names, applies the filters and the cap, and the book stays fully deployed — it just declines
+  # to also size them until the ordering has earned it. λ=1 is the pre-v4 behaviour exactly.
+  # The regime haircut rides on the NEUTRAL leg too, so a contested sector stays de-risked at λ=0.
+  tilt_shrinkage: true
+  tilt_ic_target: 0.20          # the IC at which the tilt is taken at full size. ~1·se at n=26 —
+                                # deliberately the same bar `net_edge_gate.min_abs_ic` uses.
+  tilt_prior_windows: 3.0       # credibility = n_eff/(n_eff+3): one independent 63d window buys
+                                # 25% of the tilt even if the IC is good. Three ≈ 9 months.
+  tilt_lambda_floor: 0.0        # no minimum tilt. Raise only with a CHANGELOG line.
+
 # Correlated-catalyst combined allocation cap (portfolio concentration control)
 # DISTINCT from conviction_tiers above: those size a SINGLE position by conviction.
 # This caps the SUM of allocations across all open/draft theses that share the same
@@ -809,6 +845,15 @@ rebalance_rules:
     exit_watcher: [reduce]
     reduce_fraction: 0.5       # "reduce" = halve the line, not a token trim
 
+  # RE-SCORE — "we do not know" is a real state, and it used to masquerade as SELL (plan v4 D6).
+  # `rank_out_streak` counted a MISSING rank as "outside the cut", so a sector absent from a run's
+  # sector_snapshot — including absent because the universe changed shape — accumulated a sell
+  # signal out of data that was never collected. A missing rank now BREAKS the streak, and a
+  # sector missing from enough of the recent runs gets its own non-money action instead.
+  rescore_if:
+    lookback_runs: 4           # the window `_rank_streaks` already reads
+    missing_runs_min: 2        # absent from this many of them → RE-SCORE, not SELL and not HOLD
+
   # Anti-cash-hoarding. deploy_ratio = clamp(base + step·(n_intact_top − intact_min)
   #                                          − vix_penalty·[VIX > vix_pause_above], floor, 1.0)
   # Printed with its inputs every run, so "we are holding cash" becomes a number with a reason.
@@ -827,6 +872,13 @@ rebalance_rules:
                                # VIX > 30). It floors the TARGET, never forces a buy: a book whose
                                # positions are all SELL by rule goes to cash through the SELL rows.
     ceiling: 1.00
+    # PERSISTENCE (plan v4 §4 C1). `UNDER-deployed by €5,454` printed for months as a line of text
+    # nobody had to answer. A shortfall bigger than `max_shortfall_pp` points of TOTAL capital
+    # that survives `max_shortfall_runs` consecutive RECORDED reviews must be executed or
+    # overridden in writing, naming the shortfall itself, with the cash drag priced beside it.
+    # Counted per REVIEW DATE, never per run id: two runs in one afternoon are one review.
+    max_shortfall_pp: 10.0
+    max_shortfall_runs: 2
 
   # Does the trade pay after tax? Asymmetric BY DESIGN, and the asymmetry is the point:
   #   - a sale that REALIZES a gain pays Spanish CGT now, irreversibly → it must clear the gate
@@ -844,6 +896,18 @@ rebalance_rules:
                                    # net is just "−(tax + spread)", so every taxable sale fails
                                    # forever and an unmeasured quantity has quietly become a veto.
                                    # 3 non-overlapping 63d windows ≈ 9 months of walk-forward.
+    # A window COUNT is not enough (plan v4 §0.2 D5). The buckets the gate would use come from
+    # the same ranking whose composite IC is currently NEGATIVE, so `E[r|top3] < E[r|rest]`: the
+    # moment the third window landed, the gate would have started blocking sales out of the
+    # bottom bucket and waving through sales out of the top — inverting the profit-taking rule on
+    # a sample the calibration module itself labels `noise`. An unmeasured quantity must not
+    # become a veto (v3's insight); a measurably INVERTED one must not become a decision rule.
+    requires:
+      min_independent_windows: 3   # same bar as above, restated as part of the joint condition
+      min_abs_ic: 0.20             # ≈ 1·se at n=26 sectors. Not "significant" — but not noise-only
+      ic_sign_must_be_positive: true   # a NEGATIVE IC DISABLES the gate. It never inverts it:
+                                   # "our ranking is backwards" is a scoring problem to fix, never
+                                   # a licence to trade the ranking upside down.
 
   # ── Overrides — the ONE sanctioned place to disagree with the table (plan §4.3/§7.3) ──
   # FROZEN DECISION: both the user and Claude may override, and BOTH are scored. Making the
@@ -859,8 +923,25 @@ rebalance_rules:
   # Positive = the deviation beat the rule. `rule_cost_eur` (the CGT + spread the rule would have
   # paid) is reported ALONGSIDE, never added in: avoiding a taxable sale defers tax, it does not
   # earn it, and folding a deferral into the score would let "I didn't sell" win by arithmetic.
+  # RULE SCORECARD (plan v4 §3 B4). Overrides have been scored since v3; the rules they deviate
+  # FROM never were, and a table whose own record is never priced is unfalsifiable by
+  # construction. `score_decisions` prices every recorded rule_action over a complete forward
+  # window and reads it against the HOLD baseline — "did acting beat leaving the book alone",
+  # not "did the names go up", which is beta and belongs to the deployment ratio.
+  # It is EVIDENCE FOR a config edit, never an edit: thresholds stay frozen.
+  scorecard:
+    horizon_days: 63             # same window calibration uses — one decision horizon
+    min_n: 5                     # rows in a bucket before it earns a verdict
+    min_effective_windows: 2     # …and non-overlapping horizons, because five runs inside one
+                                 # window are one observation, not five.
+
   overrides:
-    authors_allowed: [user, claude]
+    authors_allowed: [user, claude, unrecorded]
+                                   # `unrecorded` is written by the MACHINE, never by a person:
+                                   # `_log_unrecorded` records a previous run's non-HOLD row that
+                                   # produced no movement and no override, as a DEFER. Quiet was
+                                   # the cheapest form of conservatism and it was free; now it is
+                                   # tallied by author like every other deviation.
     reason_required: true          # an override with no reason is not an override, it is a mood
     defer_is_an_override: true     # "revisit next cycle" IS a deviation. Log it.
     score_after_trading_days: 21   # ≈ one month of closes — enough for the price difference to
@@ -868,3 +949,16 @@ rebalance_rules:
     claude_suspended_if:           # the escape hatch closes on evidence, not on argument
       min_scored: 5                # …never on a sample of one bad call
       net_edge_eur_below: 0.0      # cumulative, scored overrides authored by claude
+
+# ── Risk-metric reliability (position_metrics, build_site) ────────────────────
+# Vol/Sharpe/beta computed over a short window are estimates with an error bar wider than the
+# estimate itself: 59 daily observations put this book's Sharpe at 0.78 ± 4.6 (95%). That is not
+# a measurement, and printing it with two decimals beside a benchmark invites treating two months
+# of noise as evidence. These thresholds decide when the dashboard SHOWS the number as a finding
+# versus as "still accumulating history". Nothing here changes a score — display + honesty only.
+risk_metrics:
+  min_days_for_sharpe: 120   # daily observations before Sharpe/beta read as a finding rather than
+                             # as an indication. ~6 months; a Sharpe of 1 needs ~3 YEARS to clear
+                             # zero, so this is a floor against nonsense, not a claim of rigour.
+  min_days_for_vol: 30       # vol converges faster than a ratio of mean to vol (no mean to
+                             # estimate), so it earns a lower bar than Sharpe.

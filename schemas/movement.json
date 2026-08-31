@@ -1,11 +1,12 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://catalyx/schemas/movement.json",
-  "schema_version": "1.2",
+  "schema_version": "1.3",
   "_changelog": [
     "1.0 (2026-06-06): Initial schema. Replaces Thesis as the primary capital-allocation unit. A Movement is a capital event (open/add/trim/close) attributed directly to one or more catalysts, with a trigger, a conviction, and a point-in-time score_context snapshot for no-look-ahead backtesting. The falsifiable discipline (assumptions + invalidation) survives as an OPTIONAL, machine-checkable risk_discipline block (design decision: option 1, attached to the position via its movements). See docs/PLAN_movement_restructure.md.",
     "1.1 (2026-06-07): ADDITIVE — structured eval fields on risk_discipline.invalidation[] (comparator/threshold/consecutive_days/eval_ticker/eval_note) so the planned exit_watcher can evaluate price stops DETERMINISTICALLY instead of parsing free-text English. `condition` stays the human description; `stop_price_level`/`stop_price_ticker` stay the native human-facing pair; the new fields are the machine-checkable pair (threshold in eval_ticker's units, eval_ticker yfinance-resolvable or null ⇒ Claude-checked). All optional, only set for market_data stops. No fields removed. Sell-signal design: docs/DESIGN_sell_signals.md §6. profit_take[] (Family 3) deferred.",
-    "1.2 (2026-06-07): ADDITIVE — `outcome` block (set on close/trim only). Turns a closed movement into a registered EXPERIMENT: the result (realized P&L gross + after-tax, holding_days, return_pct), the right-thesis × right-reason VERDICT matrix (was the bet right, AND right for the stated reason?), the captured behavioral self-reflection (exit_note in-the-moment + append-only additional_notes for later realizations — the original is never overwritten so the in-the-moment read survives), the exit-signal context (did you follow exit_watcher or override it?), and the per-assumption resolution at close. `pnl`/`behavioral_flags`/`verdict` are COMPUTED by catalyx.attribution.outcome; the rest are captured at /catalyx-close. No fields removed. The deleted ClosedThesis/right_reason_score, rebuilt on the Movement model. See docs/DESIGN_experiment_ledger.md."
+    "1.2 (2026-06-07): ADDITIVE — `outcome` block (set on close/trim only). Turns a closed movement into a registered EXPERIMENT: the result (realized P&L gross + after-tax, holding_days, return_pct), the right-thesis × right-reason VERDICT matrix (was the bet right, AND right for the stated reason?), the captured behavioral self-reflection (exit_note in-the-moment + append-only additional_notes for later realizations — the original is never overwritten so the in-the-moment read survives), the exit-signal context (did you follow exit_watcher or override it?), and the per-assumption resolution at close. `pnl`/`behavioral_flags`/`verdict` are COMPUTED by catalyx.attribution.outcome; the rest are captured at /catalyx-close. No fields removed. The deleted ClosedThesis/right_reason_score, rebuilt on the Movement model. See docs/DESIGN_experiment_ledger.md.",
+    "1.3 (2026-08-31): ADDITIVE — append-only `reattribution[]`. `attribution[]` answers WHY the position was opened: a dated judgement, and the input the validation loop scores, so it is never rewritten. But a position's drivers move — `copper_miners` was opened on datacenter copper demand and its study now also names grid electrification; `pharma_large_cap` was opened `uncatalyzed` and now shares a structural catalyst with a €978 BUY on the same table. `correlated_catalyst_cap` asks a PRESENT-TENSE question and was being answered with the opening record. Each entry carries `as_of`, the new `attribution[]`, an optional `not_attributed[]` (drivers the review saw and declined to claim — so the drift check stops re-raising an answered question), and a `rationale`. Latest `as_of` wins; readers use `movement_repo.effective_attribution()`. Documents without the field read exactly as before. No fields removed."
   ],
   "title": "Movement",
   "description": "A single capital movement attributed to catalyst(s). The unit of the track record: catalysts accumulate P&L across the movements attributed to them. Real money, EUR. Derived objects (Position = net of movements; CatalystLedger = P&L by catalyst) are computed, never authored.",
@@ -85,6 +86,40 @@
       "type": "string",
       "enum": ["small", "medium", "high"],
       "description": "Magnitude reason. Pairs with action: a 'small' escalation add vs a 'high' deliberate open. Drives the expected size relative to conviction_tiers."
+    },
+
+    "reattribution": {
+      "type": "array",
+      "description": "APPEND-ONLY log of what this position is held for NOW (schema 1.3). `attribution[]` above stays frozen — it is the dated record of why the line was opened and what the validation loop scores. This is the present-tense answer, and it is what `correlated_catalyst_cap` reads via movement_repo.effective_attribution(). Latest `as_of` wins. Never edit an entry: append a new one.",
+      "items": {
+        "type": "object",
+        "required": ["as_of", "attribution", "rationale"],
+        "additionalProperties": false,
+        "properties": {
+          "as_of": { "type": "string", "format": "date", "description": "Date the re-attribution was decided." },
+          "attribution": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Same shape as `attribution[]`; weights sum to 1.0. Weights split P&L CREDIT only — the cap reads the full position behind every driver named, so declaring a second driver can never buy headroom on the first.",
+            "items": {
+              "type": "object",
+              "required": ["catalyst_id", "weight"],
+              "additionalProperties": false,
+              "properties": {
+                "catalyst_id": { "type": "string" },
+                "weight": { "type": "number", "minimum": 0, "maximum": 1 }
+              }
+            }
+          },
+          "not_attributed": {
+            "type": "array",
+            "description": "Structural catalysts the sector study names that this review looked at and DECLINED to claim for this position. Recorded so attribution_drift stops re-raising an answered question; the rationale must say why.",
+            "items": { "type": "string" }
+          },
+          "rationale": { "type": "string", "description": "Why these drivers, and why not the declined ones. Prose, human-authored." },
+          "author": { "type": "string", "description": "Who decided. Defaults to the user." }
+        }
+      }
     },
 
     "score_context": {

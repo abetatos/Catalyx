@@ -27,10 +27,12 @@ quiet python -m catalyx.execution.portfolio build-all
 # but track_record.yaml states plainly that projecting today's holdings backwards is HYPOTHETICAL,
 # never a track record — so it cost 4 price windows a run to redraw a curve no decision may use.
 # It is still available on demand: `nav_engine model <id> --backtest-days N`.
+#
+# ONE process for all four (plan v4 D-f). This was a shell loop: four interpreter startups, four
+# import graphs and four passes over the same warm price cache, to answer four questions about
+# that one cache. 10.4s → 1.9s, identical numbers.
 echo "▶ live NAV vs SPY per strategy (the real walk-forward track record):"
-for p in catalyx momentum equal_weight low_crowding; do
-  uv run python -m catalyx.execution.nav_engine live "$p"
-done
+uv run python -m catalyx.execution.nav_engine live-all
 
 echo "▶ real-book NAV vs SPY:"
 uv run python -m catalyx.execution.nav_engine real real --benchmark SPY
@@ -64,6 +66,15 @@ echo ""
 echo "── REBALANCE — pipeline target vs the real book, in €, after tax ──"
 echo ""
 uv run python -m catalyx.execution.rebalance --strategy catalyx
+
+# THE state file for this run (v4 plan D-b). Everything above is now assembled into ONE JSON the
+# review reads instead of threading state_<date>.json + scan_deltas + three stdout digests + the
+# rebalance table through its own context by hand. It is read-only over the lake, so it runs LAST
+# and costs nothing; the compact summary it prints is what a reader actually needs.
+echo ""
+echo "── RUN DIGEST — one file, every deterministic fact this run produced ──"
+echo ""
+uv run python -m catalyx.store.run_digest --write
 
 echo ""
 echo "✅ post-run refresh complete. Report each strategy's vs_benchmark_pct from the digest above,"

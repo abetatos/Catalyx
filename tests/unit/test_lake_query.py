@@ -144,3 +144,19 @@ def test_empty_lake_returns_empty(tmp_path):
     assert q.lineage_for_movement("x", lake_dir=tmp_path) == {"error": "no movements in lake (run movement_repo ingest)"}
     assert q.portfolio_catalyst_exposure("x", lake_dir=tmp_path) == {
         "portfolio_id": "x", "notional_eur": None, "timeseries": [], "average": []}
+
+
+def test_portfolio_compare_prefers_live_over_backtest(tmp_path):
+    """backtest/live/forward share a portfolio_id AND a last date — the hypothetical curve must
+    never win the tie and be read as the track record."""
+    import pandas as pd
+    from catalyx.store import lake as _lake
+    _lake.append_partition("portfolio_nav", pd.DataFrame([
+        {"portfolio_id": "pf", "kind": "model", "mode": "backtest", "date": "2026-07-30",
+         "nav": 125.0, "return_pct": 25.0, "benchmark_etf": "SPY", "vs_benchmark_pct": 15.0},
+        {"portfolio_id": "pf", "kind": "model", "mode": "live", "date": "2026-07-30",
+         "nav": 95.0, "return_pct": -5.0, "benchmark_etf": "SPY", "vs_benchmark_pct": -4.0},
+    ]), {"portfolio_id": "pf"}, overwrite=True, lake_dir=tmp_path)
+    rows = q.portfolio_compare(lake_dir=tmp_path)
+    pf = [r for r in rows if r["portfolio_id"] == "pf"]
+    assert len(pf) == 1 and pf[0]["return_pct"] == -5.0

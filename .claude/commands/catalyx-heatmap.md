@@ -14,8 +14,13 @@ invisible — the goal is full-universe coverage every cycle.
    ```
    uv run python -m catalyx.store.structural_catalyst_repo summary
    uv run python -m catalyx.store.catalyst_repo summary
-   uv run python -m catalyx.store.sector_study_repo summary
+   uv run python -m catalyx.store.sector_study_repo core --all
    ```
+   `core --all` is the study digest: maturity · trend · age · catalyst count per sector, the only
+   study fields anything downstream consumes (`narrative_maturity` → crowding_risk,
+   `active_catalyst_ids` → the catalyst→sector map). A full study is ~20 KB of RESEARCH — the
+   reason those values are what they are — and it is opened by a human rewriting the study, or by
+   `sector_study_repo core <sector_id>` when one sector needs its notes, never 26 at a time.
    `sector_taxonomy.yaml` (713 lines), `scoring_weights.yaml` (749) and `etf_universe.yaml` (759)
    used to be read in full here — ~60–90k tokens per run to reproduce facts the Python already
    owns and applies: `sector_scorer` reads the weights, `snapshot_repo` picks the primary ETF,
@@ -37,7 +42,10 @@ invisible — the goal is full-universe coverage every cycle.
 
    ```
    uv run python -m catalyx.store.sector_study_repo stale --days 45
+   uv run python -m catalyx.store.sector_study_repo core --all --json   # for the driver test
    ```
+   The driver test needs each study's `active_catalyst_ids` against the scan's deltas — that is
+   what `core --all --json` carries, and it is the whole reason to read it instead of the files.
 
    **This gate WARNS; it does not block.** The old rule ("any study > 7 days → ⛔ HEATMAP
    BLOCKED") was unsatisfiable in practice and directly contradicted the review's own
@@ -73,13 +81,15 @@ invisible — the goal is full-universe coverage every cycle.
 
    Then run the scoring pipeline:
    ```bash
-   # Cross-sectional momentum percentile ranks across all sectors in snapshot
-   uv run python -m catalyx.scorer.momentum_engine --json
-
-   # Composite scores for all sectors
-   # Auto-loads latest momentum + flow snapshots; catalyst_alignment derived from sector studies
-   uv run python -m catalyx.scorer.sector_scorer --all --json
+   # Composite scores for all sectors — auto-loads the latest momentum + flow snapshots;
+   # catalyst_alignment derived from sector studies. ONE call: the digest carries the momentum
+   # percentile per sector, so the separate `momentum_engine --json` pass was scoring the same
+   # numbers twice and printing 12 KB to repeat a column. It is still there for the raw
+   # 1m/3m/6m returns when a narrative needs them: `momentum_engine` (table) or `--json`.
+   uv run python -m catalyx.scorer.sector_scorer --all --digest
    ```
+   Need a single sector's full breakdown? `sector_scorer <sector_id> --json`. Never `--all --json`
+   (100 KB, of which the ranking reads four fields).
 
    These outputs are the authoritative scores. Do NOT recompute catalyst_alignment, momentum, or flow manually.
 

@@ -41,6 +41,23 @@
 #   ter:            null en toda la v2.0 A PROPOSITO — la v1.1 traia TERs asociados a
 #                   fondos que resultaron ser otros. Rellenar solo leyendo el KID del
 #                   emisor. Ningun modulo de scoring lee este campo.
+#   spread_bps:     OPCIONAL — coste round-trip observado, en puntos basicos. Sin valor
+#                   se hereda el global de `scoring_weights.rebalance_rules.spread_bps`
+#                   (20bps). Existe porque el `b/e %` de la tabla de rebalance salia
+#                   IDENTICO (0.20%) en 7 de 8 filas: una constante no discrimina entre
+#                   un IUHE.AS liquido y un JEDI.DE fino, y el b/e es exactamente la
+#                   pregunta "¿cuanto tiene que batir el destino al origen?".
+#                   COMO SE MIDE: en la revision trimestral de AUM/spread que ya manda
+#                   CLAUDE.md — anota el numero observado en vez de emitir solo un
+#                   warning. >25bps sigue siendo warning de liquidez.
+#                   VACIO A PROPOSITO (2026-08-31). Se intento poblar de un `bid`/`ask`
+#                   de yfinance y el snapshot NO es usable: SEMI.L devolvio ask < bid
+#                   (14.324 < 14.442), y WCLD.L 463bps / GLUX.SW 193bps son cotizaciones
+#                   fuera de hora, no spreads de mercado. Un numero inventado en este
+#                   campo es PEOR que el default: el b/e dejaria de ser constante y
+#                   pareceria informativo siendo ruido. Se rellena con observaciones en
+#                   mercado abierto, a mano, en la revision trimestral — mismo estandar
+#                   que `name` (longName REAL) y `ter` (solo leyendo el KID).
 #
 # ETCs (gold_physical, silver_physical, COPA.L): juridicamente son notas cotizadas,
 # no fondos UCITS. Suelen estar disponibles, pero es la categoria con mas riesgo de

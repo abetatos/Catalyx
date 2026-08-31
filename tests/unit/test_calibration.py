@@ -159,3 +159,53 @@ def test_shrinkage_makes_a_thin_sample_a_number_not_a_caveat():
     assert cal.shrink_factor(0, 6.0) == 0.0                 # nothing measured → edge is exactly 0
     assert cal.shrink_factor(6, 6.0) == pytest.approx(0.5)
     assert cal.shrink_factor(60, 6.0) > 0.9
+
+
+# ── B1: λ — how much of the conviction tilt has been EARNED ──────────────────
+
+def _ic_frame(rows):
+    import pandas as pd
+    return pd.DataFrame(rows)
+
+
+def test_a_negative_ic_removes_the_tilt_and_never_inverts_the_book(monkeypatch):
+    # Shorting your own ranking on one non-overlapping window is a superstition with a minus
+    # sign. The honest response to an anti-signal that small is to stop sizing on it.
+    monkeypatch.setattr(cal, "composite_ic", lambda **kw: {
+        "ic": -0.40, "se": 0.2, "n_windows": 6, "effective_windows": 6, "verdict": "signal"})
+    lam = cal.skill_lambda(ic_target=0.20, prior_windows=3.0)
+    assert lam["lambda"] == 0.0
+    assert "never inverts" in lam["note"]
+
+
+def test_a_good_ic_on_one_window_still_only_buys_a_quarter_of_the_tilt(monkeypatch):
+    monkeypatch.setattr(cal, "composite_ic", lambda **kw: {
+        "ic": 0.40, "se": 0.2, "n_windows": 3, "effective_windows": 1, "verdict": "weak"})
+    # IC leg clamps at 1.0 (0.40/0.20 → capped); credibility 1/(1+3) = 0.25.
+    assert cal.skill_lambda(ic_target=0.20, prior_windows=3.0)["lambda"] == 0.25
+
+
+def test_lambda_reaches_one_only_on_a_good_ic_measured_often_enough(monkeypatch):
+    monkeypatch.setattr(cal, "composite_ic", lambda **kw: {
+        "ic": 0.25, "se": 0.05, "n_windows": 40, "effective_windows": 10_000,
+        "verdict": "signal"})
+    assert cal.skill_lambda(ic_target=0.20, prior_windows=3.0)["lambda"] == pytest.approx(1.0, abs=1e-3)
+
+
+def test_an_unmeasured_ic_earns_no_tilt(monkeypatch):
+    monkeypatch.setattr(cal, "composite_ic", lambda **kw: {
+        "ic": None, "se": None, "n_windows": 0, "effective_windows": 0, "verdict": "unmeasured"})
+    lam = cal.skill_lambda()
+    assert lam["lambda"] == 0.0 and "unmeasured" in lam["note"]
+
+
+def test_effective_windows_counts_horizons_not_rows():
+    # Three runs six days apart over a 63-day horizon are ONE observation. Dividing by the row
+    # count is how a single regime gets mistaken for a measured edge.
+    df = _ic_frame([{"start": "2026-06-06", "horizon_days": 63},
+                    {"start": "2026-06-08", "horizon_days": 63},
+                    {"start": "2026-06-12", "horizon_days": 63}])
+    assert cal._effective_windows(df) == 1
+    df2 = _ic_frame([{"start": "2026-01-01", "horizon_days": 63},
+                     {"start": "2026-06-01", "horizon_days": 63}])
+    assert cal._effective_windows(df2) == 2
