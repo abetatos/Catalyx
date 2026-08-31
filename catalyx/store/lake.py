@@ -80,6 +80,9 @@ TABLES: dict[str, tuple[str, list[str]]] = {
     "catalyst_performance": ("validation/catalyst_performance", ["as_of"]),
     # closed-experiment outcomes — one row per closed/trimmed movement (P&L + verdict + behavior)
     "movement_outcome":   ("validation/movement_outcome", ["mov_id"]),
+    # v8: point-in-time backtest ICs (experiments/backtest_signals.py) — its own table BY DESIGN,
+    # never mixed into sector_snapshot/calibration (those are the live, out-of-sample record)
+    "backtest_ic":        ("validation/backtest_ic",      ["as_of"]),
     # validation / forward returns (grows; unpartitioned)
     "forward_returns":    ("validation/forward_returns", []),
     # scoring calibration: per-run, per-dimension rank IC vs realized forward returns. This is

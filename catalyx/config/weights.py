@@ -48,9 +48,9 @@ def _section(name: str, default: dict) -> dict:
 # The weight was redistributed proportionally across the survivors (each × 1/0.85).
 _COMPOSITE_DEFAULT = {
     "catalyst_alignment": 0.35,
-    "momentum": 0.29,
+    "momentum": 0.275,
     "flow_confirmation": 0.24,
-    "crowding_risk": 0.12,
+    "crowding_risk": 0.135,
 }
 
 
@@ -80,6 +80,23 @@ _MOMENTUM_DEFAULT = {"return_1m": 0.0, "return_3m": 0.5625, "return_6m": 0.4375}
 
 def momentum_period_weights() -> dict:
     return _section("momentum_period_weights", _MOMENTUM_DEFAULT)
+
+
+# v8 Q1/Q2 — official-dimension specs. Defaults restore the pre-v8 behavior.
+_MOMENTUM_SPEC_DEFAULT = {
+    "mode": "3m6m",
+    "blend": {"momentum_12_1": 0.635, "near_52w_high": 0.365},
+}
+
+_CROWDING_SOURCE_DEFAULT = {"mode": "label"}
+
+
+def momentum_spec() -> dict:
+    return _section("momentum_spec", _MOMENTUM_SPEC_DEFAULT)
+
+
+def crowding_source() -> dict:
+    return _section("crowding_source", _CROWDING_SOURCE_DEFAULT)
 
 
 # ── Indicator scoring (intensity_engine) ─────────────────────────────────────

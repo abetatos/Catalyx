@@ -14,6 +14,53 @@
 
 
 
+## v8.0 — Backtest punto-en-tiempo y promoción de candidatas: 12-1, comomentum y el reparto GK (2026-08-31)
+
+**El usuario decidió que esperar ~3 ventanas vivas (≈2027-05) para usar las candidatas de v7 no
+era aceptable.** La salida no fue bajar el listón de evidencia sino ampliar la muestra hacia
+atrás: `experiments/backtest_signals.py` reconstruye las señales reconstruibles SIN look-ahead
+sobre los hermanos US (COPX 2010, SOXX 2001, XLE 1998; COT desde 1986) — **176 meses, 3.613
+sector-mes, horizonte 63d** — y persiste el veredicto en el lake (`validation/backtest_ic`).
+Es el TODO "Backtesting harness (strict no-look-ahead)" de CLAUDE.md, ejecutado para la decisión
+que lo necesitaba (PLAN v8).
+
+**La tabla (IC medio · se por bloques · n_eff · sub-periodos 2012-19 / 2020-22 / 2023+):**
+`momentum_12_1` **+0.104** (se 0.037, 69% de meses >0, positiva en los TRES sub-periodos) ·
+`near_52w_high` +0.087 (concentrada pre-2020: +0.136 vs +0.014/+0.032) · `mom_3m6m` (la
+vigente) +0.080 — y con Ω delante (ρ 0.55 con 12-1, 0.64 con 52w-high) el GK le da el peso MÁS
+BAJO de la familia: casi todo lo que sabe ya lo dicen las otras dos mejor · `crowding_comomentum`
++0.063 como penalización (se apaga en 2023+: −0.010) · `cot_crowding` +0.006 ± 0.054 — RUIDO;
+su peso GK (+0.036) es un artefacto de diversificación (ρ −0.3 con momentum) que cambia de
+signo perturbando el IC 1se · `trends_crowding` +0.019 con 46 meses — sin veredicto.
+
+**Un defecto del harness casi entierra al COT:** el suelo global de 8 nombres por sección
+transversal (`_MIN_CROSS`) descartaba TODOS los meses del sleeve COT, que estructuralmente
+cubre 5 sectores (oro físico, mineras, plata, cobre, petróleo) — imprimía «sin datos» con 40
+años de historia en la mano. Suelo por señal (`_MIN_CROSS_BY_SIG`, 4 para COT), test que lo fija.
+
+**El edit (Q1·Q2·Q3, aprobado por el usuario con la tabla delante, frozen-threshold protocol):**
+- **Q1** — la dimensión oficial de momentum pasa del blend 3m/6m a
+  `0.635·pct(12-1) + 0.365·pct(52w-high)` (§`momentum_spec`; el split es el GK intra-familia
+  0.0674/0.0387). Sin historia 1y (11/26 vehículos) cae al percentil 3m6m — una spec MEDIDA más
+  débil, no una imputación — y lo dice por fila (`momentum_spec_used: "3m6m_fallback"`).
+- **Q2** — el input oficial de crowding pasa de la etiqueta narrativa (evidencia: CERO) al
+  percentil de comomentum medido donde existe (15/26), etiqueta donde no, con procedencia por
+  fila (`crowding_source`). **COT y Trends NO entran** en la dimensión oficial — el backtest
+  dice ruido/panel corto — y siguen como columnas candidatas midiéndose en vivo.
+- **Q3** — el pool medido (momentum+crowding, 0.41 combinado) se reparte por Grinold–Kahn:
+  IC 0.104/0.063, ρ as-used 0.14 → 66.2/33.8, shrunk hacia el split vigente 70.7/29.3 con
+  γ = n_eff/(n_eff+12) ≈ 0.824 → **momentum 0.29→0.275, crowding 0.12→0.135**. **CA (0.35) y
+  flow (0.24) conservan su prior DECLARADO** — sin historia de indicadores/shares no son
+  backtesteables, y un GK a nivel de familias estaría dominado por lo no medido.
+
+**Salvaguardas que NO se mueven (Q4):** λ sigue gated por IC VIVO (el backtest autoriza qué
+ordena la selección, nunca cuánto se aparta de neutral el sizing); el backfill de
+`sector_snapshot` sigue prohibido (el backtest vive en `validation/backtest_ic`); las ventanas
+vivas de `calibration` quedan como out-of-sample del reparto nuevo — el backtest es in-sample
+para siempre una vez usado. Sin grid-search: solo la forma cerrada GK + shrinkage.
+
+652 tests en verde (+13: 8 del harness, 5 de la promoción).
+
 ## v7.1 — La pipeline corre sola: heartbeat launchd, sin LLM (2026-08-31)
 
 El sistema entero esperaba a que alguien abriera sesión. Ahora `scripts/heartbeat.sh` corre

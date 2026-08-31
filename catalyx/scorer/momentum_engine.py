@@ -1,13 +1,12 @@
 """Cross-sectional momentum scorer for SectorSnapshot.
 
-Formula source: scoring_weights.yaml §MOMENTUM SCORE NORMALIZATION v1.3
+Official spec (v8 Q1, scoring_weights.yaml §momentum_spec):
+    momentum_score = 0.635 × pct(12-1) + 0.365 × pct(52w-high proximity)
+    Sectors without 1y history fall back to the legacy 3m6m percentile — a weaker MEASURED
+    spec, not an imputation — flagged per row via momentum_spec_used.
 
-Step 1 — weighted raw return per sector (PRIMARY ETF only):
-    raw_momentum = return_1m × 0.20 + return_3m × 0.45 + return_6m × 0.35
-
-Step 2 — cross-sectional percentile rank:
-    momentum_score = percentile_rank(sector, all_sectors) × 100
-    Bottom sector → 0, top sector → 100.
+Legacy spec (mode "3m6m", scoring_weights.yaml §momentum_period_weights):
+    raw_momentum = weighted 3m/6m return (1m weight 0 since v6 H4), percentile-ranked.
 
 Fallback (< 5 sectors with data):
     momentum_score = (raw - min) / (max - min) × 100  (min-max normalization)
@@ -37,6 +36,13 @@ _MPW = weights.momentum_period_weights()
 _WEIGHT_1M = _MPW["return_1m"]
 _WEIGHT_3M = _MPW["return_3m"]
 _WEIGHT_6M = _MPW["return_6m"]
+
+# v8 Q1 — official spec: 12-1 + 52w-high blend, 3m6m percentile as the flagged fallback
+# for sectors without 1y history. scoring_weights.yaml §momentum_spec.
+_SPEC = weights.momentum_spec()
+_SPEC_MODE = _SPEC.get("mode", "3m6m")
+_BLEND_121 = float(_SPEC.get("blend", {}).get("momentum_12_1", 0.635))
+_BLEND_52W = float(_SPEC.get("blend", {}).get("near_52w_high", 0.365))
 
 _MIN_SECTORS_FOR_PERCENTILE = 5
 
@@ -215,19 +221,33 @@ def compute_momentum_scores(snapshot_path: Path | None = None,
     all_121 = list(raw_12_1s.values())
     use_pct_121 = len(all_121) >= _MIN_SECTORS_FOR_PERCENTILE
 
+    raw_52ws = {sid: p["near_52w_high_pct"] for sid, p in primaries.items()
+                if p.get("near_52w_high_pct") is not None and sid in raw_momentums}
+    all_52w = list(raw_52ws.values())
+    use_pct_52w = len(all_52w) >= _MIN_SECTORS_FOR_PERCENTILE
+
     scores: dict[str, dict] = {}
     for sector_id, raw in raw_momentums.items():
         if use_percentile:
-            score = _percentile_rank(raw, all_raw)
+            legacy = _percentile_rank(raw, all_raw)
         else:
-            score = _minmax_norm(raw, mn, mx)
+            legacy = _minmax_norm(raw, mn, mx)
         r121 = raw_12_1s.get(sector_id)
         m121 = None
         if r121 is not None and use_pct_121:
             m121 = round(_percentile_rank(r121, all_121), 1)
+        r52w = raw_52ws.get(sector_id)
+        p52w = round(_percentile_rank(r52w, all_52w), 1) if (r52w is not None and use_pct_52w) else None
+        if _SPEC_MODE == "12_1_52w" and m121 is not None and p52w is not None:
+            score = _BLEND_121 * m121 + _BLEND_52W * p52w
+            spec_used = "12_1_52w"
+        else:
+            score = legacy
+            spec_used = "3m6m" if _SPEC_MODE == "3m6m" else "3m6m_fallback"
         scores[sector_id] = {
             "momentum_score": round(score, 1),
             "raw_momentum": round(raw, 4),
+            "momentum_spec_used": spec_used,
             "momentum_12_1": m121,
             "near_52w_high_pct": primaries[sector_id].get("near_52w_high_pct"),
             "data_source": "momentum_engine_v1",

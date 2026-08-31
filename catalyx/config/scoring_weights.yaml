@@ -42,11 +42,16 @@
 # so their relative importance is unchanged; only valuation's dead weight is gone.
 # The schema keeps `valuation_relative` marked deprecated for one major version (read-back
 # of old snapshots) — see schemas/sector_snapshot.json.
+# v8 Q3 (2026-08-31): the measured pool (momentum + crowding, 0.41 combined) is re-split by
+# Grinold–Kahn over the point-in-time backtest (lake validation/backtest_ic, 176 months):
+# IC 12-1 +0.104, comomentum +0.063, ρ(as-used) 0.14 → GK 66.2/33.8, shrunk toward the prior
+# split 70.7/29.3 with γ = n_eff/(n_eff+12) ≈ 0.824 → 0.275/0.135. CA and flow are NOT
+# backtestable (no indicator/shares history) and HOLD their prior weights — declared, not hidden.
 composite_weights:
   catalyst_alignment: 0.35
-  momentum: 0.29
+  momentum: 0.275
   flow_confirmation: 0.24
-  crowding_risk: 0.12  # Applied as (100 - crowding_score) × 0.12
+  crowding_risk: 0.135  # Applied as (100 - crowding_score) × weight
 
 # v6 H1: the weights above are applied to CROSS-SECTIONALLY STANDARDIZED dimensions, not to
 # raw 0-100 levels. In a weighted sum of non-commensurable scales the effective weight is
@@ -74,6 +79,26 @@ momentum_period_weights:
   return_1m: 0.0
   return_3m: 0.5625   # = 45/80, the exact renormalization
   return_6m: 0.4375   # = 35/80
+
+# v8 Q1 (2026-08-31): the official momentum dimension is a blend of the 12-1 percentile and
+# the 52w-high-proximity percentile. Backtest (176 months, US siblings): 12-1 IC +0.104
+# (positive in all three sub-periods, 69% of months) vs 3m6m +0.080 — and 3m6m earns the
+# LOWEST GK weight of the family (ρ 0.55/0.64 with the other two: redundant). Blend split =
+# within-family GK 0.0674/0.0387. Sectors without 1y history fall back to the 3m6m percentile
+# (a weaker MEASURED spec, not an imputation) and are flagged per row (momentum_spec_used).
+momentum_spec:
+  mode: "12_1_52w"        # "3m6m" restores the pre-v8 official dimension
+  blend:
+    momentum_12_1: 0.635   # = 0.0674 / (0.0674 + 0.0387)
+    near_52w_high: 0.365
+
+# v8 Q2 (2026-08-31): the official crowding input is the MEASURED comomentum percentile where
+# available, the narrative label elsewhere (flagged per row, crowding_source). Backtest:
+# comomentum +0.063 as a penalty; cot_crowding +0.006 ± 0.054 (noise — its GK weight is a
+# diversification artefact that flips sign under ±1se) and trends (46 months) stay CANDIDATE
+# columns, measured live, OUT of the official dimension.
+crowding_source:
+  mode: "measured_comomentum"   # "label" restores the pre-v8 behavior
 
 # Event catalyst decay function: score = strength × exp(-lambda × days_since_detection)
 # lambda = ln(2) / halflife_days
@@ -421,16 +446,18 @@ user_rank_ordering:
 # CHANGELOG.md under the v1.5 entry if it is ever needed again.
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MOMENTUM SCORE NORMALIZATION — v1.3
+# MOMENTUM SCORE NORMALIZATION — v8 (official spec in §momentum_spec above)
 # ─────────────────────────────────────────────────────────────────────────────
 #
 # The composite formula uses momentum_score in [0, 100]. Raw % returns cannot
 # be used directly — they need cross-sectional normalization.
 #
-# Step 1 — Compute raw weighted return per sector:
-#   raw_momentum = return_3m_pct × 0.5625 + return_6m_pct × 0.4375   (v6 H4: 1m weight = 0)
+# Official (v8 Q1): momentum_score = 0.635 × pct(12-1) + 0.365 × pct(52w-high proximity),
+# both percentiles across the sectors with the underlying datum. Sectors without 1y history
+# score on the legacy path below, flagged momentum_spec_used: "3m6m_fallback".
 #
-# Step 2 — Percentile rank across the full scored universe:
+# Legacy path (mode "3m6m", and the per-sector fallback):
+#   raw_momentum = return_3m_pct × 0.5625 + return_6m_pct × 0.4375   (v6 H4: 1m weight = 0)
 #   momentum_score = percentile_rank(raw_momentum, all_sector_raw_momentums) × 100
 #   Bottom sector in universe → 0, top sector → 100.
 #

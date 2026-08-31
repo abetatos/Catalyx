@@ -264,7 +264,19 @@ def record_run(top_n: int = 10, notes: str | None = None,
             _pct_in_run(como_vals[sid]) if sid in como_vals else None,
         ) if p is not None]
         return round(sum(parts) / len(parts), 1) if parts else None
-    scored = [score_sector(sid, crowding_risk=_crowding_for(maturities[sid]),
+
+    # v8 Q2 — official crowding input: measured comomentum percentile where available, the
+    # narrative label elsewhere. Provenance is a COLUMN (crowding_source), never a gate.
+    # COT and trends stay candidate columns (backtest: noise / short panel).
+    crowd_mode = weights.crowding_source().get("mode", "label")
+
+    def _crowding_official(sid: str) -> tuple[float, str]:
+        if crowd_mode == "measured_comomentum" and sid in como_vals:
+            return round(_pct_in_run(como_vals[sid]), 1), "comomentum"
+        return _crowding_for(maturities[sid]), "label"
+
+    crowd_official = {sid: _crowding_official(sid) for sid in sector_ids}
+    scored = [score_sector(sid, crowding_risk=crowd_official[sid][0],
                            momentum_snapshot_path=momentum_snapshot_path)
               for sid in sector_ids]
     # v6 H1: the composite is combined in z-space across THIS run's universe, so a nominal
@@ -300,6 +312,8 @@ def record_run(top_n: int = 10, notes: str | None = None,
             "flow_window_days": flow_detail.get("flow_window_days"),
             "flow_days_covered": flow_detail.get("flow_days_covered"),
             "crowding_risk": sb["crowding_risk"],
+            "crowding_source": crowd_official[sid][1],
+            "momentum_spec_used": r.get("momentum_spec_used"),
             # v7 candidate columns — weight 0, measured by calibration
             "momentum_12_1": r.get("momentum_12_1"),
             "near_52w_high": r.get("near_52w_high"),
@@ -641,6 +655,8 @@ def _write_run_to_lake(run_id, run_at, version, git_commit, momentum_snapshot,
         "flow_window_days": r["flow_window_days"],
         "flow_days_covered": r["flow_days_covered"],
         "crowding_risk": r["crowding_risk"], "narrative_maturity": r["narrative_maturity"],
+        "crowding_source": r.get("crowding_source"),
+        "momentum_spec_used": r.get("momentum_spec_used"),
         "momentum_12_1": r.get("momentum_12_1"), "near_52w_high": r.get("near_52w_high"),
         "ca_unpriced": r.get("ca_unpriced"), "flow_resid": r.get("flow_resid"),
         "inst_sponsorship": r.get("inst_sponsorship"),

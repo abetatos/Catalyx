@@ -3,11 +3,12 @@
 Formula source: scoring_weights.yaml §composite_weights
 
     composite = catalyst_alignment × 0.35
-              + momentum          × 0.29
+              + momentum          × 0.275
               + flow_confirmation × 0.24
-              + (100 - crowding_risk) × 0.12
+              + (100 - crowding_risk) × 0.135
 
-Result capped at [0, 100].
+(v8 Q3: GK-shrunk split of the measured pool; CA and flow hold their prior — see the
+config comment.) Result capped at [0, 100]; combined in z-space since v6 H1.
 
 v1.6 (2026-06-06): `valuation_relative` was REMOVED from the composite. It had always
 been a constant-50 placeholder (no valuation_engine), so it never changed the ranking —
@@ -440,6 +441,7 @@ def score_sector(
         "flow_imputed": flow_imputed,
         "inst_sponsorship_score": inst_sponsorship_score,
         "momentum_12_1": md.get("momentum_12_1"),
+        "momentum_spec_used": md.get("momentum_spec_used"),
         "near_52w_high": md.get("near_52w_high_pct"),
         "ca_unpriced": cd.get("ca_unpriced"),
         "flow_resid": None,
