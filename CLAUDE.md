@@ -391,16 +391,15 @@ several rules read the way they do. Refresh them when they move materially, not 
 - [x] ~~**Decisión humana pendiente (drift de atribución)**~~ **CERRADA 2026-08-31 (v5.2)** con
       `reattribution[]`: copper 0.65 AI capex / 0.35 grid; pharma 0.5 `uncatalyzed` / 0.5 patent
       cliff, declinando GLP-1 por escrito. `attribution_drift()` devuelve `[]`.
-- [ ] **Decisión pendiente AHORA (re-refrescada 2026-08-31 tras v8.0):** ejecutar la tabla
-      nueva deja `struct_ai_capex_supercycle` en **72,5%** del nocional contra el cap del
-      **30%** — €4.255 por encima, repartido en `ai_infrastructure_data_centers`,
-      `cloud_software_saas`, `robotics_automation`, `semiconductors_design` y
-      `water_infrastructure`. El salto (38,8% → 72,5%) no es un dato roto esta vez: el
-      composite v8 sube a los nombres AI-capex al top-5 (el crowding MEDIDO les quita la
-      etiqueta `crowded` que los penalizaba) y la tabla propone 4 BUY dentro del mismo driver.
-      `enforcement: warn`, así que el cap no decide: bajar tamaño, soltar nombres del cluster,
-      o escribir el `correlation_note`. Este es exactamente el escenario para el que el cap
-      existe — 5 posiciones de 6 colgando de un driver.
+- [x] ~~**Decisión pendiente (cap ai_capex al 72,5% bajo la tabla v8)**~~ **DECIDIDA
+      2026-08-31:** ejecutar HASTA el cap, no a través de él. Se ejecutan TRIM
+      `pharma_large_cap` −€556 y BUY `ai_infrastructure_data_centers` €1.500 (llena el
+      cluster exactamente al 30% = €3.000); los otros cuatro rows del cluster quedaron
+      DECLINADOS por escrito en el override log del run `run_20260831_184616` (water,
+      robotics, cloud — este además `wait_stabilize` —, y el ADD de semis), que es también
+      el override que nombra el shortfall de despliegue. Se preciarán a 21d contra la regla,
+      autor claude. **Pendiente solo la EJECUCIÓN física:** las dos órdenes en Revolut +
+      `/catalyx-close pharma_large_cap` (trim) y `/catalyx-open ai_infrastructure_data_centers`.
 - [x] ~~**v8 — `docs/PLAN_v8_backtest_promotion.md`**~~ **EJECUTADO 2026-08-31 (v8.0, P+Q).**
       Harness `experiments/backtest_signals.py` (176 meses, hermanos US, sin look-ahead) →
       `validation/backtest_ic`. Promovido con la tabla delante: momentum oficial = 12-1+52w-high
