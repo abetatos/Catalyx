@@ -14,6 +14,686 @@
 
 
 
+## v7.0 — Contenido de señal: 9 columnas candidatas, medidas desde hoy, peso 0 (2026-08-31)
+
+Ejecuta `docs/PLAN_v7_signal_content.md` fases M, N y O (N3 incluida: pytrends resultó operativo,
+26/26 términos). **Ningún peso del compuesto cambia** — test-enforced
+(`test_no_candidate_carries_a_composite_weight`). Todo entra como columna del snapshot, registrado
+en `calibration.CANDIDATE_DIMENSIONS` y medido con el mismo IC/se/verdict que las dimensiones
+oficiales; el primer run con columnas es `run_20260831_172858`, y ahí arranca el reloj de ventanas.
+
+**Columnas nuevas en `sector_snapshot`** (cobertura del primer run, n=26): `momentum_12_1` (15 —
+12-1 estándar desde `return_1y_pct`, que el lake llevaba desde siempre sin que nada lo leyera; la
+nota de K2 "requiere ampliar el fetch" era stale), `near_52w_high` (26, George–Hwang, también ya
+grabado), `ca_unpriced` (25 — CA descontado por `is_priced_in` en eventos y por
+`narrative_maturity → maturity_priced_in` en estructurales; sin señal → prior 0.5, flag),
+`flow_resid` (18 — residuo OLS del z-flow sobre z-momentum, solo filas medidas),
+`inst_sponsorship` (la puntuación 13F que viajaba en cada output sin pesar en nada),
+`crowding_comomentum` (15 — Lou–Polk simplificado: correlación media de residuos semanales vs SPY
+entre hermanos de catalizador; módulo `scorer/comomentum.py` sobre la infra I1), `cot_crowding`
+(5 — percentil 5y del net-spec/OI de CFTC vía Socrata: oro/plata/cobre/WTI; `data/cot_data.py`),
+`trends_crowding` (26 — percentil 5y de atención de búsqueda, un término por payload a propósito;
+`data/trends_data.py`, dependencia nueva `pytrends`) y `crowding_measured` (26 — blend N4 de las
+partes medidas disponibles; la etiqueta narrativa sigue siendo la dimensión oficial).
+
+**M1 — la estructura de correlación se publica con el run.** `commensurate()` añade la matriz
+Spearman entre dimensiones (imputados excluidos por par), `n_eff_dimensions` (entropía de
+autovalores) y una `correlation_lint` SEPARADA del lint de dimensión muerta (mezclarlas rompía la
+semántica del existente — lo dijo un test). Primer run: **mom~flow ρ=+0.84 (n=18), n_eff 2.9 de
+4** — sobre filas medidas el acoplamiento es peor que el +0.57 que salía con imputados dentro.
+
+**Dos reparaciones que salieron al construir, no del plan:** (1) el 13F murió con el universo
+v2.0 — `chain[0]` pasó a ser siempre UCITS y `_fetch_institutional_ownership` devolvía
+`not_available_ucits` para todo el libro; ahora camina la cadena hasta el primer hermano US
+(`inst_proxy_ticker`), la misma doctrina proxy del flow. (2) COT en vivo: oro percentil **99.2** y
+cobre **100.0** de posicionamiento especulativo a 5 años — la medición ya ordena distinto que la
+etiqueta.
+
+**O1 — 7 indicadores estructurales se auto-observan** (`data/indicator_sources.py`: FRED con
+`FRED_API_KEY` de `.env`, yfinance, CFTC), escribiendo por `indicator_update.apply_one` — nunca un
+canal paralelo — y solo donde la serie pública COINCIDE con la definición almacenada (el core CPI
+japonés ex-fresh-food se excluye a propósito: el de FRED es ex-food-and-energy). Primera pasada
+aplicada: USD/CNY 7.25→6.72 (−7.3%, dato de mayo), BoJ +12.1% y **JPY net short 40k→63.3k
+(+58%)** — dos banderas Rule-5 que llevaban meses sin observarse. En `score_run.sh` corre en DRY
+(facts para el review); el `--apply` es del scan. **O3** — serie `valuation` nueva en el lake
+(yfinance fund-level, 19/26 con PE real), leída por nada: existe para que un test de ancla de
+valor sea posible cuando haya historia. **Caveat de Trends escrito:** todo el universo busca
+"X stocks" cerca de máximos de 5 años — hay un factor de atención de mercado en el nivel; lo
+informativo es la dispersión (solar 96.2 / semis 95.0 contra lithium 59.8 / nuclear 71.3).
+
+639 tests en verde (+25, y una exención aritmética escrita en el test del knob de control: una
+fila en z≈0 se reescala por debajo del decimal de display — gold_miners a 50.1 lo destapó en
+vivo el mismo día).
+
+## The flow dimension was measuring the wrong thing on 20 of 26 sectors (2026-08-31, v6.9)
+
+Found because the user asked why the flow line printed a warning. It printed one because it was
+right to: `stockanalysis.com`, the PRIMARY shares-outstanding source, was returning **47 errors and
+0 successes**. Its unofficial `/api/symbol/e/{tk}/overview` endpoint had started 404'ing, so every
+lookup fell through the cascade to CMF — a price+volume oscillator that `flow_data`'s own note
+labels "⚠ not true flow". **20 of 26 sectors were scoring `flow_confirmation` (weight 0.15) off a
+technical indicator.**
+
+**The fix, and the reason to trust it.** The number is still on the page; only the route died. Two
+page-backed paths replace the endpoint, smallest first: the SvelteKit `__data.json` payload (~49 KB,
+whose `sharesOut` key holds an INDEX into the flattened node array and must be dereferenced — read
+as a value it yields 27) and the rendered page (~228 KB) as a fallback. Re-validated against the
+**iShares official screener** across 8 overlapping funds: −4.15%..+0.92%, consistent with the
+~0.25–1.75% band this source was originally accepted on. Coverage went from 6 to **18 of 26**
+sectors on real share counts. `_shares_stockanalysis` now also distinguishes "site up, ticker not
+covered" from "source down", so a genuine coverage gap no longer inflates the error count.
+
+**What the repair MEASURED, which is the part worth keeping.** Twelve sectors moved off CMF onto
+real shares in one step, so the CMF stand-in's error is now observed rather than assumed: **mean
+|error| 13.1 points on a 0–100 scale, max 25.6**. And the two largest errors landed on the two names
+the rebalance table was acting on — `gold_miners` inflated (CMF 78.2 vs 52.6 real) and
+`cybersecurity_commercial` deflated (CMF 28.8 vs 54.2 real). One hypothesis was checked and
+**rejected** before being written down: CMF is not simply momentum in disguise — its correlation to
+the momentum dimension is +0.16 across the universe, so the failure is inaccuracy, not
+double-counting.
+
+**Therefore CMF is now imputed, not scored.** Eight sectors still have no clean US proxy, and a
+13-point mean error is not a proxy. They are treated the way v6 H2 already treats a missing study:
+imputed to the prior (z=0), excluded from the dimension's moments, and flagged as a COLUMN
+(`flow_imputed`, `~flow` in the digest), never a gate. The CA-specific branch in `commensurate` was
+generalised to an `_IMPUTED_FLAG` map rather than duplicated, with a test pinning that the CA path
+did not regress.
+
+**Two ranking defects the re-score exposed, both the same shape as v6.8 #3.** `composite_z` was
+stored `round(s, 3)` — and since v6.8 made it the unit the RANK is computed on, that is the same
+rounding defect one decimal deeper: `water_infrastructure` and `semiconductors_design` tied at
++0.457 and were separated by list order while their composites genuinely differed. Now 6dp, so a tie
+is a real tie. And the `--universe --digest` table printed only the 1dp `comp` while ordering by z,
+which made a correctly-sorted table look mis-sorted; it now prints `z=` beside it.
+
+**Effect on the live table — the reason this is not cosmetic.** `cybersecurity_commercial` moved
+rank **10 → 5**, turning a **TRIM −€565 into an ADD +€727**: the trim rested on a partials rung whose
+condition is "the model no longer leads this name", and the model only stopped leading it because a
+broken data source had deflated its flow by 25 points. `semiconductors_design` 5 → 6 (ADD → HOLD),
+`ai_infrastructure_data_centers` 6 → 8 (its €1,456 BUY drops out), `gold_miners` 8 → 11. Eight rule
+actions become six, and the `struct_ai_capex_supercycle` cap breach falls from **55.4% to 38.8%** of
+notional (over by €881, not €2,540). 614 tests green (+2).
+
+## Seven defects the review found in itself, and the one that was silently rewriting scores (2026-08-31, v6.8)
+
+Found while running a second `/catalyx-review` on the same date, which is the condition several of
+these needed to become visible. No config threshold moved; every change here is a correctness fix.
+612 tests green (+6). An eighth was caught by an existing test rather than by me — `test_a_conditional_marker_tracks_its_condition_in_both_directions`, which reads the live book on purpose, went red the moment the budget DEFERs landed.
+
+**1. The intensity score fed its own trend, so re-running the review moved it.** `write_back`
+prepended a row to `intensity.history`, and `_trend_delta` read `scores[0] - scores[1]` — where
+`scores[0]` was the row `write_back` had just written for TODAY. The score was therefore a
+fixed-point iteration on itself: `struct_cb_gold_accumulation` went **78.6 → 68.5 → 64.5** across
+two runs on a world that had not moved, each step reported as `↓ falling 1 period`. Compounding,
+and in the one direction that looks like a thesis dying. Fixed in three places, because the bug had
+three layers: `compute_intensity` now excludes any history row stamped with today's date (that row
+is this computation's own earlier estimate, not a period that has been through — an explicit
+`--period 2026-Q3` label never matches and is kept); `write_back` REPLACES that period's row
+instead of stacking a second one beside it (the old guard skipped only when period AND score
+matched, so a moved score always appended); and `_trend_delta` dedupes by period on read, which
+repairs every file already written the old way. Nine of thirteen catalysts carried duplicate
+periods — up to **six** rows of `2026-Q2` — so this had been mis-reading the trend leg for months,
+not just today. 24 duplicate rows removed from the YAMLs. A test now pins that three consecutive
+write-backs produce byte-identical output.
+
+**2. `--all --write-back` wrote scores into the WRONG catalysts' files.** `compute_all()` skips
+`merged` and `role: macro_context` catalysts (13 results), but the CLI zipped those results against
+a fresh `glob("*.yaml")` (18 paths). Every result after the first skipped file landed one or more
+files off: gold's score into `biopharma_patent_cliff_ma`, `ai_capex`'s into `commercial_space`, and
+the last five files never written at all. The results already carry `_source_file`; the loop now
+addresses each write by it and never re-derives the path. This is the command the v6.7 entry tells
+the operator to run, so the bug was armed and waiting for the first person to follow the
+instructions. The affected files were restored and recomputed.
+
+**3. The published rank was derived from the rounded DISPLAY composite.** `composite` is rounded to
+one decimal, so any pair closer than 0.05 became a tie broken by taxonomy file order — while v6/H1
+had already named `composite_z` (3 decimals) the comparable unit. Live on today's universe:
+`space_defense_satellite` (49.4, z −0.041) outranked `nuclear_energy` (49.4, z −0.038) for no
+reason but alphabetical luck. `sector_scorer.rank_key()` now picks the unit, and it is used at
+every ranking site — the two CLI prints, `snapshot_repo` (which writes `rank` to the lake),
+`portfolio`'s top-N selection cut (where the rounding costs money, at the `max_positions`
+boundary), and `rebalance`'s re-rank of the surviving book, which now receives `composite_z` on the
+holding row. A pre-v6 run, or a mixed collection, falls back to the level: comparing a z against an
+absolute level ranks worse than a tie does.
+
+**4. The work-list ranking was not the recorded ranking.** `sector_scorer --universe` passed one
+flat `--crowd` default to every sector, so crowding's σ_cross was 0 and the dead-dimension lint
+correctly reported the 0.12-weighted dimension as ranking nothing — in the view whose only job is
+to feed the study work list, while `snapshot_repo` ranked the recorded run with crowding live. Now
+`universe_crowding()` derives it from `narrative_maturity`, the same way the recorded run does; an
+explicit `--crowd` still overrides universe-wide, which is what asking for one number means.
+
+**5. Five freshness stamps bounced, on the catalysts that had just been verified.** `catalyst_review`
+declared its enum "deliberately the same vocabulary as `regime_state` so the scan's delta rows map
+onto it with no translation" — but the enum held three values while `catalyx-scan.md` documented
+five. Every `strengthening` verdict was rejected, so on 2026-08-31 five catalysts came back with
+hard evidence (three of them driving open positions) and the freshness gate went on reporting them
+stale the day they were re-verified. A stamp that bounces is worse than one never attempted: the
+scan reports success and the gate silently disagrees. `VERDICTS` now holds the scan's five, recorded
+verbatim — flattening `strengthening` to `intact` would delete a finding — with `VERDICT_REGIME`
+mapping them onto the three states consumers act on. `strengthening` is exempt from the evidence
+requirement alongside `intact`; demanding a citation to record "still holds, more so" is what
+pushed the scan to omit the row instead.
+
+**6. Two false alarms in the review's own attention list.** `run_digest` marked `rank_moves`
+**MISSING** while the lake held six real ones: `_rank_moves` keeps only |Δ| ≥ 5, so a run whose
+biggest move is 4 legitimately yields `[]` — a RESULT, not an absent input. `_try` already had
+`empty_ok` for exactly this ("listing a passing check under MISSING reads as a hole in the run and
+teaches the reader to discount the whole list"); it just was not used here, and MISSING is now
+reserved for the lake having no rank events at all. And `review_report` raised the "write a reason
+for each override logged THIS run" marker on `budget` DEFERs — the v6 L4 trade-budget deferrals,
+which the precedence rule chose rather than a person, which the rebalance table's BUDGET line
+already names, and for which "the evidence the rule was missing" is by construction nothing. They
+now join `unrecorded` as auto-authors the marker skips. Both are the cry-wolf failure the
+attribution-drift note warns about: a check that fires on a clean result trains its reader to skip
+the table.
+
+**7. Two lines that lied in the transcript.** `catalyst_lifecycle --apply` printed
+`[PROPOSED (dry run — use --apply)]` whenever there were zero transitions, because the label tested
+the truthiness of an empty applied list — telling the operator to pass the flag they had just
+passed. And `indicator_update batch` printed `Σ None` for every recompute: it read `catalyst_id`
+from a result that returns the id under `id`, on the one line that says which catalyst's intensity
+just moved.
+
+## The percentile saturated on exactly the catalysts it exists to measure (2026-08-31, v6.7)
+
+Plan v6 J4 — the most delicate item in the plan, because it changes PUBLISHED scores.
+
+**The diagnosis (D5).** `intensity_engine` scores an indicator by its empirical percentile within
+its own history. For a persistently rising series — central-bank gold buying, hyperscaler capex —
+the current value sits at or near its own maximum nearly every month, so the percentile pins at
+~100 and stops discriminating. That happens on precisely the persistent drivers `StructuralCatalyst`
+exists to model, and it means the first sign of a slowdown arrives only when the value actually
+falls below past readings, which for a trending series is very late.
+
+**But detrending alone would be the opposite error.** "At an all-time high" is real information;
+scoring the residual instead of the level would put a record-level driver mid-range for the crime
+of being exactly on its own trend. So the two are **blended**: the level says how strong this is
+against its own history, the residual says whether it is running above or below its own
+trajectory. Two catalysts both at records — one accelerating, one flattening — now score
+differently, which is the discriminating power D5 was after. `detrend_weight: 0.0` reproduces the
+old score exactly. Detrending only engages when the series actually trends (|Kendall τ vs time| ≥
+0.5, rank-based so one huge print cannot masquerade as a trend).
+
+**Deviation from the plan's own wording, deliberately.** The plan said "residual against a rolling
+mean". A rolling window over a 6-point series discards most of the sample and returns nothing for
+the earliest points; a linear OLS detrend keeps every observation, which is the binding constraint
+on indicators observed monthly.
+
+**The second half: the 6th-observation cliff.** The score used to switch outright from the
+saturating threshold curve to the percentile when the `min_history_points`th value arrived, so ONE
+new data point could move an indicator by tens of points for reasons unrelated to the world. Now
+blended linearly across `[min − 2, min + 2]`: n≤4 curve, n=6 half and half, n≥8 percentile. Same
+family of mini-cliff v1.5 removed from the semaphore buckets and I6 removed from the VIX brake.
+
+**A real off-by-one, caught by not trusting the first table.** The initial before/after used
+`history_blend_span: 0` as the "pre-v6" baseline, as the config claimed. It was not: at exactly
+`n == min_history_points` the boundary was `n <= lo`, so span=0 took the FALLBACK where pre-v6
+took the percentile. The first comparison I generated was therefore against a baseline that never
+existed, and it reported the largest move as −24.8 when the true figure is **+44.0**. Fixed to a
+strict `<`; `--compare-legacy` now runs the SAME code path with the features zeroed rather than a
+reimplementation that could drift.
+
+**The measured effect, with each change attributed.** 6 of 48 indicators move; 4 of 13 catalysts:
+
+| catalyst | pre-v6 | v6.7 | Δ | cause |
+|---|---|---|---|---|
+| `struct_enterprise_cyber_spend_supercycle` | 70.8 | 79.8 | **+9.0** | both |
+| `struct_cb_gold_accumulation` | 75.6 | 69.1 | −6.5 | history blend |
+| `struct_commercial_space_supercycle` | 86.7 | 84.5 | −2.2 | both |
+| `struct_energy_transition_grid` | 94.2 | 93.8 | −0.4 | detrend |
+
+**The instructive case.** CrowdStrike ARR YoY growth: history 0.33 → 0.29 → 0.27 → 0.22 → 0.24,
+now 0.23, against thresholds weak 0.10 / strong 0.20. Three legitimate readings of the same
+number — level percentile **25** (near the bottom of its own range), threshold curve **84** (well
+above "strong"), detrended percentile **83** (τ = −0.73: the series is falling and 0.23 sits ABOVE
+that decline, so the deceleration is flattening). Pre-v6 published a flat 25 and threw the other
+two away.
+
+**And note the detrend cuts BOTH ways, which the motivating example hides.** D5 was about rising
+series pinning at 100; here the series is falling and the residual RAISES the score. That is
+symmetric and correct — the residual measures position against your own trajectory, whatever its
+sign — but a reader expecting "detrend = damper on hot catalysts" would be surprised, so the
+output says it. The distinct downward channel for a genuinely dying catalyst is `trend_delta`,
+which is unchanged.
+
+**Migration.** `catalyst_scorer` reads the STORED `intensity.current_score`, so **nothing
+downstream moves until someone runs `intensity_engine --write-back`** — a test pins that. Inspect
+first with `uv run python -m catalyx.scorer.intensity_engine --compare-legacy`, which prints the
+table above and attributes each change to the detrend or the blend.
+
+606 tests green (+12).
+
+## Which constants actually have consequences — and the harness that almost lied about it (2026-08-31, v6.6)
+
+Plan v6 I4. `experiments/sensitivity_weights.py` perturbs each constant ±25% and ±50%, one at a
+time, over the last recorded run, and measures whether the OUTPUT moves: Kendall τ against the
+base ranking plus the Jaccard overlap of the top-10 set (τ can stay high while the top churns,
+and the top is the part that becomes positions). It is the cheap, honest answer to "these
+percentages are arbitrary" — not a better story about each number's provenance, but a measurement
+of which ones are worth arguing over.
+
+**THE HARNESS'S OWN FAILURE MODE IS THE FALSE NEGATIVE, and it hit twice before the table was
+trustworthy.** A knob that misses its target prints identically to a constant that does not
+matter — a confident "INERT" that is really "I never touched it".
+
+- **The momentum periods came back τ=1.000, INERT.** But H4 had just measured that reweighting
+  the momentum blend moves ranks by up to 7 places. `momentum_engine` unpacks `_MPW` into
+  `_WEIGHT_1M/3M/6M` at import, and THOSE are what the engine reads; the knob patched `_MPW` and
+  reached nothing. Fixed, and they are now among the more consequential rows (τ 0.895 / 0.938).
+- **`sharpness` came back 0.00pp.** `build_model_holdings` reads `construction.sharpness` before
+  the global, and `catalyx.yaml` declares its own. Same class, one layer down.
+
+So the harness now carries a **control knob** — `composite_scale.z_scale`, a monotone rescaling
+that MUST move every score and reorder nothing. If it fails either half the table prints "FAIL —
+the harness itself is broken; ignore this table". A sensitivity table nobody can falsify is
+decoration. Nine tests pin the machinery, including both false negatives as regressions.
+
+**A third distinction the first table collapsed.** τ=1.000 was reporting two completely different
+things as one: a constant that shifts every score without reordering anything, and one the live
+path never consults. A `moved` column (how many sectors' composites changed AT ALL) separates
+them, and each NOT-REACHED row now carries its VERIFIED reason:
+
+| constant | verdict |
+|---|---|
+| `event_decay.default_halflife_days` | NOT REACHED — all 15 active events declare their own halflife |
+| `catalyst_interaction.confirm_max` | NOT REACHED — needs an event confirming a structural in the same sector |
+| `intensity_trend_deltas` | NOT REACHED — `catalyst_scorer` reads the STORED `intensity.current_score`; these apply at write-back, not at scoring |
+
+That last one is a fact about the architecture worth knowing on its own: changing the trend deltas
+does nothing until the next `indicator_update` / `--write-back`.
+
+**And the finding the harness was worth building for.** `sharpness` moves weights **0.00pp live
+and 2.78pp at λ=1**. It is not inert — it is **SWITCHED OFF**, because `skill_shrink` collapses
+the whole conviction leg toward a neutral book and λ=0 today (the measured rank IC is noise).
+Filing "currently disabled by a measurement" under "does not matter" would be the opposite
+conclusion, so the sizing rows are measured twice and get both columns. `vol_tilt_alpha` reads
+2.40 live vs 2.37 unshrunk — nearly identical, which is the documented design confirming itself:
+`vol_tilt` runs AFTER the shrinkage precisely so that neutral means neutral in RISK.
+
+**What the ranking table says.** The four composite weights are the most consequential rows
+(τ 0.858–0.938, top-10 Jaccard 0.818 — a ±50% nudge on any of them churns two of ten names), then
+the momentum periods, then `reinforce_factor` (τ 0.994). Nothing is DECISIVE by the harness's own
+threshold (top-10 Jaccard < 0.8). Read that as: the chain is not balanced on a knife edge, and
+evidence is owed on the composite weights before anything else — which is exactly what phase K is
+waiting on data to provide.
+
+**An INERT constant is not thereby a WRONG one.** It is un-arguable on today's universe, and the
+finding may not survive a differently-shaped one. The output says so.
+
+594 tests green (+9).
+
+## Constants with their assumption written down — and a second risk decomposition found in production (2026-08-31, v6.5)
+
+Plan v6 I5 · I3.
+
+**I5(a) — what the conviction tiers IMPLY, so it stops being re-derived.** A tier ceiling is also
+a per-line LOSS BUDGET once paired with the exit floor: `exit_watcher.drawdown_exit_pct` is −30%,
+so the most a single line can cost the book before the protective exit fires is `weight × 30%` —
+**6.0% / 4.2% / 2.1%** for tiers 1/2/3. That is fractional-Kelly sizing made explicit: full Kelly
+on an edge this uncertain (measured rank IC ≈ 0) would be far larger. The number is a CONSEQUENCE
+of `n_target`, not an independent choice, and the YAML now says so — if 6% on the top line is too
+much, the lever is `n_target`, and raising it costs monthly trade slots.
+
+**I5(b) — `deployment.base: 0.70` is an aversion parameter, and the entry says that outright.**
+The equity risk premium justifies being INVESTED; it says nothing about 0.70 versus 0.60 versus
+0.85, and quoting it as though it did would dress a preference as a result. What the ERP does
+license is the ASYMMETRY — invested is the default and cash must be argued for — which is why the
+step term only moves the ratio up and the sole downward term is the VIX ramp. The one derived
+number there is the ceiling (0.85 = `deploy_max`), because `n_target` and the position cap are
+read off it.
+
+**I5(c) — `line_risk_pct`, the realized version, per line.** The position digest prints
+`weight_of_total_capital × stop` beside each name and totals it: today **7.89% if every stop fired
+at once**, top line 3.15%. A config comment became a number the review can read.
+
+**AND THE THING I5 TURNED UP: a second risk decomposition, built the two ways v6 I1 exists to
+fix.** `position_metrics` has carried its own `risk_contribution` since v4 — computed on a **raw
+daily sample covariance**. Both defects at once, one layer from the module written to fix them:
+daily closes across LSE/XETRA/Euronext/SIX are asynchronous so their covariance is biased down
+(Epps: universe ρ 0.127 daily vs 0.245 weekly), and an unshrunk sample covariance with T not
+comfortably above N has biased extreme eigenvalues — the exact directions a risk decomposition
+reads. It now routes through `scorer/covariance.py`: **weekly returns with Ledoit–Wolf when there
+is enough history, daily as the documented fallback**, because 52 weeks is a lot to ask of a book
+opened this spring. Today it falls back, and SAYS SO: *"only 12 common weeks — under the 52 needed
+to sample weekly… read the risk shares as ordering, and the book vol as a floor."* The basis and
+the shrinkage are printed in the header. A number computed two different ways must say which one
+produced it.
+
+**I3 — `vol_tilt_alpha` 0.5 → 1.0, with the assumption declared.** α is not a dial, it is a claim
+about what the score MEANS: `score ∝ μ ⇒ α=2` (mean-variance), `score ∝ Sharpe ⇒ α=1`
+(inverse-vol), `score ∝ nothing ⇒ α=0`. The composite is a cross-sectional PERCENTILE — an ordinal
+rank, which is a Sharpe-like statement — so the coherent value is 1. **0.5 was a hedge between two
+positions and corresponded to no stated belief about the score at all.** The original objection
+("full inverse-vol underweights exactly the high-beta sectors this mandate exists to own") is
+answered by SELECTION, which is score-driven and untouched: the tilt only equalizes risk per euro
+among names already chosen for their catalysts.
+
+**Measured before claiming it, and the measurement trimmed the claim.** On the model book: weights
+move at most 2.1pp (gold miners −2.1, AI infra +2.1), book vol 19.4% → 18.9%. But the risk/capital
+spread barely moves — **1.71 → 1.66, with gold miners still carrying 2.2× its capital share**. **α
+is a weaker lever than it looks, and the reason is the chain order:** `water_fill` at
+`max_position_pct` runs AFTER the tilt, so once the low-vol names hit the 20% cap they cannot
+absorb more of the redistribution and the tilt is clipped. That is correct — a risk limit must
+outrank a sizing preference — but it means equalizing risk per euro is not something α can deliver
+on a capped book. If that dispersion is the target, the instrument is a risk budget inside the cap
+(the I2 column), not α. The YAML records this rather than the tidier claim.
+
+585 tests green (+2).
+
+## There was no covariance matrix anywhere, so every risk limit was notional (2026-08-31, v6.4)
+
+Plan v6 I1 · I2 · L2, in that order, and **the order is the substance**.
+
+**I1 — `catalyx/scorer/covariance.py`.** Until now nothing in CATALYX computed a covariance
+matrix. Every risk limit — `max_position_pct`, `correlated_catalyst_cap`, the conviction tiers —
+was NOTIONAL, so 20% of the book in a bucket at 55% vol and 20% in one at 18% vol were the same
+number to the rules. The module computes the missing object and nothing else: Ledoit–Wolf
+shrinkage toward constant correlation, per-vehicle vol, portfolio vol, and the Euler risk
+decomposition (`ctr_pct`, which sums to 100 across positions — that is what makes "this name
+carries 40% of the risk on 20% of the money" a sentence with a defined meaning).
+
+**Weekly sampling, and it is not a preference.** Measured across the 44-vehicle universe: mean
+pairwise ρ runs **daily 0.127 → weekly 0.245 → fortnightly 0.243**. That is the Epps effect — the
+book's UCITS lines trade on LSE, XETRA, Euronext and SIX with different hours and liquidity, so
+daily closes are not synchronous and the sample covariance is biased down, here by about half. A
+daily matrix would have reported the book as half as concentrated as it is and turned the MCTR
+column into a tranquilizer. This finding rewrote the plan item before it was built.
+
+**And the honest wrinkle: on THIS book the gap runs the other way.** Ten liquid names over 57
+weeks give ρ weekly 0.333 vs daily 0.350. So the module reports `epps_gap` — the book's own
+number — and the printed line says which case it is, rather than asserting "the daily figure is
+biased down" next to a number that is not. The universe-wide measurement is why the matrix samples
+weekly; it does not license a claim about every subset.
+
+**Shrinkage is not optional here and it is not tuned.** With ~6-26 series and ~52-104 weekly
+observations, T is not comfortably larger than N: the sample covariance is badly conditioned and
+its extreme eigenvalues — exactly the directions a risk decomposition leans on — are biased.
+δ* is ESTIMATED by the Ledoit–Wolf (2004) formula, not chosen, and the tests pin that it responds
+to the sample the way the derivation says: δ→1.0 when the truth IS constant correlation (the
+target is right), δ→0.08 when the truth is block-structured (the target is wrong and shrinking
+would destroy real structure), and δ→0 as 1/T (0.109 → 0.020 → 0.003 at T = 60 / 250 / 2000).
+Symmetric and positive definite in every case, including T barely above N. No new dependency.
+
+**I2 — the cap gains a risk column and does not change its rule.** `cluster_risk_for` gives
+`movement_repo.cap_check` the share of book variance each driver carries, on the POST-trade book,
+beside the notional `exposure_eur` it already reads. Clusters overlap — a sector with two drivers
+is wholly in both, the same rule `exposure_eur` follows since v5.2 — so neither column sums to
+100, on purpose. When the matrix cannot be built the column is **None**, never 0: an unmeasured
+risk must not read as no risk, and a test pins it.
+
+**What the column says, immediately.** On the post-trade book:
+
+| driver | notional | risk (share of variance) |
+|---|---|---|
+| `struct_ai_capex_supercycle` | 41.6% | **50.8%** |
+| `struct_biopharma_patent_cliff_ma` | 21.9% ← breaches | **11.7%** |
+| `struct_energy_transition_grid` | 19.7% | **27.1%** |
+| `struct_cb_gold_accumulation` | 7.2% | **16.6%** |
+| `struct_stablecoin_payment_rails` | 6.8% | **16.8%** |
+
+**A notional cap ranks these wrong.** Biopharma breaches the cap while carrying *less than
+three-quarters* of the risk gold accumulation carries under it at a third of the notional. The
+plan's stated trigger for this measurement — "when two clusters at the same notional show 2× the
+real risk" — is met and exceeded. The cap nevertheless stays notional and stays `warn`: house
+doctrine is that a measurement is evidence FOR a config edit, never the edit. Replacing the
+notional cap with a risk budget is a decision for the user, now with the number in front of them.
+
+**L2 — the cap goes 20% → 30%, and only now.** At n_target=6 the neutral weight is 14.2%, so a
+20% cap forbade ANY TWO positions from sharing a driver. No themed book of six names satisfies
+that, which is why AI capex printed a breach every single run — and a permanently breached cap is
+a permanently ignored one, which is worse than one set where it can bite. It was deliberately left
+at 20% through v6.0 because raising it first would have deleted the breach by decree; the
+replacement discipline (I2) had to land first. 30% admits two neutral positions per driver and
+**still bites on the real case**: AI capex prints 41.6% today. Two new feasibility invariants stop
+this from being re-litigated — the cap must admit two neutral positions, and two tier-1 positions
+on one driver must still breach it, so relaxing it cannot make it decorative.
+
+583 tests green (+18).
+
+## The turnover guard was generating turnover, and the model book had the wrong word for exposure (2026-08-31, v6.3)
+
+Plan v6 J2 · J3. Two local defects, both of the same family: a mechanism whose stated purpose and
+actual arithmetic had drifted apart.
+
+**J2 — `apply_deadband` moved the positions it had just decided not to move.** The band's whole
+job is to say "this target is close enough to what you hold — do not trade it". It then
+renormalized to preserve the gross by multiplying **every** weight, kept ones included, so each
+protected position came out at `held × total/Σkept` instead of `held`: a micro-trade on every
+position the guard existed to protect, and taxable ones, since the guard was written to suppress
+tax churn. It could also push a weight **past `max_position_pct`** — `water_fill` had already
+applied the cap, and the renormalization ran after it.
+
+The residual is now absorbed by the FREE positions only; a kept weight is returned exactly as
+held. Three edge cases decided explicitly rather than left to the arithmetic: with **no free
+position** to absorb it the difference is simply cash, which is what the band means; when the kept
+positions **already fill the gross** (`residual ≤ 0`, bounded by `n_kept × deadband`) the free
+names take their targets unchanged, because paying for a decision NOT to trade by forcing a trade
+elsewhere is exactly the trade the band exists to prevent; and a final clamp keeps the gross at or
+under 100 (leverage is not an available state) and every weight at or under the cap — the cap is a
+risk limit and outranks the band, with the freed weight staying as cash rather than being
+redistributed, the same rule the contested haircut already follows.
+
+**`apply_deadband` had no tests at all.** That is why D7 survived — eight cases now pin it,
+including the two the bug produced: a kept weight must come back exactly as held, and no
+renormalization may carry a weight through the cap.
+
+**Inert on today's book, and that is the point.** Every held weight is more than a point from its
+target (the previous book had 10 positions, the new one 6), so nothing is kept and old and new
+agree exactly. The fix bites once the book stabilizes — which is precisely when the deadband is
+supposed to act, and precisely when the bug would have fired every run.
+
+**J3 — the model book learned the word the real book learned in v5.2.** `catalyst_exposure_rows`
+split each holding's weight equally across its catalysts and called the result exposure. That
+split is **P&L CREDIT** — who is credited with the return — and it partitions the book. It is not
+**RISK**: if a driver breaks, the whole position behind it moves, and nobody owns 30% of an ETF.
+v5.2 established this for the real book and left the model book publishing the discarded semantics
+into `portfolio_catalyst_exposure`, so the same word meant two things depending on which book you
+were reading.
+
+Both columns are now emitted: `pct_credit`/`credit_eur` (partitions, sums to 100) and
+`pct_exposure`/`exposure_eur` (the full position per driver, sums to MORE than the book, on
+purpose). `pct`/`eur` keep the credit split for pre-v6 readers. The point the split hides is in
+the tests: declaring a second driver **lowers** the credit on the first, so under a notional cap
+honesty would have bought headroom for free — the exposure column does not move. `lake_query`
+reports both averages and probes for the column so pre-v6 partitions read back as the split rather
+than dropping the run.
+
+565 tests green (+12).
+
+## A weight only means what it says if the scales are commensurable (2026-08-31, v6.2)
+
+Plan v6 Fase H, all four items, plus I6. The diagnosis behind them (audit 2026-08-31, D2): in a
+ranking by weighted sum, the EFFECTIVE weight of a dimension is not `w` but `w·σ_cross`. The
+composite added a uniform cross-sectional percentile (momentum), a level in a narrow band
+(catalyst_alignment), a constant 50 wherever no flow snapshot existed, and a five-value enum
+(crowding) — so the numbers in `composite_weights` were never the weights actually applied, and a
+dimension degenerate to a constant weighed **zero** whatever the YAML said. That is exactly what
+`valuation_relative` did for months under a 0.15 weight (v1.6). v1.6 removed the instance. **The
+mechanism was left running**, and `_DEFAULT_FLOW = 50` reproduces it today for every sector with
+no flow snapshot.
+
+**H1 — the combination moves to z-space.** `sector_scorer.commensurate()` standardizes each
+dimension across THIS run's universe (z winsorized to ±3, crowding sign-flipped so higher is
+better everywhere), and the composite becomes `clamp(50 + z_scale·Σ wᵢ·zᵢ, 0, 100)` with
+`z_scale: 15`. Raw values stay in `score_breakdown`; the standardization is internal to the
+combination. `composite_z` — the raw `Σ wᵢ·zᵢ` — is persisted beside it, because that is the unit
+that means the same thing in every run. Now 0.29 means 0.29: a name 1σ better on momentum scores
+`0.29 × 15` points higher, whatever that dimension's raw spread happens to be that month.
+
+**And the lint, which is the half that survives.** A dimension whose `σ_cross` falls below
+`dead_dimension_sigma` is NAMED in the run summary. It fired on its first run: `sector_scorer
+--universe` from the CLI applies the default crowding 35 to every sector, so crowding is dead
+there (σ=0.0) — a known footnote in `catalyx-heatmap.md` that had never been a machine-checkable
+fact. Two tests pin the property rather than a number: a constant dimension cannot change the
+ranking, and it cannot fail to be flagged.
+
+**What the measurement said, including where the diagnosis was wrong.** On the real recording path
+the four σ are 28.0 / 29.4 / 19.4 / 18.7, giving effective weights **.389 / .338 / .185 / .089**
+against nominal .35 / .29 / .24 / .12. So flow and crowding were under-counted, as D2 said — but
+D2 also claimed catalyst_alignment was under-counted (σ≈10-15) and it was **over**-counted, and
+for a reason that is itself a v6 finding: the CA=0 of study-less sectors (D3) puts a spike on the
+floor and inflates the dispersion. The correction is therefore small today (max rank change ±2,
+same book) and gets larger once H2 stops manufacturing that spike.
+
+**H2 — not measured is imputed to the prior, never to the worst case.** No study meant CA=0, so
+"we have not looked" scored identically to "we looked and there is nothing". With flow at its
+default the best a study-less sector could reach was `0×.35 + 100×.29 + 50×.24 + 65×.12 = 48.8`
+against `min_composite: 55` — **a new sector with perfect momentum could not enter the flagship
+book, ever**, which is a pro-incumbent bias in a pipeline whose stated job is to detect before
+things are priced in. `compute_catalyst_alignment` now returns a machine-readable `reason`, and
+only `no_study` is imputed: it lands at z=0 and is EXCLUDED from the CA moments (an imputed value
+that drags the mean it is then measured against is not an imputation). `no_active_catalysts` keeps
+its zero — a study that looked and found nothing is a finding, not a gap. Flagged `ca_imputed` on
+the row, and test-enforced as a COLUMN, not a gate: it qualifies a BUY the way `blind` freshness
+does (v5 E1), and `/catalyx-open` still requires a study before any money moves. **Today it fires
+on nothing** — all 26 investable sectors have studies. Its value is prospective: the next sector
+promoted out of `/catalyx-scan` discovery is no longer dead on arrival.
+
+**H3 — the selection floor stops being a level.** `min_composite: 55` was an absolute number
+applied to a semi-relative blend: momentum is a percentile (mean 50 by construction) while CA
+drifts with the catalyst cycle, so what "55" excluded changed every run. A frozen threshold whose
+MEANING is not frozen is not a frozen threshold. Profiles now declare `min_composite_z`; the
+pre-v6 key is read one major more, translated through the same map. The flagship is set to
+**0.0** — "we do not hold a name below this run's universe average" — and deliberately NOT the
+mechanical translation of 55 (=+0.33), which leaves 8 candidates for 6 slots, thin enough that the
+floor starts co-selecting with top-N. The floor excludes; the selector is top-N under the caps.
+The dislocation lenses migrate too (the plan had not named them): the opportunity floor KEEPS the
+strict stance at +0.33 because it does not co-select with anything.
+
+**The migration hazard this exposed, and how it is handled.** A z-derived floor compared against a
+pre-v6 run's absolute composites is a comparison between two scales, and it would have silently
+admitted most of the universe. `portfolio._apply_composite_floor` and `dislocation.analyze` both
+detect whether the run they are reading carries `composite_z` and fall back to the pre-v6 absolute
+floors when it does not. Verified live against the current lake run, which is pre-v6.
+
+**H4 — the momentum blend stops paying for the reversal window.** `return_1m: 0.20 → 0.0`,
+3m/6m renormalized to the exact 0.5625 / 0.4375 (45:35 preserved). The last month is the
+short-term REVERSAL window (Jegadeesh 1990, Lehmann 1990) — the standard cross-sectional signal
+is 12-1 precisely because it skips it (Jegadeesh–Titman 1993) — and this repo had already measured
+the same thing locally: the v1.6 acceleration backtest found NEGATIVE monthly IC on the short leg,
+and the 1m leg still entered with a positive sign. **This is the only item in the block with real
+bite:** uranium −7 ranks, gold miners −4, gold physical −4 — the hot-last-month names.
+
+**I6 — the VIX brake ramps instead of cliffing.** `vix_pause_above: 30` with a 0.20 penalty meant
+29.9 → 30.1 moved a fifth of the target capital, so a VIX oscillating around 30 oscillated the
+whole book run to run. Now linear from `vix_ramp_start: 25` to `vix_ramp_full: 35`: zero below 25,
+half the brake at the old cliff point, full at 35. An unmigrated config centres the ramp on its own
+`vix_pause_above`, so it keeps its stance. `why` prints the ramp inputs like everything else.
+
+**The honest bottom line: the H block does not change today's book.** Same six names before and
+after; only the internal order moves (gold miners 4th → 6th, pharma up). Candidate pool 11 → 11 —
+the momentum and crowding filters bind before the composite floor does, at either floor value. It
+is a correctness fix and a base, not an alpha change, and saying otherwise would be inventing a
+result. What it buys is that the two silent failure modes are now impossible: a dead dimension is
+named, and an unmeasured one goes to the prior.
+
+**Also touched.** `sector_snapshot` schema **1.3 → 1.4** (`composite_z`, `composite_absolute`,
+`ca_imputed`; `composite` redescribed, with the note that pre-1.4 values are NOT comparable across
+the boundary — compare by `composite_z` or by rank). The dashboard's fixed 66/40 traffic light
+would have rendered every sector amber forever on a scale centred at 50, so composite gets its own
+`compositeColor` at ±0.5σ and `STRONG_COMPOSITE` derives from it; `scoreColor` keeps the old cuts
+for the genuinely 0-100 columns. 553 tests green (+22).
+
+## A trade slot is scarce, so the table stops pretending it is free (2026-08-31, v6.1)
+
+Plan v6 L3 · L4. `rebalance_rules.fee_eur: 0.0` said trading costs nothing. Inside the monthly
+allowance that is true in ACCOUNTING terms and false in economic ones: the operator has 10 free
+trades a month, the mandate spends slots on catalysts arriving BETWEEN reviews, and a slot
+therefore carries option value — its shadow price is positive whenever the constraint binds. The
+table had no concept of it and would happily emit more rows than the month could carry.
+
+**`trade_budget_plan`** splits the money-moving rows into what a review may execute and what it
+must defer. The ordering is the part that matters: **not** expected return. The composite's rank
+IC is noise (−0.05), so ranking slots by a forecast the system has already measured as unreliable
+would invent precision exactly where it declared none. The three tiers are what IS measured —
+**risk removed** (SELL/REDUCE, exempt: a book does not keep risk it decided to shed because the
+month ran out of free trades) → **cost of inaction** (BUY/ADD; `cash_drag` is a measured cost) →
+**rotation** (TRIM), which is what Gârleanu–Pedersen (2013) says to starve first when trading is
+costly: with transaction costs you trade partway toward the target and sacrifice the fine
+adjustment between existing names. Within a tier, the biggest mover wins the slot — most money
+moved per scarce unit. Exempt rows still CONSUME slots, and if they alone exhaust the budget that
+is reported (`over_budget`), not hidden.
+
+**Nothing is zeroed.** `rule_action` and `trade_eur` stay the rule's ask; the row is flagged
+`budget_state` and printed with a trailing `*`. So the scorecard still judges the RULE — we want
+to know whether it was right even when it could not be executed — and the deferral is priced
+separately as what the constraint cost.
+
+**L4 — `budget` is an override author, and deliberately not `unrecorded`.** `unrecorded` means
+nobody wrote the decision down; a budget deferral is the rule working. Filing them together would
+fill the deviation tally with rows nobody chose, which is the exact contamination v5 built that
+tally to avoid. Budget defers are logged against the CURRENT run, which also means the next run's
+`unrecorded_deviations` finds an override for that sector and does not re-file the same decision
+as silence. They are still scored: ~21 trading days later `override_edge` says what the budget
+cost, so the constraint is falsifiable like everything else in the table.
+
+On the live book the budget binds immediately: **8 money-moving rows, 6 fit, 2 deferred (€1,163)**
+— the pharma ADD and the cybersecurity TRIM. `fee_after_free_eur` is still null; when the cost of
+the 11th trade is known, going over becomes a priced choice rather than a refused one. An existing
+render test caught the legend colliding with the table header and was right to. 531 tests (+7).
+
+**Left standing, and worth knowing:** the swap ledger pairs the deferred TRIM with a granted BUY
+as its financing, though with €7,368 idle the buys are funded by cash, not by that trim. The
+pairing predates this change; the budget only made it visible.
+
+## The position cap was a position COUNT, and nobody had written the identity (2026-08-31, v6.0)
+
+First step of `docs/PLAN_v6_signal_scale_and_covariance.md` (L1 · L5 · J1).
+
+**The defect.** `max_position_pct` had been read for years as a concentration ceiling. With a
+deployment target it is mostly the opposite — a lower bound on how MANY positions the book must
+hold: `n_min = deploy_max / max_position_pct`. At the frozen 12% and a deploy_max of 0.85 that is
+**8 positions minimum**, and the operator's binding constraint is **10 free trades a month**
+(Revolut). Building the book the config demanded spent 8 of 10 slots and left 2 for a mandate
+whose entire value proposition is acting on catalysts that arrive BETWEEN reviews. The sibling
+identity `deploy_max / correlated_catalyst_cap` explains the breach v5.2 found: at a 6-name book
+the neutral weight is 14.2%, so a 20% driver cap forbids *any two positions from sharing a
+driver* — which is why `struct_ai_capex_supercycle` printed 35.6% against it every run. **The cap
+was not being broken by a reckless book; the three constants were jointly infeasible.** Each was
+defensible alone, which is exactly why nobody caught it: there was no test that read them together.
+
+**v4 had seen half of it and decided the wrong way.** D-3 of the v4 plan noted that
+`max_position_pct` was 12 in `rebalance_rules` and 16 in `portfolios/catalyx.yaml`, and
+recommended "12 wins". It was never shipped — fortunately, because unifying DOWN would have
+tightened the count constraint to 8 positions. A ceiling cannot be chosen without asking how many
+positions it forces.
+
+**The fix — the ceiling is no longer chosen.** New `book_shape` block: `n_target` is the one
+declared number and `max_position_pct` + `conviction_tiers` derive from it as multiples of the
+neutral weight (`deploy_max / n_target`). The old 12/8/4 absolutes were picked for a ~10-name book
+and meant nothing at 6 — every position would have sat above tier 1. Now `[1.4, 1.0, 0.5] × 14.2%`
+≈ **20/14/7%**, and a tier keeps meaning "1.4× a normal line" whatever `n_target` becomes.
+
+**n_target = 6 is measured, not preferred.** Mean pairwise ρ across the 44 universe vehicles is
+**0.245 on weekly returns** — and 0.127 on daily, which is the Epps effect (asynchronous closes on
+LSE/XETRA UCITS lines bias covariance down; the estimate converges by weekly, fortnightly gives
+0.243). With σ_rel(n) = √(ρ + (1−ρ)/n): n=5 0.629 · **n=6 0.609** · n=7 0.594 · n=8 0.583 · n=10
+0.566. Past 6, each additional name buys under 2.5% of relative vol and costs one of ten monthly
+trade slots; below 6 the vol given up climbs steeply. 6 is the knee of the measured curve. (That
+Epps finding also rewrote the plan's covariance step before it was built: a daily-returns matrix
+would have understated portfolio risk by half and turned the MCTR into a tranquilizer.)
+
+**`trade_budget` recorded, not yet wired.** `fee_eur: 0.0` says trading is free; inside the
+allowance that is true in accounting terms and false in economic ones, since a slot is scarce and
+carries option value. The block declares `free_per_month`, `reserve_for_events` and
+`planned_max_per_review`; the rebalance engine consumes it in L3. `fee_after_free_eur` is left
+**null on purpose** — the cost of the 11th trade is a broker fact, and inventing it would price the
+constraint wrongly in both directions.
+
+**What deliberately did NOT change.** `correlated_catalyst_cap` stays at 20% though it is now
+provably too tight. Raising a cap deletes a breach by decree, so it moves only after covariance/
+MCTR publishes risk per cluster and can carry the discipline the notional cap was providing. The
+other three model books (`momentum`, `equal_weight`, `low_crowding`) keep their shapes: they exist
+to compare strategies against the flagship and have lake history under those shapes.
+
+**`tests/unit/test_config_feasibility.py`** is the part that outlives the numbers: the cap must
+admit the target book, `n_target + reserve_for_events` must fit the monthly allowance, the driver
+cap must admit one neutral position, the YAML must mirror the derived values, and the model book
+must be executable under the real book's rules. The next config edit that makes the triple
+unsatisfiable fails the suite instead of surfacing fifteen reviews later as a permanent breach.
+524 tests green (+5). Model book rebuilt: 6 positions, cap binding at 20% on `pharma_large_cap`.
+
 ## Closing the drift found the cap reading the wrong number, on the wrong book (2026-08-31, v5.2)
 
 v5.1 printed the attribution drift and left the decision to the user. The user took it — "cerramos

@@ -43,3 +43,13 @@ pipeline with money, **which parts are resilient and which are fragile**.
   how the pipeline should tell a transient `contradicts` event (noise, decays) apart from the
   first tremor of a structural break (regime change, permanent rotation). Three-state model
   (`intact` / `contested` / `breaking`); validated against exp_2026-06-05 (classifies `contested`).
+
+## Standing harnesses (scripts, not dated experiments)
+
+- `backtest_acceleration.py` — walk-forward test of whether momentum ACCELERATION earns a
+  composite weight. Verdict: no (negative monthly IC). Fed v1.6.
+- `sensitivity_weights.py` — perturbs each scoring/sizing constant ±25/50%, one at a time,
+  and reports Kendall τ + top-10 Jaccard on the ranking, and weight deltas on the model
+  book. Read the `moved` column: it separates a constant that shifts scores without
+  reordering from one the live path never consults. Carries a control knob — if the table
+  says the control FAILED, the harness is broken and the table means nothing.

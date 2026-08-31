@@ -232,7 +232,12 @@ def hhi(weights_pct: list[float]) -> float | None:
 
 
 def covariance(series: list[list[float]]) -> list[list[float]] | None:
-    """Annualized covariance matrix of aligned daily return series. None if too short."""
+    """Annualized covariance matrix of aligned daily return series. None if too short.
+
+    LEGACY (pre-v6). Raw sample covariance on DAILY returns: no shrinkage, and biased down by
+    the Epps effect on asynchronous UCITS closes. `book_covariance` below is the current path —
+    this is kept for the fallback when there is not enough history to sample weekly.
+    """
     n = len(series)
     if n == 0:
         return None
@@ -249,7 +254,48 @@ def covariance(series: list[list[float]]) -> list[list[float]] | None:
     return cov
 
 
-def risk_contribution(weights_pct: list[float], series: list[list[float]]) -> dict | None:
+def book_covariance(prices) -> tuple[list[list[float]] | None, dict]:
+    """The book's annualized covariance, on the same basis the rest of v6 uses.
+
+    Found while wiring v6 I5: this digest had its OWN risk decomposition since v4, built on a
+    RAW DAILY sample covariance — the two defects `scorer/covariance.py` was written to fix,
+    sitting in production one layer away. Daily closes across LSE/XETRA/Euronext/SIX are not
+    synchronous, so their covariance is biased down (Epps: universe-wide ρ 0.127 daily vs 0.245
+    weekly), and an unshrunk sample covariance with T not comfortably above N has biased extreme
+    eigenvalues — the exact directions a risk decomposition reads.
+
+    So: WEEKLY returns with Ledoit–Wolf shrinkage when there is enough history, DAILY as the
+    documented fallback for a young book (52 weeks of weekly data is two months of daily data's
+    worth of observations, and a book opened this spring has neither). The basis used is
+    RETURNED, not assumed, and printed — a number computed two different ways must say which.
+    """
+    from catalyx.scorer import covariance as cvm
+
+    meta: dict = {"basis": None, "shrinkage": None, "obs": None}
+    if prices is None or getattr(prices, "empty", True) or len(prices.columns) < 2:
+        return None, meta
+    try:
+        weekly = cvm.to_weekly(prices).dropna()
+        if len(weekly) >= 52:
+            lw = cvm.ledoit_wolf(weekly.values)
+            meta.update(basis="weekly", shrinkage=round(lw["shrinkage"], 4), obs=int(lw["T"]))
+            return (lw["sigma"] * 52.0).tolist(), meta
+        daily = prices.pct_change().dropna()
+        if len(daily) < 20:
+            return None, meta
+        lw = cvm.ledoit_wolf(daily.values)
+        meta.update(basis="daily", shrinkage=round(lw["shrinkage"], 4), obs=int(lw["T"]),
+                    note=(f"only {len(weekly)} common weeks — under the 52 needed to sample "
+                          f"weekly, so this falls back to daily returns, which the Epps effect "
+                          f"biases DOWN on asynchronous UCITS closes. Read the risk shares as "
+                          f"ordering, and the book vol as a floor."))
+        return (lw["sigma"] * float(_TRADING_DAYS)).tolist(), meta
+    except Exception:                                          # pragma: no cover - defensive
+        return None, meta
+
+
+def risk_contribution(weights_pct: list[float], series: list[list[float]],
+                      cov: list[list[float]] | None = None) -> dict | None:
     """Each position's share of the BOOK's volatility: `RC_i = w_i·(Σw)_i / σ_p`, summing to 100%.
 
     WHY THIS EXISTS (plan v4 §2 A4). Two €500 lines are not two equal bets: on this book
@@ -267,7 +313,8 @@ def risk_contribution(weights_pct: list[float], series: list[list[float]]) -> di
     total = sum(w)
     if not w or total <= 0:
         return None
-    cov = covariance(series)
+    if cov is None:
+        cov = covariance(series)
     if cov is None or len(cov) != len(w):
         return None
     sigma_w = [sum(cov[i][j] * w[j] for j in range(len(w))) for i in range(len(w))]
@@ -513,9 +560,11 @@ def build(run_id: str | None = None, lake_dir: Path | None = None, exit_fn=None,
                 # capital column beside it and both sum to 100.
                 mv = [float(r.get("market_value_eur") or 0.0) for r in rows]
                 gross = sum(mv) or 1.0
-                rc = risk_contribution([m / gross * 100.0 for m in mv], series)
+                cov, cov_meta = book_covariance(common)
+                rc = risk_contribution([m / gross * 100.0 for m in mv], series, cov=cov)
                 if rc:
                     rc["window_days"] = len(common)
+                    rc.update({k: v for k, v in cov_meta.items() if v is not None})
                     for r, cap, contrib, marg, vol in zip(
                             rows, mv, rc["contribution_pct"], rc["marginal_pct"], rc["vol_pct"]):
                         r["capital_pct_of_book"] = round(cap / gross * 100.0, 2)
@@ -523,11 +572,26 @@ def build(run_id: str | None = None, lake_dir: Path | None = None, exit_fn=None,
                         r["marginal_risk_pct"] = marg
                         r["vol_common_window_pct"] = vol
 
+    # v6 I5: the loss budget the tier ceilings imply, made per-line and REALIZED. A tier is a
+    # ceiling on weight; paired with the protective exit floor it is a ceiling on what the line
+    # can cost the book. Printing the realized version turns a config comment into a number the
+    # review can read: `line_risk_pct = weight_of_total_capital × |drawdown_exit_pct|`.
+    from catalyx.config import weights as _w
+    stop = abs(float(_w.exit_signals().get("drawdown_exit_pct", -30.0)))
+    total_capital = float(_w.total_capital_eur() or 0.0)
+    for r in rows:
+        mval = float(r.get("market_value_eur") or 0.0)
+        r["line_risk_pct"] = (round(mval / total_capital * 100.0 * stop / 100.0, 2)
+                              if total_capital > 0 else None)
+
     book = _book_metrics(rows, run_id, lake_dir=lake_dir)
     book["effective_n"] = effective_n(book.get("hhi"))
+    book["line_risk_stop_pct"] = stop
+    book["line_risk_total_pct"] = round(sum(r["line_risk_pct"] or 0.0 for r in rows), 2)
     if rc:
         book["book_vol_from_cov_pct"] = rc["book_vol_pct"]
         book["risk_window_days"] = rc["window_days"]
+        book["risk_basis"] = rc.get("basis")
 
     return {"as_of": as_of, "run_id": run_id, "positions": rows,
             "book": book, "risk": rc,
@@ -656,8 +720,13 @@ def render(res: dict) -> str:
                    f"{str(r['exit_action'] or '—'):<7}")
     rc = res.get("risk")
     if rc:
+        basis = rc.get("basis") or "daily"
+        shr = rc.get("shrinkage")
         out += ["", f"RISK CONTRIBUTION — where the book's volatility actually comes from "
-                    f"({rc['window_days']} common trading days, annualized)"]
+                    f"({rc['window_days']} common trading days · {basis} returns"
+                    + (f" · Ledoit-Wolf δ={shr:.2f}" if shr is not None else "") + ", annualized)"]
+        if rc.get("note"):
+            out += ["  ! " + rc["note"]]
         h2 = f"  {'sector':<30} {'etf':<9} {'capital %':>10} {'vol %':>8} {'risk %':>8}  note"
         out += [h2, "  " + "-" * (len(h2) - 2)]
         for r in sorted(res["positions"], key=lambda x: -(x.get("risk_contribution_pct") or 0)):
@@ -677,6 +746,23 @@ def render(res: dict) -> str:
                    f"effective N {_f(b.get('effective_n'), 1)} on {b['n_positions']} positions")
         out.append("  Capital share says what was spent; risk share says how much of what can go "
                    "wrong is this line. Measurement only.")
+
+    # v6 I5 — the loss budget the tier ceilings imply, per line and realized.
+    if any(r.get("line_risk_pct") is not None for r in res["positions"]):
+        out += ["", f"LINE RISK — what each line can cost the book before the protective exit "
+                    f"fires ({b.get('line_risk_stop_pct')}% stop × weight of TOTAL capital)"]
+        h3 = f"  {'sector':<30} {'cap %':>7} {'line risk %':>12}"
+        out += [h3, "  " + "-" * (len(h3) - 2)]
+        for r in sorted(res["positions"], key=lambda x: -(x.get("line_risk_pct") or 0)):
+            stop = b.get("line_risk_stop_pct") or 30.0
+            w = (r.get("line_risk_pct") or 0.0) / stop * 100.0   # the weight it was derived from
+            out.append(f"  {str(r['sector_id'])[:30]:<30} {_f(w, 1):>7} "
+                       f"{_f(r.get('line_risk_pct'), 2):>12}")
+        out.append(f"  {'ALL LINES':<30} {'':>7} {_f(b.get('line_risk_total_pct'), 2):>12}  "
+                   f"if every stop fired at once")
+        out.append("  The tier ceilings imply 6.0 / 4.2 / 2.1% per line (20/14/7% × the 30% stop) "
+                   "— fractional-Kelly\n  sizing made explicit. The lever on this number is "
+                   "book_shape.n_target, not the tiers.")
 
     out += ["", f"BOOK     {b['n_positions']} positions · marked €{b['marked_eur']:,.0f} · "
                 f"deployed {_f(b['deployed_pct'], 0)}% · unrealized €{b['unrealized_eur']:,.0f}",

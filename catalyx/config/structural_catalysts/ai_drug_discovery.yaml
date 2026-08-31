@@ -40,20 +40,25 @@ user_notes: >
   patent-cliff structural (80). Validation-stage: watch for the first AI-designed-drug pivotal readout.
 
 intensity:
-  current_score: 88.7
+  current_score: 90.7
   computation_method: computed
-  last_updated: "2026-07-28"
+  last_updated: "2026-08-31"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: below struct_biopharma_patent_cliff_ma (80). Real platform
     inflection but early-cycle with binary clinical-validation risk.
   history:
+  - period: '2026-08-31'
+    score: 90.7
+    note: 'Computed 2026-08-31: avg=88.73 trend=↑ (rising 1 period) (was 88.7)'
+    computation_method: computed
   - period: '2026-07-28'
     score: 88.7
     note: 'Computed 2026-07-28: avg=88.73 trend=→ (flat — insufficient history) (was 72)'
     computation_method: computed
   - period: "2026-Q3"
     score: 72
-    note: "Bootstrap at creation 2026-07-01. Isomorphic $2.1B Series B (May 2026); Insilico rentosertib Phase IIa; no AI-designed drug FDA-approved yet."
+    note: "Bootstrap at creation 2026-07-01. Isomorphic $2.1B Series B (May 2026); Insilico rentosertib Phase IIa; no AI-designed
+      drug FDA-approved yet."
     computation_method: bootstrap
 
 indicators:

@@ -63,6 +63,25 @@ _DEFAULT_HALFLIFE = weights.event_default_halflife()
 # noisy-OR. See scoring_weights.yaml §MULTI-CATALYST AGGREGATION.
 _REINFORCE_FACTOR = weights.reinforce_factor()
 
+# v7 M4: ca_unpriced candidate column — priced-in fractions per carrier.
+_MATURITY_PRICED = weights.maturity_priced_in()
+_PRICED_PRIOR = weights.PRICED_IN_PRIOR
+
+
+def _priced_in_structural(sc: dict) -> tuple[float, bool]:
+    """(priced_in fraction, imputed?) from the structural's narrative_maturity."""
+    m = sc.get("narrative_maturity")
+    if m in _MATURITY_PRICED:
+        return float(_MATURITY_PRICED[m]), False
+    return _PRICED_PRIOR, True
+
+
+def _priced_in_event(ev: dict) -> tuple[float, bool]:
+    v = ev.get("is_priced_in_estimate")
+    if v is None:
+        return _PRICED_PRIOR, True
+    return float(v), False
+
 
 def _aggregate_alignment(modified_scores: list[float]) -> float:
     """Combine per-catalyst modified scores into one sector catalyst_alignment.
@@ -208,11 +227,16 @@ def compute_catalyst_alignment(
     study = _load_sector_study(sector_id)
     if structural_ids is None:
         if study is None:
-            return {"sector_id": sector_id, "error": f"No sector study found at data/sector_studies/study_{sector_id}.json"}
+            # reason "no_study" = NOT MEASURED, distinct from a study that measured zero
+            # catalysts below. sector_scorer imputes the first to the prior (v6 H2) and
+            # lets the second score 0, because that zero is a finding.
+            return {"sector_id": sector_id, "reason": "no_study",
+                    "error": f"No sector study found at data/sector_studies/study_{sector_id}.json"}
         structural_ids = study.get("active_catalyst_ids", [])
 
     if not structural_ids:
-        return {"sector_id": sector_id, "error": "No active_catalyst_ids in sector study"}
+        return {"sector_id": sector_id, "reason": "no_active_catalysts",
+                "error": "No active_catalyst_ids in sector study"}
 
     # Load all active event catalysts once (also indexed by id for direct lookup)
     all_events = [e for e in _load_all_event_catalysts() if e.get("status") == "active"]
@@ -271,6 +295,7 @@ def compute_catalyst_alignment(
             # `contradicts` has no structural target in this context, so it is recorded
             # but not aggregated (nothing to dampen).
             contributes = relation in ("independent", "confirms")
+            ev_priced, ev_priced_imp = _priced_in_event(ev)
             direct_event_results.append({
                 "event_id": sid,
                 "type": "direct_event",
@@ -279,6 +304,8 @@ def compute_catalyst_alignment(
                 "strength_decayed": decayed,
                 "halflife_days": halflife,
                 "modified_score": round(decayed, 2) if contributes else None,
+                "priced_in": ev_priced,
+                "priced_in_imputed": ev_priced_imp,
             })
             continue
 
@@ -347,10 +374,13 @@ def compute_catalyst_alignment(
         regime_state = sm.classify_structural(monitor["degrading"], n_live)
         persistence = sm.persistence_evidence(live_windowed)
 
+        st_priced, st_priced_imp = _priced_in_structural(sc)
         structural_results.append({
             "structural_id": sid,
             "base_score": base_score,
             "modified_score": modified_score,
+            "priced_in": st_priced,
+            "priced_in_imputed": st_priced_imp,
             "events": event_details,
             "regime_state": regime_state,
             "degrading": monitor["degrading"],
@@ -374,6 +404,18 @@ def compute_catalyst_alignment(
         }
 
     catalyst_alignment = _aggregate_alignment(valid)
+
+    # v7 M4: same pool, each carrier's score scaled by its unpriced fraction. Column, weight 0.
+    unpriced_pool = [
+        r["modified_score"] * (1.0 - r["priced_in"])
+        for r in (structural_results + direct_event_results)
+        if r.get("modified_score") is not None and r.get("priced_in") is not None
+    ]
+    ca_unpriced = _aggregate_alignment(unpriced_pool) if unpriced_pool else None
+    ca_unpriced_imputed_n = sum(
+        1 for r in (structural_results + direct_event_results)
+        if r.get("modified_score") is not None and r.get("priced_in_imputed")
+    )
 
     # Sector regime state: worst state among the structurals that materially drive the
     # alignment (within MATERIAL_MARGIN of the anchor). Additive annotation only — it does
@@ -410,6 +452,8 @@ def compute_catalyst_alignment(
     return {
         "sector_id": sector_id,
         "catalyst_alignment": catalyst_alignment,
+        "ca_unpriced": ca_unpriced,
+        "ca_unpriced_imputed_n": ca_unpriced_imputed_n,
         "regime_state": sector_regime,
         "regime_review_recommended": sector_review,
         "structural_count": sum(1 for r in structural_results if r.get("modified_score") is not None),

@@ -90,6 +90,8 @@ def decompose(window_return: float, beta_val: float | None, market_window_return
 # ── Lake read: latest sectors + regime + catalyst ────────────────────────────
 
 def _load_sectors(run_id: str | None, lake_dir: Path | None) -> tuple[list[dict], str | None]:
+    import pandas as pd
+
     df = lake.read_table("sector_snapshot", lake_dir=lake_dir)
     if df.empty:
         return [], None
@@ -105,6 +107,9 @@ def _load_sectors(run_id: str | None, lake_dir: Path | None) -> tuple[list[dict]
             "regime_state": r.get("regime_state") if r.get("regime_state") is not None else "intact",
             "catalyst_alignment": float(r.get("catalyst_alignment") or 0.0),
             "composite": float(r.get("composite") or 0.0),
+            # NaN, not None, is how a pre-v6 partition reads back under union_by_name
+            "composite_z": (None if pd.isna(r.get("composite_z"))
+                            else float(r.get("composite_z"))),
             "momentum": float(r.get("momentum") or 0.0),
         })
     # primary_etf can be NaN (a float) for studyless sectors — NaN is truthy, so filter on type;
@@ -141,17 +146,26 @@ def analyze(run_id: str | None = None, lookback_days: int = 90, window_days: int
         drawdown_threshold = cfg["drawdown_threshold_pct"]
     if min_catalyst_alignment is None:
         min_catalyst_alignment = cfg["min_catalyst_alignment"]
-    if min_composite is None:
-        min_composite = cfg["min_opportunity_composite"]
     if max_diversifier_corr is None:
         max_diversifier_corr = cfg["max_diversifier_corr"]
-    if min_diversifier_composite is None:
-        min_diversifier_composite = cfg["min_diversifier_composite"]
 
     price_fn = price_fn or yfinance_prices
     sectors, used_run = _load_sectors(run_id, lake_dir)
     if not sectors:
         return {"error": "no sector_snapshot in lake (record a run first)"}
+
+    # v6 H3: the floors are z-derived levels, valid only against a run scored in z-space. A
+    # pre-v6 run holds absolute-level composites, so it is compared against the pre-v6 floors —
+    # comparing the two scales would silently admit most of the universe.
+    zscale = any(s.get("composite_z") is not None for s in sectors)
+    if min_composite is None:
+        min_composite = (_w.composite_floor(cfg, "min_opportunity_composite_z",
+                                            "min_opportunity_composite")
+                         if zscale else cfg["min_opportunity_composite"])
+    if min_diversifier_composite is None:
+        min_diversifier_composite = (_w.composite_floor(cfg, "min_diversifier_composite_z",
+                                                        "min_diversifier_composite")
+                                     if zscale else cfg["min_diversifier_composite"])
 
     etfs = list(dict.fromkeys(s["primary_etf"] for s in sectors))
     tickers = list(dict.fromkeys(etfs + [benchmark]))

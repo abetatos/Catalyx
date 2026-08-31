@@ -290,7 +290,10 @@ def apply_batch(payload, as_of: str | None = None, recompute: bool = True,
             try:
                 res = intensity_engine.compute_from_yaml(Path(path))
                 intensity_engine.write_back(Path(path), res, period=as_of)
-                recomputed.append({"path": path, "catalyst_id": res.get("catalyst_id"),
+                # `compute_from_yaml` returns the id under "id"; reading "catalyst_id" made
+                # every recompute line print "Σ None" — the one line that says which catalyst's
+                # intensity just moved.
+                recomputed.append({"path": path, "catalyst_id": res.get("id"),
                                    "stored_score": res.get("stored_score"),
                                    "computed_score": res.get("computed_score")})
             except Exception as e:                      # a bad YAML must not lose the applied edits

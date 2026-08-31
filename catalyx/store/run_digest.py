@@ -85,6 +85,35 @@ def _pick(rows: list[dict], fields: tuple[str, ...]) -> list[dict]:
     return [{k: r.get(k) for k in fields} for r in rows]
 
 
+def _scan_counts(scan, scan_path) -> dict:
+    """Counts for the scan deltas, in either shape the file is written in.
+
+    The three consumers of this file (`indicator_update`, `catalyst_review`,
+    `catalyst_lifecycle`) all accept a bare LIST of per-catalyst deltas as well as
+    the keyed dict; this reader assumed the dict and raised AttributeError on the
+    list, which is the shape a scan actually writes. Count both.
+    """
+    if isinstance(scan, list):
+        return {
+            "path": str(scan_path),
+            "n_indicator_updates": sum(len(d.get("indicators") or []) for d in scan
+                                       if isinstance(d, dict)),
+            "n_catalyst_reviews": sum(1 for d in scan
+                                      if isinstance(d, dict) and d.get("verdict")),
+            "n_lifecycle": sum(1 for d in scan
+                               if isinstance(d, dict) and d.get("lifecycle")),
+            "n_new_catalysts": sum(1 for d in scan
+                                   if isinstance(d, dict) and d.get("new")),
+        }
+    return {
+        "path": str(scan_path),
+        "n_indicator_updates": len(scan.get("indicator_updates") or []),
+        "n_catalyst_reviews": len(scan.get("catalyst_reviews") or []),
+        "n_lifecycle": len(scan.get("lifecycle_transitions") or []),
+        "n_new_catalysts": len(scan.get("new_catalysts") or []),
+    }
+
+
 def build(as_of: str | None = None, top_n: int = 15, lake_dir: Path | None = None) -> dict:
     """Assemble the run's whole deterministic state. Never raises on a missing source."""
     from catalyx.store import lake_query
@@ -146,19 +175,17 @@ def build(as_of: str | None = None, top_n: int = 15, lake_dir: Path | None = Non
         "stale_verdicts": state.get("stale_verdicts"),
 
         # ── what the scan changed (deltas the review must apply before scoring) ───────
-        "scan": None if scan is None else {
-            "path": str(scan_path),
-            "n_indicator_updates": len(scan.get("indicator_updates") or []),
-            "n_catalyst_reviews": len(scan.get("catalyst_reviews") or []),
-            "n_lifecycle": len(scan.get("lifecycle_transitions") or []),
-            "n_new_catalysts": len(scan.get("new_catalysts") or []),
-        },
+        "scan": None if scan is None else _scan_counts(scan, scan_path),
 
         # ── what the score run produced ───────────────────────────────────────────────
         "ranking": _try("ranking", lambda: lake_query.latest_ranking(top_n=top_n, lake_dir=lake_dir), []),
+        # `_rank_moves` keeps only |Δ| ≥ 5, so a run whose biggest move is 4 legitimately yields
+        # []. That is a RESULT, not an absent input, and listing it under MISSING reads as a hole
+        # in the run — it did on 2026-08-31, where the lake held six real moves. Missing is
+        # reserved for the case the lake has no rank events at all.
         "rank_moves": _try("rank_moves",
                            lambda: _rank_moves(lake_query.rank_moves(top_n=10, lake_dir=lake_dir)),
-                           []),
+                           [], empty_ok=bool(lake_query.rank_moves(top_n=10, lake_dir=lake_dir))),
 
         # ── what the post run produced ────────────────────────────────────────────────
         "portfolios": _try("portfolios", lambda: lake_query.portfolio_compare(lake_dir=lake_dir), []),

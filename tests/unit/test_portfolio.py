@@ -190,3 +190,106 @@ def test_the_regime_haircut_rides_on_the_neutral_leg_and_survives_lambda_zero():
 def test_a_degenerate_leg_falls_back_to_the_model_rather_than_to_zero():
     assert pf.skill_shrink([2.0, 1.0], [0.0, 0.0], 0.0) == [2.0, 1.0]
     assert pf.skill_shrink([], [], 0.0) == []
+
+
+# ── v6 J2: the deadband must not move what it just decided not to move ───────
+
+def test_a_kept_weight_is_returned_exactly_as_held():
+    """The pre-v6 renormalization multiplied EVERY weight, kept ones included — so the guard
+    against micro-trades generated a micro-trade on every position it protected."""
+    targets = [30.0, 25.0, 25.0, 20.0]
+    held = [30.4, None, None, None]          # position 0 within the 1pt band
+    out = pf.apply_deadband(targets, held, deadband_pct=1.0)
+    assert out[0] == pytest.approx(30.4)
+
+
+def test_the_residual_is_absorbed_by_the_free_positions_only():
+    targets = [30.0, 25.0, 25.0, 20.0]       # gross 100
+    held = [30.4, None, None, None]
+    out = pf.apply_deadband(targets, held, deadband_pct=1.0)
+    assert sum(out) == pytest.approx(100.0)
+    # the free names carry the whole -0.4 adjustment, in proportion to their targets
+    assert out[1] / out[2] == pytest.approx(targets[1] / targets[2])
+    assert out[1] < targets[1]
+
+
+def test_with_every_position_kept_the_difference_is_cash_not_a_trade():
+    """Nothing is free to absorb the residual, so the book simply runs at the held weights —
+    'no trades' is the answer the band exists to give."""
+    targets = [30.0, 25.0, 25.0]
+    held = [30.4, 25.3, 24.8]
+    out = pf.apply_deadband(targets, held, deadband_pct=1.0)
+    assert out == pytest.approx(held)
+
+
+def test_the_deadband_never_renormalizes_a_weight_past_the_cap():
+    """water_fill already applied the cap; the pre-v6 renormalization ran after it and could
+    push a weight through. The cap is a risk limit and outranks the band."""
+    targets = [20.0, 20.0, 20.0, 5.0]
+    held = [20.0, 20.0, 20.0, None]
+    out = pf.apply_deadband(targets, held, deadband_pct=1.0, max_position_pct=20.0)
+    assert max(out) <= 20.0 + 1e-9
+
+
+def test_a_held_weight_above_a_lowered_cap_is_clamped_not_kept():
+    out = pf.apply_deadband([12.0, 40.0], [12.2, 40.3], deadband_pct=1.0, max_position_pct=20.0)
+    assert out[1] == pytest.approx(20.0)
+
+
+def test_the_gross_can_never_exceed_the_book():
+    """The kept positions can together exceed the intended gross by at most n_kept × deadband.
+    Above 100 that would be leverage, which is not an available state."""
+    out = pf.apply_deadband([34.0, 33.0, 33.0], [34.9, 33.9, 33.9], deadband_pct=1.0)
+    assert sum(out) == pytest.approx(100.0)
+
+
+def test_a_zero_deadband_is_a_no_op():
+    targets = [40.0, 35.0, 25.0]
+    assert pf.apply_deadband(targets, [39.9, 34.9, 24.9], 0.0) == targets
+
+
+def test_a_position_outside_the_band_takes_its_target():
+    out = pf.apply_deadband([50.0, 50.0], [20.0, 50.2], deadband_pct=1.0)
+    assert out[1] == pytest.approx(50.2)
+    assert out[0] == pytest.approx(49.8)     # the free name absorbs the residual
+
+
+# ── v6 J3: the model book carries both senses of "exposure" ──────────────────
+
+def _exposure(holdings, smap):
+    return pf.catalyst_exposure_rows("p", "run_a", holdings, built_at=None,
+                                     sector_catalysts=smap, notional=1000.0)
+
+
+def test_credit_partitions_the_book_and_exposure_does_not():
+    rows = _exposure([{"sector_id": "s1", "weight_pct": 60.0},
+                      {"sector_id": "s2", "weight_pct": 40.0}],
+                     {"s1": ["cat_a", "cat_b"], "s2": ["cat_a"]})
+    by = {r["catalyst_id"]: r for r in rows}
+    assert sum(r["pct_credit"] for r in rows) == pytest.approx(100.0)
+    # cat_a drives the WHOLE of s1 and the WHOLE of s2 — nobody owns 30% of an ETF
+    assert by["cat_a"]["pct_exposure"] == pytest.approx(100.0)
+    assert by["cat_b"]["pct_exposure"] == pytest.approx(60.0)
+    assert sum(r["pct_exposure"] for r in rows) > 100.0
+
+
+def test_declaring_a_second_driver_cannot_buy_headroom():
+    """The incentive the split inverts: naming another driver lowers the credit on the first,
+    so honesty would have bought room under a cap. Exposure does not move."""
+    one = _exposure([{"sector_id": "s1", "weight_pct": 50.0}], {"s1": ["cat_a"]})
+    two = _exposure([{"sector_id": "s1", "weight_pct": 50.0}], {"s1": ["cat_a", "cat_b"]})
+    a_one = next(r for r in one if r["catalyst_id"] == "cat_a")
+    a_two = next(r for r in two if r["catalyst_id"] == "cat_a")
+    assert a_two["pct_credit"] < a_one["pct_credit"]
+    assert a_two["pct_exposure"] == pytest.approx(a_one["pct_exposure"])
+
+
+def test_an_uncatalyzed_sector_reports_the_same_number_in_both_senses():
+    rows = _exposure([{"sector_id": "s1", "weight_pct": 25.0}], {})
+    assert rows[0]["catalyst_id"] == "uncatalyzed"
+    assert rows[0]["pct_credit"] == pytest.approx(rows[0]["pct_exposure"])
+
+
+def test_the_legacy_pct_column_still_carries_the_credit_split():
+    rows = _exposure([{"sector_id": "s1", "weight_pct": 60.0}], {"s1": ["cat_a", "cat_b"]})
+    assert all(r["pct"] == r["pct_credit"] for r in rows)

@@ -8,7 +8,8 @@ description: >
 benchmark_etf: SPY
 construction:
   max_positions: 10
-  min_composite: 50
+  min_composite_z: 0.0    # v6 H3: floor in z-units, 0.0 = the run's universe average
+  min_composite: 50        # pre-v6, read one major more
   min_momentum: 35
   max_crowding: 55
   exclude_narrative_maturity: [crowded, exhausted]

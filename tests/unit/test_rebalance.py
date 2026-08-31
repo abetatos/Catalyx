@@ -943,3 +943,115 @@ def test_the_model_counterfactual_never_mixes_nav_modes(tmp_path):
     lake.append_partition("portfolio_nav", pd.DataFrame(only_bt[:1]), {"portfolio_id": "catalyx"},
                           overwrite=True, lake_dir=tmp_path)
     assert rb._model_return_pct("2026-06-16", "2026-08-31", "catalyx", lake_dir=tmp_path) is None
+
+
+# ── Trade budget: a scarce slot is not a free one (plan v6 L3/L4) ────────────
+
+def _mv(sid, action, eur):
+    return {"sector_id": sid, "rule_action": action, "trade_eur": float(eur)}
+
+
+def _budget_cfg(**over):
+    tb = {"free_per_month": 10, "reserve_for_events": 3, "planned_max_per_review": 2,
+          "exempt_actions": ["SELL", "REDUCE"]}
+    tb.update(over)
+    return {"trade_budget": tb}
+
+
+def test_budget_grants_the_biggest_movers_first_within_a_tier():
+    """A slot is scarce, so it goes to the row that moves the most money — never to a forecast
+    of return, which this system has measured as noise."""
+    rows = [_mv("a", "BUY", 200), _mv("b", "BUY", 900), _mv("c", "BUY", 500)]
+    plan = rb.trade_budget_plan(rows, _budget_cfg())
+    assert plan["granted"] == 2 and plan["deferred"] == 1
+    granted = {r["sector_id"] for r in rows if r["budget_state"] == "granted"}
+    assert granted == {"b", "c"}
+
+
+def test_risk_removal_never_queues_behind_the_budget():
+    """SELL/REDUCE are exempt: a book does not carry risk it decided to shed because the month
+    ran out of free trades. They still consume slots, and going over is REPORTED, not hidden."""
+    rows = [_mv("a", "SELL", -800), _mv("b", "REDUCE", -400), _mv("c", "SELL", -100),
+            _mv("d", "BUY", 900)]
+    plan = rb.trade_budget_plan(rows, _budget_cfg())
+    assert all(r["budget_state"] == "exempt" for r in rows if r["rule_action"] in ("SELL", "REDUCE"))
+    assert plan["over_budget"] == 1
+    assert rows[-1]["budget_state"] == "deferred"      # the BUY yields to the risk rows
+
+
+def test_deploying_idle_cash_outranks_rotation():
+    """Gârleanu–Pedersen: with costly trading you under-trade toward the target, and the fine
+    adjustment between existing names is the first thing to starve. Cash drag is measured; a
+    TRIM back to target is turnover."""
+    rows = [_mv("a", "TRIM", -900), _mv("b", "BUY", 300)]
+    rb.trade_budget_plan(rows, _budget_cfg(planned_max_per_review=1))
+    assert rows[1]["budget_state"] == "granted"        # the smaller BUY beats the bigger TRIM
+    assert rows[0]["budget_state"] == "deferred"
+
+
+def test_budget_never_zeroes_the_rules_ask():
+    """The deferral is a constraint, not a re-decision: `rule_action` and `trade_eur` stay what
+    the table asked for, so the scorecard still judges the RULE and the deferral is priced
+    separately as a deviation."""
+    rows = [_mv("a", "BUY", 900), _mv("b", "BUY", 100)]
+    rb.trade_budget_plan(rows, _budget_cfg(planned_max_per_review=1))
+    assert rows[1]["rule_action"] == "BUY" and rows[1]["trade_eur"] == 100.0
+
+
+def test_budget_is_capped_by_the_event_reserve():
+    """`planned_max_per_review` cannot spend the slots held back for catalysts arriving between
+    reviews — the reserve IS the option value of a slot."""
+    rows = [_mv(f"s{i}", "BUY", 100 * (i + 1)) for i in range(9)]
+    plan = rb.trade_budget_plan(rows, _budget_cfg(planned_max_per_review=9,
+                                                  free_per_month=10, reserve_for_events=3))
+    assert plan["budget"] == 7 and plan["granted"] == 7
+
+
+def test_non_money_rows_do_not_consume_slots():
+    rows = [{"sector_id": "a", "rule_action": "HOLD", "trade_eur": 0.0},
+            {"sector_id": "b", "rule_action": "RE-SCORE", "trade_eur": 0.0},
+            _mv("c", "BUY", 500)]
+    plan = rb.trade_budget_plan(rows, _budget_cfg())
+    assert plan["granted"] == 1
+    assert rows[0]["budget_state"] == "n/a" and rows[1]["budget_state"] == "n/a"
+
+
+def test_budget_is_an_allowed_override_author_and_is_not_unrecorded():
+    """`unrecorded` means nobody wrote the decision down. A budget deferral is the rule working,
+    so filing them together would fill the deviation tally with rows nobody chose."""
+    ocfg = weights.rebalance_rules()["overrides"]
+    assert "budget" in ocfg["authors_allowed"]
+    assert "budget" != "unrecorded"
+
+
+# ── v6 I6: the VIX brake ramps, it does not cliff ────────────────────────────
+
+def test_the_vix_brake_has_no_cliff(cfg):
+    """Pre-v6, 29.9 → 30.1 moved a fifth of the target capital; a VIX oscillating around 30
+    oscillated the whole book run to run. Neighbouring VIX levels must now be neighbours."""
+    below = rb.deploy_ratio(8, 29.9, cfg)["ratio"]
+    above = rb.deploy_ratio(8, 30.1, cfg)["ratio"]
+    assert abs(above - below) < 0.01
+
+
+def test_the_vix_brake_is_monotone_and_saturates_at_both_ends(cfg):
+    d = cfg["deployment"]
+    start, full = d.get("vix_ramp_start", 25.0), d.get("vix_ramp_full", 35.0)
+    ratios = [rb.deploy_ratio(8, v, cfg)["ratio"] for v in (10, start, 28, 30, 32, full, 80)]
+    assert ratios == sorted(ratios, reverse=True)
+    assert ratios[0] == ratios[1], "no brake below the ramp start"
+    assert ratios[-1] == ratios[-2], "the brake saturates — it never keeps deepening"
+
+
+def test_the_old_cliff_point_now_brakes_by_half(cfg):
+    calm = rb.deploy_ratio(8, 15.0, cfg)["ratio"]
+    at_30 = rb.deploy_ratio(8, 30.0, cfg)["ratio"]
+    assert calm - at_30 == pytest.approx(cfg["deployment"]["vix_penalty"] / 2, abs=1e-6)
+
+
+def test_an_unmigrated_config_centres_the_ramp_on_its_old_cliff():
+    legacy = {"deployment": {"base": 0.70, "step_per_intact_sector": 0.05, "intact_min": 5,
+                             "vix_pause_above": 30.0, "vix_penalty": 0.20,
+                             "floor": 0.40, "ceiling": 1.00}}
+    assert rb.deploy_ratio(5, 25.0, legacy)["vix_brake_pp"] == pytest.approx(0.0)
+    assert rb.deploy_ratio(5, 35.0, legacy)["vix_brake_pp"] == pytest.approx(0.20)

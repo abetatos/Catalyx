@@ -15,7 +15,10 @@
   "catalyst_type": "corporate_event",
   "catalyst_subtype": "earnings_guidance_revision",
   "description": "Hyperscaler capex guidance moved UP through July 2026 earnings, directly contradicting the 2026-06-05 'AI capex peak scare' (cat_20260605_ai_capex_peak_scare) narrative of a demand air-pocket. Alphabet raised FY2026 capex guidance to $195-205bn (from $180-190bn prior quarter). The Big Four hyperscalers (Amazon, Google, Meta, Microsoft) now guide to combined FY2026 capex of up to $630bn, +62% YoY vs $388bn in 2025 (Amazon ~$200bn, Microsoft $110-120bn, Meta $115-135bn). TSMC's 2026-07-16 earnings call added a further $100bn to its Arizona buildout (total planned US investment $265bn), citing AI demand still scaling. Net read: the June guidance-miss scare that triggered a selloff and a 'contested' regime_state on struct_ai_capex_supercycle has not been confirmed by subsequent hard data -- capex commitments broadened and accelerated instead of decelerating.",
-  "geography": ["US", "GLOBAL"],
+  "geography": [
+    "US",
+    "GLOBAL"
+  ],
   "magnitude": "high",
   "novelty_score": 20,
   "novelty_rubric_scores": {
@@ -30,11 +33,44 @@
   "is_priced_in_estimate": 0.5,
   "relation_to_structural": "confirms",
   "decay_halflife_days": 30,
-  "related_catalyst_ids": ["struct_ai_capex_supercycle", "cat_20260605_ai_capex_peak_scare"],
+  "related_catalyst_ids": [
+    "struct_ai_capex_supercycle",
+    "cat_20260605_ai_capex_peak_scare"
+  ],
   "raw_signal_ids": [],
   "status": "active",
   "expires_at": null,
   "user_rank": 2,
   "user_notes": "Registered 2026-07-28 scheduled scan (Pass 2). Directly relevant to the open semiconductors_design position (SEMI.L) and to struct_copper_datacenter_demand (data-center copper draw scales with capex). Recommend the lifecycle gate reconsider cat_20260605_ai_capex_peak_scare toward 'decayed'/'weakening' -- the guidance-cut fear it registered has not materialized three earnings cycles later; regime_state on struct_ai_capex_supercycle should be re-run via structural_monitor with this event in the window.",
-  "tags": ["ai_capex", "hyperscaler", "earnings", "capex_guidance", "semiconductors", "data_center", "tsmc", "google"]
+  "tags": [
+    "ai_capex",
+    "hyperscaler",
+    "earnings",
+    "capex_guidance",
+    "semiconductors",
+    "data_center",
+    "tsmc",
+    "google"
+  ],
+  "status_last_reviewed": "2026-08-31",
+  "review_log": [
+    {
+      "date": "2026-08-31",
+      "verdict": "intact",
+      "evidence": "The guidance raise this event registered has extended: FY2026 big-4 combined capex guidance now $720-745bn, and 2027 consensus is ~$934bn with JPMorgan at $1.0tn and Goldman at $1.01tn. Management commentary across the Q2 calls gives no indication investment is nearing a peak.",
+      "source": "TMT Finance 2026 hyperscaler capex analysis; JPMorgan / Goldman 2027 forecasts (accessed 2026-08-31)"
+    },
+    {
+      "date": "2026-08-31",
+      "verdict": "intact",
+      "evidence": "The guidance raise this event registered has extended: FY2026 big-4 combined capex guidance now $720-745bn, and 2027 consensus is ~$934bn with JPMorgan at $1.0tn and Goldman at $1.01tn. Management commentary across the Q2 calls gives no indication investment is nearing a peak.",
+      "source": "TMT Finance 2026 hyperscaler capex analysis; JPMorgan / Goldman 2027 forecasts (accessed 2026-08-31)"
+    },
+    {
+      "date": "2026-08-31",
+      "verdict": "intact",
+      "evidence": "The guidance raise this event registered has extended: FY2026 big-4 combined capex guidance now $720-745bn, and 2027 consensus is ~$934bn with JPMorgan at $1.0tn and Goldman at $1.01tn. Management commentary across the Q2 calls gives no indication investment is nearing a peak.",
+      "source": "TMT Finance 2026 hyperscaler capex analysis; JPMorgan / Goldman 2027 forecasts (accessed 2026-08-31)"
+    }
+  ]
 }

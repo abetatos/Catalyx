@@ -14,7 +14,11 @@
   "catalyst_type": "sanctions_trade",
   "catalyst_subtype": "export_control_tech",
   "description": "The US Department of Commerce Bureau of Industry and Security (BIS) issued guidance on June 1, 2026 stating that export licensing requirements for advanced AI chips (including Nvidia Blackwell) apply to ALL businesses with headquarters or a parent company in China, including overseas subsidiaries operating outside mainland China. This closes a loophole that allowed Chinese companies to route chip acquisitions through non-China subsidiaries. The action builds on January 2026 policy changes (case-by-case licensing framework) and congressional momentum via the AI OVERWATCH Act (prohibits Blackwell sales to foreign entities of concern for 2 years). Impact: (1) Reduces accessible market for Nvidia Blackwell and equivalent chips to Chinese entities globally, not just in China. (2) Reinforces Western AI infrastructure advantage — hyperscalers (MSFT, GOOG, AMZN, META) cannot lose Blackwell to Chinese competitors through subsidiary routes. (3) Supply chain: Chinese AI companies forced to develop or acquire domestic alternatives (Huawei Ascend), extending their capability gap.",
-  "geography": ["US", "CHN", "GLOBAL"],
+  "geography": [
+    "US",
+    "CHN",
+    "GLOBAL"
+  ],
   "magnitude": "medium",
   "novelty_score": 40,
   "novelty_rubric_scores": {
@@ -35,5 +39,29 @@
   "expires_at": "2028-06-01",
   "user_rank": null,
   "user_notes": "Evento regulatorio que refuerza la tesis AI capex occidental indirectamente — la ventaja de compute de las empresas occidentales se ensancha. Sectores impactados: semiconductors_design (Nvidia — mixed short-term/bullish long-term), cybersecurity_defense (US AI sovereignty). No está directamente enlazado a ningún catalizador estructural existente (relation_to_structural: independent). El strength_score de 62 está en el umbral — incluido porque la closure del loophole de subsidiarias es un cambio concreto con implicaciones de ejecución inmediata. El 40% novelty refleja que export controls AI son ya un patrón conocido. La extensión a subsidiarias es el elemento nuevo.",
-  "tags": ["AI", "semiconductors", "export_controls", "BIS", "China", "Nvidia", "Blackwell", "sanctions"]
+  "tags": [
+    "AI",
+    "semiconductors",
+    "export_controls",
+    "BIS",
+    "China",
+    "Nvidia",
+    "Blackwell",
+    "sanctions"
+  ],
+  "status_last_reviewed": "2026-08-31",
+  "review_log": [
+    {
+      "date": "2026-08-31",
+      "verdict": "intact",
+      "evidence": "Controls in force and China substitution is not arriving on schedule: case-by-case licensing for Nvidia H200 / AMD MI325X since January 2026, on top of China-wide controls on advanced packaging SME, HBM and DRAM. Chinese producers are expected to make ~7m HBM3 dies in 2026 - enough for only ~600k H100-class accelerators, far short of domestic demand - and are not expected to ship HBM at volume through 2026-2027.",
+      "source": "AI Frontiers, High-Bandwidth Memory: The Critical Gaps in US Export Controls; CRS R48642"
+    },
+    {
+      "date": "2026-08-31",
+      "verdict": "intact",
+      "evidence": "Controls in force and China substitution is not arriving on schedule: case-by-case licensing for Nvidia H200 / AMD MI325X since January 2026, on top of China-wide controls on advanced packaging SME, HBM and DRAM. Chinese producers are expected to make ~7m HBM3 dies in 2026 - enough for only ~600k H100-class accelerators, far short of domestic demand - and are not expected to ship HBM at volume through 2026-2027.",
+      "source": "AI Frontiers, High-Bandwidth Memory: The Critical Gaps in US Export Controls; CRS R48642"
+    }
+  ]
 }

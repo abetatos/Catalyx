@@ -46,14 +46,18 @@ user_notes: >
   in confirmation and capped by tariff margin drag + EUR strength. Run intensity_engine after first refresh.
 
 intensity:
-  current_score: 70.4
+  current_score: 78.7
   computation_method: computed
-  last_updated: "2026-07-28"
+  last_updated: "2026-08-31"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: near struct_solar_lcoe_deployment (64.1); below
     struct_cb_gold_accumulation (84) because the recovery is only one-to-two quarters confirmed and
     tariff/FX drags cap the near-term upside.
   history:
+  - period: '2026-08-31'
+    score: 78.7
+    note: 'Computed 2026-08-31: avg=76.72 trend=↑ (rising 1 period) (was 72.4)'
+    computation_method: computed
   - period: '2026-07-28'
     score: 70.4
     note: 'Computed 2026-07-28: avg=70.38 trend=→ (flat — insufficient history) (was 67)'
@@ -144,18 +148,16 @@ indicators:
   source: "ECB / Bloomberg USD/CNY"
   source_url_template: "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/"
   check_frequency: monthly
-  current_value: 7.25
+  current_value: 6.721
   unit: cny_per_usd
   direction: lower_is_stronger
   threshold_strong: 6.9
   threshold_weak: 7.4
-  last_value: 7.28
-  last_date: "2026-05-31"
-  update_note: >
-    USD/CNY ~7.25 and CNY appreciating (forecast toward ~6.8 by Q4-2026). A stronger CNY narrows the
-    mainland-vs-overseas luxury price gap, repatriating demand onshore. Lower_is_stronger; threshold_strong 6.9,
-    threshold_weak 7.4.
-  semaphore: 🟡
+  last_value: 7.25
+  last_date: "2026-08-21"
+  update_note: >-
+    auto: USD/CNY (FRED DEXCHUS)
+  semaphore: 🟢
   value_history:
   - date: "2026-05-31"
     value: 7.28
@@ -164,7 +166,7 @@ indicators:
   - date: "2025-06-30"
     value: 7.25
 
-  score: 59.0
+  score: 84.4
 deactivation_conditions:
 - id: deact_01
   condition: >
@@ -187,4 +189,4 @@ linked_structural_catalyst_ids: []
 
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-07-01"
+status_last_reviewed: "2026-08-21"

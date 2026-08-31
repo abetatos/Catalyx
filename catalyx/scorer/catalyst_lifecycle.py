@@ -312,8 +312,12 @@ def main() -> None:
         return
 
     trans = result["transitions"]
-    verb = "APPLIED" if result.get("applied") else ("PENDING (governance=ask)" if governance == "ask"
-                                                    else "PROPOSED (dry run — use --apply)")
+    # `"applied" in result`, not `result.get("applied")`: with --apply and zero transitions the
+    # applied list is empty and falsy, so the header used to tell the operator to pass the flag
+    # they had just passed. "Nothing to apply" and "you forgot the flag" are different states.
+    verb = ("APPLIED" if "applied" in result
+            else "PENDING (governance=ask)" if governance == "ask"
+            else "PROPOSED (dry run — use --apply)")
     print(f"CATALYX — catalyst lifecycle  [{verb}]  as of {result['as_of']}\n")
     if not trans:
         print("  no transitions — every catalyst is in the right state")

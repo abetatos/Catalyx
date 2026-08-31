@@ -73,6 +73,34 @@ def list_profiles() -> list[str]:
     return sorted(p.stem for p in _PROFILES_DIR.glob("*.yaml"))
 
 
+def _composite_floor(c: dict) -> float:
+    """The selection floor as a composite level, from the profile's `min_composite_z`.
+
+    v6 H3: `min_composite: 55` was a LEVEL applied to a semi-relative composite — momentum
+    is a percentile (mean 50 by construction) while catalyst_alignment drifts with the
+    catalyst cycle, so what "55" excluded changed run to run. The floor is now expressed in
+    the units the composite is built from (`50 + z_scale·z`), where 0.0 means "the universe
+    average of this run". The pre-v6 key is read for one major version, translated through
+    the same map so an unmigrated profile keeps its stance.
+    """
+    return weights_cfg.composite_floor(c, "min_composite_z", "min_composite")
+
+
+def _apply_composite_floor(df, c: dict):
+    """Filter a run's rows by the selection floor, in the units THAT RUN was scored in.
+
+    A pre-v6 run holds absolute-level composites and no `composite_z`; comparing them
+    against a z-derived floor would compare two different scales and admit almost the whole
+    universe. So a run that carries `composite_z` is filtered on it; an older one falls back
+    to its own absolute floor.
+    """
+    if "composite_z" in df.columns and df["composite_z"].notna().any():
+        z_floor = (_composite_floor(c) - 50.0) / float(
+            weights_cfg.composite_scale().get("z_scale", 15.0))
+        return df[df["composite_z"] >= z_floor]
+    return df[df["composite"] >= float(c.get("min_composite", 50.0))]
+
+
 # ── Weighting ────────────────────────────────────────────────────────────────
 
 def water_fill(scores: list[float], max_w: float) -> list[float]:
@@ -290,24 +318,43 @@ def _held_weights(portfolio_id: str, before_run_id: str, lake_dir: Path | None =
     return {r["sector_id"]: float(r["weight_pct"]) for _, r in df.iterrows()}
 
 
-def apply_deadband(targets: list[float], held: list[float | None], deadband_pct: float) -> list[float]:
+def apply_deadband(targets: list[float], held: list[float | None], deadband_pct: float,
+                   max_position_pct: float | None = None) -> list[float]:
     """Turnover guard: where a target weight is within `deadband_pct` points of the weight
-    already held, keep the held weight (no trade); otherwise take the target. Renormalize so
-    the total is unchanged (preserves the cash level). Suppresses tax-churn from tiny score
-    wiggles. `held[i]` is None for a position not previously held (no deadband → take target).
-    `deadband_pct` ≤ 0 disables.
+    already held, keep the held weight (no trade); otherwise take the target. Suppresses
+    tax-churn from tiny score wiggles. `held[i]` is None for a position not previously held
+    (no deadband → take target). `deadband_pct` ≤ 0 disables.
+
+    v6 J2: the renormalization used to multiply EVERY weight, kept ones included, so it moved
+    the positions it had just decided not to move — reintroducing the micro-trades the band
+    exists to suppress — and it could push a weight past `max_position_pct`, which `water_fill`
+    had already applied. The residual is now absorbed by the FREE positions only; a kept weight
+    is returned exactly as held.
     """
     if deadband_pct <= 0:
         return list(targets)
     total = sum(targets)
-    kept = [
-        h if (h is not None and abs(t - h) < deadband_pct) else t
-        for t, h in zip(targets, held)
-    ]
-    s = sum(kept)
-    if s <= 1e-9:
-        return list(targets)
-    return [k * total / s for k in kept]
+    is_kept = [h is not None and abs(t - h) < deadband_pct for t, h in zip(targets, held)]
+    out = [float(h) if k else float(t) for t, h, k in zip(targets, held, is_kept)]
+
+    free_total = sum(t for t, k in zip(targets, is_kept) if not k)
+    residual = total - sum(o for o, k in zip(out, is_kept) if k)
+    if free_total > 1e-9 and residual > 0:
+        s = residual / free_total
+        out = [o if k else t * s for o, t, k in zip(out, targets, is_kept)]
+    # No free position to absorb it → the difference is cash, which is what the band means.
+    # residual ≤ 0 (the kept alone already fill the gross) → the free names take their targets
+    # unchanged: paying for a decision NOT to trade by forcing a trade elsewhere is precisely
+    # the trade the band exists to prevent. Bounded by n_kept × deadband, and capped below.
+
+    gross = sum(out)
+    if gross > 100.0:            # not a preference — a book cannot hold more than it has
+        out = [o * 100.0 / gross for o in out]
+    if max_position_pct is not None:
+        # the cap is a risk limit and outranks the band; the freed weight stays as cash rather
+        # than being redistributed, exactly as the contested haircut does
+        out = [min(o, float(max_position_pct)) for o in out]
+    return out
 
 
 def _sector_catalyst_map() -> dict[str, list[str]]:
@@ -320,13 +367,23 @@ def _sector_catalyst_map() -> dict[str, list[str]]:
 def catalyst_exposure_rows(portfolio_id: str, run_id: str, holdings: list[dict],
                            built_at, sector_catalysts: dict[str, list[str]] | None = None,
                            notional: float = _NOTIONAL_EUR) -> list[dict]:
-    """Decompose a portfolio's weights into per-catalyst exposure. Each holding's weight is
-    split EQUALLY across the catalysts that drive its sector (the user's rule); a sector with
-    no catalyst falls into the `uncatalyzed` bucket. The result partitions the book — the pct
-    over all catalysts (incl. uncatalyzed + the implicit cash remainder) sums to 100%. One row
-    per (portfolio, run, catalyst), so the exposure can be tracked across rebalances."""
+    """Decompose a portfolio's weights per catalyst, in BOTH senses — the model book carries
+    the same two columns the real book got in v5.2, because they answer different questions.
+
+      `pct_credit`   — the weight split equally across the catalysts driving the sector. This
+                       is P&L CREDIT: who gets credited with the return. Partitions the book,
+                       so credit + uncatalyzed + the cash remainder sums to 100.
+      `pct_exposure` — the FULL position behind every driver it names. This is RISK: how much
+                       money moves if this driver breaks. Nobody owns 30% of an ETF, so the
+                       rows sum to MORE than the book, on purpose. This is what a correlated-
+                       catalyst cap must read; feeding it the split also inverts the incentive,
+                       since declaring a second driver would buy headroom for free.
+
+    `pct`/`eur` stay as the credit split for pre-v6 readers (deprecated — migrate to the column
+    your question needs). One row per (portfolio, run, catalyst), tracked across rebalances."""
     smap = _sector_catalyst_map() if sector_catalysts is None else sector_catalysts
-    by_cat: dict[str, float] = {}
+    credit: dict[str, float] = {}
+    exposure: dict[str, float] = {}
     for h in holdings:
         w = float(h.get("weight_pct") or 0.0)
         if w <= 0:
@@ -335,14 +392,19 @@ def catalyst_exposure_rows(portfolio_id: str, run_id: str, holdings: list[dict],
         if cats:
             share = w / len(cats)                       # split equally across the sector's catalysts
             for cid in cats:
-                by_cat[cid] = by_cat.get(cid, 0.0) + share
+                credit[cid] = credit.get(cid, 0.0) + share
+                exposure[cid] = exposure.get(cid, 0.0) + w      # the WHOLE position, per driver
         else:
-            by_cat[_UNCATALYZED] = by_cat.get(_UNCATALYZED, 0.0) + w
+            credit[_UNCATALYZED] = credit.get(_UNCATALYZED, 0.0) + w
+            exposure[_UNCATALYZED] = exposure.get(_UNCATALYZED, 0.0) + w
     return [{
         "portfolio_id": portfolio_id, "run_id": run_id, "catalyst_id": cid,
         "pct": round(pct, 2), "eur": round(pct / 100.0 * notional, 2),
+        "pct_credit": round(pct, 2), "credit_eur": round(pct / 100.0 * notional, 2),
+        "pct_exposure": round(exposure[cid], 2),
+        "exposure_eur": round(exposure[cid] / 100.0 * notional, 2),
         "notional_eur": notional, "built_at": built_at,
-    } for cid, pct in sorted(by_cat.items(), key=lambda kv: kv[1], reverse=True)]
+    } for cid, pct in sorted(credit.items(), key=lambda kv: kv[1], reverse=True)]
 
 
 def build_model_holdings(portfolio_id: str, run_id: str | None = None,
@@ -392,7 +454,7 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
     df["regime_state"] = df["regime_state"].fillna("intact")
 
     # 1. filters
-    df = df[df["composite"] >= c["min_composite"]]
+    df = _apply_composite_floor(df, c)
     df = df[df["momentum"] >= c.get("min_momentum", 0)]
     df = df[df["crowding_risk"] <= c.get("max_crowding", 100)]
     excl = set(c.get("exclude_narrative_maturity") or [])
@@ -406,6 +468,12 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
     # 2. select + 3. dedupe by ETF + top N — ranked by the STRATEGY's signal.
     weighting = c["weighting"]                       # momentum | composite | equal
     rank_col = "momentum" if weighting == "momentum" else "composite"
+    # `composite` is rounded to 1dp for display; the top-N cut is where that rounding costs
+    # money — two sectors 0.05 apart at the `max_positions` boundary are a tie broken by row
+    # order. Rank on `composite_z` when the run carries it for every sector (the same
+    # fallback rule as `_apply_composite_floor`). See `sector_scorer.rank_key`.
+    if rank_col == "composite" and "composite_z" in df.columns and df["composite_z"].notna().all():
+        rank_col = "composite_z"
     df = df.sort_values(rank_col, ascending=False)
     df = df.drop_duplicates("primary_etf", keep="first")
     df = df.head(int(c["max_positions"]))
@@ -479,7 +547,8 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
         held_map = _held_weights(portfolio_id, run_id, lake_dir=lake_dir)
         if held_map:
             held = [held_map.get(r["sector_id"]) for _, r in df.iterrows()]
-            pct = apply_deadband([w * 100.0 for w in weights], held, deadband)
+            pct = apply_deadband([w * 100.0 for w in weights], held, deadband,
+                                 max_position_pct=float(c["max_position_pct"]))
             weights = [p / 100.0 for p in pct]
 
     entry_prices = _entry_prices(lake_dir)
@@ -497,6 +566,10 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
             "sector_id": r["sector_id"],
             "primary_etf": r["primary_etf"],
             "composite": float(r["composite"]),
+            # carried so downstream re-rankings (rebalance re-ranks the surviving book) sort
+            # on the same unit the selection did, not on the rounded display number
+            "composite_z": (None if r.get("composite_z") is None or r.get("composite_z") != r.get("composite_z")
+                            else float(r["composite_z"])),
             "momentum": float(r["momentum"]),
             "crowding_risk": float(r["crowding_risk"]),
             "narrative_maturity": r.get("narrative_maturity"),
@@ -513,8 +586,12 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
     # catalyst decomposition of the notional book (recorded at this rebalance for the time-series)
     exposure = catalyst_exposure_rows(portfolio_id, run_id, rows, built_at)
     if cash_pct > 0.01:                                  # the un-deployed remainder is honest cash
+        cash_eur = round(cash_pct / 100.0 * _NOTIONAL_EUR, 2)
+        # cash has one driver and one owner, so credit and exposure coincide
         exposure.append({"portfolio_id": portfolio_id, "run_id": run_id, "catalyst_id": "cash",
-                         "pct": cash_pct, "eur": round(cash_pct / 100.0 * _NOTIONAL_EUR, 2),
+                         "pct": cash_pct, "eur": cash_eur,
+                         "pct_credit": cash_pct, "credit_eur": cash_eur,
+                         "pct_exposure": cash_pct, "exposure_eur": cash_eur,
                          "notional_eur": _NOTIONAL_EUR, "built_at": built_at})
 
     if persist:

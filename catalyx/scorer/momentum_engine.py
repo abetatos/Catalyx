@@ -79,6 +79,10 @@ def _primaries_from_lake(snapshot_date: str | None = None) -> tuple[str, dict] |
             "return_1m_pct": _clean(row.get("return_1m_pct")),
             "return_3m_pct": _clean(row.get("return_3m_pct")),
             "return_6m_pct": _clean(row.get("return_6m_pct")),
+            # v7 M2/M3: both have been fetched and lake-written since the beginning
+            # (fetch_metrics asks for period="1y") — nothing ever read them.
+            "return_1y_pct": _clean(row.get("return_1y_pct")),
+            "near_52w_high_pct": _clean(row.get("near_52w_high_pct")),
         }
         for _, row in df.iterrows()
     }
@@ -113,6 +117,15 @@ def _raw_momentum(returns: dict) -> float | None:
         available.append((r6, _WEIGHT_6M))
     total_w = sum(w for _, w in available)
     return sum(r * w for r, w in available) / total_w  # re-normalise to available periods
+
+
+def _raw_12_1(returns: dict) -> float | None:
+    """12-1 momentum (months 2-12, skipping the reversal month), in %. None without 1y data."""
+    r1y = returns.get("return_1y_pct")
+    r1 = returns.get("return_1m_pct")
+    if r1y is None or r1 is None:
+        return None
+    return ((1 + r1y / 100.0) / (1 + r1 / 100.0) - 1) * 100.0
 
 
 def _percentile_rank(value: float, all_values: list[float]) -> float:
@@ -168,6 +181,7 @@ def compute_momentum_scores(snapshot_path: Path | None = None,
             source = f"json:{path.name}"
 
     raw_momentums: dict[str, float] = {}
+    raw_12_1s: dict[str, float] = {}
     raw_returns: dict[str, dict] = {}
 
     for sector_id, primary in primaries.items():
@@ -175,11 +189,16 @@ def compute_momentum_scores(snapshot_path: Path | None = None,
         if raw is None:
             continue
         raw_momentums[sector_id] = raw
+        r121 = _raw_12_1(primary)
+        if r121 is not None:
+            raw_12_1s[sector_id] = r121
         raw_returns[sector_id] = {
             "return_1m": primary.get("return_1m_pct"),
             "return_3m": primary.get("return_3m_pct"),
             "return_6m": primary.get("return_6m_pct"),
+            "return_1y": primary.get("return_1y_pct"),
             "raw_momentum": round(raw, 4),
+            "raw_12_1": round(r121, 4) if r121 is not None else None,
         }
 
     if not raw_momentums:
@@ -192,15 +211,25 @@ def compute_momentum_scores(snapshot_path: Path | None = None,
     mn = min(all_raw)
     mx = max(all_raw)
 
+    # v7 M2: candidate column, weight 0. Percentile among sectors WITH 1y data; None elsewhere.
+    all_121 = list(raw_12_1s.values())
+    use_pct_121 = len(all_121) >= _MIN_SECTORS_FOR_PERCENTILE
+
     scores: dict[str, dict] = {}
     for sector_id, raw in raw_momentums.items():
         if use_percentile:
             score = _percentile_rank(raw, all_raw)
         else:
             score = _minmax_norm(raw, mn, mx)
+        r121 = raw_12_1s.get(sector_id)
+        m121 = None
+        if r121 is not None and use_pct_121:
+            m121 = round(_percentile_rank(r121, all_121), 1)
         scores[sector_id] = {
             "momentum_score": round(score, 1),
             "raw_momentum": round(raw, 4),
+            "momentum_12_1": m121,
+            "near_52w_high_pct": primaries[sector_id].get("near_52w_high_pct"),
             "data_source": "momentum_engine_v1",
         }
 
@@ -209,6 +238,7 @@ def compute_momentum_scores(snapshot_path: Path | None = None,
         "source": source,
         "normalization": normalization,
         "sector_count": len(scores),
+        "momentum_12_1_count": len(raw_12_1s),
         "scores": scores,
         "raw_returns": raw_returns,
     }

@@ -59,7 +59,8 @@ Usage:
    - `trigger`: `new_catalyst` (acting on a catalyst) / `escalation` / `contradiction` /
      `reconsideration` ("me lo he pensado mejor", no new external signal) / `rebalance` /
      `stop_hit` / `profit_take`.
-   - `conviction`: `small` / `medium` / `high` — pairs with `conviction_tiers` (12/8/4%).
+   - `conviction`: `small` / `medium` / `high` — pairs with `conviction_tiers` (20/14/7%,
+     derived from `book_shape.n_target`; read them via `weights.conviction_tiers()`).
 
 5. **Correlation check (flexible cap).** Look at exposure already attributed to the same
    catalyst(s):

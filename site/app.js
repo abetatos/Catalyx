@@ -89,6 +89,12 @@ function reRenderForMarked() { try { if (LAST && RENDER[LAST.section]) RENDER[LA
 function md(t) { if (!marked) return '<pre style="white-space:pre-wrap;font:inherit;background:none;border:none;padding:0">' + escapeHtml(t || '') + '</pre>'; try { return marked.parse(t || ''); } catch (e) { return escapeHtml(t || ''); } }
 function err(where, e) { console.error(e); const el = $(where); if (el) el.innerHTML = `<div class="err">${(e && e.message) || e}</div>`; }
 function scoreColor(v) { return v >= 66 ? 'var(--green)' : v >= 40 ? 'var(--amber)' : 'var(--red)'; }
+// The composite is no longer a 0-100 level: since v6 H1 it is 50 + 15 x sum(w*z), so it lives
+// around 50 and a fixed 66/40 traffic light would render every sector amber forever. Its cuts
+// are the same statement in the new units: green above +0.5 sd of the run's universe, red below -0.5.
+const COMPOSITE_MEAN = 50, COMPOSITE_SD = 15;
+function compositeColor(v) { return v >= COMPOSITE_MEAN + 0.5 * COMPOSITE_SD ? 'var(--green)'
+  : v >= COMPOSITE_MEAN - 0.5 * COMPOSITE_SD ? 'var(--amber)' : 'var(--red)'; }
 function num(v, d = 1) { return (v === null || v === undefined || v === '') ? '—' : (Number.isInteger(v) ? v : Number(v).toFixed(d)); }
 function signed(v, d = 1) { if (v === null || v === undefined) return '—'; return (v >= 0 ? '+' : '') + num(v, d); }
 function maturityPill(m) { const c = { emerging: 'b', mainstream: 'a', crowded: 'r', exhausted: 'r' }[m] || ''; return m ? `<span class="pill ${c}">${m}</span>` : ''; }
@@ -327,7 +333,7 @@ function renderOverview() {
     <a class="rowlink barrow" style="grid-template-columns:22px minmax(120px,1fr) 84px 44px 40px 12px;text-decoration:none;color:inherit" href="#/sectors/${s.sector_id}">
       <span class="lbl" style="text-align:right">${s.rank}</span>
       <span class="nm">${s.sector_id} <span class="pill b">${s.primary_etf || '—'}</span></span>
-      ${bar(s.composite)}
+      ${bar(s.composite, 100, compositeColor(s.composite))}
       <span class="v">${num(s.composite, 0)}</span>
       <span class="v">${moveBadge(s.sector_id)}</span>
       <span class="lbl" style="text-align:right">›</span>
@@ -392,7 +398,7 @@ function renderOverview() {
 // earned its weight — see the backtest). crowding is shown as a categorical label (derives from
 // narrative_maturity).
 const SEC_COLS = [
-  { k: 'composite', label: 'composite', bold: true, tip: 'Blend used for the ranking (higher = better)' },
+  { k: 'composite', label: 'composite', bold: true, tip: 'Blend used for the ranking. 50 = this run\'s universe average; each 15 points is one cross-sectional standard deviation' },
   { k: 'catalyst_alignment', label: 'catalyst', tip: 'How strongly active catalysts support the sector' },
   { k: 'momentum', label: 'momentum', tip: 'Cross-sectional price-momentum percentile' },
   { k: 'flow_confirmation', label: 'flow', tip: 'ETF net share-flow (creation/redemption), as a moving average over the last 7 days. ᴾ = real flow via same-theme proxy ETF; ↻ = carried from last reading; ⚠ = NOT real flow, price+volume approximation; ~ = no reading (neutral 50)' },
@@ -529,7 +535,7 @@ function selectSector(sid) {
             <span class="pill b">${row.primary_etf || (study && study.etf_analysis && study.etf_analysis.primary_etf) || '—'}</span></div>
           <div style="margin-top:6px">${row.rank ? `<span class="pill">rank ${row.rank} ${moveBadge(sid)}</span> ` : ''}${regimePill(row.regime_state)} ${maturityPill(row.narrative_maturity || (study && study.narrative_maturity))}</div>
         </div>
-        <div style="text-align:right"><div class="lbl">composite</div><div class="big" style="color:${scoreColor(row.composite || 0)}">${num(row.composite, 0)}</div></div>
+        <div style="text-align:right"><div class="lbl">composite</div><div class="big" style="color:${compositeColor(row.composite || 0)}">${num(row.composite, 0)}</div></div>
       </div>
       <div style="margin-top:14px;display:grid;gap:8px">
         <div class="barrow" style="grid-template-columns:130px 1fr 40px"><span class="lbl">catalyst align</span>${bar(row.catalyst_alignment || 0)}<span class="v">${num(row.catalyst_alignment, 0)}</span></div>
@@ -593,7 +599,7 @@ function oppScores() { const m = {}; ((OV.dislocation || {}).opportunities || []
 //   'dip'    = a dislocation panic dip (fell hard, intact, catalyst-confirmed, composite floor)
 //   'strong' = NOT a dip, but high composite AND neutral timing → a clean "buy-ready" entry (scores
 //              high on our strategy with no near-term tension). The user wanted these marked too.
-const STRONG_COMPOSITE = 66;   // green zone — "scores high on our strategy"
+const STRONG_COMPOSITE = COMPOSITE_MEAN + 0.5 * COMPOSITE_SD;   // green zone — "scores high on our strategy"
 function oppClass(r, opp) {
   if (r.sector_id in opp) return 'dip';
   if ((r.composite || 0) >= STRONG_COMPOSITE && r.micro_timing_state === 'neutral'

@@ -1,14 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "catalyx/schemas/sector_snapshot.json",
-  "schema_version": "1.3",
+  "schema_version": "1.4",
   "title": "SectorSnapshot",
   "description": "A sector's composite score at a point in time. The output of the Scorer module. One per sector per scoring run.",
   "type": "object",
   "required": ["id", "schema_version", "sector_id", "sector_label", "snapshot_at", "investable", "scores", "active_catalyst_ids"],
   "properties": {
     "id": { "type": "string", "pattern": "^snap_[0-9]{8}_[a-z0-9_]+$" },
-    "schema_version": { "type": "string", "const": "1.3" },
+    "schema_version": { "type": "string", "const": "1.4" },
     "sector_id": { "type": "string", "description": "Must be a valid sector_id from sector_taxonomy.yaml." },
     "sector_label": { "type": "string" },
     "parent_sector": { "type": "string" },
@@ -104,7 +104,21 @@
           "type": "number",
           "minimum": 0,
           "maximum": 100,
-          "description": "Weighted composite (schema 1.2): alignment×0.35 + momentum×0.29 + flow×0.24 + (100−crowding)×0.12. valuation_relative removed."
+          "description": "Weighted composite. Schema 1.4 (v6 H1): the weights are applied to CROSS-SECTIONALLY STANDARDIZED dimensions within the run, not to raw levels — composite = clamp(50 + z_scale × Σ wᵢ·zᵢ, 0, 100), z winsorized to ±winsor_z (scoring_weights.yaml §composite_scale). In a weighted sum of non-commensurable scales the effective weight is w·σ_cross, not w, so a nominal weight did not mean what it said and a constant dimension weighed zero in silence (the valuation_relative bug, schema 1.2). Pre-1.4 snapshots hold the absolute level alignment×0.35 + momentum×0.29 + flow×0.24 + (100−crowding)×0.12 and are NOT comparable across the boundary — compare via composite_z or rank."
+        },
+        "composite_z": {
+          "type": ["number", "null"],
+          "description": "Schema 1.4. The raw Σ wᵢ·zᵢ behind `composite`, in cross-sectional standard deviations of this run's universe (0.0 = the universe average). This is the unit selection floors are expressed in (`min_composite_z`), because it means the same thing in every run. Null when the universe was too small to standardize (§composite_scale.min_universe)."
+        },
+        "composite_absolute": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Schema 1.4. The pre-v6 absolute-level composite, retained so a run that spans the scale change can be read back on the old basis."
+        },
+        "ca_imputed": {
+          "type": "boolean",
+          "description": "Schema 1.4 (v6 H2). True when the sector has no study, so catalyst_alignment was NOT MEASURED: it is imputed to the prior (z=0, the median of the sectors that were measured) and excluded from the CA moments, instead of scoring 0 — a missing value goes to the prior, never to the worst case. Distinct from a study that measured zero active catalysts, where the 0 is a finding and stands. This QUALIFIES a row; it is not a gate (v5 doctrine)."
         }
       }
     },

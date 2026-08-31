@@ -58,9 +58,24 @@ def composite_weights() -> dict:
     return _section("composite_weights", _COMPOSITE_DEFAULT)
 
 
+# v6 H1: the composite combines standardized dimensions, so a nominal weight is the
+# effective weight. See sector_scorer.commensurate().
+_COMPOSITE_SCALE_DEFAULT = {
+    "z_scale": 15.0,
+    "winsor_z": 3.0,
+    "min_universe": 5,
+    "dead_dimension_sigma": 2.0,
+}
+
+
+def composite_scale() -> dict:
+    return _section("composite_scale", _COMPOSITE_SCALE_DEFAULT)
+
+
 # ── Momentum periods (momentum_engine) ───────────────────────────────────────
 
-_MOMENTUM_DEFAULT = {"return_1m": 0.20, "return_3m": 0.45, "return_6m": 0.35}
+# v6 H4: return_1m dropped to 0 — the last month is the reversal window (see scoring_weights.yaml).
+_MOMENTUM_DEFAULT = {"return_1m": 0.0, "return_3m": 0.5625, "return_6m": 0.4375}
 
 
 def momentum_period_weights() -> dict:
@@ -76,6 +91,11 @@ _INDICATOR_SCORING_DEFAULT = {
     "fallback_anchors": {"weak": 50, "strong": 80},
     "fallback_above_strong_decay": 0.693,
     "clamp": [0, 100],
+    # v6 J4. Zeroing detrend_weight and history_blend_span reproduces the pre-v6 score exactly.
+    "detrend_weight": 0.5,
+    "detrend_min_tau": 0.5,
+    "detrend_min_points": 6,
+    "history_blend_span": 2,
 }
 
 
@@ -182,6 +202,25 @@ def crowding_from_maturity() -> dict:
     return _section("crowding_from_maturity", _CROWDING_FROM_MATURITY_DEFAULT)
 
 
+# v7 M4 — narrative_maturity → priced-in fraction, for the `ca_unpriced` candidate column.
+# Same steps as `is_priced_in_levels`; the imputation prior for a catalyst with neither
+# signal is the median step (0.5), never the worst case (v6 H2 doctrine).
+_MATURITY_PRICED_IN_DEFAULT = {
+    "ignored": 0.0,
+    "emerging": 0.25,
+    "mainstream": 0.50,
+    "crowded": 0.75,
+    "exhausted": 1.0,
+}
+
+PRICED_IN_PRIOR = 0.5
+
+
+def maturity_priced_in() -> dict:
+    """Map a structural catalyst's `narrative_maturity` to a priced-in fraction [0, 1]."""
+    return _section("maturity_priced_in", _MATURITY_PRICED_IN_DEFAULT)
+
+
 # ── Portfolio weighting (portfolio.build_model_holdings) ─────────────────────
 
 _PORTFOLIO_WEIGHTING_DEFAULT = {
@@ -237,6 +276,66 @@ def total_capital_eur() -> float | None:
     return float(v) if v is not None else None
 
 
+# ── Book shape — the one knob the position cap and the tiers derive from (v6 L1) ─────
+
+_BOOK_SHAPE_DEFAULT = {
+    "n_target": 6,
+    "tier_multiples": [1.4, 1.0, 0.5],
+    "trade_budget": {"free_per_month": 10, "reserve_for_events": 3,
+                     "planned_max_per_review": 6, "fee_after_free_eur": None,
+                     "exempt_actions": ["SELL", "REDUCE"]},
+}
+
+
+def deploy_max() -> float:
+    """Highest deployment ratio the rules can ask for (every top-`intact_rank_max` sector
+    intact), as a fraction. The number the position cap must be feasible against: a ceiling
+    that cannot absorb the deployment the same config demands resolves as a permanent
+    shortfall or a permanent breach."""
+    d = rebalance_rules().get("deployment", {}) or {}
+    base = float(d.get("base", 0.70))
+    step = float(d.get("step_per_intact_sector", 0.05))
+    intact_min = float(d.get("intact_min", 5))
+    intact_max = float(d.get("intact_rank_max", 8))
+    raw = base + step * max(0.0, intact_max - intact_min)
+    return max(float(d.get("floor", 0.40)), min(float(d.get("ceiling", 1.00)), raw))
+
+
+def book_shape() -> dict:
+    """Position cap and conviction tiers DERIVED from `n_target` (v6 L1).
+
+    The cap is a lower bound on the position COUNT (`n_min = deploy_max / cap`), so at 12% it
+    silently demanded an 8-position book — 8 of the operator's 10 free monthly trades. Now
+    `n_target` is the declared number and the rest follows; `test_config_feasibility` fails
+    the suite if the triple stops being satisfiable. Percentages, not fractions.
+    """
+    c = _section("book_shape", _BOOK_SHAPE_DEFAULT)
+    n = max(1, int(c.get("n_target", 6)))
+    mult = [float(m) for m in (c.get("tier_multiples") or [1.4, 1.0, 0.5])]
+    dmax = deploy_max()
+    neutral = dmax * 100.0 / n
+    tiers = {i: round(neutral * m) for i, m in enumerate(mult, 1)}
+    tb = {**_BOOK_SHAPE_DEFAULT["trade_budget"], **(c.get("trade_budget") or {})}
+    return {"n_target": n, "tier_multiples": mult, "deploy_max": dmax,
+            "neutral_weight_pct": round(neutral, 2), "tiers": tiers,
+            "max_position_pct": float(tiers[1]), "trade_budget": tb}
+
+
+def conviction_tiers() -> dict:
+    """`{tier: max_position_pct}` as PERCENT, derived from `book_shape`. Multiples of the
+    neutral weight, so a tier keeps meaning "1.4× a normal line" whatever `n_target` becomes;
+    the old 12/8/4 absolutes all sat below the neutral weight of a 6-name book."""
+    return dict(book_shape()["tiers"])
+
+
+def trade_budget() -> dict:
+    """Monthly trading allowance and what a scheduled review may spend of it (v6 L3).
+    `reserve_for_events` is the option value of a slot made explicit — the mandate acts on
+    catalysts arriving between reviews. `fee_after_free_eur` is a broker fact, None until
+    observed."""
+    return dict(book_shape()["trade_budget"])
+
+
 def correlated_catalyst_cap() -> dict:
     """Max combined allocation across positions sharing a primary catalyst, as a PERCENT.
 
@@ -244,8 +343,8 @@ def correlated_catalyst_cap() -> dict:
     that compares it to a real percentage (an exposure of 10.0 for 10%) silently never breaches.
     Normalized here, once, so the unit is the one the field name promises.
     """
-    c = _section("correlated_catalyst_cap", {"max_combined_pct": 0.20, "enforcement": "warn"})
-    v = float(c.get("max_combined_pct", 0.20))
+    c = _section("correlated_catalyst_cap", {"max_combined_pct": 0.30, "enforcement": "warn"})
+    v = float(c.get("max_combined_pct", 0.30))
     return {"max_combined_pct": v * 100.0 if v <= 1.0 else v,
             "enforcement": str(c.get("enforcement", "warn"))}
 
@@ -361,9 +460,20 @@ _DISLOCATION_DEFAULT = {
     "drawdown_threshold_pct": -3.0,
     "min_catalyst_alignment": 70.0,
     "min_opportunity_composite": 55.0,
+    "min_opportunity_composite_z": 0.33,
     "max_diversifier_corr": 0.65,
     "min_diversifier_composite": 50.0,
+    "min_diversifier_composite_z": 0.0,
 }
+
+
+def composite_floor(cfg: dict, z_key: str, legacy_key: str) -> float:
+    """A composite floor as a level, from its z-unit key (v6 H3), falling back to the pre-v6
+    absolute key for one major version. See sector_scorer.commensurate()."""
+    z = cfg.get(z_key)
+    if z is not None:
+        return 50.0 + float(composite_scale().get("z_scale", 15.0)) * float(z)
+    return float(cfg[legacy_key])
 
 
 def dislocation() -> dict:
@@ -381,7 +491,10 @@ def dislocation() -> dict:
 _REBALANCE_RULES_DEFAULT = {
     "deadband_pp": 2.0,
     "min_ticket_eur": 150.0,
-    "max_position_pct": 12.0,
+    # Derived from `book_shape` (v6 L1) = tier 1 = 1.4 × (deploy_max / n_target). Mirrored here
+    # like every other default; `test_config_feasibility` asserts YAML == derived, so the
+    # duplication cannot drift silently. Do not edit this without editing `book_shape.n_target`.
+    "max_position_pct": 20.0,
     "spread_bps": 20.0,
     "fee_eur": 0.0,
     "add_if": {"rank_max": 5, "gap_pp_min": 3.0, "regime_not": ["breaking"]},
@@ -396,7 +509,8 @@ _REBALANCE_RULES_DEFAULT = {
                     "rank_out_of_top": 10, "rank_out_consecutive": 2},
     "reduce_if_any": {"exit_watcher": ["reduce"], "reduce_fraction": 0.5},
     "deployment": {"base": 0.70, "step_per_intact_sector": 0.05, "intact_min": 5,
-                   "intact_rank_max": 8, "vix_pause_above": 30.0, "vix_penalty": 0.20,
+                   "intact_rank_max": 8, "vix_ramp_start": 25.0, "vix_ramp_full": 35.0,
+                   "vix_pause_above": 30.0, "vix_penalty": 0.20,
                    "floor": 0.40, "ceiling": 1.00,
                    # Persistence rule: a shortfall this large surviving this many recorded
                    # reviews must be executed or overridden in writing (plan v4 §4 C1).
@@ -404,7 +518,8 @@ _REBALANCE_RULES_DEFAULT = {
     "net_edge_gate": {"applies_to_taxable_sales": True, "applies_to_purchases": False,
                       "shrinkage_prior_windows": 6.0, "min_windows_to_gate": 3},
     "scorecard": {"horizon_days": 63, "min_n": 5, "min_effective_windows": 2},
-    "overrides": {"authors_allowed": ["user", "claude", "unrecorded"], "reason_required": True,
+    "overrides": {"authors_allowed": ["user", "claude", "unrecorded", "budget"],
+                  "reason_required": True,
                   "defer_is_an_override": True, "score_after_trading_days": 21,
                   "claude_suspended_if": {"min_scored": 5, "net_edge_eur_below": 0.0}},
 }

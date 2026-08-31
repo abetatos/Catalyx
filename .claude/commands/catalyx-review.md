@@ -5,7 +5,10 @@ The ANALYTICAL cycle: facts → scan → apply → studies → score → rebalan
 run separately, whenever the user decides.
 
 Usage:
-- `/catalyx-review` or `/catalyx-review scheduled` — the full periodic review.
+- `/catalyx-review` or `/catalyx-review scheduled` — the full periodic review. Runs Steps 0–8 and
+  **stops at 8.5** with the summary + dashboard; Steps 9/12 and the report wait for your word.
+- `/catalyx-review continue` — resume phase 2 (Steps 9 · 12 · report) against the run already
+  recorded today. Re-reads `data/reports/run_<date>.json`; it does NOT re-scan or re-score.
 - `/catalyx-review event:<catalyst_id>` — a catalyst fired and you want to react now. Run only
   Step 0 · a **lightweight refresh of that one catalyst** (its keyword, strengthen/weaken/
   invalidation — NOT the full scan) · Step 2 for its indicators · Step 3 for the sectors it drives
@@ -31,16 +34,31 @@ position decision.
 6    open-position reviews       evidence per assumption; the ACTION comes from the table
 7    catalyst exposure           combined per catalyst vs the cap
 8    tax snapshot YTD
-9    open recommendations        AskUserQuestion per candidate — three PRICED branches
-12   taxonomy gap review         AskUserQuestion per proposal (watch triggers fold in here)
+8.5  HANDOFF                     summary + dashboard URL → ** STOP HERE. ** The review ends.
+───────────────────────────────  ▲ everything above runs unprompted; nothing below does ▲
+9    open recommendations        PHASE 2 — only after the user says to continue
+12   taxonomy gap review         PHASE 2 — only after the user says to continue
+out  review_report.py            PHASE 2 — the prose sections encode phase-2 decisions
 ```
 
 **Two steps were deleted, not shortened (plan v4 D-c).** Step 4 read the two catalyst summaries
 that `/catalyx-scan` has already read in C1 — 4.5 KB to restate what step 0/1 carried forward.
 Step 11 swept 31 non-investable sectors and its own instruction was to write "no watch trigger
 surfaced"; a watch trigger firing IS an investability event, so it belongs in Step 12 and nowhere
-else. And the dashboard moved from 8.5 to 5.5: the user reads the book, THEN the positions get
-discussed — the evidence arrives before the argument, not after it.
+else. And the dashboard moved from the old 8.5 slot to 5.5: the user reads the book, THEN the
+positions get discussed — the evidence arrives before the argument, not after it. (The 8.5 slot is
+now the HANDOFF below; the build stays at 5.5, only its URL is repeated at 8.5.)
+
+**Why the review STOPS at 8.5 — the default, not an option.** Steps 0–8 produce facts; Steps 9
+and 12 ask for capital and taxonomy decisions. The user validates the facts against the dashboard,
+with their own eyes, BEFORE either is put to them. Asking in the same turn short-circuits exactly
+the validation that Step 5.5 exists to enable — and it has been raised twice, in the same terms
+(2026-07-28: *"tengo que ver la app de antes"*; 2026-08-31: *"se tiene que dar un resumen y decir
+de abrir el front para estudiar lo que se dice y validarlo y luego si eso seguir con la pipeline"*).
+**This is not the "Wait" branch that Step 9 bans.** That ban is about the options offered once the
+question is asked; this is about when the question may be asked at all. Nothing is left unlogged by
+stopping: no row has been declined yet, and the next run's `_log_unrecorded` still catches anything
+the user never comes back to.
 
 **Why 1.5 gates scoring:** it used to run after the heatmap recorded the run, which baked stale and
 spent catalysts into the recorded scores — sectors ranking top-10 on indicators 100–500 days old.
@@ -50,7 +68,7 @@ Prune first, then score.
 
 Bulk WebSearch and many-file phases run in **subagents that return only the step's digest**; the
 main conversation holds compact summaries and runs the two user-facing decisions (subagents cannot
-ask the user). The subagent Writes its files directly — the file IS the registration.
+ask the user) — in a LATER turn, never in the one that ends at 8.5. The subagent Writes its files directly — the file IS the registration.
 
 **A subagent brief names one input and one output shape — never the pipeline order.** The order
 is in this file and the state is in `run_<date>.json`; a brief that restates either is paying twice
@@ -64,7 +82,7 @@ for the same context, and the restatement is the part that grows every time a st
 | 5c opportunities/regime | **SUBAGENT** | the lake → the four tables |
 | 6 position reviews | **SUBAGENT** | `run_<date>.json` `positions[]` + `rebalance.actions[]` → one row per position |
 | 1.5 · 2 · 7 · 8 | MAIN — one CLI each, small output | |
-| **9 · 12** | **MAIN** — AskUserQuestion | |
+| **9 · 12 · output** | **MAIN — PHASE 2**, AskUserQuestion; never in the same turn as 8.5 | |
 
 ---
 
@@ -198,10 +216,12 @@ Step 5 already produced these; **read that output, do not re-run the scorers.** 
 uv run python scripts/build_site.py
 python -m http.server -d dist 8000        # background
 ```
-Verify it answers 200, give the user **http://localhost:8000** and one line on what changed. This is
-a LOCAL build; the public Pages dashboard only updates on push. It runs HERE, not before Step 9:
-the user reads the book — the rebalance table, the risk contributions, the cost of not acting —
-before the positions are argued about, so the evidence arrives ahead of the argument.
+Verify it answers 200 and note one line on what changed; the URL is repeated in the Step 8.5
+handoff, which is where the user is actually pointed at it. This is a LOCAL build; the public Pages
+dashboard only updates on push. It is built HERE, ahead of Steps 6–8, so the user reads the book —
+the rebalance table, the risk contributions, the cost of not acting — before the positions are
+argued about. The evidence arrives ahead of the argument, and at 8.5 the argument stops until he
+has read it.
 
 ### Step 6 — Open position reviews
 
@@ -294,7 +314,30 @@ uv run python -m catalyx.execution.tax_engine --gain <projected_unrealized> --yt
 Realized gains, tax paid YTD, marginal bracket, projected full-year if open positions closed at
 mark. No closing movement yet → state YTD realized = 0.
 
-### Step 9 — Position-open recommendations
+### Step 8.5 — Handoff, and the end of the review
+
+**This is where the review ends by default.** Print the summary to chat and stop. Do not call
+AskUserQuestion, do not log an override, do not generate the report, do not start Step 9 or 12 —
+in this turn or any turn until the user says to continue.
+
+The summary carries, in this order:
+1. **The book** — positions, invested vs marked, unrealized, realized YTD, deployed % vs the rule
+   and the shortfall, cash drag in €, TWR vs SPY as a DIFFERENCE in pp, and `execution_alpha_pp`.
+2. **The findings** — every non-obvious thing this run turned up, each with its evidence, date and
+   source. This is the part the user is validating; it is the reason the review exists.
+3. **Any defect found or fixed** in the pipeline itself, named with `file:line`.
+4. **The rule table verbatim** — SELL/TRIM/ADD/BUY with € and reason, stated as FACTS the table
+   produced, never as a question and never softened into a recommendation to act now.
+5. **The dashboard URL** and an explicit invitation to review it and say whether to continue.
+
+Close by saying plainly what was NOT done: nothing executed, no override written, no report
+generated. That sentence is what makes the stop legible rather than looking like the review died.
+
+### Step 9 — Position-open recommendations  ·  PHASE 2
+
+> **Gate: do not begin until the user has come back and said to continue.** If you are arriving
+> here in the same turn that produced Step 8.5, you are in the wrong step — stop and hand off.
+
 
 Candidates = ranked in the top-5 with no open position. Present a context block each — why it ranks
 (flag parabolic momentum: a high rank is not an entry point) · crowding from `narrative_maturity` ·
@@ -323,7 +366,11 @@ Then **AskUserQuestion per candidate**, with three PRICED branches and no costle
   is never recorded cannot be wrong, which is exactly why it accumulates. If you forget, the NEXT
   run logs it for you as `unrecorded` — the tally is the same, only the reason is missing.
 
-### Step 12 — Taxonomy gap review (and any watch trigger that fired)
+### Step 12 — Taxonomy gap review (and any watch trigger that fired)  ·  PHASE 2
+
+> **Same gate as Step 9.** A taxonomy promotion writes `sector_taxonomy.yaml`; it waits for the
+> same validation pass as a capital decision.
+
 
 **Watch-only sectors are handled here, and only on a finding.** Never sweep the 31 non-investable
 sectors — a sweep reports "no change" 30 times. Raise one only when the scan's discovery pass
@@ -344,7 +391,12 @@ read-only, never decide automatically. `sector_taxonomy.yaml` is written only af
 
 ---
 
-## Output
+## Output  ·  PHASE 2
+
+The report is written AFTER Steps 9 and 12, because its prose markers encode their outcomes — the
+Step 9 context blocks, the Step 12 blocks and the override reasons. Generating it at 8.5 would
+either leave those markers empty (which `lint_completeness` exists to catch) or invent decisions the
+user has not made.
 
 ```bash
 uv run python scripts/review_report.py        # → data/reports/review_<date>.md
@@ -379,5 +431,9 @@ Then print to chat: "Review complete. Key findings: [3 bullets]. Full report:
 - **Stale indicators are not optional to flag** — they are data-quality faults that corrupt
   everything downstream.
 - **The review recommends; the user executes.** Every step above is recommend-only.
+- **The review STOPS at Step 8.5 and hands off.** Steps 9, 12 and the report are phase 2 and run
+  only when the user comes back and says to continue. Never put a capital or taxonomy decision to
+  the user in the same turn that delivers the findings — they validate them against the dashboard
+  first. Told twice; treat a third as a defect in this file, not in the user.
 - **Cash is a decision with a cost.** Report the deployment line every run, even when the answer is
   uncomfortable — especially then.

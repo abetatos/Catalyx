@@ -13,7 +13,9 @@ dependencies = [
     "jsonschema>=4.22",   # schema validation in tests
     "pyarrow>=24.0.0",    # parquet lake (Tier 2)
     "pandas>=2.2",
+    "numpy>=1.26",   # covariance.py (Ledoit-Wolf); arrives with pandas but imported directly
     "duckdb>=1.1",        # lake read-path (same SQL runs in DuckDB-WASM in the browser)
+    "pytrends>=4.9.2",
 ]
 
 # Dev tooling lives in a PEP-735 dependency-group (not an optional-extra): `uv sync` and

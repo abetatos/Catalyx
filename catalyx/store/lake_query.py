@@ -221,15 +221,25 @@ def portfolio_catalyst_exposure(portfolio_id: str, lake_dir: Path | None = None)
     split equally over the catalysts it's driven by; sectors with none → `uncatalyzed`; the
     un-deployed remainder → `cash`). Returns:
       • `timeseries` — per run: {run_id, date, by_catalyst:{cid: pct}} (the rebalance history),
-      • `average`    — per catalyst: the TIME-WEIGHTED mean exposure (weighted by how long each
-                       allocation was live) + its € on the notional — the 'so on average where is
-                       this book?' view.
+      • `average`    — per catalyst: the TIME-WEIGHTED mean (weighted by how long each allocation
+                       was live) + its € on the notional — the 'so on average where is this book?'
+                       view.
+    Both senses are reported (v6 J3): `pct`/`avg_pct` is the CREDIT split and partitions the book;
+    `pct_exposure`/`avg_pct_exposure` is the FULL position behind each driver — what a correlated-
+    catalyst cap must read — and sums to MORE than the book, on purpose.
     Read-only; empty before any portfolio build."""
     out: dict = {"portfolio_id": portfolio_id, "notional_eur": None, "timeseries": [], "average": []}
     if not _has("portfolio_catalyst_exposure", lake_dir):
         return out
+    # v6 J3: `pct` is the CREDIT split (who is credited with the return); `pct_exposure` is the
+    # full position behind each driver (how much money moves if it breaks) and sums to more than
+    # the book, on purpose. Pre-v6 partitions lack the column — union_by_name gives NULL, so it
+    # falls back to the split rather than dropping the run.
+    cols = set(_df("SELECT * FROM portfolio_catalyst_exposure LIMIT 0", None, lake_dir).columns)
+    exp_sel = "COALESCE(pct_exposure, pct)" if "pct_exposure" in cols else "pct"
     rows = _df(
-        "SELECT run_id, catalyst_id, pct, eur, notional_eur FROM portfolio_catalyst_exposure "
+        f"SELECT run_id, catalyst_id, pct, eur, {exp_sel} AS pct_exposure, notional_eur "
+        "FROM portfolio_catalyst_exposure "
         "WHERE portfolio_id = ? ORDER BY run_id", [portfolio_id], lake_dir,
     ).to_dict(orient="records")
     if not rows:
@@ -238,8 +248,10 @@ def portfolio_catalyst_exposure(portfolio_id: str, lake_dir: Path | None = None)
     dates = _run_dates(lake_dir)
     run_ids = sorted({r["run_id"] for r in rows})
     by_run: dict[str, dict] = {}
+    exp_run: dict[str, dict] = {}
     for r in rows:
         by_run.setdefault(r["run_id"], {})[r["catalyst_id"]] = r["pct"]
+        exp_run.setdefault(r["run_id"], {})[r["catalyst_id"]] = r["pct_exposure"]
     out["timeseries"] = [
         {"run_id": rid, "date": (dates.get(rid) or rid)[:10], "by_catalyst": by_run[rid]}
         for rid in run_ids
@@ -251,8 +263,11 @@ def portfolio_catalyst_exposure(portfolio_id: str, lake_dir: Path | None = None)
     avg = []
     for cid in cats:
         apct = round(sum(by_run[rid].get(cid, 0.0) * w for rid, w in zip(run_ids, weights)) / wsum, 2)
+        aexp = round(sum(exp_run[rid].get(cid, 0.0) * w for rid, w in zip(run_ids, weights)) / wsum, 2)
         avg.append({"catalyst_id": cid, "avg_pct": apct,
-                    "avg_eur": round(apct / 100.0 * notional, 2)})
+                    "avg_eur": round(apct / 100.0 * notional, 2),
+                    "avg_pct_exposure": aexp,
+                    "avg_exposure_eur": round(aexp / 100.0 * notional, 2)})
     out["average"] = sorted(avg, key=lambda x: x["avg_pct"], reverse=True)
     return out
 

@@ -52,6 +52,12 @@ _ANCHOR_STRONG = float(_SCORING["fallback_anchors"]["strong"])
 _ABOVE_STRONG_DECAY = float(_SCORING["fallback_above_strong_decay"])
 _IND_CLAMP_LO, _IND_CLAMP_HI = (float(x) for x in _SCORING["clamp"])
 
+# v6 J4 — detrended blend + the min_history cliff. Defaults reproduce pre-v6 when zeroed.
+_DETREND_WEIGHT = float(_SCORING.get("detrend_weight", 0.5))
+_DETREND_MIN_TAU = float(_SCORING.get("detrend_min_tau", 0.5))
+_DETREND_MIN_POINTS = int(_SCORING.get("detrend_min_points", 6))
+_BLEND_SPAN = int(_SCORING.get("history_blend_span", 2))
+
 _COLOR_GREEN, _COLOR_AMBER = weights.indicator_color_thresholds()
 _TREND_DELTAS = weights.intensity_trend_deltas()
 _INTENSITY_MIN, _INTENSITY_MAX = weights.intensity_bounds()
@@ -82,15 +88,19 @@ def _indicator_values(ind: dict, ext_history: list[dict] | None = None) -> list[
 
     `ext_history` (the lake's value_history for this indicator) takes precedence; when it
     is None the deprecated inline YAML `value_history` is used as a fallback. Entries are
-    {date, value}; order does not matter for percentile. The current value is always
-    included so the percentile reflects where today sits.
+    {date, value}. Returned CHRONOLOGICALLY (oldest first) with the current value last —
+    the level percentile does not care, but the detrended one (v6 J4) does, and a function
+    whose result depends on an ordering it does not control is a trap for the next caller.
     """
     source = ext_history if ext_history is not None else (ind.get("value_history") or [])
-    values: list[float] = []
+    dated: list[tuple[str, float]] = []
     for entry in source:
         v = entry.get("value") if isinstance(entry, dict) else entry
         if isinstance(v, (int, float)):
-            values.append(float(v))
+            d = entry.get("date") if isinstance(entry, dict) else None
+            dated.append((str(d or ""), float(v)))
+    dated.sort(key=lambda kv: kv[0])
+    values = [v for _, v in dated]
     cur = ind.get("current_value")
     if isinstance(cur, (int, float)):
         values.append(float(cur))
@@ -134,19 +144,113 @@ def _fallback_score(value: float, ind: dict) -> float:
     return _ANCHOR_STRONG + (100.0 - _ANCHOR_STRONG) * (1.0 - math.exp(-_ABOVE_STRONG_DECAY * (x - 1.0)))
 
 
+def _kendall_tau_vs_time(values: list[float]) -> float:
+    """τ between a series and its own index — how monotonically it trends. ±1 = strictly
+    monotone. Rank-based on purpose: robust to the one huge print that a Pearson r would let
+    masquerade as a trend."""
+    n = len(values)
+    if n < 3:
+        return 0.0
+    conc = disc = 0
+    for i in range(n):
+        for j in range(i + 1, n):
+            if values[j] > values[i]:
+                conc += 1
+            elif values[j] < values[i]:
+                disc += 1
+    return (conc - disc) / (n * (n - 1) / 2)
+
+
+def _detrended(values: list[float]) -> list[float]:
+    """Residuals against an OLS line on the index.
+
+    The plan said "residual against a rolling mean"; a rolling window over a 6-point series
+    throws away most of the sample and gives back nothing for the earliest points. A linear
+    detrend keeps every observation, which is the binding constraint on series that are
+    observed monthly.
+    """
+    n = len(values)
+    xs = list(range(n))
+    mx = sum(xs) / n
+    my = sum(values) / n
+    sxx = sum((x - mx) ** 2 for x in xs)
+    if sxx <= 0:
+        return list(values)
+    b = sum((x - mx) * (y - my) for x, y in zip(xs, values)) / sxx
+    a = my - b * mx
+    return [y - (a + b * x) for x, y in zip(xs, values)]
+
+
+def _percentile_component(cur: float, sample: list[float], direction: str) -> tuple[float, dict]:
+    """The percentile half of the score: the LEVEL percentile, blended with the DETRENDED one
+    when the series actually trends (v6 J4).
+
+    D5: a persistently rising series (central-bank gold buying, hyperscaler capex) sits near its
+    own maximum almost every month, so the level percentile pins at ~100 and stops discriminating
+    — precisely on the persistent drivers that `StructuralCatalyst` exists to model. But "at an
+    all-time high" is real information, not noise, so the detrended percentile REPLACING it would
+    be the opposite error: a driver at a record level would score mid-range for the crime of being
+    exactly on its own trend.
+
+    So they are BLENDED. The level says how strong this is against its own history; the residual
+    says whether it is running above or below its own trajectory. Two catalysts both at record
+    highs, one accelerating and one decelerating, now score differently — which is the
+    discriminating power D5 was after. `detrend_weight: 0.0` reproduces the pre-v6 score exactly.
+    """
+    level = _percentile_score(cur, sample, direction)
+    meta = {"level_percentile": round(level, 1), "detrended_percentile": None,
+            "trend_tau": None, "detrend_weight_applied": 0.0}
+    if _DETREND_WEIGHT <= 0 or len(sample) < _DETREND_MIN_POINTS:
+        return level, meta
+    tau = _kendall_tau_vs_time(sample)
+    meta["trend_tau"] = round(tau, 3)
+    if abs(tau) < _DETREND_MIN_TAU:
+        return level, meta                      # not trending → nothing to detrend away
+    resid = _detrended(sample)
+    det = _percentile_score(resid[-1], resid, direction)
+    meta["detrended_percentile"] = round(det, 1)
+    meta["detrend_weight_applied"] = _DETREND_WEIGHT
+    return (1.0 - _DETREND_WEIGHT) * level + _DETREND_WEIGHT * det, meta
+
+
 def _indicator_score(ind: dict, ext_history: list[dict] | None = None) -> float:
-    """Continuous [0, 100] score for one indicator. Percentile when enough history
-    exists, else the saturating threshold fallback. No data → clamp floor."""
+    return _indicator_score_detail(ind, ext_history)["score"]
+
+
+def _indicator_score_detail(ind: dict, ext_history: list[dict] | None = None) -> dict:
+    """Continuous [0, 100] score for one indicator, with its provenance.
+
+    v6 J4 also removes the REGIME JUMP at the `min_history_points` boundary: the score used to
+    switch outright from the saturating threshold curve to the percentile on the arrival of the
+    6th observation, so one new data point could move an indicator by tens of points for reasons
+    that had nothing to do with the world. The two are now blended linearly across
+    `[min − blend_span, min + blend_span]` — the same family of mini-cliff v1.5 removed from the
+    semaphore buckets and v6 I6 removed from the VIX brake.
+    """
     cur = ind.get("current_value")
     if not isinstance(cur, (int, float)):
-        return _IND_CLAMP_LO
+        return {"score": _IND_CLAMP_LO, "mode": "no_data"}
 
     sample = _indicator_values(ind, ext_history)
-    if len(sample) >= _MIN_HISTORY_POINTS:
-        raw = _percentile_score(float(cur), sample, ind["direction"])
+    n = len(sample)
+    lo, hi = _MIN_HISTORY_POINTS - _BLEND_SPAN, _MIN_HISTORY_POINTS + _BLEND_SPAN
+    fallback = _fallback_score(float(cur), ind)
+
+    if n < lo:                       # strict: at n == lo the blend weight is 0 anyway,
+        raw, mode, meta = fallback, "fallback", {}   # and `<=` made span=0 skip the
+                                                     # percentile at exactly n == min
     else:
-        raw = _fallback_score(float(cur), ind)
-    return round(_clamp(raw, _IND_CLAMP_LO, _IND_CLAMP_HI), 1)
+        pct, meta = _percentile_component(float(cur), sample, ind["direction"])
+        if n >= hi:
+            raw, mode = pct, "percentile"
+        else:
+            t = (n - lo) / float(hi - lo)
+            raw = (1.0 - t) * fallback + t * pct
+            # the mode names what the score IS: at the ends of the band the blend is degenerate
+            mode = "fallback" if t <= 0 else "percentile" if t >= 1 else "blended"
+            meta["blend_t"] = round(t, 2)
+    return {"score": round(_clamp(raw, _IND_CLAMP_LO, _IND_CLAMP_HI), 1),
+            "mode": mode, "n_observations": n, **meta}
 
 
 def _color(score: float) -> str:
@@ -159,7 +263,8 @@ def _color(score: float) -> str:
 
 
 def _scoring_mode(ind: dict, ext_history: list[dict] | None = None) -> str:
-    return "percentile" if len(_indicator_values(ind, ext_history)) >= _MIN_HISTORY_POINTS else "fallback"
+    """How the score was actually produced: fallback | blended | percentile (v6 J4)."""
+    return _indicator_score_detail(ind, ext_history).get("mode", "fallback")
 
 
 # ── Trend (additive delta) ───────────────────────────────────────────────────
@@ -169,7 +274,28 @@ def _trend_delta(history: list[dict]) -> tuple[float, str]:
 
     History is expected most-recent-first (as written in YAML files).
     Consecutive = both the most-recent AND the prior period moved in the same direction.
+
+    ONE ENTRY PER PERIOD, and that is not a formality. `write_back` appended a fresh entry every
+    time it ran, so a second review on the same day left two `2026-08-31` rows and this function
+    differenced them as two consecutive PERIODS — turning "the pipeline ran twice" into a
+    `↓ falling 1 period` delta on a world that had not moved. It compounds: each re-run writes a
+    lower score, which the next re-run reads as a further fall. On 2026-08-31 that alone took
+    `struct_cb_gold_accumulation` 78.6 → 68.5 → 64.5, and nine of thirteen catalysts carried
+    duplicate periods (up to SIX rows of `2026-Q2`). Deduping on read, keeping the most recent
+    computation per period, repairs the reading for every file already written that way.
     """
+    seen: set[str] = set()
+    deduped = []
+    for h in history:
+        period = h.get("period")
+        # An entry with no period is not "the same period" as another one without a period —
+        # it is an unlabelled observation, and collapsing those would silently eat real history.
+        if period is not None:
+            if str(period) in seen:
+                continue
+            seen.add(str(period))
+        deduped.append(h)
+    history = deduped
     scores = [h["score"] for h in history if isinstance(h.get("score"), (int, float))]
     if len(scores) < 2:
         return float(_TREND_DELTAS["flat"]), "→ (flat — insufficient history)"
@@ -238,7 +364,15 @@ def compute_intensity(catalyst: dict) -> dict:
     total_weight = sum(w for _, w in scores_weighted)
     indicator_avg = sum(s * w for s, w in scores_weighted) / total_weight
 
-    history = catalyst.get("intensity", {}).get("history", [])
+    # The trend is measured over PRIOR periods. A history row stamped with today's date is this
+    # same computation's own earlier estimate, not a period that has been through, and feeding it
+    # back in makes the score a fixed-point iteration on itself: run the pipeline twice and gold
+    # went 78.6 → 68.5 → 64.5 while the world stood still. Dropping it makes `compute` give the
+    # same answer whether or not `write_back` has already run today — which is what lets a review
+    # be re-run safely. An explicit `--period` label (e.g. `2026-Q3`) never matches and is kept.
+    today_iso = date.today().isoformat()
+    history = [h for h in catalyst.get("intensity", {}).get("history", [])
+               if str(h.get("period")) != today_iso]
     trend_delta, trend_label = _trend_delta(history)
 
     raw = indicator_avg + trend_delta
@@ -330,11 +464,14 @@ def write_back(path: Path, result: dict, period: str | None = None) -> None:
 
     history = intensity["history"]
     entry_period = period or today
-    already_logged = (
-        len(history) > 0
-        and history[0].get("period") == entry_period
-        and history[0].get("score") == new_score
-    )
+    # One entry per period: a re-run REPLACES that period's row instead of stacking a second one
+    # beside it. The old guard only skipped when period AND score matched, so a same-day re-run
+    # with a moved score appended a duplicate that `_trend_delta` then read as a period change.
+    existing = next((i for i, h in enumerate(history)
+                     if str(h.get("period")) == str(entry_period)), None)
+    already_logged = existing is not None and history[existing].get("score") == new_score
+    if existing is not None and not already_logged:
+        history.pop(existing)          # replace that period's row, never stack a second one
     if not already_logged:
         note = f"Computed {today}: avg={result['indicator_avg']} trend={result['trend_label']}"
         if stored_score is not None and stored_score != new_score:
@@ -374,6 +511,82 @@ def _format_result(r: dict) -> str:
     )
 
 
+def compare_legacy() -> dict:
+    """Every catalyst's intensity under v6 J4 against the pre-v6 formula (v6 J4 migration aid).
+
+    J4 changes PUBLISHED scores, so the change has to be inspectable rather than asserted. Both
+    halves are switched off by zeroing their config, so the legacy number is the same code path
+    with `detrend_weight = 0` and `history_blend_span = 0` — not a reimplementation that could
+    drift from what actually ran.
+
+    Nothing is written. The stored `intensity.current_score` (which is what `catalyst_scorer`
+    reads) is untouched until someone runs `--write-back`.
+    """
+    global _DETREND_WEIGHT, _BLEND_SPAN
+    keep = (_DETREND_WEIGHT, _BLEND_SPAN)
+
+    def sweep():
+        out = {}
+        for f in sorted(_CATALYSTS_DIR.glob("*.yaml")):
+            d = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+            if d.get("status") in ("merged", "deactivated") or not d.get("id"):
+                continue
+            try:
+                r = compute_intensity(d)
+            except Exception:
+                continue
+            out[d["id"]] = (r.get("computed_score"), r.get("stored_score"))
+        return out
+
+    try:
+        _DETREND_WEIGHT, _BLEND_SPAN = 0.0, 0
+        legacy = sweep()
+        _DETREND_WEIGHT, _BLEND_SPAN = 0.5, 0
+        detrend_only = sweep()
+        _DETREND_WEIGHT, _BLEND_SPAN = 0.0, int(_SCORING.get("history_blend_span", 2))
+        cliff_only = sweep()
+        _DETREND_WEIGHT, _BLEND_SPAN = keep
+        current = sweep()
+    finally:
+        _DETREND_WEIGHT, _BLEND_SPAN = keep
+
+    rows = []
+    for cid, (now, stored) in current.items():
+        was = legacy.get(cid, (None, None))[0]
+        if now is None or was is None:
+            continue
+        d_only = abs((detrend_only.get(cid, (None,))[0] or 0) - was) > 0.05
+        c_only = abs((cliff_only.get(cid, (None,))[0] or 0) - was) > 0.05
+        rows.append({
+            "catalyst_id": cid, "stored_score": stored, "legacy_score": was,
+            "new_score": now, "delta": round(now - was, 1),
+            "cause": ("detrend" if d_only and not c_only
+                      else "history blend" if c_only and not d_only
+                      else "both" if d_only and c_only else None),
+        })
+    rows.sort(key=lambda r: -abs(r["delta"]))
+    return {"n_catalysts": len(rows), "n_changed": sum(1 for r in rows if abs(r["delta"]) > 0.05),
+            "max_abs_delta": max((abs(r["delta"]) for r in rows), default=0.0),
+            "note": "stored scores are UNCHANGED until --write-back; catalyst_scorer reads stored",
+            "catalysts": rows}
+
+
+def render_comparison(res: dict) -> str:
+    out = [f"CATALYX — intensity, v6 J4 vs the pre-v6 formula   {res['n_changed']}/"
+           f"{res['n_catalysts']} catalysts change · max |Δ| {res['max_abs_delta']:.1f}", ""]
+    hdr = f"  {'catalyst':<46} {'stored':>7} {'pre-v6':>7} {'now':>7} {'Δ':>7}  cause"
+    out += [hdr, "  " + "-" * (len(hdr) - 2)]
+    for r in res["catalysts"]:
+        st = f"{r['stored_score']:.1f}" if r["stored_score"] is not None else "—"
+        out.append(f"  {r['catalyst_id']:<46} {st:>7} {r['legacy_score']:>7.1f} "
+                   f"{r['new_score']:>7.1f} {r['delta']:>+7.1f}  {r['cause'] or ''}")
+    out += ["", "  `stored` is what catalyst_scorer reads TODAY and it does not move until "
+                "--write-back.\n  `detrend` cuts both ways on purpose: it scores a series "
+                "against its own trajectory, so it\n  pulls down a driver pinned at its record "
+                "AND lifts one sitting above its own decline."]
+    return "\n".join(out)
+
+
 def main() -> None:
     # Force UTF-8 on Windows consoles
     if hasattr(sys.stdout, "reconfigure"):
@@ -399,23 +612,38 @@ def main() -> None:
         help="Write computed score back to YAML file(s) in place"
     )
     parser.add_argument(
+        "--compare-legacy", action="store_true",
+        help="v6 J4 migration aid: every catalyst's intensity now vs the pre-v6 formula, with "
+             "the change attributed to the detrend or the history blend. Writes nothing.")
+    parser.add_argument(
         "--period", type=str, default=None,
         help="Period label for history entry, e.g. '2026-Q2' (default: today's date)"
     )
     args = parser.parse_args()
 
+    if args.compare_legacy:
+        res = compare_legacy()
+        print(json.dumps(res, indent=2, ensure_ascii=False) if args.json else render_comparison(res))
+        return
+
     if args.all or args.yaml_file is None:
         results = compute_all()
-        paths = sorted(_CATALYSTS_DIR.glob("*.yaml")) if args.write_back else []
     else:
         results = [compute_from_yaml(args.yaml_file)]
-        paths = [args.yaml_file] if args.write_back else []
 
     if args.write_back:
-        for path, result in zip(paths, results):
-            if "error" not in result:
-                write_back(path, result, period=args.period)
-                print(f"Updated: {path.name}  score={result['computed_score']}", file=sys.stderr)
+        # Each result carries the file it was computed FROM. It used to be zipped against a fresh
+        # `glob("*.yaml")`, but `compute_all` SKIPS inactive/macro_context catalysts — so the two
+        # lists had different lengths and every result after the first skipped file was written
+        # into the wrong catalyst's YAML. On 2026-08-31 that put gold's 68.5 into
+        # biopharma_patent_cliff, ai_capex's 95.0 into commercial_space, and left the last five
+        # files untouched. Never re-derive the path; carry it.
+        for result in results:
+            if "error" in result:
+                continue
+            path = Path(result["_source_file"])
+            write_back(path, result, period=args.period)
+            print(f"Updated: {path.name}  score={result['computed_score']}", file=sys.stderr)
 
     if args.json:
         print(json.dumps(results if len(results) > 1 else results[0], indent=2, ensure_ascii=False))

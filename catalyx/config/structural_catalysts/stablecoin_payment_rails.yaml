@@ -45,20 +45,25 @@ user_notes: >
   but on the networks monetizing the rails. Bootstrap 64 anchored to struct_solar_lcoe_deployment (64.1).
 
 intensity:
-  current_score: 86.6
+  current_score: 88.6
   computation_method: computed
-  last_updated: "2026-07-28"
+  last_updated: "2026-08-31"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: on par with struct_solar_lcoe_deployment (64.1). Onset-phase,
     high-novelty adoption trend with an incumbent-capture floor.
   history:
+  - period: '2026-08-31'
+    score: 88.6
+    note: 'Computed 2026-08-31: avg=86.58 trend=↑ (rising 1 period) (was 86.6)'
+    computation_method: computed
   - period: '2026-07-28'
     score: 86.6
     note: 'Computed 2026-07-28: avg=86.58 trend=→ (flat — insufficient history) (was 64)'
     computation_method: computed
   - period: "2026-Q3"
     score: 64
-    note: "Bootstrap at creation 2026-07-01. Visa/MC/Coinbase consortium launched 2026-06-30; stablecoin supply >$270B; Visa on-chain ~$7B annualized run-rate."
+    note: "Bootstrap at creation 2026-07-01. Visa/MC/Coinbase consortium launched 2026-06-30; stablecoin supply >$270B; Visa
+      on-chain ~$7B annualized run-rate."
     computation_method: bootstrap
 
 indicators:

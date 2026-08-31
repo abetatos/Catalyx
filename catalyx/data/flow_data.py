@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import time
 import urllib.request
@@ -183,13 +184,30 @@ def _is_ucits(ticker: str) -> bool:
 # `health` accumulates ok/err per source so the run can shout if a source (esp.
 # stockanalysis) is DOWN and mark the flow as degraded/needs-review.
 
-_SA_URL = "https://stockanalysis.com/api/symbol/e/{tk}/overview"
+# stockanalysis exposes no stable public API. The old `/api/symbol/e/{tk}/overview` endpoint
+# 404'd sometime before 2026-08-31 and took 47 of 47 lookups with it — the whole primary source,
+# silently, because a dead source and an uncovered ticker both just return None. Two page-backed
+# paths replace it, best (smallest) first:
+#   1) `__data.json` — the SvelteKit payload behind the same page, ~49 KB. Its `sharesOut` key
+#      holds an INDEX into the flattened node array, not the value, so it must be dereferenced.
+#   2) the rendered page, ~228 KB, which carries `sharesOut:"82.30M"` in an inline blob.
+# Both are unofficial and will break again; what must not happen again is breaking QUIETLY, so
+# `_flow_source_reachable()` probes one known ticker and the snapshot refuses to silently
+# re-label the universe. Re-validated 2026-08-31 against the iShares screener across 8 funds:
+# −4.15%..+0.92%, consistent with the ~0.25–1.75% band this source was originally accepted on.
+_SA_DATA_URL = "https://stockanalysis.com/etf/{tk}/__data.json"
+_SA_PAGE_URL = "https://stockanalysis.com/etf/{tk}/"
+_SA_STOCK_PAGE_URL = "https://stockanalysis.com/stocks/{tk}/"
 _ISHARES_SCREENER_URL = (
     "https://www.ishares.com/us/product-screener/product-screener-v3.1.jsn"
     "?dcrPath=/templatedata/config/product-screener-v3/data/en/us-ishares/"
     "ishares-product-screener-backend-config&siteEntryPassthrough=true"
 )
 _HTTP_HEADERS = {"User-Agent": "catalyx-research/0.1 abetatos@gmail.com"}
+# The page paths are served by a CDN that returns 403 to a non-browser agent.
+_SA_HEADERS = {"User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                              "AppleWebKit/537.36 (KHTML, like Gecko) "
+                              "Chrome/126.0.0.0 Safari/537.36")}
 _ISHARES_SCREENER_CACHE: dict[str, float] | None = None  # ticker → shares (AUM/NAV)
 # Politeness delay + one retry for stockanalysis — without it, ~70 rapid calls in a full
 # snapshot get throttled and the later/fallback tickers fail (looked like coverage gaps).
@@ -226,24 +244,65 @@ def _parse_human_num(s) -> float | None:
         return None
 
 
+def _sa_shares_from_data_json(text: str) -> float | None:
+    """Dereference `sharesOut` out of the SvelteKit `__data.json` payload.
+
+    The payload is FLATTENED: the key maps to an integer INDEX into the node's data array, and
+    the human string ("82.30M") lives at that index. Reading the key as if it were the value
+    would silently yield 27.
+    """
+    try:
+        nodes = json.loads(text).get("nodes") or []
+    except (ValueError, AttributeError):
+        return None
+    for node in nodes:
+        if not isinstance(node, dict) or node.get("type") != "data":
+            continue
+        arr = node.get("data")
+        if not isinstance(arr, list):
+            continue
+        for el in arr:
+            if isinstance(el, dict) and "sharesOut" in el:
+                idx = el["sharesOut"]
+                if isinstance(idx, int) and 0 <= idx < len(arr):
+                    return _parse_human_num(arr[idx])
+    return None
+
+
+def _sa_shares_from_page(text: str) -> float | None:
+    """`sharesOut:"82.30M"` out of the inline blob on the rendered page."""
+    m = re.search(r'sharesOut:"([^"]+)"', text)
+    return _parse_human_num(m.group(1)) if m else None
+
+
 def _shares_stockanalysis(ticker: str, health: dict) -> float | None:
-    """Shares outstanding from stockanalysis.com (US tickers). Unofficial endpoint — rate-limited,
-    so we pace + retry once; any persistent HTTP/parse failure increments
+    """Shares outstanding from stockanalysis.com (US tickers). Unofficial and page-backed — we
+    pace + retry once; any persistent HTTP/parse failure increments
     health['stockanalysis']['err'] so the run can warn."""
-    for attempt in range(_SA_MAX_RETRIES + 1):
-        try:
-            r = httpx.get(_SA_URL.format(tk=ticker), headers=_HTTP_HEADERS, timeout=12)
-            if r.status_code == 200:
-                v = _parse_human_num(r.json().get("data", {}).get("sharesOut"))
-                time.sleep(_SA_REQUEST_DELAY_S)
-                if v:
-                    health["stockanalysis"]["ok"] += 1
-                    return v
-                return None  # 200 but no field = not covered, not an error
-            # non-200 (often throttling) → back off and retry
-            time.sleep(_SA_REQUEST_DELAY_S * (2 ** attempt))
-        except Exception:  # noqa: BLE001
-            time.sleep(_SA_REQUEST_DELAY_S * (2 ** attempt))
+    attempts = ((_SA_DATA_URL, _sa_shares_from_data_json),
+                (_SA_PAGE_URL, _sa_shares_from_page),
+                (_SA_STOCK_PAGE_URL, _sa_shares_from_page))
+    saw_200 = False
+    for url_tpl, extract in attempts:
+        for attempt in range(_SA_MAX_RETRIES + 1):
+            try:
+                r = httpx.get(url_tpl.format(tk=ticker), headers=_SA_HEADERS, timeout=15,
+                              follow_redirects=True)
+                if r.status_code == 200:
+                    saw_200 = True
+                    v = extract(r.text)
+                    time.sleep(_SA_REQUEST_DELAY_S)
+                    if v:
+                        health["stockanalysis"]["ok"] += 1
+                        return v
+                    break            # reachable but this shape had no field → try the next shape
+                if r.status_code == 404:
+                    break            # not covered under this path → try the next path
+                time.sleep(_SA_REQUEST_DELAY_S * (2 ** attempt))   # throttling → back off
+            except Exception:  # noqa: BLE001
+                time.sleep(_SA_REQUEST_DELAY_S * (2 ** attempt))
+    if saw_200:
+        return None      # site up, ticker genuinely not covered — not a source failure
     health["stockanalysis"]["err"] += 1
     return None
 
@@ -735,8 +794,18 @@ def fetch_flow_data(
         signal_ticker, result, _kind = _resolve_flow_signal(chain, health)
         proxy_used = signal_ticker is not None and signal_ticker != primary
 
-        # 13F institutional breadth is about the vehicle you actually HOLD → the primary.
+        # 13F breadth: try the primary, else the first US sibling in the chain (v7). Post-universe
+        # v2.0 every primary is UCITS (no 13F), which silently nulled this signal for the whole
+        # book — same proxy doctrine as flow: the theme's US vehicle measures the theme.
         inst = _fetch_institutional_ownership(primary) if primary else {}
+        if inst.get("inst_sponsorship_score") is None:
+            for t in chain[1:]:
+                if _is_ucits(t):
+                    continue
+                cand = _fetch_institutional_ownership(t)
+                if cand.get("inst_sponsorship_score") is not None:
+                    inst = {**cand, "inst_proxy_ticker": t}
+                    break
 
         if result:
             etf_results[signal_ticker] = {**result, **inst}
@@ -759,6 +828,7 @@ def fetch_flow_data(
             "inst_sponsorship_score": inst.get("inst_sponsorship_score"),
             "inst_13f_filer_count": inst.get("inst_13f_filer_count"),
             "inst_source": inst.get("inst_source"),
+            "inst_proxy_ticker": inst.get("inst_proxy_ticker"),
         }
         # Resilience ladder — never silently park a sector at a neutral 50:
         #   1) carry forward the last genuine share-flow reading (market closed → no new flow), else

@@ -1,19 +1,21 @@
 {
   "$schema": "catalyx/schemas/sector_study.json",
   "id": "study_gold_miners",
-  "schema_version": "1.2",
+  "schema_version": "1.3",
   "sector_id": "gold_miners",
   "sector_label": "Gold Miners",
   "created_at": "2026-06-03",
-  "last_updated": "2026-06-29",
+  "last_updated": "2026-08-31",
   "study_type": "full",
-
   "taxonomy": {
     "parent_sector": "precious_metals",
-    "adjacent_sectors": ["gold_physical", "silver_miners", "royalty_streaming_metals"],
+    "adjacent_sectors": [
+      "gold_physical",
+      "silver_miners",
+      "royalty_streaming_metals"
+    ],
     "differentiation_note": "Gold miners are NOT gold physical in three ways that matter in June 2026: (1) Operational leverage — a 10% gold price move produces 20-30% miner move via margin expansion (revenue fixed in gold price, costs partly fixed in local currency/energy). GDX fell ~11% YTD vs gold -28% from ATH — miners are currently showing LESS downside leverage than expected, reflecting the exceptional AISC margin buffer at $4,026 gold. (2) Additional risk layers — mine location geopolitics, management quality, AISC trajectory (specifically the Iran diesel shock risk from Brent $120 peak April 2026), M&A, ESG screening; these do NOT affect physical gold vehicles like IGLN. (3) Different investment thesis — owning miners requires BOTH a bullish gold view AND a specific view on the AISC/price spread: at $4,026/oz gold with sector average AISC guidance ~$1,703/oz (GDX top-25), the implied ~$2,320/oz spread is historically exceptional and IS the primary bull case. Royalty/streaming (adjacent) is further differentiated: royalties own % of production revenue with ZERO operating cost exposure — they are structurally immune to the Iran diesel risk that is the central stress-test for direct miners today."
   },
-
   "demand_drivers": [
     "Gold price as primary revenue driver (UPDATED June 29): gold spot ~$4,026/oz (-10.2% past month, -28% from $5,602 ATH Jan 28). GDX at $76.84 (June 26), YTD -10.67%. The critical insight: GDX is underperforming gold spot on the DOWNSIDE (miners down -11% YTD vs gold -28% from ATH), suggesting the market is pricing the AISC margin buffer as partially protective. At $4,026 gold with GDX top-25 average AISC guidance $1,703/oz (DiscoveryAlert), implied spread ~$2,320/oz — historically exceptional.",
     "Record Q1 2026 earnings confirmed: Newmont Q1 2026 — gold production 1.3M oz, AISC $1,029/oz (beat vs $1,680 full-year guidance), FCF $3.1B (ALL-TIME QUARTERLY RECORD despite $1.3B in cash taxes). Barrick Q1 2026 — 719k oz gold production (beat guidance 640-680k), AISC $1,708/oz, operating cash flow +111% YoY, attributable FCF +195% YoY, added $3B buyback. Both majors delivered exceptional Q1. The critical question is whether Q2 2026 (July earnings season) confirms or refutes the Iran diesel AISC risk.",
@@ -22,7 +24,6 @@
     "Western ETF re-entry potential: WGC Q1 2026 data — $12B Western gold ETF OUTFLOWS in March (profit-taking at ATH). Asian inflows $14B offset. As gold corrects 28% from ATH, Western investors who trimmed at the top may re-engage — creating a demand wave layered on steady CB buying. GDX AUM $26.2B (up from ~$14B in etf_universe.yaml, June 2026) confirms institutional discovery is ongoing.",
     "Brent crude easing is a Q3-Q4 AISC tailwind: Brent fell from $120 peak (April 2026) to $72 (June 26) following the US-Iran ceasefire framework. Diesel = 15-25% of AISC for open-pit operations; every $10 crude decline = ~$10/oz AISC relief. From peak to current: ~$4.80/oz improvement per $10 crude decline. If Brent holds $70-75 through H2, Q3-Q4 AISC may come in BELOW the $1,680-1,900 range management guided, creating a positive earnings surprise in July and October."
   ],
-
   "supply_constraints": [
     "Iran energy shock — diesel AISC risk (ACUTE, but easing): Brent peaked $120 in April 2026, now $72 (June 26). Diesel = 15-25% of AISC at open-pit operations; each $10 crude = ~$10/oz AISC. Newmont full-year guidance $1,680 (vs $1,029 Q1 actual — $651 gap) and Barrick $1,708 suggest H2 cost loading is expected. BUT Brent easing to $72 means the worst of the diesel shock may be behind us (April-May peak). If Brent holds $70-80, H2 AISC may beat guidance. GDXJ top-25 average guidance $1,857 — higher-cost miners more exposed.",
     "Grade decline: average gold ore grades declining 0.5-1.0%/year at major mines. More capex to maintain production levels.",
@@ -30,15 +31,12 @@
     "Jurisdictional and geopolitical exposure: Barrick in Mali (Loulo-Gounkoto — Q1 2026 strong performer), Tanzania, Pakistan; Newmont in Ghana, Suriname; AngloGold in DRC. Government royalty increases during high-gold periods historically common.",
     "Labor cost inflation: skilled mining workforce commands higher wages globally in inflationary environment. Secondary cost driver after diesel."
   ],
-
   "technology_maturity": null,
-
   "cycle_position": {
-    "assessment": "Post-ATH correction — record Q1 margins confirmed, Q2 AISC is the key test; Brent easing to $72 is a positive surprise for the H2 cost thesis; thesis intact under its first serious operational stress-test",
-    "rationale": "Gold hit $5,602 ATH Jan 28, 2026, corrected to ~$4,026 (-28%). GDX ATH ~$117, current $76.84 = -34% from ATH but only -11% YTD. The YTD underperformance vs gold's -28% from ATH reflects the AISC margin buffer — miners are not crashing symmetrically because their margins are so wide that a $1,576/oz correction in gold price still leaves $2,320/oz spread. Q1 2026 results were exceptional. The AISC/price spread stress-test for Q2: Brent peaked $120 in April, but is now $72 — significantly below the level that would stress-test guidance. If Brent holds $70-80 through Q3-Q4, H2 AISC may BEAT guidance and restore the 'management conservatism' interpretation of the Newmont guidance gap. The market appears to be pricing some Iran AISC risk (hence the -11% YTD) but not the worst case — this seems reasonable given Brent's normalization. Cycle position: mid-correction in gold + AISC resolution pending. The -11% YTD vs energy sector +21.6% YTD creates an interesting relative value picture IF Q2 AISC confirms guidance conservatism.",
-    "last_assessed": "2026-06-29"
+    "assessment": "Breakout out of the post-ATH correction — the Q2 AISC stress test PASSED and margins printed a record; the risk has rotated from operational to positioning",
+    "rationale": "The June 2026 study named one falsification test: Q2 AISC actuals vs guidance, passing below ~$1,700 for Newmont, failing above ~$1,900. RESOLVED PASS. Across the GDX top-25, Q2 FY26 revenue was $35.982bn and operating cash flow $17.215bn — among the strongest sector-wide figures ever recorded — and the sector posted its second-best earnings quarter ever with record net income, DESPITE spot gold slipping ~5% during Q2 (DiscoveryAlert, 2026-08). Newmont printed adjusted EBITDA of $3.8bn and record Q2 free cash flow of $2.2bn; Agnico Eagle and AngloGold Ashanti also posted record FCF. Full-year 2026 AISC is tracking a ~5% DECLINE against a ~24% rise in the gold price, implying record operating margins of about $2,800/oz against top-25 FY26 AISC guidance of $1,703/oz (Q2 actual ~$1,800/oz). The price leg then confirmed: gold cracked $4,400 on 2026-08-11 and is ~$4,600 at 2026-08-31, versus $4,026 in the June study — so the spread is WIDER than the $2,320/oz the June thesis was built on, not narrower. GDX closed $103.64 on 2026-08-27, +20.49% YTD, having been only ~3% YTD in mid-August. What has NOT been re-verified this cycle: Brent (the AISC input) — the $72 figure is the June observation and must be re-checked before any H2 cost claim. The cycle risk has moved from 'can the miners earn it' (answered yes) to 'am I paying for it after a 21% week'.",
+    "last_assessed": "2026-08-31"
   },
-
   "etf_analysis": [
     {
       "ticker": "GDX",
@@ -82,57 +80,61 @@
       "limitations": "AUM £393M warrants monitoring — sustained price correction could push below $200M threshold, widening spread. FLAG: verify AUM before position sizing. TER 0.65% vs GDX 0.51%. Acceptable for medium positions (<€100k). Preferred vehicle for Spanish UCITS investor despite the cost and AUM disadvantage vs GDX."
     }
   ],
-
   "key_metrics_to_monitor": [
     {
       "metric": "Gold spot price (USD/oz)",
       "unit": "USD/oz",
       "source": "LBMA PM Fix / market_data",
-      "current": 4026,
-      "comment": "June 29, 2026: ~$4,026. ATH $5,602 (Jan 28). -10.2% past month. At $4,026 with sector average AISC $1,703, implied spread ~$2,320/oz. $3,800 would be the stress threshold: at $3,800 + $1,703 AISC = $2,097/oz spread — still exceptional but narrowed. Run market_data for real-time."
+      "current": 4600,
+      "comment": "2026-08-31: ~$4,600/oz, vs $4,026 in the June study and the $5,602 ATH of 2026-01-28. Gold cracked $4,400 on 2026-08-11 (24/7 Wall St.) and kept going. Against top-25 FY26 AISC guidance of $1,703/oz the implied spread is now ~$2,900/oz — wider than the $2,320/oz the June bull case rested on. The $3,800 stress threshold is now ~17% below spot."
     },
     {
       "metric": "GDX top-25 sector average AISC 2026 guidance (USD/oz)",
       "unit": "USD/oz",
       "source": "DiscoveryAlert sector analysis / quarterly earnings",
       "current": 1703,
-      "comment": "GDX top-25 average full-year 2026 guidance: $1,703/oz. GDXJ top-25: $1,857/oz. Newmont Q1 actual $1,029 (full-year $1,680 — implies H2 averaging ~$1,900 to reconcile). Barrick Q1 actual $1,708 (in-line with guidance). Iran diesel easing (Brent $72 vs $120 peak) is a Q3-Q4 AISC tailwind. KEY WATCH: Q2 2026 actuals (July earnings)."
+      "comment": "GDX top-25 average FY2026 AISC guidance $1,703/oz; Q2 2026 actual averaged ~$1,800/oz. Sector AISC is projected to DECLINE ~5% in 2026 while the gold price rises ~24%, producing record operating margins of ~$2,800/oz (DiscoveryAlert / Merchant Gold, 2026-08). The Q1->Q2 reconciliation worry from the June study did not materialise."
     },
     {
-      "metric": "GDX price and YTD performance",
+      "metric": "GDX price and YTD performance (US reference; SPGP.L is the traded vehicle)",
       "unit": "USD / percent",
       "source": "VanEck / market_data",
-      "current": 76.84,
-      "comment": "June 26, 2026: $76.84, YTD -10.67%. 52-week range ~$50-$117. AUM $26.2B. The YTD underperformance vs gold ATH suggests the market is pricing AISC margin buffer as partially protective — NOT showing 2x downside leverage on the gold spot decline. Run `uv run python -m catalyx.data.market_data --tickers GDX GLD` for current GDX/GLD ratio."
+      "current": 103.64,
+      "comment": "2026-08-27: $103.64, +20.49% YTD, versus $76.84 and -10.67% YTD in the June study. GDX rose 21.09% in five days to $89.73 in mid-August (MINING.COM) — one of the strongest weeks in years. GDX is NOT buyable from Spain (US non-UCITS); the traded and scored vehicle is SPGP.L. Use GDX only as the fundamental reference series the AISC data is published against."
     },
     {
-      "metric": "Newmont + Barrick Q2 2026 AISC actuals vs guidance",
+      "metric": "Q2 2026 sector AISC actuals vs guidance (the June falsification test)",
       "unit": "USD/oz",
       "source": "Q2 2026 earnings (~July 2026)",
-      "current": null,
-      "comment": "CRITICAL UPCOMING FALSIFICATION TEST. Newmont full-year guidance $1,680 (Q1 actual $1,029 — implies H2 avg ~$1,900 to reconcile). Barrick guidance $1,708 (Q1 actual $1,708 — in-line). PASSING SCENARIO: Q2 Newmont <$1,700 (guidance conservatism confirmed, Brent easing helped). FAILING SCENARIO: Q2 Newmont >$1,900 (Iran diesel showed through; guidance was accurate, not conservative). Brent's fall to $72 is a favorable indicator for Q2."
+      "current": "PASSED — GDX top-25 Q2 revenue $35.982bn, operating cash flow $17.215bn, record net income; Newmont adj. EBITDA $3.8bn and record Q2 FCF $2.2bn",
+      "comment": "RESOLVED 2026-08-31. The June study's failing scenario (Newmont Q2 >$1,900/oz, Iran diesel showing through) did not occur; guidance conservatism was confirmed. Q2 was the sector's second-best earnings quarter ever even though spot gold fell ~5% within the quarter — which is the cleanest possible demonstration that the miner thesis is a MARGIN thesis, not a gold-price thesis. Next test: Q3 actuals (October 2026)."
     },
     {
       "metric": "Brent crude spot price (key AISC driver)",
       "unit": "USD/bbl",
       "source": "ICE / Reuters / CNBC",
-      "current": 72,
-      "comment": "June 26, 2026: Brent $72 — lowest since pre-conflict (Feb 2026 was ~$72 as well). Fell 4.34% week of June 26 as Hormuz shipping recovered (75% of pre-war levels). Was $120 in April. Each $10 crude decline = ~$10/oz AISC relief. From $120 to $72 = $48/bbl decline = ~$4.80/oz AISC improvement (approx). This is a MAJOR TAILWIND for Q3-Q4 AISC. Watch ceasefire stability — Trump June 26 alleges Iran violated it with drone attacks."
+      "current": "72 (June 2026 observation — NOT re-verified this cycle, treat as stale)",
+      "comment": "Brent is the principal AISC input and the only leg of the cost thesis that was not refreshed on 2026-08-31. Re-verify before making any forward H2 cost claim; production costs lag commodity prices by 1-2 quarters, so a Brent move since June is not yet visible in the Q2 print above."
     },
     {
-      "metric": "AUCO.L AUM (UCITS vehicle health)",
-      "unit": "GBP millions",
-      "source": "L&G / Bloomberg",
-      "current": 393,
-      "comment": "£393M as of last verified data. Monitor — sustained correction in gold miners could erode AUM. If it approaches £160M (~$200M), spread widens and liquidity thins. For Spanish investor: this is the primary UCITS vehicle; check AUM before sizing any new position."
+      "metric": "SPGP.L AUM (traded UCITS vehicle health)",
+      "unit": "USD million",
+      "source": "catalyx/config/etf_universe.yaml (verified 2026-08-27)",
+      "current": 3311,
+      "comment": "REPLACES the AUCO.L metric. etf_universe v2.0 promoted SPGP.L (iShares Gold Producers UCITS, LSE, $3,311M) to tier 1; AUCO.L ($679M, and £393M in the June study) is no longer the only or the primary vehicle. The 'single fragile UCITS vehicle' constraint that shaped the June position-sizing note no longer binds."
+    },
+    {
+      "metric": "World Gold Council central bank net purchases (quarterly, tonnes)",
+      "unit": "tonnes",
+      "source": "World Gold Council, Gold Demand Trends Q2 2026",
+      "current": 288.9,
+      "comment": "Q2 2026: 288.9t, +62% YoY (+74% on The National's framing), the largest quarterly total on record — Poland +51t, China +33t (its largest addition since late 2023), Uzbekistan +16t, Kazakhstan +15t. H1 2026 total is 345t, the weakest first half since 2022. The two facts are reconciled by the WGC itself: the H1 weakness is a Q1 artefact ('a notable Q1 slowdown following a downward revision to our data'), after which buying 'recovered sharply to the lofty levels typical of the last four years'. Read the QUARTERLY run rate, not the half."
     }
   ],
-
   "active_catalyst_ids": [
     "struct_cb_gold_accumulation",
     "cat_20260617_fed_hawkish_pivot"
   ],
-
   "historical_catalyst_performance": {
     "summary": "Gold miners respond most strongly to: (1) Fed pivot signals — miners lead gold by 3-6 months as investors position before rate cycle turns (MOST RELEVANT NOW: if Warsh hawkishness peaks near-term, miners would be first to re-rate); (2) CB buying acceleration — slower but more sustained; (3) Geopolitical crises — initial spike fades unless gold sustains. Key 2026 update: Q1 2026 record earnings (Newmont FCF $3.1B, Barrick FCF +195%) and Brent now $72 (from $120 peak) are creating conditions for a Q2 AISC positive surprise in July earnings. The GDX/GLD ratio broke out of a 15-year base in Q1 2026 — the new regime is holding even through the correction (ratio ~0.19, above prior structural base of 0.15-0.17). If the ratio holds above the prior base through this correction, the structural re-rating is confirmed.",
     "avg_response_to_fed_pivot_signal_pct": 0.18,
@@ -140,17 +142,15 @@
     "avg_response_to_gold_10pct_move_pct": 0.22,
     "key_2026_update": "Q1 actuals: Newmont AISC $1,029 (record FCF $3.1B); Barrick AISC $1,708 (FCF +195% YoY, $3B buyback). GDX YTD -10.67% at $76.84. Brent fell $120→$72 = AISC relief for Q3-Q4. Q2 earnings (July 2026) are the next major inflection for the spread thesis."
   },
-
   "risks": [
-    "Q2 2026 AISC actuals above guidance (PRIMARY NEAR-TERM): Newmont full-year guidance $1,680 vs Q1 $1,029 implies H2 avg ~$1,900 needed to reconcile. If Q2 actuals land at $1,900+ (Iran oil shock showed through April-May supply chains), the AISC/price spread compresses and miners face downward re-rating. Brent's fall to $72 is a mitigating factor — but production costs lag commodity prices by 1-2 quarters.",
-    "Gold price further downside — TIPS escalation above 2.5%: TIPS 10-year ~2.2% approaching the danger zone. If Warsh hike in October, TIPS could break 2.5% — gold tests $3,800. At $3,800 gold + $1,703 AISC = $2,097 spread — still profitable but compressed. Miners typically amplify gold downside 1.5-2x. Fourth monthly gold loss is creating momentum-based selling risk.",
-    "AUCO.L AUM fragility: the only UCITS vehicle for Spanish investor has £393M AUM near the $200M threshold. A sustained correction could erode this — widening spreads and thinning liquidity. Position sizing must account for this risk.",
-    "Narrative crowded — re-rating trade is fully mainstream: DiscoveryAlert, FinancialContent, Canadian Mining Report all publishing regular 'record margins' coverage. The 'GDX/GLD ratio breakout' was named in mainstream outlets in March 2026. Entering now requires a forward AISC thesis, not just discovery.",
+    "RESOLVED, kept for the record and re-armed for Q3 (was PRIMARY NEAR-TERM in June 2026): the Q2 2026 AISC test passed — GDX top-25 Q2 revenue $35.982bn, record net income, Newmont record Q2 FCF $2.2bn, FY26 AISC tracking -5% against a +24% gold price. The risk does not disappear, it re-arms at the Q3 print (October 2026), and the untested input is Brent, which was not re-verified on 2026-08-31.",
+    "Gold price downside via the hawkish Fed (cat_20260617_fed_hawkish_pivot, still active): the 2026-06-17 FOMC held 3.50-3.75% but moved the end-2026 median dot to 3.8%, removing the 2026 cut and pricing a possible October hike. Evidence AGAINST this risk dominating: gold has risen from ~$4,026 to ~$4,600 in the 75 days SINCE that pivot, so the event catalyst has so far failed to suppress the metal. Evidence FOR keeping it: an actual hike is not the same as a hawkish dot, and TIPS 10y breaking 2.5% remains the mechanical channel. Keep it registered as the named bear case rather than retiring it on price action alone.",
+    "ENTRY-TIMING RISK, now the primary risk (REPLACES the obsolete AUCO.L AUM-fragility risk, 2026-08-31): the fundamentals and the crowd arrived in the same month. GDX rose 21.09% in five days in mid-August and took $419M of retail inflows in August, its strongest month since February; several miner ETFs are +20% over one month. Buying now is buying after the re-rating, into accelerating retail flow, with gold ~$4,600 vs the $4,026 the June thesis was built on. Miners amplify gold drawdowns 1.5-2x, so a gold retrace to $4,000 (-13%) plausibly costs 20-26% on the vehicle even with margins intact. Size for the entry price, not for the margin story. (The old risk is void: etf_universe v2.0 made SPGP.L, $3,311M AUM, the tier-1 vehicle.)",
+    "Crowding is still rising, not resetting (UPGRADED 2026-08-31): the June study called the narrative crowded and stable; it is now crowded and INCREASING. Retail ETF inflows accelerating is one of the three explicit 'crowded' observable criteria in scoring_weights.yaml, and it is now measured ($419M into GDX in August). Entering requires a forward AISC/price-spread thesis, and crowding_risk is a PENALTY in the composite — the 78.0 composite already carries part of this.",
     "Jurisdictional and royalty risk: Barrick (Mali, Tanzania), Newmont (Ghana, Suriname). Iran war doesn't directly threaten these but broader EM risk-off can. Government royalty increases during high-gold periods historically common.",
     "Iran ceasefire re-escalation risk: Trump June 26 alleges Iran violated ceasefire with Hormuz drone attacks. If Hormuz re-closes: oil spikes again → diesel costs spike → AISC guidance becomes underestimates → miners re-price lower."
   ],
-
   "narrative_maturity": "crowded",
-  "narrative_trend": "stable",
-  "narrative_notes": "Maintaining 'crowded' from prior study. The correction from ATH has not reset crowding — it has increased coverage intensity as 'is the thesis over?' content accelerates. DiscoveryAlert, FinancialContent, Seeking Alpha, and Canadian Mining Report are running higher-frequency miner coverage than before. The 'record AISC margins' and 'GDX/GLD ratio breakout' theses are fully mainstream by June 2026. The AISC margin argument is still differentiating (specific knowledge, not generic retail narrative) — if Q2 earnings confirm guidance conservatism, narrative shifts toward 'mainstream + renewed interest.' If Q2 disappoints, toward 'exhausted.' For now: stable at crowded. Narrative_trend 'stable' — no change vs June 12 study. Anchoring: crowded (80 score-equiv) — fully institutionally discovered, not yet exhausted."
+  "narrative_trend": "increasing",
+  "narrative_notes": "Stays 'crowded' (80 score-equiv), but trend flips stable -> INCREASING, and that flip is the entry-relevant part. The crowded observable criteria are 'Bloomberg/CNBC daily coverage, retail ETF inflows accelerating, top-10 hedge fund themes'. The retail leg is now measured, not inferred: GDX took $419M of retail inflows in August 2026 alone, on track for its strongest monthly intake since February (Benzinga, 2026-08), after gold cracked $4,400 on 2026-08-11 and GDX rose 21.09% in five days to $89.73 (MINING.COM, mid-August 2026). Multiple gold-miner ETFs are up more than 20% over one month. The June study called the risk correctly and left the test open ('if Q2 earnings confirm guidance conservatism, narrative shifts toward mainstream + renewed interest'); the Q2 print confirmed and the market re-rated in a week, which lands on the 'renewed interest' branch — but the interest arriving is retail flow into a vertical move, which is the crowded signature, not a return to mainstream. Not 'exhausted' (95): exhausted requires the thesis in mainstream press >12 months with P/E at historical max and flows REVERSING; flows are accelerating in, and the margin thesis is being validated by earnings rather than by multiple expansion. The honest read for an entry candidate: the fundamentals improved AND the crowd arrived in the same month."
 }

@@ -1,0 +1,124 @@
+[
+  {
+    "catalyst_id": "struct_ai_capex_supercycle",
+    "verdict": "strengthening",
+    "evidence": "Nvidia FQ2-2027 (quarter ended Aug 2026) data-center revenue $89.0bn, ~92% of total, of which $49bn hyperscaler +13% sequential; guided FQ3 total revenue $108.0bn, a +$11.8bn sequential step. Top-5 hyperscaler capex path put at $1.3tn for 2027 vs $800bn prior year (+62%). CFO: about half of data-center business now comes from customers BEYOND the hyperscalers - the demand base is broadening, not narrowing, which is the specific bear case this print rebuts.",
+    "source": "CNBC 2026-08-26 Nvidia Q2 FY2027 earnings; Fortune 2026-08-27 (Nvidia CFO); Goldman Sachs hyperscaler capex projection",
+    "indicators": [
+      {
+        "id": "ind_01",
+        "value": 183.1,
+        "note": "quarterly-equivalent combined guidance unchanged vs the 13:15 stamp; the $1.3tn 2027 figure is a forward-year path on a different basis and is deliberately NOT converted into this quarterly unit"
+      }
+    ]
+  },
+  {
+    "catalyst_id": "struct_biopharma_patent_cliff_ma",
+    "verdict": "intact",
+    "evidence": "No new YTD print surfaced: the $106bn / 201 deals figure is still the 2026-06-04 CNBC number already stored in ind_01, so this indicator is ~3 months stale even after re-verification. What IS new: average deal value $527.3m in 2026 vs $365m in 2025 (+44%), and a reported shift from 'platform premium' to 'execution premium' - acquirers now prioritising assets reaching EPS accretion in 24-36 months. LOE exposure quoted at >$230bn by 2030 by this source vs the $265bn stored in ind_04; different methodology, NOT written as an update.",
+    "source": "CNBC 2026-06-04; IQVIA Biopharma M&A Outlook 2026; Vision Life Sciences patent-cliff guide",
+    "indicators": []
+  },
+  {
+    "catalyst_id": "struct_energy_transition_grid",
+    "verdict": "strengthening",
+    "evidence": "European HV transformer lead times have extended past the stored 20 months: Efacec 20-28, Pauwels 24-32, TMC 20-28, Schneider France 18-26 months (US OEMs 48-60). Root cause is grain-oriented electrical steel - global GOES capacity has not expanded with transformer demand and even willing manufacturers wait 12-18 months for their own raw material, which makes the bottleneck structural rather than a backlog that clears. Copper $6.54/lb on 2026-08-30 = $14,418/t, +1.67% MoM, +45.0% YoY - confirms ind_03 exactly.",
+    "source": "GridReadiness Transformer Lead Times Europe 2026; TradingEconomics copper 2026-08-30",
+    "indicators": [
+      {
+        "id": "ind_01",
+        "value": 24,
+        "note": "median of quoted EU HV manufacturer ranges (18-32 months), up from 20"
+      },
+      {
+        "id": "ind_03",
+        "value": 14418.0,
+        "note": "spot 2026-08-30, 6.54 USD/lb converted"
+      }
+    ]
+  },
+  {
+    "catalyst_id": "struct_enterprise_cyber_spend_supercycle",
+    "verdict": "strengthening",
+    "evidence": "CrowdStrike Q2 FY2027 (ended 2026-07-31): ARR $5.84bn, +25% YoY, with record net-new ARR of $332.8m accelerating 51%. This REVERSES the multi-year deceleration in ind_02 (0.33 -> 0.29 -> 0.27 -> 0.22 -> 0.24 -> 0.23); the v6.7 detrend was reading a genuine downtrend (Kendall tau -0.73) that has now broken. Management attributes it to AI-agent adoption expanding the attack surface. Corrects the 13:15 stamp, which recorded ind_02 at the stale 0.23 while citing 'best quarter ever' revenue growth.",
+    "source": "CrowdStrike IR, Q2 FY2027 results (2026-08-26); Q2 FY2027 earnings call transcript 2026-08-31",
+    "indicators": [
+      {
+        "id": "ind_02",
+        "value": 0.25,
+        "note": "ARR $5.84bn as of 2026-07-31, +25% YoY - acceleration, not the stored 0.23"
+      }
+    ]
+  },
+  {
+    "catalyst_id": "cat_20260402_section232_pharma_tariffs",
+    "verdict": "intact",
+    "evidence": "The tariff MATERIALISED rather than being walked back: the 100% Section 232 tariff on patented pharmaceuticals and biologics took effect 2026-07-31 (2026-09-29 for smaller companies not named in the Proclamation). Not walked back, but now a realised event - the stored is_priced_in of 0.75 looks right and the remaining alpha is in the relief channel, not the tariff: Lilly and Novo both filed comment on the tariff impact and then agreed MFN pricing with the administration, i.e. price concessions traded for tariff relief.",
+    "source": "Crowell & Moring client alert (effective 2026-07-31); Foley Hoag alert on the April 2026 Proclamation; AMCP federal update",
+    "indicators": []
+  },
+  {
+    "catalyst_id": "struct_glp1_obesity_supercycle",
+    "verdict": "weakening",
+    "evidence": "The Trump administration struck agreements with Eli Lilly and Novo Nordisk to offer Most-Favored-Nation pricing on semaglutide (Ozempic/Wegovy) and tirzepatide (Mounjaro/Zepbound) - the two molecules the entire thesis rests on. MFN compresses US realised price, which is the revenue lever of a revenue supercycle; the offsetting Medicare-access volume leg is real but slower and lower-margin. No 2026 sales figures surfaced to size the net effect, so this is a mechanism-level weakening, not a measured one. Consistent with the v5.2 decision to decline GLP-1 as a pharma driver in writing.",
+    "source": "AMCP federal update on the MFN GLP-1 deal; Conference Board CED analysis",
+    "indicators": []
+  },
+  {
+    "catalyst_id": "cat_20260601_us_ai_chip_export_controls",
+    "verdict": "intact",
+    "evidence": "Controls in force and China substitution is not arriving on schedule: case-by-case licensing for Nvidia H200 / AMD MI325X since January 2026, on top of China-wide controls on advanced packaging SME, HBM and DRAM. Chinese producers are expected to make ~7m HBM3 dies in 2026 - enough for only ~600k H100-class accelerators, far short of domestic demand - and are not expected to ship HBM at volume through 2026-2027.",
+    "source": "AI Frontiers, High-Bandwidth Memory: The Critical Gaps in US Export Controls; CRS R48642",
+    "indicators": []
+  },
+  {
+    "catalyst_id": "cat_20260624_memory_shortage_confirmed",
+    "verdict": "strengthening",
+    "evidence": "The shortage has extended its duration rather than resolving: all three major HBM suppliers confirm sold-out capacity through 2026, with SK Hynix describing HBM, DRAM and NAND as 'essentially sold out' for the year, and tight DRAM supply now expected to persist BEYOND 2026. Chinese conventional-DRAM relief lands only in consumer devices, not the HBM bottleneck.",
+    "source": "AI Frontiers HBM export-controls analysis; SoftwareSeni China DRAM export controls; SiliconAnalysts capex reallocation",
+    "indicators": []
+  },
+  {
+    "catalyst_id": "cat_20260617_fed_hawkish_pivot",
+    "verdict": "strengthening",
+    "evidence": "Fed held at 3.50-3.75% for a fifth consecutive meeting in July 2026, and Chair Warsh used Jackson Hole to flag that underlying inflation is NOT slowing; CME FedWatch put roughly 55% odds on a 25bp HIKE at the September meeting vs ~45% hold - the market is now pricing a hike, not a cut. Corroborated by the ECB, which raised all three key rates 25bp on 2026-06-11 (first hike in three years, effective 2026-06-17) on energy-driven inflation. NOTE: search results for US CPI were contaminated by September-2024 articles quoting 2.5% headline; the 2026-dated sources put CPI nearer 3.5% YoY. The 2.5% figure was NOT used.",
+    "source": "Jackson Hole remarks (Warsh) via Yahoo Finance/Motley Fool Aug 2026; ECB monetary policy decisions 2026-06-11 and 2026-07-23",
+    "indicators": []
+  },
+  {
+    "catalyst_id": "struct_cb_gold_accumulation",
+    "verdict": "intact",
+    "direction": "unchanged",
+    "evidence": "Central banks bought a record 288.9t in Q2 2026, +62-74% YoY and a five-fold jump on Q1's revised 57t; Poland +51t, China +33t (its largest quarterly add since late 2023), Uzbekistan +16t, Kazakhstan +15t. BUT H1 net demand of 345t is the LOWEST first half since 2022, held down by official-sector sales — so the quarter is a record and the half is a trough, and the verdict is intact rather than strengthening. WGC survey: 89% of central bankers expect reserves to rise over the next 12 months. Gold spot ~$4,600/oz on 2026-08-28.",
+    "source": "World Gold Council Gold Demand Trends Q2 2026 (published 2026-07-30); TradingEconomics gold spot 2026-08-28",
+    "indicators": [
+      {
+        "id": "ind_01",
+        "value": 288.9,
+        "note": "WGC Q2 2026 central-bank net purchases, tonnes. Record quarterly print; prior stored value 315. H1 total 345t is the weakest first half since 2022.",
+        "source": "World Gold Council Gold Demand Trends Q2 2026"
+      }
+    ]
+  },
+  {
+    "catalyst_id": "cat_20260603_copper_supply_deficit_2026",
+    "verdict": "intact",
+    "direction": "strengthening",
+    "evidence": "Copper $6.54/lb on 2026-08-30, +1.67% MoM and +45.02% YoY, supported by a weaker dollar. Sell-side targets now straddle spot: JPMorgan $14,800/t by Dec-2026 (above the ~$14,418/t spot) and Goldman $11,400 for 2026 (already breached) — the deficit thesis is being repriced INTO the models, which is the early form of the analyst_model_revision exit signal for the copper line.",
+    "source": "TradingEconomics copper 2026-08-30; JPMorgan and Goldman Sachs 2026 copper forecasts (accessed 2026-08-31)"
+  },
+  {
+    "catalyst_id": "cat_20260728_hyperscaler_capex_guidance_raise",
+    "verdict": "intact",
+    "direction": "strengthening",
+    "evidence": "The guidance raise this event registered has extended: FY2026 big-4 combined capex guidance now $720-745bn, and 2027 consensus is ~$934bn with JPMorgan at $1.0tn and Goldman at $1.01tn. Management commentary across the Q2 calls gives no indication investment is nearing a peak.",
+    "source": "TMT Finance 2026 hyperscaler capex analysis; JPMorgan / Goldman 2027 forecasts (accessed 2026-08-31)"
+  },
+  {
+    "catalyst_id": "cat_20260728_cybersecurity_ai_beneficiary_revision",
+    "verdict": "intact",
+    "direction": "strengthening",
+    "evidence": "The revision thesis this event captured was confirmed by the tape: CrowdStrike's 2026-08-26 print (revenue +26% to $1.47bn, net-new ARR +73% YoY, FY guide to ~$6bn) was read by CNBC explicitly as 'AI is a cybersecurity tailwind, not a threat', and 24/7 Wall St notes it re-rated the whole group into Palo Alto's 2026-09-01 print.",
+    "source": "CNBC 2026-08-26; 24/7 Wall St 2026-08-30 (accessed 2026-08-31)"
+  }
+]

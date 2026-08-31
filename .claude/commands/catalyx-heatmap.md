@@ -3,8 +3,9 @@
 Generate the CATALYX Sector Heatmap — ranks **every investable sector** in the taxonomy
 by composite score. Sectors with a sector study score on all dimensions (catalyst_alignment
 + crowding from the study); sectors without a study still appear on a **momentum baseline**
-(catalyst_alignment falls back to 0, crowding to the default). No investable sector is
-invisible — the goal is full-universe coverage every cycle.
+(catalyst_alignment is imputed to the universe prior and flagged `ca_imputed` — v6 H2 — crowding
+to the default). No investable sector is invisible — the goal is full-universe coverage every
+cycle.
 
 ## Steps
 
@@ -114,10 +115,13 @@ invisible — the goal is full-universe coverage every cycle.
 7. Rank all investable sectors by `composite` descending. Include a `regime` column
    (`regime_state` from `catalyst_scorer`: 🟢 intact / 🟡 contested / 🔴 breaking) so a sector under
    a live contradiction is visible in the main table — but remember `contested` is watch-only and
-   does NOT change its score or weight. The composite (schema 1.2) has 4 dimensions —
-   `catalyst_alignment×0.35 + momentum×0.29 + flow_confirmation×0.24 + (100−crowding_risk)×0.12`
-   (`valuation_relative` was removed: it was a constant-50 placeholder and no price-derived metric
-   earned its weight). Note which dimensions are Phase 0.5 defaults:
+   does NOT change its score or weight. The composite (schema 1.4) has 4 dimensions, combined in
+   **z-space** so a nominal weight is the effective one: `composite = 50 + z_scale × (0.35·z_CA +
+   0.29·z_mom + 0.24·z_flow + 0.12·z_(100−crowd))`, standardized across the run's universe. So
+   **50 is this run's average, not "a middling sector"**, and a composite is not comparable with
+   one from a pre-1.4 run — compare by `composite_z` or by rank. If the run summary names a **dead
+   dimension**, say so in the report: that dimension is not ranking anything this run, whatever its
+   weight. Note which dimensions are Phase 0.5 defaults:
    - `flow_confirmation`: ⚠ default (50) — no ETF flow data yet
    - `crowding_risk`: 🟢 from study or ⚠ default (35)
 

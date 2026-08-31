@@ -15,7 +15,10 @@
   "catalyst_type": "monetary_policy",
   "catalyst_subtype": "pause_pivot_signal",
   "description": "At the 2026-06-17 FOMC — Kevin Warsh's first meeting as Fed Chair — the Committee held the target range at 3.50-3.75% (unanimous 12-0) but flipped its forward guidance HAWKISH: the median dot for end-2026 rose to 3.8% (from 3.4% in March), REMOVING the prior outlook for a 2026 cut and signaling at least one HIKE is now seen as likely. Post-meeting, traders began pricing a hike as early as October. The statement attributes elevated inflation in part to supply shocks driving energy prices (the Iran/Hormuz conflict) and notes solid growth, strong capex/productivity, and a labor market keeping pace (the strong May jobs print). This is a regime shift from the disinflation-cut path the market had assumed: long-duration/rate-sensitive equities (grid/utilities, solar, real estate) face a higher-for-longer discount-rate headwind, the USD/DXY is supported, and gold faces a higher-real-rate headwind partly offset by its stagflation/energy-shock hedge bid.",
-  "geography": ["USA", "GLOBAL"],
+  "geography": [
+    "USA",
+    "GLOBAL"
+  ],
   "magnitude": "high",
   "novelty_score": 60,
   "novelty_rubric_scores": {
@@ -30,11 +33,41 @@
   "is_priced_in_estimate": 0.5,
   "relation_to_structural": "independent",
   "decay_halflife_days": 30,
-  "related_catalyst_ids": ["cat_20260228_hormuz_closure", "cat_20260605_ai_capex_peak_scare"],
+  "related_catalyst_ids": [
+    "cat_20260228_hormuz_closure",
+    "cat_20260605_ai_capex_peak_scare"
+  ],
   "raw_signal_ids": [],
   "status": "active",
   "expires_at": null,
   "user_rank": 1,
   "user_notes": "Registered 2026-06-29 in the scan refresh. The hawkish dot-plot flip is the single biggest macro regime change since the last review (2026-06-12): the Fed went from a hold-with-a-cut-bias to a hold-with-a-HIKE-bias, with an Oct hike now in play. Cross-cutting macro catalyst (not tied to one structural). Transmission: (1) HEADWIND to long-duration/rate-sensitive books we hold conviction in — grid_infrastructure (mov_20260604 grid position), solar, real_estate; risk_discipline rate-stops on those movements should be re-read. (2) USD support — a yfinance-priced EURUSD invalidation stop on the copper movement (inv_04) is rate-linked. (3) Gold: net-ambiguous (real-rate headwind vs energy-shock/stagflation hedge), consistent with gold's pullback to ~$4,187 from its ATH. Linked to the Hormuz energy shock (the inflation source the Fed is reacting to) and to the 06-05 selloff (which already had a yields/jobs leg). is_priced_in 0.5: yields moved on the day; the actual Oct-hike decision is unresolved.",
-  "tags": ["fed", "fomc", "monetary_policy", "hawkish", "rate_hike", "dot_plot", "warsh", "higher_for_longer", "usd", "macro", "rate_sensitive"]
+  "tags": [
+    "fed",
+    "fomc",
+    "monetary_policy",
+    "hawkish",
+    "rate_hike",
+    "dot_plot",
+    "warsh",
+    "higher_for_longer",
+    "usd",
+    "macro",
+    "rate_sensitive"
+  ],
+  "status_last_reviewed": "2026-08-31",
+  "review_log": [
+    {
+      "date": "2026-08-31",
+      "verdict": "strengthening",
+      "evidence": "Fed held at 3.50-3.75% for a fifth consecutive meeting in July 2026, and Chair Warsh used Jackson Hole to flag that underlying inflation is NOT slowing; CME FedWatch put roughly 55% odds on a 25bp HIKE at the September meeting vs ~45% hold - the market is now pricing a hike, not a cut. Corroborated by the ECB, which raised all three key rates 25bp on 2026-06-11 (first hike in three years, effective 2026-06-17) on energy-driven inflation. NOTE: search results for US CPI were contaminated by September-2024 articles quoting 2.5% headline; the 2026-dated sources put CPI nearer 3.5% YoY. The 2.5% figure was NOT used.",
+      "source": "Jackson Hole remarks (Warsh) via Yahoo Finance/Motley Fool Aug 2026; ECB monetary policy decisions 2026-06-11 and 2026-07-23"
+    },
+    {
+      "date": "2026-08-31",
+      "verdict": "intact",
+      "evidence": "Fed held the funds rate at 3.50-3.75% for a fifth consecutive meeting in July 2026 with markets assigning roughly one-in-three odds to a HIKE; Chair Warsh used Jackson Hole to flag that underlying inflation is not slowing. CPI running +3.5% YoY as of August 2026 with the effective funds rate at 3.63%. The hawkish-pivot thesis is confirmed, not fading. DATA HYGIENE: search returned a '+2.5% August CPI' figure that traces to 2024-dated articles (fxstreet/tradingview 2024 URLs) — discarded, not recorded.",
+      "source": "TradingEconomics US Fed Funds Rate; Jackson Hole 2026 remarks (Warsh); Investing.com sector-rotation note 2026-08-24 (accessed 2026-08-31)"
+    }
+  ]
 }

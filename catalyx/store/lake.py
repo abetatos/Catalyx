@@ -50,6 +50,9 @@ TABLES: dict[str, tuple[str, list[str]]] = {
     # market snapshots (one partition per fetch date)
     "momentum":           ("market/momentum",            ["date"]),
     "flow":               ("market/flow",                ["date"]),
+    # v7 O3: fund-level valuation best-effort (yfinance .info) — a series being accumulated so a
+    # future value-anchor test is POSSIBLE; read by nothing today
+    "valuation":          ("market/valuation",           ["date"]),
     # shared price cache — ONE fetch per run feeds every scorer/NAV consumer (catalyx.data.prices).
     # One partition per ticker: a refresh rewrites only the tickers whose window moved, so git
     # stores a small diff instead of one giant re-written price table.

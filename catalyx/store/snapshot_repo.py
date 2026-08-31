@@ -219,26 +219,74 @@ def record_run(top_n: int = 10, notes: str | None = None,
     rank-change events vs the previous run to the lake. Append-only. Returns a summary."""
     # Imported here to avoid a heavy import at module load
     from catalyx.store import lake
-    from catalyx.scorer.sector_scorer import _investable_sector_ids, score_sector
+    from catalyx.scorer.sector_scorer import (_investable_sector_ids, commensurate,
+                                              rank_key, score_sector)
 
     now = datetime.now(timezone.utc)
     run_id = "run_" + now.strftime("%Y%m%d_%H%M%S")
     version = _scoring_version()
 
     sector_ids = _investable_sector_ids()
+    maturities = {sid: _narrative_maturity(sid) for sid in sector_ids}
+    # v7 N1/N2: measured crowding, best-effort — unmeasurable stays None, never 0
+    try:
+        from catalyx.scorer.comomentum import compute as _comomentum
+        como = _comomentum().get("sectors", {})
+    except Exception:
+        como = {}
+    try:
+        from catalyx.data.cot_data import load_latest as _cot_latest
+        cot = (_cot_latest() or {}).get("sector_scores", {})
+    except Exception:
+        cot = {}
+    try:
+        from catalyx.data.trends_data import load_latest as _trends_latest
+        trends = (_trends_latest() or {}).get("sector_scores", {})
+    except Exception:
+        trends = {}
+
+    # v7 N4 — crowding_measured: mean of the available measured parts, on a 0-100 scale.
+    # Comomentum (a correlation) enters as its percentile within this run. None if nothing
+    # was measured — the narrative label stays the official dimension until IC says otherwise.
+    como_vals = {sid: v for sid in sector_ids
+                 if (v := (como.get(sid) or {}).get("crowding_comomentum")) is not None}
+
+    def _pct_in_run(v: float) -> float:
+        vals = list(como_vals.values())
+        below = sum(1 for x in vals if x < v)
+        equal = sum(1 for x in vals if x == v)
+        return (below + 0.5 * equal) / len(vals) * 100.0
+
+    def _crowding_measured(sid: str) -> float | None:
+        parts = [p for p in (
+            (cot.get(sid) or {}).get("cot_crowding"),
+            (trends.get(sid) or {}).get("trends_crowding"),
+            _pct_in_run(como_vals[sid]) if sid in como_vals else None,
+        ) if p is not None]
+        return round(sum(parts) / len(parts), 1) if parts else None
+    scored = [score_sector(sid, crowding_risk=_crowding_for(maturities[sid]),
+                           momentum_snapshot_path=momentum_snapshot_path)
+              for sid in sector_ids]
+    # v6 H1: the composite is combined in z-space across THIS run's universe, so a nominal
+    # weight is the effective weight and a dead dimension is named instead of weighing zero
+    # in silence. Must run over the whole universe, before ranking.
+    scale = commensurate(scored)
+
     rows = []
-    for sid in sector_ids:
-        maturity = _narrative_maturity(sid)
-        crowd = _crowding_for(maturity)
-        r = score_sector(sid, crowding_risk=crowd,
-                         momentum_snapshot_path=momentum_snapshot_path)
+    for sid, r in zip(sector_ids, scored):
+        maturity = maturities[sid]
         sb = r["score_breakdown"]
         cat_detail = r.get("catalyst_detail") or {}
         flow_detail = r.get("flow_detail") or {}
         rows.append({
             "sector_id": sid,
             "composite": r["composite"],
+            "composite_z": r.get("composite_z"),
+            "composite_absolute": r.get("composite_absolute"),
             "catalyst_alignment": sb["catalyst_alignment"],
+            "ca_imputed": bool(r.get("ca_imputed", False)),
+            # CMF/estimated flow is not a flow measurement — the column says so per row
+            "flow_imputed": bool(r.get("flow_imputed", False)),
             "momentum": sb["momentum"],
             "flow_confirmation": sb["flow_confirmation"],
             # flow provenance — so the dashboard can flag a proxy/low-quality flow number
@@ -252,6 +300,16 @@ def record_run(top_n: int = 10, notes: str | None = None,
             "flow_window_days": flow_detail.get("flow_window_days"),
             "flow_days_covered": flow_detail.get("flow_days_covered"),
             "crowding_risk": sb["crowding_risk"],
+            # v7 candidate columns — weight 0, measured by calibration
+            "momentum_12_1": r.get("momentum_12_1"),
+            "near_52w_high": r.get("near_52w_high"),
+            "ca_unpriced": r.get("ca_unpriced"),
+            "flow_resid": r.get("flow_resid"),
+            "inst_sponsorship": r.get("inst_sponsorship_score"),
+            "crowding_comomentum": (como.get(sid) or {}).get("crowding_comomentum"),
+            "cot_crowding": (cot.get(sid) or {}).get("cot_crowding"),
+            "trends_crowding": (trends.get(sid) or {}).get("trends_crowding"),
+            "crowding_measured": _crowding_measured(sid),
             "narrative_maturity": maturity,
             "has_study": 1 if maturity is not None else 0,
             "primary_etf": _primary_etf(sid),
@@ -261,8 +319,10 @@ def record_run(top_n: int = 10, notes: str | None = None,
             "regime_state": cat_detail.get("regime_state", "intact"),
         })
 
-    # Rank by composite descending
-    rows.sort(key=lambda x: -x["composite"])
+    # Rank by the comparable unit descending — `composite_z` when the run carries it, since
+    # `composite` is a 1-decimal DISPLAY number and ranking on it breaks near-ties by list
+    # order. See `sector_scorer.rank_key`.
+    rows.sort(key=rank_key(rows))
     for i, row in enumerate(rows, 1):
         row["rank"] = i
 
@@ -308,6 +368,7 @@ def record_run(top_n: int = 10, notes: str | None = None,
 
     summary = _run_summary(rows, events, prev_ranks, prev_comp, prev_run_at, now, top_n)
     summary["prev_run_id"] = prev_run_id
+    summary["composite_scale"] = scale
 
     _write_run_to_lake(run_id, now, version, _git_commit(),
                        str(momentum_snapshot_path) if momentum_snapshot_path else None,
@@ -320,6 +381,7 @@ def record_run(top_n: int = 10, notes: str | None = None,
         "prev_run_id": prev_run_id,
         "top_n": top_n,
         "top": [(r["rank"], r["sector_id"], r["composite"]) for r in rows[:top_n]],
+        "composite_scale": scale,
     }
 
 
@@ -579,6 +641,13 @@ def _write_run_to_lake(run_id, run_at, version, git_commit, momentum_snapshot,
         "flow_window_days": r["flow_window_days"],
         "flow_days_covered": r["flow_days_covered"],
         "crowding_risk": r["crowding_risk"], "narrative_maturity": r["narrative_maturity"],
+        "momentum_12_1": r.get("momentum_12_1"), "near_52w_high": r.get("near_52w_high"),
+        "ca_unpriced": r.get("ca_unpriced"), "flow_resid": r.get("flow_resid"),
+        "inst_sponsorship": r.get("inst_sponsorship"),
+        "crowding_comomentum": r.get("crowding_comomentum"),
+        "cot_crowding": r.get("cot_crowding"),
+        "trends_crowding": r.get("trends_crowding"),
+        "crowding_measured": r.get("crowding_measured"),
         "has_study": r["has_study"], "primary_etf": r["primary_etf"], "rationale_md": r["rationale_md"],
         "regime_state": r["regime_state"],
     } for r in rows]

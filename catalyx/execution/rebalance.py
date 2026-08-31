@@ -66,31 +66,43 @@ BANNED_ACTION_WORDS = ("watch", "monitor", "consider", "optional", "maybe", "eva
 def deploy_ratio(n_intact_top: int, vix: float | None, cfg: dict) -> dict:
     """How much of the committed capital the rules say should be AT WORK right now.
 
-    `clamp(base + step·(n_intact_top − intact_min) − vix_penalty·[VIX > pause], floor, ceiling)`.
+    `clamp(base + step·(n_intact_top − intact_min) − vix_penalty·ramp(VIX), floor, ceiling)`.
 
     This replaces "cash by feel". The book sitting 70% in cash was never a decision anybody
     made — it was the residue of never deciding. Here it is a number with its inputs printed,
     and VIX is the ONLY macro brake: there is no discretionary "the market feels risky" term.
+
+    v6 I6: the brake was a step at VIX 30 — 29.9 → 30.1 moved a fifth of the target capital,
+    so a VIX oscillating around 30 oscillated the whole book. It now ramps linearly from
+    `vix_ramp_start` to `vix_ramp_full`, which is the same brake without the discontinuity.
     """
     d = cfg.get("deployment", {}) or {}
     base = float(d.get("base", 0.60))
     step = float(d.get("step_per_intact_sector", 0.05))
     intact_min = int(d.get("intact_min", 5))
-    pause = float(d.get("vix_pause_above", 30.0))
     penalty = float(d.get("vix_penalty", 0.20))
     floor = float(d.get("floor", 0.30))
     ceiling = float(d.get("ceiling", 1.00))
+    # pre-v6 configs carry only the cliff; centre the ramp on it so they keep their stance
+    pause = float(d.get("vix_pause_above", 30.0))
+    ramp_start = float(d.get("vix_ramp_start", pause - 5.0))
+    ramp_full = float(d.get("vix_ramp_full", pause + 5.0))
 
-    vix_brake = bool(vix is not None and vix > pause)
-    raw = base + step * (int(n_intact_top) - intact_min) - (penalty if vix_brake else 0.0)
+    span = max(1e-9, ramp_full - ramp_start)
+    ramp = 0.0 if vix is None else max(0.0, min(1.0, (float(vix) - ramp_start) / span))
+    brake = penalty * ramp
+    raw = base + step * (int(n_intact_top) - intact_min) - brake
     ratio = max(floor, min(ceiling, raw))
     return {
         "ratio": round(ratio, 4), "raw": round(raw, 4),
         "n_intact_top": int(n_intact_top), "intact_min": intact_min,
-        "vix": vix, "vix_pause_above": pause, "vix_brake": vix_brake,
+        "vix": vix, "vix_ramp_start": ramp_start, "vix_ramp_full": ramp_full,
+        "vix_ramp": round(ramp, 3), "vix_brake_pp": round(brake, 4),
+        "vix_brake": bool(brake > 0),
         "floor": floor, "ceiling": ceiling,
         "why": (f"base {base:.2f} + {step:.2f}×({n_intact_top}−{intact_min})"
-                + (f" − {penalty:.2f} (VIX {vix:.1f} > {pause:.0f})" if vix_brake else "")
+                + (f" − {brake:.2f} (VIX {vix:.1f}, ramp {ramp_start:.0f}→{ramp_full:.0f})"
+                   if brake > 0 else "")
                 + f" → {ratio:.0%}"),
     }
 
@@ -526,10 +538,13 @@ def _render_rows(rows: list[dict]) -> list[str]:
         # How old is the evidence this row is spending on. It sits beside the reason on purpose:
         # the justification and the age of what justifies it belong in one glance.
         age = row.get("data_age")
+        # A row the rule wants but no trade slot can carry this cycle. Marked on the ACTION, not
+        # by zeroing the trade: the rule's ask stays visible and the constraint is what is new.
+        act = row["rule_action"] + ("*" if row.get("budget_state") == "deferred" else "")
         out.append(f"{row['sector_id'][:30]:<30} {str(row.get('etf') or '—')[:9]:<9} "
                    f"{(str(sr) if sr is not None else '—'):>4} "
                    f"{row['target_pct']:>6.1f} {row['actual_pct']:>6.1f} {row['gap_eur']:>8.0f} "
-                   f"{row['rule_action']:<7} {row['trade_eur']:>8.0f} {be_s:>6} "
+                   f"{act:<7} {row['trade_eur']:>8.0f} {be_s:>6} "
                    f"{(age if age and age == age else '—'):<13} {row['reason']}")
     return out
 
@@ -680,6 +695,66 @@ def rank_coverage(rank_history: list[int | None]) -> dict:
     return {"n_runs": len(hist), "scored": len(hist) - missing, "missing": missing,
             "missing_recent": next((i for i, r in enumerate(reversed(hist)) if r is not None),
                                    len(hist))}
+
+
+# ── The trade budget — a scarce slot is not a free one (plan v6 L3) ─────────
+
+# Priority of a money-moving row when there are more rows than slots. NOT expected return: the
+# composite's rank IC is noise (−0.05), so ordering by a forecast we have measured as
+# unreliable would invent precision exactly where the system already declared none. These three
+# are ordered by what IS measured — risk removed, then the cost of inaction (`cash_drag`), then
+# turnover, which is what Gârleanu–Pedersen (2013) says to starve first when trading is costly.
+_BUDGET_TIERS = {"SELL": 0, "REDUCE": 0, "BUY": 1, "ADD": 1, "TRIM": 2}
+
+
+def trade_budget_plan(rows: list[dict], cfg: dict) -> dict:
+    """Split the money-moving rows into what this review may execute and what it must defer.
+
+    `fee_eur: 0.0` says a trade is free. Inside the monthly allowance that is true in accounting
+    terms and false in economic ones: the slot is scarce, and the mandate spends slots on
+    catalysts that arrive BETWEEN reviews, so holding some back has option value. Rows in
+    `exempt_actions` are never deferred — removing risk does not queue — but they DO consume
+    slots, and if they alone exhaust the budget that is reported, not hidden.
+
+    Nothing is zeroed: `rule_action` and `trade_eur` stay the rule's ask, and a deferred row is
+    flagged so the deferral can be logged (author `budget`) and priced like any other deviation.
+    """
+    tb = (cfg.get("trade_budget") or weights.trade_budget())
+    exempt = set(tb.get("exempt_actions") or ())
+    free, reserve = int(tb.get("free_per_month", 10)), int(tb.get("reserve_for_events", 3))
+    budget = max(0, min(int(tb.get("planned_max_per_review", 6)), free - reserve))
+
+    movers = [r for r in rows if float(r.get("trade_eur") or 0.0) != 0.0]
+    ranked = sorted(movers, key=lambda r: (
+        -1 if r.get("rule_action") in exempt else _BUDGET_TIERS.get(r.get("rule_action"), 3),
+        -abs(float(r.get("trade_eur") or 0.0))))     # most money moved per scarce slot
+
+    granted, deferred = [], []
+    for r in ranked:
+        if r.get("rule_action") in exempt or len(granted) < budget:
+            r["budget_state"] = "exempt" if r.get("rule_action") in exempt else "granted"
+            granted.append(r)
+        else:
+            r["budget_state"] = "deferred"
+            deferred.append(r)
+    for r in rows:
+        r.setdefault("budget_state", "n/a")           # HOLD / RE-SCORE spend nothing
+
+    over = max(0, len(granted) - budget)
+    return {
+        "free_per_month": free, "reserve_for_events": reserve, "budget": budget,
+        "granted": len(granted), "deferred": len(deferred), "over_budget": over,
+        "deferred_eur": round(sum(abs(float(r.get("trade_eur") or 0.0)) for r in deferred), 2),
+        "deferred_rows": [{"sector_id": r["sector_id"], "rule_action": r["rule_action"],
+                           "trade_eur": float(r.get("trade_eur") or 0.0)} for r in deferred],
+        "note": (f"{len(granted)} of {len(movers)} money-moving rows fit the {budget}-trade "
+                 f"review budget ({free} free/month less {reserve} reserved for events)."
+                 + (f" {len(deferred)} deferred by budget, €"
+                    f"{sum(abs(float(r.get('trade_eur') or 0)) for r in deferred):,.0f} held back."
+                    if deferred else "")
+                 + (f" {over} risk-removal row(s) push PAST the budget — they are never deferred."
+                    if over else "")),
+    }
 
 
 # ── Anti-conservatism: the cost of NOT acting (plan v4 §4 C1/C3/C4) ─────────
@@ -1276,9 +1351,11 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
     # Re-rank the book that ACTUALLY exists. `rank_in_portfolio` is the model's own ordering and
     # the `add_if`/`buy_if` ceilings read it as "does the model still call this a leader". After
     # removing 4 of 10 names those stored ranks describe a book nobody holds — cybersecurity at
-    # "rank 6 of 10" is rank 4 of the 6 that survived. Ranks are re-derived from composite, the
-    # same key `portfolio.build_model_holdings` ranks on.
-    model.sort(key=lambda m: -float(m.get("composite") or 0.0))
+    # "rank 6 of 10" is rank 4 of the 6 that survived. Ranks are re-derived on the same key
+    # `portfolio.build_model_holdings` selected on — `composite_z` where the run carries it,
+    # not the 1-decimal display composite. See `sector_scorer.rank_key`.
+    from catalyx.scorer.sector_scorer import rank_key
+    model.sort(key=rank_key(model))
     for i, m in enumerate(model, 1):
         m["rank_in_portfolio"] = i
 
@@ -1450,6 +1527,7 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
 
     rows.sort(key=lambda r: (PRECEDENCE.index(r["rule_action"]) if r["rule_action"] in PRECEDENCE
                              else 9, -abs(r["trade_eur"])))
+    budget = trade_budget_plan(rows, cfg)
 
     invested_now = round(sum(r["actual_eur"] for r in rows), 2)
     buys = round(sum(r["trade_eur"] for r in rows if r["trade_eur"] > 0), 2)
@@ -1601,7 +1679,7 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         # What the deployment pressure rests on, when the ranking's own edge is not it (v5 F1).
         "selection_prior": selection_prior(evidence,
                                            (book_metrics.get("model") or {}).get("tilt_lambda")),
-        "shortfall": short, "cash_drag": drag,
+        "shortfall": short, "cash_drag": drag, "trade_budget": budget,
         "unrecorded": unrecorded, "prior_run_id": prior_run_id,
         "gate": gate, "composite_ic": ic_stat,
         # The entire partial-sale vocabulary, in one place, so the table can state it before the
@@ -1667,7 +1745,34 @@ def persist(result: dict, lake_dir: Path | None = None) -> int:
     lake.append_partition(_TABLE, pd.DataFrame(rows), {"run_id": run_id},
                           overwrite=True, lake_dir=lake_dir)
     _log_unrecorded(result, lake_dir=lake_dir)
+    _log_budget_defers(result, lake_dir=lake_dir)
     return len(rows)
+
+
+def _log_budget_defers(result: dict, lake_dir: Path | None = None) -> int:
+    """Record rows this run deferred for lack of a trade slot, authored `budget` (plan v6 L4).
+
+    Deliberately NOT `unrecorded`: that author means "nobody wrote the decision down", and a
+    budget deferral is the rule working, not silence. Filing them together would fill the
+    deviation tally with rows nobody chose — the exact contamination v5 built the tally to
+    avoid. They are still scored like any deviation, which is the point: ~21 trading days later
+    `override_edge` says what the constraint cost, so the budget itself is falsifiable.
+
+    Logged against the CURRENT run (this run made the call), which also means next run's
+    `unrecorded_deviations` finds an override for that sector and does not re-file it as silence.
+    """
+    n = 0
+    for d in (result.get("trade_budget") or {}).get("deferred_rows") or []:
+        try:
+            log_override(result["run_id"], d["sector_id"], d["rule_action"], "DEFER",
+                         reason=(f"No trade slot: {d['rule_action']} {d['sector_id']} "
+                                 f"€{abs(d['trade_eur']):,.0f} fell outside this review's budget "
+                                 f"of {(result['trade_budget'] or {}).get('budget')} trades."),
+                         author="budget", chosen_trade_eur=0.0, lake_dir=lake_dir)
+            n += 1
+        except Exception:                                      # pragma: no cover - defensive
+            continue
+    return n
 
 
 def _log_unrecorded(result: dict, lake_dir: Path | None = None) -> int:
@@ -2191,6 +2296,9 @@ def render(res: dict) -> str:
     short = res.get("shortfall") or {}
     if short.get("breached"):
         out.append(f"SHORTFALL {short['note']}")
+    tb = res.get("trade_budget") or {}
+    if tb.get("deferred") or tb.get("over_budget"):
+        out += _wrap(tb["note"], width=96, indent=" " * 20, first=f"{'BUDGET':<20}")
     out.append("")
 
     # The partial-sale vocabulary, stated ONCE before any verdict is read: three fractions are
@@ -2200,7 +2308,8 @@ def render(res: dict) -> str:
     lf = res.get("fractions", {}).get("ladder_trim")
     out.append("COLUMNS  rk = rank in this run's full ranking (— = not scored this run) · "
                "b/e% = friction ÷ capital moved · data = age of the catalyst evidence behind "
-               "the score (qualifies the row, never vetoes it)")
+               "the score (qualifies the row, never vetoes it) · a trailing * on the action = "
+               "deferred for lack of a trade slot, logged and priced like any deviation")
     out.append(f"SIZING   SELL = 100% of the line · REDUCE = {rf:.0f}% · TRIM = back to target"
                + (f" (or {float(lf) * 100:.0f}% on a ladder rung)" if lf else ""))
     out.append("")

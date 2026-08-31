@@ -1,12 +1,11 @@
 {
   "id": "study_cloud_software_saas",
-  "schema_version": "1.2",
+  "schema_version": "1.3",
   "sector_id": "cloud_software_saas",
   "sector_label": "Cloud Software & SaaS",
   "created_at": "2026-06-05",
-  "last_updated": "2026-06-05",
+  "last_updated": "2026-08-31",
   "study_type": "full",
-
   "taxonomy": {
     "parent_sector": "technology",
     "adjacent_sectors": [
@@ -15,134 +14,140 @@
       "cybersecurity_commercial",
       "robotics_automation"
     ],
-    "differentiation_note": "Cloud Software & SaaS operates at the application layer: it sells access to recurring-revenue software services that run on infrastructure others build and own — the value is in workflow automation, data processing, and AI feature delivery, not in silicon design or physical compute capacity. This sector is therefore structurally distinct from semiconductors_design (which designs the chips that SaaS runs on) and from ai_infrastructure_data_centers (which builds and operates the hyperscaler GPU clusters, cooling, and power that underpin SaaS delivery) — SaaS companies are customers of both, not competitors. The per-seat recurring revenue model and enterprise ARR growth metrics that drive SaaS valuation (NTM EV/Revenue, NRR, Rule of 40) are orthogonal to the utilization and capex-return metrics that govern data center and semiconductor valuations. Additionally, within SaaS, the 2026 AI-agent disruption debate is specifically a pricing-model risk (seat-based vs consumption/outcome-based) rather than a demand destruction event — this dynamic has no direct analog in hardware or infrastructure sectors."
+    "differentiation_note": "Cloud Software & SaaS operates at the application layer: it sells access to recurring-revenue software services that run on infrastructure others build and own — the value is in workflow automation, data processing, and AI feature delivery, not in silicon design or physical compute capacity. This sector is therefore structurally distinct from semiconductors_design (which designs the chips that SaaS runs on) and from ai_infrastructure_data_centers (which builds and operates the hyperscaler GPU clusters, cooling, and power that underpin SaaS delivery) — SaaS companies are customers of both, not competitors. The per-seat recurring revenue model and enterprise ARR growth metrics that drive SaaS valuation (NTM EV/Revenue, NRR, Rule of 40) are orthogonal to the utilization and capex-return metrics that govern data center and semiconductor valuations. Additionally, within SaaS, the 2026 AI-agent disruption debate is specifically a pricing-model risk (seat-based vs consumption/outcome-based) rather than a demand destruction event — this dynamic has no direct analog in hardware or infrastructure sectors. SHARPENED 2026-08-31: August 2026 supplied the cleanest empirical separation yet between this sector and ai_infrastructure_data_centers, and it is a P&L sign flip on the SAME driver. AI capex is REVENUE for the infrastructure layer and COST for the application layer: on 2026-08-06/07 Datadog (-19%, steepest since its 2019 IPO), HubSpot (-19%, worst day in a decade) and Figma (-15%+) fell on results that BEAT on revenue and EPS, punished specifically for AI inference spend compressing gross margin (Datadog adjusted GM 80.0% vs 80.7% consensus). Both sectors attribute primarily to struct_ai_capex_supercycle, but they sit on opposite sides of its income statement — which is why they are NOT one sector and must not be sized as one position, even though the correlated_catalyst_cap correctly treats them as one risk bucket. SECOND PASS 2026-08-31 (Nvidia FQ2-27, quarter ended Aug 2026): the separation is now quantified from the other side of the invoice. Nvidia booked $89.0bn of data-center revenue (~92% of total), of which ~$49bn was hyperscaler (+13% sequential), and guided FQ3 to $108.0bn; the CFO said about HALF the data-center business now comes from customers beyond the hyperscalers. That is the ai_infrastructure_data_centers revenue line printing a record and broadening its buyer base — and it is simultaneously the cost curve this sector pays for inference. The broadening is genuinely two-signed for SaaS: a wider enterprise buyer base is the demand channel through which AI budget reaches incumbent suites, while the same compute scarcity is what held Datadog's gross margin 0.7pp below consensus. Neither sector's read on struct_ai_capex_supercycle can be inferred from the other's."
   },
-
   "demand_drivers": [
-    "Global enterprise software spending is forecast to grow 14.7% in 2026 to above $1.4 trillion (Gartner, April 2026), the highest growth rate in three years, driven by AI feature embedding across all major SaaS suites. SaaS specifically is projected to grow 15% YoY in 2026, following 12% growth in 2025.",
-    "AI agent adoption is accelerating enterprise SaaS consumption: Salesforce Agentforce ARR grew from ~$200M in Q1 FY26 to ~$800M by Q4 FY26 (+300% intra-year), and Snowflake product revenue grew 34% YoY in Q1 FY27 (ended April 2026) to $1.33B as data platform consumption from AI workloads scaled. These are early evidence that AI is expanding per-customer spending, not merely replacing seats.",
-    "Total addressable SaaS market reached $465B in 2026 (up from $408B in 2025), with 84% of enterprise workloads now running at least partially in cloud environments (Flexera State of Cloud 2026). Cloud infrastructure spend exceeded $500B annually for the first time in 2026.",
-    "Transition from seat-based to consumption/outcome-based pricing is unlocking new revenue per customer: 41% of SaaS companies formally monetize AI features, AI credit models grew 126% YoY in 2025, and usage-based pricing (per API call, per resolved ticket) is creating non-linear upside for workflow-oriented vendors (ServiceNow, Snowflake, Intercom). Intercom's Fin AI Agent reached 8-figure ARR at 393% annualized growth.",
-    "Gartner's April 2026 revision raised worldwide IT spending growth to 13.5% ($6.31 trillion total), reflecting a re-acceleration after early-2026 macro uncertainty. GenAI model spending alone is growing at 80.8% and now represents a rising share of the software market — SaaS vendors that embed generative features benefit directly.",
-    "ServiceNow Q1 2026: subscription revenue $3.671B (+22% YoY), 630 customers above $5M in annual contract value. The workflow-routing and approvals layer for AI agents is proving to be a durable incremental revenue line rather than a replacement of existing seats."
+    "NEW 2026-08-31 -- struct_ai_capex_supercycle came back STRENGTHENING, and the part that reaches the APPLICATION layer is the buyer-base broadening, not the headline. Nvidia FQ2-27 (quarter ended Aug 2026): data-center revenue $89.0bn (~92% of total), hyperscaler ~$49bn (+13% sequential), FQ3 guided $108.0bn; top-5 hyperscaler capex path $800bn (2026) -> $1.3tn (2027). The CFO's statement that roughly half the data-center business now comes from customers BEYOND the hyperscalers rebuts the hyperscaler-concentration bear case and, read for this sector, says enterprise AI deployment is broadening past the four buyers -- which is the channel that routes AI budget through incumbent SaaS suites (see the 41% AI-monetization line below). CAVEAT, stated so it is not read as a clean tailwind: the same print is the input-cost curve of the sector's PRIMARY risk. A capex supercycle that accelerates raises the inference bill before it raises the software bill.",
+    "Salesforce Q2 FY2027 (reported 2026-08-26, quarter ended 2026-07-31) is the single hardest datapoint against the seat-destruction thesis: record revenue $11.345B (+10.83% YoY), adjusted EPS $5.90, net income $4.844B (+73.3% YoY), and FY27 revenue guidance RAISED by $200M to $46.1-46.4B (from $45.9-46.2B in May); Q3 guided $11.42-11.50B vs $11.41B consensus. The stock rose 12-14% the following session and ServiceNow +5%, Adobe +3% in sympathy. Benioff's framing -- 'cutting-edge models depend on CRM, they do not replace it' -- is now backed by a guidance raise rather than only by rhetoric.",
+    "Market size and growth remain intact: SaaS reached ~$465B in 2026 (from $408.2B in 2025, +14.1% YoY; Precedence/multiples.vc, August 2026), with the worldwide SaaS forecast at $512.3bn for 2026 (Statista) and the US at ~$260.0bn. Enterprise software spend growth was revised UP to 14.7% for 2026 (Gartner, April 2026) to above $1.4 trillion.",
+    "The growth is VERTICAL, not uniform: industry-focused SaaS providers are growing nearly twice as fast as horizontal peers (multiples.vc, August 2026), and data-infrastructure software commands the highest multiples of any software category because every enterprise AI programme starts at the data layer. Design/engineering software (Autodesk, Adobe) also holds a premium where AI features augment rather than cannibalise the core product. WCLD.L, the buyable vehicle, is a broad equal-weight cloud basket -- it owns this dispersion rather than selecting the winning side of it.",
+    "Pricing-model transition is converting AI usage into revenue: 41% of SaaS companies formally monetize AI, AI-credit models grew 126% YoY, and consumption/outcome-based pricing is displacing pure per-seat billing (Ibbaka/Growthunhinged B2B Monetization 2026). Enterprises are increasingly buying AI capability rather than building it, which routes AI budget through incumbent SaaS suites.",
+    "Prior-cycle evidence retained from the June 2026 study: Snowflake Q1 FY2027 (ended April 2026) product revenue $1.33B (+34% YoY); ServiceNow Q1 FY2026 subscription revenue $3.671B (+22% YoY) with 630 customers above $5M ACV; Salesforce Agentforce ARR ~$200M -> ~$800M across FY26. These were not re-observed in this refresh -- see key_metrics_to_monitor for their staleness flags."
   ],
-
   "supply_constraints": [
     "AI talent concentration: the engineers capable of building and shipping production-grade AI agent features are concentrated at a small number of firms (Microsoft, Google, Salesforce, ServiceNow, Snowflake). Startups face a talent scarcity ceiling that limits how fast new entrants can compete with incumbent SaaS stacks.",
     "Data network effects and switching costs: enterprise SaaS incumbents hold years of proprietary workflow data and user behavior history. An AI agent replacing Salesforce CRM still needs Salesforce's customer interaction history to function — this data moat creates supply-side friction for new entrants that cannot be overcome by model quality alone.",
     "Integration complexity: enterprise software environments average 130+ SaaS applications per organization (Zylo 2026). Replacing a SaaS incumbent requires re-integration of all downstream data flows, SSO, audit trails, and compliance controls — this integration surface is a structural barrier to supply-side disruption on a 1-3 year horizon.",
     "Regulatory and compliance overhead: GDPR, SOC 2, FedRAMP, and the EU AI Act impose certification requirements that favor incumbents with existing compliance infrastructure. New AI-native entrants face 18-24 month certification cycles before they can serve regulated industries (financial services, healthcare, government).",
-    "Pricing model transition costs: the shift from seat-based to consumption-based pricing requires vendors to redesign billing, forecasting, and sales compensation structures. This transition creates short-term revenue recognition volatility and sales friction that constrains how quickly supply of new pricing models can come online."
+    "Pricing model transition costs: the shift from seat-based to consumption-based pricing requires vendors to redesign billing, forecasting, and sales compensation structures. This transition creates short-term revenue recognition volatility and sales friction that constrains how quickly supply of new pricing models can come online.",
+    "NEW 2026-08-31 -- AI inference cost is now a hard input-cost floor under SaaS gross margin, and it is set by a market the SaaS vendor does not control. Figma explicitly flagged rising inference spend on its August 2026 print, and Datadog's 80.0% adjusted gross margin (vs 80.7% consensus) was enough to take the stock down 19% despite a top- and bottom-line beat. Because token pricing is set by the model providers and GPU capacity is rationed by the same struct_ai_capex_supercycle constraint that benefits ai_infrastructure_data_centers, the application layer cannot supply AI features at a predictable unit cost until inference capacity stops being scarce. UPDATED same-day: the Nvidia FQ2-27 print (FQ3 guided $108.0bn, hyperscaler capex path $800bn -> $1.3tn in 2027) says capacity is being ADDED at an accelerating rate but also that demand is absorbing it faster than it lands -- the scarcity is not resolving inside the entry horizon, so the margin constraint should be assumed to persist through at least the September mid-cap prints. This is a supply constraint on MARGIN, not on demand."
   ],
-
   "cycle_position": {
-    "assessment": "recovery_early_re-acceleration",
-    "rationale": "Cloud Software & SaaS experienced a severe valuation and narrative reset in February 2026 ('SaaSpocalypse') — $285B in market cap erased in 48 hours as AI agent demonstrations raised seat-model viability concerns. That selloff has largely reversed: software stocks rallied 21% in May 2026 (best month since October 2001 for the sector), driven by Q1 FY26 earnings that demonstrated AI is expanding consumption rather than destroying seats for workflow-anchored vendors. The sector is in early re-acceleration: fundamentals are solid (ServiceNow +22% YoY, Snowflake +34% YoY, SaaS spending +15% 2026 forecast), narratives are recalibrating from 'AI destroys SaaS' to 'AI creates winners and losers within SaaS', and consumption-based pricing models are beginning to show up in ARR. The cycle position is NOT early-cycle (valuations are not distressed — NTM EV/Revenue multiples for leaders like ServiceNow remain elevated) and NOT late-cycle (growth re-acceleration is underway, not fading). The key risk is that the AI-agent disruption debate is not fully resolved — seat-model incumbents (Workday, some Salesforce surfaces) remain exposed to a second de-rating wave if AI substitution of human seats accelerates faster than anticipated.",
-    "last_assessed": "2026-06-05"
+    "assessment": "recovery_with_violent_internal_dispersion, now against a hawkish discount rate -- re-accelerating fundamentals, compressing multiples, rotation out of the parent sector",
+    "rationale": "The June 2026 read ('early re-acceleration, narrative recalibrating') is only half right as of 2026-08-31, and the half that is wrong is the half that matters for an entry. August 2026 was not a trend month, it was a two-sided month: on 2026-08-06/07 the mid-cap cohort broke (DDOG -19%, HUBS -19% -- its worst day in a decade, FIG -15%+, all on beats, all on AI inference cost), CNBC ran 'SaaSpocalypse debate INTENSIFIES as software stocks swing wildly' on 2026-08-07, and Airtable was acquired for pennies on the dollar. Then on 2026-08-26 Salesforce beat and raised and the tape reversed (+12-14%, NOW +5%, ADBE +3%). The sector composite ranks #1 with 98.1 momentum BECAUSE of the last four sessions of that sequence, not because of the month. So the cycle position is: fundamentals re-accelerating at the workflow-anchored mega-caps, multiple compression running simultaneously through the mid-cap consumption names that WCLD.L actually holds, and the dispersion between them widening -- 'wide valuation dispersion, a sign of AI's creative destruction' is the August 2026 multiples.vc framing. That is a stock-picker's tape being bought through an index vehicle. It is NOT the 2022-style, uniform, rate-driven de-rating this sector has historically mean-reverted out of, and it should not be sized as if it were. SECOND PASS, same day, with two facts the morning read did not have. (1) THE DRIVER STRENGTHENED: Nvidia FQ2-27 put data-center revenue at $89.0bn and guided FQ3 to $108.0bn, with the hyperscaler capex path now $800bn -> $1.3tn in 2027 and ~half of data-center demand coming from beyond the hyperscalers. For this sector that is a broader enterprise AI buyer base (demand) arriving on top of an accelerating inference bill (cost) -- it strengthens the thesis and the primary risk at the same time, which is exactly what a sector on the cost side of its own driver should expect. (2) THE DISCOUNT RATE TURNED AGAINST IT, on both sides of the Atlantic: the Fed has held 3.50-3.75% for a fifth meeting with ~55% market-implied odds of a 25bp HIKE in September, and the ECB raised 25bp on 2026-06-11. This sector's own historical_catalyst_performance block prices that: ~100bps of rate rise has historically carried 20-30% multiple compression for high-growth SaaS, and the 2022 de-rating ran from 25-40x to 5-8x NTM EV/Revenue with ARR growth still POSITIVE -- the compression channel does not need a fundamental miss. Multiples.vc's August 2026 note that software multiples are set against the cost of debt (leveraged buyers solve for a return after financing) is the same mechanism from the private side. And the tape already shows it: the 2026-08-24 US sector rotation has Technology LOSING relative strength while Energy, Financials and Healthcare gain (XLE +1.76%, XLV +1.60% on the late-August sessions). So the read tightens rather than reverses: this is a re-accelerating fundamental in the most duration-sensitive sector in the taxonomy, entering a hiking-bias regime, with index-level flows rotating out of the parent sector -- a #1 composite rank built on 98.1 momentum from four post-Salesforce sessions is the weakest possible foundation for that combination.",
+    "last_assessed": "2026-08-31"
   },
-
   "key_metrics_to_monitor": [
     {
       "metric": "SaaS global market spending YoY growth",
       "unit": "% YoY",
-      "source": "Gartner IT Spending Forecast (quarterly update)",
-      "current": "15",
-      "comment": "2026 Gartner forecast (April revision). Prior forecast was 12% (Oct 2025 baseline). Upward revision driven by AI feature embedding. Monitor quarterly — next update expected July 2026."
+      "source": "Precedence Research / multiples.vc public comps (monthly); Gartner IT Spending Forecast",
+      "current": "14.1",
+      "comment": "REFRESHED 2026-08-31: ~$465B 2026 vs $408.2B 2025 = +14.1%. Gartner's April 2026 enterprise-software figure is +14.7%. Both are intact and both are ABOVE the 12% 2025 realised rate -- the aggregate demand line is not what broke in August."
     },
     {
-      "metric": "Snowflake product revenue growth YoY",
-      "unit": "% YoY",
-      "source": "Snowflake quarterly earnings (SEC 8-K)",
-      "current": "34",
-      "comment": "Q1 FY2027 (ended April 2026): $1.33B product revenue, +34% YoY. Leading indicator for data platform consumption from AI agents. Snowflake surged 37% post-earnings in May 2026 — watch whether Q2 FY27 sustains this trajectory."
+      "metric": "Fed funds target + market-implied odds of the next 25bp move",
+      "unit": "% / % probability",
+      "source": "FOMC statements; CME FedWatch / market pricing",
+      "current": "3.50-3.75 held; ~55% odds of a 25bp HIKE in September",
+      "comment": "NEW METRIC 2026-08-31 (second pass) and the sector's largest non-AI beta. Fifth consecutive hold, and the HIKE odds have pulled forward from October (the June read in cat_20260617_fed_hawkish_pivot) to September. ECB raised 25bp on 2026-06-11, so both sides of the Atlantic are hawkish. ~100bps historically = 20-30% multiple compression here with ARR growth still positive; this metric can de-rate the sector without any thesis in this study being wrong. Tracked, deliberately NOT linked as a catalyst -- see the rate risk."
     },
     {
-      "metric": "ServiceNow subscription revenue growth YoY",
-      "unit": "% YoY",
-      "source": "ServiceNow quarterly earnings (SEC 8-K)",
-      "current": "22",
-      "comment": "Q1 FY2026 (ended March 2026): $3.671B subscription revenue, +22% YoY. 630 customers above $5M ACV. ServiceNow is the workflow-routing layer for AI agents — sustained 20%+ growth validates the consumption-pricing thesis."
+      "metric": "Nvidia data-center revenue (the driver's read-through and this sector's inference cost curve)",
+      "unit": "USD billions per quarter",
+      "source": "Nvidia IR / SEC 8-K; hyperscaler capex guidance",
+      "current": "89.0",
+      "comment": "NEW METRIC 2026-08-31: FQ2-27 (quarter ended Aug 2026) $89.0bn, ~92% of total revenue; ~$49bn hyperscaler, +13% sequential; FQ3 guided $108.0bn. Top-5 hyperscaler capex path $800bn (2026) -> $1.3tn (2027). READ IT TWICE for this sector: the CFO's '~half from beyond the hyperscalers' is the enterprise-AI broadening that routes budget to incumbent suites (bull), and the same acceleration is the inference input cost behind the primary gross-margin risk (bear). A rising number here is NOT unambiguously good for the application layer."
+    },
+    {
+      "metric": "SaaS blended adjusted gross margin vs consensus (AI inference cost pass-through)",
+      "unit": "pp beat/miss vs consensus GM",
+      "source": "Company quarterly earnings; Datadog/Figma disclosures",
+      "current": "-0.7",
+      "comment": "NEW METRIC 2026-08-31 and the one this sector now trades on. Datadog Q2 2026: adjusted GM 80.0% vs 80.7% consensus = -0.7pp -> stock -19% on a revenue AND EPS beat with guidance raised. Figma flagged rising inference spend the same week. A sub-1pp gross-margin miss now costs more than a revenue beat earns; until that asymmetry closes, revenue growth is not the metric to underwrite."
+    },
+    {
+      "metric": "Salesforce quarterly revenue and FY guidance",
+      "unit": "USD billions",
+      "source": "Salesforce IR (investor.salesforce.com), SEC 8-K",
+      "current": "11.345",
+      "comment": "REFRESHED 2026-08-31: Q2 FY2027 (ended 2026-07-31, reported 2026-08-26) $11.345B, +10.83% YoY, EPS $5.90, net income $4.844B (+73.3%). FY27 guidance raised $200M to $46.1-46.4B; Q3 guided $11.42-11.50B. This replaces the Agentforce-ARR line below as the primary Salesforce read."
     },
     {
       "metric": "Salesforce Agentforce ARR",
       "unit": "USD millions",
       "source": "Salesforce earnings / investor day disclosures",
       "current": "800",
-      "comment": "Grew from ~$200M (Q1 FY26) to ~$800M (Q4 FY26), +300% intra-year. Key watch for whether AI agent monetization converts into durable ARR rather than pilot revenue."
+      "comment": "STALE as of 2026-08-31 -- last observed ~$800M at Q4 FY26; NOT re-observed in the Q2 FY27 material reviewed in this refresh. Do not treat 800 as a current value."
     },
     {
-      "metric": "CLOU ETF year-to-date return",
-      "unit": "% YTD",
-      "source": "Bloomberg / ETF provider NAV",
-      "current": "-3.49",
-      "comment": "As of mid-2026 YTD. Dramatically outperforms WCLD (-22% YTD) because CLOU holds larger-cap SaaS with workflow moats (ServiceNow, Salesforce, Workday) vs WCLD's smaller-cap, higher-growth, higher-volatility BVP Nasdaq index. CLOU's relative strength signals market preference for quality over pure-growth in the current AI-uncertainty regime."
+      "metric": "ServiceNow subscription revenue growth YoY",
+      "unit": "% YoY",
+      "source": "ServiceNow quarterly earnings (SEC 8-K)",
+      "current": "22",
+      "comment": "STALE as of 2026-08-31 -- last observed Q1 FY2026 ($3.671B, +22% YoY). The only August datapoint is a price reaction, not a fundamental: NOW +5% to $131.90 on 2026-08-27 as a sympathy bid to Salesforce."
+    },
+    {
+      "metric": "Snowflake product revenue growth YoY",
+      "unit": "% YoY",
+      "source": "Snowflake quarterly earnings (SEC 8-K)",
+      "current": "34",
+      "comment": "STALE as of 2026-08-31 -- last observed Q1 FY2027 (ended April 2026), $1.33B product revenue +34% YoY. Snowflake is the cleanest read on whether AI agents drive CONSUMPTION (bull case) and should be re-observed before any add."
+    },
+    {
+      "metric": "WCLD.L total return (the buyable vehicle)",
+      "unit": "% return",
+      "source": "catalyx parquet lake (lake_query / market prices, ticker=WCLD.L)",
+      "current": null,
+      "comment": "DELIBERATELY NULL. The web gave only inconsistent US-line WCLD readings (-20.73% YTD at 2026-04-07 vs -1.1% YTD at 2026-01-13) and the tradeable line is WCLD.L in USD on LSE, not the US fund. Per the broker-reality rule, momentum must be measured on the vehicle actually operated -- take this from the lake, never from a web quote. AUM $280M (etf_universe.yaml, verified 2026-08-27) clears the $200M floor with little margin."
     },
     {
       "metric": "SaaS AI credit / consumption model adoption rate",
       "unit": "% of SaaS companies",
       "source": "Growthunhinged / Ibbaka B2B Monetization Report 2026",
       "current": "41",
-      "comment": "41% of SaaS companies formally monetize AI. 29% use AI credit models (up 126% YoY). 33% plan to introduce AI credits within 6-12 months. This metric predicts revenue-model transition speed — accelerating adoption enables non-linear expansion; stagnation would signal seat-model stickiness dominates."
-    }
-  ],
-
-  "etf_analysis": [
-    {
-      "ticker": "CLOU",
-      "name": "Global X Cloud Computing ETF",
-      "exchange": "NASDAQ",
-      "currency": "USD",
-      "ter": 0.0068,
-      "aum_m_usd": 1100,
-      "replication": "physical",
-      "avg_spread_bps": 9,
-      "avg_daily_volume_m_usd": null,
-      "top_10_concentration_pct": null,
-      "characteristics": "37 holdings. Pure SaaS/cloud application layer: Salesforce, Workday, Snowflake, ServiceNow, Twilio, Veeva, Datadog. Market-cap weighted. Holds larger-cap, more profitable SaaS — YTD 2026 return of -3.49% vs WCLD -22% confirms quality tilt. TER of 0.68% is higher than WCLD but acceptable for concentrated thematic exposure.",
-      "recommendation_tier": 1,
-      "limitations": "NOT UCITS — restricted for Spanish MiFID II investors under standard brokerage accounts. AUM $1.1B is above the $200M liquidity threshold. Spread 9bps is within the 25bps warning band. Primary vehicle if broker allows non-UCITS access (Interactive Brokers, DEGIRO via US market). No UCITS equivalent with comparable SaaS purity exists in the EU market as of June 2026 — this is the key structural limitation for Spanish investors."
+      "comment": "Unchanged since the June study: 41% formally monetize AI, 29% use AI-credit models (+126% YoY), 33% plan to introduce them. This is the transmission channel that turns the inference COST above into revenue -- the gap between the two is the whole thesis."
     },
     {
-      "ticker": "WCLD",
-      "name": "WisdomTree Cloud Computing Fund",
-      "exchange": "NASDAQ",
-      "currency": "USD",
-      "ter": 0.0045,
-      "aum_m_usd": 780,
-      "replication": "physical",
-      "avg_spread_bps": 11,
-      "avg_daily_volume_m_usd": null,
-      "top_10_concentration_pct": null,
-      "characteristics": "Tracks BVP Nasdaq Emerging Cloud Index. Equal-weight strategy emphasizing next-generation, smaller-cap SaaS companies. Lower TER (0.45%) than CLOU. However, the equal-weight/smaller-cap tilt has been a significant headwind in 2026: WCLD is down 22% YTD vs CLOU -3.49% — the SaaSpocalypse selloff hit smaller, pre-profitability SaaS disproportionately. Use WCLD if conviction favors recovery of higher-growth smaller-cap SaaS names.",
-      "recommendation_tier": 2,
-      "limitations": "NOT UCITS — restricted for Spanish MiFID II investors. AUM $780M is above liquidity threshold. Spread 11bps is within warning band. The 2026 YTD underperformance (-22%) reflects the higher beta of the equal-weight smaller-cap index to the SaaSpocalypse narrative reset. Higher volatility (12.44% vs CLOU 10.21%) means wider drawdown range. Suitable only if investor accepts higher volatility for lower TER and smaller-cap growth exposure."
+      "metric": "Public SaaS revenue multiple (median / average)",
+      "unit": "x annualized last-quarter revenue",
+      "source": "multiples.vc public comps (143 public SaaS companies)",
+      "current": "3.27 median / 5.6 average",
+      "comment": "REFRESHED 2026-08-31 (as of 2026-08-07, 143 names). The gap between the 3.27x median and the 5.6x average IS the dispersion: the average is held up by data-infrastructure and vertical/AI-native premiums while the horizontal cohort WCLD.L is weighted toward sits at or below the median. Track median, not average -- and read this alongside the rate metric: it is the level from which a hiking bias would compress."
+    },
+    {
+      "metric": "Share of enterprise tasks AI agents resolve end-to-end",
+      "unit": "% of tasks",
+      "source": "Public agent-benchmark tracking (August 2026 reading)",
+      "current": "3.8",
+      "comment": "NEW METRIC 2026-08-31 and the cleanest falsifier of the seat-destruction thesis. 3.8% of tasks resolvable end-to-end means agents can START workflows but cannot yet REPLACE the SaaS workflow layer at scale -- consistent with Salesforce's raised FY27 guidance. This is the number that must climb materially before 'AI replaces seats' becomes a demand risk rather than a narrative risk; if it does climb, the primary risk in this study changes from a MARGIN risk to a DEMAND risk and the thesis needs re-underwriting, not resizing."
     }
   ],
-
+  "etf_analysis": [],
   "risks": [
-    "AI-agent seat-model disruption (primary sector-specific risk): if AI agents demonstrably reduce human-seat counts in major SaaS categories (CRM, HCM, ERP), per-seat ARR growth could stall even as total productivity increases. The February 2026 SaaSpocalypse showed this risk can trigger rapid 20-30% de-ratings. The market has partially recovered on Q1 earnings evidence, but the structural question — whether outcome/consumption pricing fully offsets seat count decline — is not resolved. Workday and per-seat Salesforce surfaces remain most exposed.",
-    "Pricing model transition execution risk: the shift from seat-based to consumption/outcome-based pricing requires accurate cost prediction, re-tooled sales motions, and customer willingness to accept variable billing. Execution failures (revenue recognition volatility, customer pushback on variable costs) could delay the monetization of AI features even if underlying usage is growing.",
-    "Valuation multiple compression risk: leading SaaS names (ServiceNow, Snowflake) trade at elevated NTM EV/Revenue multiples following the May 2026 rally (+21% month). If the AI growth narrative falters — e.g., enterprise AI ROI fails to materialize at scale by Q3 2026 — multiples could compress even with solid underlying ARR growth. This is an especially sharp risk because the May 2026 rally has already partially re-priced the recovery.",
-    "AI-native entrant competition: new companies (Cursor, Glean, Cognition, startup agents) are building verticalized AI-native workflows that bypass incumbent SaaS entirely. These are currently constrained by enterprise compliance and integration barriers (see supply_constraints), but if a breakthrough in enterprise-grade AI agent certification occurs, the threat to incumbents with seat-model revenue concentration would accelerate.",
-    "Export control / geopolitical bifurcation risk: US AI chip export controls (cat_20260601_us_ai_chip_export_controls) limit Chinese SaaS adoption of Western AI stacks and potentially reduce the total addressable market for US-listed SaaS providers in APAC. This risk is not directly linked to a structural catalyst but reduces the international expansion thesis for market-leaders with significant APAC enterprise pipeline.",
-    "Macro sensitivity — enterprise IT budget cuts: 84% of CIOs now rank cost optimization as a top priority (Flexera 2026), which has historically led to SaaS license rationalization and consolidation. If macro conditions deteriorate (recession, credit tightening), the 14.7% software spend growth forecast could reverse sharply — SaaS is discretionary at the margin even for enterprises."
+    "PROMOTED TO CO-PRIMARY 2026-08-31 (second pass) -- RATE SENSITIVITY, and the evidence supports saying it plainly: Cloud Software & SaaS is the most duration-sensitive equity sector in this taxonomy, and the rate cycle turned hawkish on BOTH sides of the Atlantic while the sector was printing its best momentum reading of the year. Facts: the Fed has held 3.50-3.75% for a fifth consecutive meeting with ~55% market-implied odds of a 25bp HIKE in September (this is a HIKE, not a slower cut -- the June framing in cat_20260617_fed_hawkish_pivot said 'October hike in market pricing' and the pricing has pulled FORWARD), and the ECB raised 25bp on 2026-06-11. Mechanism, priced from this study's own historical block: ~100bps of rate rise has historically carried 20-30% multiple compression for high-growth SaaS (NTM EV/Rev > 10x), and 2022 compressed the cohort from 25-40x to 5-8x on multiple ALONE with ARR growth still positive -- so this risk does NOT require any of the fundamental theses in this study to be wrong. It is corroborated on the private side (multiples.vc, August 2026: software multiples are set against the cost of debt, because leveraged buyers solve for a return after financing) and confirmed in the tape (the 2026-08-24 rotation: Technology losing relative strength, Energy/Financials/Healthcare gaining; XLE +1.76%, XLV +1.60%). The compression cushion is also thinner than the index multiple suggests: the public SaaS median sits at 3.27x annualized-last-quarter revenue with a 5.6x average across 143 names (multiples.vc, 2026-08-07) -- a dispersion, not a floor. DELIBERATELY NOT ADDED to active_catalyst_ids, unchanged doctrine: the Fed pivot is a HEADWIND here and catalyst_scorer treats any linked catalyst as a POSITIVE alignment contributor, so linking it would falsely LIFT this sector in the heatmap. It belongs in the narrative and in position sizing, never in the score.",
+    "PRIMARY, RE-SPECIFIED 2026-08-31 -- AI inference cost compresses gross margin faster than AI pricing converts to revenue. This supersedes the June framing ('AI agents reduce seat counts'), which August did NOT confirm: the August selloffs were not demand misses, they were margin misses on revenue beats. Datadog -19% on an 80.0% vs 80.7% GM, HubSpot -19% (worst day in a decade), Figma -15%+ explicitly flagging inference spend, all 2026-08-06/07. The mechanism is that token cost is set by the model providers while price increases must be negotiated with enterprise customers, so the vendor absorbs the timing gap. Watch: blended adjusted gross margin vs consensus, quarter by quarter, ahead of revenue growth.",
+    "ENTRY-TIMING RISK, and the specific reason this study exists -- the #1 composite rank rests on 98.1 momentum generated in the four sessions after Salesforce's 2026-08-26 print, on top of a month in which the cohort WCLD.L actually holds fell 15-19%. Buying the index here buys the mid-cap consumption names that were sold, at prices set by a mega-cap re-rating they did not participate in. Wide valuation dispersion is the documented August 2026 state of this sector (multiples.vc), and an equal-weighted basket is the wrong instrument for a dispersion regime. A partial entry, or waiting for the September prints from the mid-cap cohort, is the risk-symmetric expression -- not a smaller version of the same conviction.",
+    "CORRELATED-CATALYST CAP: HEADROOM EXISTS ON NOTIONAL, BUT THE RISK COLUMN IS THE BINDING CONSTRAINT (corrected 2026-08-31, second pass). The morning version of this risk said 'EUR 0 of headroom against a 20% cap' -- that was STALE within the same day: v6 L2 raised correlated_catalyst_cap.max_combined_pct from 20% to 30% precisely because a 20% cap at n_target=6 forbade any two positions sharing a driver and was therefore permanently breached and permanently ignored. Measured now (movement_repo.cap_check, EUR 500 proposed BUY): struct_ai_capex_supercycle holds EUR 1,500 today (copper_miners EUR 1,000 + semiconductors_design EUR 500, read as exposure_eur = the FULL position behind the driver), goes to EUR 2,000 = 20.0% of the EUR 10,000 book post-trade, against a 30% cap -- COMPLIANT, with EUR 1,000 of notional room. The honest number is the other one: that same post-trade book puts 83.7% of portfolio VARIANCE in the struct_ai_capex_supercycle cluster (risk_ctr_pct, cluster standalone vol 18.4%). Per v6 I2 the cap is notional and notional ranks buckets wrong; a compliant notional reading next to an 84% variance share is exactly the divergence that column was built to expose. The cap will not block this trade (enforcement: warn) and on its own terms it does not need to -- so the size decision has to be made on the risk column, in writing, not deferred to the cap. Note also that declaring a secondary driver for this line buys NO headroom: the cap reads exposure_eur, not the weight-split invested_eur.",
+    "AI-native entrant competition, now with a realised datapoint rather than a hypothetical: Airtable -- a one-time high-flyer -- was acquired for pennies on the dollar in H1 2026, and 86% of private deal value in H1 2026 went to AI companies with no notable SaaS IPO in the year. Capital formation has moved out of the SaaS category entirely, which removes the private-market valuation floor that historically supported public comps.",
+    "Valuation multiple compression risk, concentrated rather than uniform: the pure-play SaaS public median sits near 3.8x revenue (multiples.vc, August 2026) while data-infrastructure and vertical software hold premiums. The index-level multiple therefore understates how far the premium cohort can fall and overstates the cushion under the discount cohort.",
+    "Export control / geopolitical bifurcation (cat_20260601_us_ai_chip_export_controls): controls limit Chinese adoption of Western AI stacks and shrink the APAC TAM for US-listed SaaS. Unchanged from June.",
+    "Macro sensitivity -- enterprise IT budget rationalisation: 84% of CIOs rank cost optimisation a top priority (Flexera 2026), and enterprises average 130+ SaaS applications each. A macro deterioration turns AI budget from incremental spend into a consolidation budget funded by cutting existing seats."
   ],
-
   "narrative_maturity": "crowded",
-
-  "narrative_trend": "decreasing",
-
-  "narrative_notes": "Classified as 'crowded' per scoring_weights.yaml criteria: the AI-eating-SaaS thesis (and its counter-thesis) received daily Bloomberg/CNBC/Fortune coverage throughout Q1-Q2 2026, culminating in the February 2026 'SaaSpocalypse' — the single largest AI-triggered repricing event in software history. Goldman Sachs, Bank of America, Gartner, a16z, and Bain Capital Ventures all published named reports on the sector's AI disruption risk in Q1 2026. ETF AUM for CLOU ($1.1B) and WCLD ($780B) both exceed $500M (the crowded observable criterion). The crowding pattern in both bullish ('AI expands SaaS TAM') and bearish ('AI destroys SaaS seat counts') positions simultaneously is itself a crowding signal. The narrative_trend is 'decreasing' because the SaaSpocalypse thesis is subsiding post-Q1 earnings: coverage is shifting from 'will AI destroy SaaS?' to 'which SaaS companies win?', indicating narrative differentiation rather than undifferentiated crowding. However, the overall maturity level remains 'crowded' — not 'mainstream' — because retail ETF inflows remain elevated and the debate is still widely amplified in generalist financial media.",
-
+  "narrative_trend": "stable",
+  "narrative_notes": "LEVEL UNCHANGED at 'crowded' -- that is the field the scorer reads (crowding_risk 75) and nothing today moved it. TREND revised 'increasing' -> 'stable' on the same day, and the revision is evidence-driven rather than churn: the morning read set 'increasing' on media intensity alone (CNBC 2026-08-07 'SaaSpocalypse debate INTENSIFIES', Fortune 'The SaaSpocalypse that wasn't' 2026-08-26, Benioff calling the thesis 'nonsense' the same week). The afternoon added the FLOW half of the 'crowded' criteria, and it points the other way: the 2026-08-24 US sector rotation has Technology losing relative strength to Energy, Financials and Healthcare, i.e. capital rotating OUT of the parent sector. Per scoring_weights.yaml the observable criteria for 'crowded' are daily Bloomberg/CNBC coverage AND accelerating thematic inflows; the first is intact and the second has stopped confirming, so the two components of 'increasing' now disagree and 'stable' is the only defensible read. It is still not 'exhausted' -- that requires flows REVERSING with only momentum traders left, and one week of relative-strength rotation is not a reversal. Note the distinction that matters for this sector: the AI narrative broadly INTENSIFIED today (Nvidia's print), but the AI-infrastructure narrative and the SaaS narrative are not the same narrative -- for the application layer that print is as much a cost story as a demand story, which is precisely why maximum disagreement, not maximum enthusiasm, is the state being recorded. analyst_narrative_score is deprecated and left null; the enum carries the judgement.",
   "active_catalyst_ids": [
     "struct_ai_capex_supercycle",
     "cat_20260601_us_ai_chip_export_controls"
   ],
-
   "historical_catalyst_performance": {
     "summary": "Cloud Software & SaaS has historically exhibited three distinct catalyst-response patterns: (1) Risk-on macro expansion: during periods of falling rates and strong risk appetite (2020-2021 ZIRP era), SaaS outperformed dramatically — ARK Innovation ETF and cloud ETFs returned 150-200%+ as duration-sensitive growth multiples expanded. The sector is high-beta to monetary easing. (2) Rate-shock compression: the 2022 rate cycle compressed NTM EV/Revenue multiples from 25-40x to 5-8x for many SaaS names, a 60-80% drawdown for growth SaaS. The mechanism was purely multiple-driven, not fundamental (ARR growth remained positive). This establishes that SaaS is extremely sensitive to discount rate changes — more than most equity sectors. (3) AI narrative catalyst: the 2023-2024 AI wave initially benefited SaaS through 'AI feature monetization' optimism, then the February 2026 'SaaSpocalypse' showed the same catalyst can invert violently when AI is framed as supply-side competition rather than demand-side expansion. The May 2026 +21% recovery (best month since 2001) demonstrates the sector's high mean-reversion speed once a narrative panic resolves into earnings evidence. Key lesson: SaaS responds to narrative catalysts faster and more violently than most sectors, with recoveries proportional to the size of the preceding selloff when earnings data validates the underlying growth thesis.",
     "rate_sensitivity": "High negative duration: a 100bps rate rise historically correlates with 20-30% multiple compression for high-growth SaaS (NTM EV/Rev > 10x). Rate cuts are a direct valuation catalyst.",
     "ai_narrative_catalyst_response_2026": "SaaSpocalypse (Feb 2026): -20 to -35% peak-to-trough for seat-model SaaS in 48 hours. Recovery: +21% sector-wide in May 2026 following Q1 earnings validation. Snowflake specifically +37% in 4 trading days post-earnings.",
     "covid_re_opening_cycle": "2020-2021: CLOU ETF +65% from April 2020 low to Feb 2021 peak as WFH drove enterprise cloud adoption. 2022 drawdown erased all 2021 gains by end of year."
-  }
+  },
+  "$schema": "catalyx/schemas/sector_study.json",
+  "_active_catalyst_note": "UNCHANGED 2026-08-31 (second pass): [struct_ai_capex_supercycle, cat_20260601_us_ai_chip_export_controls]. TWO catalysts were considered and DECLINED today, both for the same reason -- catalyst_scorer treats every linked id as a POSITIVE alignment contributor, so linking a headwind or a double-count inflates this sector's heatmap rank. (1) cat_20260728_hyperscaler_capex_guidance_raise (active, strength 75): it is the EVENT expression of struct_ai_capex_supercycle, already linked -- linking both would count one economic driver twice in catalyst_alignment, which is what the 'one catalyst = one driver' rule and the correlated_catalyst_cap exist to prevent; and at the application layer its sign is at best ambiguous, since hyperscaler capex is this sector's inference COST. (2) cat_20260617_fed_hawkish_pivot (active, strength 80): a genuine and now-strengthening driver of this sector's price, but a NEGATIVE one -- see the co-primary rate risk. Both are recorded in risks[] where they can inform sizing without inflating the score.",
+  "_etf_analysis_note": "EMPTIED 2026-08-31. Deprecated in schema 1.3; the prior entries (CLOU, WCLD) were the US non-UCITS lines, which a Spanish investor on Revolut CANNOT buy (PRIIPs/KID). The single source of truth is catalyx/config/etf_universe.yaml -> cloud_software_saas: WCLD.L (WisdomTree Cloud Computing UCITS ETF USD Acc, LSE, USD, AUM $280M, tier 2, broker_access assumed, verified 2026-08-27) and DGTL.L (iShares Digitalisation UCITS, AUM $761M, tier 2). The key is retained as an empty array because the schema still requires it for study_type=full."
 }

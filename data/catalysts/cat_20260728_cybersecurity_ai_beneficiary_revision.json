@@ -15,7 +15,10 @@
   "catalyst_type": "corporate_event",
   "catalyst_subtype": "analyst_model_revision",
   "description": "Two Tier-1 banks revised cybersecurity sector models upward in the same 30-day window, meeting the CLAUDE.md registration bar (>=2 of {GS,JPM,MS,BofA,UBS}, >=10% target change). Goldman Sachs (analyst Gabriela Borges, 2026-07-21) raised 12-month price targets on CrowdStrike ($182->$208, +14.3%) and Palo Alto Networks ($330->$371, +12.4%), both Buy-rated, explicitly reframing the sector: 'the Security category has shifted from being viewed as at risk from AI to being a clear beneficiary' as AI spend increasingly flows into security budgets. JPMorgan (analyst Brian Essex, 2026-06-30) separately upgraded Qualys to Neutral from Underweight, price target $87->$139 (+59.8%), citing vulnerability-management growth tied to the same AI-driven demand dynamic; JPM raised the QLYS target again to $150 by 2026-07-27. This is a live exit-timing signal for the open cybersecurity_commercial position (USPY.L) -- the 'security is a loser to AI agents' mispricing that partly motivated the original entry thesis is closing as consensus catches up.",
-  "geography": ["US", "GLOBAL"],
+  "geography": [
+    "US",
+    "GLOBAL"
+  ],
   "magnitude": "high",
   "novelty_score": 40,
   "novelty_rubric_scores": {
@@ -30,11 +33,43 @@
   "is_priced_in_estimate": 0.5,
   "relation_to_structural": "confirms",
   "decay_halflife_days": 30,
-  "related_catalyst_ids": ["struct_enterprise_cyber_spend_supercycle"],
+  "related_catalyst_ids": [
+    "struct_enterprise_cyber_spend_supercycle"
+  ],
   "raw_signal_ids": [],
   "status": "active",
   "expires_at": null,
   "user_rank": 3,
   "user_notes": "Registered 2026-07-28 scheduled scan (Pass 2). Position-relevant: cybersecurity_commercial is an open real-book holding (USPY.L, mov_20260608_cybersecurity_commercial_diversifier_experiment). Flagged in the review's analyst-model-revision table as a signal the sector's AI-beneficiary re-rating is broadening beyond CrowdStrike/Palo Alto (mega-caps) into mid-cap vulnerability management (Qualys) -- narrative maturity likely moving from 'emerging' toward 'mainstream', which cuts against future upside (crowding penalty) even as it validates the original thesis. Re-check narrative_maturity in the next sector study refresh.",
-  "tags": ["cybersecurity", "analyst_model_revision", "ai_beneficiary", "crowdstrike", "palo_alto", "qualys", "goldman_sachs", "jpmorgan"]
+  "tags": [
+    "cybersecurity",
+    "analyst_model_revision",
+    "ai_beneficiary",
+    "crowdstrike",
+    "palo_alto",
+    "qualys",
+    "goldman_sachs",
+    "jpmorgan"
+  ],
+  "status_last_reviewed": "2026-08-31",
+  "review_log": [
+    {
+      "date": "2026-08-31",
+      "verdict": "intact",
+      "evidence": "The revision thesis this event captured was confirmed by the tape: CrowdStrike's 2026-08-26 print (revenue +26% to $1.47bn, net-new ARR +73% YoY, FY guide to ~$6bn) was read by CNBC explicitly as 'AI is a cybersecurity tailwind, not a threat', and 24/7 Wall St notes it re-rated the whole group into Palo Alto's 2026-09-01 print.",
+      "source": "CNBC 2026-08-26; 24/7 Wall St 2026-08-30 (accessed 2026-08-31)"
+    },
+    {
+      "date": "2026-08-31",
+      "verdict": "intact",
+      "evidence": "The revision thesis this event captured was confirmed by the tape: CrowdStrike's 2026-08-26 print (revenue +26% to $1.47bn, net-new ARR +73% YoY, FY guide to ~$6bn) was read by CNBC explicitly as 'AI is a cybersecurity tailwind, not a threat', and 24/7 Wall St notes it re-rated the whole group into Palo Alto's 2026-09-01 print.",
+      "source": "CNBC 2026-08-26; 24/7 Wall St 2026-08-30 (accessed 2026-08-31)"
+    },
+    {
+      "date": "2026-08-31",
+      "verdict": "intact",
+      "evidence": "The revision thesis this event captured was confirmed by the tape: CrowdStrike's 2026-08-26 print (revenue +26% to $1.47bn, net-new ARR +73% YoY, FY guide to ~$6bn) was read by CNBC explicitly as 'AI is a cybersecurity tailwind, not a threat', and 24/7 Wall St notes it re-rated the whole group into Palo Alto's 2026-09-01 print.",
+      "source": "CNBC 2026-08-26; 24/7 Wall St 2026-08-30 (accessed 2026-08-31)"
+    }
+  ]
 }

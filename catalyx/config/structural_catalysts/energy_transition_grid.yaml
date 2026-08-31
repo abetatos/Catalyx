@@ -20,7 +20,8 @@ description: >
 created_at: "2026-06-03T18:00:00Z"
 created_by: user
 onset_period: "2023-Q2"
-onset_evidence: "IEA 2023: grid investment must triple by 2030 to meet climate targets. Transformer lead times >2 years (vs historical 3 months)."
+onset_evidence: "IEA 2023: grid investment must triple by 2030 to meet climate targets. Transformer lead times >2 years (vs
+  historical 3 months)."
 
 catalyst_type: climate_transition
 catalyst_subtype: grid_electrification
@@ -28,12 +29,17 @@ geography: [US, EU, GLOBAL]
 thematic_tags: [grid, electrification, copper, infrastructure, energy_transition, ai_power]
 
 user_rank: 3
-user_notes: "Less crowded than pure AI play. Copper miners is the physical commodity expression; grid utilities is the regulated infrastructure expression."
+user_notes: "Less crowded than pure AI play. Copper miners is the physical commodity expression; grid utilities is the regulated
+  infrastructure expression."
 
 intensity:
-  current_score: 85.6
-  last_updated: "2026-07-28"
+  current_score: 88.1
+  last_updated: "2026-08-31"
   history:
+  - period: '2026-08-31'
+    score: 88.1
+    note: 'Computed 2026-08-31: avg=95.13 trend=↓↓ (falling 2+ consecutive) (was 86.5)'
+    computation_method: computed
   - period: '2026-07-28'
     score: 85.6
     note: 'Computed 2026-07-28: avg=92.57 trend=↓↓ (falling 2+ consecutive) (was 89.9)'
@@ -50,10 +56,6 @@ intensity:
     score: 95.0
     note: 'Computed 2026-06-05: avg=92.87 trend=↑↑ (rising 2+ consecutive)'
     computation_method: computed
-  - period: 2026-Q2
-    score: 95
-    note: 'Computed 2026-06-04: avg=100.0 trend=↑ (rising 1 period) (was 82)'
-    computation_method: computed
   - period: "2026-Q1"
     score: 82
     note: "Transformer lead times still >18 months. EU grid investment announced €584B through 2030."
@@ -67,13 +69,13 @@ indicators:
   name: "Power transformer delivery lead times (industry survey)"
   source: "Wood Mackenzie / S&P Global reports"
   check_frequency: quarterly
-  current_value: 20
+  current_value: 24.0
   unit: months_delivery_lead_time
   direction: higher_is_stronger
   threshold_strong: 12
   threshold_weak: 6
-  last_value: 22
-  last_date: "2026-03-01"
+  last_value: 20
+  last_date: "2026-08-31"
 
   semaphore: 🟢
   value_history:
@@ -81,7 +83,8 @@ indicators:
     value: 22
   - date: '2025-12-31'
     value: 18
-  score: 92.1
+  score: 95.0
+  update_note: median of quoted EU HV manufacturer ranges (18-32 months), up from 20
 - id: ind_02
   name: "EU grid investment announced (€B, rolling 12M)"
   source: "ENTSO-E + EC energy reports"
@@ -103,14 +106,14 @@ indicators:
   name: "Copper price trend (spot, USD/tonne)"
   source: "LME spot price"
   check_frequency: monthly
-  current_value: 13871.0
+  current_value: 14759.9313
   unit: USD_per_tonne
   direction: higher_is_stronger
   threshold_strong: 9000
   threshold_weak: 7000
-  last_value: 13965
-  last_date: "2026-06-29"
-  update_note: "WebSearch 2026-06-29: LME copper 3M $13,357.50/tonne, -6.2% MoM on USD strength + dual-hawkish Fed/ECB; still far above strong threshold ($9,000). Copper-as-grid-input cost remains elevated."
+  last_value: 14418.0
+  last_date: "2026-08-31"
+  update_note: "auto: COMEX copper front month, USD/lb → USD/tonne"
 
   semaphore: 🟢
   value_history:
@@ -218,7 +221,7 @@ indicators:
     value: 9017.0
   - date: '2021-07-01'
     value: 9878.0
-  score: 94.3
+  score: 99.1
 deactivation_conditions:
 - id: deact_01
   condition: "Grid connection queue clears materially (lead times drop below 6 months for 2 consecutive quarters)."
@@ -231,7 +234,7 @@ deactivation_conditions:
 linked_event_catalyst_ids: []
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-08-27"
+status_last_reviewed: "2026-08-31"
 absorbed_catalyst_ids:
 - struct_solar_lcoe_deployment
 - struct_battery_storage_supercycle
@@ -248,3 +251,21 @@ absorbed_note: |
   decidir explicitamente cual de estos indicadores merece promoverse a este fichero:
     - struct_solar_lcoe_deployment (intensity 64.1): US utility-scale solar LCOE (BloombergNEF global benchmark, fixed-axis), US utility-scale solar capacity additions (annualized, GW), China polysilicon spot price (CNY/kg) — inverse signal: lower price = developer tailwind, not structural strength, North American utility-scale solar PPA price (USD/MWh, LevelTen Energy quarterly index)
     - struct_battery_storage_supercycle (intensity 87.0): Lithium carbonate battery-grade spot (USD/t), Global grid-scale BESS annual installations (GWh), BESS share of total lithium demand (%), Global EV sales run-rate (millions units/yr)
+review_log:
+- date: '2026-08-31'
+  verdict: strengthening
+  evidence: 'European HV transformer lead times have extended past the stored 20 months: Efacec 20-28, Pauwels 24-32, TMC
+    20-28, Schneider France 18-26 months (US OEMs 48-60). Root cause is grain-oriented electrical steel - global GOES capacity
+    has not expanded with transformer demand and even willing manufacturers wait 12-18 months for their own raw material,
+    which makes the bottleneck structural rather than a backlog that clears. Copper $6.54/lb on 2026-08-30 = $14,418/t, +1.67%
+    MoM, +45.0% YoY - confirms ind_03 exactly.'
+  source: GridReadiness Transformer Lead Times Europe 2026; TradingEconomics copper 2026-08-30
+- date: '2026-08-31'
+  verdict: intact
+  evidence: US utility capex forecast raised to ~$1.3-1.4tn for 2026-30, +27% on last year's $1.1tn projection and 
+    roughly double the $700bn spent over the prior decade (PowerLines analysis 2026-04-14; S&P Global). Utilities 
+    anticipate +90GW of data-center peak load by 2030 with ~70% of grid infrastructure near end-of-life. European data 
+    centres need EUR176bn cumulative 2026-2031 (~EUR25-26bn/yr). Copper spot at a fresh high reinforces the materials 
+    leg.
+  source: S&P Global Market Intelligence utility capex 2026-30; PowerLines analysis 2026-04-14; European Data Center 
+    Association (accessed 2026-08-31)

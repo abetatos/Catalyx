@@ -119,11 +119,6 @@ intensity:
     score: 71.1
     note: 'Computed 2026-06-05: avg=71.08 trend=→ (flat — insufficient history) (was 78.0)'
     computation_method: computed
-  - period: "2026-Q2"
-    score: 78
-    note: "Bootstrap at creation 2026-06-05. Anchor: similar to struct_cb_gold_accumulation (76.1). Bifurcated sector: utility-scale record additions (bullish) offset by ITC cliff and polysilicon oversupply (bearish)."
-    computation_method: bootstrap
-
 indicators:
 - id: ind_01
   name: "US utility-scale solar LCOE (BloombergNEF global benchmark, fixed-axis)"

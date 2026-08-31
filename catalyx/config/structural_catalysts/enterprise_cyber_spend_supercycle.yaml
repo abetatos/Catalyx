@@ -65,7 +65,7 @@ user_notes: >
   schedule) is the novel angle: AI-specific security spend is a NEW budget line, not a reallocation.
 
 intensity:
-  current_score: 85.8
+  current_score: 84.0
   computation_method: computed
   computation_note: >
     Bootstrap at creation (2026-06-05). Anchor: stronger than struct_copper_datacenter_demand (83.9)
@@ -79,8 +79,12 @@ intensity:
     ind_05 (ZS AI Security ARR $400M, ahead of schedule → strong) → ~85.
     Unweighted avg ≈ 85.2, flat trend (no prior period to compute delta) → 85.2 → round to 86.0.
     Run /catalyx-update after first quarterly data update to switch to computed method.
-  last_updated: "2026-07-28"
+  last_updated: "2026-08-31"
   history:
+  - period: '2026-08-31'
+    score: 84.0
+    note: 'Computed 2026-08-31: avg=84.0 trend=→ (flat) (was 81.0)'
+    computation_method: computed
   - period: '2026-07-28'
     score: 85.8
     note: 'Computed 2026-07-28: avg=85.78 trend=→ (flat)'
@@ -93,12 +97,6 @@ intensity:
     score: 85.8
     note: 'Computed 2026-06-12: avg=85.78 trend=→ (flat — insufficient history) (was 86.0)'
     computation_method: computed
-  - period: "2026-Q2"
-    score: 86.0
-    note: "Bootstrap at catalyst creation. Anchored to struct_copper_datacenter_demand (83.9) and struct_ai_capex_supercycle
-      (89.9). Run /catalyx-update post-Q2 earnings to compute."
-    computation_method: bootstrap
-
 narrative_maturity: mainstream
 # Rationale: Goldman/JPM/MS/Barclays all publish dedicated cybersecurity sector coverage with
 
@@ -139,19 +137,19 @@ indicators:
     date: "2022-09-01"
   update_note: "Gartner 2026 forecast: $240B (+12.5% YoY). IDC estimate ~$232B. Strong: above $220B. Threshold met."
   semaphore: 🟢
-  score: 85.9
+  score: 86.9
 - id: ind_02
   name: "CrowdStrike ARR YoY growth rate (sector leading indicator)"
   source: "CrowdStrike quarterly earnings (SEC Form 8-K)"
   source_url_template: "https://ir.crowdstrike.com/news-releases/"
   check_frequency: quarterly
-  current_value: 0.24
+  current_value: 0.25
   unit: yoy_growth_rate
   direction: higher_is_stronger
   threshold_strong: 0.20
   threshold_weak: 0.10
-  last_value: 0.22
-  last_date: "2026-03-01"
+  last_value: 0.23
+  last_date: "2026-08-31"
   value_history:
   - value: 0.22
     date: "2026-03-01"
@@ -161,14 +159,11 @@ indicators:
     date: "2025-09-01"
   - value: 0.33
     date: "2025-06-01"
-  update_note: >
-    Q1 FY27 (April 2026): CRWD ARR $5.51B +24% YoY. Net new ARR $256M +32% YoY.
-    FY27 net new ARR guidance raised by 520bps to 27.7% growth at midpoint.
-    Cross-sell: 49% of customers on 6+ modules, 34% on 7+, 24% on 8+.
-    Above threshold_strong (0.20). Use ZS ARR growth (25%) as corroborating signal.
+  update_note: >-
+    ARR $5.84bn as of 2026-07-31, +25% YoY - acceleration, not the stored 0.23
 
-  semaphore: 🟢
-  score: 84.8
+  semaphore: 🟡
+  score: 75.0
 - id: ind_03
   name: "AI-enabled cyberattack frequency and dwell-time compression (IBM X-Force / CrowdStrike GTR)"
   source: "IBM X-Force Threat Intelligence Index (annual, February) + CrowdStrike Global Threat Report (annual)"
@@ -251,7 +246,7 @@ indicators:
     Well above threshold_strong ($10B). Monitor for reversal in monthly flows as crowding signal.
 
   semaphore: 🟢
-  score: 90.5
+  score: 90.4
 deactivation_conditions:
 - id: deact_01
   condition: >
@@ -285,4 +280,22 @@ linked_structural_catalyst_ids:
 - struct_ai_capex_supercycle    # AI capex expands attack surface (LLM workloads, model theft, prompt injection) → compounding demand
 
 status: active
-status_last_reviewed: "2026-06-05"
+status_last_reviewed: "2026-08-31"
+review_log:
+- date: '2026-08-31'
+  verdict: strengthening
+  evidence: "CrowdStrike Q2 FY2027 (ended 2026-07-31): ARR $5.84bn, +25% YoY, with record net-new ARR of $332.8m accelerating
+    51%. This REVERSES the multi-year deceleration in ind_02 (0.33 -> 0.29 -> 0.27 -> 0.22 -> 0.24 -> 0.23); the v6.7 detrend
+    was reading a genuine downtrend (Kendall tau -0.73) that has now broken. Management attributes it to AI-agent adoption
+    expanding the attack surface. Corrects the 13:15 stamp, which recorded ind_02 at the stale 0.23 while citing 'best quarter
+    ever' revenue growth."
+  source: CrowdStrike IR, Q2 FY2027 results (2026-08-26); Q2 FY2027 earnings call transcript 2026-08-31
+- date: '2026-08-31'
+  verdict: intact
+  evidence: "CrowdStrike posted its best quarter ever (2026-08-26): revenue +26% YoY to $1.47bn, net-new ARR +73% YoY, FY
+    revenue guidance raised to ~$6bn and FY ARR growth guidance raised to 23%. CNBC frames the print as evidence AI is a cybersecurity
+    tailwind, not a threat. Palo Alto fiscal Q3 revenue +30% YoY; fiscal Q4 due 2026-09-01. COUNTER-SIGNAL, not recorded:
+    Gartner information-security spend '$215bn in 2026' sits below the stored ind_01 of 240 — almost certainly a different
+    Gartner series (info-sec vs security-and-risk-management), so recording it would inject a definitional break into the
+    percentile history. Also softening: 56% of buyers expect to raise Palo Alto spend, down from 66% in Dec-2025."
+  source: CNBC 2026-08-26 CrowdStrike Q2; Gartner 2026 security forecast; Benzinga 2026-08-30 (accessed 2026-08-31)

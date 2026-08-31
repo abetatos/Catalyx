@@ -15,7 +15,13 @@
   "catalyst_type": "sanctions_trade",
   "catalyst_subtype": "section_232_tariffs",
   "description": "The US administration imposed Section 232 tariffs on patented pharmaceutical imports — 100% ad valorem — under a tiered structure taking effect 2026-07-31 for Annex III companies and 2026-09-29 for others. MFN-compliant companies get 0%; EU/Japan/Swiss face 15%. This is a discrete, dated policy HEADWIND to pharma_large_cap: it compresses ex-US manufacturer margins and forces re-shoring/pricing decisions, partially offsetting the GLP-1 supercycle tailwind. Relevant to pharma_large_cap as a bearish overlay on the otherwise-bullish GLP-1 thesis. Registered as a headwind event so the risk is documented and dated; the net sector call is Claude's (GLP-1 volume growth vs tariff margin drag).",
-  "geography": ["US", "EU", "JPN", "CHE", "GLOBAL"],
+  "geography": [
+    "US",
+    "EU",
+    "JPN",
+    "CHE",
+    "GLOBAL"
+  ],
   "magnitude": "high",
   "novelty_score": 40,
   "novelty_rubric_scores": {
@@ -30,11 +36,37 @@
   "is_priced_in_estimate": 0.75,
   "relation_to_structural": "contradicts",
   "decay_halflife_days": 120,
-  "related_catalyst_ids": ["struct_glp1_obesity_supercycle"],
+  "related_catalyst_ids": [
+    "struct_glp1_obesity_supercycle"
+  ],
   "raw_signal_ids": [],
   "status": "active",
   "expires_at": null,
   "user_rank": 4,
   "user_notes": "Registered 2026-07-01 in the sectors-without-catalyst review. Headwind overlay on pharma_large_cap (driven primarily by struct_glp1_obesity_supercycle). relation_to_structural='contradicts' vs the GLP-1 structural: it dampens that structural's contribution in pharma's scoring (the confirm/contradict path applies a penalty to the structural score), so pharma's alignment reflects the tariff drag rather than being falsely lifted. strength 60; is_priced_in 0.75 (well-telegraphed). event_date anchored to the ~2026-04-02 proclamation (effective 2026-07-31). Re-check on MFN-compliance carve-outs and any rate revision.",
-  "tags": ["pharma", "tariffs", "section_232", "trade", "drug_pricing", "margin_headwind", "contradicts", "glp1"]
+  "tags": [
+    "pharma",
+    "tariffs",
+    "section_232",
+    "trade",
+    "drug_pricing",
+    "margin_headwind",
+    "contradicts",
+    "glp1"
+  ],
+  "status_last_reviewed": "2026-08-31",
+  "review_log": [
+    {
+      "date": "2026-08-31",
+      "verdict": "intact",
+      "evidence": "The tariff MATERIALISED rather than being walked back: the 100% Section 232 tariff on patented pharmaceuticals and biologics took effect 2026-07-31 (2026-09-29 for smaller companies not named in the Proclamation). Not walked back, but now a realised event - the stored is_priced_in of 0.75 looks right and the remaining alpha is in the relief channel, not the tariff: Lilly and Novo both filed comment on the tariff impact and then agreed MFN pricing with the administration, i.e. price concessions traded for tariff relief.",
+      "source": "Crowell & Moring client alert (effective 2026-07-31); Foley Hoag alert on the April 2026 Proclamation; AMCP federal update"
+    },
+    {
+      "date": "2026-08-31",
+      "verdict": "intact",
+      "evidence": "The tariff MATERIALISED rather than being walked back: the 100% Section 232 tariff on patented pharmaceuticals and biologics took effect 2026-07-31 (2026-09-29 for smaller companies not named in the Proclamation). Not walked back, but now a realised event - the stored is_priced_in of 0.75 looks right and the remaining alpha is in the relief channel, not the tariff: Lilly and Novo both filed comment on the tariff impact and then agreed MFN pricing with the administration, i.e. price concessions traded for tariff relief.",
+      "source": "Crowell & Moring client alert (effective 2026-07-31); Foley Hoag alert on the April 2026 Proclamation; AMCP federal update"
+    }
+  ]
 }

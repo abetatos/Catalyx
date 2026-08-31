@@ -146,6 +146,46 @@ def test_declaring_a_second_driver_cannot_buy_cap_headroom(tmp_path):
     assert after["struct_ai"]["reattributed_sectors"] == ["a"]
 
 
+def test_closing_a_position_releases_its_cap_exposure(tmp_path):
+    """A sold position names no risk. Exposure accumulated on buys only and nothing subtracted it,
+    so a closed line kept its full weight in the cap row forever — the v5.1 defect with the sign
+    flipped: there the cap understated a bucket and published headroom that did not exist, here it
+    overstates one and hides headroom that does. It bites hardest right after a de-risking sale,
+    which is precisely when the next position is being sized against the cap.
+    """
+    _write_mov(tmp_path, "mov_20260605_a_open", "IQQH", "open", 44.0, 500.0,
+               attribution=[{"catalyst_id": "struct_grid", "weight": 0.7},
+                            {"catalyst_id": "struct_ai", "weight": 0.3}])
+    _write_mov(tmp_path, "mov_20260605_b_open", "COPA", "open", 10.0, 1000.0, sector_id="b",
+               attribution=[{"catalyst_id": "struct_ai", "weight": 1.0}])
+    led = {e["catalyst_id"]: e for e in mr.catalyst_ledger(movements_dir=tmp_path)}
+    assert led["struct_ai"]["exposure_eur"] == 1500.0
+
+    _write_mov(tmp_path, "mov_20260820_a_close", "IQQH", "close", 44.0, 388.87,
+               attribution=[{"catalyst_id": "struct_grid", "weight": 0.7},
+                            {"catalyst_id": "struct_ai", "weight": 0.3}])
+    led = {e["catalyst_id"]: e for e in mr.catalyst_ledger(movements_dir=tmp_path)}
+
+    # The whole grid line is gone: no exposure, no credit, and it names no sector any more.
+    assert "struct_grid" not in led or led["struct_grid"]["exposure_eur"] == 0.0
+    # ...and the driver it SHARED with a still-open position keeps only that position.
+    assert led["struct_ai"]["exposure_eur"] == 1000.0
+    assert led["struct_ai"]["sectors"] == ["b"]
+    # Proceeds (388.87) are not the release amount — the cost basis is. Releasing the proceeds
+    # would strand 111.13 of phantom exposure on a position that no longer exists.
+    assert led["struct_ai"]["invested_eur"] == 1000.0
+
+
+def test_a_partial_trim_releases_exposure_pro_rata(tmp_path):
+    """Half the units sold releases half the exposure — not all of it, and not none."""
+    _write_mov(tmp_path, "mov_20260605_a_open", "SEMI", "open", 10.0, 1000.0,
+               attribution=[{"catalyst_id": "struct_ai", "weight": 1.0}])
+    _write_mov(tmp_path, "mov_20260820_a_trim", "SEMI", "trim", 5.0, 600.0,
+               attribution=[{"catalyst_id": "struct_ai", "weight": 1.0}])
+    led = {e["catalyst_id"]: e for e in mr.catalyst_ledger(movements_dir=tmp_path)}
+    assert led["struct_ai"]["exposure_eur"] == 500.0
+
+
 def test_reattribution_is_present_tense_and_leaves_the_opening_record_alone(tmp_path):
     """`attribution[]` is the dated record of why the line was opened — the validation loop's
     input. `reattribution[]` answers what it is held for now. The ledger reads the latest entry;

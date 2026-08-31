@@ -7,13 +7,23 @@ description: >
   to the system's best overall ideas, not a single-factor tilt.
 benchmark_etf: SPY
 construction:
-  max_positions: 10
-  min_composite: 55
+  # v6 J1/L1: 10→6, 16→20, both from `book_shape.n_target`. v4's D-3 decided "12 wins" and was
+  # never shipped — the wrong direction: unifying DOWN forces 8 positions and 8 of the 10 free
+  # monthly trades. The model book must be executable under the real book's rules or its
+  # execution alpha partly measures a ceiling no disciplined executor could reach.
+  max_positions: 6
+  # v6 H3: the floor is now in composite z-units — 0.0 = the run's universe average. NOT the
+  # mechanical translation of the old 55 (= +0.33): that leaves 8 candidates for 6 slots, a
+  # margin thin enough that the floor starts co-selecting with top-N. Its job is to exclude
+  # below-average names; the selector is top-N under the caps. Measured 2026-08-31: 0.0 and
+  # +0.33 pick the SAME six — the momentum/crowding filters bind first either way.
+  min_composite_z: 0.0
+  min_composite: 55        # pre-v6, read one major more for unmigrated profiles
   min_momentum: 40
   max_crowding: 85
   exclude_narrative_maturity: [exhausted]
   weighting: composite
-  max_position_pct: 16
+  max_position_pct: 20
   # Conviction sizing (overrides global portfolio_weighting): the flagship book expresses the
   # ranking in the WEIGHTS, not just the selection. softmax over z-normalized composite spreads
   # the narrow score band (≈65–74) into dispersed weights; the deadband caps tax-churn.

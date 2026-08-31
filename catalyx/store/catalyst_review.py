@@ -19,9 +19,19 @@ WHAT A STAMP RECORDS — `status_last_reviewed` (the field the gate reads) plus 
 `review_log[]` entry: {date, verdict, evidence, source}. The log is what turns freshness from a
 timestamp into an audit trail: WHY was it judged intact 3 reviews ago, and did that hold?
 
-VERDICTS — `intact` (thesis holds), `weakening` (evidence eroding, not broken), `breaking`
-(mechanism failing → a lifecycle candidate). Deliberately the same vocabulary as `regime_state`
-so the scan's delta rows map onto it with no translation.
+VERDICTS — the scan's delta vocabulary, recorded verbatim: `strengthening` (thesis holds and the
+evidence got stronger), `intact` (holds), `weakening` (evidence eroding, not broken), `breaking`
+(mechanism failing → a lifecycle candidate), `invalidated` (mechanism gone). The GATE reads them
+as three states — strengthening folds into intact, invalidated into breaking — but the log records
+the word the scan actually used, because "this got stronger today" is a finding and flattening it
+to `intact` deletes it.
+
+This enum was three values while `catalyx-scan.md` documented five, and the docstring claimed the
+two mapped "with no translation". They did not: on 2026-08-31 five catalysts came back
+`strengthening` — three of them driving open positions, all with hard evidence — and every one of
+those stamps was REJECTED, so the freshness gate went on reporting them stale the day they were
+re-verified. A stamp that bounces is worse than one never attempted: the scan reports success and
+the gate silently disagrees.
 
 DOCTRINE — a stamp is a RECORD, never an action. It does not change `status`, intensity, or any
 score; lifecycle transitions stay in `catalyst_lifecycle`, indicator values in `/catalyx-update`.
@@ -46,7 +56,14 @@ _REPO_ROOT = Path(__file__).parents[2]
 _STRUCTURAL_DIR = _REPO_ROOT / "catalyx" / "config" / "structural_catalysts"
 _EVENT_DIR = _REPO_ROOT / "data" / "catalysts"
 
-VERDICTS = ("intact", "weakening", "breaking")
+VERDICTS = ("strengthening", "intact", "weakening", "breaking", "invalidated")
+
+# The three-state view the freshness/regime consumers read. Kept explicit so widening the
+# recorded vocabulary can never silently widen what the gate acts on.
+VERDICT_REGIME = {"strengthening": "intact", "intact": "intact", "weakening": "weakening",
+                  "breaking": "breaking", "invalidated": "breaking"}
+# Verdicts that assert the thesis still holds — the ones that do not need evidence to record.
+_HOLDS = ("intact", "strengthening")
 
 # Kept in sync with `scoring_weights.yaml exit_signals` — the gate the stamp feeds.
 DEFAULT_WARN_DAYS = 30
@@ -87,12 +104,14 @@ def build_entry(verdict: str, evidence: str | None, source: str | None,
                 as_of: str | None = None) -> dict:
     """One `review_log[]` entry. Raises on an unknown verdict or a missing required evidence.
 
-    Evidence is mandatory for `weakening`/`breaking`: those verdicts feed lifecycle decisions
-    and an unsourced "it feels weaker" is exactly the LLM drift the scoring rules exist to stop.
+    Evidence is mandatory for `weakening`/`breaking`/`invalidated`: those verdicts feed lifecycle
+    decisions and an unsourced "it feels weaker" is exactly the LLM drift the scoring rules exist
+    to stop. `strengthening` is exempt with `intact` — it moves nothing on its own, and demanding
+    a citation to record "still holds, more so" is what pushed the scan to omit the row instead.
     """
     if verdict not in VERDICTS:
         raise ValueError(f"verdict must be one of {VERDICTS}, got {verdict!r}")
-    if verdict != "intact" and not (evidence or "").strip():
+    if verdict not in _HOLDS and not (evidence or "").strip():
         raise ValueError(f"verdict {verdict!r} requires --evidence (what changed, with a source)")
     entry = {"date": as_of or date.today().isoformat(), "verdict": verdict}
     if evidence:

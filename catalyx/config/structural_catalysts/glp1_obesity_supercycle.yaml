@@ -50,13 +50,17 @@ user_notes: >
   struct_cb_gold_accumulation (84). Run intensity_engine after the first indicator refresh to replace bootstrap.
 
 intensity:
-  current_score: 85.8
+  current_score: 87.8
   computation_method: computed
-  last_updated: "2026-07-28"
+  last_updated: "2026-08-31"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: on par with struct_cb_gold_accumulation (84), below
     struct_ai_capex_supercycle (89.9). Consensus/mainstream but TAM still expanding (oral + Medicare onset).
   history:
+  - period: '2026-08-31'
+    score: 87.8
+    note: 'Computed 2026-08-31: avg=85.85 trend=↑ (rising 1 period) (was 85.8)'
+    computation_method: computed
   - period: '2026-07-28'
     score: 85.8
     note: 'Computed 2026-07-28: avg=85.85 trend=→ (flat — insufficient history) (was 82)'
@@ -186,4 +190,23 @@ linked_structural_catalyst_ids: []
 
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-07-01"
+status_last_reviewed: "2026-08-31"
+review_log:
+- date: '2026-08-31'
+  verdict: weakening
+  evidence: The Trump administration struck agreements with Eli Lilly and Novo Nordisk to offer Most-Favored-Nation 
+    pricing on semaglutide (Ozempic/Wegovy) and tirzepatide (Mounjaro/Zepbound) - the two molecules the entire thesis 
+    rests on. MFN compresses US realised price, which is the revenue lever of a revenue supercycle; the offsetting 
+    Medicare-access volume leg is real but slower and lower-margin. No 2026 sales figures surfaced to size the net 
+    effect, so this is a mechanism-level weakening, not a measured one. Consistent with the v5.2 decision to decline 
+    GLP-1 as a pharma driver in writing.
+  source: AMCP federal update on the MFN GLP-1 deal; Conference Board CED analysis
+- date: '2026-08-31'
+  verdict: weakening
+  evidence: The Trump administration struck agreements with Eli Lilly and Novo Nordisk to offer Most-Favored-Nation 
+    pricing on semaglutide (Ozempic/Wegovy) and tirzepatide (Mounjaro/Zepbound) - the two molecules the entire thesis 
+    rests on. MFN compresses US realised price, which is the revenue lever of a revenue supercycle; the offsetting 
+    Medicare-access volume leg is real but slower and lower-margin. No 2026 sales figures surfaced to size the net 
+    effect, so this is a mechanism-level weakening, not a measured one. Consistent with the v5.2 decision to decline 
+    GLP-1 as a pharma driver in writing.
+  source: AMCP federal update on the MFN GLP-1 deal; Conference Board CED analysis

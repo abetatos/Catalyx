@@ -43,13 +43,17 @@ user_notes: >
   stale on its old weak-dollar premise and should be refreshed via /catalyx-sector-study.
 
 intensity:
-  current_score: 58.9
+  current_score: 61.1
   computation_method: computed
-  last_updated: "2026-07-28"
+  last_updated: "2026-08-31"
   computation_note: >
     Bootstrap at creation 2026-07-01. Deliberately weakest active structural: real long-run EM-consumption floor
     but the near-term driver is contested (RBI on hold, DXY back to ~101, FPI outflows).
   history:
+  - period: '2026-08-31'
+    score: 61.1
+    note: 'Computed 2026-08-31: avg=59.12 trend=↑ (rising 1 period) (was 60.9)'
+    computation_method: computed
   - period: '2026-07-28'
     score: 58.9
     note: 'Computed 2026-07-28: avg=58.9 trend=→ (flat — insufficient history) (was 45)'
@@ -66,16 +70,15 @@ indicators:
   source: "ICE / Bloomberg DXY"
   source_url_template: "https://www.marketwatch.com/investing/index/dxy"
   check_frequency: weekly
-  current_value: 101.3
+  current_value: 99.407
   unit: dxy_index
   direction: lower_is_stronger
   threshold_strong: 97
   threshold_weak: 104
-  last_value: 99
-  last_date: "2026-05-31"
-  update_note: >
-    DXY ~101.3 (June 2026), rebounded on the Fed hawkish pivot — a headwind to EM flows. Lower_is_stronger;
-    threshold_strong <97 (EM tailwind), threshold_weak 104 (acute EM stress).
+  last_value: 101.3
+  last_date: "2026-08-31"
+  update_note: >-
+    auto: ICE DXY (yfinance)
   semaphore: 🟡
   value_history:
   - date: "2026-05-31"
@@ -85,7 +88,7 @@ indicators:
   - date: "2025-06-30"
     value: 104
 
-  score: 61.6
+  score: 69.7
 - id: ind_02
   name: "FPI net equity+debt flows into India, trailing 12M ($B)"
   source: "NSDL / CDSL FPI data"
@@ -137,16 +140,15 @@ indicators:
   source: "RBI / Bloomberg USD/INR"
   source_url_template: "https://www.rbi.org.in/"
   check_frequency: weekly
-  current_value: 94.5
+  current_value: 95.7
   unit: inr_per_usd
   direction: lower_is_stronger
   threshold_strong: 92
   threshold_weak: 97
-  last_value: 95.5
-  last_date: "2026-05-31"
-  update_note: >
-    INR ~₹94-95/USD, stabilizing off the policy-support measures. Lower_is_stronger (stronger rupee = capital
-    attraction working); threshold_strong 92, threshold_weak 97.
+  last_value: 94.5
+  last_date: "2026-08-21"
+  update_note: >-
+    auto: INR/USD (FRED DEXINUS)
   semaphore: 🟡
   value_history:
   - date: "2026-05-31"
@@ -154,7 +156,7 @@ indicators:
   - date: "2025-12-31"
     value: 94.0
 
-  score: 65.0
+  score: 57.8
 deactivation_conditions:
 - id: deact_01
   condition: >
@@ -178,4 +180,4 @@ linked_structural_catalyst_ids:
 
 narrative_maturity: "emerging"
 status: active
-status_last_reviewed: "2026-07-01"
+status_last_reviewed: "2026-08-31"

@@ -266,6 +266,11 @@ Three consumers read this one file (the review runs them; do not run them from h
 `indicator_update batch` (values) · `catalyst_review batch` (freshness stamps) ·
 `catalyst_lifecycle --deltas` (reversals, which are evidence and are never inferred).
 
+**Auto-observable indicators (v7 O1):** before searching for FX / rates / copper / JPY-COT
+values by hand, run `uv run python -m catalyx.data.indicator_sources --apply` — it records the
+7 mapped public-series indicators through `indicator_update` (dedup-safe) and prints the >10%
+Rule-5 deltas. WebSearch effort then goes to the indicators no API serves.
+
 ---
 
 ## Rules

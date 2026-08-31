@@ -494,7 +494,12 @@ def section_overrides() -> str:
     # A DELIBERATE deviation is the only thing that owes the reader a written reason. The
     # `unrecorded` DEFERs are auto-logged precisely BECAUSE nobody wrote one, and §4c already
     # names them — asking for prose here too would be asking twice for the same silence.
-    chosen = [p for p in pending if str(p.get("author")) != "unrecorded"]
+    # `budget` DEFERs (v6 L4) are the same case one step earlier: the trade-budget precedence
+    # rule chose them, not a person, the rebalance table's BUDGET line already names what was
+    # held back and why, and "the evidence the rule was missing" is by construction nothing.
+    # A marker that demands prose for a decision nobody made trains its reader to skip markers.
+    _AUTO_AUTHORS = ("unrecorded", "budget")
+    chosen = [p for p in pending if str(p.get("author")) not in _AUTO_AUTHORS]
     if chosen:
         lines.append("\n<!-- CLAUDE: for each override logged THIS run, one line: what the rule "
                      "said, what you chose, and the evidence the rule was missing. -->")

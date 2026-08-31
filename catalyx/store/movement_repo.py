@@ -180,10 +180,35 @@ def catalyst_ledger(movements_dir: Path | None = None,
         except Exception:                                      # pragma: no cover - defensive
             merged = {}
 
+    # A CLOSE MUST RELEASE THE EXPOSURE IT TOOK. Exposure used to accumulate on `is_buy` only, so
+    # nothing ever subtracted it: a sold position kept its full weight in the risk row forever.
+    # That is the v5.1 defect with the sign flipped — there the cap UNDERSTATED the bucket and
+    # published headroom that did not exist; here it OVERSTATES it and hides headroom that does.
+    # Both make the same control unusable, and this one bites hardest right after a de-risking
+    # sale, which is exactly when the next position is being sized.
+    #
+    # Netted the way `positions()` nets: a sell reduces the sector's cost basis by the average
+    # cost of the units sold. Each sector's surviving fraction (net basis ÷ gross bought) then
+    # scales that sector's per-movement contributions, so a full close contributes 0 and a partial
+    # trim contributes pro rata, while the per-movement attribution split is preserved.
+    # Keyed by VEHICLE, not sector: `positions()` nets per ETF, and a sector may hold more than
+    # one. Keying by sector would let a close on one vehicle bleed exposure off the other.
+    gross: dict[str, float] = {}
+    for m in load_all(movements_dir):
+        if m["action"] in _BUY_ACTIONS:
+            etf = m["vehicle"]["etf"]
+            gross[etf] = gross.get(etf, 0.0) + float(m.get("amount_eur") or 0.0)
+    net: dict[str, float] = {}
+    for h in positions(movements_dir)["holdings"]:
+        net[h["etf"]] = net.get(h["etf"], 0.0) + float(h["invested_eur"])
+    surviving = {etf: (net.get(etf, 0.0) / g if g else 0.0) for etf, g in gross.items()}
+
     led: dict[str, dict] = {}
     for m in load_all(movements_dir):
         eur = float(m.get("amount_eur") or 0.0)
         is_buy = m["action"] in _BUY_ACTIONS
+        sid = m.get("sector_id")
+        frac = surviving.get(m["vehicle"]["etf"], 0.0)
         attribution, reattributed_at, _ = effective_attribution(m)
         for a in attribution:
             raw = a["catalyst_id"]
@@ -193,14 +218,15 @@ def catalyst_ledger(movements_dir: Path | None = None,
                                      "realized_eur": 0.0, "n_movements": 0, "sectors": set(),
                                      "absorbed": set(), "reattributed": set()})
             e["n_movements"] += 1
-            e["sectors"].add(m.get("sector_id"))
             if raw != cid:
                 e["absorbed"].add(raw)
-            if reattributed_at:
-                e["reattributed"].add(m.get("sector_id"))
-            if is_buy:
-                e["invested_eur"] += w * eur
-                e["exposure_eur"] += eur
+            if is_buy and frac > 0:
+                # Only a sector still on the book is a risk row; a closed one names no exposure.
+                e["sectors"].add(sid)
+                if reattributed_at:
+                    e["reattributed"].add(sid)
+                e["invested_eur"] += w * eur * frac
+                e["exposure_eur"] += eur * frac
             # realized P&L attribution on closes/trims is computed at close time (Fase 2
             # return_decomposer); the opening record alone carries no realized P&L.
     out = []
@@ -258,6 +284,15 @@ def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[d
     current = {r["catalyst_id"]: r["exposure_eur"] for r in catalyst_ledger(movements_dir)}
     added: dict[str, float] = {}
     by_catalyst: dict[str, set] = {}
+    # the POST-trade book per sector, for the risk column below: held euros plus what the table
+    # would add. Built here rather than re-derived, so the risk and the notional describe the
+    # same hypothetical book.
+    post_book: dict[str, list] = {}
+    for etf_row in positions(movements_dir).get("holdings", []):
+        sid = str(etf_row.get("sector_id") or "")
+        if sid and float(etf_row.get("invested_eur") or 0.0) > 0:
+            post_book[sid] = [str(etf_row.get("etf") or ""), float(etf_row["invested_eur"])]
+
     for p in proposed or []:
         eur = float(p.get("trade_eur") or 0.0)
         sid = str(p.get("sector_id") or "")
@@ -272,11 +307,38 @@ def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[d
         for c in drivers & structural:
             added[c] = added.get(c, 0.0) + eur
             by_catalyst.setdefault(c, set()).add(sid)
+        etf = str(p.get("etf") or (post_book.get(sid) or ["", 0.0])[0])
+        if etf:
+            row = post_book.setdefault(sid, [etf, 0.0])
+            row[1] += eur
+
+    # v6 I2: the RISK a cluster carries, beside the notional the cap reads. The cap stays
+    # notional and stays `warn` — a measurement is evidence FOR a config edit, never the edit.
+    # None when the covariance cannot be built: an unmeasured risk must not read as zero risk.
+    risk: dict[str, dict] = {}
+    try:
+        from catalyx.scorer import covariance
+        clusters = {cid: sorted(by_catalyst.get(cid, ())) for cid in added}
+        # the cluster's members are every sector attributed to it in the post-trade book, not
+        # only the ones this table touches — the cap is about the whole bucket
+        for sid, (etf, _eur) in post_book.items():
+            mov = held.get(sid)
+            drivers = ({merged.get(a["catalyst_id"], a["catalyst_id"])
+                        for a in effective_attribution(mov)[0]} if mov is not None
+                       else {merged.get(c, c) for c in (smap.get(sid) or [])})
+            for c in drivers & structural & set(clusters):
+                if sid not in clusters[c]:
+                    clusters[c].append(sid)
+        risk = covariance.cluster_risk_for(
+            {s: (v[0], v[1]) for s, v in post_book.items()}, clusters) or {}
+    except Exception:                                          # pragma: no cover - defensive
+        risk = {}
 
     out = []
     for cid, add_eur in added.items():
         post = current.get(cid, 0.0) + add_eur
         pct = post / total * 100.0
+        r = risk.get(cid) or {}
         out.append({
             "catalyst_id": cid,
             "current_eur": round(current.get(cid, 0.0), 2),
@@ -286,6 +348,8 @@ def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[d
             "cap_pct": cap_pct,
             "over_by_eur": round(post - cap_pct / 100.0 * total, 2),
             "over": pct > cap_pct,
+            "risk_ctr_pct": r.get("ctr_pct"),
+            "risk_standalone_vol_pct": r.get("standalone_vol_pct"),
             "sectors": sorted(by_catalyst.get(cid, ())),
         })
     return sorted(out, key=lambda r: -r["post_pct"])

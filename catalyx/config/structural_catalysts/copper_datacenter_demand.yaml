@@ -53,7 +53,9 @@ user_notes: >
 intensity:
   current_score: 78.7
   computation_method: "computed"
-  computation_note: "Recomputed 2026-06-03 from indicator semaphores: ind_01=🟢(100), ind_02=🟢(100), ind_03=🟢(100), ind_04=🟢(100) → avg=100; trend ↑ (68→76→87) → factor=1.02; capped at 95. Override to 87 reflecting genuine strength without hitting ceiling. WebSearch confirmed: hyperscaler capex $700B combined 2026, LME copper $13,965/tonne."
+  computation_note: "Recomputed 2026-06-03 from indicator semaphores: ind_01=🟢(100), ind_02=🟢(100), ind_03=🟢(100), ind_04=🟢(100)
+    → avg=100; trend ↑ (68→76→87) → factor=1.02; capped at 95. Override to 87 reflecting genuine strength without hitting
+    ceiling. WebSearch confirmed: hyperscaler capex $700B combined 2026, LME copper $13,965/tonne."
   last_updated: "2026-07-28"
   history:
   - period: '2026-07-28'
@@ -72,18 +74,6 @@ intensity:
     score: 75.9
     note: 'Computed 2026-06-05: avg=78.92 trend=↓ (falling 1 period) (was 83.9)'
     computation_method: computed
-  - period: 2026-Q2
-    score: 83.9
-    note: 'Computed 2026-06-04: avg=78.92 trend=↑↑ (rising 2+ consecutive) (was 95.0)'
-    computation_method: computed
-  - period: 2026-Q2
-    score: 95
-    note: 'Computed 2026-06-04: avg=100.0 trend=↑↑ (rising 2+ consecutive) (was 87)'
-    computation_method: computed
-  - period: "2026-Q2"
-    score: 87
-    note: "Hyperscaler capex upgraded to $700B combined 2026 (Q1 earnings). Copper spot $13,965/t (+37% vs prior estimate). LME inventories near multi-year lows. Goldman publishes DC copper demand 500kT/year by 2030 — thesis entering emerging narrative phase."
-    computation_method: "computed"
   - period: "2026-Q1"
     score: 76
     note: "Combined hyperscaler capex guide $350B+. Copper spot ~$12,742/t avg. LME inventories low."
@@ -113,7 +103,8 @@ indicators:
   threshold_weak: 35
   last_value: 87
   last_date: "2026-05-15"
-  update_note: "Q1 2026 earnings (Apr-May 2026): combined 2026 capex guidance upgraded to ~$700B ($175B/quarter avg). MSFT $190B, Alphabet $180-190B, Meta $125-145B, Amazon $200B. Doubled vs prior $350B estimate. Source: Q1 2026 earnings transcripts."
+  update_note: "Q1 2026 earnings (Apr-May 2026): combined 2026 capex guidance upgraded to ~$700B ($175B/quarter avg). MSFT
+    $190B, Alphabet $180-190B, Meta $125-145B, Amazon $200B. Doubled vs prior $350B estimate. Source: Q1 2026 earnings transcripts."
 
   semaphore: 🟢
   value_history:
@@ -131,7 +122,10 @@ indicators:
   threshold_weak: 7500
   last_value: 13965
   last_date: "2026-06-29"
-  update_note: "WebSearch 2026-06-29: LME copper 3M $13,357.50/tonne ($6.12/lb), -6.2% MoM on firmer USD + hawkish Fed/ECB rate concerns; still +21% YoY and far above strong threshold. Goldman RAISED year-end 2026 target to $13,735 (640kt ex-US deficit; Grasberg + Kamoa-Kakula not at full capacity until 2028) — fundamentals intact, near-term price cooling is macro (rates/dollar), not demand."
+  update_note: "WebSearch 2026-06-29: LME copper 3M $13,357.50/tonne ($6.12/lb), -6.2% MoM on firmer USD + hawkish Fed/ECB
+    rate concerns; still +21% YoY and far above strong threshold. Goldman RAISED year-end 2026 target to $13,735 (640kt ex-US
+    deficit; Grasberg + Kamoa-Kakula not at full capacity until 2028) — fundamentals intact, near-term price cooling is macro
+    (rates/dollar), not demand."
 
   semaphore: 🟢
   value_history:
@@ -251,7 +245,11 @@ indicators:
   threshold_weak: 300000
   last_value: 98000
   last_date: "2026-06-04"
-  update_note: "CORRECTED 2026-06-04 (WebSearch MacroMicro/westmetall): LME copper warehouse stock 393,400T as of May 20 2026, with continued net inflows (+1,275T/day). Prior YAML value 98,000T was stale/erroneous. Actual stock is ABOVE the weak threshold (300,000T) — this INVALIDATES the near-term supply-tightness leg of the copper thesis. LME inventories are RISING, not at multi-year lows. Structural DC copper-demand thesis intact, but the spot-tightness narrative no longer holds; combined with S&P analysts flagging copper as 'overextended' and Chile's weak April output being a supply, not demand, story."
+  update_note: "CORRECTED 2026-06-04 (WebSearch MacroMicro/westmetall): LME copper warehouse stock 393,400T as of May 20 2026,
+    with continued net inflows (+1,275T/day). Prior YAML value 98,000T was stale/erroneous. Actual stock is ABOVE the weak
+    threshold (300,000T) — this INVALIDATES the near-term supply-tightness leg of the copper thesis. LME inventories are RISING,
+    not at multi-year lows. Structural DC copper-demand thesis intact, but the spot-tightness narrative no longer holds; combined
+    with S&P analysts flagging copper as 'overextended' and Chile's weak April output being a supply, not demand, story."
 
   semaphore: 🔴
   value_history:
@@ -271,7 +269,8 @@ indicators:
   threshold_weak: 400000
   last_value: 1000000
   last_date: "2026-03-01"
-  update_note: "Goldman Sachs published 500,000T/year by 2030 (partial estimate — likely understated). WoodMac/CRU update pending. Current 1.2M T/year estimate still valid as base case."
+  update_note: "Goldman Sachs published 500,000T/year by 2030 (partial estimate — likely understated). WoodMac/CRU update
+    pending. Current 1.2M T/year estimate still valid as base case."
 
   semaphore: 🟢
   value_history:
@@ -286,7 +285,8 @@ deactivation_conditions:
   action: full_deactivation
 
 - id: deact_02
-  condition: "New data center architecture reduces copper intensity by >50% (e.g., optical interconnects replacing copper at rack level at scale)."
+  condition: "New data center architecture reduces copper intensity by >50% (e.g., optical interconnects replacing copper
+    at rack level at scale)."
   action: review_required
 
 - id: deact_03

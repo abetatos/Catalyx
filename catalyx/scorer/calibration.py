@@ -63,6 +63,22 @@ DIMENSIONS = {
     "crowding_risk": True,
 }
 
+# v7 M6 — candidate signals: weight 0 in the composite, measured with the same IC/se/verdict
+# machinery so evidence accumulates from the day the column ships. Promotion to a weight stays
+# a human config edit (PLAN_v7 §5). Absent columns (older runs) are skipped silently.
+CANDIDATE_DIMENSIONS = {
+    "momentum_12_1": False,
+    "near_52w_high": False,
+    "ca_unpriced": False,
+    "flow_resid": False,
+    "inst_sponsorship": False,
+    "crowding_comomentum": True,   # crowding is a penalty: it would enter inverted
+    "cot_crowding": True,
+    "trends_crowding": True,
+    "crowding_measured": True,
+}
+DIMENSIONS = {**DIMENSIONS, **CANDIDATE_DIMENSIONS}
+
 DEFAULT_HORIZON_DAYS = 63          # ≈3 months of calendar days — the book's decision horizon
 MIN_SECTORS = 8                    # below this, a rank correlation is not worth reporting
 TOP_K = 5
@@ -404,6 +420,7 @@ def compute_run(run_id: str, run_start: str, horizon_days: int | None = DEFAULT_
             "rank_ic": ic,
             "as_used_ic": contribution_ic(ic, inverted),
             "inverted_in_composite": inverted,
+            "candidate": dim in CANDIDATE_DIMENSIONS,
             "verdict": ic_verdict(ic, se),
         }
 
@@ -498,6 +515,7 @@ def persist(results: list[dict], lake_dir: Path | None = None) -> int:
             "horizon_days": r.get("horizon_days"), "window_complete": r.get("window_complete"),
             "n_sectors": r["n_sectors"], "se": r["se"], "dimension": dim,
             "rank_ic": d["rank_ic"], "as_used_ic": d["as_used_ic"], "verdict": d["verdict"],
+            "candidate": bool(d.get("candidate", False)),
             "top_k_spread_pct": r.get("spread", {}).get("spread"),
             "computed_at": r["computed_at"],
         } for dim, d in r["dimensions"].items()]
@@ -529,22 +547,31 @@ def _render(results: list[dict], agg: dict) -> str:
     if not usable:
         return "\n".join(out + ["", "  nothing calibratable yet"])
 
-    hdr = f"  {'run':<20}{'window':<26}{'n':>4}{'se':>7}"
-    dims = list(usable[0]["dimensions"].keys())
-    for d in dims:
-        hdr += f"{d[:11]:>13}"
-    hdr += f"{'top5 spr':>10}"
-    out.append(hdr)
-    for r in usable:
-        partial = "" if r.get("window_complete") else " (partial)"
-        line = (f"  {r['run_id'][4:]:<20}{r['start']}→{r['end']}{partial:<8}"
-                f"{r['n_sectors']:>4}{r['se']:>7.2f}")
+    all_dims = list(usable[0]["dimensions"].keys())
+    official = [d for d in all_dims if d not in CANDIDATE_DIMENSIONS]
+    candidates = [d for d in all_dims if d in CANDIDATE_DIMENSIONS]
+
+    def _table(dims: list[str]) -> None:
+        hdr = f"  {'run':<20}{'window':<26}{'n':>4}{'se':>7}"
         for d in dims:
-            v = r["dimensions"].get(d, {}).get("as_used_ic")
-            line += f"{('—' if v is None else f'{v:+.2f}'):>13}"
-        sp = r.get("spread", {}).get("spread")
-        line += f"{('—' if sp is None else f'{sp:+.1f}%'):>10}"
-        out.append(line)
+            hdr += f"{d[:11]:>13}"
+        hdr += f"{'top5 spr':>10}"
+        out.append(hdr)
+        for r in usable:
+            partial = "" if r.get("window_complete") else " (partial)"
+            line = (f"  {r['run_id'][4:]:<20}{r['start']}→{r['end']}{partial:<8}"
+                    f"{r['n_sectors']:>4}{r['se']:>7.2f}")
+            for d in dims:
+                v = r["dimensions"].get(d, {}).get("as_used_ic")
+                line += f"{('—' if v is None else f'{v:+.2f}'):>13}"
+            sp = r.get("spread", {}).get("spread")
+            line += f"{('—' if sp is None else f'{sp:+.1f}%'):>10}"
+            out.append(line)
+
+    _table(official)
+    if candidates:
+        out += ["", "  CANDIDATE columns (weight 0 in the composite — evidence, not signal):"]
+        _table(candidates)
 
     out += ["", "  IC shown is AS USED BY THE COMPOSITE (crowding is inverted there, so its raw",
             "  correlation is negated). Positive = the score ordered sectors correctly.", ""]
@@ -554,7 +581,7 @@ def _render(results: list[dict], agg: dict) -> str:
     out += ["", f"  ⚠ {agg['note']}"]
 
     se = usable[0]["se"]
-    noisy = [d for d in dims
+    noisy = [d for d in all_dims
              if all(r["dimensions"].get(d, {}).get("verdict") in ("noise", "insufficient")
                     for r in usable)]
     if noisy:

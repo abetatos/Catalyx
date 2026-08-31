@@ -31,12 +31,16 @@ user_notes: >
   Key differentiation: CB demand is sovereign-driven, price-insensitive, not reversible quickly.
 
 intensity:
-  current_score: 81.1
+  current_score: 71.5
   computation_method: "computed"
   computation_note: "Computed 2026-06-03: semaphores ind_01=🟢(100), ind_02=🟡(65), ind_03=🟢(100) → avg=88.3; trend ↑ (79→90
     vs Q1) → factor=1.02; result=90.1→90. ind_01 updated 290→315T (Q2 2026 WGC data)."
-  last_updated: "2026-07-28"
+  last_updated: "2026-08-31"
   history:
+  - period: '2026-08-31'
+    score: 71.5
+    note: 'Computed 2026-08-31: avg=71.53 trend=→ (flat) (was 68.5)'
+    computation_method: computed
   - period: '2026-07-28'
     score: 81.1
     note: 'Computed 2026-07-28: avg=79.13 trend=↑ (rising 1 period) (was 79.1)'
@@ -53,28 +57,6 @@ intensity:
     score: 72.1
     note: 'Computed 2026-06-05: avg=79.13 trend=↓↓ (falling 2+ consecutive) (was 76.1)'
     computation_method: computed
-  - period: 2026-Q2
-    score: 76.1
-    note: 'Computed 2026-06-04: avg=79.13 trend=↓ (falling 1 period) (was 81.1)'
-    computation_method: computed
-  - period: 2026-Q2
-    score: 81.1
-    note: 'Computed 2026-06-04: avg=79.13 trend=↑ (rising 1 period) (was 95.0)'
-    computation_method: computed
-  - period: 2026-Q2
-    score: 95.0
-    note: 'Computed 2026-06-04: avg=99.17 trend=→ (flat) (was 90.1)'
-    computation_method: computed
-  - period: 2026-Q2
-    score: 90.1
-    note: 'Computed 2026-06-04: avg=88.33 trend=↑ (rising 1 period) (was 90)'
-    computation_method: computed
-  - period: "2026-Q2"
-    score: 90
-    note: "WGC Q2 2026: 315T CB net purchases, above Q1 (290T). Poland +31T leads all buyers. Uzbekistan +25T. PBoC +7T. New
-      entrants: Guatemala, Indonesia, Uganda. 95% of CBs expect to grow reserves (WGC survey record). Buyer base broadening
-      is the key new signal — not just EM incumbents."
-    computation_method: "computed"
   - period: "2026-Q1"
     score: 79
     note: "China Q1 +34T. India +15T. Poland +10T."
@@ -98,16 +80,16 @@ indicators:
   source: "WGC Gold Demand Trends report"
   source_url_template: "https://www.gold.org/goldhub/research/gold-demand-trends"
   check_frequency: quarterly
-  current_value: 315
+  current_value: 288.9
   unit: tonnes_net_quarterly
   direction: higher_is_stronger
   threshold_strong: 200
   threshold_weak: 80
-  last_value: 290
-  last_date: "2026-06-03"
-  semaphore: "🟢"
-  update_note: "WGC Q2 2026: 315T net purchases. Above Q1 (290T). Poland +31T, Uzbekistan +25T, PBoC +7T. New buyers: Guatemala,
-    Indonesia, Uganda. Full-year WGC forecast 700-900T."
+  last_value: 288.9
+  last_date: "2026-08-31"
+  semaphore: "🟡"
+  update_note: "WGC Q2 2026 central-bank net purchases, tonnes. Record quarterly print; prior stored value 315. H1 total 345t
+    is the weakest first half since 2022."
 
   value_history:
   - date: '2026-03-31'
@@ -116,7 +98,7 @@ indicators:
     value: 330
   - date: '2022-09-30'
     value: 399
-  score: 89.7
+  score: 66.9
 - id: ind_02
   name: "IMF COFER — Non-USD reserve share of global FX reserves"
   source: "IMF COFER quarterly data"
@@ -283,4 +265,29 @@ deactivation_conditions:
 linked_event_catalyst_ids: []
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-06-03"
+status_last_reviewed: "2026-08-31"
+review_log:
+- date: '2026-08-31'
+  verdict: intact
+  evidence: "Central banks bought a record 288.9t in Q2 2026, +62-74% YoY and a five-fold jump on Q1's revised 57t; Poland
+    +51t, China +33t (its largest quarterly add since late 2023), Uzbekistan +16t, Kazakhstan +15t. BUT H1 net demand of 345t
+    is the LOWEST first half since 2022, held down by official-sector sales — so the quarter is a record and the half is a
+    trough, and the verdict is intact rather than strengthening. WGC survey: 89% of central bankers expect reserves to rise
+    over the next 12 months. Gold spot ~$4,600/oz on 2026-08-28."
+  source: World Gold Council Gold Demand Trends Q2 2026 (published 2026-07-30); TradingEconomics gold spot 2026-08-28
+- date: '2026-08-31'
+  verdict: intact
+  evidence: "Central banks bought a record 288.9t in Q2 2026, +62-74% YoY and a five-fold jump on Q1's revised 57t; Poland
+    +51t, China +33t (its largest quarterly add since late 2023), Uzbekistan +16t, Kazakhstan +15t. BUT H1 net demand of 345t
+    is the LOWEST first half since 2022, held down by official-sector sales — so the quarter is a record and the half is a
+    trough, and the verdict is intact rather than strengthening. WGC survey: 89% of central bankers expect reserves to rise
+    over the next 12 months. Gold spot ~$4,600/oz on 2026-08-28."
+  source: World Gold Council Gold Demand Trends Q2 2026 (published 2026-07-30); TradingEconomics gold spot 2026-08-28
+- date: '2026-08-31'
+  verdict: intact
+  evidence: "Central banks bought a record 288.9t in Q2 2026, +62-74% YoY and a five-fold jump on Q1's revised 57t; Poland
+    +51t, China +33t (its largest quarterly add since late 2023), Uzbekistan +16t, Kazakhstan +15t. BUT H1 net demand of 345t
+    is the LOWEST first half since 2022, held down by official-sector sales — so the quarter is a record and the half is a
+    trough, and the verdict is intact rather than strengthening. WGC survey: 89% of central bankers expect reserves to rise
+    over the next 12 months. Gold spot ~$4,600/oz on 2026-08-28."
+  source: World Gold Council Gold Demand Trends Q2 2026 (published 2026-07-30); TradingEconomics gold spot 2026-08-28

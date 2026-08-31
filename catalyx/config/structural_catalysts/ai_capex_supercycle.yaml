@@ -18,7 +18,8 @@ description: >
 created_at: "2026-06-03T18:00:00Z"
 created_by: user
 onset_period: "2023-Q1"
-onset_evidence: "Microsoft $10B OpenAI investment announced Jan 2023. Google Bard launch. Hyperscaler capex guidance inflections in Q1 2023 earnings."
+onset_evidence: "Microsoft $10B OpenAI investment announced Jan 2023. Google Bard launch. Hyperscaler capex guidance inflections
+  in Q1 2023 earnings."
 
 catalyst_type: technology_adoption
 catalyst_subtype: ai_inference_buildout
@@ -26,12 +27,17 @@ geography: [US, EU, APAC, GLOBAL]
 thematic_tags: [ai, data_center, semiconductors, power, infrastructure, capex]
 
 user_rank: 2
-user_notes: "Most visible structural catalyst in the market. Risk of being priced in for semiconductors — focus on power, cooling, networking as higher-alpha adjacent plays."
+user_notes: "Most visible structural catalyst in the market. Risk of being priced in for semiconductors — focus on power,
+  cooling, networking as higher-alpha adjacent plays."
 
 intensity:
-  current_score: 89.9
-  last_updated: "2026-07-28"
+  current_score: 94.4
+  last_updated: "2026-08-31"
   history:
+  - period: '2026-08-31'
+    score: 94.4
+    note: 'Computed 2026-08-31: avg=92.37 trend=↑ (rising 1 period) (was 95.0)'
+    computation_method: computed
   - period: '2026-07-28'
     score: 89.9
     note: 'Computed 2026-07-28: avg=89.87 trend=→ (flat) (was 82.9)'
@@ -47,18 +53,6 @@ intensity:
   - period: '2026-06-05'
     score: 86.9
     note: 'Computed 2026-06-05: avg=89.87 trend=↓ (falling 1 period) (was 89.9)'
-    computation_method: computed
-  - period: 2026-Q2
-    score: 89.9
-    note: 'Computed 2026-06-04: avg=89.87 trend=→ (flat) (was 94.9)'
-    computation_method: computed
-  - period: 2026-Q2
-    score: 94.9
-    note: 'Computed 2026-06-04: avg=89.87 trend=↑↑ (rising 2+ consecutive) (was 95.0)'
-    computation_method: computed
-  - period: 2026-Q2
-    score: 95
-    note: 'Computed 2026-06-04: avg=100.0 trend=↑↑ (rising 2+ consecutive) (was 89)'
     computation_method: computed
   - period: "2026-Q1"
     score: 89
@@ -76,19 +70,21 @@ indicators:
   name: "Combined hyperscaler capex guidance (Microsoft + Google + Amazon + Meta, quarterly earnings)"
   source: "Earnings transcripts + consensus estimates"
   check_frequency: quarterly
-  current_value: 87
+  current_value: 183.1
   unit: USD_billion_quarterly
   direction: higher_is_stronger
   threshold_strong: 60
   threshold_weak: 40
-  last_value: 82
-  last_date: "2026-04-30"
+  last_value: 183.1
+  last_date: "2026-08-31"
 
   semaphore: 🟢
   value_history:
   - date: "2026-04-30"
     value: 82
-  score: 92.2
+  score: 99.7
+  update_note: 'quarterly-equivalent combined guidance unchanged vs the 13:15 stamp; the $1.3tn 2027 figure is a forward-year
+    path on a different basis and is deliberately NOT converted into this quarterly unit'
 - id: ind_02
   name: "Nvidia data center revenue quarterly growth"
   source: "Nvidia earnings"
@@ -136,7 +132,7 @@ linked_event_catalyst_ids: []
 linked_structural_catalyst_ids:
 - struct_copper_datacenter_demand    # Commodity expression: copper miners as physical beneficiary
 status: active
-status_last_reviewed: "2026-08-27"
+status_last_reviewed: "2026-08-31"
 absorbed_catalyst_ids:
 - struct_copper_datacenter_demand
 absorbed_at: '2026-08-27'
@@ -151,3 +147,20 @@ absorbed_note: |
   fusionados se conservan intactos con status: merged. En el proximo /catalyx-update,
   decidir explicitamente cual de estos indicadores merece promoverse a este fichero:
     - struct_copper_datacenter_demand (intensity 78.7): Combined hyperscaler AI capex guidance (Microsoft + Google + Amazon + Meta, $B quarterly), LME copper spot price (USD/tonne), LME copper warehouse inventory (tonnes) — low inventory = supply tightness, Data center copper demand estimate — analyst consensus (Wood Mackenzie / CRU)
+review_log:
+- date: '2026-08-31'
+  verdict: strengthening
+  evidence: 'Nvidia FQ2-2027 (quarter ended Aug 2026) data-center revenue $89.0bn, ~92% of total, of which $49bn hyperscaler
+    +13% sequential; guided FQ3 total revenue $108.0bn, a +$11.8bn sequential step. Top-5 hyperscaler capex path put at $1.3tn
+    for 2027 vs $800bn prior year (+62%). CFO: about half of data-center business now comes from customers BEYOND the hyperscalers
+    - the demand base is broadening, not narrowing, which is the specific bear case this print rebuts.'
+  source: CNBC 2026-08-26 Nvidia Q2 FY2027 earnings; Fortune 2026-08-27 (Nvidia CFO); Goldman Sachs hyperscaler capex 
+    projection
+- date: '2026-08-31'
+  verdict: intact
+  evidence: Combined FY2026 capex guidance across the big-4 hyperscalers climbed to $720-745bn; 2027 consensus ~$934bn 
+    (Google $284.8bn, Amazon $256.5bn, Microsoft $207.6bn, Meta $185.6bn), with JPMorgan at $1.0tn and Goldman at 
+    $1.01tn for 2027. Amazon (Jassy) says capacity constraints persist through 2027 and 2028 demand is already informing
+    planning; no earnings-call language suggesting a peak.
+  source: TMT Finance '2026 hyperscaler capex tops US$700bn'; JPMorgan / Goldman Sachs 2027 capex forecasts (accessed 
+    2026-08-31)

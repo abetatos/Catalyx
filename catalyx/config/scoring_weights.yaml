@@ -48,16 +48,32 @@ composite_weights:
   flow_confirmation: 0.24
   crowding_risk: 0.12  # Applied as (100 - crowding_score) × 0.12
 
+# v6 H1: the weights above are applied to CROSS-SECTIONALLY STANDARDIZED dimensions, not to
+# raw 0-100 levels. In a weighted sum of non-commensurable scales the effective weight is
+# w·σ_cross, not w — which is why a constant dimension weighs zero whatever the YAML says
+# (the valuation_relative bug, v1.6). composite = clamp(50 + z_scale · Σ wᵢ·zᵢ, 0, 100).
+composite_scale:
+  z_scale: 15.0             # 1σ of a dimension moves the composite w·15 points
+  winsor_z: 3.0
+  min_universe: 5           # below this, no cross-section to standardize against
+  dead_dimension_sigma: 2.0 # σ_cross under this = the dimension is not ranking anything
+
 # catalyst_alignment sub-weights (event vs structural contribution)
 catalyst_alignment_sub_weights:
   event_component: 0.55    # Event catalysts are spike signals — higher immediate weight
   structural_component: 0.45  # Structural catalysts are the floor
 
 # Momentum time-period weights (used in momentum_engine.py)
+# v6 H4 (2026-08-31): return_1m 0.20 → 0.0. The last month is the SHORT-TERM REVERSAL window
+# (Jegadeesh 1990, Lehmann 1990) — the standard cross-sectional momentum signal is 12-1, i.e.
+# it skips it precisely because recent winners mean-revert (Jegadeesh–Titman 1993). This repo
+# had already measured the same thing locally: the v1.6 acceleration backtest found NEGATIVE
+# monthly IC on the short leg, and the 1m still entered with a POSITIVE sign. 3m/6m keep their
+# 45:35 relative proportion, renormalized to 1.0. Frozen threshold: config edit + CHANGELOG.
 momentum_period_weights:
-  return_1m: 0.20
-  return_3m: 0.45
-  return_6m: 0.35
+  return_1m: 0.0
+  return_3m: 0.5625   # = 45/80, the exact renormalization
+  return_6m: 0.4375   # = 35/80
 
 # Event catalyst decay function: score = strength × exp(-lambda × days_since_detection)
 # lambda = ln(2) / halflife_days
@@ -126,6 +142,24 @@ indicator_scoring:
     strong: 80                 # score at threshold_strong (headroom above → far-above values spread, not clamp)
   fallback_above_strong_decay: 0.693   # each extra (strong-weak) band above strong closes half the gap to 100
   clamp: [0, 100]              # per-indicator score bounds
+
+  # v6 J4 — DETRENDED BLEND. A persistently rising series (CB gold buying, hyperscaler capex)
+  # sits near its own maximum nearly every month, so the level percentile pins at ~100 and stops
+  # discriminating — on exactly the persistent drivers StructuralCatalyst exists to model. But
+  # "at an all-time high" IS information: replacing the level with the residual would score a
+  # record-level driver mid-range for being exactly on its own trend. So they are blended. Two
+  # catalysts both at records, one accelerating and one decelerating, now differ.
+  # `detrend_weight: 0.0` reproduces the pre-v6 score exactly.
+  detrend_weight: 0.5          # share of the percentile taken from the detrended residual
+  detrend_min_tau: 0.5         # |Kendall τ vs time| below this = not trending, no detrend at all
+  detrend_min_points: 6        # a trend needs a series; below this, level only
+
+  # v6 J4 — THE min_history_points CLIFF. The score used to switch outright from the saturating
+  # curve to the percentile when the 6th observation arrived, so one new data point could move an
+  # indicator tens of points for reasons unrelated to the world. Now blended linearly across
+  # [min − span, min + span]: n≤4 curve, n=6 half and half, n≥8 percentile. Same family of
+  # mini-cliff v1.5 removed from the semaphore buckets and I6 from the VIX brake. 0 = pre-v6.
+  history_blend_span: 2
 
 # Display-only color, DERIVED from the continuous indicator score (v1.5).
 # Replaces the old indicator_semaphore_scores math. Colors no longer affect numbers.
@@ -394,7 +428,7 @@ user_rank_ordering:
 # be used directly — they need cross-sectional normalization.
 #
 # Step 1 — Compute raw weighted return per sector:
-#   raw_momentum = return_1m_pct × 0.20 + return_3m_pct × 0.45 + return_6m_pct × 0.35
+#   raw_momentum = return_3m_pct × 0.5625 + return_6m_pct × 0.4375   (v6 H4: 1m weight = 0)
 #
 # Step 2 — Percentile rank across the full scored universe:
 #   momentum_score = percentile_rank(raw_momentum, all_sector_raw_momentums) × 100
@@ -497,19 +531,65 @@ closed_thesis_rubrics:
       alpha_from_catalyst = True (catalyst_alpha=+8.2%, confidence=medium) → + 0.25
       right_reason_score = 0.30 + 0.35 + 0.25 = 0.90
 
-# Conviction tiers → position size ceiling
+# ─────────────────────────────────────────────────────────────────────────────
+# BOOK SHAPE — the single knob (v6 L1, 2026-08-31). Rationale: PLAN_v6 §5.
+# ─────────────────────────────────────────────────────────────────────────────
+# `max_position_pct` is not only a concentration ceiling: with a deployment target it is a
+# LOWER BOUND on the position count, `n_min = deploy_max / cap`. At 12% that demanded an
+# 8-position book — 8 of the operator's 10 free monthly trades just to build it. So the cap is
+# no longer chosen: n_target is declared, cap and tiers derive from it, and
+# tests/unit/test_config_feasibility.py fails the suite if the triple stops being satisfiable.
+#
+# n_target = 6 is measured: mean pairwise ρ = 0.245 (weekly returns; daily halves it — Epps),
+# σ_rel(n) = √(ρ + (1−ρ)/n) → n=5: 0.629 · n=6: 0.609 · n=7: 0.594 · n=10: 0.566. Past 6 each
+# name buys <2.5% of relative vol and costs a monthly trade slot. 6 is the knee.
+book_shape:
+  n_target: 6
+  tier_multiples: [1.4, 1.0, 0.5]   # × the neutral weight (deploy_max/n_target), not absolutes:
+                                    # 12/8/4 were chosen for a 10-name book and mean nothing at 6.
+  # In force (computed by weights.book_shape(); the test asserts YAML == derived):
+  #   deploy_max 0.85 · neutral 14.2% · tiers ≈ 20/14/7% · max_position_pct = tier 1 = 20%
+
+  # The binding constraint, previously invisible to the code: `fee_eur: 0.0` is true in
+  # accounting terms inside the allowance and false in economic ones — a slot is scarce and
+  # carries option value, because the mandate acts on events arriving BETWEEN reviews.
+  trade_budget:
+    free_per_month: 10
+    reserve_for_events: 3      # slots a scheduled review may NOT spend
+    planned_max_per_review: 6
+    fee_after_free_eur: null   # a broker fact, not a preference — null until observed
+    exempt_actions: [SELL, REDUCE]   # removing risk never queues behind a budget
+
+# Conviction tiers → position size ceiling. DERIVED: tier_multiples × (deploy_max / n_target).
+# Was 12/8/4 absolute; at a 6-name book every position sat above tier 1, so the ladder said nothing.
+# DERIVED, NOT CHOSEN (v6 L1): these are `tier_multiples × book_shape.neutral_weight`, i.e.
+# [1.4, 1.0, 0.5] × (deploy_max / n_target). Edit `n_target`, never these. Kept in the YAML so
+# they stay greppable; `test_config_feasibility` fails if the copy drifts.
+#
+# WHAT THEY IMPLY, written down so it stops being re-derived (v6 I5). A tier ceiling is also a
+# per-line LOSS BUDGET once you pair it with the exit floor. `exit_watcher.drawdown_exit_pct` is
+# −30%, so the most a single line can cost the book before the protective exit fires is
+# `weight × 30%`:
+#     tier 1  20% × 30% = 6.0% of the book       tier 2  14% × 30% = 4.2%
+#     tier 3   7% × 30% = 2.1%
+# That is fractional-Kelly sizing made explicit: a full-Kelly bet on an edge this uncertain
+# (measured rank IC ≈ 0, see calibration) would be far larger, and 6% of the book on the single
+# highest-conviction line is the fraction actually being run. The number is a CONSEQUENCE of
+# n_target, not an independent choice — if 6% per line is too much, the lever is n_target, and
+# raising it costs monthly trade slots (see book_shape). `position_metrics` prints the realized
+# version of this per line as `line_risk_pct`.
 conviction_tiers:
   1:
     label: "Highest conviction"
-    max_position_pct: 0.12
+    max_position_pct: 0.20
     description: "Strong catalyst + fresh signal + low crowding + validated prior hit rate > 0.65"
   2:
     label: "High conviction"
-    max_position_pct: 0.08
+    max_position_pct: 0.14
     description: "Good catalyst + some momentum + acceptable crowding"
   3:
     label: "Exploratory"
-    max_position_pct: 0.04
+    max_position_pct: 0.07
     description: "Interesting thesis but high uncertainty or limited prior data"
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -555,15 +635,34 @@ portfolio_weighting:
   # the only input that makes two euros comparable. On the 2026-08-28 book `semiconductors_design`
   # (vol 55%) and `pharma_large_cap` (vol 18%) were sized as if they were the same bet — semis
   # carries ~3x the risk per euro.
-  #   alpha = 0    → today's behaviour (score-proportional, vol ignored)
-  #   alpha = 0.5  → DEFAULT: halves the risk dispersion without turning a momentum book into a
-  #                  low-vol fund. Full inverse-vol (1.0) systematically underweights exactly the
-  #                  high-beta sectors a catalyst-driven mandate exists to own.
+  # THE ASSUMPTION, DECLARED (v6 I3) — so the next argument is about the assumption, not the
+  # number. α is not a dial, it is a claim about what the score MEANS:
+  #   score ∝ expected return μ         ⇒ α = 2   (mean-variance: w ∝ μ/σ²)
+  #   score ∝ Sharpe    μ/σ             ⇒ α = 1   (inverse-vol: w ∝ score/σ)
+  #   score ∝ nothing in particular     ⇒ α = 0   (vol ignored)
+  # The composite is a cross-sectional PERCENTILE — an ordinal rank, not a return forecast. A
+  # rank is a "which of these is the better bet" statement, i.e. Sharpe-like, so the coherent
+  # value is **α = 1**. 0.5 was a hedge between two positions, and it corresponded to no stated
+  # belief about the score at all.
+  # 0.5 → 1.0 (2026-08-31). The original fear — "full inverse-vol systematically underweights
+  # exactly the high-beta sectors this mandate exists to own" — is answered by SELECTION, which
+  # is score-driven and untouched: the tilt only equalizes risk per euro AMONG names already
+  # chosen for their catalysts. A high-vol sector still gets in; it gets in at a size where its
+  # euro is comparable to the others'.
+  # WHAT IT ACTUALLY BUYS, measured before claiming it (model book, 2026-08-31, weekly LW
+  # covariance): weights move at most 2.1pp (gold miners −2.1, AI infra +2.1) and book vol falls
+  # 19.4% → 18.9%. The risk/capital spread barely moves — 1.71 → 1.66, with gold miners still
+  # carrying 2.2x its capital share. **α is a weaker lever than it looks, and the reason is the
+  # chain order:** `water_fill` at `max_position_pct` runs AFTER the tilt, so once the low-vol
+  # names hit the 20% cap they cannot absorb any more of the redistribution and the tilt is
+  # clipped. That is correct — a risk limit must outrank a sizing preference — but it means
+  # equalizing risk per euro is not something α can deliver on a capped book. If that dispersion
+  # is the target, the instrument is a risk budget in the cap itself (the I2 column), not α.
   # water_fill at `max_position_pct` runs AFTER the tilt, so the cap and the deadband are
   # untouched. Vol is annualized over `vol_lookback_days` of the sector's OWN traded vehicle; a
   # sector with no usable price history falls back to the median vol, never to zero (which would
   # divide into an infinite weight).
-  vol_tilt_alpha: 0.5
+  vol_tilt_alpha: 1.0
   vol_lookback_days: 120
   min_vol_pct: 5.0              # floor, so a stale/flat series cannot manufacture a huge weight
 
@@ -595,9 +694,38 @@ portfolio_weighting:
 # is flagged and must carry an explicit `correlation_note` override, but is NOT prohibited.
 # Rationale (2026-06-05): the old design reused the Tier-2 single-position ceiling (8%) as the
 # combined cap, which was too low for a deliberately concentrated, few-sector portfolio.
+# 0.20 → 0.30 (v6 L2, 2026-08-31), and the ORDER was the point. At n_target=6 the neutral
+# weight is 14.2%, so a 20% cap forbade ANY TWO positions from sharing a driver — an
+# infeasible rule, permanently breached, therefore permanently ignored. It was left at 0.20
+# until I2 could publish RISK per cluster (`covariance.cluster_risk_for`), because raising a
+# cap first deletes a breach by decree; the replacement discipline had to land before the
+# relaxation. 0.30 admits two neutral positions per driver and still bites on the real case:
+# AI capex prints 41.6% today.
+# WHAT THE RISK COLUMN SAYS ABOUT THIS CAP, now that it exists (2026-08-31, post-trade book):
+#   ai_capex        41.6% notional → 50.8% of book variance    gold_accum   7.2% →  16.6%
+#   biopharma       21.9%          → 11.7%                     stablecoin   6.8% →  16.8%
+#   energy_grid     19.7%          → 27.1%
+# A notional cap ranks these wrong: biopharma breaches at HALF the risk gold carries under it.
+# The cap stays notional and stays `warn` anyway — the risk column is evidence FOR a future
+# rule, not a rule. Replacing the notional cap with a risk budget is a decision for the user.
 correlated_catalyst_cap:
-  max_combined_pct: 0.20      # combined allocation across theses sharing a primary catalyst
+  max_combined_pct: 0.30      # combined allocation across theses sharing a primary catalyst
   enforcement: "warn"          # "warn" = flag + require override note | "block" = prohibit
+
+# v7 M4 — narrative_maturity → priced-in fraction, for the `ca_unpriced` CANDIDATE COLUMN
+# (weight 0 in the composite; measured by calibration alongside the official dimensions).
+# CA scores the LEVEL of a catalyst; the market pays the UNPRICED part. Events carry their own
+# `is_priced_in_estimate` (the stepped 0/0.25/0.5/0.75/1.0 scale); structurals do not, so their
+# discount derives from narrative_maturity on the SAME steps. A catalyst with neither is imputed
+# to 0.5 (the median step — the prior, never the worst case) and counted in
+# `ca_unpriced_imputed_n`. Promoting this column to a weight is a future config edit gated on
+# measured IC (PLAN_v7 §5) — this table only makes the column computable.
+maturity_priced_in:
+  ignored: 0.0
+  emerging: 0.25
+  mainstream: 0.50
+  crowded: 0.75
+  exhausted: 1.0
 
 # Crowding penalty derived from a sector study's narrative_maturity (added 2026-06-05)
 # Single source of truth — was hardcoded in the heatmap skill + ad-hoc scripts.
@@ -774,9 +902,14 @@ technical_study:
 dislocation:
   drawdown_threshold_pct: -3.0   # opportunity: min 5d drawdown to flag (negative %)
   min_catalyst_alignment: 70.0   # opportunity: catalyst-confirmation floor
-  min_opportunity_composite: 55.0  # opportunity: full-blend floor (NON-NEGOTIABLE — keep strict)
+  # v6 H3: both floors in composite z-units (0.0 = the run's universe average). Unlike the
+  # portfolio floor these do NOT co-select with a top-N, so the strict stance is kept: the
+  # opportunity floor is the exact translation of the old 55.
+  min_opportunity_composite_z: 0.33   # opportunity: full-blend floor (NON-NEGOTIABLE — keep strict)
+  min_opportunity_composite: 55.0     # pre-v6, read one major more
   max_diversifier_corr: 0.65     # diversifier: mean corr to the cluster ≤ this qualifies (was 0.5)
-  min_diversifier_composite: 50.0  # diversifier: health floor, decoupled from opportunity (was 55)
+  min_diversifier_composite_z: 0.0    # diversifier: health floor, decoupled from opportunity
+  min_diversifier_composite: 50.0     # pre-v6, read one major more
 
 # ─────────────────────────────────────────────────────────────────────────────
 # REBALANCE RULES (v3 Phase 2/3, 2026-08-28) — catalyx/execution/rebalance.py
@@ -807,7 +940,9 @@ rebalance_rules:
   frozen: "2026-08-28"         # provenance only; nothing reads it, everything is dated by it
   deadband_pp: 2.0             # |gap| below this (points of TOTAL capital) → HOLD, never trade
   min_ticket_eur: 150.0        # below this a trade is spread + friction, not a position change
-  max_position_pct: 12.0       # ceiling per sector = conviction tier 1; a BUY is capped here
+  max_position_pct: 20.0       # = conviction tier 1, DERIVED from `book_shape` (v6 L1). Was
+                               # 12.0, which silently demanded an 8-position book. Not a free
+                               # parameter: change `book_shape.n_target`, not this line.
   spread_bps: 20.0             # round-trip cost assumption (etf_universe v2.0 carries no
                                # spread_bps; when it does, the per-ETF value wins)
   fee_eur: 0.0                 # Revolut retail: no explicit commission on the ETF lines held
@@ -827,7 +962,7 @@ rebalance_rules:
   # The second rung ({gain_pct_min: 50, rank_min: 0}) was DELETED at the freeze: trimming a +50%
   # position the model still ranks #1 is the disposition effect wearing a discipline costume, and
   # it is the exact opposite of a momentum mandate. Concentration is already bounded twice without
-  # it — `max_position_pct` (12%) caps the line and `trim_if.overweight_pp_min` trims a winner back
+  # it — `max_position_pct` (tier 1, derived) caps the line and `trim_if.overweight_pp_min` trims a winner back
   # to target as it drifts. So the ladder survives only in its RANK-COUPLED form: a partial is
   # taken when the gain is real AND the model has stopped calling it a leader.
   profit_ladder:               # empty list disables the ladder entirely
@@ -863,10 +998,25 @@ rebalance_rules:
                                # happened when that number was set, so idle cash inside the
                                # envelope is not prudence, it is an unchosen zero-return position.
                                # Neutral state (5 intact top-8 sectors) now deploys 70%.
+                               # v6 I5 — WHAT JUSTIFIES 0.70, so it stops being re-litigated:
+                               # it is an AVERSION PARAMETER, not a derivation. The equity risk
+                               # premium justifies being INVESTED; it says nothing about 0.70 vs
+                               # 0.60 vs 0.85, and quoting it as if it did would dress a
+                               # preference as a result. What the ERP does license is the
+                               # asymmetry: the default is invested and cash must be argued for,
+                               # which is why the step term only moves this UP and the sole
+                               # downward term is the VIX ramp. The one number here that IS
+                               # derived is the ceiling the step reaches (0.85 = deploy_max),
+                               # because n_target and the position cap are read off it.
     step_per_intact_sector: 0.05
     intact_min: 5              # the neutral point of the step term
     intact_rank_max: 8         # a sector counts as "intact top" only inside the model's top-8
-    vix_pause_above: 30.0      # the ONLY macro brake — no discretionary "market feels risky"
+    # the ONLY macro brake — no discretionary "market feels risky". v6 I6: it was a STEP at 30,
+    # so 29.9 → 30.1 moved a fifth of the target capital and a VIX sitting near 30 oscillated the
+    # whole book run to run. Now a linear ramp over the same range: 0 below 25, full 0.20 at 35.
+    vix_ramp_start: 25.0
+    vix_ramp_full: 35.0
+    vix_pause_above: 30.0      # pre-v6 cliff, read one major more (centres an unmigrated ramp)
     vix_penalty: 0.20
     floor: 0.40                # 0.30 → 0.40. Binds only in the worst state (nothing intact AND
                                # VIX > 30). It floors the TARGET, never forces a buy: a book whose
@@ -936,7 +1086,11 @@ rebalance_rules:
                                  # window are one observation, not five.
 
   overrides:
-    authors_allowed: [user, claude, unrecorded]
+    authors_allowed: [user, claude, unrecorded, budget]
+                                   # `budget` is the trade allowance, not a person: a row with no
+                                   # free slot left is the rule working, not silence, so it is
+                                   # filed apart from `unrecorded` — and still scored, which is
+                                   # how the budget itself stays falsifiable.
                                    # `unrecorded` is written by the MACHINE, never by a person:
                                    # `_log_unrecorded` records a previous run's non-HOLD row that
                                    # produced no movement and no override, as a DEFER. Quiet was

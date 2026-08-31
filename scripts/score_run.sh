@@ -19,6 +19,14 @@ LOG="data/reports/score_run_$(date +%Y%m%d).log"
 : > "$LOG"
 quiet() { echo "\$ uv run $*" >>"$LOG"; uv run "$@" >>"$LOG" 2>&1; }
 
+# v7 candidate-signal snapshots, best-effort BEFORE the run records (each degrades to None).
+# Trends is NOT here — rate-limited source; refresh monthly via `python -m catalyx.data.trends_data`.
+# indicator_sources runs DRY (facts for the review) — applying observations mutates catalyst
+# YAMLs, which stays with the scan (`--apply` there, then intensity write-back).
+echo "▶ candidate-signal snapshots (COT · valuation; best-effort → $LOG)"
+quiet python -m catalyx.data.cot_data || true
+quiet python -m catalyx.data.valuation_data || true
+
 echo "▶ record run + register report (verbose → $LOG)"
 quiet python -m catalyx.store.snapshot_repo record --notes "$NOTES"
 if [ -n "$REPORT" ]; then
@@ -40,6 +48,9 @@ fi
 # which the review reads a handful of fields per sector; the rest is per-event trace that is already
 # in the lake and re-derivable with one scoped `--json` call when a single sector is being debugged.
 echo "── OPPORTUNITY & REGIME FACTS — consume these; the escalation / buy / rotate calls are YOURS ──"
+echo ""
+echo "### auto-observable indicators — live vs stored (DRY; apply via the scan)"
+uv run python -m catalyx.data.indicator_sources || true
 echo ""
 echo "### regime_state + persistence (catalyst_scorer --all)"
 uv run python -m catalyx.scorer.catalyst_scorer --all --digest

@@ -1,0 +1,136 @@
+{
+  "date": "2026-08-31",
+  "sector_scores": {
+    "gold_physical": {
+      "trends_crowding": 79.9,
+      "term": "buy gold",
+      "n_weeks": 261
+    },
+    "gold_miners": {
+      "trends_crowding": 82.2,
+      "term": "gold mining stocks",
+      "n_weeks": 261
+    },
+    "silver_physical": {
+      "trends_crowding": 80.7,
+      "term": "buy silver",
+      "n_weeks": 261
+    },
+    "copper_miners": {
+      "trends_crowding": 82.8,
+      "term": "copper stocks",
+      "n_weeks": 261
+    },
+    "lithium_miners": {
+      "trends_crowding": 59.8,
+      "term": "lithium stocks",
+      "n_weeks": 261
+    },
+    "uranium_miners": {
+      "trends_crowding": 84.3,
+      "term": "uranium stocks",
+      "n_weeks": 261
+    },
+    "nuclear_energy": {
+      "trends_crowding": 71.3,
+      "term": "nuclear energy stocks",
+      "n_weeks": 261
+    },
+    "solar_energy": {
+      "trends_crowding": 96.2,
+      "term": "solar stocks",
+      "n_weeks": 261
+    },
+    "oil_majors_integrated": {
+      "trends_crowding": 90.4,
+      "term": "oil stocks",
+      "n_weeks": 261
+    },
+    "grid_infrastructure_utilities": {
+      "trends_crowding": 79.3,
+      "term": "utility stocks",
+      "n_weeks": 261
+    },
+    "semiconductors_design": {
+      "trends_crowding": 95.0,
+      "term": "semiconductor stocks",
+      "n_weeks": 261
+    },
+    "ai_infrastructure_data_centers": {
+      "trends_crowding": 83.1,
+      "term": "AI stocks",
+      "n_weeks": 261
+    },
+    "robotics_automation": {
+      "trends_crowding": 84.7,
+      "term": "robotics stocks",
+      "n_weeks": 261
+    },
+    "cybersecurity_commercial": {
+      "trends_crowding": 80.5,
+      "term": "cybersecurity stocks",
+      "n_weeks": 261
+    },
+    "cloud_software_saas": {
+      "trends_crowding": 79.3,
+      "term": "cloud stocks",
+      "n_weeks": 261
+    },
+    "pharma_large_cap": {
+      "trends_crowding": 83.5,
+      "term": "pharma stocks",
+      "n_weeks": 261
+    },
+    "biotech_drug_development": {
+      "trends_crowding": 86.2,
+      "term": "biotech stocks",
+      "n_weeks": 261
+    },
+    "eu_defense_prime_contractors": {
+      "trends_crowding": 83.5,
+      "term": "defense stocks",
+      "n_weeks": 261
+    },
+    "space_defense_satellite": {
+      "trends_crowding": 82.4,
+      "term": "space stocks",
+      "n_weeks": 261
+    },
+    "crypto_infrastructure": {
+      "trends_crowding": 79.3,
+      "term": "crypto stocks",
+      "n_weeks": 261
+    },
+    "eu_retail_banking": {
+      "trends_crowding": 81.2,
+      "term": "bank stocks",
+      "n_weeks": 261
+    },
+    "agriculture_soft_commodities": {
+      "trends_crowding": 78.5,
+      "term": "agriculture stocks",
+      "n_weeks": 261
+    },
+    "water_infrastructure": {
+      "trends_crowding": 79.3,
+      "term": "water stocks",
+      "n_weeks": 261
+    },
+    "infrastructure_core": {
+      "trends_crowding": 88.1,
+      "term": "infrastructure stocks",
+      "n_weeks": 261
+    },
+    "luxury_goods": {
+      "trends_crowding": 78.9,
+      "term": "luxury stocks",
+      "n_weeks": 261
+    },
+    "consumer_india_em": {
+      "trends_crowding": 80.1,
+      "term": "india stocks",
+      "n_weeks": 261
+    }
+  },
+  "failed": []
+}

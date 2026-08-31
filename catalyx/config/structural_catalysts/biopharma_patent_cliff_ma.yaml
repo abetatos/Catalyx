@@ -39,13 +39,17 @@ user_notes: >
   are the primary confirmation; refresh quarterly against IQVIA/BioPharma deal trackers.
 
 intensity:
-  current_score: 84.0
+  current_score: 86.0
   computation_method: computed
-  last_updated: "2026-07-28"
+  last_updated: "2026-08-31"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: just below struct_ai_capex_supercycle (89.9). Durable
     LOE-driven takeout pressure with clear deal-flow indicators.
   history:
+  - period: '2026-08-31'
+    score: 86.0
+    note: 'Computed 2026-08-31: avg=84.05 trend=↑ (rising 1 period) (was 84.0)'
+    computation_method: computed
   - period: '2026-07-28'
     score: 84.0
     note: 'Computed 2026-07-28: avg=84.05 trend=→ (flat — insufficient history) (was 80)'
@@ -168,4 +172,28 @@ linked_structural_catalyst_ids:
 
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-07-01"
+status_last_reviewed: "2026-08-31"
+review_log:
+- date: '2026-08-31'
+  verdict: intact
+  evidence: "No new YTD print surfaced: the $106bn / 201 deals figure is still the 2026-06-04 CNBC number already stored in
+    ind_01, so this indicator is ~3 months stale even after re-verification. What IS new: average deal value $527.3m in 2026
+    vs $365m in 2025 (+44%), and a reported shift from 'platform premium' to 'execution premium' - acquirers now prioritising
+    assets reaching EPS accretion in 24-36 months. LOE exposure quoted at >$230bn by 2030 by this source vs the $265bn stored
+    in ind_04; different methodology, NOT written as an update."
+  source: CNBC 2026-06-04; IQVIA Biopharma M&A Outlook 2026; Vision Life Sciences patent-cliff guide
+- date: '2026-08-31'
+  verdict: intact
+  evidence: "No new YTD print surfaced: the $106bn / 201 deals figure is still the 2026-06-04 CNBC number already stored in
+    ind_01, so this indicator is ~3 months stale even after re-verification. What IS new: average deal value $527.3m in 2026
+    vs $365m in 2025 (+44%), and a reported shift from 'platform premium' to 'execution premium' - acquirers now prioritising
+    assets reaching EPS accretion in 24-36 months. LOE exposure quoted at >$230bn by 2030 by this source vs the $265bn stored
+    in ind_04; different methodology, NOT written as an update."
+  source: CNBC 2026-06-04; IQVIA Biopharma M&A Outlook 2026; Vision Life Sciences patent-cliff guide
+- date: '2026-08-31'
+  verdict: intact
+  evidence: Biotech M&A $106bn across 201 deals through June 2026, best year since pre-Covid; average deal value $527.3m
+    vs $365m in 2025 (+44% YoY). IQVIA forecasts $140-160bn full-year 2026 with $20-30bn upside. Mix shifting to bolt-on
+    ($1-10bn), science-driven, CVR risk-sharing. No print fresher than the stored 106 value, so no numeric observation 
+    recorded.
+  source: CNBC 2026-06-04 'Biotech M&A hits $106 billion'; IQVIA 2026 full-year forecast (accessed 2026-08-31)
