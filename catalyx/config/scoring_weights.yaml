@@ -586,6 +586,14 @@ book_shape:
     planned_max_per_review: 6
     fee_after_free_eur: null   # a broker fact, not a preference — null until observed
     exempt_actions: [SELL, REDUCE]   # removing risk never queues behind a budget
+    # …and so does a row that closes the LINE, whatever the rule called it (v9 R2). `TRIM` covers
+    # two different trades: shaving 4pp off an overweight is the fine adjustment that should
+    # starve first when slots are scarce (tier 2, Gârleanu–Pedersen), while a TRIM against a 0%
+    # target is a full exit with another name — which is how EVERY exit from a sector the model
+    # book no longer holds arrives (copper and pharma, 2026-09-01). Filing that behind a BUY lets
+    # the slot allowance decide to keep risk, and "removing risk does not queue" was never a
+    # statement about the label. `false` makes the label literal again.
+    exempt_full_exits: true
 
 # Conviction tiers → position size ceiling. DERIVED: tier_multiples × (deploy_max / n_target).
 # Was 12/8/4 absolute; at a 6-name book every position sat above tier 1, so the ladder said nothing.
@@ -738,6 +746,37 @@ portfolio_weighting:
 correlated_catalyst_cap:
   max_combined_pct: 0.30      # combined allocation across theses sharing a primary catalyst
   enforcement: "warn"          # "warn" = flag + require override note | "block" = prohibit
+
+  # ── THE RISK BUDGET (v10 P6) — the column above, promoted to a limit ──────────────────────
+  # The paragraph above ends "replacing the notional cap with a risk budget is a decision for
+  # the user". The user made it (2026-09-01), asking that risk and concentration both inform
+  # the rebalance. This is that budget, and it does NOT replace the notional cap yet: both run,
+  # both `warn`, for one cycle, and the evidence of two runs decides which one survives. That
+  # ordering is the same discipline v6 L2 used — a measurement earns its enforcement, and a cap
+  # is never relaxed or replaced on the strength of a single table.
+  #
+  # 35% IS CHOSEN AGAINST THE MEASURED SPREAD (2026-08-31 post-trade book):
+  #   ai_capex 41.6% notional → 50.8% of book variance   energy_grid 19.7% → 27.1%
+  #   biopharma 21.9% → 11.7%                            stablecoin 6.8% → 16.8%
+  #   gold_accum 7.2% → 16.6%
+  # At 35 exactly ONE cluster breaches — ai_capex, the one every review already names — while
+  # biopharma, which breaches the NOTIONAL cap at half of gold's risk, does not. That is the
+  # whole argument for the risk column: the two rules disagree, and they disagree about the
+  # bucket the table has been arguing over for a month.
+  #
+  # Clusters OVERLAP and their shares sum to more than 100 (a position can serve two drivers) —
+  # the same rule `exposure_eur` follows, and the reason this is a budget per driver rather
+  # than a partition of the book. `ctr_pct` is the Euler contribution to book variance from
+  # `covariance.cluster_risk_for`; **None** when the covariance cannot be built, and a None is
+  # never read as zero — an unmeasured risk does not pass a risk budget by default, it is
+  # reported as unmeasured and the notional cap governs alone.
+  max_cluster_variance_pct: 35.0
+  risk_enforcement: "warn"     # "warn" = flag + name the trim candidate, the action table is
+                               # untouched | "block" = ADD/BUY into a breaching cluster degrades
+                               # to HOLD and the highest-contribution member is TRIMmed.
+                               # Ships as "warn" deliberately: arming a new limit in the same
+                               # edit that introduces it would move money on a threshold that
+                               # has never been read against a live table.
 
 # v7 M4 — narrative_maturity → priced-in fraction, for the `ca_unpriced` CANDIDATE COLUMN
 # (weight 0 in the composite; measured by calibration alongside the official dimensions).

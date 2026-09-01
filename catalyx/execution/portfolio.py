@@ -101,6 +101,65 @@ def _apply_composite_floor(df, c: dict):
     return df[df["composite"] >= float(c.get("min_composite", 50.0))]
 
 
+# ── The conviction gate — an ABSOLUTE floor beside the relative one (v10 P1) ──
+
+def conviction_gate(df, c: dict) -> tuple:
+    """Names that fail an absolute standard, whatever the rest of the universe did.
+
+    WHY THIS IS NOT THE COMPOSITE FLOOR. `min_composite_z` is RELATIVE by construction: 0.0
+    means "above this run's own average", so in a universe where every driver is fading it
+    still admits half the field, and the book stays full because the book is always full. The
+    user's criterion is the other one — "if a sector stops being interesting under its
+    catalysts or its risk, drop it" — and that question cannot be asked in z-units, because a
+    z-score has no opinion about whether the thing it ranks is worth owning at all.
+
+    So the gate reads `catalyst_alignment`, which IS an absolute level in [0,100] and carries
+    the largest weight in the composite (0.35). The floor is read off the measured distribution
+    rather than chosen: on run_20260831_184616 the 26 CA values are bimodal — twenty sit
+    between 71.5 and 96.2, then a 25-point gap, then 36.2 / 13.9 / 13.9 / 0.0, which are the
+    sectors carrying no live structural driver at all. A floor of 40 sits in that gap. It
+    changes NOTHING about today's book (all four excluded names rank 17th or worse) and that is
+    the point: it encodes the criterion without silently re-cutting a table the user already
+    decided on. What it stops is the case that has never yet happened and would not be caught —
+    `eu_retail_banking` at momentum 86.5 with CA 13.9, one good quarter away from `buy_if`'s
+    rank-8 ceiling, bought on price alone with no driver behind it.
+
+    WHAT THE GATE REFUSES TO JUDGE. An IMPUTED catalyst_alignment (`ca_imputed`, v6 H2 — no
+    study, so CA was set to the universe prior rather than to zero) is NOT evaluated: it passes
+    and is reported as unevaluated. Gating on it would convert "we have not measured this" into
+    "this fails", which is the one inference v5/v6 spent two versions removing from this
+    pipeline. A MEASURED zero is different and is gated: `infrastructure_core` scores CA 0.0
+    with a study behind it, and that zero was observed.
+
+    A dropped name is not replaced by a lower-ranked one out of politeness: top-N runs over the
+    survivors, so the next eligible name does come in. Cash appears only when FEWER THAN
+    `max_positions` names clear the gate — which is exactly the state the user asked to be
+    representable, and which the book previously had no way to express.
+
+    Returns `(kept_df, excluded_rows)`; `excluded_rows` is what the caller reports.
+    """
+    g = c.get("entry_gate") or {}
+    if not g or not bool(g.get("enabled", True)) or df.empty:
+        return df, []
+    min_ca = g.get("min_catalyst_alignment")
+    if min_ca is None or "catalyst_alignment" not in df.columns:
+        return df, []
+    min_ca = float(min_ca)
+
+    imputed = (df["ca_imputed"].fillna(False).astype(bool) if "ca_imputed" in df.columns
+               else df["catalyst_alignment"].notna() & False)
+    ca = df["catalyst_alignment"]
+    fails = (~imputed) & ca.notna() & (ca < min_ca)
+
+    excluded = [{"sector_id": str(r["sector_id"]),
+                 "catalyst_alignment": round(float(r["catalyst_alignment"]), 1),
+                 "min_catalyst_alignment": min_ca,
+                 "reason": (f"catalyst_alignment {float(r['catalyst_alignment']):.1f} < "
+                            f"{min_ca:.0f} — no live driver behind the name")}
+                for _, r in df[fails].iterrows()]
+    return df[~fails], excluded
+
+
 # ── Weighting ────────────────────────────────────────────────────────────────
 
 def water_fill(scores: list[float], max_w: float) -> list[float]:
@@ -455,6 +514,9 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
 
     # 1. filters
     df = _apply_composite_floor(df, c)
+    # The ABSOLUTE gate runs beside the relative floor, never instead of it: one asks "is this
+    # above average today", the other "is this worth owning at all". See `conviction_gate`.
+    df, gate_excluded = conviction_gate(df, c)
     df = df[df["momentum"] >= c.get("min_momentum", 0)]
     df = df[df["crowding_risk"] <= c.get("max_crowding", 100)]
     excl = set(c.get("exclude_narrative_maturity") or [])
@@ -604,9 +666,35 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
                                   {"portfolio_id": portfolio_id, "run_id": run_id},
                                   overwrite=True, lake_dir=lake_dir)
 
+    # WHY THE GATE'S CASH IS REPORTED SEPARATELY (v10 P2). `cash_pct` is the residue of three
+    # very different things: the per-position cap, a contested haircut, and — now — names the
+    # conviction gate deliberately refused. Only the last is a DECISION about where not to
+    # invest, and `rebalance.close_target_weights` must not rescale it away as if it were weight
+    # lost to an unbuyable vehicle. Downstream reads `n_eligible` to know how much of the book
+    # the model could fill at all, which is what the deployment shortfall is then measured
+    # against — see `rebalance.absorbable_eur`.
     return {"portfolio_id": portfolio_id, "run_id": run_id, "config_version": cfg_ver,
             "positions": len(rows), "cash_pct": cash_pct, "overlay": risk_overlay,
             "contested": n_contested, "tilt": lam_info,
+            "conviction_gate": {
+                "enabled": bool((c.get("entry_gate") or {}).get("enabled", True)
+                                and (c.get("entry_gate") or {}).get("min_catalyst_alignment")
+                                is not None),
+                "min_catalyst_alignment": (c.get("entry_gate") or {}).get(
+                    "min_catalyst_alignment"),
+                "excluded": gate_excluded,
+                "n_excluded": len(gate_excluded),
+                "n_eligible": len(rows),
+                "max_positions": int(c["max_positions"]),
+                # The book is SHORT of its own target because too few names cleared an absolute
+                # standard — not because capital was mislaid. This is the state the user asked
+                # to be representable, and it is the one the shortfall rule must not punish.
+                "short_of_target": len(rows) < int(c["max_positions"]),
+                "note": (f"{len(rows)} of {c['max_positions']} slots filled; "
+                         f"{len(gate_excluded)} name(s) failed the absolute conviction floor"
+                         + (": " + ", ".join(e["sector_id"] for e in gate_excluded)
+                            if gate_excluded else "")),
+            },
             "holdings": rows, "catalyst_exposure": exposure}
 
 

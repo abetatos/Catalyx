@@ -22,6 +22,31 @@ construction:
   min_momentum: 40
   max_crowding: 85
   exclude_narrative_maturity: [exhausted]
+
+  # ── CONVICTION GATE (v10 P1) — the ABSOLUTE standard, beside the relative floor ──
+  # `min_composite_z` is relative by construction: 0.0 means "better than this run's average",
+  # so in a universe where every driver is fading it still admits half the field and the book
+  # stays full because the book is always full. The user's criterion is the other question —
+  # "if a sector stops being interesting under its catalysts, it should not be in the book" —
+  # and a z-score cannot express it: it ranks, it does not judge whether the thing ranked is
+  # worth owning. So the gate reads catalyst_alignment, which is an absolute level in [0,100]
+  # and already the composite's largest weight (0.35).
+  #
+  # 40 IS READ OFF THE MEASURED DISTRIBUTION, NOT CHOSEN. On run_20260831_184616 the 26 CA
+  # values are bimodal: twenty between 71.5 and 96.2, then a 25-point gap, then 36.2 / 13.9 /
+  # 13.9 / 0.0 — precisely the sectors carrying no live structural driver. 40 sits in the gap.
+  # It changes nothing about today's book (all four excluded rank 17th or worse), and that is
+  # the point: it states the criterion without silently re-cutting a table already decided on.
+  # What it stops is the case that has not happened yet — eu_retail_banking, momentum 86.5 and
+  # CA 13.9, one good quarter from `buy_if`'s rank-8 ceiling, bought on price with no driver.
+  #
+  # An IMPUTED CA (`ca_imputed`, v6 H2 — no study, so CA took the universe prior) is NOT judged:
+  # it passes and is reported unevaluated. Turning "not measured" into "fails" is the single
+  # inference v5 and v6 spent two versions removing. A MEASURED zero IS judged — infrastructure
+  # _core scores 0.0 with a study behind it, and that zero was observed.
+  entry_gate:
+    enabled: true
+    min_catalyst_alignment: 40
   weighting: composite
   max_position_pct: 20
   # Conviction sizing (overrides global portfolio_weighting): the flagship book expresses the

@@ -979,6 +979,46 @@ def test_risk_removal_never_queues_behind_the_budget():
     assert rows[-1]["budget_state"] == "deferred"      # the BUY yields to the risk rows
 
 
+def _exit_row(sid, trade, actual, target_pct):
+    return {"sector_id": sid, "rule_action": "TRIM", "trade_eur": float(trade),
+            "actual_eur": float(actual), "target_pct": float(target_pct)}
+
+
+def test_a_full_exit_never_queues_even_when_the_rule_called_it_a_trim():
+    """Every exit from a sector the model book no longer holds arrives as TRIM against a 0%
+    target. Filing that behind a BUY lets the slot allowance decide to keep risk, and "removing
+    risk does not queue" was never a statement about the label."""
+    rows = [_mv("b1", "BUY", 900), _mv("b2", "BUY", 800),
+            _exit_row("gone", -4000, 4000, 0.0)]
+    plan = rb.trade_budget_plan(rows, _budget_cfg(planned_max_per_review=1))
+    assert rows[2]["budget_state"] == "exempt"
+    assert rows[0]["budget_state"] == "deferred", "the BUY yields the slot, not the exit"
+    assert "gone" not in {d["sector_id"] for d in plan["deferred_rows"]}
+
+    # Exempt rows still CONSUME slots, and exits alone pushing past the budget is reported.
+    rows = [_exit_row("gone", -4000, 4000, 0.0), _exit_row("gone2", -900, 900, 0.0)]
+    assert rb.trade_budget_plan(rows, _budget_cfg(planned_max_per_review=1))["over_budget"] == 1
+
+
+def test_a_partial_trim_still_starves_first():
+    """The other half of the distinction: shaving an overweight back to a LIVE target is the fine
+    adjustment Gârleanu–Pedersen says to starve first. Exempting every TRIM would delete the
+    tier-2 rule instead of correcting its label."""
+    rows = [_mv("b1", "BUY", 900), _mv("b2", "BUY", 800),
+            _exit_row("shaved", -4000, 9000, 5.0)]     # still held after the trim
+    rb.trade_budget_plan(rows, _budget_cfg(planned_max_per_review=2))
+    assert rb.is_full_exit(rows[2]) is False
+    assert rows[2]["budget_state"] == "deferred"
+
+
+def test_a_row_that_cannot_say_whether_it_exits_is_not_claimed_as_one():
+    """No target, no market value → unknowable. Claiming exemption on missing data is how a
+    guard degrades into an escape hatch."""
+    assert rb.is_full_exit({"rule_action": "TRIM", "trade_eur": -500.0}) is False
+    assert rb.is_full_exit({"rule_action": "BUY", "trade_eur": 500.0,
+                            "target_pct": 0.0, "actual_eur": 0.0}) is False
+
+
 def test_deploying_idle_cash_outranks_rotation():
     """Gârleanu–Pedersen: with costly trading you under-trade toward the target, and the fine
     adjustment between existing names is the first thing to starve. Cash drag is measured; a

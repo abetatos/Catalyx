@@ -362,8 +362,15 @@ def correlated_catalyst_cap() -> dict:
     """
     c = _section("correlated_catalyst_cap", {"max_combined_pct": 0.30, "enforcement": "warn"})
     v = float(c.get("max_combined_pct", 0.30))
+    # `max_cluster_variance_pct` (v10 P6) is a SHARE OF BOOK VARIANCE and is stored as a real
+    # percent — it is never a fraction, because a variance share of 0.35 would mean a third of a
+    # percent and quietly never bind. It gets no <=1.0 normalization for exactly that reason:
+    # the ambiguity that made `max_combined_pct` need one is not present here, and inventing it
+    # would make 0.35 unwritable.
     return {"max_combined_pct": v * 100.0 if v <= 1.0 else v,
-            "enforcement": str(c.get("enforcement", "warn"))}
+            "enforcement": str(c.get("enforcement", "warn")),
+            "max_cluster_variance_pct": float(c.get("max_cluster_variance_pct", 35.0)),
+            "risk_enforcement": str(c.get("risk_enforcement", "warn"))}
 
 
 # ── Entry-timing overlay (entry_timing) ──────────────────────────────────────

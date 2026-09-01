@@ -42,6 +42,9 @@ _SELL_ACTIONS = ("trim", "close")
 _MOVEMENT_TABLE = "movement"
 _PERF_TABLE = "catalyst_performance"
 _UNCATALYZED_ID = "uncatalyzed"
+# Namespace for the per-member singleton clusters `cap_check` asks the covariance for (v10 P7).
+# Prefixed so a singleton can never collide with a real `catalyst_id` and leak into the cap rows.
+_MEMBER_RISK_PREFIX = "\x00member:"
 
 
 # ── read ─────────────────────────────────────────────────────────────────────
@@ -269,7 +272,9 @@ def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[d
         from catalyx.store import structural_catalyst_repo as scr
         smap, merged = portfolio._sector_catalyst_map(), scr.merged_map()
         structural = {str(d.get("id")) for d in scr._load_all() if d.get("id")}
-        cap_pct = float(weights.correlated_catalyst_cap()["max_combined_pct"])
+        ccc = weights.correlated_catalyst_cap()
+        cap_pct = float(ccc["max_combined_pct"])
+        var_cap_pct = float(ccc.get("max_cluster_variance_pct", 35.0))
         total = float(weights.total_capital_eur() or 0.0)
     except Exception:                                          # pragma: no cover - defensive
         return []
@@ -327,6 +332,7 @@ def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[d
     # notional and stays `warn` — a measurement is evidence FOR a config edit, never the edit.
     # None when the covariance cannot be built: an unmeasured risk must not read as zero risk.
     risk: dict[str, dict] = {}
+    member_risk: dict[str, dict] = {}
     try:
         from catalyx.scorer import covariance
         clusters = {cid: sorted(by_catalyst.get(cid, ())) for cid in added}
@@ -340,16 +346,34 @@ def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[d
             for c in drivers & structural & set(clusters):
                 if sid not in clusters[c]:
                     clusters[c].append(sid)
+        # v10 P7 — each member ALSO gets a singleton cluster, so the risk budget can name WHICH
+        # line to trim instead of only that a bucket is too big. Euler contributions are
+        # additive, so a singleton's `ctr_pct` is that position's own share of book variance and
+        # the members of a cluster sum to the cluster's. Computed in the SAME call: they must be
+        # read off one covariance matrix or the shares would not be comparable, and rebuilding
+        # the matrix per member would pay for the same estimate N times.
+        singles = {f"{_MEMBER_RISK_PREFIX}{s}": [s] for s in post_book}
         risk = covariance.cluster_risk_for(
-            {s: (v[0], v[1]) for s, v in post_book.items()}, clusters) or {}
+            {s: (v[0], v[1]) for s, v in post_book.items()},
+            {**clusters, **singles}) or {}
+        member_risk = {k[len(_MEMBER_RISK_PREFIX):]: v for k, v in risk.items()
+                       if k.startswith(_MEMBER_RISK_PREFIX)}
+        risk = {k: v for k, v in risk.items() if not k.startswith(_MEMBER_RISK_PREFIX)}
     except Exception:                                          # pragma: no cover - defensive
-        risk = {}
+        risk, member_risk = {}, {}
 
     out = []
     for cid, add_eur in added.items():
         post = max(0.0, current.get(cid, 0.0) + add_eur)
         pct = post / total * 100.0
         r = risk.get(cid) or {}
+        ctr = r.get("ctr_pct")
+        # v10 P6 — the risk column, promoted to a limit that runs BESIDE the notional cap for a
+        # cycle. `over_risk` is None, never False, when the covariance could not be built: an
+        # unmeasured risk must not pass a risk budget by default. The two flags are reported
+        # separately on purpose — where they disagree is the evidence that decides which rule
+        # survives, and collapsing them to one boolean would destroy exactly that.
+        over_risk = None if ctr is None else bool(float(ctr) > var_cap_pct)
         out.append({
             "catalyst_id": cid,
             "current_eur": round(current.get(cid, 0.0), 2),
@@ -359,9 +383,24 @@ def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[d
             "cap_pct": cap_pct,
             "over_by_eur": round(post - cap_pct / 100.0 * total, 2),
             "over": pct > cap_pct,
-            "risk_ctr_pct": r.get("ctr_pct"),
+            "risk_ctr_pct": ctr,
             "risk_standalone_vol_pct": r.get("standalone_vol_pct"),
+            "risk_cap_pct": var_cap_pct,
+            "over_risk": over_risk,
+            "risk_over_by_pp": (None if ctr is None
+                                else round(float(ctr) - var_cap_pct, 2)),
+            # The two rules disagreeing on the SAME bucket is the finding, not a glitch.
+            "rules_disagree": over_risk is not None and (pct > cap_pct) != over_risk,
             "sectors": sorted(by_catalyst.get(cid, ())),
+            # Which member carries the risk — what a trim candidate is chosen on (v10 P7).
+            # Sorted by contribution so the caller never has to re-rank; empty when unmeasured.
+            "members_by_risk": sorted(
+                ({"sector_id": s,
+                  "ctr_pct": (member_risk.get(s) or {}).get("ctr_pct"),
+                  "eur": round(float((post_book.get(s) or ["", 0.0])[1]), 2)}
+                 for s in (clusters.get(cid) or by_catalyst.get(cid, ()))
+                 if (member_risk.get(s) or {}).get("ctr_pct") is not None),
+                key=lambda m: -float(m["ctr_pct"])),
         })
     return sorted(out, key=lambda r: -r["post_pct"])
 

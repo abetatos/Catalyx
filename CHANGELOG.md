@@ -71,12 +71,26 @@ capital total por review. Tres propiedades la separan de un escondite para el ef
    una PERSONA ya contestó. La autoría humana no se toca: una decisión de una persona no es de la
    máquina para retirarla.
 
+**R2 — una salida completa no hace cola, la llame la regla como la llame.** Lo preguntó el usuario
+en cuanto vio la rampa: «¿esto afecta a si quiero vender una posición completa aunque sea muy
+grande?». La rampa no (toda fila negativa se concede: verificado con una venta de €9.000 bajo un
+tramo de 1pp), y `SELL`/`REDUCE` ya estaban exentos del presupuesto de huecos. Pero **`TRIM` no lo
+estaba**, y una salida completa llega etiquetada `TRIM` siempre que el target del modelo es 0% —
+que es como sale del libro **todo** sector que el model book ha dejado de tener (hoy mismo, copper
+y pharma). Con más de 6 filas que mueven dinero, un cierre total podía quedar detrás de una compra:
+la asignación de huecos decidiendo **mantener riesgo**, que es justo lo contrario de la regla que
+la lista de exentos codifica. `exempt_full_exits: true` + `is_full_exit()` (trade negativo, target
+0%, y el importe cubre la posición) lo corrigen sin borrar el tier 2: un TRIM que rasca 4pp de un
+sobrepeso contra un target VIVO sigue siendo rotación y sigue siendo lo primero que se queda sin
+hueco. Una fila que no puede saber si cierra (sin target o sin valor de mercado) **no** reclama la
+exención — conceder sobre dato ausente es como una guarda se convierte en puerta trasera.
+
 El marcador `*` de la tabla pasa a significar «encolada por una escasez (hueco u ramp)». El
 dashboard gana la tarjeta **this tranche** y el mismo bloque de orden de ejecución, y persiste
 `ramp_state`/`budget_state` por fila más la ruta (`book_ramp_*`) para que un run releído mañana
 diga por qué una fila estaba encolada. `review_report` añade `ramp` a los autores automáticos: la
 línea RAMP ya nombra cada fila retenida, y un marcador que pide prosa por una decisión que nadie
-tomó enseña a saltarse los marcadores. 664 tests en verde (+9).
+tomó enseña a saltarse los marcadores. 667 tests en verde (+12).
 
 **Efecto en la tabla viva:** el tramo de esta iteración son 5 filas —SELL `copper_miners` €1.051,
 SELL `pharma_large_cap` €556, ADD `semiconductors_design` €374, BUY `ai_infrastructure_data_centers`

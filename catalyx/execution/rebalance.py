@@ -709,6 +709,25 @@ def rank_coverage(rank_history: list[int | None]) -> dict:
 _BUDGET_TIERS = {"SELL": 0, "REDUCE": 0, "BUY": 1, "ADD": 1, "TRIM": 2}
 
 
+def is_full_exit(row: dict) -> bool:
+    """Does this row close the LINE, whatever the rule called it?
+
+    `TRIM` covers two different trades and only one of them is turnover. Shaving 4pp off an
+    overweight is the fine adjustment Gârleanu–Pedersen says to starve first when trading is
+    costly — it stays tier 2. A TRIM against a 0% target is a full exit with another name, which
+    is how every exit from a sector the model book no longer holds arrives (copper and pharma,
+    2026-09-01). Filing that behind a BUY makes the slot allowance decide to keep risk, and
+    "removing risk does not queue" was never about the label.
+    """
+    trade = float(row.get("trade_eur") or 0.0)
+    if trade >= 0:
+        return False
+    target, actual = row.get("target_pct"), row.get("actual_eur")
+    if target is None or actual is None:
+        return False                                   # unknowable → not claimed as an exit
+    return float(target) <= 0.0 and abs(trade) >= float(actual) - 0.01
+
+
 def trade_budget_plan(rows: list[dict], cfg: dict) -> dict:
     """Split the money-moving rows into what this review may execute and what it must defer.
 
@@ -716,28 +735,34 @@ def trade_budget_plan(rows: list[dict], cfg: dict) -> dict:
     terms and false in economic ones: the slot is scarce, and the mandate spends slots on
     catalysts that arrive BETWEEN reviews, so holding some back has option value. Rows in
     `exempt_actions` are never deferred — removing risk does not queue — but they DO consume
-    slots, and if they alone exhaust the budget that is reported, not hidden.
+    slots, and if they alone exhaust the budget that is reported, not hidden. `exempt_full_exits`
+    extends that to a row that closes the line whatever the rule called it (`is_full_exit`),
+    because a full exit arriving as TRIM is still a full exit.
 
     Nothing is zeroed: `rule_action` and `trade_eur` stay the rule's ask, and a deferred row is
     flagged so the deferral can be logged (author `budget`) and priced like any other deviation.
     """
     tb = (cfg.get("trade_budget") or weights.trade_budget())
     exempt = set(tb.get("exempt_actions") or ())
+    exempt_exits = bool(tb.get("exempt_full_exits", True))
     free, reserve = int(tb.get("free_per_month", 10)), int(tb.get("reserve_for_events", 3))
     budget = max(0, min(int(tb.get("planned_max_per_review", 6)), free - reserve))
+
+    def _exempt(r: dict) -> bool:
+        return r.get("rule_action") in exempt or (exempt_exits and is_full_exit(r))
 
     # A row the ramp already queued does not compete for a slot: the scarcity that stopped it is
     # cash, and rationing slots against it would spend the allowance on rows nobody will place.
     movers = [r for r in rows if float(r.get("trade_eur") or 0.0) != 0.0
               and r.get("ramp_state") != "deferred"]
     ranked = sorted(movers, key=lambda r: (
-        -1 if r.get("rule_action") in exempt else _BUDGET_TIERS.get(r.get("rule_action"), 3),
+        -1 if _exempt(r) else _BUDGET_TIERS.get(r.get("rule_action"), 3),
         -abs(float(r.get("trade_eur") or 0.0))))     # most money moved per scarce slot
 
     granted, deferred = [], []
     for r in ranked:
-        if r.get("rule_action") in exempt or len(granted) < budget:
-            r["budget_state"] = "exempt" if r.get("rule_action") in exempt else "granted"
+        if _exempt(r) or len(granted) < budget:
+            r["budget_state"] = "exempt" if _exempt(r) else "granted"
             granted.append(r)
         else:
             r["budget_state"] = "deferred"
@@ -850,6 +875,111 @@ def deployment_ramp_plan(rows: list[dict], deployed_eur: float, deployable_eur: 
                     f"{_eur(sum(float(r['trade_eur']) for r in deferred))} held back: "
                     + ", ".join(r["sector_id"] for r in deferred) + "."
                     if deferred else " Every row fits this tranche.")),
+    }
+
+
+# ── The risk budget in the action table (v10 P6/P7) ─────────────────────────
+
+def cluster_risk_pass(rows: list[dict], clusters: list[dict], cfg: dict) -> dict:
+    """Let CONCENTRATION IN RISK, not only in euros, speak in the action table.
+
+    WHY A SECOND PASS AND NOT A RULE IN `decide_action`. A cluster's risk is a property of the
+    POST-TRADE book, and the post-trade book is what `decide_action` produces — the input does
+    not exist until the first pass has run. So this reads the finished table the same way
+    `trade_budget_plan` and `deployment_ramp_plan` already do, and for the same reason.
+
+    WHAT IT DOES, and the asymmetry is deliberate:
+      · a cluster over its variance budget makes every ADD/BUY into that cluster a HOLD — you do
+        not add to the bucket that is already carrying more risk than it was budgeted;
+      · and it NAMES the member carrying the most of that risk as a trim candidate, sized
+        first-order at `eur × (1 − budget/ctr)`.
+    SELL and REDUCE are never touched: they remove risk, and a risk limit that could cancel a
+    risk removal would be a limit arguing with itself.
+
+    THE SIZING IS FIRST-ORDER AND SAYS SO. A variance share is not invertible per position
+    without an optimizer — trimming a member changes every other member's share too. The
+    proportional step is the linearization of that around the current book: it under-shoots for
+    a highly-correlated cluster and over-shoots for a diversifying one, converging over reviews
+    rather than in one. That is honest for a `warn`-level limit and would need replacing before
+    the limit ever moved money on its own. The TRIGGER is measured risk; only the STEP is
+    notional, and conflating the two is what the notional cap already gets wrong.
+
+    UNMEASURED IS NOT COMPLIANT. `over_risk is None` — no covariance — is reported as unmeasured
+    and changes nothing. It is never read as "within budget".
+
+    At `risk_enforcement: "warn"` (the shipped default) nothing here rewrites an action: the
+    findings are returned for the report and the table stands. `"block"` arms it.
+    """
+    ccc = weights.correlated_catalyst_cap()
+    budget = float(ccc.get("max_cluster_variance_pct", 35.0))
+    arming = str(ccc.get("risk_enforcement", "warn")).lower()
+    armed = arming == "block"
+
+    by_sector = {r["sector_id"]: r for r in rows}
+    breaching = [c for c in (clusters or []) if c.get("over_risk") is True]
+    unmeasured = [c["catalyst_id"] for c in (clusters or []) if c.get("over_risk") is None]
+
+    findings, changed = [], 0
+    for c in sorted(breaching, key=lambda c: -float(c.get("risk_ctr_pct") or 0.0)):
+        ctr = float(c["risk_ctr_pct"])
+        members = [m["sector_id"] for m in (c.get("members_by_risk") or [])]
+        blocked = []
+        for sid in members or (c.get("sectors") or []):
+            r = by_sector.get(sid)
+            if r and r.get("rule_action") in ("ADD", "BUY"):
+                blocked.append({"sector_id": sid, "rule_action": r["rule_action"],
+                                "trade_eur": float(r.get("trade_eur") or 0.0)})
+                if armed:
+                    r["rule_action"], r["trade_eur"] = "HOLD", 0.0
+                    r["reason"] = (f"{c['catalyst_id']} carries {ctr:.1f}% of book variance "
+                                   f"against a {budget:.0f}% budget — no adds into a cluster "
+                                   f"already over its risk")
+                    changed += 1
+
+        # The trim candidate: the member carrying the most of the cluster's risk that is not
+        # already being sold down by a higher-precedence rule.
+        cand = next((m for m in (c.get("members_by_risk") or [])
+                     if (by_sector.get(m["sector_id"]) or {}).get("rule_action")
+                     not in ("SELL", "REDUCE", "TRIM")), None)
+        trim = None
+        if cand and float(cand.get("eur") or 0.0) > 0 and ctr > 0:
+            step = round(float(cand["eur"]) * (1.0 - budget / ctr), 2)
+            if step >= float(cfg.get("min_ticket_eur", 150.0)):
+                trim = {"sector_id": cand["sector_id"], "ctr_pct": cand["ctr_pct"],
+                        "eur": cand["eur"], "trim_eur": step}
+                if armed:
+                    r = by_sector.get(cand["sector_id"])
+                    if r is not None:
+                        r["rule_action"], r["trade_eur"] = "TRIM", -step
+                        r["reason"] = (f"{c['catalyst_id']} at {ctr:.1f}% of book variance "
+                                       f"(budget {budget:.0f}%); this line carries "
+                                       f"{float(cand['ctr_pct']):.1f}pp of it")
+                        changed += 1
+
+        findings.append({
+            "catalyst_id": c["catalyst_id"], "ctr_pct": ctr, "budget_pct": budget,
+            "over_by_pp": round(ctr - budget, 2),
+            "notional_pct": c.get("post_pct"), "notional_over": c.get("over"),
+            "rules_disagree": c.get("rules_disagree"),
+            "blocked": blocked, "trim_candidate": trim,
+            "members_by_risk": c.get("members_by_risk") or [],
+        })
+
+    for r in rows:
+        r.setdefault("risk_state", "n/a")
+    return {
+        "enabled": True, "armed": armed, "enforcement": arming, "budget_pct": budget,
+        "breaching": findings, "n_breaching": len(findings),
+        "unmeasured": unmeasured, "rows_changed": changed,
+        "note": (f"risk budget {budget:.0f}% of book variance per driver — "
+                 + ("no cluster over budget" if not findings else
+                    "; ".join(f"{f['catalyst_id']} {f['ctr_pct']:.1f}% "
+                              f"(+{f['over_by_pp']:.1f}pp)" for f in findings))
+                 + (f". {len(unmeasured)} cluster(s) UNMEASURED — reported, never assumed "
+                    f"compliant: {', '.join(unmeasured)}" if unmeasured else "")
+                 + ("." if armed else
+                    ". Enforcement is `warn`: the table above is unchanged, these are the rows "
+                    "the budget would move if it were armed.")),
     }
 
 
