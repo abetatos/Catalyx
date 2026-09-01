@@ -1,0 +1,87 @@
+{
+  "$schema": "catalyx/schemas/movement.json",
+  "id": "mov_20260901_cybersecurity_commercial_close",
+  "schema_version": "1.3",
+  "executed_at": "2026-09-01T00:00:00Z",
+  "action": "close",
+  "sector_id": "cybersecurity_commercial",
+  "vehicle": {
+    "etf": "USPY.L",
+    "isin": null,
+    "currency": "USD"
+  },
+  "amount_eur": 542.82,
+  "qty": 13.99,
+  "price": 38.8,
+  "fees": 0.0,
+  "attribution": [
+    {
+      "catalyst_id": "struct_enterprise_cyber_spend_supercycle",
+      "weight": 1.0
+    }
+  ],
+  "trigger": "rebalance",
+  "conviction": "small",
+  "outcome": {
+    "exit_reason": "Executed the rebalance table of run_20260901: rule_action TRIM against a model-book target of 0.0% (score_rank 8 of the run, outside the n_target=6 book), gap -EUR 564.57, reason '5.7pp above target'. The same table paired it as a SWAP into water_infrastructure (IQQQ.DE), friction EUR 14.53, breakeven 2.57% over a 63d horizon. A full exit driven by the rule table, not by a fired stop: inv_01/inv_02/inv_03 were all clear at close.",
+    "exit_note": "Lo ha dicho la pestana de rebalanceo por los motivos que aparecen ahi.",
+    "exit_note_at": "2026-09-01T00:00:00Z",
+    "exit_trigger_type": "rotation",
+    "signal_context": {
+      "exit_watcher_action": "hold",
+      "followed_signal": false
+    },
+    "assumption_resolution": [
+      {
+        "id": "asm_01",
+        "outcome": "unresolved",
+        "note": "Enterprise cyber spend growth was NOT re-verified against Gartner/IDC or platform-leader guidance during the 85-day holding period. The run's data column marks this position 'blind (52d)'. Recorded unresolved rather than assumed to have held — the assumption's own falsification test (below ~5% YoY for 2 consecutive quarters) was never evaluated."
+      },
+      {
+        "id": "asm_02",
+        "outcome": "unresolved",
+        "note": "Measured at close (EUR, 2026-06-01 -> 2026-09-01, n=64d): USPY.L vs the eq-weighted held AI-capex cluster (4COP.DE + SEMI.L) rho = 0.325 daily -- just above the 0.30 assumption line, far below the inv_03 kill-switch at 0.50. Weekly over the same span is -0.00 (n=12). Pairwise: 0.276 vs copper, 0.301 vs semis, against a book-internal 0.590 copper~semis. Entry was 0.06. One daily reading above the line is not the 'sustained' breach the test requires, and the two frequencies disagree -- so: weakening, not falsified. The diversification job was substantially done for the holding period."
+      },
+      {
+        "id": "asm_03",
+        "outcome": "unresolved",
+        "note": "struct_enterprise_cyber_spend_supercycle intensity fell 85.8 (2026-07-28) -> 79.0 (2026-08-31) -> 69.3 (2026-09-01), crossing below the 70 line for ONE review; falsification requires two consecutive. narrative_maturity in the catalyst file is still 'mainstream' (the sector snapshot reads 'crowded'), not 'exhausted'. Fading clearly, falsified not yet."
+      }
+    ],
+    "catalyst_materialized": true,
+    "catalyst_materialized_note": "The driver stayed active and the vehicle delivered: USPY.L +8.6% in EUR over 85 days against a book that was behind its benchmark. struct_enterprise_cyber_spend_supercycle remains status 'active' with catalyst_alignment 71.9 at close, and no invalidation fired -- the exit is a RANKING decision (rank 8, out of a 6-name model book) and a correlation-driven rotation, not a thesis break. Two qualifiers on the 'materialized' call: (1) the mechanism itself (Gartner/IDC spend growth, platform ARR) was never re-verified after entry -- 52 days blind -- so what is confirmed is the catalyst's registered intensity trajectory, not fresh evidence of the underlying spend; (2) that trajectory is DOWN, 85.8 -> 69.3, so the driver materialized while fading. The experiment's own hypothesis (DJ-002: cyber as a durable diversifier to AI capex) is answered favourably but weakly: rho to the held cluster rose 0.06 -> 0.33, still the lowest-correlation line in the book, and the position was profitable while the cluster it hedged was not.",
+    "pnl": {
+      "gross_pnl_eur": 42.82,
+      "tax_due_eur": 8.14,
+      "after_tax_pnl_eur": 34.68,
+      "return_pct": 8.56,
+      "holding_days": 85
+    },
+    "behavioral_flags": [
+      "overrode_signal"
+    ],
+    "verdict": {
+      "right_thesis": true,
+      "right_reason": true,
+      "label": "skill",
+      "confidence": "low",
+      "note": "Made money AND the stated reason held — the pattern is worth repeating."
+    }
+  },
+  "metadata": {
+    "created_at": "2026-09-01T00:00:00Z",
+    "created_by": "claude",
+    "attribution_note": "Same single driver and weight as the opening movement (struct_enterprise_cyber_spend_supercycle at 1.0), so realized P&L attributes to the catalyst that opened the line.",
+    "fill_note": "Broker report (user, 2026-09-01): 13.991 units at 38.80, proceeds 542.82. CURRENCY READING: the figures are EUR, not the vehicle's native USD. Evidence: USPY.L closed 45.42 USD on 2026-09-01 at EURUSD 1.15902 = EUR 39.19/unit, so 38.80 is an intraday EUR fill 1.0% under the EUR close; read as USD it would be 15% under a same-day close, which no fill explains. Native equivalent ~44.97 USD. The `price` field therefore carries the EUR per-unit price the broker showed, while `vehicle.currency` stays USD (the quoting currency) -- P&L is computed from amount_eur, which is exact. QTY: recorded as 13.99 to match the held quantity in the ledger; the broker line says 13.991, a 0.001-unit (EUR 0.04) rounding artifact of the opening record, not a separate lot. Fees 0.00 -- the FX/spread wedge is already inside the 542.82 received, the same convention as the opening fill."
+  },
+  "score_context": {
+    "run_id": "run_20260901",
+    "rank": 8,
+    "composite": 54.0,
+    "catalyst_alignment": 71.9,
+    "momentum": 81.5,
+    "flow": null,
+    "crowding": 75.0,
+    "regime_state": "intact"
+  }
+}
