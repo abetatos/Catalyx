@@ -211,7 +211,7 @@ async function getRunData(rid) {
   if (RUNCACHE[rid]) return RUNCACHE[rid];
   await ensureDuckDB();
   const ranking = tables.has('sector_snapshot') ? await q(
-    `SELECT sector_id, rank, composite, catalyst_alignment, momentum, flow_confirmation, flow_data_quality, flow_source, flow_proxy_ticker, flow_proxy_used, flow_carried_from, flow_volume_cmf, flow_window_days, flow_days_covered, crowding_risk, narrative_maturity, primary_etf, regime_state
+    `SELECT sector_id, rank, composite, catalyst_alignment, momentum, flow_confirmation, flow_data_quality, flow_source, flow_proxy_ticker, flow_proxy_used, flow_carried_from, flow_volume_cmf, flow_window_days, flow_days_covered, crowding_risk, crowding_source, narrative_maturity, primary_etf, regime_state
      FROM sector_snapshot WHERE run_id = ? ORDER BY rank`, [rid]) : [];
   const rank_moves = tables.has('rank_event') ? await q(
     `SELECT sector_id, event_type, from_rank, to_rank, delta FROM rank_event WHERE run_id = ? ORDER BY abs(coalesce(delta,99)) DESC`, [rid]) : [];
@@ -397,12 +397,36 @@ function renderOverview() {
 // 1.2 (it was a constant-50 placeholder that only diluted the ranking; no price-derived metric
 // earned its weight — see the backtest). crowding is shown as a categorical label (derives from
 // narrative_maturity).
+// ── UNITS. Every column below is drawn 0–100 and they are NOT the same quantity.
+// `catalyst 95` and `momentum 95` read like one sentence and are two: the first says "this
+// driver is strong", the second says "this sector beat 95% of the others TODAY". One is
+// comparable across runs, the other is 50 on average by construction and says nothing about
+// whether the universe as a whole is worth owning. The composite is a third thing again — a
+// LEVEL computed from a relative position (`50 + 15z`), which is exactly why v6/H1 introduced
+// `composite_z` and why the pre-1.4 levels are not comparable to today's.
+//
+// So each column carries its unit, and the legend names all three. This changes no number:
+// the ambiguity was in the reading, not in the maths.
+const UNITS = {
+  lvl: { sup: 'ʟ', name: 'level', tip: 'absolute level 0–100 — comparable across runs' },
+  pct: { sup: 'ᴾ', name: 'percentile', tip: 'cross-sectional percentile WITHIN this run\'s universe — 50 by construction, not comparable across runs of different shape' },
+  rel: { sup: 'ᴿ', name: 'relative', tip: 'relative to this run\'s universe: 50 = average, each 15 points = one cross-sectional standard deviation' },
+};
 const SEC_COLS = [
-  { k: 'composite', label: 'composite', bold: true, tip: 'Blend used for the ranking. 50 = this run\'s universe average; each 15 points is one cross-sectional standard deviation' },
-  { k: 'catalyst_alignment', label: 'catalyst', tip: 'How strongly active catalysts support the sector' },
-  { k: 'momentum', label: 'momentum', tip: 'Cross-sectional price-momentum percentile' },
-  { k: 'flow_confirmation', label: 'flow', tip: 'ETF net share-flow (creation/redemption), as a moving average over the last 7 days. ᴾ = real flow via same-theme proxy ETF; ↻ = carried from last reading; ⚠ = NOT real flow, price+volume approximation; ~ = no reading (neutral 50)' },
+  { k: 'composite', label: 'composite', bold: true, unit: 'rel', tip: 'Blend used for the ranking. 50 = this run\'s universe average; each 15 points is one cross-sectional standard deviation' },
+  { k: 'catalyst_alignment', label: 'catalyst', unit: 'lvl', tip: 'How strongly active catalysts support the sector. An absolute level: 95 means the same thing in every run' },
+  { k: 'momentum', label: 'momentum', unit: 'pct', tip: 'Cross-sectional price-momentum percentile — it ranks this sector against the others in THIS run, and averages 50 by construction' },
+  { k: 'flow_confirmation', label: 'flow', unit: 'lvl', tip: 'ETF net share-flow (creation/redemption), as a moving average over the last 7 days. ᴾ = real flow via same-theme proxy ETF; ↻ = carried from last reading; ⚠ = NOT real flow, price+volume approximation; ~ = no reading (neutral 50)' },
 ];
+function unitSup(u) {
+  const d = UNITS[u];
+  return d ? `<span class="unit" title="${d.name} — ${d.tip}">${d.sup}</span>` : '';
+}
+function unitsLegend() {
+  return `<p class="hint">Units — these columns are all drawn 0–100 and are <b>not</b> the same quantity: `
+    + Object.entries(UNITS).map(([, d]) => `<span class="unit">${d.sup}</span> ${d.name} (${d.tip})`).join(' · ')
+    + `. A <span class="unit">ᴾ</span> of 95 means "beat 95% of the universe today"; an <span class="unit">ʟ</span> of 95 means the same thing in every run.</p>`;
+}
 // continuous vivid heatmap: red (low) → amber → green (high)
 function heatColor(v) {
   const t = Math.max(0, Math.min(100, v)) / 100;
@@ -414,10 +438,18 @@ function heatCell(v, bold) {
   if (v == null || v === '') return '<td style="text-align:center"><span class="lbl">—</span></td>';
   return `<td style="text-align:center"><span class="score" style="background:${heatColor(v)}${bold ? ';font-weight:700;min-width:40px' : ''}">${num(v, 0)}</span></td>`;
 }
-function crowdLabel(v) {
+// `src` is the row's `crowding_source` (v8 N4): `comomentum` where the measurement exists,
+// the narrative label where it does not. The two are not the same unit, so the cell says which
+// one it is rather than presenting a measured percentile and a mapped adjective as one number.
+function crowdLabel(v, src) {
   if (v == null) return '<span class="lbl">—</span>';
   const [cls, txt] = v >= 66 ? ['r', 'high'] : v >= 40 ? ['a', 'medium'] : ['g', 'low'];
-  return `<span class="pill ${cls}" title="crowding risk ${num(v, 0)} (from narrative maturity)">${txt}</span>`;
+  const measured = String(src || '').startsWith('comomentum');
+  const u = measured ? UNITS.pct : UNITS.lvl;
+  const how = measured ? 'measured comomentum percentile of this run\'s universe'
+    : 'mapped from the study\'s narrative_maturity label — a judgement, not a measurement';
+  return `<span class="pill ${cls}" title="crowding risk ${num(v, 0)} — ${how}">${txt}`
+    + `<span class="unit">${u.sup}</span></span>`;
 }
 // ── flow provenance: flag when flow_confirmation is a proxy or a no-data placeholder
 //    rather than a clean own-vehicle reading (see catalyx/data/flow_data.py FLOW_PROXY).
@@ -477,20 +509,25 @@ function drawSecTable() {
   });
   const arrow = (col) => SEC_SORT.k === col ? `<span class="ar">${SEC_SORT.dir > 0 ? '▲' : '▼'}</span>` : '';
   const head = `<th data-sort="rank">#${arrow('rank')}</th><th data-sort="sector_id">sector${arrow('sector_id')}</th>`
-    + SEC_COLS.map((c) => `<th class="num" data-sort="${c.k}" title="${c.tip}">${c.label}${arrow(c.k)}</th>`).join('')
-    + `<th data-sort="crowding_risk" title="crowding (from narrative maturity) — lower is better">crowding${arrow('crowding_risk')}</th>`
+    + SEC_COLS.map((c) => `<th class="num" data-sort="${c.k}" title="${c.tip}">${c.label}${unitSup(c.unit)}${arrow(c.k)}</th>`).join('')
+    // crowding has NO single unit: since v8 it is a comomentum PERCENTILE where one is
+    // measurable and the narrative label elsewhere, row by row (`crowding_source`). Marking the
+    // header with one of the two would be a claim about rows that do not carry it, so the mark
+    // is per-row in `crowdLabel` and the header says only that lower is better.
+    + `<th data-sort="crowding_risk" title="crowding — MIXED units by row: measured comomentum percentile where available, narrative-maturity label otherwise (hover a cell). Lower is better">crowding${arrow('crowding_risk')}</th>`
     + `<th data-sort="regime_state" title="noise-vs-regime state">regime${arrow('regime_state')}</th><th title="rank move vs previous run">Δ</th><th></th>`;
   const chevron = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
   const body = rows.map((s) => `<tr data-sid="${s.sector_id}" class="${s.sector_id === curSector ? 'sel' : ''}">
       <td class="lbl">${s.rank}</td>
       <td><b>${s.sector_id}</b> <span class="pill b">${s.primary_etf || '—'}</span></td>
       ${SEC_COLS.map((c) => c.k === 'flow_confirmation' ? flowHeatCell(s) : heatCell(s[c.k], c.bold)).join('')}
-      <td>${crowdLabel(s.crowding_risk)}</td>
+      <td>${crowdLabel(s.crowding_risk, s.crowding_source)}</td>
       <td>${regimePill(s.regime_state)}</td>
       <td>${moveBadge(s.sector_id)}</td>
       <td class="go" title="open sector report">${chevron}</td>
     </tr>`).join('') || `<tr><td colspan="${SEC_COLS.length + 6}" class="lbl" style="padding:14px">no match</td></tr>`;
   $('sec-table').innerHTML = `<div class="cmp"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`
+    + unitsLegend()
     + `<p class="hint" style="margin-top:8px">Cell colour: <b style="color:var(--green)">green</b> high · <b style="color:var(--amber)">amber</b> mid · <b style="color:var(--red)">red</b> low (higher = better for all shown). <b>crowding</b> low is better. On <b>flow</b>: plain = real share-flow · <sup style="color:var(--accent,#3b82f6);font-weight:700">ᴾ</sup> = real flow via same-theme proxy ETF · <sup style="color:var(--accent,#3b82f6);font-weight:700">↻</sup> = carried from last reading (market closed) · <sup style="color:var(--red,#dc2626);font-weight:700">⚠</sup> = NOT real flow, price+volume approximation (review) ·<sup style="color:var(--amber);font-weight:700">~</sup> = no reading, neutral 50. <code>valuation</code> was removed from the model (schema 1.2) — it never moved the ranking and no price-derived metric earned its weight.</p>`;
   $('sec-table').querySelector('thead').onclick = (ev) => {
     const th = ev.target.closest('th[data-sort]'); if (!th) return;
@@ -535,14 +572,14 @@ function selectSector(sid) {
             <span class="pill b">${row.primary_etf || (study && study.etf_analysis && study.etf_analysis.primary_etf) || '—'}</span></div>
           <div style="margin-top:6px">${row.rank ? `<span class="pill">rank ${row.rank} ${moveBadge(sid)}</span> ` : ''}${regimePill(row.regime_state)} ${maturityPill(row.narrative_maturity || (study && study.narrative_maturity))}</div>
         </div>
-        <div style="text-align:right"><div class="lbl">composite</div><div class="big" style="color:${compositeColor(row.composite || 0)}">${num(row.composite, 0)}</div></div>
+        <div style="text-align:right"><div class="lbl">composite${unitSup('rel')}</div><div class="big" style="color:${compositeColor(row.composite || 0)}">${num(row.composite, 0)}</div></div>
       </div>
       <div style="margin-top:14px;display:grid;gap:8px">
-        <div class="barrow" style="grid-template-columns:130px 1fr 40px"><span class="lbl">catalyst align</span>${bar(row.catalyst_alignment || 0)}<span class="v">${num(row.catalyst_alignment, 0)}</span></div>
-        <div class="barrow" style="grid-template-columns:130px 1fr 40px"><span class="lbl">momentum</span>${bar(row.momentum || 0)}<span class="v">${num(row.momentum, 0)}</span></div>
-        <div class="barrow" style="grid-template-columns:130px 1fr 40px"><span class="lbl">flow${flowMark(row)}</span>${bar(row.flow_confirmation || 0)}<span class="v">${num(row.flow_confirmation, 0)}</span></div>
+        <div class="barrow" style="grid-template-columns:130px 1fr 40px"><span class="lbl">catalyst align${unitSup('lvl')}</span>${bar(row.catalyst_alignment || 0)}<span class="v">${num(row.catalyst_alignment, 0)}</span></div>
+        <div class="barrow" style="grid-template-columns:130px 1fr 40px"><span class="lbl">momentum${unitSup('pct')}</span>${bar(row.momentum || 0)}<span class="v">${num(row.momentum, 0)}</span></div>
+        <div class="barrow" style="grid-template-columns:130px 1fr 40px"><span class="lbl">flow${unitSup('lvl')}${flowMark(row)}</span>${bar(row.flow_confirmation || 0)}<span class="v">${num(row.flow_confirmation, 0)}</span></div>
         ${flowProvNote(row)}
-        <div class="barrow" style="grid-template-columns:130px 1fr"><span class="lbl">crowding</span><span>${crowdLabel(row.crowding_risk)} <span class="lbl">(${num(row.crowding_risk, 0)})</span></span></div>
+        <div class="barrow" style="grid-template-columns:130px 1fr"><span class="lbl">crowding</span><span>${crowdLabel(row.crowding_risk, row.crowding_source)} <span class="lbl">(${num(row.crowding_risk, 0)})</span></span></div>
       </div>
       ${(() => { const t = timingFor(sid); return t ? `<h3>Entry timing <span class="lbl" style="text-transform:none;letter-spacing:0">— when to enter (<a href="#/timing">all sectors →</a>)</span></h3>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px">${verdictPill(t)} ${statePill(t)}</div>

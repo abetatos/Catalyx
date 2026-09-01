@@ -92,6 +92,11 @@ TABLES: dict[str, tuple[str, list[str]]] = {
     # rank-bucket forward returns (top3 / mid / rest) — the €-denominated twin of the IC, and the
     # only calibration output a trade size can legitimately be multiplied by.
     "calibration_bucket": ("validation/calibration_bucket", ["run_id"]),
+    # CA-tilt retro ledger (v10 P8): what TODAY'S δ would have earned on each model book recorded
+    # BEFORE the tilt existed — the pre-P8 half of the counterfactual series (the post-P8 half
+    # lives inside portfolio_holding as w_pre_ca_pct and needs no table). Evidence for tuning δ
+    # and the CA computation; never an off switch, never fed back into sector_snapshot.
+    "ca_tilt_retro":      ("validation/ca_tilt_retro",    ["run_id"]),
     # rebalance recommendations: target vs actual per sector with the rule action, the € to move
     # and the after-tax net edge. Persisted per run so a recommendation can be audited later —
     # did we follow it, and did it pay?

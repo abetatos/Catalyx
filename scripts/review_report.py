@@ -425,13 +425,30 @@ def section_inaction() -> str:
     pp, runs = r0.get("book_shortfall_pp"), r0.get("book_shortfall_runs")
     if pp is not None and pp == pp:
         breached = bool(r0.get("book_shortfall_breached"))
-        out.append(f"**DEPLOYMENT SHORTFALL** — {float(pp):.1f}pp below the rule for "
-                   f"{int(float(runs or 0))} consecutive recorded review(s). "
-                   + ("**The persistence rule is breached**: execute the rows above, or log an "
-                      "override naming the shortfall itself. A shortfall that survives two "
-                      "reviews without a written reason is exactly what the deployment ratio was "
-                      "built to make visible." if breached else
-                      "Below the persistence limit."))
+        stance_author = r0.get("book_cash_stance_author")
+        answered = bool(r0.get("book_shortfall_breach_raw")) and not breached and stance_author
+        raw_pp = r0.get("book_shortfall_vs_deployable_pp")
+        basis = r0.get("book_shortfall_basis")
+        # The basis travels with the number. Once a shortfall can be measured two ways, a bare
+        # figure is unreadable — and a rule measurable two ways can be gamed by choosing the way,
+        # so the raw gap to the deploy rule is printed whenever it differs.
+        line = (f"**DEPLOYMENT SHORTFALL** — {float(pp):.1f}pp below the rule for "
+                f"{int(float(runs or 0))} consecutive recorded review(s)")
+        if raw_pp is not None and raw_pp == raw_pp and abs(float(raw_pp) - float(pp)) > 0.05:
+            line += (f" (measured against what the book can HOLD, `{basis}`; against the raw "
+                     f"deploy rule it is **{float(raw_pp):.1f}pp** — the difference is capital "
+                     f"with no eligible name to go into, not capital mislaid)")
+        out.append(line + ". " + (
+            f"**ANSWERED** by the cash stance of `{stance_author}`, expiring "
+            f"{r0.get('book_cash_stance_expires')}: _{r0.get('book_cash_stance_reason')}_ "
+            f"The breach is not erased — it re-opens by itself on that date, and the drag above "
+            f"keeps pricing it." if answered else
+            "**The persistence rule is breached**: execute the rows above, log an override "
+            "naming the shortfall itself, or record a dated cash stance "
+            "(`rebalance cash-stance --reason ...`). A shortfall that survives two reviews "
+            "without a written reason is exactly what the deployment ratio was built to make "
+            "visible." if breached else
+            "Below the persistence limit."))
     # One line per run, not one row per deviation: what the review acts on is "the last run asked
     # for N things and got none of them", and the 10-row list said that ten times.
     unrec = _safe(_unrecorded_rows, [])
@@ -658,6 +675,56 @@ def _cap_check_note() -> str:
     return "\n".join(out)
 
 
+def _risk_budget_note() -> str:
+    """Concentration in RISK beside concentration in euros (v10 P6/P7).
+
+    The notional cap and the variance budget are printed as two columns of the SAME table
+    precisely so their disagreement is legible: a driver can breach one and clear the other,
+    and on this book they already do. That disagreement is the evidence the user asked for when
+    deciding which of the two rules should survive the cycle — hiding it behind a single
+    verdict would delete the only thing this section is for.
+    """
+    from catalyx.config import weights
+    from catalyx.store import movement_repo
+
+    rows = _safe(lambda: _rebalance_rows(), [])
+    proposed = [{"sector_id": r.get("sector_id"), "etf": r.get("etf"),
+                 "trade_eur": r.get("trade_eur")}
+                for r in rows if float(r.get("trade_eur") or 0.0) != 0.0]
+    checked = _safe(lambda: movement_repo.cap_check(proposed), [])
+    if not checked:
+        return ""
+    ccc = _safe(lambda: weights.correlated_catalyst_cap(), {})
+    budget = float(ccc.get("max_cluster_variance_pct") or 35.0)
+    measured = [c for c in checked if c.get("risk_ctr_pct") is not None]
+    unmeasured = [c["catalyst_id"] for c in checked if c.get("risk_ctr_pct") is None]
+    if not measured and not unmeasured:
+        return ""
+
+    out = [f"\n\n**Risk budget — {budget:.0f}% of book variance per driver** "
+           f"(`max_cluster_variance_pct`, enforcement `{ccc.get('risk_enforcement', 'warn')}`)\n",
+           "| catalyst | notional % | vs cap | variance % | vs budget | verdict |",
+           "|---|---|---|---|---|---|"]
+    for c in sorted(measured, key=lambda c: -float(c["risk_ctr_pct"])):
+        ctr = float(c["risk_ctr_pct"])
+        verdict = ("**both**" if c["over"] and c["over_risk"] else
+                   "**risk only**" if c["over_risk"] else
+                   "**notional only**" if c["over"] else "clear")
+        out.append(f"| {c['catalyst_id']} | {c['post_pct']:.1f} | "
+                   f"{'OVER' if c['over'] else 'ok'} | {ctr:.1f} | "
+                   f"{'OVER' if c['over_risk'] else 'ok'} | {verdict} |")
+    if unmeasured:
+        out.append(f"\n_{len(unmeasured)} cluster(s) UNMEASURED (no covariance): "
+                   f"{', '.join(unmeasured)}. Reported, never counted as compliant — an "
+                   f"unmeasured risk does not pass a risk budget by default._")
+    out.append("\n_Clusters OVERLAP and both columns sum to more than the book: a position can "
+               "serve two drivers, and both carry it. The two rules run side by side for one "
+               "cycle **so their disagreement can be read** — where a driver breaches one and "
+               "clears the other is the evidence for which rule should survive. Both are "
+               "`warn`: neither moved a euro in the table above._")
+    return "\n".join(out)
+
+
 def _drift_note() -> str:
     """Where a position's RECORDED attribution no longer matches its study's structural drivers.
 
@@ -731,6 +798,7 @@ def section_exposure() -> str:
             f"is ONE row: its absorbed ids are named in parentheses._")
     forward = _cap_check_note()
     out += forward
+    out += _risk_budget_note()
     out += _drift_note()
     # The marker is emitted only when a cap is actually breached — held OR proposed. A lint that
     # demands prose where the honest answer is "nothing breached" trains people to write filler.

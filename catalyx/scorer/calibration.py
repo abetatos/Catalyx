@@ -372,6 +372,304 @@ def forward_returns(tickers: list[str], start: str, end: str, allow_fetch: bool 
     return out
 
 
+def ca_tilt_edge(portfolio_id: str = "catalyx", horizon_days: int = DEFAULT_HORIZON_DAYS,
+                 as_of: str | None = None, lake_dir: Path | None = None,
+                 allow_fetch: bool = True, fwd_fn=None, min_gap_days: int = 21) -> dict:
+    """Did the CA conviction tilt PAY? `Σ (w_post − w_pre) · fwd_return`, per complete window.
+
+    THE LEDGER OF v10 P8. The CA tilt is a DECLARED PRIOR — the one sizing leg that runs outside
+    the λ gate, because a tilt that never moves euros can never be measured. This function is
+    what that exemption costs: every model book since P8 persists the δ=0 counterfactual weight
+    (`w_pre_ca_pct`) beside the final one, and here the difference is priced over the same
+    horizon every other decision is priced on. Positive = the euros the delta moved toward high
+    CA beat the euros it took from low CA.
+
+    THE TALLY LOCALIZES, IT NEVER DISABLES (user doctrine, 2026-09-01). CA is the core of the
+    approach and does not have an off switch, so the output is deliberately not a verdict on
+    CA's existence: contributions are decomposed per SECTOR and per DRIVING CATALYST (clusters
+    overlap, same rule as `exposure_eur` — a sector serving two drivers credits both). A
+    negative stretch names WHICH catalyst's score misled the sizing, and the fix lives in how
+    that score is computed — indicators, decay, noisy-OR, freshness — or, with the tally in
+    front, in the SIZE of δ (a frozen-threshold config edit, floored at `ca_tilt_delta_min`).
+
+    One run per review DATE (latest wins — same convention as rebalance's rank streaks), only
+    COMPLETE windows, and `effective_windows` counts the non-overlapping ones: five runs inside
+    one horizon are one observation, not five.
+    """
+    from catalyx.store import lake
+
+    fwd_fn = fwd_fn or forward_returns
+    today = as_of or date.today().isoformat()
+    empty = {"portfolio_id": portfolio_id, "horizon_days": int(horizon_days), "windows": [],
+             "n_windows": 0, "effective_windows": 0, "mean_edge_pp": None,
+             "total_edge_pp": None, "per_sector": {}, "per_catalyst": {},
+             "verdict": "unmeasured"}
+    df = lake.read_table("portfolio_holding", lake_dir=lake_dir)
+    if df.empty or "w_pre_ca_pct" not in df.columns:
+        return {**empty, "note": "no run has persisted the CA-tilt ledger yet (w_pre_ca_pct) — "
+                                 "the first post-P8 model book starts the clock"}
+    df = df[(df["portfolio_id"] == portfolio_id) & df["w_pre_ca_pct"].notna()
+            & df["weight_pct"].notna()].copy()
+    if df.empty:
+        return {**empty, "note": f"no {portfolio_id} book carries the CA-tilt ledger yet"}
+
+    by_date: dict[str, str] = {}
+    for rid in sorted(str(r) for r in df["run_id"].unique()):
+        if rid.startswith("run_") and len(rid) >= 12:
+            by_date[rid[4:12]] = rid                       # later run of a date wins
+    windows: list[dict] = []
+    per_sector: dict[str, dict] = {}
+    for d8 in _review_cycle_dates(sorted(by_date), min_gap_days):
+        try:
+            start = date(int(d8[:4]), int(d8[4:6]), int(d8[6:8]))
+        except ValueError:
+            continue
+        window_end = start + timedelta(days=int(horizon_days))
+        if window_end.isoformat() > today:
+            continue                                       # open window — not priced yet
+        rows = df[df["run_id"] == by_date[d8]]
+        etfs = sorted({str(t) for t in rows["primary_etf"].dropna() if str(t).strip()})
+        fwd = fwd_fn(etfs, start.isoformat(), window_end.isoformat(), allow_fetch=allow_fetch)
+        edge, contribs = 0.0, []
+        for _, r in rows.iterrows():
+            ret = fwd.get(str(r.get("primary_etf")))
+            if ret is None:
+                continue
+            dw = (float(r["weight_pct"]) - float(r["w_pre_ca_pct"])) / 100.0
+            if abs(dw) < 1e-9:
+                continue
+            pp = dw * float(ret) * 100.0                   # points of the book, EUR-neutral
+            edge += pp
+            sid = str(r["sector_id"])
+            contribs.append({"sector_id": sid, "delta_w_pp": round(dw * 100.0, 2),
+                             "fwd_pct": round(float(ret) * 100.0, 2), "edge_pp": round(pp, 3)})
+            agg = per_sector.setdefault(sid, {"edge_pp": 0.0, "n_windows": 0})
+            agg["edge_pp"] += pp
+            agg["n_windows"] += 1
+        delta = None
+        if "ca_tilt_delta" in rows.columns and len(rows):
+            v = rows["ca_tilt_delta"].iloc[0]
+            delta = None if v is None or v != v else float(v)
+        windows.append({"run_id": by_date[d8], "start": start.isoformat(),
+                        "end": window_end.isoformat(), "delta": delta,
+                        "edge_pp": round(edge, 3),
+                        "contributions": sorted(contribs, key=lambda c: c["edge_pp"])})
+
+    if not windows:
+        return {**empty, "note": "the CA-tilt ledger exists but no window has closed yet — "
+                                 f"first verdict ~{horizon_days}d after the first post-P8 run"}
+    return _edge_summary(empty, windows, per_sector, int(horizon_days), label="the CA tilt")
+
+
+def _review_cycle_dates(dates: list[str], min_gap_days: int = 21) -> list[str]:
+    """One `YYYYMMDD` per review CYCLE — the rebalance's own collapse (`_cycle_runs`), reused so
+    "a review" means the same thing in this ledger as in the rule table. The run history is
+    development-shaped (five runs one afternoon, three in one week): pricing a window per DATE
+    would let a burst of iteration count as several observations of one decision. Each cluster
+    keeps its LATEST reading — the run the decision was actually about."""
+    from catalyx.execution.rebalance import _cycle_runs         # lazy — rebalance imports us
+    return _cycle_runs(sorted(dates), len(dates), min_gap_days)
+
+
+def _edge_summary(base: dict, windows: list[dict], per_sector: dict[str, dict],
+                  horizon_days: int, label: str) -> dict:
+    """The shared tail of the live and retro CA-tilt ledgers: effective windows, the
+    per-sector/per-driver localization map, and a verdict phrased as a diagnosis — never as an
+    off switch (user doctrine, 2026-09-01)."""
+    # non-overlapping windows, same arithmetic as _effective_windows
+    n_eff, last = 0, None
+    for w in windows:
+        s = date.fromisoformat(w["start"])
+        if last is None or (s - last).days >= int(horizon_days):
+            n_eff, last = n_eff + 1, s
+    per_sector = {k: {"edge_pp": round(v["edge_pp"], 3), "n_windows": v["n_windows"]}
+                  for k, v in sorted(per_sector.items(), key=lambda kv: kv[1]["edge_pp"])}
+
+    # the localization map: sector contributions credited to every driver the sector serves
+    per_catalyst: dict[str, float] = {}
+    try:
+        from catalyx.execution import portfolio as _pf                    # lazy — no cycle
+        cmap = _pf._sector_catalyst_map() or {}
+    except Exception:                                      # pragma: no cover - defensive
+        cmap = {}
+    for sid, agg in per_sector.items():
+        for cid in (cmap.get(sid) or ["(unattributed)"]):
+            per_catalyst[cid] = round(per_catalyst.get(cid, 0.0) + agg["edge_pp"], 3)
+    per_catalyst = dict(sorted(per_catalyst.items(), key=lambda kv: kv[1]))
+
+    total = round(sum(w["edge_pp"] for w in windows), 3)
+    mean = round(total / len(windows), 3)
+    worst = next(iter(per_catalyst.items()), None)
+    verdict = "paid" if mean > 0 else ("cost" if mean < 0 else "flat")
+    return {
+        **base,
+        "windows": windows, "n_windows": len(windows), "effective_windows": n_eff,
+        "mean_edge_pp": mean, "total_edge_pp": total,
+        "per_sector": per_sector, "per_catalyst": per_catalyst, "verdict": verdict,
+        "note": (f"{label} {verdict} {mean:+.2f}pp of book per {horizon_days}d window over "
+                 f"{len(windows)} window(s) (~{n_eff} independent)."
+                 + (f" Largest drag: {worst[0]} ({worst[1]:+.2f}pp) — evidence about HOW that "
+                    f"catalyst's score is computed, never about disabling CA."
+                    if worst is not None and worst[1] < 0 else "")),
+    }
+
+
+def ca_tilt_edge_retro(portfolio_id: str = "catalyx", horizon_days: int = DEFAULT_HORIZON_DAYS,
+                       as_of: str | None = None, lake_dir: Path | None = None,
+                       allow_fetch: bool = True, fwd_fn=None,
+                       delta: float | None = None, winsor_z: float | None = None,
+                       persist: bool = False, min_gap_days: int = 21) -> dict:
+    """What WOULD the CA tilt have earned on the books recorded BEFORE it existed?
+
+    THE COUNTERFACTUAL, MIRRORED. Since v10 P8 the live ledger stores the δ=0 book beside the
+    real one; the runs recorded before P8 are the OTHER half of the same question — those books
+    ARE the δ=0 reality, so here the tilt is applied a posteriori: take each recorded book's
+    weights, tilt them by TODAY'S δ using the `catalyst_alignment` that run's own
+    `sector_snapshot` froze at scoring time (point-in-time — the CA is as-recorded, only the
+    forward return is hindsight, which is the one hindsight a backtest is allowed), re-cap at
+    `max_position_pct`, and price `Σ (w_tilted − w_recorded) · fwd` over the same horizon the
+    live ledger uses. Together the two functions give one continuous series: retro before P8,
+    live after.
+
+    HONEST LIMITS, stated rather than hidden: the recorded weights already absorbed that run's
+    deadband and vol-tilt, so the retro tilt is applied ON TOP of the finished book (the exact
+    chain cannot be replayed without that run's config); the cap and δ are TODAY'S. This is
+    EVIDENCE for tuning δ and the CA computation — it never feeds sector_snapshot, never gates,
+    and per the user doctrine it is never an argument for disabling CA. Same epistemic status
+    as `experiments/backtest_signals.py` (v8): a measured prior, not a live window.
+
+    `persist=True` writes one row per priced run to the lake table `ca_tilt_retro`
+    (re-runnable; the partition for a run is overwritten, never duplicated).
+    """
+    from catalyx.execution import portfolio as _pf
+    from catalyx.store import lake
+    from catalyx.store import snapshot_repo as sr
+
+    pw = _weights_cfg().portfolio_weighting()
+    delta = float(pw.get("ca_tilt_delta", 0.20) if delta is None else delta)
+    delta = max(delta, float(pw.get("ca_tilt_delta_min", 0.05)))
+    winsor = float(pw.get("ca_tilt_winsor_z", 2.5) if winsor_z is None else winsor_z)
+    cap_pct = float(_weights_cfg().book_shape()["max_position_pct"])
+    fwd_fn = fwd_fn or forward_returns
+    today = as_of or date.today().isoformat()
+    empty = {"portfolio_id": portfolio_id, "horizon_days": int(horizon_days), "mode": "retro",
+             "delta": delta, "windows": [], "n_windows": 0, "effective_windows": 0,
+             "mean_edge_pp": None, "total_edge_pp": None, "per_sector": {},
+             "per_catalyst": {}, "verdict": "unmeasured"}
+
+    hold = lake.read_table("portfolio_holding", lake_dir=lake_dir)
+    snaps = lake.read_table("sector_snapshot", lake_dir=lake_dir)
+    if hold.empty or snaps.empty:
+        return {**empty, "note": "no recorded model books / snapshots to retro-price"}
+    hold = hold[(hold["portfolio_id"] == portfolio_id) & hold["weight_pct"].notna()].copy()
+    # pre-P8 books only: a book that carries the live ledger is priced by ca_tilt_edge, and
+    # pricing it here too would count the same window twice with two different baselines.
+    if "w_pre_ca_pct" in hold.columns:
+        hold = hold[hold["w_pre_ca_pct"].isna()]
+    if hold.empty:
+        return {**empty, "note": "every recorded book already carries the live CA-tilt ledger"}
+
+    by_date: dict[str, str] = {}
+    for rid in sorted(str(r) for r in hold["run_id"].unique()):
+        if rid.startswith("run_") and len(rid) >= 12:
+            by_date[rid[4:12]] = rid                       # later run of a date wins
+    windows: list[dict] = []
+    per_sector: dict[str, dict] = {}
+    for d8 in _review_cycle_dates(sorted(by_date), min_gap_days):
+        try:
+            start = date(int(d8[:4]), int(d8[4:6]), int(d8[6:8]))
+        except ValueError:
+            continue
+        window_end = start + timedelta(days=int(horizon_days))
+        if window_end.isoformat() > today:
+            continue                                       # open window — not priced yet
+        rid = by_date[d8]
+        book = hold[hold["run_id"] == rid]
+        book = book[book["weight_pct"] > 0]
+        sn = snaps[snaps["run_id"] == rid].set_index("sector_id") \
+            if "sector_id" in snaps.columns else None
+        if book.empty or sn is None or sn.empty:
+            continue
+
+        sids = [str(s) for s in book["sector_id"]]
+        w_rec = [float(x) for x in book["weight_pct"]]
+
+        def _sn(sid, col):
+            try:
+                v = sn.at[sid, col] if col in sn.columns else None
+            except KeyError:
+                return None
+            return None if v is None or v != v else v
+
+        ca_vals = [_sn(s, "catalyst_alignment") for s in sids]
+        imput = [bool(_sn(s, "ca_imputed") or False) for s in sids]
+        tilted, ca_rows = _pf.ca_tilt(w_rec, ca_vals, imput, delta, winsor)
+        # Re-cap, gross preserved: the tilt must not manufacture a position today's cap would
+        # refuse — but it must not SHRINK a position the recorded book actually carried either
+        # (that would charge the counterfactual for a cap the baseline never faced), so the
+        # effective ceiling is max(today's cap, the book's own largest line). water_fill
+        # allocates a unit pool → scale by the recorded gross.
+        gross = sum(w_rec)
+        if gross <= 0:
+            continue
+        cap_eff = max(cap_pct, max(w_rec))
+        fr = _pf.water_fill(tilted, max_w=min(1.0, cap_eff / gross))
+        w_tilt = [f * gross for f in fr]
+
+        # vehicle buyable TODAY, same remap as compute_run: pre-2026-08-27 books reference US
+        # non-UCITS tickers this investor could never have held.
+        etfs = {s: sr._primary_etf(s) for s in sids}
+        usable = sorted({t for t in etfs.values() if isinstance(t, str) and t.strip()})
+        fwd = fwd_fn(usable, start.isoformat(), window_end.isoformat(),
+                     allow_fetch=allow_fetch)
+        edge, contribs, n_priced = 0.0, [], 0
+        for sid, wr, wt, cr in zip(sids, w_rec, w_tilt, ca_rows):
+            ret = fwd.get(etfs.get(sid) or "")
+            dw = (wt - wr) / 100.0
+            if ret is None or abs(dw) < 1e-9:
+                continue
+            pp = dw * float(ret) * 100.0
+            edge += pp
+            n_priced += 1
+            contribs.append({"sector_id": sid, "ca": cr["ca"], "ca_z": cr["z"],
+                             "delta_w_pp": round(dw * 100.0, 2),
+                             "fwd_pct": round(float(ret) * 100.0, 2),
+                             "edge_pp": round(pp, 3)})
+            agg = per_sector.setdefault(sid, {"edge_pp": 0.0, "n_windows": 0})
+            agg["edge_pp"] += pp
+            agg["n_windows"] += 1
+        if not n_priced:
+            continue
+        windows.append({"run_id": rid, "start": start.isoformat(),
+                        "end": window_end.isoformat(), "delta": delta,
+                        "edge_pp": round(edge, 3), "n_priced": n_priced,
+                        "contributions": sorted(contribs, key=lambda c: c["edge_pp"])})
+
+    if not windows:
+        return {**empty, "note": f"no recorded pre-P8 book has a complete {horizon_days}d "
+                                 f"window yet (try --horizon-days 21 for an early, noisier read)"}
+    res = _edge_summary(empty, windows, per_sector, int(horizon_days),
+                        label=f"RETRO — today's δ={delta:.2f} applied to the recorded books "
+                              f"would have")
+    if persist:
+        import pandas as pd
+        rows = [{"portfolio_id": portfolio_id, "run_id": w["run_id"], "start": w["start"],
+                 "end": w["end"], "horizon_days": int(horizon_days), "delta": delta,
+                 "edge_pp": w["edge_pp"], "n_priced": w["n_priced"],
+                 "contributions": json.dumps(w["contributions"]),
+                 "computed_at": datetime.now(timezone.utc).isoformat()} for w in windows]
+        for w in rows:
+            lake.append_partition("ca_tilt_retro", pd.DataFrame([w]),
+                                  {"run_id": w["run_id"]}, overwrite=True, lake_dir=lake_dir)
+        res["persisted"] = len(rows)
+    return res
+
+
+def _weights_cfg():
+    from catalyx.config import weights as weights_cfg
+    return weights_cfg
+
+
 def compute_run(run_id: str, run_start: str, horizon_days: int | None = DEFAULT_HORIZON_DAYS,
                 as_of: str | None = None, allow_fetch: bool = True) -> dict:
     """Calibrate ONE run: rank IC per dimension over its forward window."""
@@ -606,7 +904,41 @@ def main() -> None:
     p.add_argument("--offline", action="store_true", help="Cache-only, never fetch")
     p.add_argument("--write", action="store_true", help="Persist to the lake `calibration` table")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--ca-tilt", action="store_true",
+                   help="Price the CA conviction tilt (v10 P8): Σ(w_post − w_pre)·fwd per "
+                        "complete window, decomposed per sector and per driving catalyst")
+    p.add_argument("--ca-tilt-retro", action="store_true",
+                   help="Apply TODAY'S δ to the model books recorded BEFORE P8 (their CA as "
+                        "frozen at scoring time) and price what the tilt would have earned. "
+                        "--write persists per-run rows to the lake `ca_tilt_retro` table.")
     args = p.parse_args()
+
+    if args.ca_tilt or args.ca_tilt_retro:
+        if args.ca_tilt_retro:
+            res = ca_tilt_edge_retro(horizon_days=args.horizon_days or DEFAULT_HORIZON_DAYS,
+                                     as_of=args.as_of, allow_fetch=not args.offline,
+                                     persist=args.write)
+            title = ("CATALYX — CA conviction tilt, RETRO: what today's δ would have earned "
+                     "on the recorded books")
+        else:
+            res = ca_tilt_edge(horizon_days=args.horizon_days or DEFAULT_HORIZON_DAYS,
+                               as_of=args.as_of, allow_fetch=not args.offline)
+            title = "CATALYX — CA conviction tilt: what the declared prior earned"
+        if args.json:
+            print(json.dumps(res, indent=2, default=str))
+            return
+        print(title)
+        print(f"  {res['note'] if res.get('note') else res['verdict']}")
+        for w in res.get("windows", []):
+            print(f"  {w['start']} → {w['end']}  δ={w['delta']}  edge {w['edge_pp']:+.2f}pp "
+                  f"({w['run_id']})")
+        if res.get("per_catalyst"):
+            print("  per driver (overlapping credit, worst first):")
+            for cid, pp in res["per_catalyst"].items():
+                print(f"    {pp:+7.2f}pp  {cid}")
+        if res.get("persisted"):
+            print(f"  persisted {res['persisted']} row(s) → lake `ca_tilt_retro`")
+        return
 
     horizon = args.horizon_days or None
     if args.run_id:

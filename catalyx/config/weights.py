@@ -253,6 +253,12 @@ _PORTFOLIO_WEIGHTING_DEFAULT = {
     "tilt_ic_target": 0.20,
     "tilt_prior_windows": 3.0,
     "tilt_lambda_floor": 0.0,
+    # CA conviction tilt (v10 P8). A DECLARED PRIOR, deliberately outside the λ machinery, and
+    # the default is ACTIVE — the catalyst score is the core of the mandate and is never
+    # disabled (user doctrine 2026-09-01): a missing YAML section must not quietly turn it off.
+    "ca_tilt_delta": 0.20,
+    "ca_tilt_winsor_z": 2.5,
+    "ca_tilt_delta_min": 0.05,
 }
 
 

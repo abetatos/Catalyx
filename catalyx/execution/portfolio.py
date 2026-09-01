@@ -255,6 +255,57 @@ def skill_shrink(model: list[float], neutral: list[float], lam: float) -> list[f
     return [x * tm / tot for x in out] if tot else list(model)
 
 
+def ca_tilt(scores: list[float], ca_values: list[float | None], imputed: list[bool],
+            delta: float, winsor_z: float = 2.5,
+            mult_floor: float = 0.1) -> tuple[list[float], list[dict]]:
+    """Multiply the weighting scores by `(1 + δ·z_CA)` — the catalyst score sizing the book
+    DIRECTLY, as a declared prior (v10 P8; rationale in scoring_weights.yaml `ca_tilt_delta`).
+
+    WHY THIS LIVES OUTSIDE `skill_shrink`. λ is the right discipline for a tilt whose only
+    justification is measured skill; it is the WRONG discipline for the one signal the mandate
+    is built on, because λ=0 means the counterfactual book is never constructed — no euro moves
+    by CA, so no window can ever price a CA-driven euro. This leg therefore survives λ=0 by
+    design, and what keeps it honest is not a gate but a LEDGER: the caller persists the
+    pre-tilt weight beside the final one, and `calibration.ca_tilt_edge` prices the difference
+    every complete window, per sector and per driver. Evidence flows into recalibrating HOW CA
+    is computed — never into whether it participates.
+
+    z_CA is cross-sectional among the SELECTED names only (the tilt divides the book the
+    selection already chose; it re-ranks nothing), winsorized at ±`winsor_z`. An IMPUTED or
+    missing CA takes z=0 — multiplier 1.0, excluded from the moments — the v6 H2 rule that an
+    unmeasured quantity is imputed to the prior, never to a verdict. Fewer than 2 measured
+    values, or a flat cross-section, → no tilt at all (a z needs a distribution).
+
+    δ=0.20 maps the winsor range onto `book_shape.tier_multiples` [1.4, 1.0, 0.5]: +2σ → ×1.4,
+    0 → ×1.0, −2.5σ → ×0.5. `mult_floor` only guards a mis-set δ from producing a negative
+    weight. Monotonic in CA among measured names; the total is rescaled so the intermediate
+    stays legible (water_fill only reads ratios).
+
+    Returns `(tilted_scores, rows)` — one `{ca, z, mult, imputed}` per input, same order.
+    """
+    n = len(scores)
+    rows = [{"ca": (None if v is None or v != v else float(v)), "z": 0.0, "mult": 1.0,
+             "imputed": bool(imp)} for v, imp in zip(ca_values, imputed)]
+    if n == 0 or delta <= 0:
+        return list(scores), rows
+    measured = [r["ca"] for r in rows if r["ca"] is not None and not r["imputed"]]
+    if len(measured) < 2:
+        return list(scores), rows
+    mean = sum(measured) / len(measured)
+    var = sum((v - mean) ** 2 for v in measured) / len(measured)
+    std = var ** 0.5
+    if std < 1e-9:
+        return list(scores), rows
+    out = []
+    for sc, r in zip(scores, rows):
+        if r["ca"] is not None and not r["imputed"]:
+            r["z"] = round(max(-winsor_z, min(winsor_z, (r["ca"] - mean) / std)), 4)
+        r["mult"] = round(max(mult_floor, 1.0 + delta * r["z"]), 4)
+        out.append(float(sc) * r["mult"])
+    tot_in, tot_out = sum(scores), sum(out)
+    return ([x * tot_in / tot_out for x in out] if tot_out else out), rows
+
+
 def vol_tilt(scores: list[float], vols_pct: list[float | None], alpha: float,
              min_vol_pct: float = 5.0) -> list[float]:
     """Divide the weighting scores by `σ^alpha` — risk-budgeted sizing (plan v4 §2 A4).
@@ -584,41 +635,86 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
                                                 and st == "contested") else 1.0
                    for st in states]
         scores = skill_shrink(scores, neutral, lam_info["lambda"])
+
+    # CA CONVICTION TILT (v10 P8): the catalyst score — the core of the mandate — sizes the
+    # book directly, as a DECLARED PRIOR (rationale in scoring_weights.yaml `ca_tilt_delta`).
+    # Deliberately OUTSIDE the λ machinery: with λ gated on a still-noise IC, a CA tilt inside
+    # it would never move a euro, and a tilt that never moves euros can never be measured — the
+    # δ=0 counterfactual book is persisted beside the real one instead (`w_pre_ca_pct`), so
+    # `calibration.ca_tilt_edge` prices the tilt every complete window. Composite-weighted
+    # books only: `momentum` and `equal` books are counterfactual baselines and stay clean.
+    ca_info, ca_rows, scores_pre_ca = None, None, None
+    if weighting not in ("momentum", "equal"):
+        d_min = float(c.get("ca_tilt_delta_min", pw.get("ca_tilt_delta_min", 0.05)))
+        # max(δ, floor): "delta: 0" is unwritable — CA is tuned, never disabled (user doctrine
+        # 2026-09-01). The floor lives in config so lowering it is itself a logged edit.
+        delta = max(d_min, float(c.get("ca_tilt_delta", pw.get("ca_tilt_delta", 0.20))))
+        winsor = float(c.get("ca_tilt_winsor_z", pw.get("ca_tilt_winsor_z", 2.5)))
+        ca_vals = [r.get("catalyst_alignment") for _, r in df.iterrows()]
+        ca_imp = ([bool(v) for v in df["ca_imputed"].fillna(False)]
+                  if "ca_imputed" in df.columns else [False] * len(df))
+        scores_pre_ca = list(scores)
+        scores, ca_rows = ca_tilt(scores, ca_vals, ca_imp, delta, winsor)
+        n_meas = sum(1 for r in ca_rows if r["ca"] is not None and not r["imputed"])
+        ca_info = {
+            "delta": delta, "winsor_z": winsor, "n_measured": n_meas,
+            "n_imputed": sum(1 for r in ca_rows if r["imputed"]),
+            "active": any(abs(r["mult"] - 1.0) > 1e-9 for r in ca_rows),
+            "note": (f"δ={delta:.2f} — the catalyst score sizes the book (declared prior, "
+                     f"never disabled); {n_meas} name(s) measured"
+                     + (f", {sum(1 for r in ca_rows if r['imputed'])} imputed → untilted"
+                        if any(r["imputed"] for r in ca_rows) else "")
+                     + ("" if n_meas >= 2 else " — too few measured CAs, tilt is a no-op")),
+        }
+
     # RISK BUDGET: divide by σ^alpha before the cap, so `max_position_pct` still means what it
     # says and the deadband is untouched. alpha 0 (the default) leaves `scores` identical.
     alpha = float(c.get("vol_tilt_alpha", pw.get("vol_tilt_alpha", 0.0)))
     vols_used: dict[str, float] = {}
+    vols_list: list[float | None] | None = None
     if alpha > 0:
         vols_used = _sector_vols(
             [str(r.get("primary_etf") or "") for _, r in df.iterrows()],
             int(c.get("vol_lookback_days", pw.get("vol_lookback_days", 120))))
-        scores = vol_tilt(scores, [vols_used.get(str(r.get("primary_etf") or ""))
-                                   for _, r in df.iterrows()],
-                          alpha, float(c.get("min_vol_pct", pw.get("min_vol_pct", 5.0))))
-    weights = water_fill(scores, float(c["max_position_pct"]) / 100.0)
-    if veto_on and contested_action == "cash":
-        # gross-down: trim contested FINAL weights; the freed weight stays as cash (not
-        # redistributed). exp_2026-06-05 A/B: this is what actually cuts a broad-risk-off
-        # drawdown — redistribution merely reshuffles within a correlated momentum cluster.
-        weights = [w * (1.0 - contested_haircut) if st == "contested" else w
-                   for w, st in zip(weights, states)]
-
-    # turnover guard: keep weights within `deadband` points of what's already held (prev run),
-    # so tiny score wiggles don't trigger taxable rebalances. No prior run → no-op.
+        vols_list = [vols_used.get(str(r.get("primary_etf") or "")) for _, r in df.iterrows()]
+    min_vol = float(c.get("min_vol_pct", pw.get("min_vol_pct", 5.0)))
+    held = None
     if deadband > 0:
         held_map = _held_weights(portfolio_id, run_id, lake_dir=lake_dir)
         if held_map:
             held = [held_map.get(r["sector_id"]) for _, r in df.iterrows()]
-            pct = apply_deadband([w * 100.0 for w in weights], held, deadband,
+
+    def _finalize(sc: list[float]) -> list[float]:
+        """vol_tilt → cap → contested gross-down → deadband — identically for the real scores
+        and the δ=0 counterfactual, because the CA-tilt ledger is only honest if both books
+        walk the same downstream path (v10 P8)."""
+        if alpha > 0 and vols_list is not None:
+            sc = vol_tilt(sc, vols_list, alpha, min_vol)
+        w = water_fill(sc, float(c["max_position_pct"]) / 100.0)
+        if veto_on and contested_action == "cash":
+            # gross-down: trim contested FINAL weights; the freed weight stays as cash (not
+            # redistributed). exp_2026-06-05 A/B: this is what actually cuts a broad-risk-off
+            # drawdown — redistribution merely reshuffles within a correlated momentum cluster.
+            w = [x * (1.0 - contested_haircut) if st == "contested" else x
+                 for x, st in zip(w, states)]
+        # turnover guard: keep weights within `deadband` points of what's already held (prev
+        # run), so tiny score wiggles don't trigger taxable rebalances. No prior run → no-op.
+        if held is not None:
+            pct = apply_deadband([x * 100.0 for x in w], held, deadband,
                                  max_position_pct=float(c["max_position_pct"]))
-            weights = [p / 100.0 for p in pct]
+            w = [p / 100.0 for p in pct]
+        return w
+
+    weights = _finalize(scores)
+    weights_pre_ca = _finalize(scores_pre_ca) if scores_pre_ca is not None else None
 
     entry_prices = _entry_prices(lake_dir)
     cfg_ver = config_version(portfolio_id)
     strategy = profile.get("strategy", weighting)
     built_at = datetime.now(timezone.utc)
     rows = []
-    for rank, ((_, r), w) in enumerate(zip(df.iterrows(), weights), 1):
+    for idx, ((_, r), w) in enumerate(zip(df.iterrows(), weights)):
+        rank = idx + 1
         rows.append({
             "portfolio_id": portfolio_id,
             "run_id": run_id,
@@ -638,6 +734,18 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
             "regime_state": r.get("regime_state", "intact"),
             "weight_pct": round(w * 100.0, 2),
             "tilt_lambda": (lam_info or {}).get("lambda"),
+            # The CA-tilt ledger (v10 P8): the input, the multiplier, and the δ=0 counterfactual
+            # weight — persisted so `calibration.ca_tilt_edge` can price the tilt per window and
+            # per driver, which is what makes the declared prior falsifiable.
+            "catalyst_alignment": (None if r.get("catalyst_alignment") is None
+                                   or r.get("catalyst_alignment") != r.get("catalyst_alignment")
+                                   else float(r["catalyst_alignment"])),
+            "ca_imputed": (bool(ca_rows[idx]["imputed"]) if ca_rows else None),
+            "ca_z": (ca_rows[idx]["z"] if ca_rows else None),
+            "ca_tilt_mult": (ca_rows[idx]["mult"] if ca_rows else None),
+            "ca_tilt_delta": (ca_info or {}).get("delta"),
+            "w_pre_ca_pct": (round(weights_pre_ca[idx] * 100.0, 2)
+                             if weights_pre_ca is not None else None),
             "entry_price": entry_prices.get(r["sector_id"]),
             "built_at": built_at,
         })
@@ -675,7 +783,7 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
     # against — see `rebalance.absorbable_eur`.
     return {"portfolio_id": portfolio_id, "run_id": run_id, "config_version": cfg_ver,
             "positions": len(rows), "cash_pct": cash_pct, "overlay": risk_overlay,
-            "contested": n_contested, "tilt": lam_info,
+            "contested": n_contested, "tilt": lam_info, "ca_tilt": ca_info,
             "conviction_gate": {
                 "enabled": bool((c.get("entry_gate") or {}).get("enabled", True)
                                 and (c.get("entry_gate") or {}).get("min_catalyst_alignment")

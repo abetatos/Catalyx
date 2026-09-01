@@ -220,7 +220,15 @@ def analyze(run_id: str | None = None, lookback_days: int = 90, window_days: int
                 and r["catalyst_alignment"] >= min_catalyst_alignment
                 and r["composite"] >= min_composite):
             r2 = dict(r)
+            # UNIT (named, not normalized). This is `points of drawdown × catalyst confidence`,
+            # so it is UNBOUNDED above and is NOT a 0-100 score — a −60% fall on a CA-100 driver
+            # scores 60. Squashing it into 0-100 to match the columns beside it was considered
+            # and rejected: the product already has a meaning ("a 40% drawdown I am 90%
+            # confident about"), and a saturating curve would replace a real unit with an
+            # invented one purely so two different quantities could look alike. What was wrong
+            # was never the number, it was that nothing said what it was. So it is labelled.
             r2["opportunity_score"] = round(abs(r["drawdown_pct"]) * (r["catalyst_alignment"] / 100.0), 1)
+            r2["opportunity_unit"] = "pp_drawdown_x_ca"
             opportunities.append(r2)
     opportunities.sort(key=lambda x: x["opportunity_score"], reverse=True)
 
@@ -253,7 +261,14 @@ def analyze(run_id: str | None = None, lookback_days: int = 90, window_days: int
             if mean_corr <= max_diversifier_corr:
                 r2 = dict(r)
                 r2["mean_corr_to_stressed"] = mean_corr
+                # UNIT: `composite × (1 − ρ)`. The composite leg is RUN-RELATIVE (50 = this
+                # run's universe average), so this score is too — it ranks candidates within a
+                # run and must not be compared across runs. It is also not capped at 100: a
+                # NEGATIVE mean correlation makes (1 − ρ) exceed 1, which is the case the lens
+                # most wants to surface. Labelled rather than clipped, for the same reason as
+                # `opportunity_score` above.
                 r2["diversifier_score"] = round(r["composite"] * (1.0 - mean_corr), 1)
+                r2["diversifier_unit"] = "composite_rel_x_1_minus_rho"
                 diversifiers.append(r2)
         diversifiers.sort(key=lambda x: x["diversifier_score"], reverse=True)
 
@@ -359,16 +374,23 @@ def main() -> None:
     print(f"CATALYX — Dislocation lens   run={r['run_id']}   {r['window_days']}d window   "
           f"market({r['benchmark']})={r['market_window_pct']}%\n")
     print("OPPORTUNITIES (fell hard · fundamentals intact · catalyst confirmed → buy the panic?)")
-    print(f"  {'sector':<34}{'etf':<9}{'draw%':>7}{'beta':>6}{'contag%':>9}{'idio%':>7}{'catAlign':>9}{'score':>7}")
+    # `catAlign` is an absolute 0-100 level; `score` is |drawdown pp| × CA/100 and is UNBOUNDED.
+    # Two adjacent columns, two different units — said here so the reader is not left to assume.
+    print(f"  {'sector':<34}{'etf':<9}{'draw%':>7}{'beta':>6}{'contag%':>9}{'idio%':>7}"
+          f"{'catAlign⁰⁻¹⁰⁰':>14}{'score(pp×ca)':>13}")
     for o in r["opportunities"]:
         print(f"  {o['sector_id']:<34}{str(o['primary_etf']):<9}{o['drawdown_pct']:>7}{str(o['beta_to_market']):>6}"
-              f"{str(o['contagion_explained_pct']):>9}{str(o['idiosyncratic_pct']):>7}{o['catalyst_alignment']:>9}{o['opportunity_score']:>7}")
+              f"{str(o['contagion_explained_pct']):>9}{str(o['idiosyncratic_pct']):>7}"
+              f"{o['catalyst_alignment']:>14}{o['opportunity_score']:>13}")
     if not r["opportunities"]:
         print("  (none)")
     print(f"\nDIVERSIFIERS (healthy · low correlation to stressed {r['stressed_cluster'] or '—'} → rotate here?)")
-    print(f"  {'sector':<34}{'etf':<9}{'comp':>6}{'corr':>6}{'score':>7}")
+    # `comp` is run-RELATIVE (50 = this run's average), so `score` is too — it ranks candidates
+    # within this run and is not comparable across runs.
+    print(f"  {'sector':<34}{'etf':<9}{'compᴿᵉˡ':>9}{'corr':>6}{'score(rel×1-ρ)':>15}")
     for d in r["diversifiers"]:
-        print(f"  {d['sector_id']:<34}{str(d['primary_etf']):<9}{d['composite']:>6}{d['mean_corr_to_stressed']:>6}{d['diversifier_score']:>7}")
+        print(f"  {d['sector_id']:<34}{str(d['primary_etf']):<9}{d['composite']:>9}"
+              f"{d['mean_corr_to_stressed']:>6}{d['diversifier_score']:>15}")
     if not r["diversifiers"]:
         print("  (none)")
     print(f"\n  {r['note']}")

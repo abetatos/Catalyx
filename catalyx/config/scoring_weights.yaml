@@ -720,6 +720,38 @@ portfolio_weighting:
                                 # 25% of the tilt even if the IC is good. Three ≈ 9 months.
   tilt_lambda_floor: 0.0        # no minimum tilt. Raise only with a CHANGELOG line.
 
+  # CA CONVICTION TILT (v10 P8, 2026-09-01) — the catalyst score SIZES the book, as a DECLARED
+  # PRIOR. User decision, and the reasoning is causal, not statistical: the catalyst score is
+  # the core of the approach, and a CA tilt gated on λ can never be measured — with λ=0 no euro
+  # ever moves by CA, so no forward window can ever say whether euros moved by CA would have
+  # paid. The delta CREATES the very series that will calibrate it. Its epistemic status is the
+  # same as CA's 0.35 composite weight (v8 Q3): a prior, declared not hidden, refined with the
+  # tally in front.
+  #
+  #     w_i ← w_i · (1 + δ · z_CA,i)      after skill_shrink, before vol_tilt and the cap
+  #     z_CA = cross-sectional z of catalyst_alignment among the SELECTED names, winsorized
+  #            at ±ca_tilt_winsor_z; an IMPUTED CA contributes z = 0 (v6 H2: unmeasured is
+  #            imputed to the prior, never tilted) and is excluded from the moments.
+  #
+  # δ = 0.20 is not invented — it maps the winsor range onto the ALREADY-DECLARED conviction
+  # scale `book_shape.tier_multiples` [1.4, 1.0, 0.5]: z=+2σ → ×1.4 (tier-1 multiple), z=0 →
+  # ×1.0 (neutral), z=−2.5σ → ×0.5 (tier-3 multiple). It runs BEFORE vol_tilt (conviction
+  # first, risk-comparability after) and before water_fill (a risk limit outranks any sizing
+  # preference — same order α obeys). Composite-weighted books only: `momentum` and `equal`
+  # books are counterfactual baselines and stay clean.
+  #
+  # THE FEEDBACK LOOP LOCALIZES, IT NEVER DISABLES (user doctrine, 2026-09-01: "si va mal,
+  # cambiaremos cómo se calcula, pero nunca se apaga"). CA always participates —
+  # `ca_tilt_delta_min` makes `delta: 0` unwritable by construction. Every run persists
+  # `w_pre_ca_pct` beside the final weight, so `calibration.ca_tilt_edge` prices the tilt per
+  # complete 63d window AND per sector/driver: a negative tally is evidence about WHICH
+  # catalyst's COMPUTATION misled the sizing (indicators, decay, noisy-OR, freshness, the
+  # 0.55/0.45 split) — never a case for removing CA from the equation. Changing δ is a
+  # frozen-threshold edit: config + CHANGELOG, with the tally in front.
+  ca_tilt_delta: 0.20
+  ca_tilt_winsor_z: 2.5
+  ca_tilt_delta_min: 0.05       # doctrine floor — CA is tuned, never disabled
+
 # Correlated-catalyst combined allocation cap (portfolio concentration control)
 # DISTINCT from conviction_tiers above: those size a SINGLE position by conviction.
 # This caps the SUM of allocations across all open/draft theses that share the same
@@ -1095,6 +1127,38 @@ rebalance_rules:
     # Counted per REVIEW DATE, never per run id: two runs in one afternoon are one review.
     max_shortfall_pp: 10.0
     max_shortfall_runs: 2
+
+    # THE SHORTFALL IS MEASURED AGAINST WHAT THE BOOK CAN HOLD (v10 P2). `deployable` says how
+    # much should be at work and is silent about whether enough eligible NAMES exist to hold it:
+    # at a 20% position ceiling, five names is the fewest that can absorb a full book, four cap
+    # out at 80%, three at 60%. So a book the rules themselves cut to four names was measured
+    # against a target unreachable by construction, and the persistence rule re-opened that
+    # breach every review — an infeasible demand, permanently breached, therefore eventually
+    # ignored. Exactly the failure v6 L2 found in the correlated-catalyst cap.
+    # It matters more now: v10 P1's conviction gate gives the rules a deliberate way to hold
+    # FEWER names, and a book of four high-conviction names is an ANSWER to "where do we invest
+    # and where do we not", not a failure to deploy.
+    # This is not a hiding place for cash, and three things keep it from becoming one: the
+    # ceiling is the cap's own arithmetic (n × max_position_pct, nothing discretionary), BOTH
+    # numbers stay printed so the full gap never leaves the page, and `cash_drag` keeps pricing
+    # ALL idle cash against the benchmark and the model book. The rule stops demanding the
+    # impossible and keeps charging for the possible.
+    shortfall_basis: "absorbable"   # "absorbable" = vs what the model book can hold
+                                    # "deployable" = pre-v10 behaviour, vs the raw deploy rule
+
+    # THE CASH STANCE (v10 P3) — a decision to hold cash, said ONCE and priced.
+    # There were two ways to be under-deployed and only one of them was a decision: either the
+    # rows got executed, or the shortfall survived and this rule re-asked the same unanswered
+    # question every cycle, which is how a real judgement ("dry powder until the Fed meets")
+    # degrades into a monthly argument and then into silence. A stance is an OVERRIDE — same
+    # log, same author, same reason requirement, priced ~21 trading days later against the
+    # benchmark it declined — so nothing new has to be trusted. What is new is that it EXPIRES:
+    # silence is what the shortfall rule exists to break, so a stance that never lapsed would
+    # rebuild the silence it replaced. Machine authors (`budget`, `ramp`, `unrecorded`) may not
+    # write one: automation excusing its own output answers to nobody.
+    cash_stance:
+      enabled: true
+      max_days: 90               # ~one quarter, i.e. three monthly reviews. Then it re-opens.
     # RAMP (v9 R1) — the ratio said WHERE the book should be and never said HOW FAST to get
     # there, so a book 48pp under the rule was asked to close the whole gap in one afternoon:
     # six names bought on one day's prices, which is the single largest timing bet the system

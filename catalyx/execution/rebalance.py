@@ -536,6 +536,11 @@ def _render_rows(rows: list[dict]) -> list[str]:
         # and §1 of the report shows. The model-book rank stays internal (it exists only for book
         # members, so a column carrying both meant two things depending on the row).
         sr = _clean_rank(row.get("score_rank"))
+        # The catalyst-score z that SIZED this row's target (v10 P8) — the CORE signal, printed
+        # where it moves euros. "—" = the sector is outside the model book (nothing was sized),
+        # or the book predates the tilt.
+        caz = _fnum(row.get("ca_z"))
+        caz_s = "—" if caz is None else f"{caz:+.1f}"
         # How old is the evidence this row is spending on. It sits beside the reason on purpose:
         # the justification and the age of what justifies it belong in one glance.
         age = row.get("data_age")
@@ -544,7 +549,7 @@ def _render_rows(rows: list[dict]) -> list[str]:
         act = row["rule_action"] + ("*" if row.get("budget_state") == "deferred"
                                     or row.get("ramp_state") == "deferred" else "")
         out.append(f"{row['sector_id'][:30]:<30} {str(row.get('etf') or '—')[:9]:<9} "
-                   f"{(str(sr) if sr is not None else '—'):>4} "
+                   f"{(str(sr) if sr is not None else '—'):>4} {caz_s:>5} "
                    f"{row['target_pct']:>6.1f} {row['actual_pct']:>6.1f} {row['gap_eur']:>8.0f} "
                    f"{act:<7} {row['trade_eur']:>8.0f} {be_s:>6} "
                    f"{(age if age and age == age else '—'):<13} {row['reason']}")
@@ -557,6 +562,14 @@ def _clean_rank(v) -> int | None:
     if v is None or (isinstance(v, float) and v != v):
         return None
     return int(v)
+
+
+def _fnum(v, ndigits: int = 2) -> float | None:
+    """A number or None — same NaN discipline as `_clean_rank`, for the float columns a lake
+    read hands back (older partitions lack the newer columns and pandas fills NaN)."""
+    if v is None or (isinstance(v, float) and v != v):
+        return None
+    return round(float(v), ndigits)
 
 
 def partial_rungs(rows: list[dict], cfg: dict) -> list[dict]:
@@ -904,6 +917,12 @@ def cluster_risk_pass(rows: list[dict], clusters: list[dict], cfg: dict) -> dict
     the limit ever moved money on its own. The TRIGGER is measured risk; only the STEP is
     notional, and conflating the two is what the notional cap already gets wrong.
 
+    ONE ACTION PER ROW PER PASS. A member whose ADD/BUY was just blocked is not ALSO offered as
+    a trim candidate: declining a purchase and selling the position in the same breath is not a
+    discipline, it is two rules arguing. So a cluster whose every member has a pending add is
+    answered by stopping the adds — the budget's first job is to stop making it worse — and the
+    trim, if one is still needed, is the NEXT review's, computed on a book that has changed.
+
     UNMEASURED IS NOT COMPLIANT. `over_risk is None` — no covariance — is reported as unmeasured
     and changes nothing. It is never read as "within budget".
 
@@ -938,15 +957,29 @@ def cluster_risk_pass(rows: list[dict], clusters: list[dict], cfg: dict) -> dict
 
         # The trim candidate: the member carrying the most of the cluster's risk that is not
         # already being sold down by a higher-precedence rule.
-        cand = next((m for m in (c.get("members_by_risk") or [])
-                     if (by_sector.get(m["sector_id"]) or {}).get("rule_action")
-                     not in ("SELL", "REDUCE", "TRIM")), None)
+        #
+        # It must be a position ACTUALLY HELD, and that is not a detail. `members_by_risk` is
+        # measured on the POST-trade book, so a name the table is only proposing to buy carries
+        # risk there without existing yet — and since the block above has just declined that very
+        # buy, trimming it would have the budget cancelling a purchase and selling the result in
+        # the same breath. The euro the trim is sized on is therefore the HELD euro, not the
+        # post-trade one.
+        blocked_ids = {b["sector_id"] for b in blocked}
+        cand = None
+        for m in (c.get("members_by_risk") or []):
+            r = by_sector.get(m["sector_id"]) or {}
+            if r.get("rule_action") in ("SELL", "REDUCE", "TRIM") or m["sector_id"] in blocked_ids:
+                continue
+            if float(r.get("actual_eur") or 0.0) <= 0:
+                continue
+            cand = {**m, "held_eur": round(float(r["actual_eur"]), 2)}
+            break
         trim = None
-        if cand and float(cand.get("eur") or 0.0) > 0 and ctr > 0:
-            step = round(float(cand["eur"]) * (1.0 - budget / ctr), 2)
+        if cand and cand["held_eur"] > 0 and ctr > 0:
+            step = round(cand["held_eur"] * (1.0 - budget / ctr), 2)
             if step >= float(cfg.get("min_ticket_eur", 150.0)):
                 trim = {"sector_id": cand["sector_id"], "ctr_pct": cand["ctr_pct"],
-                        "eur": cand["eur"], "trim_eur": step}
+                        "eur": cand["held_eur"], "trim_eur": step}
                 if armed:
                     r = by_sector.get(cand["sector_id"])
                     if r is not None:
@@ -1003,7 +1036,136 @@ def shortfall_pp(deployed_eur: float, deployable_eur: float, total_capital_eur: 
     return round((float(deployable_eur or 0.0) - float(deployed_eur or 0.0)) / denom * 100.0, 2)
 
 
-def shortfall_status(history: list[dict], cfg: dict) -> dict:
+def absorbable_eur(deployable_eur: float, target_total_eur: float) -> dict:
+    """What the model book can actually HOLD, which is not always what the deploy rule asks for.
+
+    THE DEFECT (v10 P2). `deployable = capital × deploy_ratio` is a statement about how much
+    should be at work. It is silent about whether there are enough eligible NAMES to hold it,
+    and `max_position_pct` says there must be: at a 20% ceiling, five names is the fewest that
+    can absorb a full book, four cap out at 80%, three at 60%. So a book the rules themselves
+    cut to four names was measured against a target it could not reach by construction, and the
+    persistence rule re-opened that breach every review — an infeasible demand, permanently
+    breached, therefore eventually ignored. That is the same failure mode v6 L2 found in the
+    correlated-catalyst cap, arriving from the other direction.
+
+    This matters far more now than it did last month, because v10 P1 gives the rules a way to
+    deliberately hold FEWER names: a conviction gate that admits four names is answering the
+    user's actual question ("where do we invest, where do we not, and is some cash right?"), and
+    it must not be scored as a failure to deploy.
+
+    WHY THIS IS NOT A HIDING PLACE FOR CASH, which is the objection it has to survive:
+      · the ceiling is the CAP's arithmetic, not a judgement — `n × max_position_pct`, nothing
+        discretionary enters;
+      · both numbers are always reported, so the gap to the deploy rule never disappears from
+        the page, it just stops being called a breach nobody can answer;
+      · `cash_drag` keeps pricing ALL idle cash against the benchmark and the model book,
+        untouched. Cash the rules created is still cash that costs something, and the ledger
+        that says so is the one that was already there.
+    In short: the rule stops demanding the impossible, and keeps charging for the possible.
+    """
+    depl = float(deployable_eur or 0.0)
+    target = max(0.0, float(target_total_eur or 0.0))
+    absorbable = min(depl, target) if target > 0 else depl
+    return {
+        "deployable_eur": round(depl, 2),
+        "target_total_eur": round(target, 2),
+        "absorbable_eur": round(absorbable, 2),
+        "capped_by_book": bool(target > 0 and target < depl - 0.01),
+        "unreachable_eur": round(max(0.0, depl - absorbable), 2),
+        "why": (f"the deploy rule asks for {_eur(depl)}; the model book's targets sum to "
+                f"{_eur(target)}, so {_eur(depl - absorbable)} of it has no eligible name to go "
+                f"into — the shortfall is measured against what the book can hold, and the full "
+                f"gap stays printed beside it" if target > 0 and target < depl - 0.01 else
+                f"the model book can absorb the whole {_eur(depl)} the deploy rule asks for"),
+    }
+
+
+# ── The cash stance — a decision to hold cash, said ONCE and priced (v10 P3) ─
+#
+# The book had two ways to be under-deployed and only one of them was a decision. Either the
+# review executed the rows, or the shortfall survived and the persistence rule re-opened the same
+# unanswered question every cycle — which is how a real judgement ("I want dry powder until the
+# Fed meets") degraded into an argument repeated monthly and eventually skipped. There was no
+# object for "I decided this, here is why, ask me again in N days".
+#
+# It is deliberately NOT a new document type. It is an override, in the override log, with an
+# author and a reason, scored ~21 trading days later like every other deviation — because the
+# thing that keeps an escape hatch honest is that it gets priced, and that machinery already
+# exists. What is new is only that this one answers a BOOK-level rule rather than a row, and
+# that it EXPIRES: silence is what the shortfall rule was built to break, so a stance that never
+# lapsed would rebuild exactly the silence it replaced.
+
+_CASH_STANCE_SECTOR = "__book_cash__"
+_CASH_STANCE_ACTION = "CASH-STANCE"
+
+
+def _stance_cfg(cfg: dict) -> dict:
+    d = ((cfg or {}).get("deployment") or {}).get("cash_stance") or {}
+    return {"max_days": int(d.get("max_days", 90)),
+            "enabled": bool(d.get("enabled", True))}
+
+
+def cash_stance(lake_dir: Path | None = None, cfg: dict | None = None,
+                as_of: str | None = None) -> dict | None:
+    """The live cash stance, or None. A stance older than `max_days` has lapsed by design.
+
+    Only a HUMAN author's stance silences the rule. `budget`, `ramp` and `unrecorded` are the
+    machine's own deferrals — letting a stance be written by the same automation whose output it
+    excuses would close the loop on itself, and the shortfall would answer to nobody.
+    """
+    from catalyx.store import lake
+
+    sc = _stance_cfg(cfg or weights.rebalance_rules())
+    if not sc["enabled"]:
+        return None
+    ov = lake.read_table(_OVERRIDE_TABLE, lake_dir=lake_dir)
+    if ov.empty or "sector_id" not in ov.columns:
+        return None
+    rows = ov[(ov["sector_id"] == _CASH_STANCE_SECTOR)
+              & (ov.get("chosen_action") == _CASH_STANCE_ACTION)]
+    if rows.empty:
+        return None
+    today = date.fromisoformat(as_of or date.today().isoformat())
+    live = []
+    for _, r in rows.iterrows():
+        if str(r.get("author")) in _AUTO_DEFER_AUTHORS + ("unrecorded",):
+            continue
+        try:
+            started = date.fromisoformat(str(r.get("logged_at") or "")[:10])
+        except ValueError:                                     # pragma: no cover - defensive
+            continue
+        age = (today - started).days
+        if age <= sc["max_days"]:
+            live.append({"logged_at": str(r.get("logged_at")), "started": started.isoformat(),
+                         "author": str(r.get("author")), "reason": str(r.get("reason") or ""),
+                         "run_id": str(r.get("run_id")), "age_days": age,
+                         "expires_on": (started + timedelta(days=sc["max_days"])).isoformat(),
+                         "days_left": sc["max_days"] - age,
+                         "rule_deploy_eur": abs(float(r.get("rule_trade_eur") or 0.0)) or None,
+                         "chosen_deploy_eur": float(r.get("chosen_trade_eur") or 0.0)})
+    if not live:
+        return None
+    return max(live, key=lambda s: s["logged_at"])
+
+
+def log_cash_stance(run_id: str, reason: str, author: str, deploy_gap_eur: float,
+                    chosen_deploy_eur: float = 0.0, lake_dir: Path | None = None,
+                    cfg: dict | None = None) -> dict:
+    """Write a cash stance: the decision NOT to deploy what the rule asks, with its reason.
+
+    `deploy_gap_eur` is what the rule wanted at work (positive). It is stored as the rule's
+    trade so `score_overrides` can price the stance against the benchmark it declined — the
+    same difference-of-exposures arithmetic every other override is scored by, with the
+    benchmark standing in for the vehicle because the capital declined a market, not a name.
+    """
+    return log_override(run_id, _CASH_STANCE_SECTOR, "DEPLOY", _CASH_STANCE_ACTION,
+                        reason=reason, author=author,
+                        chosen_trade_eur=float(chosen_deploy_eur or 0.0),
+                        rule_trade_eur=abs(float(deploy_gap_eur or 0.0)),
+                        lake_dir=lake_dir, cfg=cfg)
+
+
+def shortfall_status(history: list[dict], cfg: dict, stance: dict | None = None) -> dict:
     """Has the book been under-deployed long enough that silence stops being an option?
 
     `history` is one record per RECORDED RUN, oldest first, each `{as_of, shortfall_pp}`. The
@@ -1025,11 +1187,24 @@ def shortfall_status(history: list[dict], cfg: dict) -> dict:
             break
     current = float(hist[-1]["shortfall_pp"]) if hist else 0.0
     breached = streak >= max_runs
+    # A live cash stance ANSWERS the breach; it does not delete it. The shortfall keeps its
+    # number, the cash drag keeps pricing it, and the stance keeps its expiry date printed
+    # beside both — so what changes is only that the review stops re-asking a question that has
+    # a signed, dated, scored answer on file.
+    answered = bool(breached and stance)
     return {
         "shortfall_pp": round(current, 2), "runs_breached": streak, "since": since,
         "max_shortfall_pp": max_pp, "max_shortfall_runs": max_runs,
-        "breached": breached,
-        "note": (f"{current:.1f}pp below the deploy rule for {streak} consecutive recorded run(s) "
+        "breached": breached and not answered,
+        "breach_raw": breached,
+        "answered_by_stance": answered,
+        "stance": stance,
+        "note": (f"{current:.1f}pp below the deploy rule for {streak} consecutive recorded "
+                 f"run(s) (limit {max_pp:.0f}pp × {max_runs}) — ANSWERED by the cash stance of "
+                 f"{stance['started']} ({stance['author']}): {stance['reason']} Expires "
+                 f"{stance['expires_on']} ({stance['days_left']}d), and the shortfall re-opens "
+                 f"by itself that day. The drag is still priced below." if answered else
+                 f"{current:.1f}pp below the deploy rule for {streak} consecutive recorded run(s) "
                  f"(limit {max_pp:.0f}pp × {max_runs}) — execute the rows or log an override "
                  f"naming the shortfall" if breached else
                  f"{current:.1f}pp below the rule, {streak} consecutive run(s) over "
@@ -1713,6 +1888,11 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
             "sector_id": sid, "etf": etf,
             "vehicle_at_run": vehicle_at_run if vehicle_at_run != etf else None,
             "rank": rank, "score_rank": score_ranks.get(sid), "bucket": bucket,
+            # The catalyst score behind this row (v10 P8): the level, and the z that SIZED the
+            # target via the CA conviction tilt. The row that orders euros shows the CA moving
+            # them — a sector outside the model book has neither (it was not sized at all).
+            "catalyst_alignment": _fnum(m.get("catalyst_alignment"), 1),
+            "ca_z": _fnum(m.get("ca_z")),
             "target_pct": target_pct, "actual_pct": actual_pct, "gap_pp": gap_pp,
             "target_eur": target_eur, "actual_eur": actual_eur, "gap_eur": gap_eur,
             # Room left under the per-position ceiling once this row is at its target — the third
@@ -1751,6 +1931,21 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
             **{k: costs[k] for k in ("tax_eur", "spread_eur", "cost_drag_eur")},
         })
 
+    # RISK AND CONCENTRATION, before the scarcities ration anything (v10 P6/P7). It runs on the
+    # finished table because a cluster's risk is a property of the POST-trade book, which does
+    # not exist until the first pass has produced it — the same reason the budget and the ramp
+    # are post-passes. At `risk_enforcement: "warn"` it changes no action; it reports what the
+    # budget WOULD move, which is what a cycle of evidence is made of.
+    try:
+        from catalyx.store import movement_repo
+        clusters = movement_repo.cap_check(
+            [{"sector_id": r["sector_id"], "etf": r["etf"], "trade_eur": r["trade_eur"]}
+             for r in rows])
+    except Exception:                                          # pragma: no cover - defensive
+        clusters = []
+    risk_budget = cluster_risk_pass(rows, clusters, cfg)
+
+    # Sorted AFTER the risk pass so a row the budget rewrote lands in its new precedence class.
     rows.sort(key=lambda r: (PRECEDENCE.index(r["rule_action"]) if r["rule_action"] in PRECEDENCE
                              else 9, -abs(r["trade_eur"])))
     invested_now = round(sum(r["actual_eur"] for r in rows), 2)
@@ -1807,6 +2002,10 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
             "tilt_lambda": next((float(m["tilt_lambda"]) for m in model
                                  if m.get("tilt_lambda") == m.get("tilt_lambda")     # NaN-safe
                                  and m.get("tilt_lambda") is not None), None),
+            # The declared prior sizing the book by catalyst score (v10 P8). None on books
+            # built before it — the tilt line then simply does not print.
+            "ca_tilt_delta": next((float(m["ca_tilt_delta"]) for m in model
+                                   if _fnum(m.get("ca_tilt_delta")) is not None), None),
         },
     }
 
@@ -1861,11 +2060,23 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
     # Deduped by REVIEW DATE only. Not by run_id: a review can re-use an earlier score run, and
     # excluding that run_id would silently delete the previous review from its own history — which
     # is precisely the kind of quiet reset the persistence rule exists to prevent.
+    # v10 P2 — the shortfall is measured against what the model book can ACTUALLY hold. Both
+    # bases are computed and both are reported; only which one the persistence rule counts is
+    # configurable, and the raw gap to the deploy rule never leaves the page.
+    absorb = absorbable_eur(deployable, target_total)
+    basis = str((cfg.get("deployment", {}) or {}).get("shortfall_basis", "absorbable")).lower()
+    short_basis_eur = absorb["absorbable_eur"] if basis == "absorbable" else deployable
     hist = [h for h in _shortfall_history(lake_dir=lake_dir) if h.get("as_of") != as_of]
     hist.append({"run_id": run_id, "as_of": as_of,
-                 "shortfall_pp": shortfall_pp(invested_now, deployable, total_capital)})
-    short = shortfall_status(hist, cfg)
+                 "shortfall_pp": shortfall_pp(invested_now, short_basis_eur, total_capital)})
+    stance = cash_stance(lake_dir=lake_dir, cfg=cfg, as_of=as_of)
+    short = shortfall_status(hist, cfg, stance=stance)
     short["history"] = hist[-6:]
+    short["basis"] = basis
+    short["absorbable"] = absorb
+    # The gap to the RAW deploy rule, always, whatever the basis. A rule that can only be
+    # measured one way is a rule that can be gamed by choosing the way.
+    short["shortfall_vs_deployable_pp"] = shortfall_pp(invested_now, deployable, total_capital)
 
     # Idle SINCE the book last changed, which is a movement date, not a run date: a review that
     # recommends and is not executed does not restart the clock — that is the whole point.
@@ -1909,6 +2120,14 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
                            if ramp.get("enabled") else
                            "Declining a row IS the override; leaving the shortfall unaddressed "
                            "for another run is a decision nobody signed."))
+    if risk_budget.get("n_breaching"):
+        warnings.append("RISK BUDGET — " + risk_budget["note"])
+    if absorb.get("capped_by_book") and basis == "absorbable":
+        warnings.append(
+            f"BOOK CANNOT ABSORB THE DEPLOY RULE — {absorb['why']}. The shortfall above is "
+            f"measured against {_eur(absorb['absorbable_eur'])}; against the raw deploy rule it "
+            f"is {short['shortfall_vs_deployable_pp']:.1f}pp. Widening the book means clearing "
+            f"the conviction gate with more names, not raising the position cap.")
     if unrecorded:
         warnings.append(f"{len(unrecorded)} UNRECORDED DEVIATION(S) from run {prior_run_id}: "
                         + ", ".join(f"{u['rule_action']} {u['sector_id']}" for u in unrecorded)
@@ -1923,6 +2142,11 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
                                            (book_metrics.get("model") or {}).get("tilt_lambda")),
         "shortfall": short, "cash_drag": drag, "trade_budget": budget,
         "deployment_ramp": ramp,
+        # Concentration in RISK beside concentration in euros (v10 P6/P7). `catalyst_cap` is the
+        # notional rule that has always been checked; `risk_budget` is the variance rule now
+        # running beside it. They are reported separately because where they DISAGREE is the
+        # evidence that decides which one survives the cycle.
+        "risk_budget": risk_budget, "catalyst_cap": clusters,
         "unrecorded": unrecorded, "prior_run_id": prior_run_id,
         "gate": gate, "composite_ic": ic_stat,
         # The entire partial-sale vocabulary, in one place, so the table can state it before the
@@ -1983,6 +2207,23 @@ def persist(result: dict, lake_dir: Path | None = None) -> int:
              "book_shortfall_pp": (result.get("shortfall") or {}).get("shortfall_pp"),
              "book_shortfall_runs": (result.get("shortfall") or {}).get("runs_breached"),
              "book_shortfall_breached": (result.get("shortfall") or {}).get("breached"),
+             # v10 P2/P3 — WHICH bar the shortfall was measured against, whether the book could
+             # reach the deploy rule at all, and whether a signed cash stance is answering it.
+             # A shortfall read back in six months must say what it was measured against: the
+             # basis is part of the number, and a row that carries only the number is unreadable
+             # the moment the basis can differ.
+             "book_shortfall_basis": (result.get("shortfall") or {}).get("basis"),
+             "book_shortfall_vs_deployable_pp": (result.get("shortfall") or {}).get(
+                 "shortfall_vs_deployable_pp"),
+             "book_absorbable_eur": ((result.get("shortfall") or {}).get("absorbable")
+                                     or {}).get("absorbable_eur"),
+             "book_shortfall_breach_raw": (result.get("shortfall") or {}).get("breach_raw"),
+             "book_cash_stance_author": ((result.get("shortfall") or {}).get("stance")
+                                         or {}).get("author"),
+             "book_cash_stance_expires": ((result.get("shortfall") or {}).get("stance")
+                                          or {}).get("expires_on"),
+             "book_cash_stance_reason": ((result.get("shortfall") or {}).get("stance")
+                                         or {}).get("reason"),
              # The schedule this table was cut to. Without it a row read back later says DEFER
              # with no trace of which scarcity queued it (v9 R1).
              "book_ramp_step_pp": (result.get("deployment_ramp") or {}).get("max_step_pp"),
@@ -2112,7 +2353,8 @@ def _log_unrecorded(result: dict, lake_dir: Path | None = None) -> int:
 
 def log_override(run_id: str, sector_id: str, rule_action: str, chosen_action: str,
                  reason: str, author: str, lake_dir: Path | None = None,
-                 chosen_trade_eur: float | None = None, cfg: dict | None = None) -> dict:
+                 chosen_trade_eur: float | None = None, cfg: dict | None = None,
+                 rule_trade_eur: float | None = None) -> dict:
     """Record a deviation from the rule. The ONLY sanctioned way to be conservative.
 
     Scored later against the action it replaced (`override_edge_eur`), which is what keeps the
@@ -2139,6 +2381,11 @@ def log_override(run_id: str, sector_id: str, rule_action: str, chosen_action: s
     row = {"run_id": run_id, "sector_id": sector_id, "rule_action": rule_action,
            "chosen_action": chosen_action,
            "chosen_trade_eur": float(chosen_trade_eur or 0.0),
+           # Normally the rule's ask is read back off the rebalance row at scoring time, which is
+           # the right source — it is the table's own record, not the narrator's memory of it. A
+           # BOOK-level override (the cash stance) has no rebalance row of its own, so it carries
+           # what it declined. None keeps the old behaviour for every row-level override.
+           "rule_trade_eur": (None if rule_trade_eur is None else float(rule_trade_eur)),
            "reason": reason, "author": author,
            "logged_at": datetime.now(timezone.utc).isoformat()}
     existing = lake.read_table(_OVERRIDE_TABLE, lake_dir=lake_dir)
@@ -2217,6 +2464,28 @@ def _run_as_of(run_id: str | None, fallback: str | None = None) -> str | None:
     return f"{m.group(1)}-{m.group(2)}-{m.group(3)}" if m else None
 
 
+def _stance_benchmark(run_id: str, reb) -> str | None:
+    """The vehicle a cash stance is priced against: the benchmark of the run's own strategy.
+
+    Cash that declined the deploy rule declined a MARKET, not a name, so the benchmark is the
+    honest counterfactual — and it is the same yardstick `cash_drag` already prints, which is
+    what keeps the two numbers about the same decision comparable.
+    """
+    strategy = "catalyx"
+    try:
+        if reb is not None and not reb.empty and "run_id" in reb.columns:
+            hit = reb[reb["run_id"] == run_id]
+            if not hit.empty and "strategy" in hit.columns:
+                strategy = str(hit.iloc[0]["strategy"]) or strategy
+    except Exception:                                          # pragma: no cover - defensive
+        pass
+    try:
+        from catalyx.execution import portfolio
+        return str(portfolio.load_profile(strategy).get("benchmark_etf") or "SPY")
+    except Exception:                                          # pragma: no cover - defensive
+        return "SPY"
+
+
 def score_overrides(lake_dir: Path | None = None, cfg: dict | None = None,
                     price_fn=None, as_of: str | None = None, ccy_fn=None, fx_fn=None) -> dict:
     """Score every logged override old enough to have a forward window; tally by author.
@@ -2250,12 +2519,23 @@ def score_overrides(lake_dir: Path | None = None, cfg: dict | None = None,
     for _, o in ov.iterrows():
         key = (str(o["run_id"]), str(o["sector_id"]))
         rr = rule_rows.get(key, {})
+        # A BOOK-level override (the cash stance, v10 P3) has no rebalance row of its own: the
+        # capital it declined was not declining a NAME, it was declining the market. So it is
+        # priced against the benchmark, with the € it declined carried on the override itself.
+        # Same difference-of-exposures arithmetic as every other row — only the vehicle differs,
+        # and it differs because the decision did.
+        is_stance = key[1] == _CASH_STANCE_SECTOR
+        etf = _stance_benchmark(key[0], reb) if is_stance else (
+            rr.get("etf") if hasattr(rr, "get") else None)
+        logged_rule = o.get("rule_trade_eur")
+        has_logged = logged_rule is not None and logged_rule == logged_rule   # NaN-safe
         items.append({
             "run_id": key[0], "sector_id": key[1],
-            "etf": (rr.get("etf") if hasattr(rr, "get") else None),
+            "etf": etf,
             "author": o.get("author"), "reason": o.get("reason"),
             "rule_action": o.get("rule_action"), "chosen_action": o.get("chosen_action"),
-            "rule_trade_eur": float(rr.get("trade_eur") or 0.0) if hasattr(rr, "get") else 0.0,
+            "rule_trade_eur": (float(logged_rule) if has_logged else
+                               (float(rr.get("trade_eur") or 0.0) if hasattr(rr, "get") else 0.0)),
             "chosen_trade_eur": float(o.get("chosen_trade_eur") or 0.0),
             "rule_cost_eur": float(rr.get("cost_drag_eur") or 0.0) if hasattr(rr, "get") else None,
             "from_date": _run_as_of(key[0], rr.get("as_of") if hasattr(rr, "get") else None),
@@ -2627,6 +2907,11 @@ def render(res: dict) -> str:
                       if lam < 0.05 else
                       f"{lam:.0%} of the model's conviction tilt applied, {1 - lam:.0%} shrunk "
                       f"toward the neutral book"))
+    ca_delta = mdl.get("ca_tilt_delta")
+    if ca_delta is not None:
+        out.append(f"CA-TILT  δ={ca_delta:.2f} — the catalyst score sizes the book directly "
+                   f"(declared prior, never disabled; caZ column below). Priced per window by "
+                   f"calibration --ca-tilt; a negative tally recalibrates HOW CA is computed.")
     gap = b["under_deployed_eur"]
     if abs(gap) >= 1:
         word = "UNDER-deployed" if gap > 0 else "OVER-deployed"
@@ -2659,6 +2944,8 @@ def render(res: dict) -> str:
     rf = float((res.get("fractions") or {}).get("reduce", 0.5)) * 100
     lf = res.get("fractions", {}).get("ladder_trim")
     out.append("COLUMNS  rk = rank in this run's full ranking (— = not scored this run) · "
+               "caZ = catalyst-score z among the model book's names — the declared prior that "
+               "sized the target (— = outside the book, nothing sized) · "
                "b/e% = friction ÷ capital moved · data = age of the catalyst evidence behind "
                "the score (qualifies the row, never vetoes it) · a trailing * on the action = "
                "queued by a scarcity (trade slot or deployment ramp), logged and priced like any "
@@ -2667,8 +2954,8 @@ def render(res: dict) -> str:
                + (f" (or {float(lf) * 100:.0f}% on a ladder rung)" if lf else ""))
     out.append("")
 
-    hdr = f"{'sector':<30} {'vehicle':<9} {'rk':>4} {'tgt%':>6} {'act%':>6} {'gap€':>8} " \
-          f"{'ACTION':<7} {'trade€':>8} {'b/e%':>6} {'data':<13} reason"
+    hdr = f"{'sector':<30} {'vehicle':<9} {'rk':>4} {'caZ':>5} {'tgt%':>6} {'act%':>6} " \
+          f"{'gap€':>8} {'ACTION':<7} {'trade€':>8} {'b/e%':>6} {'data':<13} reason"
     out += [hdr, "-" * len(hdr)]
     out += _render_rows(res["rows"])
     # The CASH row is a POSITION, priced like any other: the table is a closed book or it is two
@@ -2676,13 +2963,13 @@ def render(res: dict) -> str:
     # above — printed as an action, never as a footnote (plan v4 §4 C1).
     cash_act = b["cash_action_eur"]
     cash_verb = "DEPLOY" if cash_act > 0 else ("RAISE" if cash_act < 0 else "HOLD")
-    out.append(f"{'CASH':<30} {'—':<9} {'—':>4} "
+    out.append(f"{'CASH':<30} {'—':<9} {'—':>4} {'—':>5} "
                f"{b['cash_target_pct']:>6.1f} {b['cash_actual_pct']:>6.1f} "
                f"{-cash_act:>8.0f} {cash_verb:<7} {-cash_act:>8.0f} {'—':>6} {'—':<13} "
                f"rule holds {b['cash_target_pct']:.0f}% in cash; you hold "
                f"{b['cash_actual_pct']:.0f}% — already allocated on the rows above; "
                f"declining a row IS the override, not the cash")
-    out.append(f"{'TOTAL':<30} {'':<9} {'':>4} "
+    out.append(f"{'TOTAL':<30} {'':<9} {'':>4} {'':>5} "
                f"{b['target_pct'] + b['cash_target_pct']:>6.1f} "
                f"{b['deployed_pct'] + b['cash_actual_pct']:>6.1f} "
                f"{0:>8.0f}")
@@ -2789,7 +3076,7 @@ def render(res: dict) -> str:
 
 
 def main() -> None:
-    """Four commands. The default (no subcommand) is the report, so `post_run.sh` and every
+    """Five commands. The default (no subcommand) is the report, so `post_run.sh` and every
     existing call site keep working unchanged."""
     argv = sys.argv[1:]
     sub = argv[0] if argv and not argv[0].startswith("-") else None
@@ -2827,6 +3114,56 @@ def main() -> None:
         row = log_override(run_id, a.sector_id, rule_action, a.chosen_action, a.reason,
                            a.author, chosen_trade_eur=a.trade_eur)
         print(json.dumps(row, indent=2, default=str))
+        return
+
+    if sub == "cash-stance":
+        ap = argparse.ArgumentParser(
+            prog="rebalance cash-stance",
+            description="Decide, once and in writing, to hold cash the deploy rule wants at "
+                        "work. Logged as an override, scored against the benchmark it declined, "
+                        "and it EXPIRES — after which the shortfall re-opens by itself.")
+        ap.add_argument("command")
+        ap.add_argument("--reason", default=None,
+                        help="why. Required to write one; omit to SHOW the live stance.")
+        ap.add_argument("--author", default="user", choices=["user", "claude"])
+        ap.add_argument("--run-id", default=None, help="default: latest recorded rebalance run")
+        ap.add_argument("--deploy-gap-eur", type=float, default=None,
+                        help="€ the rule wants deployed (default: this run's cash action)")
+        ap.add_argument("--deployed-eur", type=float, default=0.0,
+                        help="€ actually being deployed instead (default 0)")
+        ap.add_argument("--json", action="store_true")
+        a = ap.parse_args(argv)
+
+        cfg = weights.rebalance_rules()
+        if not a.reason:
+            live = cash_stance(cfg=cfg)
+            print(json.dumps(live, indent=2, default=str) if a.json else
+                  ("No live cash stance — the deployment shortfall answers to nobody right now."
+                   if not live else
+                   f"CASH STANCE by {live['author']}, opened {live['started']} "
+                   f"({live['age_days']}d ago)\n  {live['reason']}\n"
+                   f"  expires {live['expires_on']} — {live['days_left']}d left, then the "
+                   f"shortfall re-opens by itself."))
+            return
+
+        from catalyx.store import lake
+        reb = lake.read_table(_TABLE)
+        run_id = a.run_id or (str(sorted(reb["run_id"].unique())[-1])
+                              if not reb.empty and "run_id" in reb.columns else None)
+        if not run_id:
+            raise SystemExit("no recorded rebalance run — run the report first.")
+        gap = a.deploy_gap_eur
+        if gap is None and not reb.empty:
+            row = reb[reb["run_id"] == run_id]
+            gap = float(row.iloc[0].get("book_cash_action_eur") or 0.0) if len(row) else 0.0
+        row = log_cash_stance(run_id, a.reason, a.author, float(gap or 0.0),
+                              chosen_deploy_eur=a.deployed_eur, cfg=cfg)
+        sc = _stance_cfg(cfg)
+        print(json.dumps(row, indent=2, default=str) if a.json else
+              f"Cash stance recorded on run {run_id} by {a.author}: "
+              f"€{abs(float(gap or 0.0)):,.0f} declined, €{a.deployed_eur:,.0f} deployed.\n"
+              f"  It silences the shortfall rule for {sc['max_days']} days and is scored "
+              f"against the benchmark ~21 trading days from now.")
         return
 
     if sub == "overrides":

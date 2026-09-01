@@ -14,6 +14,149 @@
 
 
 
+## v10.0 — El libro solo tenía una manera de ser pequeño: fallar (2026-09-01)
+
+**Salió de dos frases del usuario:** «si bajo catalizadores o riesgo hay sectores que dejan de ser
+interesantes deberíamos eliminarlos, no ir a por los n primeros» y «hay que incluir el riesgo y la
+concentración como métricas para recomendar rebalanceos».
+
+**El diagnóstico, que es lo que hay que quedarse.** Todo mecanismo capaz de encoger el libro
+desembocaba en el mismo sitio — un *deployment shortfall* que la regla de persistencia reabría cada
+review. No existía forma de decir «este sector dejó de merecer la pena», ni «cuatro nombres es el
+número correcto este mes», ni «quiero caja hasta X» que sobreviviera un ciclo. Y **la mitad de lo
+que el usuario pedía ya estaba construido**: los filtros pre-corte (`min_momentum: 40`,
+`max_crowding: 85`) ya son absolutos, `deploy_ratio` ya modela caja con rampa de VIX, y
+`sell_if_any.catalyst_status: [invalidated, dormant]` ya es una salida DIRECTA por catalizador
+muerto, con precedencia máxima. Lo que faltaba eran cuatro piezas concretas, no un rediseño.
+
+**P1 — la puerta de convicción, absoluta, al lado de la relativa.** `min_composite_z: 0.0` es
+relativo por construcción: significa «mejor que la media de ESTE run», así que en un universo donde
+todos los drivers se apagan sigue admitiendo a la mitad del campo y el libro sigue lleno porque el
+libro siempre está lleno. Un z-score ordena; no opina sobre si lo que ordena merece poseerse.
+`portfolio.conviction_gate()` lee `catalyst_alignment`, que SÍ es un nivel absoluto [0,100] y ya es
+el mayor peso del compuesto (0,35). **El suelo 40 se lee de la distribución medida, no se elige:**
+en `run_20260831_184616` los 26 valores de CA son bimodales — veinte entre 71,5 y 96,2, luego un
+hueco de 25 puntos, luego 36,2 / 13,9 / 13,9 / 0,0, que son exactamente los sectores sin driver
+estructural vivo. 40 cae en el hueco. **No mueve la tabla de hoy** (los cuatro excluidos rankean
+17º o peor) y eso es el punto: enuncia el criterio sin recortar en silencio una tabla ya decidida.
+Lo que para es el caso que aún no ha pasado — `eu_retail_banking`, momentum 86,5 con CA 13,9, a un
+buen trimestre del techo rank-8 de `buy_if`, comprado por precio sin driver detrás. **Un CA
+IMPUTADO (`ca_imputed`) no se juzga:** pasa y se reporta sin evaluar, porque convertir «no medido»
+en «suspende» es la única inferencia que v5 y v6 dedicaron dos versiones a eliminar. **Un cero
+MEDIDO sí se juzga** — `infrastructure_core` marca 0,0 con estudio detrás, y ese cero se observó.
+
+**P2 — el shortfall se mide contra lo que el libro PUEDE sostener.** `deployable` dice cuánto
+debería estar trabajando y calla sobre si existen NOMBRES elegibles para sostenerlo; con techo del
+20% por posición, cinco nombres es el mínimo que absorbe un libro completo, cuatro topan en 80%,
+tres en 60%. Un libro que las propias reglas cortan a cuatro se medía contra un objetivo
+inalcanzable por construcción, y la regla de persistencia reabría esa brecha cada review — una
+exigencia infactible, incumplida permanentemente, y por tanto ignorada con el tiempo. Es el mismo
+fallo que v6 L2 encontró en el cap de catalizador correlacionado, llegando por el otro lado.
+`absorbable_eur()` baja el listón a `min(deployable, Σ target)`. **Y no es un escondite para caja,
+por tres razones que van en el código:** el techo es la aritmética del cap (`n × max_position_pct`,
+nada discrecional), AMBOS números se siguen imprimiendo — `shortfall_vs_deployable_pp` nunca
+desaparece de la página — y `cash_drag` sigue preciando CADA euro ocioso contra el benchmark y
+contra el model book. La regla deja de exigir lo imposible y sigue cobrando por lo posible.
+
+**P3 — la postura de caja: dicha UNA vez, fechada, preciada, y que CADUCA.** Había dos maneras de
+estar infra-desplegado y solo una era una decisión. `cash_stance` deliberadamente NO es un tipo de
+documento nuevo: es un override, en el override log, con autor y razón, preciado ~21 días de
+mercado después contra el benchmark que declinó — porque lo que mantiene honesta una vía de escape
+es que se le ponga precio, y esa maquinaria ya existía. Lo nuevo es solo que responde a una regla
+de LIBRO en vez de a una fila, y que **expira** (90d): el silencio es lo que la regla de shortfall
+existe para romper, así que una postura que no caducara reconstruiría el silencio que sustituye.
+Autores máquina (`budget`, `ramp`, `unrecorded`) no pueden escribir una: automatización excusando
+su propia salida no responde ante nadie. `shortfall_status` pasa a `breached: false` con
+`breach_raw: true` — **la brecha no se borra**, se contesta, y se reabre sola en su fecha.
+CLI: `rebalance cash-stance --reason ...` (sin `--reason` muestra la vigente).
+
+**P6/P7 — el riesgo entra en la tabla, y la discrepancia con el nocional es el hallazgo.**
+El párrafo de `correlated_catalyst_cap` terminaba desde v6.4 en «replacing the notional cap with a
+risk budget is a decision for the user»; el usuario la tomó. `max_cluster_variance_pct: 35.0` NO
+sustituye al cap nocional: ambos corren, ambos en `warn`, un ciclo, y dos runs de evidencia deciden
+cuál sobrevive — el mismo orden que v6 L2, donde una medición se gana su enforcement y un cap nunca
+se relaja sobre una sola tabla. **35 se elige contra el spread medido** (libro post-trade
+2026-08-31): a 35 incumple exactamente UN cluster, `ai_capex`, el que todo review ya nombra,
+mientras `biopharma` — que incumple el NOCIONAL a la mitad del riesgo que carga `gold` bajo él — no.
+`cluster_risk_pass()` corre como post-pase sobre la tabla terminada, porque el riesgo de un cluster
+es propiedad del libro POST-trade y ese libro no existe hasta que la primera pasada lo produce (la
+misma razón por la que el presupuesto de operaciones y la rampa son post-pases). Bloquea ADD/BUY
+hacia un cluster por encima de presupuesto y NOMBRA al miembro que más riesgo carga como candidato
+a TRIM, dimensionado a primer orden. **Nunca toca un SELL o un REDUCE:** un límite de riesgo que
+pudiera cancelar una RETIRADA de riesgo sería un límite discutiendo consigo mismo. **Un riesgo NO
+MEDIDO (`over_risk: None`) jamás se lee como «dentro de presupuesto»** — la misma regla que
+`cluster_risk_for` sigue al devolver None en vez de 0.
+
+**Un defecto que la propia implementación destapó, y que vale más que la función:** el candidato a
+TRIM salía de `members_by_risk`, que se mide sobre el libro POST-trade — así que un nombre que solo
+se PROPONE comprar carga riesgo ahí sin existir todavía, y como el bloqueo acababa de declinar esa
+misma compra, el presupuesto habría cancelado una compra y vendido el resultado en el mismo aliento.
+El candidato exige ahora posición REALMENTE tenida (`actual_eur > 0`) y no haber sido bloqueado en
+la misma pasada: una acción por fila por pasada.
+
+**Lo que la tabla nueva dice hoy, que es por lo que esto no es cosmético.** `struct_ai_capex_
+supercycle` incumple los dos (62,5% nocional, **89,2% de la varianza del libro**), pero
+`struct_energy_transition_grid` **cumple el nocional al 15,0% y carga el 44,6% de la varianza** —
+las dos reglas discrepan, y discrepan sobre un driver que el cap nocional declara limpio. Esa fila
+es exactamente la evidencia que el usuario pidió. Dos clusters salen UNMEASURED y se reportan como
+tal. Ninguna acción cambió: ambos enforcement son `warn`.
+
+**Lo que se DECIDIÓ NO hacer, con causa.** El plan inicial incluía una pata «evidencia `blind` >N
+días bloquea un BUY». Se descartó al leer `_data_age_by_sector`, cuyo docstring fija la doctrina
+opuesta y por escrito: *«This QUALIFIES a row. It never votes: `decide_action` does not read it, by
+design… stale data is a reason to RE-VERIFY, not to stop acting — turning a maintenance failure
+into a trading prohibition is the conservative bias Phase C exists to fight.»* Revertir eso en
+silencio dentro de un edit sobre otra cosa habría sido justo el tipo de cambio que este proyecto
+registra para no repetir. Queda como decisión abierta del usuario.
+
+695 tests en verde (+31), con dos invariantes nuevas de factibilidad: un libro LLENO debe poder
+absorber la regla de despliegue (si no, la relajación de P2 dispararía siempre en vez de solo
+cuando la puerta corta el libro), y el presupuesto de riesgo debe admitir una posición individual
+(el fallo de v6 L2 en unidades de varianza).
+
+**P8 — el score de catalizadores DIMENSIONA el libro, como prior declarado (`ca_conviction_tilt`).**
+Salió de tres frases del usuario en el mismo hilo: «para el rebalanceo no se usa nuestro score de
+catalizadores, y es el CORE de nuestro approach», «quiero darle un peso, aunque no lo tengamos
+calculado… tiene que funcionar, si no no tenemos nada que medir», y la doctrina que lo gobierna:
+«no vamos a apagar CA nunca; si va mal, cambiaremos cómo se calcula, pero nunca se apaga».
+
+**El diagnóstico era correcto en el sentido que importa.** CA ya elegía los NOMBRES (peso 0,35 del
+compuesto → rank → buy/sell; puerta absoluta P1; status binario → SELL), pero con λ=0 no ponía ni
+un euro de diferencia entre ellos: el libro quedaba inverse-vol neutral, y el argumento estadístico
+de esperar al IC tiene un fallo causal — **un tilt que nunca mueve euros no genera jamás la serie
+que lo calibraría**, porque el contrafactual no se construye. Así que el delta entra como PRIOR
+DECLARADO — el mismo estatus epistémico que el 0,35 de CA en el compuesto (v8 Q3: «declared, not
+hidden») — y lo que lo mantiene honesto no es una puerta sino un LIBRO MAYOR.
+
+**El mecanismo** (`portfolio.ca_tilt`, entre `skill_shrink` y `vol_tilt`): `w ← w·(1 + δ·z_CA)`,
+z cross-sectional de `catalyst_alignment` entre los nombres SELECCIONADOS, winsor ±2,5; un CA
+imputado va a z=0 (v6 H2: lo no medido se imputa al prior, nunca se inclina) y fuera de los
+momentos. **δ=0,20 no se inventa: mapea el rango del winsor sobre la escalera de convicción YA
+declarada** (`tier_multiples` [1.4, 1.0, 0.5]: +2σ→×1,4, 0→×1,0, −2,5σ→×0,5 — los tiers que
+ningún código leía). Corre ANTES de `vol_tilt` (convicción primero, comparabilidad en riesgo
+después) y antes del cap (un límite de riesgo manda sobre una preferencia de tamaño). Solo libros
+composite: `momentum` y `equal` son baselines contrafactuales y se quedan limpios.
+
+**El libro mayor que lo hace falsificable.** Cada build persiste el contrafactual δ=0 exacto
+(`w_pre_ca_pct`, ambos libros recorren idéntico el tramo vol_tilt→cap→deadband) junto a `ca_z` y
+`ca_tilt_mult`; `calibration.ca_tilt_edge` (CLI `--ca-tilt`) precia `Σ(w_post−w_pre)·fwd` por
+ventana COMPLETA de 63d, un run por fecha de review, ventanas efectivas no solapadas — y
+**descompone por sector y por driver** (crédito solapado, la regla de `exposure_eur`). La doctrina
+está en el código: un tally negativo NOMBRA el catalizador cuyo cálculo desvió el sizing
+(indicadores, decay, noisy-OR, frescura) — la evidencia entra por recalibrar CA, nunca por
+apagarlo. `ca_tilt_delta_min: 0.05` hace `delta: 0` inescribible por construcción; mover δ es un
+edit de umbral congelado, config + CHANGELOG con el tally delante.
+
+**Efecto vivo, que es por lo que no es cosmético** (libro modelo sobre `run_20260831_184616`, sin
+re-persistir el run ya decidido — sus overrides se registraron contra la tabla pre-tilt y un juicio
+fechado no se reescribe): los CA 95–96 se amplifican (×1,06–1,12) y `cybersecurity_commercial`
+(CA 79, z −2,23 en un cross-section apiñado en 94–96) cae ×0,55 → su target 17%→10,2% y su ADD de
+la tabla anterior degrada a HOLD. La tabla de rebalance gana la columna `caZ` al lado de `rk` y la
+línea `CA-TILT δ=…` bajo `TILT λ=…`: el prior que dimensiona cada fila, impreso donde mueve euros.
+709 tests en verde (+14).
+
+---
+
 ## v9.0 — La regla decía DÓNDE debe estar el libro y nunca dijo A QUÉ VELOCIDAD (2026-09-01)
 
 **Salió de dos frases del usuario:** «en rebalanceo hay algo mal, pone 773 hold y yo tengo 565 en

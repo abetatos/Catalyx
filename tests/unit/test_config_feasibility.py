@@ -94,3 +94,62 @@ def test_model_book_is_executable_under_the_real_books_rules():
     bs = weights.book_shape()
     assert c["max_position_pct"] <= bs["max_position_pct"]
     assert c["max_positions"] <= bs["n_target"]
+
+
+# ── v10 — the two new limits must be satisfiable by the book they govern ─────
+
+def test_the_target_book_can_absorb_the_deploy_rule():
+    """`absorbable_eur` (v10 P2) lowers the shortfall bar to what the book can HOLD. That is a
+    correction for the case where too few names qualify — it must never be the NORMAL state, or
+    the deployment rule would quietly stop binding on a full book. At n_target names under the
+    position ceiling, the book must still be able to absorb everything the deploy rule asks for.
+    """
+    bs = weights.book_shape()
+    reachable = bs["n_target"] * bs["max_position_pct"] / 100.0
+    assert reachable >= bs["deploy_max"], (
+        f"{bs['n_target']} names at {bs['max_position_pct']}% reach {reachable:.0%}, under the "
+        f"{bs['deploy_max']:.0%} deploy ceiling — a FULL book would read as under-deployed, and "
+        f"P2's relaxation would fire every run instead of only when the gate cuts the book")
+
+
+def test_the_risk_budget_admits_a_single_position():
+    """The v6 L2 failure, in variance units. A budget below the share ONE name carries in an
+    equal-risk book of n_target would be breached the day any position is opened — infeasible,
+    permanently breached, therefore permanently ignored."""
+    bs = weights.book_shape()
+    budget = weights.correlated_catalyst_cap()["max_cluster_variance_pct"]
+    one_name = 100.0 / bs["n_target"]
+    assert budget > one_name, (
+        f"risk budget {budget}% is at or below the {one_name:.1f}% a single name carries in an "
+        f"equal-risk {bs['n_target']}-name book")
+
+
+def test_the_risk_budget_is_not_stricter_than_the_notional_cap_it_runs_beside():
+    """Both run for a cycle so their DISAGREEMENT can be read. A variance budget tighter than
+    the notional cap's equal-risk equivalent would simply supersede it, and there would be
+    nothing to compare — the notional rule would never be the binding one on any book."""
+    ccc = weights.correlated_catalyst_cap()
+    assert ccc["max_cluster_variance_pct"] >= ccc["max_combined_pct"], (
+        f"variance budget {ccc['max_cluster_variance_pct']}% is tighter than the notional cap "
+        f"{ccc['max_combined_pct']}% under equal risk — the notional cap could never bind first")
+
+
+def test_both_caps_ship_unarmed_while_the_evidence_is_collected():
+    """A new limit that moves money in the same edit that introduces it has been read against
+    no live table. Both stay `warn` until two runs of evidence say which one survives."""
+    ccc = weights.correlated_catalyst_cap()
+    assert ccc["enforcement"] == "warn"
+    assert ccc["risk_enforcement"] == "warn"
+
+
+def test_the_conviction_gate_cannot_empty_the_book():
+    """A floor above the level a leader scores would cut every name and hand the whole book to
+    cash — the opposite failure to the one P1 exists to fix, and just as silent."""
+    c = portfolio.load_profile("catalyx")["construction"]
+    gate = c.get("entry_gate") or {}
+    if not gate.get("enabled", True) or gate.get("min_catalyst_alignment") is None:
+        return
+    floor = float(gate["min_catalyst_alignment"])
+    assert 0 < floor < 70, (
+        f"catalyst_alignment floor {floor} is outside the sane band: at or below 0 it gates "
+        f"nothing, at 70+ it starts cutting names the composite calls leaders")
