@@ -36,7 +36,7 @@
       "inst_13f_filer_count": null,
       "inst_source": "not_available_ucits",
       "inst_proxy_ticker": null,
-      "volume_cmf": -0.564
+      "volume_cmf": -0.611
     },
     "space_defense_satellite": {
       "ticker": "JEDI.DE",
@@ -134,7 +134,7 @@
       "shares_ticker": "ICLN",
       "flow_proxy_used": false,
       "flow_source": "cmf",
-      "flow_confirmation": 25.2,
+      "flow_confirmation": 25.0,
       "flow_pct": null,
       "flow_window_days": null,
       "flow_days_covered": null,
@@ -145,7 +145,7 @@
       "inst_13f_filer_count": 1446,
       "inst_source": "edgar_13f",
       "inst_proxy_ticker": "ICLN",
-      "volume_cmf": -0.309
+      "volume_cmf": -0.313
     },
     "gold_physical": {
       "ticker": "IGLN.L",
@@ -153,7 +153,7 @@
       "shares_ticker": "GLD",
       "flow_proxy_used": false,
       "flow_source": "cmf",
-      "flow_confirmation": 77.7,
+      "flow_confirmation": 77.3,
       "flow_pct": null,
       "flow_window_days": null,
       "flow_days_covered": null,
@@ -164,7 +164,7 @@
       "inst_13f_filer_count": 10000,
       "inst_source": "edgar_13f",
       "inst_proxy_ticker": "GLD",
-      "volume_cmf": 0.347
+      "volume_cmf": 0.341
     },
     "gold_miners": {
       "ticker": "SPGP.L",
@@ -190,7 +190,7 @@
       "shares_ticker": "SLV",
       "flow_proxy_used": false,
       "flow_source": "cmf",
-      "flow_confirmation": 64.3,
+      "flow_confirmation": 64.2,
       "flow_pct": null,
       "flow_window_days": null,
       "flow_days_covered": null,
@@ -201,7 +201,7 @@
       "inst_13f_filer_count": 4920,
       "inst_source": "edgar_13f",
       "inst_proxy_ticker": "SLV",
-      "volume_cmf": 0.179
+      "volume_cmf": 0.177
     },
     "copper_miners": {
       "ticker": "4COP.DE",
@@ -245,7 +245,7 @@
       "shares_ticker": "MOO",
       "flow_proxy_used": false,
       "flow_source": "cmf",
-      "flow_confirmation": 35.2,
+      "flow_confirmation": 35.1,
       "flow_pct": null,
       "flow_window_days": null,
       "flow_days_covered": null,
@@ -256,7 +256,7 @@
       "inst_13f_filer_count": 609,
       "inst_source": "edgar_13f",
       "inst_proxy_ticker": "MOO",
-      "volume_cmf": -0.185
+      "volume_cmf": -0.186
     },
     "water_infrastructure": {
       "ticker": "IQQQ.DE",
