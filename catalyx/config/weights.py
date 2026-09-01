@@ -332,6 +332,8 @@ _PORTFOLIO_WEIGHTING_DEFAULT = {
     "ca_tilt_delta": 0.20,
     "ca_tilt_winsor_z": 2.5,
     "ca_tilt_delta_min": 0.05,
+    # Which scale the tilt z-scores (v10 P8b): "logit" (in force) | "level" (the P8 behaviour).
+    "ca_tilt_scale": "logit",
 }
 
 

@@ -507,6 +507,49 @@ la tabla anterior degrada a HOLD. La tabla de rebalance gana la columna `caZ` al
 línea `CA-TILT δ=…` bajo `TILT λ=…`: el prior que dimensiona cada fila, impreso donde mueve euros.
 709 tests en verde (+14).
 
+**P8b — el tilt toma su z del LOGIT, y la retro es la otra mitad del contrafactual.** Dos
+peticiones del usuario el mismo día: «lo quiero funcionando YA, y luego mejoraremos los scores»
+y «tener esa información es oro — ¿se puede calcular a posteriori con los runs?».
+
+**El problema que arregla está MEDIDO; el arreglo NO está backtesteado, y se envía igual por
+decisión explícita del usuario.** El noisy-OR está acotado en 100 y anclado al portador más
+fuerte, así que un sector con varios catalizadores fuertes satura: en el universo del
+2026-09-01 **nueve sectores caen entre 95,0 y 96,7** — 1,7 puntos contra σ_cross 28,5, o sea
+**0,06σ**, menos resolución que el redondeo del propio agregador. Esa banda no es una curiosidad:
+es donde el libro concentra, y es la población exacta que el tilt estandariza — el tilt estaba
+leyendo diferencias que la escala había dejado de transportar. `ca_tilt_scale: "logit"` toma la z
+de `log(p/(1−p))` del MISMO CA. Es la inversa del mapa saturante que creó el techo, y sobre los
+nombres del libro vivo la banda del techo pasa de un span de z de 0,177 a 0,430 — **×2,4 de
+resolución** donde se decide el tamaño. **La transformación es MONÓTONA**, así que re-espacia y
+jamás reordena: la selección, la puerta de convicción y todos los ranks quedan intactos por
+construcción, y solo cambia el espaciado entre multiplicadores (efecto en el libro vivo: máx
+0,34pp, `copper_miners` +0,34 / `cloud` −0,19). `scale: "level"` reproduce el sizing de P8 exacto.
+**Lo que NO arregla, dicho claro:** un techo comprimido puede significar que la escala está mal
+O que los sectores son de verdad igual de fuertes. El logit asume lo primero y nada lo distingue
+todavía — por eso el tally sigue siendo lo que decide. Una fila sin `ca_logit` (run pre-v11, o un
+CA imputado, donde el logit es None por diseño) hace caer **toda la sección transversal** al
+nivel, y se declara (`scale_used`, `scale_fallback`): una z necesita UNA escala, y mezclar dos
+dentro del mismo z compara unidades que no son comparables.
+
+**`ca_tilt_edge_retro` — el contrafactual mirando hacia atrás.** La pata viva solo puede empezar
+a medir desde P8; los 13 runs ya grabados son la otra mitad, y son literalmente el libro «sin
+CA». Así que se les aplica el δ de hoy usando el `catalyst_alignment` que **ese run congeló** en
+su propio `sector_snapshot` — punto-en-tiempo, y el único hindsight es el retorno forward, que es
+el que un backtest sí puede usar — se recapa y se precia `Σ(w_tilt − w_grabado)·fwd` sobre la
+misma ventana que usa la pata viva. Juntas dan **una serie continua**: retro antes de P8, viva
+después. Persiste en `validation/ca_tilt_retro` (re-ejecutable, sobreescribe por run).
+**Dos decisiones que la implementación forzó:** (1) los runs son de desarrollo — hay ráfagas de
+cinco en una tarde —, así que las fechas se colapsan con `_cycle_runs` del propio rebalance
+(mismo `min_gap_days: 21`, se queda la lectura más reciente del clúster): una tarde de iteración
+no puede contar como cinco observaciones de la misma decisión. (2) El cap del retro es
+`max(cap_hoy, mayor línea del libro grabado)` — cobrarle al contrafactual un techo que la
+baseline nunca enfrentó falsearía el resultado; un libro totalmente cap-bound sale como «sin
+ventana», nunca como cero. **Lo que dice hoy:** +0,35pp en la única ventana cerrada de 63d;
+−0,04pp de media en 3 ventanas de 21d (−0,43 / +0,12 / +0,20). Sin veredicto — es exactamente la
+muestra que `calibration` etiquetaría `noise` —, pero ya es una serie que crece sola, y su mayor
+lastre tiene nombre (`struct_energy_transition_grid`), que es lo que la doctrina pide: localizar
+QUÉ catalizador recalibrar, nunca el interruptor. 787 tests en verde (+78 sobre v9).
+
 ---
 
 ## v9.0 — La regla decía DÓNDE debe estar el libro y nunca dijo A QUÉ VELOCIDAD (2026-09-01)

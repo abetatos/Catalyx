@@ -531,7 +531,8 @@ def ca_tilt_edge_retro(portfolio_id: str = "catalyx", horizon_days: int = DEFAUL
                        as_of: str | None = None, lake_dir: Path | None = None,
                        allow_fetch: bool = True, fwd_fn=None,
                        delta: float | None = None, winsor_z: float | None = None,
-                       persist: bool = False, min_gap_days: int = 21) -> dict:
+                       persist: bool = False, min_gap_days: int = 21,
+                       scale: str | None = None) -> dict:
     """What WOULD the CA tilt have earned on the books recorded BEFORE it existed?
 
     THE COUNTERFACTUAL, MIRRORED. Since v10 P8 the live ledger stores the δ=0 book beside the
@@ -562,11 +563,13 @@ def ca_tilt_edge_retro(portfolio_id: str = "catalyx", horizon_days: int = DEFAUL
     delta = float(pw.get("ca_tilt_delta", 0.20) if delta is None else delta)
     delta = max(delta, float(pw.get("ca_tilt_delta_min", 0.05)))
     winsor = float(pw.get("ca_tilt_winsor_z", 2.5) if winsor_z is None else winsor_z)
+    scale = str(scale or pw.get("ca_tilt_scale", "level")).lower()
     cap_pct = float(_weights_cfg().book_shape()["max_position_pct"])
     fwd_fn = fwd_fn or forward_returns
     today = as_of or date.today().isoformat()
     empty = {"portfolio_id": portfolio_id, "horizon_days": int(horizon_days), "mode": "retro",
-             "delta": delta, "windows": [], "n_windows": 0, "effective_windows": 0,
+             "delta": delta, "scale": scale, "windows": [], "n_windows": 0,
+             "effective_windows": 0,
              "mean_edge_pp": None, "total_edge_pp": None, "per_sector": {},
              "per_catalyst": {}, "verdict": "unmeasured"}
 
@@ -615,8 +618,13 @@ def ca_tilt_edge_retro(portfolio_id: str = "catalyx", horizon_days: int = DEFAUL
             return None if v is None or v != v else v
 
         ca_vals = [_sn(s, "catalyst_alignment") for s in sids]
+        ca_lgts = [_sn(s, "ca_logit") for s in sids]
         imput = [bool(_sn(s, "ca_imputed") or False) for s in sids]
-        tilted, ca_rows = _pf.ca_tilt(w_rec, ca_vals, imput, delta, winsor)
+        # Same scale the live tilt runs on, so retro and live windows are one continuous
+        # series; a pre-v11 run carries no logit and falls back to the level, which the
+        # per-window `scale` records rather than leaving to be inferred.
+        tilted, ca_rows = _pf.ca_tilt(w_rec, ca_vals, imput, delta, winsor,
+                                      ca_logits=ca_lgts, scale=scale)
         # Re-cap, gross preserved: the tilt must not manufacture a position today's cap would
         # refuse — but it must not SHRINK a position the recorded book actually carried either
         # (that would charge the counterfactual for a cap the baseline never faced), so the
@@ -653,8 +661,11 @@ def ca_tilt_edge_retro(portfolio_id: str = "catalyx", horizon_days: int = DEFAUL
             agg["n_windows"] += 1
         if not n_priced:
             continue
+        scale_used = next((r["scale"] for r in ca_rows
+                           if r["x"] is not None and not r["imputed"]), scale)
         windows.append({"run_id": rid, "start": start.isoformat(),
                         "end": window_end.isoformat(), "delta": delta,
+                        "scale": scale_used,
                         "edge_pp": round(edge, 3), "n_priced": n_priced,
                         "contributions": sorted(contribs, key=lambda c: c["edge_pp"])})
 
@@ -662,13 +673,14 @@ def ca_tilt_edge_retro(portfolio_id: str = "catalyx", horizon_days: int = DEFAUL
         return {**empty, "note": f"no recorded pre-P8 book has a complete {horizon_days}d "
                                  f"window yet (try --horizon-days 21 for an early, noisier read)"}
     res = _edge_summary(empty, windows, per_sector, int(horizon_days),
-                        label=f"RETRO — today's δ={delta:.2f} applied to the recorded books "
-                              f"would have")
+                        label=f"RETRO — today's δ={delta:.2f} on the "
+                              f"{(windows[0].get('scale') or scale).upper()} scale, applied to "
+                              f"the recorded books, would have")
     if persist:
         import pandas as pd
         rows = [{"portfolio_id": portfolio_id, "run_id": w["run_id"], "start": w["start"],
                  "end": w["end"], "horizon_days": int(horizon_days), "delta": delta,
-                 "edge_pp": w["edge_pp"], "n_priced": w["n_priced"],
+                 "edge_pp": w["edge_pp"], "n_priced": w["n_priced"], "scale": w["scale"],
                  "contributions": json.dumps(w["contributions"]),
                  "computed_at": datetime.now(timezone.utc).isoformat()} for w in windows]
         for w in rows:

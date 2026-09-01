@@ -208,3 +208,52 @@ def test_the_momentum_blend_carries_no_one_month_leg():
     assert w["return_1m"] == 0.0
     assert w["return_3m"] + w["return_6m"] == pytest.approx(1.0)
     assert w["return_3m"] / w["return_6m"] == pytest.approx(45 / 35, abs=0.01)
+
+
+# ── the persisted row must carry the unit the rank is computed on (2026-09-01) ──
+
+def test_the_lake_row_carries_composite_z_not_only_the_display_level():
+    """THE DEFECT: `_write_run_to_lake` copied `composite` and stopped, so every run written to
+    the lake carried NO `composite_z` — and v6 H1 made that the comparable unit. Downstream,
+    `portfolio._apply_composite_floor` and `dislocation` DETECT the column to decide which scale
+    a run is on, so its absence silently routed every fresh run through the pre-v6 fallback:
+    an absolute floor on a level whose meaning changes run to run, which is exactly what v6 H3
+    removed. `sector_scorer.rank_key` fell back the same way, so the top-N cut was decided on
+    the 1-decimal display number the module warns about.
+
+    `ca_imputed` rides the same fix: the conviction gate and `commensurate` both ask whether a
+    CA was MEASURED, and a missing flag reads as "measured" — the inference v6 H2 exists to stop.
+    """
+    from catalyx.store import snapshot_repo
+
+    scored = {"sector_id": "s", "rank": 1, "composite": 61.4, "composite_z": 0.7614,
+              "composite_absolute": 58.0, "ca_imputed": True,
+              "catalyst_alignment": 95.0, "momentum": 70.0, "flow_confirmation": 50.0,
+              "crowding_risk": 30.0, "narrative_maturity": "emerging", "has_study": 1,
+              "primary_etf": "AAA", "rationale_md": "", "regime_state": "intact",
+              "flow_data_quality": None, "flow_source": None, "flow_proxy_ticker": None,
+              "flow_proxy_used": False, "flow_carried_from": None, "flow_volume_cmf": None,
+              "flow_window_days": None, "flow_days_covered": None}
+    row = snapshot_repo._snapshot_lake_row("run_x", "2026-09-01", "v", scored)
+
+    assert row["composite_z"] == 0.7614, "the unit every selection floor is written in"
+    assert row["composite_absolute"] == 58.0
+    assert row["ca_imputed"] is True, "an imputed CA must not read back as measured"
+    # and the display level is still there — the fix is additive, nothing was replaced
+    assert row["composite"] == 61.4
+
+
+def test_a_run_without_the_z_still_writes_a_row():
+    """A pre-v6 scoring path produces no `composite_z`; the writer must degrade to None rather
+    than raise — missing is a state, not a crash."""
+    from catalyx.store import snapshot_repo
+
+    minimal = {"sector_id": "s", "rank": 1, "composite": 50.0,
+               "catalyst_alignment": 50.0, "momentum": 50.0, "flow_confirmation": 50.0,
+               "crowding_risk": 50.0, "narrative_maturity": None, "has_study": 0,
+               "primary_etf": None, "rationale_md": "", "regime_state": "intact",
+               "flow_data_quality": None, "flow_source": None, "flow_proxy_ticker": None,
+               "flow_proxy_used": False, "flow_carried_from": None, "flow_volume_cmf": None,
+               "flow_window_days": None, "flow_days_covered": None}
+    row = snapshot_repo._snapshot_lake_row("run_x", "2026-09-01", "v", minimal)
+    assert row["composite_z"] is None and row["ca_imputed"] is False

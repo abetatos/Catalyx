@@ -256,8 +256,9 @@ def skill_shrink(model: list[float], neutral: list[float], lam: float) -> list[f
 
 
 def ca_tilt(scores: list[float], ca_values: list[float | None], imputed: list[bool],
-            delta: float, winsor_z: float = 2.5,
-            mult_floor: float = 0.1) -> tuple[list[float], list[dict]]:
+            delta: float, winsor_z: float = 2.5, mult_floor: float = 0.1,
+            ca_logits: list[float | None] | None = None,
+            scale: str = "level") -> tuple[list[float], list[dict]]:
     """Multiply the weighting scores by `(1 + δ·z_CA)` — the catalyst score sizing the book
     DIRECTLY, as a declared prior (v10 P8; rationale in scoring_weights.yaml `ca_tilt_delta`).
 
@@ -281,25 +282,58 @@ def ca_tilt(scores: list[float], ca_values: list[float | None], imputed: list[bo
     weight. Monotonic in CA among measured names; the total is rescaled so the intermediate
     stays legible (water_fill only reads ratios).
 
-    Returns `(tilted_scores, rows)` — one `{ca, z, mult, imputed}` per input, same order.
+    WHICH SCALE THE z COMES FROM (`scale`, v10 P8b). `"level"` z-scores the raw alignment;
+    `"logit"` z-scores `log(p/(1−p))` of the same number. The level SATURATES exactly where
+    this book lives — nine sectors inside 1.7 points (0.06σ) on the 2026-09-01 universe — so
+    the tilt was reading differences the scale had stopped carrying; the logit is the inverse
+    of the map that created that ceiling and gives ×3.56 the resolution there. The transform is
+    MONOTONE, so it re-spaces the names and never reorders them: selection, the gate and every
+    rank are untouched by construction, and only the SPACING between multipliers changes.
+    A row whose logit is missing (pre-v11 run, or an imputed CA) falls back to the level for
+    that row and is counted in `scale_fallback` — a silent mix of two scales inside one z would
+    compare units that are not comparable.
+
+    Returns `(tilted_scores, rows)` — one `{ca, x, z, mult, imputed, scale}` per input, in
+    order — where `x` is the value actually standardized.
     """
+    def _num(v):
+        return None if v is None or v != v else float(v)
+
     n = len(scores)
-    rows = [{"ca": (None if v is None or v != v else float(v)), "z": 0.0, "mult": 1.0,
-             "imputed": bool(imp)} for v, imp in zip(ca_values, imputed)]
+    logits = list(ca_logits or [None] * n)
+    want_logit = str(scale).lower() == "logit"
+    rows = []
+    for i, (v, imp) in enumerate(zip(ca_values, imputed)):
+        ca = _num(v)
+        lg = _num(logits[i]) if i < len(logits) else None
+        # The value actually standardized. A missing logit falls back to the LEVEL for that row
+        # and says so, rather than dropping the name out of the cross-section: losing a row
+        # would shrink the very population the z is computed over.
+        use_logit = want_logit and lg is not None
+        rows.append({"ca": ca, "ca_logit": lg, "x": (lg if use_logit else ca),
+                     "scale": ("logit" if use_logit else "level"),
+                     "z": 0.0, "mult": 1.0, "imputed": bool(imp)})
     if n == 0 or delta <= 0:
         return list(scores), rows
-    measured = [r["ca"] for r in rows if r["ca"] is not None and not r["imputed"]]
+    measured = [r for r in rows if r["x"] is not None and not r["imputed"]]
+    # A z needs ONE scale. If the run is mid-migration (some rows carry a logit, some do not),
+    # standardize the whole cross-section on the level rather than mixing units — the level is
+    # coarse, a mixed z is wrong.
+    if want_logit and measured and any(r["scale"] == "level" for r in measured):
+        for r in rows:
+            r["x"], r["scale"] = r["ca"], "level"
+        measured = [r for r in rows if r["x"] is not None and not r["imputed"]]
     if len(measured) < 2:
         return list(scores), rows
-    mean = sum(measured) / len(measured)
-    var = sum((v - mean) ** 2 for v in measured) / len(measured)
-    std = var ** 0.5
+    xs = [r["x"] for r in measured]
+    mean = sum(xs) / len(xs)
+    std = (sum((v - mean) ** 2 for v in xs) / len(xs)) ** 0.5
     if std < 1e-9:
         return list(scores), rows
     out = []
     for sc, r in zip(scores, rows):
-        if r["ca"] is not None and not r["imputed"]:
-            r["z"] = round(max(-winsor_z, min(winsor_z, (r["ca"] - mean) / std)), 4)
+        if r["x"] is not None and not r["imputed"]:
+            r["z"] = round(max(-winsor_z, min(winsor_z, (r["x"] - mean) / std)), 4)
         r["mult"] = round(max(mult_floor, 1.0 + delta * r["z"]), 4)
         out.append(float(sc) * r["mult"])
     tot_in, tot_out = sum(scores), sum(out)
@@ -650,20 +684,38 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
         # 2026-09-01). The floor lives in config so lowering it is itself a logged edit.
         delta = max(d_min, float(c.get("ca_tilt_delta", pw.get("ca_tilt_delta", 0.20))))
         winsor = float(c.get("ca_tilt_winsor_z", pw.get("ca_tilt_winsor_z", 2.5)))
+        # WHICH SCALE the z comes from (v10 P8b). The level saturates exactly where this book
+        # lives, so the tilt was reading differences the scale had stopped carrying; the logit
+        # is monotone, so this re-spaces the multipliers and never reorders a single name.
+        scale = str(c.get("ca_tilt_scale", pw.get("ca_tilt_scale", "level"))).lower()
         ca_vals = [r.get("catalyst_alignment") for _, r in df.iterrows()]
+        ca_logits = ([r.get("ca_logit") for _, r in df.iterrows()]
+                     if "ca_logit" in df.columns else None)
         ca_imp = ([bool(v) for v in df["ca_imputed"].fillna(False)]
                   if "ca_imputed" in df.columns else [False] * len(df))
         scores_pre_ca = list(scores)
-        scores, ca_rows = ca_tilt(scores, ca_vals, ca_imp, delta, winsor)
+        scores, ca_rows = ca_tilt(scores, ca_vals, ca_imp, delta, winsor,
+                                  ca_logits=ca_logits, scale=scale)
         n_meas = sum(1 for r in ca_rows if r["ca"] is not None and not r["imputed"])
+        # What was ACTUALLY standardized — never assume the request was honoured: a run whose
+        # snapshot predates v11 carries no logit and falls back to the level, and that has to
+        # be visible in the output rather than inferred from the config.
+        scale_used = next((r["scale"] for r in ca_rows
+                           if r["x"] is not None and not r["imputed"]), scale)
         ca_info = {
             "delta": delta, "winsor_z": winsor, "n_measured": n_meas,
+            "scale_requested": scale, "scale_used": scale_used,
+            "scale_fallback": bool(scale != scale_used),
             "n_imputed": sum(1 for r in ca_rows if r["imputed"]),
             "active": any(abs(r["mult"] - 1.0) > 1e-9 for r in ca_rows),
-            "note": (f"δ={delta:.2f} — the catalyst score sizes the book (declared prior, "
-                     f"never disabled); {n_meas} name(s) measured"
+            "note": (f"δ={delta:.2f} on the {scale_used.upper()} scale — the catalyst score "
+                     f"sizes the book (declared prior, never disabled); {n_meas} name(s) "
+                     f"measured"
                      + (f", {sum(1 for r in ca_rows if r['imputed'])} imputed → untilted"
                         if any(r["imputed"] for r in ca_rows) else "")
+                     + (f" — `{scale}` requested but this run carries no ca_logit, so the "
+                        f"whole cross-section fell back to the level"
+                        if scale != scale_used else "")
                      + ("" if n_meas >= 2 else " — too few measured CAs, tilt is a no-op")),
         }
 
@@ -744,6 +796,10 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
             "ca_z": (ca_rows[idx]["z"] if ca_rows else None),
             "ca_tilt_mult": (ca_rows[idx]["mult"] if ca_rows else None),
             "ca_tilt_delta": (ca_info or {}).get("delta"),
+            # WHICH scale this row's z was taken on, and the value standardized. A ledger that
+            # does not record its own units cannot be read back two migrations later.
+            "ca_tilt_scale": (ca_rows[idx]["scale"] if ca_rows else None),
+            "ca_tilt_x": (ca_rows[idx]["x"] if ca_rows else None),
             "w_pre_ca_pct": (round(weights_pre_ca[idx] * 100.0, 2)
                              if weights_pre_ca is not None else None),
             "entry_price": entry_prices.get(r["sector_id"]),

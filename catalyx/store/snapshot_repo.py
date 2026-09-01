@@ -671,9 +671,41 @@ def _write_run_to_lake(run_id, run_at, version, git_commit, momentum_snapshot,
         "summary": json.dumps(summary, default=str) if summary is not None else None,
     }]), {"run_id": run_id}, overwrite=True)
 
-    snap_rows = [{
+    snap_rows = [_snapshot_lake_row(run_id, run_at, version, r) for r in rows]
+    lake.append_partition("sector_snapshot", pd.DataFrame(snap_rows),
+                          {"run_id": run_id}, overwrite=True)
+
+    if events:
+        ev_rows = [{
+            "run_id": run_id, "prev_run_id": prev_run_id, "sector_id": sid,
+            "event_type": etype, "from_rank": fr, "to_rank": tr, "delta": d,
+            "top_n": top_n, "created_at": run_at,
+        } for sid, etype, fr, tr, d in events]
+        lake.append_partition("rank_event", pd.DataFrame(ev_rows),
+                              {"run_id": run_id}, overwrite=True)
+
+
+def _snapshot_lake_row(run_id, run_at, version, r: dict) -> dict:
+    """One `sector_snapshot` row as it is PERSISTED. Extracted so a test can pin it.
+
+    THE DEFECT IT EXISTS TO PREVENT (2026-09-01): this builder copied `composite` and never
+    `composite_z`, so every run written to the lake looked PRE-v6 to its own consumers.
+    """
+    return {
         "run_id": run_id, "snapshot_at": run_at, "scoring_version": version,
         "sector_id": r["sector_id"], "rank": r["rank"], "composite": r["composite"],
+        # THE UNIT THE RANK IS COMPUTED ON, and it was the one column the lake never got.
+        # v6 H1 made `composite_z` (the raw Σ wᵢ·zᵢ, 0.0 = this run's universe average) the
+        # comparable unit — every selection floor is written in it (`min_composite_z`),
+        # `sector_scorer.rank_key` sorts on it, and `portfolio`/`dislocation` DETECT it to
+        # decide which scale a run carries. This builder copied `composite` and stopped, so
+        # every persisted run looked pre-v6 to its own consumers: they fell back to the
+        # absolute level, i.e. the scale v6 H3 removed for changing meaning run to run.
+        # `ca_imputed` rides along for the same reason — the gate and `commensurate` both
+        # ask whether a CA was measured, and a missing flag reads as "measured" (v6 H2).
+        "composite_z": r.get("composite_z"),
+        "composite_absolute": r.get("composite_absolute"),
+        "ca_imputed": bool(r.get("ca_imputed", False)),
         "catalyst_alignment": r["catalyst_alignment"], "momentum": r["momentum"],
         "flow_confirmation": r["flow_confirmation"],
         "flow_data_quality": r["flow_data_quality"],
@@ -698,18 +730,7 @@ def _write_run_to_lake(run_id, run_at, version, git_commit, momentum_snapshot,
         "crowding_measured": r.get("crowding_measured"),
         "has_study": r["has_study"], "primary_etf": r["primary_etf"], "rationale_md": r["rationale_md"],
         "regime_state": r["regime_state"],
-    } for r in rows]
-    lake.append_partition("sector_snapshot", pd.DataFrame(snap_rows),
-                          {"run_id": run_id}, overwrite=True)
-
-    if events:
-        ev_rows = [{
-            "run_id": run_id, "prev_run_id": prev_run_id, "sector_id": sid,
-            "event_type": etype, "from_rank": fr, "to_rank": tr, "delta": d,
-            "top_n": top_n, "created_at": run_at,
-        } for sid, etype, fr, tr, d in events]
-        lake.append_partition("rank_event", pd.DataFrame(ev_rows),
-                              {"run_id": run_id}, overwrite=True)
+    }
 
 
 # ── CLI ──────────────────────────────────────────────────────────────────────

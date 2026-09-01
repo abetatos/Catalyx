@@ -884,6 +884,31 @@ portfolio_weighting:
   ca_tilt_winsor_z: 2.5
   ca_tilt_delta_min: 0.05       # doctrine floor — CA is tuned, never disabled
 
+  # WHICH SCALE THE TILT TAKES ITS z FROM (v10 P8b, 2026-09-01 — user decision, shipped
+  # unbacktested and deliberately so: "lo quiero funcionando YA y luego mejoraremos los scores").
+  #   "logit" → z of `ca_logit` = log(p/(1−p)) of the same alignment   ← IN FORCE
+  #   "level" → z of the raw `catalyst_alignment` level (the v10 P8 behaviour)
+  #
+  # THE PROBLEM IT FIXES IS MEASURED, even though the FIX is not. The noisy-OR is bounded by
+  # 100 and anchored on the strongest carrier, so a sector with several strong catalysts
+  # saturates: on the 2026-09-01 universe NINE sectors sit between 95.0 and 96.7 — a 1.7-point
+  # span against a cross-sectional σ of 28.5, i.e. **0.06σ**, less resolution than the
+  # aggregator's own rounding. That band is not a curiosity: it is exactly where this book
+  # concentrates, and it is the population the tilt z-scores. The same nine names span 0.212σ
+  # of the logit's own σ — **×3.56 the resolution**. The logit is the natural inverse of the
+  # saturating map that created the ceiling, and it is MONOTONE: it re-spaces the names, it
+  # never reorders them, so selection, the gate and every rank are untouched by construction.
+  #
+  # WHAT IT DOES NOT FIX, said plainly: a compressed ceiling can mean the scale is wrong OR
+  # that the sectors really are equally strong. The logit assumes the former. Nothing yet
+  # distinguishes them — `ca_tilt_edge` / `--ca-tilt-retro` accumulate the evidence, and
+  # `scale: "level"` restores the previous sizing exactly if it says so.
+  #
+  # A row with no `ca_logit` (pre-v11 runs, and any IMPUTED CA — the logit is None there by
+  # design) falls back to the level for that row and the fallback is COUNTED, never silent:
+  # mixing two scales inside one z would compare units that are not comparable.
+  ca_tilt_scale: "logit"
+
 # Correlated-catalyst combined allocation cap (portfolio concentration control)
 # DISTINCT from conviction_tiers above: those size a SINGLE position by conviction.
 # This caps the SUM of allocations across all open/draft theses that share the same

@@ -298,3 +298,73 @@ def test_dev_run_bursts_collapse_into_one_review_cycle(tmp_path, monkeypatch):
         fwd_fn=lambda t, s, e, **k: {"AAA": 0.10, "BBB": -0.10})
     assert res["n_windows"] == 1
     assert res["windows"][0]["run_id"] == "run_20260105_090000"
+
+
+# ── the scale the z is taken on (v10 P8b) ────────────────────────────────────
+
+def _logit(v):
+    import math
+    p = min(max(v / 100.0, 1e-6), 1 - 1e-6)
+    return round(math.log(p / (1 - p)), 4)
+
+
+def test_the_logit_scale_never_reorders_only_re_spaces():
+    """The whole safety argument: logit is MONOTONE. It may change how far apart the
+    multipliers sit, never which name gets the larger one."""
+    ca = [96.3, 96.0, 95.5, 95.0, 76.0]
+    lg = [_logit(v) for v in ca]
+    imp = [False] * 5
+    _, lvl = pf.ca_tilt([1.0] * 5, ca, imp, delta=0.2, scale="level")
+    _, log = pf.ca_tilt([1.0] * 5, ca, imp, delta=0.2, ca_logits=lg, scale="logit")
+    order_lvl = sorted(range(5), key=lambda i: -lvl[i]["mult"])
+    order_log = sorted(range(5), key=lambda i: -log[i]["mult"])
+    assert order_lvl == order_log == [0, 1, 2, 3, 4]
+
+
+def test_the_logit_buys_resolution_exactly_where_the_level_saturates():
+    """The measured motivation: the aggregator's ceiling packs the names the book actually
+    holds into a span the level scale can no longer separate."""
+    ca = [96.3, 96.0, 95.5, 95.0, 76.0]          # four in the ceiling band + one outlier
+    lg = [_logit(v) for v in ca]
+    _, lvl = pf.ca_tilt([1.0] * 5, ca, [False] * 5, delta=0.2, scale="level")
+    _, log = pf.ca_tilt([1.0] * 5, ca, [False] * 5, delta=0.2, ca_logits=lg, scale="logit")
+    span_lvl = max(r["z"] for r in lvl[:4]) - min(r["z"] for r in lvl[:4])
+    span_log = max(r["z"] for r in log[:4]) - min(r["z"] for r in log[:4])
+    assert span_log > span_lvl * 1.5, "the ceiling band must separate materially better"
+
+
+def test_a_row_without_a_logit_falls_back_to_the_level_for_the_whole_cross_section():
+    """A z needs ONE scale. Mid-migration (some rows carry a logit, some do not) the whole
+    cross-section standardizes on the level — a mixed z compares units that are not
+    comparable — and the fallback is stated, never silent."""
+    ca = [90.0, 50.0, 10.0]
+    lg = [_logit(90.0), None, _logit(10.0)]
+    _, rows = pf.ca_tilt([1.0] * 3, ca, [False] * 3, delta=0.2, ca_logits=lg, scale="logit")
+    assert {r["scale"] for r in rows} == {"level"}
+    assert [r["x"] for r in rows] == ca
+
+
+def test_scale_level_reproduces_the_pre_p8b_sizing_exactly():
+    ca = [90.0, 50.0, 10.0]
+    lg = [_logit(v) for v in ca]
+    a, _ = pf.ca_tilt([1.0] * 3, ca, [False] * 3, delta=0.2, scale="level")
+    b, _ = pf.ca_tilt([1.0] * 3, ca, [False] * 3, delta=0.2, ca_logits=lg, scale="level")
+    assert a == b
+
+
+def test_the_build_reports_which_scale_it_actually_used(tmp_path):
+    """Never assume the request was honoured: a run whose snapshot predates the logit column
+    falls back, and the output has to say so rather than leave it to be inferred."""
+    _seed(tmp_path, [
+        {"sector_id": "a", "rank": 1, "composite": 70, "catalyst_alignment": 90.0,
+         "primary_etf": "AAA"},
+        {"sector_id": "b", "rank": 2, "composite": 70, "catalyst_alignment": 10.0,
+         "primary_etf": "BBB"},
+    ])
+    prof = {**_PROFILE, "construction": {**_PROFILE["construction"],
+                                         "ca_tilt_scale": "logit"}}
+    res = pf.build_model_holdings("test", profile=prof, lake_dir=tmp_path)
+    assert res["ca_tilt"]["scale_requested"] == "logit"
+    assert res["ca_tilt"]["scale_used"] == "level"          # no ca_logit in this snapshot
+    assert res["ca_tilt"]["scale_fallback"] is True
+    assert "fell back" in res["ca_tilt"]["note"]
