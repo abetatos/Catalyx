@@ -1,0 +1,76 @@
+[
+  {
+    "catalyst_id": "struct_ai_capex_supercycle",
+    "verdict": "intact",
+    "evidence": "Combined 2026 capex guidance for the big four hyperscalers is $720-745B, up ~77% from ~$410B in 2025. Alphabet, Amazon and Meta all RAISED guidance in the latest round (Meta to $125-145B from $115-135B); Microsoft's apparent cut is an accounting change (datacenter useful life extended 15->25 years), CFO states plans unchanged in economic terms. Quarterly midpoint of the guidance range is 183.1 USD_bn - identical to the stored indicator, so no numeric update: the indicator was already current.",
+    "source": "TMT Finance 2026 hyperscaler capex analysis; CNBC 2026-02-06; CreditSights hyperscaler capex 2026 estimates",
+    "disconfirming": {
+      "searched": true,
+      "query": "hyperscaler capex cut guidance lowered data center lease cancelled delay September 2026",
+      "found": true,
+      "evidence": "The capex COMMITMENT is not being cut, but the physical buildout is bottlenecked: 30-50% of US data center projects planned for 2026 are expected to be delayed or cancelled, with over $64B in project delays/cancellations, and the binding constraint has shifted from capital and chips to POWER infrastructure (electricity, transformers, switchgear, batteries) plus community opposition. This does not break the capex thesis but it constrains the sector that monetizes the physical buildout (ai_infrastructure_data_centers, now a REIT-weighted vehicle) while CONFIRMING struct_energy_transition_grid. Counter-source: SemiAnalysis publishes an explicit rebuttal of the 'half of 2026 capacity cancelled' framing, so the 30-50% figure is contested and is a forecast, not a print - recorded as evidence, not registered as an event."
+    }
+  },
+  {
+    "catalyst_id": "struct_biopharma_patent_cliff_ma",
+    "verdict": "strengthening",
+    "evidence": "IQVIA mid-year 2026 update: aggregate biopharma M&A deal value reached $130B in H1 2026, already almost matching the full-year 2025 total, on pace for $250B+ - the strongest year since the 2019 peak. 19 transactions above $1B announced by end of May 2026. Average deal value $527.3M, up from $365M in 2025. Note on ind_03 (stored 55% average clinical-stage takeout premium): sources report median biotech acquisition premiums of 30-50% for 2025-26, which would be premium COMPRESSION, but the metric definitions differ (median/all-biotech vs average/clinical-stage) so no numeric update is recorded - flagged for the next review to resolve on a like-for-like source.",
+    "source": "IQVIA Biopharma M&A mid-year 2026 update; CNBC 2026-06-04",
+    "indicators": [
+      {
+        "id": "ind_01",
+        "value": 130,
+        "note": "H1 2026 aggregate deal value, IQVIA mid-year update (stored 106, +22.6% -> Rule 5 flag)"
+      }
+    ],
+    "disconfirming": {
+      "searched": true,
+      "query": "biotech M&A slowdown antitrust FTC blocks pharma deal drought 2026",
+      "found": false,
+      "evidence": null
+    }
+  },
+  {
+    "catalyst_id": "struct_energy_transition_grid",
+    "verdict": "strengthening",
+    "evidence": "EU HV transformer lead times remain extended and have lengthened at the top of the market: major OEMs (ABB, Siemens, Hitachi, GE Vernova) are quoting 48-60 months having absorbed the first wave of US data center demand, while EU second-tier makers quote Efacec 20-28, Pauwels 24-32, TMC 20-28 months. European Commission Grid Action Plan calls for over $680B of grid investment this decade. Demand for generator step-up units is up 274% since 2019, substation power transformers up 116%. Europe also carries a 1,700 GW grid-connection backlog with 375 GW of renewables and 455 GW of storage - over EUR 100B - stuck in distribution queues.",
+    "source": "GridReadiness EU/US transformer lead times 2026; EC Grid Action Plan; Beyond Fossil Fuels distribution backlog 2026-06-02",
+    "indicators": [
+      {
+        "id": "ind_01",
+        "value": 26.0,
+        "note": "median of quoted EU HV manufacturer ranges (20-32 months), same methodology as the stored 24.0; the 48-60 quoted by ABB/Siemens/Hitachi/GE Vernova is recorded in evidence but excluded from the median so the percentile history stays on one definition"
+      }
+    ],
+    "disconfirming": {
+      "searched": true,
+      "query": "grid investment delayed cancelled renewable project cancellation Europe 2026",
+      "found": true,
+      "evidence": "Q1 2026 alone saw developers cancel or downsize nearly 8 GW of generation capacity, over $14B of planned investment. Germany suspended offshore wind auctions in January 2026 citing rising costs and grid-connection concerns; Denmark's six-wind-farm tender drew no bids on untenable commercial risk. European cancellations are driven by ECONOMICS, not policy, which makes them harder to reverse with a political decision. Read carefully, this cuts against the GENERATION leg (solar_energy, wind, and struct_solar_lcoe_deployment) more than the GRID leg - less generation eventually means less interconnection demand, but the same sources report the connection backlog itself is the binding constraint. Recorded as a genuine partial contradiction, not dismissed."
+    }
+  },
+  {
+    "catalyst_id": "struct_enterprise_cyber_spend_supercycle",
+    "verdict": "intact",
+    "evidence": "Gartner worldwide end-user information security spending reaches $240B in 2026, up from $213B in 2025 (+12.5%) - an exact match to the stored indicator, so this stamps freshness rather than moving it. CrowdStrike ARR $5.25B as of 2026-01-31, +24% YoY, with a record $1.01B of net new ARR (first year above $1B); Cloud Security ARR above $800M (+35%) and LogScale Next-Gen SIEM above $585M (+75%).",
+    "source": "Gartner via StationX/Elisity 2026 benchmarks; CrowdStrike Q4 FY2026 results (ir.crowdstrike.com)",
+    "indicators": [
+      {
+        "id": "ind_01",
+        "value": 240,
+        "note": "Gartner 2026 end-user security spending, unchanged vs stored - freshness stamp"
+      },
+      {
+        "id": "ind_02",
+        "value": 0.24,
+        "note": "CrowdStrike ARR +24% YoY to $5.25B at FY2026 close (stored 0.25, -4%, within noise)"
+      }
+    ],
+    "disconfirming": {
+      "searched": true,
+      "query": "cybersecurity spending slowdown budget cuts security software deceleration 2026",
+      "found": true,
+      "evidence": "The 2026 acceleration is a FORECAST sitting on top of a measured 2025 deceleration: average enterprise cybersecurity budget growth was 4% in 2025, half of the prior year's 8% and the lowest in five years. US federal spending is being cut outright - Congress proposed nearly $270M off CISA's FY2026 budget (threat hunting and vulnerability management) and the FY2026 deal locks civilian agency cyber funding at 2024 levels. This is the weakest of the four must-reverify drivers and it is the one behind the book's lowest catalyst alignment (cybersecurity_commercial, CA 76.0, caZ -2.2), where the v10 CA tilt already cut the target from 17% to 10.2%."
+    }
+  }
+]

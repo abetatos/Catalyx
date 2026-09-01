@@ -3,8 +3,8 @@
   "schema_version": "1.0",
   "status": "rejected",
   "first_detected": "2026-06-04",
-  "last_seen": "2026-06-04",
-  "signal_count": 1,
+  "last_seen": "2026-09-01",
+  "signal_count": 2,
   "label_inferred": "Crude Oil Tanker Shipping — Freight Rates",
   "parent_sector_inferred": "energy",
   "demand_drivers_inferred": [
@@ -27,17 +27,22 @@
     }
   ],
   "etf_candidates": {
-    "pure_play_found": true,
-    "pure_play_ticker": "BWET",
+    "pure_play_found": false,
+    "pure_play_ticker": null,
     "proxies": [
       {
         "ticker": "BDRY",
         "estimated_exposure_pct": 100,
         "note": "Breakwave Dry Bulk Shipping ETF — same manager as BWET but dry bulk (iron ore, coal, grain), not crude oil. Different cycle driver."
+      },
+      {
+        "ticker": "IE00B3CMS880",
+        "estimated_exposure_pct": 0,
+        "note": "ETFS DAXglobal Shipping GO UCITS ETF - the only European UCITS shipping vehicle found. LIQUIDATED/merged, no longer trading (verified 2026-09-01). Recorded so the next scan does not re-discover it as a candidate."
       }
     ]
   },
-  "investability_assessment": "investable_pending_etf_verify",
+  "investability_assessment": "not_investable_no_buyable_vehicle",
   "evidence": [
     {
       "date": "2026-06-04",
@@ -45,10 +50,17 @@
       "description": "BWET (Breakwave Tanker Shipping ETF) up +1,406% year-over-year as of 2026-06-01. Strait of Hormuz closure on 2026-02-28 following US-Israel-Iran conflict. VLCC freight rates spiked as Middle East crude was rerouted around Cape of Good Hope. BWET holds VLCC freight futures (90% VLCC, 10% Suezmax). $100K invested at start of 2026 = $764K by April 2026. Short interest surged 142% in February 2026 indicating significant reversion risk.",
       "source_query": "tanker shipping ETF BWET Strait of Hormuz 2026",
       "magnitude": "extreme"
+    },
+    {
+      "date": "2026-09-01",
+      "signal_type": "price_outlier",
+      "description": "Theme resurfaced unprompted in the discovery pass: BWET is the best-performing ETF of 2026 (+411% cited by etf.com; +243% YTD cited by CNBC on the same fund, the spread itself reflecting how violently the series moves), driven by the Strait of Hormuz closure following the US-Israel-Iran war. Roughly 20% of global oil flows interrupted; VLCC availability tightening as cargoes reroute around the Cape. NEW AND DECISIVE FOR THIS PROPOSAL: there is no buyable vehicle for this operator. BWET and SEA are US-listed (PCX) and therefore blocked by PRIIPs with no KID; the only European UCITS shipping ETF, ETFS DAXglobal Shipping GO (IE00B3CMS880), has been LIQUIDATED/merged and is no longer trading (justETF, verified 2026-09-01, last AUM EUR 5M). SHIP.L is Tufton Assets, a closed-end investment company, not a sector ETF.",
+      "source_query": "tanker shipping ETF UCITS Europe maritime freight rates 2026",
+      "magnitude": "extreme"
     }
   ],
   "proposed_sector_id": null,
   "promoted_date": null,
-  "rejection_reason": "Geopolitical event catalyst, no sector estructural. El movimiento de BWET (+1.406%) está 100% explicado por el cierre del Estrecho de Ormuz (2026-02-28) — evento discreto y reversible. Freight rates son mean-reverting por naturaleza. Sin el evento, no hay tesis. Registrado como CatalystEvent cat_20260228_hormuz_closure con is_priced_in_estimate: 1.0.",
-  "notes": "STRUCTURAL CAUTION: BWET is driven by a single geopolitical event (Strait of Hormuz closure). Freight rates are mean-reverting by nature. BWET has 3.50% expense ratio and holds near-dated freight futures with structural roll cost. This is a high-conviction TACTICAL play, not a permanent structural sector. The question for promotion is whether tanker shipping deserves a permanent taxonomy entry or should be treated as a geopolitical event catalyst under existing sectors (oil_majors_integrated + geopolitical type). Consider: does the theme persist if Hormuz reopens? If no, this may be better handled as a CatalystEvent rather than a new sector."
+  "rejection_reason": "Geopolitical event catalyst, no sector estructural. El movimiento de BWET (+1.406%) está 100% explicado por el cierre del Estrecho de Ormuz (2026-02-28) — evento discreto y reversible. Freight rates son mean-reverting por naturaleza. Sin el evento, no hay tesis. Registrado como CatalystEvent cat_20260228_hormuz_closure con is_priced_in_estimate: 1.0. CONFIRMADO 2026-09-01 con una razon adicional e independiente: aunque la tesis estructural se aceptase, NO HAY VEHICULO COMPRABLE. BWET y SEA son US-listed (sin KID de PRIIPs, imposibles en Revolut desde Espana) y el unico UCITS de shipping europeo (IE00B3CMS880) esta liquidado. Un sector sin vehiculo comprable no puede ser objetivo de un Movement, asi que promoverlo seria gasto puro. Se deja el registro para que el proximo scan no vuelva a descubrir el mismo tema.",
+  "notes": "STRUCTURAL CAUTION: BWET is driven by a single geopolitical event (Strait of Hormuz closure). Freight rates are mean-reverting by nature. BWET has 3.50% expense ratio and holds near-dated freight futures with structural roll cost. This is a high-conviction TACTICAL play, not a permanent structural sector. The question for promotion is whether tanker shipping deserves a permanent taxonomy entry or should be treated as a geopolitical event catalyst under existing sectors (oil_majors_integrated + geopolitical type). Consider: does the theme persist if Hormuz reopens? If no, this may be better handled as a CatalystEvent rather than a new sector. ACTUALIZACION 2026-09-01: la pregunta '?persiste el tema si Ormuz reabre?' sigue sin responderse y ahora es secundaria - la comprabilidad la responde antes. El driver geopolitico SI esta capturado en el registro como cat_20260817_hormuz_reescalation (strength 68), que es la forma correcta de tenerlo."
 }

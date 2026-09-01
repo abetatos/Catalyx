@@ -136,7 +136,7 @@ linked_event_catalyst_ids: []
 linked_structural_catalyst_ids:
 - struct_copper_datacenter_demand    # Commodity expression: copper miners as physical beneficiary
 status: active
-status_last_reviewed: "2026-08-31"
+status_last_reviewed: "2026-09-01"
 absorbed_catalyst_ids:
 - struct_copper_datacenter_demand
 absorbed_at: '2026-08-27'
@@ -152,6 +152,14 @@ absorbed_note: |
   decidir explicitamente cual de estos indicadores merece promoverse a este fichero:
     - struct_copper_datacenter_demand (intensity 78.7): Combined hyperscaler AI capex guidance (Microsoft + Google + Amazon + Meta, $B quarterly), LME copper spot price (USD/tonne), LME copper warehouse inventory (tonnes) — low inventory = supply tightness, Data center copper demand estimate — analyst consensus (Wood Mackenzie / CRU)
 review_log:
+- date: '2026-09-01'
+  verdict: intact
+  evidence: "Combined 2026 capex guidance for the big four hyperscalers is $720-745B, up ~77% from ~$410B in 2025. Alphabet,
+    Amazon and Meta all RAISED guidance in the latest round (Meta to $125-145B from $115-135B); Microsoft's apparent cut is
+    an accounting change (datacenter useful life extended 15->25 years), CFO states plans unchanged in economic terms. Quarterly
+    midpoint of the guidance range is 183.1 USD_bn - identical to the stored indicator, so no numeric update: the indicator
+    was already current."
+  source: TMT Finance 2026 hyperscaler capex analysis; CNBC 2026-02-06; CreditSights hyperscaler capex 2026 estimates
 - date: '2026-08-31'
   verdict: strengthening
   evidence: 'Nvidia FQ2-2027 (quarter ended Aug 2026) data-center revenue $89.0bn, ~92% of total, of which $49bn hyperscaler

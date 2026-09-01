@@ -33,12 +33,12 @@ user_notes: "Less crowded than pure AI play. Copper miners is the physical commo
   infrastructure expression."
 
 intensity:
-  current_score: 92.4
+  current_score: 93.5
   last_updated: "2026-09-01"
   history:
   - period: '2026-09-01'
-    score: 92.4
-    note: 'Computed 2026-09-01: avg=92.4 trend=→ (flat) (was 85.4)'
+    score: 93.5
+    note: 'Computed 2026-09-01: avg=93.5 trend=→ (flat) (was 92.4)'
     computation_method: computed
   - period: '2026-08-31'
     score: 85.4
@@ -73,13 +73,13 @@ indicators:
   name: "Power transformer delivery lead times (industry survey)"
   source: "Wood Mackenzie / S&P Global reports"
   check_frequency: quarterly
-  current_value: 24.0
+  current_value: 26.0
   unit: months_delivery_lead_time
   direction: higher_is_stronger
   threshold_strong: 12
   threshold_weak: 6
   last_value: 24.0
-  last_date: "2026-08-31"
+  last_date: "2026-09-01"
 
   semaphore: 🟢
   value_history:
@@ -87,8 +87,10 @@ indicators:
     value: 22
   - date: '2025-12-31'
     value: 18
-  score: 91.2
-  update_note: median of quoted EU HV manufacturer ranges (18-32 months), up from 20
+  score: 94.5
+  update_note: median of quoted EU HV manufacturer ranges (20-32 months), same methodology as the stored 24.0; the 48-60
+    quoted by ABB/Siemens/Hitachi/GE Vernova is recorded in evidence but excluded from the median so the percentile 
+    history stays on one definition
 - id: ind_02
   name: "EU grid investment announced (€B, rolling 12M)"
   source: "ENTSO-E + EC energy reports"
@@ -256,6 +258,16 @@ absorbed_note: |
     - struct_solar_lcoe_deployment (intensity 64.1): US utility-scale solar LCOE (BloombergNEF global benchmark, fixed-axis), US utility-scale solar capacity additions (annualized, GW), China polysilicon spot price (CNY/kg) — inverse signal: lower price = developer tailwind, not structural strength, North American utility-scale solar PPA price (USD/MWh, LevelTen Energy quarterly index)
     - struct_battery_storage_supercycle (intensity 87.0): Lithium carbonate battery-grade spot (USD/t), Global grid-scale BESS annual installations (GWh), BESS share of total lithium demand (%), Global EV sales run-rate (millions units/yr)
 review_log:
+- date: '2026-09-01'
+  verdict: strengthening
+  evidence: 'EU HV transformer lead times remain extended and have lengthened at the top of the market: major OEMs (ABB, Siemens,
+    Hitachi, GE Vernova) are quoting 48-60 months having absorbed the first wave of US data center demand, while EU second-tier
+    makers quote Efacec 20-28, Pauwels 24-32, TMC 20-28 months. European Commission Grid Action Plan calls for over $680B
+    of grid investment this decade. Demand for generator step-up units is up 274% since 2019, substation power transformers
+    up 116%. Europe also carries a 1,700 GW grid-connection backlog with 375 GW of renewables and 455 GW of storage - over
+    EUR 100B - stuck in distribution queues.'
+  source: GridReadiness EU/US transformer lead times 2026; EC Grid Action Plan; Beyond Fossil Fuels distribution backlog
+    2026-06-02
 - date: '2026-08-31'
   verdict: strengthening
   evidence: 'European HV transformer lead times have extended past the stored 20 months: Efacec 20-28, Pauwels 24-32, TMC

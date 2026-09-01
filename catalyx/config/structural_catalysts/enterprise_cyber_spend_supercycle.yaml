@@ -65,7 +65,7 @@ user_notes: >
   schedule) is the novel angle: AI-specific security spend is a NEW budget line, not a reallocation.
 
 intensity:
-  current_score: 76.0
+  current_score: 69.3
   computation_method: computed
   computation_note: >
     Bootstrap at creation (2026-06-05). Anchor: stronger than struct_copper_datacenter_demand (83.9)
@@ -82,8 +82,8 @@ intensity:
   last_updated: "2026-09-01"
   history:
   - period: '2026-09-01'
-    score: 76.0
-    note: 'Computed 2026-09-01: avg=79.0 trend=↓ (falling 1 period) (was 79.0)'
+    score: 69.3
+    note: 'Computed 2026-09-01: avg=72.28 trend=↓ (falling 1 period) (was 76.0)'
     computation_method: computed
   - period: '2026-08-31'
     score: 79.0
@@ -123,13 +123,13 @@ indicators:
   source: "Gartner Security & Risk Management forecast (published Q1 annually)"
   source_url_template: "https://www.gartner.com/en/newsroom/press-releases/"
   check_frequency: annual
-  current_value: 240
+  current_value: 240.0
   unit: USD_billion_annual
   direction: higher_is_stronger
   threshold_strong: 220
   threshold_weak: 180
-  last_value: 213
-  last_date: "2026-06-05"
+  last_value: 240
+  last_date: "2026-09-01"
   value_history:
   - value: 213
     date: "2025-07-29"
@@ -139,21 +139,21 @@ indicators:
     date: "2023-09-01"
   - value: 152
     date: "2022-09-01"
-  update_note: "Gartner 2026 forecast: $240B (+12.5% YoY). IDC estimate ~$232B. Strong: above $220B. Threshold met."
-  semaphore: 🟢
-  score: 86.9
+  update_note: "Gartner 2026 end-user security spending, unchanged vs stored - freshness stamp"
+  semaphore: 🟡
+  score: 65.8
 - id: ind_02
   name: "CrowdStrike ARR YoY growth rate (sector leading indicator)"
   source: "CrowdStrike quarterly earnings (SEC Form 8-K)"
   source_url_template: "https://ir.crowdstrike.com/news-releases/"
   check_frequency: quarterly
-  current_value: 0.25
+  current_value: 0.24
   unit: yoy_growth_rate
   direction: higher_is_stronger
   threshold_strong: 0.20
   threshold_weak: 0.10
   last_value: 0.25
-  last_date: "2026-08-31"
+  last_date: "2026-09-01"
   value_history:
   - value: 0.22
     date: "2026-03-01"
@@ -164,10 +164,10 @@ indicators:
   - value: 0.33
     date: "2025-06-01"
   update_note: >-
-    ARR $5.84bn as of 2026-07-31, +25% YoY - acceleration, not the stored 0.23
+    CrowdStrike ARR +24% YoY to $5.25B at FY2026 close (stored 0.25, -4%, within noise)
 
-  semaphore: 🟡
-  score: 50.0
+  semaphore: 🔴
+  score: 37.5
 - id: ind_03
   name: "AI-enabled cyberattack frequency and dwell-time compression (IBM X-Force / CrowdStrike GTR)"
   source: "IBM X-Force Threat Intelligence Index (annual, February) + CrowdStrike Global Threat Report (annual)"
@@ -284,8 +284,15 @@ linked_structural_catalyst_ids:
 - struct_ai_capex_supercycle    # AI capex expands attack surface (LLM workloads, model theft, prompt injection) → compounding demand
 
 status: active
-status_last_reviewed: "2026-08-31"
+status_last_reviewed: "2026-09-01"
 review_log:
+- date: '2026-09-01'
+  verdict: intact
+  evidence: Gartner worldwide end-user information security spending reaches $240B in 2026, up from $213B in 2025 
+    (+12.5%) - an exact match to the stored indicator, so this stamps freshness rather than moving it. CrowdStrike ARR 
+    $5.25B as of 2026-01-31, +24% YoY, with a record $1.01B of net new ARR (first year above $1B); Cloud Security ARR 
+    above $800M (+35%) and LogScale Next-Gen SIEM above $585M (+75%).
+  source: Gartner via StationX/Elisity 2026 benchmarks; CrowdStrike Q4 FY2026 results (ir.crowdstrike.com)
 - date: '2026-08-31'
   verdict: strengthening
   evidence: "CrowdStrike Q2 FY2027 (ended 2026-07-31): ARR $5.84bn, +25% YoY, with record net-new ARR of $332.8m accelerating

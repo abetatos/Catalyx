@@ -39,7 +39,7 @@ user_notes: >
   are the primary confirmation; refresh quarterly against IQVIA/BioPharma deal trackers.
 
 intensity:
-  current_score: 90.5
+  current_score: 92.8
   computation_method: computed
   last_updated: "2026-09-01"
   computation_note: >
@@ -47,8 +47,8 @@ intensity:
     LOE-driven takeout pressure with clear deal-flow indicators.
   history:
   - period: '2026-09-01'
-    score: 90.5
-    note: 'Computed 2026-09-01: avg=85.47 trend=↑↑ (rising 2+ consecutive) (was 87.5)'
+    score: 92.8
+    note: 'Computed 2026-09-01: avg=87.78 trend=↑↑ (rising 2+ consecutive) (was 90.5)'
     computation_method: computed
   - period: '2026-08-31'
     score: 87.5
@@ -69,17 +69,16 @@ indicators:
   source: "IQVIA / BioPharma Dive deal tracker"
   source_url_template: "https://www.iqvia.com/"
   check_frequency: quarterly
-  current_value: 106
+  current_value: 130.0
   unit: usd_billion_ytd
   direction: higher_is_stronger
   threshold_strong: 120
   threshold_weak: 60
-  last_value: 90
-  last_date: "2026-05-31"
-  update_note: >
-    ~$106B YTD by early June 2026 (annualizing to ~$140-160B). Threshold_strong $120B/yr-pace = active
-    supercycle; threshold_weak $60B = normalized deal environment.
-  semaphore: 🟡
+  last_value: 106
+  last_date: "2026-09-01"
+  update_note: >-
+    H1 2026 aggregate deal value, IQVIA mid-year update (stored 106, +22.6% -> Rule 5 flag)
+  semaphore: 🟢
   value_history:
   - date: "2026-05-31"
     value: 106
@@ -88,7 +87,7 @@ indicators:
   - date: "2024-12-31"
     value: 70
 
-  score: 73.0
+  score: 82.2
 - id: ind_02
   name: "XBI (equal-weight biotech) trailing 12-month total return (%)"
   source: "SPDR S&P Biotech ETF"
@@ -175,8 +174,17 @@ linked_structural_catalyst_ids:
 
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-08-31"
+status_last_reviewed: "2026-09-01"
 review_log:
+- date: '2026-09-01'
+  verdict: strengthening
+  evidence: 'IQVIA mid-year 2026 update: aggregate biopharma M&A deal value reached $130B in H1 2026, already almost matching
+    the full-year 2025 total, on pace for $250B+ - the strongest year since the 2019 peak. 19 transactions above $1B announced
+    by end of May 2026. Average deal value $527.3M, up from $365M in 2025. Note on ind_03 (stored 55% average clinical-stage
+    takeout premium): sources report median biotech acquisition premiums of 30-50% for 2025-26, which would be premium COMPRESSION,
+    but the metric definitions differ (median/all-biotech vs average/clinical-stage) so no numeric update is recorded - flagged
+    for the next review to resolve on a like-for-like source.'
+  source: IQVIA Biopharma M&A mid-year 2026 update; CNBC 2026-06-04
 - date: '2026-08-31'
   verdict: intact
   evidence: XBI trailing-12M total return +80.3% (computed from yfinance adjusted closes, 2026-08-31) vs 50 stored on 
