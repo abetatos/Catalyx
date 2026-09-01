@@ -36,11 +36,11 @@
   },
   "key_metrics_to_monitor": [
     {
-      "metric": "XBI price level (thesis barometer) and BTEC.L (traded vehicle)",
+      "metric": "XBI price level (thesis barometer) and NBTK.DE (traded vehicle)",
       "unit": "USD",
       "source": "NYSE/SPDR",
-      "current": "XBI 168.39 (2026-08-27); BTEC.L is the traded vehicle, AUM $1,147M",
-      "comment": "XBI is the equal-weight clinical-stage barometer and is what the M&A thesis is measured on; BTEC.L (iShares Nasdaq US Biotechnology, cap-weighted) is what is actually buyable and what SECTOR_TICKERS scores. Track the SPREAD between them — it is the direct measure of how much of the thesis the vehicle transmits."
+      "current": "XBI 168.39 (2026-08-27); the traded vehicle is NBTK.DE since 2026-09-01 (BTEC.L is not listed in the operator's broker; the same iShares fund is buyable as OM3E, its EUR German line, but its market-maker quote is not scoreable)",
+      "comment": "XBI is the equal-weight clinical-stage barometer and is what the M&A thesis is measured on; the buyable vehicle tracks the cap-weighted Nasdaq Biotechnology index (IBB-shaped) — NBTK.DE (Invesco, XETRA, EUR) is what SECTOR_TICKERS scores and what primary_etf recommends, and OM3E (iShares, same fund as BTEC.L) is the alternative the broker also lists. Track the SPREAD between XBI and the vehicle — it is the direct measure of how much of the thesis the vehicle transmits. The vehicle swap does not change that spread: NBTK.DE measures rho 0.984 weekly EUR against BTEC.L."
     },
     {
       "metric": "Monthly FDA novel drug approvals (NME + BLA count)",
@@ -119,7 +119,7 @@
       "top_10_concentration_pct": 65,
       "characteristics": "UCITS-compliant biotech ETF domiciled in Ireland, listed on LSE (tickers BTEC / BTEK). Tracks the same Nasdaq Biotechnology Index as IBB. AUM ~$897M as of 2026 (just above the $200M liquidity floor — acceptable). TER 0.35% — same as IBB. No AUM warning. Spread ~12bps (above preferred <20bps threshold — acceptable). This is the Tier 1 UCITS vehicle for a Spanish investor.",
       "recommendation_tier": 1,
-      "limitations": "Tracks same large-cap-weighted index as IBB, not the equal-weight XBI methodology. Therefore captures less clinical-stage M&A and approval catalyst alpha than XBI. The UCITS structure is the premium paid for regulatory access: similar large-cap biotech exposure, but 8–10% lower expected return in a strong M&A cycle vs XBI. Also listed as 2B70 on XETRA for EUR-denominated access — verify spread on XETRA before entering."
+      "limitations": "Tracks same large-cap-weighted index as IBB, not the equal-weight XBI methodology. Therefore captures less clinical-stage M&A and approval catalyst alpha than XBI. The UCITS structure is the premium paid for regulatory access: similar large-cap biotech exposure, but 8–10% lower expected return in a strong M&A cycle vs XBI. Also listed as 2B70 on XETRA for EUR-denominated access — verify spread on XETRA before entering. NOT LISTED IN THE OPERATOR'S BROKER (user, 2026-09-01) — see etf_universe.yaml, which is the single source of truth for vehicles (this section is deprecated since schema 1.3). The same fund is buyable as OM3E (EUR, German lines); the scored/recommended vehicle is now NBTK.DE."
     }
   ],
   "risks": [

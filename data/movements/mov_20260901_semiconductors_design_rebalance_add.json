@@ -1,0 +1,53 @@
+{
+  "$schema": "catalyx/schemas/movement.json",
+  "id": "mov_20260901_semiconductors_design_rebalance_add",
+  "schema_version": "1.3",
+  "executed_at": "2026-09-01T16:35:00Z",
+  "action": "add",
+  "sector_id": "semiconductors_design",
+  "vehicle": {
+    "etf": "SEC0.DE",
+    "isin": null,
+    "currency": "EUR"
+  },
+  "amount_eur": 564.0,
+  "qty": 34.14043583,
+  "price": 16.52,
+  "fees": 0.0,
+  "attribution": [
+    {
+      "catalyst_id": "struct_ai_capex_supercycle",
+      "weight": 1.0
+    }
+  ],
+  "trigger": "rebalance",
+  "conviction": "medium",
+  "risk_discipline": {
+    "assumptions": [
+      {
+        "id": "asm_01",
+        "statement": "Holding the SAME fund across two listings (SEMI.L in GBP and SEC0.DE in EUR) is a bookkeeping fact, not two positions, and every exposure read sums them.",
+        "measurability": "The line is now 27.33 units of SEMI.L (GBP-quoted) plus 34.14043583 units of SEC0.DE (EUR-quoted), one fund. Falsified the first time any report — cap check, cluster variance, position metrics — prices only one of the two lots.",
+        "monitoring_source": "movement_repo positions + lake_query catalyst-exposure",
+        "check_frequency": "monthly",
+        "current_status": "unverified"
+      }
+    ],
+    "note": "ADD to an existing line opened 2026-06-08; the invalidation stops live on that movement and are not restated here. TWO THINGS TO KNOW. (1) The vehicle is NOT the one the table named: the table said SEMI.L, the fill went on SEC0.DE — the Xetra EUR line of the identical fund (longName verified against yfinance 2026-09-01). Economically the same exposure, and for a Spanish resident the EUR line avoids the FX spread the GBP line charges on every trade, so this is an improvement rather than a slip; but the sector's position now spans two listings and two quoting currencies. (2) The row carried `stale (89d)` evidence. Executed out of the ramp queue — see the override log for run_20260901_165828."
+  },
+  "metadata": {
+    "created_at": "2026-09-01T16:45:00Z",
+    "created_by": "claude",
+    "fill_note": "Broker fill (Revolut, screenshot 2026-09-01 18:35 CEST = 16:35Z): 34.14043583 units at 16.52, EUR 564.00. qty x price = 564.00 exactly -> fees 0. VEHICLE: the app shows `SEC0`, which resolves to SEC0.DE — iShares MSCI Global Semiconductors UCITS ETF USD Acc on Xetra, EUR-quoted (yfinance longName identical to SEMI.L's, same fund, AUM 5457M). Fill 16.52 against a 16.566 previous close = -0.3%. Added to etf_universe.yaml as verified tier-1 on the strength of this fill."
+  },
+  "score_context": {
+    "run_id": "run_20260901_143420",
+    "rank": 3,
+    "composite": 60.2,
+    "catalyst_alignment": 97.7,
+    "momentum": 70.2,
+    "flow": 55.4,
+    "crowding": 36.1,
+    "regime_state": "intact"
+  }
+}

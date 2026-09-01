@@ -334,49 +334,49 @@
     {
       "portfolio_id": "real",
       "kind": "real",
-      "date": "2026-08-31",
-      "nav": 98.5702,
-      "return_pct": -1.4298,
+      "date": "2026-09-01",
+      "nav": 98.2768,
+      "return_pct": -1.7232,
       "benchmark_etf": "SPY",
-      "vs_benchmark_pct": -5.9106,
+      "vs_benchmark_pct": -6.204,
       "mode": NaN,
-      "mwr_pct": 3.09,
+      "mwr_pct": 0.28,
       "execution_alpha_vs": "catalyx",
-      "execution_alpha_pp": null,
-      "execution_alpha_note": "not comparable — real book to 2026-08-31, catalyx to 2026-09-01. Re-run scripts/post_run.sh."
+      "execution_alpha_pp": -4.92,
+      "execution_alpha_note": null
     }
   ],
   "book_metrics": {
     "total_capital_eur": 10000.0,
-    "invested_eur": 2000.0,
-    "marked_eur": 2067.28,
-    "deployed_pct": 20.67,
-    "cash_eur": 7932.72,
-    "unrealized_eur": 67.28,
-    "n_positions": 3,
-    "hhi": 3803.6,
-    "fx_exposure_pct": "{\"EUR\": 77.7, \"GBP\": 22.3}",
-    "vol_pct": 26.77,
-    "sharpe": 0.85,
-    "sharpe_ci95": 3.99,
+    "invested_eur": 6236.0,
+    "marked_eur": 6306.21,
+    "deployed_pct": 63.06,
+    "cash_eur": 3693.79,
+    "unrealized_eur": 70.21,
+    "n_positions": 6,
+    "hhi": 1977.8,
+    "fx_exposure_pct": "{\"EUR\": 92.7, \"GBP\": 7.3}",
+    "vol_pct": 26.56,
+    "sharpe": 0.8,
+    "sharpe_ci95": 3.95,
     "max_drawdown_pct": -9.22,
     "beta_vs_spy": 1.04,
     "corr_vs_spy": 0.52,
-    "tracking_error_vs_model_pct": 20.35,
-    "active_share_pct": 39.66,
-    "model_overlap_pct": 20.67,
-    "nav_points": 62,
-    "twr_pct": -1.43,
+    "tracking_error_vs_model_pct": 20.19,
+    "active_share_pct": 21.29,
+    "model_overlap_pct": 57.43,
+    "nav_points": 63,
+    "twr_pct": -1.72,
     "metrics_reliable": false,
-    "metrics_note": "61/120 daily observations — risk metrics are indicative only, the confidence interval is wider than the estimate",
+    "metrics_note": "62/120 daily observations — risk metrics are indicative only, the confidence interval is wider than the estimate",
     "run_id": "run_20260901_165828",
     "as_of": "2026-09-01",
-    "computed_at": "2026-09-01T16:58:49.979608+00:00",
-    "effective_n": 2.63,
-    "book_vol_from_cov_pct": 28.66,
+    "computed_at": "2026-09-01T18:59:33.594502+00:00",
+    "effective_n": 5.06,
+    "book_vol_from_cov_pct": 17.73,
     "risk_window_days": 61.0,
     "line_risk_stop_pct": 30.0,
-    "line_risk_total_pct": 6.2,
+    "line_risk_total_pct": 18.91,
     "risk_basis": "daily"
   },
   "positions": [
@@ -400,9 +400,105 @@
       "regime_state": "intact",
       "exit_action": "watch",
       "drawdown_tier": "clear",
-      "capital_pct_of_book": 50.83,
+      "capital_pct_of_book": 16.66,
       "vol_common_window_pct": 42.53,
-      "risk_contribution_pct": 71.66
+      "risk_contribution_pct": 33.05
+    },
+    {
+      "sector_id": "water_infrastructure",
+      "etf": "IQQQ.DE",
+      "invested_eur": 1732.0,
+      "market_value_eur": 1738.09,
+      "unrealized_eur": 6.09,
+      "unrealized_pct": 0.35,
+      "pnl_price_eur": 6.09,
+      "pnl_fx_eur": 0.0,
+      "days_held": 0,
+      "max_drawdown_from_peak_pct": null,
+      "composite_at_entry": 58.8,
+      "composite_now": 59.5,
+      "composite_drift": 0.7,
+      "rank_now": 2,
+      "rank_drift": -2.0,
+      "catalyst_freshness": "fresh",
+      "regime_state": "intact",
+      "exit_action": "hold",
+      "drawdown_tier": "clear",
+      "capital_pct_of_book": 27.56,
+      "vol_common_window_pct": 13.04,
+      "risk_contribution_pct": 7.36
+    },
+    {
+      "sector_id": "pharma_large_cap",
+      "etf": "IUHE.AS",
+      "invested_eur": 1435.0,
+      "market_value_eur": 1472.06,
+      "unrealized_eur": 37.06,
+      "unrealized_pct": 2.58,
+      "pnl_price_eur": 37.09,
+      "pnl_fx_eur": 0.0,
+      "days_held": 77,
+      "max_drawdown_from_peak_pct": -3.82,
+      "composite_at_entry": 34.0,
+      "composite_now": 59.2,
+      "composite_drift": 25.2,
+      "rank_now": 4,
+      "rank_drift": -33.0,
+      "catalyst_freshness": "fresh",
+      "regime_state": "intact",
+      "exit_action": "hold",
+      "drawdown_tier": "clear",
+      "capital_pct_of_book": 23.34,
+      "vol_common_window_pct": 17.63,
+      "risk_contribution_pct": -3.01
+    },
+    {
+      "sector_id": "robotics_automation",
+      "etf": "2B76.DE",
+      "invested_eur": 1005.0,
+      "market_value_eur": 1021.66,
+      "unrealized_eur": 16.66,
+      "unrealized_pct": 1.66,
+      "pnl_price_eur": 16.66,
+      "pnl_fx_eur": 0.0,
+      "days_held": 0,
+      "max_drawdown_from_peak_pct": null,
+      "composite_at_entry": 62.7,
+      "composite_now": 63.4,
+      "composite_drift": 0.7,
+      "rank_now": 1,
+      "rank_drift": 0.0,
+      "catalyst_freshness": "fresh",
+      "regime_state": "intact",
+      "exit_action": "hold",
+      "drawdown_tier": "clear",
+      "capital_pct_of_book": 16.2,
+      "vol_common_window_pct": 29.21,
+      "risk_contribution_pct": 22.52
+    },
+    {
+      "sector_id": "semiconductors_design",
+      "etf": "SEC0.DE",
+      "invested_eur": 564.0,
+      "market_value_eur": 563.45,
+      "unrealized_eur": -0.55,
+      "unrealized_pct": -0.1,
+      "pnl_price_eur": -0.55,
+      "pnl_fx_eur": 0.0,
+      "days_held": 0,
+      "max_drawdown_from_peak_pct": null,
+      "composite_at_entry": 72.8,
+      "composite_now": 59.5,
+      "composite_drift": -13.3,
+      "rank_now": 3,
+      "rank_drift": -6.0,
+      "catalyst_freshness": "fresh",
+      "regime_state": "intact",
+      "exit_action": "hold",
+      "drawdown_tier": "clear",
+      "capital_pct_of_book": 8.93,
+      "vol_common_window_pct": 53.75,
+      "risk_contribution_pct": 21.89
     },
     {
       "sector_id": "semiconductors_design",
@@ -424,33 +520,9 @@
       "regime_state": "intact",
       "exit_action": "hold",
       "drawdown_tier": "clear",
-      "capital_pct_of_book": 22.25,
+      "capital_pct_of_book": 7.3,
       "vol_common_window_pct": 54.53,
-      "risk_contribution_pct": 31.47
-    },
-    {
-      "sector_id": "pharma_large_cap",
-      "etf": "IUHE.AS",
-      "invested_eur": 500.0,
-      "market_value_eur": 556.33,
-      "unrealized_eur": 56.33,
-      "unrealized_pct": 11.27,
-      "pnl_price_eur": 56.36,
-      "pnl_fx_eur": 0.0,
-      "days_held": 77,
-      "max_drawdown_from_peak_pct": -3.82,
-      "composite_at_entry": 34.0,
-      "composite_now": 59.2,
-      "composite_drift": 25.2,
-      "rank_now": 4,
-      "rank_drift": -33.0,
-      "catalyst_freshness": "unknown",
-      "regime_state": "intact",
-      "exit_action": "hold",
-      "drawdown_tier": "clear",
-      "capital_pct_of_book": 26.91,
-      "vol_common_window_pct": 17.63,
-      "risk_contribution_pct": -3.14
+      "risk_contribution_pct": 18.19
     }
   ],
   "rebalance": {
@@ -460,10 +532,10 @@
     "total_capital_eur": 10000.0,
     "deployable_eur": 7500.0,
     "cash_target_eur": 2500.0,
-    "cash_actual_eur": 7932.72,
-    "cash_action_eur": 5432.72,
+    "cash_actual_eur": 3693.79,
+    "cash_action_eur": 1193.79,
     "tilt_lambda": 0.0,
-    "shortfall_pp": 54.33,
+    "shortfall_pp": 11.94,
     "shortfall_runs": 3.0,
     "shortfall_breached": true,
     "cash_drag_eur": null,
@@ -473,79 +545,14 @@
     "model_return_pct": null,
     "cash_model_forgone_eur": null,
     "cash_verdict": null,
-    "n_actions": 4,
-    "n_hold": 2,
-    "actions": [
-      {
-        "sector_id": "pharma_large_cap",
-        "etf": "IUHE.AS",
-        "score_rank": 4,
-        "target_pct": 14.91,
-        "actual_pct": 5.56,
-        "gap_eur": 934.67,
-        "rule_action": "ADD",
-        "trade_eur": 934.67,
-        "tax_eur": 0.0,
-        "breakeven_pct": 0.2,
-        "reason": "rank 4 opens the gate, 9.3pp under the risk-budget target",
-        "regime_state": "intact",
-        "exit_action": "hold",
-        "flags": "",
-        "data_age": "blind (149d)"
-      },
-      {
-        "sector_id": "semiconductors_design",
-        "etf": "SEMI.L",
-        "score_rank": 3,
-        "target_pct": 10.24,
-        "actual_pct": 4.6,
-        "gap_eur": 564.43,
-        "rule_action": "ADD",
-        "trade_eur": 564.43,
-        "tax_eur": 0.0,
-        "breakeven_pct": 0.2,
-        "reason": "rank 3 opens the gate, 5.6pp under the risk-budget target",
-        "regime_state": "intact",
-        "exit_action": "hold",
-        "flags": "",
-        "data_age": "stale (89d)"
-      },
-      {
-        "sector_id": "water_infrastructure",
-        "etf": "IQQQ.DE",
-        "score_rank": 2,
-        "target_pct": 17.32,
-        "actual_pct": 0.0,
-        "gap_eur": 1731.75,
-        "rule_action": "BUY",
-        "trade_eur": 1731.75,
-        "tax_eur": 0.0,
-        "breakeven_pct": 0.2,
-        "reason": "rank 2 opens the gate, not held, 17.3pp under the risk-budget target",
-        "regime_state": "intact",
-        "exit_action": null,
-        "flags": "",
-        "data_age": "stale (89d)"
-      },
-      {
-        "sector_id": "robotics_automation",
-        "etf": "2B76.DE",
-        "score_rank": 1,
-        "target_pct": 10.05,
-        "actual_pct": 0.0,
-        "gap_eur": 1005.0,
-        "rule_action": "BUY",
-        "trade_eur": 1005.0,
-        "tax_eur": 0.0,
-        "breakeven_pct": 0.2,
-        "reason": "rank 1 opens the gate, not held, 10.1pp under the risk-budget target",
-        "regime_state": "intact",
-        "exit_action": null,
-        "flags": "",
-        "data_age": "stale (89d)"
-      }
-    ],
+    "n_actions": 0,
+    "n_hold": 6,
+    "actions": [],
     "holds": [
+      "robotics_automation",
+      "water_infrastructure",
+      "semiconductors_design",
+      "pharma_large_cap",
       "copper_miners",
       "biotech_drug_development"
     ],
@@ -565,26 +572,48 @@
     },
     "partials": [
       {
-        "sector_id": "pharma_large_cap",
-        "etf": "IUHE.AS",
-        "unrealized_pct": 11.27,
-        "rank": 4,
-        "action": "ADD",
+        "sector_id": "robotics_automation",
+        "etf": "2B76.DE",
+        "unrealized_pct": 1.66,
+        "rank": 1,
+        "action": "HOLD",
         "live": false,
-        "ladder_need_gain_pct": 13.73,
+        "ladder_need_gain_pct": 23.34,
         "ladder_rank_ok": false,
-        "overweight_need_pp": 13.35
+        "overweight_need_pp": 3.83
+      },
+      {
+        "sector_id": "water_infrastructure",
+        "etf": "IQQQ.DE",
+        "unrealized_pct": 0.35,
+        "rank": 2,
+        "action": "HOLD",
+        "live": false,
+        "ladder_need_gain_pct": 24.65,
+        "ladder_rank_ok": false,
+        "overweight_need_pp": 3.94
       },
       {
         "sector_id": "semiconductors_design",
-        "etf": "SEMI.L",
-        "unrealized_pct": -7.99,
+        "etf": "SEC0.DE",
+        "unrealized_pct": -0.1,
         "rank": 3,
-        "action": "ADD",
+        "action": "HOLD",
         "live": false,
-        "ladder_need_gain_pct": 32.99,
+        "ladder_need_gain_pct": 25.1,
         "ladder_rank_ok": false,
-        "overweight_need_pp": 9.64
+        "overweight_need_pp": 4.0
+      },
+      {
+        "sector_id": "pharma_large_cap",
+        "etf": "IUHE.AS",
+        "unrealized_pct": 2.58,
+        "rank": 4,
+        "action": "HOLD",
+        "live": false,
+        "ladder_need_gain_pct": 22.42,
+        "ladder_rank_ok": false,
+        "overweight_need_pp": 4.19
       },
       {
         "sector_id": "copper_miners",
@@ -620,11 +649,40 @@
   "exposure": [
     {
       "catalyst_id": "struct_ai_capex_supercycle",
-      "exposure_eur": 1500.0,
-      "pct": 15.0,
+      "exposure_eur": 4801.0,
+      "pct": 48.0,
       "sectors": [
         "copper_miners",
-        "semiconductors_design"
+        "robotics_automation",
+        "semiconductors_design",
+        "water_infrastructure"
+      ],
+      "absorbed_ids": []
+    },
+    {
+      "catalyst_id": "uncatalyzed",
+      "exposure_eur": 1435.0,
+      "pct": 14.3,
+      "sectors": [
+        "pharma_large_cap"
+      ],
+      "absorbed_ids": []
+    },
+    {
+      "catalyst_id": "struct_biopharma_patent_cliff_ma",
+      "exposure_eur": 1435.0,
+      "pct": 14.3,
+      "sectors": [
+        "pharma_large_cap"
+      ],
+      "absorbed_ids": []
+    },
+    {
+      "catalyst_id": "struct_nato_rearmament",
+      "exposure_eur": 1005.0,
+      "pct": 10.1,
+      "sectors": [
+        "robotics_automation"
       ],
       "absorbed_ids": []
     },
@@ -634,24 +692,6 @@
       "pct": 10.0,
       "sectors": [
         "copper_miners"
-      ],
-      "absorbed_ids": []
-    },
-    {
-      "catalyst_id": "uncatalyzed",
-      "exposure_eur": 500.0,
-      "pct": 5.0,
-      "sectors": [
-        "pharma_large_cap"
-      ],
-      "absorbed_ids": []
-    },
-    {
-      "catalyst_id": "struct_biopharma_patent_cliff_ma",
-      "exposure_eur": 500.0,
-      "pct": 5.0,
-      "sectors": [
-        "pharma_large_cap"
       ],
       "absorbed_ids": []
     },
@@ -666,18 +706,18 @@
   "cap_breaches": [
     {
       "catalyst_id": "struct_ai_capex_supercycle",
-      "current_eur": 1500.0,
-      "proposed_eur": 3301.18,
-      "post_eur": 4801.18,
+      "current_eur": 4801.0,
+      "proposed_eur": 0.0,
+      "post_eur": 4801.0,
       "post_pct": 48.0,
       "cap_pct": 30.0,
-      "over_by_eur": 1801.18,
+      "over_by_eur": 1801.0,
       "over": true,
-      "risk_ctr_pct": 82.03,
-      "risk_standalone_vol_pct": 17.25,
+      "risk_ctr_pct": 85.16,
+      "risk_standalone_vol_pct": 13.56,
       "risk_cap_pct": 35.0,
       "over_risk": true,
-      "risk_over_by_pp": 47.03,
+      "risk_over_by_pp": 50.16,
       "rules_disagree": false,
       "sectors": [
         "copper_miners",
@@ -685,27 +725,52 @@
         "semiconductors_design",
         "water_infrastructure"
       ],
-      "sectors_traded": [
-        "robotics_automation",
-        "semiconductors_design",
-        "water_infrastructure"
-      ],
-      "touched_by_table": true,
+      "sectors_traded": [],
+      "touched_by_table": false,
       "members_by_risk": [
         {
           "sector_id": "copper_miners",
-          "ctr_pct": 46.42,
+          "ctr_pct": 33.96,
           "eur": 1000.0
         },
         {
+          "sector_id": "robotics_automation",
+          "ctr_pct": 26.42,
+          "eur": 1005.0
+        },
+        {
+          "sector_id": "water_infrastructure",
+          "ctr_pct": 14.21,
+          "eur": 1732.0
+        },
+        {
           "sector_id": "semiconductors_design",
-          "ctr_pct": 35.61,
-          "eur": 1064.43
+          "ctr_pct": 10.57,
+          "eur": 500.0
         }
       ]
     }
   ],
-  "attribution_drift": [],
+  "attribution_drift": [
+    {
+      "sector_id": "pharma_large_cap",
+      "movement_id": "mov_20260901_pharma_large_cap_rebalance_add",
+      "amount_eur": 935.0,
+      "recorded": [
+        "struct_biopharma_patent_cliff_ma",
+        "uncatalyzed"
+      ],
+      "current": [
+        "struct_biopharma_patent_cliff_ma",
+        "struct_glp1_obesity_supercycle"
+      ],
+      "unattributed": [
+        "struct_glp1_obesity_supercycle"
+      ],
+      "uncatalyzed": false,
+      "reattributed_at": null
+    }
+  ],
   "overrides": {
     "note": "override_edge_eur = (chosen − rule exposure) × EUR return since the run. `rule_cost_eur` (the CGT + spread the rule would have paid) is shown beside it, never added: deferring tax is not earning it."
   },

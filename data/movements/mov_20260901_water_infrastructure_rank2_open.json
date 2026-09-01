@@ -1,0 +1,90 @@
+{
+  "$schema": "catalyx/schemas/movement.json",
+  "id": "mov_20260901_water_infrastructure_rank2_open",
+  "schema_version": "1.3",
+  "executed_at": "2026-09-01T16:35:00Z",
+  "action": "open",
+  "sector_id": "water_infrastructure",
+  "vehicle": {
+    "etf": "IQQQ.DE",
+    "isin": null,
+    "currency": "EUR"
+  },
+  "amount_eur": 1732.0,
+  "qty": 26.48723046,
+  "price": 65.39,
+  "fees": 0.0,
+  "attribution": [
+    {
+      "catalyst_id": "struct_ai_capex_supercycle",
+      "weight": 1.0
+    }
+  ],
+  "trigger": "rebalance",
+  "conviction": "high",
+  "risk_discipline": {
+    "invalidation": [
+      {
+        "id": "inv_01",
+        "condition": "IQQQ.DE closes more than 20% below entry (65.39 EUR) for 10 consecutive trading days.",
+        "severity": "review_and_reduce",
+        "source": "market_data",
+        "triggered": false,
+        "triggered_at": null,
+        "stop_price_level": 52.31,
+        "stop_price_ticker": "IQQQ.DE",
+        "comparator": "below",
+        "threshold": 52.31,
+        "consecutive_days": 10,
+        "eval_ticker": "IQQQ.DE",
+        "eval_note": "Machine-checkable. IQQQ.DE is the traded vehicle, quoted in EUR on Xetra, so the threshold is already in the book's currency — no FX wedge between the stop and the cost basis (the bug v2.25 shipped once).",
+        "rationale": "A 20%/10d drawdown is a REVIEW, not a reflex exit. Entry timing read `enter_now` at a neutral micro-state, so a pullback of that size would be information, not noise."
+      },
+      {
+        "id": "inv_02",
+        "condition": "The sector study is not refreshed within 90 days of 2026-09-01, i.e. the evidence behind the score stays blind through the next two reviews.",
+        "severity": "flag_for_review",
+        "source": "user_manual",
+        "triggered": false,
+        "triggered_at": null,
+        "eval_ticker": null,
+        "eval_note": "NOT a price stop. Recorded as an invalidation because it is the honest weak point of THIS entry, and freshness is not a gate anywhere else in the system — so if it is not written here, nothing catches it.",
+        "rationale": "The study behind this position is dated 2026-06-05 — 89 days stale at entry, and the rebalance table flagged the row `stale (89d)`. The whole 17.3% weight rests on a `catalyst_alignment` of 97.4 computed off that document. Freshness means RE-VERIFY, never auto-sell (CLAUDE.md), but 17.3% of the book is the largest single line and the re-verification is owed."
+      }
+    ],
+    "assumptions": [
+      {
+        "id": "asm_01",
+        "statement": "struct_ai_capex_supercycle is genuinely the driver of water infrastructure, and not a label attached to the sector because data-centre cooling is the fashionable story.",
+        "measurability": "The study lists ai_capex as the sole active catalyst, but v13.0 measured water as the book's DIVERSIFIER (rho_bar 0.20; -0.00 against cloud) — i.e. the tape says it does NOT move with the rest of the ai_capex cluster. Falsified if a refreshed study finds the ai_capex link is read-across rather than demand, OR if rolling 56w rho vs the held ai_capex names rises above 0.45.",
+        "monitoring_source": "catalyx.scorer.covariance + a refreshed sector study",
+        "check_frequency": "monthly",
+        "current_status": "unverified"
+      },
+      {
+        "id": "asm_02",
+        "statement": "The diversification this line is being bought for survives contact with the book: adding 17.3% of capital in it does not itself concentrate the book further.",
+        "measurability": "BOOK RISK printed vol 24.0% -> 23.0% and mean rho 0.197 -> 0.263 for the FULL table. Falsified if the post-trade measurement shows water raising, not lowering, the book's mean pairwise rho once all four rows settle.",
+        "monitoring_source": "rebalance BOOK RISK block",
+        "check_frequency": "monthly",
+        "current_status": "unverified"
+      }
+    ],
+    "note": "Largest line in the book at 17.3% = the tier-1 ceiling (max_position_pct 17.5%), so this is a HIGH-conviction sizing on a study 89 days old. That tension is the point of inv_02. Executed out of the ramp queue — see the override log for run_20260901_165828."
+  },
+  "metadata": {
+    "created_at": "2026-09-01T16:45:00Z",
+    "created_by": "claude",
+    "fill_note": "Broker fill (Revolut, screenshot 2026-09-01 18:35 CEST = 16:35Z): 26.48723046 units at 65.39, EUR 1732.00. qty x price = 1732.00 exactly, so fees are 0 (inside the Revolut monthly franchise) and there is no FX wedge to reconcile: IQQQ.DE is EUR-quoted on Xetra, unlike the USPY.L close of the same day which needed a currency reading. Fill 65.39 against a 65.81 previous close (yfinance) = -0.6%, an ordinary intraday print."
+  },
+  "score_context": {
+    "run_id": "run_20260901_143420",
+    "rank": 4,
+    "composite": 58.8,
+    "catalyst_alignment": 97.5,
+    "momentum": 59.6,
+    "flow": 48.9,
+    "crowding": 8.3,
+    "regime_state": "intact"
+  }
+}

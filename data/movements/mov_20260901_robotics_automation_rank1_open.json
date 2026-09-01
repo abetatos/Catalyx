@@ -1,0 +1,83 @@
+{
+  "$schema": "catalyx/schemas/movement.json",
+  "id": "mov_20260901_robotics_automation_rank1_open",
+  "schema_version": "1.3",
+  "executed_at": "2026-09-01T16:39:00Z",
+  "action": "open",
+  "sector_id": "robotics_automation",
+  "vehicle": {
+    "etf": "2B76.DE",
+    "isin": null,
+    "currency": "EUR"
+  },
+  "amount_eur": 1005.0,
+  "qty": 55.52486187,
+  "price": 18.1,
+  "fees": 0.0,
+  "attribution": [
+    {
+      "catalyst_id": "struct_ai_capex_supercycle",
+      "weight": 0.65
+    },
+    {
+      "catalyst_id": "struct_nato_rearmament",
+      "weight": 0.35
+    }
+  ],
+  "trigger": "rebalance",
+  "conviction": "medium",
+  "risk_discipline": {
+    "invalidation": [
+      {
+        "id": "inv_01",
+        "condition": "2B76.DE closes more than 20% below entry (18.10 EUR) for 10 consecutive trading days.",
+        "severity": "review_and_reduce",
+        "source": "market_data",
+        "triggered": false,
+        "triggered_at": null,
+        "stop_price_level": 14.48,
+        "stop_price_ticker": "2B76.DE",
+        "comparator": "below",
+        "threshold": 14.48,
+        "consecutive_days": 10,
+        "eval_ticker": "2B76.DE",
+        "eval_note": "Machine-checkable. EUR-quoted on Xetra, same currency as the cost basis.",
+        "rationale": "Rank 1 of the run with momentum 78.8 — the highest-momentum name being bought. A 20%/10d break is the cleanest signal that the momentum, not the thesis, was what was bought."
+      }
+    ],
+    "assumptions": [
+      {
+        "id": "asm_01",
+        "statement": "Robotics is driven by AI capex and reshoring/defence demand as two genuinely independent drivers, not one driver counted twice.",
+        "measurability": "CLAUDE.md forbids modelling one economic driver twice — it defeats the correlated_catalyst_cap. The study lists both ai_capex and nato_rearmament. Falsified if a refreshed study shows the defence contribution is itself downstream of the same capex cycle, in which case this collapses to a 1.0 ai_capex line and the cluster exposure is understated by the 0.35.",
+        "monitoring_source": "sector study + structural_catalyst_repo",
+        "check_frequency": "monthly",
+        "current_status": "unverified"
+      },
+      {
+        "id": "asm_02",
+        "statement": "The composite of 63.4 that made this rank 1 is not being carried by momentum alone.",
+        "measurability": "Momentum 78.8 vs catalyst_alignment 98.0 and crowding 14.7 — on paper broad-based. Falsified if a later run keeps the rank while momentum decays and the composite falls with it, i.e. the other dimensions were never doing work.",
+        "monitoring_source": "lake_query sector robotics_automation",
+        "check_frequency": "monthly",
+        "current_status": "unverified"
+      }
+    ],
+    "note": "The ONLY row the deployment ramp granted this iteration (tranche 15pp of capital); the other three were queued and executed anyway. See the override log for run_20260901_165828."
+  },
+  "metadata": {
+    "created_at": "2026-09-01T16:45:00Z",
+    "created_by": "claude",
+    "fill_note": "Broker fill (Revolut, screenshot 2026-09-01 18:39 CEST = 16:39Z): 55.52486187 units at 18.10, EUR 1005.00. qty x price = 1005.00 exactly -> fees 0. EUR-quoted on Xetra, no FX reconciliation. Fill 18.10 against an 18.508 previous close (yfinance) = -2.2%."
+  },
+  "score_context": {
+    "run_id": "run_20260901_143420",
+    "rank": 1,
+    "composite": 62.7,
+    "catalyst_alignment": 98.0,
+    "momentum": 78.8,
+    "flow": 54.6,
+    "crowding": 19.4,
+    "regime_state": "intact"
+  }
+}
