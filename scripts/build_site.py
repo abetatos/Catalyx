@@ -641,7 +641,17 @@ def _bake_overview(dist: Path) -> dict:
                 optional = ", ".join(c for c in (
                     "budget_state", "ramp_state", "book_ramp_step_pp",
                     "book_ramp_allowed_after_eur", "book_ramp_after_pct",
-                    "book_ramp_reviews_to_full") if c in have)
+                    "book_ramp_reviews_to_full",
+                    # v13.3 — the ramp's own arithmetic (a row that exceeds a WHOLE tranche is
+                    # not queued for later), the swap hurdle, and what the cut actually decided.
+                    "book_ramp_tranche_eur", "book_ramp_headroom_eur", "book_ramp_unfittable",
+                    "ramp_never_fits", "dz_required", "dz_hurdle_verdict", "composite_z",
+                    "composite_at_entry", "composite_now", "composite_drift",
+                    "book_swap_hurdle_verdict", "book_swap_hurdle_ic",
+                    "book_swap_hurdle_ic_effective", "book_sigma_cs_pct",
+                    "book_sigma_cs_windows", "book_rank_size_spearman",
+                    "book_selection_margin_z", "book_selection_last_in",
+                    "book_selection_first_out") if c in have)
                 rows = q(
                     "SELECT " + (f"{optional}, " if optional else "")
                     + "sector_id, etf, rank, score_rank, bucket, target_pct, actual_pct, "
@@ -662,6 +672,12 @@ def _bake_overview(dist: Path) -> dict:
                             f"WHERE run_id = '{rid}'") if has("position_metrics") else []
                 bm = q(f"SELECT * FROM book_metrics WHERE run_id = '{rid}'") \
                     if has("book_metrics") else []
+                # The rotations the table implies, and whether each clears its own hurdle.
+                # A row with no `from_sector` is the empty-ledger marker written when the table
+                # implies no rotation at all — a fact, not a missing partition.
+                swaps = [w for w in (q("SELECT * FROM rebalance_swap "
+                                       f"WHERE run_id = '{rid}'") if has("rebalance_swap") else [])
+                         if w.get("from_sector")]
                 overrides = q("SELECT run_id, sector_id, rule_action, chosen_action, "
                               "chosen_trade_eur, author, reason, "
                               "substr(CAST(logged_at AS VARCHAR),1,19) AS logged_at "
@@ -683,8 +699,27 @@ def _bake_overview(dist: Path) -> dict:
                     "ramp": ({"step_pp": rows[0].get("book_ramp_step_pp"),
                               "allowed_after_eur": rows[0].get("book_ramp_allowed_after_eur"),
                               "after_pct": rows[0].get("book_ramp_after_pct"),
-                              "reviews_to_full": rows[0].get("book_ramp_reviews_to_full")}
+                              "reviews_to_full": rows[0].get("book_ramp_reviews_to_full"),
+                              "tranche_eur": rows[0].get("book_ramp_tranche_eur"),
+                              "headroom_eur": rows[0].get("book_ramp_headroom_eur"),
+                              "unfittable": rows[0].get("book_ramp_unfittable")}
                              if rows and rows[0].get("book_ramp_step_pp") is not None else None),
+                    # v13.3 — WHAT THE RANKING IS WORTH, and how close the cut it decides was.
+                    # With λ=0 the ranking sizes nothing, so the top-N cut IS the model's whole
+                    # contribution; the page showed the rows it produces and never the margin
+                    # they rest on.
+                    "hurdle": ({"verdict": rows[0].get("book_swap_hurdle_verdict"),
+                                "ic": rows[0].get("book_swap_hurdle_ic"),
+                                "ic_effective": rows[0].get("book_swap_hurdle_ic_effective"),
+                                "sigma_cs_pct": rows[0].get("book_sigma_cs_pct"),
+                                "n_windows": rows[0].get("book_sigma_cs_windows")}
+                               if rows and rows[0].get("book_swap_hurdle_verdict") else None),
+                    "selection": ({"margin_z": rows[0].get("book_selection_margin_z"),
+                                   "last_in": rows[0].get("book_selection_last_in"),
+                                   "first_out": rows[0].get("book_selection_first_out"),
+                                   "rank_size_spearman": rows[0].get("book_rank_size_spearman")}
+                                  if rows and rows[0].get("book_selection_margin_z") is not None
+                                  else None),
                     "tilt_lambda": rows[0].get("book_tilt_lambda") if rows else None,
                     # The cost of NOT acting, alongside the cost of acting (plan v4 §4 C1/C4).
                     "inaction": ({
@@ -696,6 +731,7 @@ def _bake_overview(dist: Path) -> dict:
                         "shortfall_runs": rows[0].get("book_shortfall_runs"),
                         "shortfall_breached": rows[0].get("book_shortfall_breached"),
                     } if rows else None),
+                    "swaps": swaps,
                     "rows": rows,
                     "metrics_by_sector": {m["sector_id"]: m for m in metrics},
                     "book": book,

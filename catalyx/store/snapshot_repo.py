@@ -136,6 +136,18 @@ def primary_etf(sector_id: str) -> str | None:
     Sector-level `investable` is NOT the same guarantee — that flag lives in the taxonomy and can
     lag the universe file — so the vehicle is resolved here, from `etf_universe.yaml`, every time
     it is needed.
+
+    The venue test is a HEURISTIC for buyability; `broker_access: broker_absent` is a MEASUREMENT
+    of it, and the measurement wins. A listing can carry a KID on a PRIIPs venue and still not
+    exist in the operator's broker: `cloud_software_saas` was rank 2 of 26 with a live
+    `BUY €1265.87` against WCLD.L on 2026-09-01 when the operator searched all four of its
+    listings — plus ISIN and fund name — and found none of them, while three vehicles the book
+    actually holds answered the same search. Every such entry is an `assumed` that has now been
+    tested and failed, so it is excluded here for exactly the reason the US tickers are: an
+    unbuyable recommendation that looks actionable is worse than `None`. The entries are NOT
+    deleted from the universe (unlike regulatorily-impossible ones) — the instrument is valid and
+    returns intact if the broker's list changes — which is precisely why the filter has to live in
+    the read path rather than in whether the row exists.
     """
     try:
         data = yaml.safe_load(_ETF_PATH.read_text(encoding="utf-8")) or {}
@@ -146,7 +158,8 @@ def primary_etf(sector_id: str) -> str | None:
     if not isinstance(etfs, list) or not etfs:
         return None
     buyable = [e for e in etfs
-               if str(e.get("exchange", "")).strip().upper() in PRIIPS_VENUES]
+               if str(e.get("exchange", "")).strip().upper() in PRIIPS_VENUES
+               and str(e.get("broker_access", "")).strip().lower() != "broker_absent"]
     if not buyable:
         return None
     return sorted(buyable, key=lambda e: e.get("recommendation_tier", 9))[0].get("ticker")

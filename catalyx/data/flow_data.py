@@ -127,7 +127,8 @@ SECTOR_FLOW_TICKERS: dict[str, list[str]] = {
     "ai_infrastructure_data_centers": ["V9N.DE", "DTCR", "SRVR"],  # DTCR = hermano US exacto (mismo indice Global X); SRVR = Pacer, mismo tema, es el que tiene historia en el lake
     "robotics_automation":            ["2B76.DE", "ROBO", "BOTZ"],
     "cybersecurity_commercial":       ["USPY.L", "CIBR", "BUG"],
-    "cloud_software_saas":            ["WCLD.L", "WCLD", "CLOU", "IGV"],
+    # cloud_software_saas RETIRADO a watch_only 2026-09-01 — ver market_data.SECTOR_TICKERS.
+    # Su cadena era ["WCLD.L", "WCLD", "CLOU", "IGV"].
     # ── SALUD ───────────────────────────────────────────────────────────────────
     "pharma_large_cap":               ["IUHE.AS", "XLV", "IHE"],           # IUHE.AS sigue S&P500 Health Care → XLV es el hermano US exacto
     "biotech_drug_development":       ["BTEC.L", "IBB", "XBI"],

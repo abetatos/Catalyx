@@ -56,6 +56,7 @@ from catalyx.config import weights
 PRECEDENCE = ("SELL", "REDUCE", "TRIM", "RE-SCORE", "ADD", "BUY", "HOLD")
 _TABLE = "rebalance"
 _OVERRIDE_TABLE = "override_log"
+_SWAP_TABLE = "rebalance_swap"
 
 # Words the output may never contain in an action column. Kept as data so a test can assert it:
 # the prose ban of §4.4 is only real if something checks it.
@@ -260,14 +261,16 @@ def decide_action(row: dict, cfg: dict) -> dict:
             if ok_rank and gap_pp >= float(add.get("gap_pp_min", 3.0)) \
                     and not _in(regime, add.get("regime_not")):
                 return {"action": "ADD",
-                        "reason": f"rank {rank}, {gap_pp:.1f}pp under target"}
+                        "reason": f"rank {rank} opens the gate, {gap_pp:.1f}pp under the "
+                                  f"risk-budget target"}
         else:
             ok_rank = rank is not None and rank <= int(buy.get("rank_max", 8))
             if ok_rank and gap_pp >= float(buy.get("gap_pp_min", 4.0)) \
                     and not _in(regime, buy.get("regime_not")) \
                     and not _in(row.get("narrative_maturity"), buy.get("maturity_not")):
                 return {"action": "BUY",
-                        "reason": f"rank {rank}, not held, {gap_pp:.1f}pp under target"}
+                        "reason": f"rank {rank} opens the gate, not held, {gap_pp:.1f}pp "
+                                  f"under the risk-budget target"}
 
     if abs(gap_pp) < deadband:
         return {"action": "HOLD", "reason": f"within the {deadband:.0f}pp deadband"}
@@ -478,6 +481,82 @@ def rank_edge_evidence(exp: dict | None, cfg: dict) -> dict:
                      f"{'n/a' if spread is None else f'{spread:+.2f}pp'} → {verdict} ({why})")}
 
 
+def swap_hurdle(gate: dict | None, disp: dict | None) -> dict:
+    """How large a composite gap must be before acting on it pays its own friction (v13.3).
+
+    THE HOLE THIS FILLS. Every row of this table already prints two numbers that cannot be
+    compared: `breakeven_pct`, a real percentage of real money, and a rank, which is a position
+    in a dimensionless ordering. Nothing converted one into the other, so "rank 8 → sell" was a
+    verdict with no denominator — and the 2026-09-01 table sold a line at a 2.57% breakeven to
+    buy one 0.55 composite-z above it, a gap the measured skill cannot pay for at any plausible
+    IC. Sizing has stood aside for want of edge since λ shipped; SELECTION never did.
+
+    The arithmetic is the same one λ rests on. A ranking's expected return from a gap is
+
+        E[Δr] ≈ IC · Δz · σ_cs
+
+    — `σ_cs` (`calibration.dispersion`) is how far apart outcomes actually spread, `IC` is how
+    much of that ordering the score captures, `Δz` is the gap in `composite_z`. Setting that
+    equal to the round-trip friction and solving gives the hurdle:
+
+        Δz_required = breakeven_pct / (IC · σ_cs)
+
+    THIS IS NOT A THRESHOLD, which is the whole point. It breathes with the friction of the
+    actual row (a buy from cash pays ~0.20%, a rotation ~2.6% — so the same formula makes
+    deploying cash ~13× easier than churning, an asymmetry nobody has to impose), with the
+    measured dispersion of the regime, and with measured skill. And it has the property the
+    project already demands everywhere else: **IC → 0 sends the hurdle to infinity**, so with no
+    established edge NO rank-based rotation is justified. That is the same medicine `skill_lambda`
+    gives sizing, finally applied to turnover.
+
+    A COLUMN, NOT A GATE — deliberately, and for one cycle at least. Promoting it to a veto is a
+    policy change on evidence that does not exist yet (the rule scorecard has no complete window),
+    and the project's own v7 discipline is that a new signal ships at weight 0 until three
+    independent windows have spoken. So this cancels nothing; it prints what the row would have to
+    be worth. Fundamental exits — the exit watcher, a broken regime, a dead driver, a drawdown,
+    a rank-out STREAK — are about the position, not about a marginal gap, and would stay outside
+    the hurdle even if it were ever armed.
+    """
+    g, d = gate or {}, disp or {}
+    ic, sigma = g.get("ic"), d.get("sigma_cs_pct")
+    armed = bool(g.get("armed"))
+    ic_eff = float(ic) if (armed and ic is not None and ic == ic and float(ic) > 0) else 0.0
+
+    if sigma is None or float(sigma) <= 0:
+        verdict = "UNMEASURED"
+        why = d.get("note") or "cross-sectional dispersion not measured"
+    elif ic_eff <= 0:
+        verdict = "UNPAYABLE"
+        why = (f"IC stands aside ({g.get('why')}) → the hurdle is unbounded: no composite gap "
+               f"justifies paying friction to act on this ranking")
+    else:
+        verdict = "MEASURED"
+        why = (f"IC {ic_eff:+.3f} × σ_cs {float(sigma):.2f}% — a row's gap must clear "
+               f"breakeven ÷ {ic_eff * float(sigma):.3f} in composite_z")
+
+    out = {"verdict": verdict, "ic": ic, "ic_effective": ic_eff, "ic_armed": armed,
+           "sigma_cs_pct": sigma, "n_windows": d.get("n_windows"),
+           "horizon_days": d.get("horizon_days"), "why": why}
+    out["line"] = (f"swap hurdle → {verdict} ({why})")
+    return out
+
+
+def dz_required(breakeven: float | None, hurdle: dict | None) -> float | None:
+    """The composite_z gap this row's friction demands. `None` = unbounded or unmeasured.
+
+    `None` is load-bearing and must never be rendered as 0: "no gap is large enough" and "any gap
+    will do" are opposite claims, and only a dash can carry the first honestly.
+    """
+    h = hurdle or {}
+    ic, sigma = float(h.get("ic_effective") or 0.0), h.get("sigma_cs_pct")
+    if breakeven is None or breakeven != breakeven or sigma is None:
+        return None
+    denom = ic * float(sigma)
+    if denom <= 0:
+        return None
+    return round(abs(float(breakeven)) / denom, 3)
+
+
 def selection_prior(evidence: dict | None, tilt_lambda: float | None) -> dict | None:
     """What the table's own deployment pressure rests on, when the ranking's evidence is not it.
 
@@ -512,8 +591,34 @@ def selection_prior(evidence: dict | None, tilt_lambda: float | None) -> dict | 
     }
 
 
+def _swap_edge(from_sid: str | None, to_sid: str | None, be: float | None,
+               z_by_sector: dict | None, hurdle: dict | None) -> dict:
+    """Price one rotation against its own hurdle: gap bet, edge implied, does it pay?
+
+    `pays: None` is a THIRD state and not a soft no — it means the hurdle is unmeasured or the
+    gap is unknown, and collapsing it into False would read as "measured and rejected".
+    """
+    z = z_by_sector or {}
+    zf = (z.get(from_sid) or {}).get("composite_z")
+    zt = (z.get(to_sid) or {}).get("composite_z")
+    gap = round(float(zt) - float(zf), 4) if zf is not None and zt is not None else None
+    req = dz_required(be, hurdle)
+    h = hurdle or {}
+    ic, sigma = float(h.get("ic_effective") or 0.0), h.get("sigma_cs_pct")
+    edge = round(ic * gap * float(sigma), 3) if (gap is not None and sigma and ic > 0) else None
+    if h.get("verdict") == "UNMEASURED" or gap is None:
+        pays = None
+    elif req is None:                        # UNPAYABLE — the hurdle is unbounded
+        pays = False
+    else:
+        pays = bool(gap >= req)
+    return {"dz_gap": gap, "dz_required": req, "edge_expected_pct": edge,
+            "hurdle_verdict": h.get("verdict"), "pays": pays}
+
+
 def swap_ledger(rows: list[dict], cfg: dict, horizon_days: int | None = None,
-                spread_bps: float | None = None) -> list[dict]:
+                spread_bps: float | None = None, z_by_sector: dict | None = None,
+                hurdle: dict | None = None) -> list[dict]:
     """Pair the € the table wants sold with the € it wants bought, and price each swap.
 
     Greedy, largest first: a sale funds the largest buy it can, then the next. This is not an
@@ -556,6 +661,12 @@ def swap_ledger(rows: list[dict], cfg: dict, horizon_days: int | None = None,
                 "friction_eur": friction,
                 "breakeven_pct": breakeven_pct(friction, moved),
                 "horizon_days": horizon_days,
+                # v13.3 — WHAT THE SWAP IS BETTING ON, in the unit the hurdle is written in.
+                # `dz_gap` is signed so positive means the buy leg outranks the sell leg, which
+                # is the direction the rotation claims. The pairing already exists here and
+                # nowhere else, so this is the only place the bet and its price meet.
+                **_swap_edge(s["row"].get("sector_id"), b["row"].get("sector_id"),
+                             breakeven_pct(friction, moved), z_by_sector, hurdle),
             })
             s["left"] -= moved
             b["left"] -= moved
@@ -592,14 +703,24 @@ def _render_rows(rows: list[dict]) -> list[str]:
         # How old is the evidence this row is spending on. It sits beside the reason on purpose:
         # the justification and the age of what justifies it belong in one glance.
         age = row.get("data_age")
+        # The composite gap this row's friction demands (v13.3). "∞" is NOT decoration: it is
+        # the state where the measured skill cannot pay for acting on the ranking at all, and it
+        # is a different claim from a missing measurement ("—").
+        dz = row.get("dz_required")
+        dz_s = ("—" if row.get("dz_hurdle_verdict") in (None, "UNMEASURED")
+                or row.get("breakeven_pct") is None
+                else "∞" if dz is None else f"{float(dz):.2f}")
         # A row the rule wants but no trade slot can carry this cycle. Marked on the ACTION, not
         # by zeroing the trade: the rule's ask stays visible and the constraint is what is new.
-        act = row["rule_action"] + ("*" if row.get("budget_state") == "deferred"
+        # `*` = a scarcity queued this row for a LATER review. `**` = it exceeds a whole ramp
+        # tranche, so "later" is never: the two states look identical on the table and are not.
+        act = row["rule_action"] + ("**" if row.get("ramp_never_fits")
+                                    else "*" if row.get("budget_state") == "deferred"
                                     or row.get("ramp_state") == "deferred" else "")
         out.append(f"{row['sector_id'][:30]:<30} {str(row.get('etf') or '—')[:9]:<9} "
                    f"{(str(sr) if sr is not None else '—'):>4} {caz_s:>5} "
                    f"{row['target_pct']:>6.1f} {row['actual_pct']:>6.1f} {row['gap_eur']:>8.0f} "
-                   f"{act:<7} {row['trade_eur']:>8.0f} {be_s:>6} "
+                   f"{act:<8} {row['trade_eur']:>8.0f} {be_s:>6} {dz_s:>7} "
                    f"{(age if age and age == age else '—'):<13} {row['reason']}")
     return out
 
@@ -976,18 +1097,30 @@ def deployment_ramp_plan(rows: list[dict], deployed_eur: float, deployable_eur: 
     buys = sorted([r for r in movers if float(r["trade_eur"]) > 0],
                   key=lambda r: (_clean_rank(r.get("score_rank")) or 999,
                                  -float(r.get("trade_eur") or 0.0)))
-    full = True
+    # The tranche this review actually has, measured AFTER the sells have given their room back.
+    # A buy larger than this can never be granted however the queue is ordered — that is a
+    # property of the constants (`max_step_pp` 15pp vs `max_position_pct` 17.5pp), not of the
+    # queue, so it is NAMED rather than filed as one more deferral. Left unnamed it reads as
+    # "next review", and the row is in fact unbuyable in every review, forever.
+    tranche = round(allowed_after - running, 2)
+    unfittable = []
     for r in buys:
         trade = float(r["trade_eur"])
-        if full and round(running + trade, 2) <= allowed_after:
+        if round(running + trade, 2) <= allowed_after:
             r["ramp_state"] = "granted"
             running = round(running + trade, 2)
         else:
-            # Once a row does not fit, the rest queue behind it: the ramp is a rank-ordered fill,
-            # not a knapsack that would skip the leader to squeeze in two cheaper names.
-            full = False
+            # RANK ORDER IS ABSOLUTE: a row is never skipped to MAKE ROOM for a lower-ranked one,
+            # and grants are always full-size. But stopping the fill at the first row that does
+            # not fit displaces NOBODY — that row is deferred either way — while throwing away
+            # the remainder of the tranche this review just authorised. Live on 2026-09-01 that
+            # was €1,059.67 of authorised headroom left unspent, flagged `headroom_usable: True`,
+            # with two rows that fit queued behind one that did not (v13.3).
             r["ramp_state"] = "deferred"
             deferred.append(r)
+            if trade > tranche:
+                r["ramp_never_fits"] = True
+                unfittable.append(r)
 
     headroom = round(allowed_after - running, 2)
     gap_to_full = round(float(deployable_eur or 0.0) - deployed, 2)
@@ -999,12 +1132,23 @@ def deployment_ramp_plan(rows: list[dict], deployed_eur: float, deployable_eur: 
         "ask_eur": ask_eur, "planned_after_eur": round(deployed + ask_eur, 2),
         "after_eur": round(running, 2),
         "after_pct": round(running / (total or 1.0) * 100, 2),
+        # After the backfill, every remaining deferred row has already been offered this
+        # headroom and did not fit — so "usable" means "authorised and unclaimed by any row on
+        # this table", never "we forgot to spend it".
         "headroom_eur": headroom, "headroom_usable": bool(headroom >= min_ticket),
+        "headroom_smallest_deferred_eur": (round(min(float(r["trade_eur"]) for r in deferred), 2)
+                                           if deferred else None),
         "reviews_to_full": reviews,
         "deferred": len(deferred),
         "deferred_eur": round(sum(float(r["trade_eur"]) for r in deferred), 2),
         "deferred_rows": [{"sector_id": r["sector_id"], "rule_action": r["rule_action"],
-                           "trade_eur": float(r["trade_eur"])} for r in deferred],
+                           "trade_eur": float(r["trade_eur"]),
+                           "never_fits": bool(r.get("ramp_never_fits"))} for r in deferred],
+        "tranche_eur": tranche,
+        "unfittable": len(unfittable),
+        "unfittable_rows": [{"sector_id": r["sector_id"], "trade_eur": float(r["trade_eur"]),
+                             "excess_eur": round(float(r["trade_eur"]) - tranche, 2)}
+                            for r in unfittable],
         "note": (f"scaling in {step_pp:.0f}pp of capital per review — this one may take the book "
                  f"to {allowed_after / (total or 1.0) * 100:.0f}% "
                  f"({_eur(allowed_after)}), the deploy rule's {_eur(deployable_eur)} arrives in "
@@ -1012,7 +1156,13 @@ def deployment_ramp_plan(rows: list[dict], deployed_eur: float, deployable_eur: 
                  + (f" {len(deferred)} row(s) queue behind the tranche, "
                     f"{_eur(sum(float(r['trade_eur']) for r in deferred))} held back: "
                     + ", ".join(r["sector_id"] for r in deferred) + "."
-                    if deferred else " Every row fits this tranche.")),
+                    if deferred else " Every row fits this tranche.")
+                 + (f" {len(unfittable)} row(s) EXCEED a whole tranche ({_eur(tranche)}) and are "
+                    f"not deferred to next review — they are unbuyable at full size under "
+                    f"max_step_pp={step_pp:.0f}pp until the constant or the ask changes: "
+                    + ", ".join(f"{r['sector_id']} {_eur(float(r['trade_eur']))}"
+                                for r in unfittable) + "."
+                    if unfittable else "")),
     }
 
 
@@ -1531,6 +1681,95 @@ def _snapshot_ranks(run_id: str, lake_dir: Path | None = None) -> dict[str, int]
             if r["rank"] == r["rank"]}
 
 
+def _snapshot_scores(run_id: str, lake_dir: Path | None = None) -> dict[str, dict]:
+    """`composite_z` and the display composite per sector for one run.
+
+    `composite_z` is the unit every selection floor is written in and the only one comparable
+    across runs (a pre-schema-1.4 composite is on the old absolute scale). The swap hurdle and
+    the selection margin both need the gap in THAT unit, not in display points.
+    """
+    from catalyx.store import lake
+    df = lake.read_table("sector_snapshot", lake_dir=lake_dir)
+    if df.empty:
+        return {}
+    df = df[df["run_id"] == run_id]
+    out: dict[str, dict] = {}
+    for _, r in df.iterrows():
+        z = r.get("composite_z") if "composite_z" in df.columns else None
+        c = r.get("composite") if "composite" in df.columns else None
+        out[str(r["sector_id"])] = {
+            "composite_z": float(z) if z is not None and z == z else None,
+            "composite": float(c) if c is not None and c == c else None,
+        }
+    return out
+
+
+def rank_size_spearman(rows: list[dict]) -> float | None:
+    """Does the ORDER of the ranking show up in the SIZE of the positions? (v13.3)
+
+    Reported because it is routinely assumed and was, on 2026-09-01, −0.03: the largest target
+    was the 4th name and the top-ranked one was 5th by size. That is CORRECT by design — λ=0
+    means the ranking sizes nothing and the risk budget sizes everything — but the table's own
+    reasons said "rank 4, not held" beside a euro figure rank had no part in. A number that is
+    assumed and never printed is the kind that goes wrong quietly.
+    """
+    pairs = [(_clean_rank(r.get("score_rank")), float(r.get("target_pct") or 0.0))
+             for r in rows if float(r.get("target_pct") or 0.0) > 0]
+    pairs = [(a, b) for a, b in pairs if a is not None]
+    n = len(pairs)
+    if n < 3:
+        return None
+
+    def _ranks(vals):
+        order = sorted(range(len(vals)), key=lambda i: vals[i])
+        rk = [0.0] * len(vals)
+        i = 0
+        while i < len(order):
+            j = i
+            while j + 1 < len(order) and vals[order[j + 1]] == vals[order[i]]:
+                j += 1
+            avg = (i + j) / 2.0 + 1.0
+            for k in range(i, j + 1):
+                rk[order[k]] = avg
+            i = j + 1
+        return rk
+
+    a, b = _ranks([p[0] for p in pairs]), _ranks([p[1] for p in pairs])
+    ma, mb = sum(a) / n, sum(b) / n
+    num = sum((x - ma) * (y - mb) for x, y in zip(a, b))
+    den = (sum((x - ma) ** 2 for x in a) * sum((y - mb) ** 2 for y in b)) ** 0.5
+    return round(num / den, 3) if den else None
+
+
+def selection_margin(z_by_sector: dict[str, dict], selected: set[str],
+                     investable: set[str] | None = None) -> dict | None:
+    """How close the top-N cut actually was, in `composite_z` (v13.3).
+
+    THE NUMBER THE WHOLE BOOK HANGS ON AND NOBODY PRINTED. With λ=0 the ranking does not size
+    anything, so 100% of what the model contributes is WHICH names are inside the cut — and on
+    2026-09-01 the last name in beat the first name out by 0.4 display points. A boundary that
+    tight is a coin flip, and a table that never says so invites the reader to treat the cut as
+    a finding. It is reported beside `swap_hurdle` on purpose: the two answer the same question
+    from opposite ends — how big is the gap, and how big would it have to be to be worth paying
+    for.
+    """
+    pool = {sid: d.get("composite_z") for sid, d in (z_by_sector or {}).items()
+            if d.get("composite_z") is not None
+            and (investable is None or sid in investable)}
+    inside = [(z, sid) for sid, z in pool.items() if sid in selected]
+    outside = [(z, sid) for sid, z in pool.items() if sid not in selected]
+    if not inside or not outside:
+        return None
+    last_in = min(inside)
+    first_out = max(outside)
+    margin = round(last_in[0] - first_out[0], 4)
+    return {"last_in": last_in[1], "last_in_z": round(last_in[0], 4),
+            "first_out": first_out[1], "first_out_z": round(first_out[0], 4),
+            "margin_z": margin,
+            "note": (f"the cut was decided by {margin:+.3f} composite_z — {last_in[1]} is in, "
+                     f"{first_out[1]} is out")}
+
+
 def _cycle_runs(dates: list[str], n_runs: int, min_gap_days: int) -> list[str]:
     """The last `n_runs` review CYCLES among `dates` (`YYYYMMDD`, ascending).
 
@@ -1970,6 +2209,15 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
     gate = gate_status(exp, ic_stat, cfg)
     gate_evaluable = gate["armed"]
 
+    # v13.3 — the swap hurdle. Same gate as the after-tax veto (enough windows, |IC| above the
+    # floor, positive sign), because a hurdle computed off an unarmed IC would be a number
+    # pretending to be a measurement. A COLUMN this cycle: it prints, it never blocks.
+    try:
+        disp = calibration.dispersion(lake_dir=lake_dir)
+    except Exception:                                          # pragma: no cover - defensive
+        disp = {}
+    hurdle = swap_hurdle(gate, disp)
+
     data_age = _data_age_by_sector()
     # Observed round-trip cost per vehicle; an absent entry inherits the global (plan v5 G1).
     try:
@@ -1979,6 +2227,18 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
     sell_cfg = cfg.get("sell_if_any", {}) or {}
     streaks = _rank_streaks(int(sell_cfg.get("rank_out_of_top", 12)), lake_dir=lake_dir)
     score_ranks = _snapshot_ranks(run_id, lake_dir=lake_dir) if run_id else {}
+    z_by_sector = _snapshot_scores(run_id, lake_dir=lake_dir) if run_id else {}
+    # What the pipeline believed about each line WHEN IT WAS OPENED. `decide_action` reads level
+    # (rank), regime and the exit watcher — never the DIRECTION the score has travelled since —
+    # so a thesis can decay 23 composite points while its rank holds and no rule sees it. This
+    # ships as a column first (v13.3); turning drift into an exit is a rule change and needs its
+    # own evidence.
+    try:
+        from catalyx.execution.position_metrics import _entry_context, score_drift
+        from catalyx.store import movement_repo as _mr
+        entry_ctx = _entry_context(_mr.load_all())
+    except Exception:                                          # pragma: no cover - defensive
+        entry_ctx, score_drift = {}, None
     crowd_excl = _crowding_excluded(strategy, run_id, lake_dir=lake_dir) if run_id else {}
 
     # IS THE PERSISTED MODEL BOOK STILL THE ONE THIS CONFIG WOULD BUILD? (v13.1)
@@ -2136,6 +2396,21 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
             # table, because a forecast the data cannot support does not belong beside a real tax
             # bill. This one is arithmetic on observables: friction ÷ capital actually moved.
             "breakeven_pct": breakeven_pct(costs["cost_drag_eur"], trade_eur),
+            # v13.3 — the composite_z gap this row's own friction demands, from the MEASURED
+            # dispersion and the MEASURED IC. `None` with verdict UNPAYABLE means no gap is
+            # large enough; `None` with UNMEASURED means nobody has looked. Column, not gate.
+            "dz_required": dz_required(breakeven_pct(costs["cost_drag_eur"], trade_eur), hurdle),
+            "dz_hurdle_verdict": hurdle.get("verdict"),
+            "composite_z": (z_by_sector.get(sid) or {}).get("composite_z"),
+            # What the model believed at entry vs now. Held rows only — a BUY has no entry to
+            # drift from, and a zero there would read as "the thesis is intact".
+            **({k: v for k, v in (score_drift(entry_ctx.get(sid),
+                                              {"composite": (z_by_sector.get(sid) or {}).get("composite"),
+                                               "rank": score_ranks.get(sid)}) or {}).items()
+                if k in ("composite_at_entry", "composite_now", "composite_drift", "drift_note")}
+               if (p is not None and score_drift) else
+               {"composite_at_entry": None, "composite_now": None, "composite_drift": None,
+                "drift_note": None}),
             "gate_note": gated["gate_note"],
             "regime_state": ctx["regime_state"],
             "catalyst_freshness": ((p or {}).get("catalyst_freshness") or {}).get("status"),
@@ -2275,7 +2550,8 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
 
     # The swap ledger and the partials block: the two questions the user asked the table to
     # answer — "¿renta vender?" and "¿parciales?" — neither of which needs a forecast.
-    swaps = swap_ledger(rows, cfg, horizon_days=exp.get("horizon_days"))
+    swaps = swap_ledger(rows, cfg, horizon_days=exp.get("horizon_days"),
+                        z_by_sector=z_by_sector, hurdle=hurdle)
     evidence = rank_edge_evidence(exp, cfg)
     partials = partial_rungs(rows, cfg)
     # What the table does to the BOOK, beside what each row costs to trade (v11.1).
@@ -2341,8 +2617,8 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         # free pass. A row queued by the ramp is already logged and priced (author `ramp`).
         warnings.append(f"DEPLOYMENT SHORTFALL — {short['note']}. "
                         + (f"The ramp answers it on a schedule: execute this review's granted "
-                           f"rows ({_eur(ramp['allowed_after_eur'])}, "
-                           f"{ramp['allowed_after_pct']:.0f}% deployed) and the breach is "
+                           f"rows ({_eur(ramp['after_eur'])}, "
+                           f"{ramp['after_pct']:.0f}% deployed) and the breach is "
                            f"answered; the remaining gap closes in ~{ramp['reviews_to_full']} "
                            f"review(s). Declining a GRANTED row is still an override."
                            if ramp.get("enabled") else
@@ -2365,6 +2641,11 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         "as_of": as_of, "strategy": strategy, "run_id": run_id,
         "book": book_metrics, "warnings": warnings, "overrides": overrides,
         "swaps": swaps, "rank_edge_evidence": evidence, "partials": partials,
+        # v13.3 — the three diagnostics that make the ranking's own economics visible.
+        "swap_hurdle": hurdle, "dispersion": disp,
+        "rank_size_spearman": rank_size_spearman(rows),
+        "selection_margin": selection_margin(
+            z_by_sector, {m["sector_id"] for m in model}, investable),
         "book_risk_delta": risk_delta,
         # What the deployment pressure rests on, when the ranking's own edge is not it (v5 F1).
         "selection_prior": selection_prior(evidence,
@@ -2460,11 +2741,43 @@ def persist(result: dict, lake_dir: Path | None = None) -> int:
                  "allowed_after_eur"),
              "book_ramp_after_pct": (result.get("deployment_ramp") or {}).get("after_pct"),
              "book_ramp_reviews_to_full": (result.get("deployment_ramp") or {}).get(
-                 "reviews_to_full")}
+                 "reviews_to_full"),
+             # v13.3 — the tranche this review actually had, and the rows that exceed a WHOLE
+             # tranche. A row read back later that says DEFER must be able to say whether it was
+             # queued for next review or is unbuyable at full size in every review.
+             "book_ramp_tranche_eur": (result.get("deployment_ramp") or {}).get("tranche_eur"),
+             "book_ramp_headroom_eur": (result.get("deployment_ramp") or {}).get("headroom_eur"),
+             "book_ramp_unfittable": (result.get("deployment_ramp") or {}).get("unfittable"),
+             # v13.3 — the ranking's own economics. Persisted at book level because all three are
+             # properties of the RUN, not of a sector, and the dashboard rebuilds from the lake
+             # alone: a page that re-derived them would be showing a different afternoon's numbers.
+             "book_swap_hurdle_verdict": (result.get("swap_hurdle") or {}).get("verdict"),
+             "book_swap_hurdle_ic": (result.get("swap_hurdle") or {}).get("ic"),
+             "book_swap_hurdle_ic_effective": (result.get("swap_hurdle") or {}).get(
+                 "ic_effective"),
+             "book_sigma_cs_pct": (result.get("dispersion") or {}).get("sigma_cs_pct"),
+             "book_sigma_cs_windows": (result.get("dispersion") or {}).get("n_windows"),
+             "book_rank_size_spearman": result.get("rank_size_spearman"),
+             "book_selection_margin_z": (result.get("selection_margin") or {}).get("margin_z"),
+             "book_selection_last_in": (result.get("selection_margin") or {}).get("last_in"),
+             "book_selection_first_out": (result.get("selection_margin") or {}).get("first_out")}
     rows = [{**r, **const, "run_id": run_id, "strategy": result["strategy"],
              "as_of": result["as_of"], "computed_at": computed_at} for r in result["rows"]]
     lake.append_partition(_TABLE, pd.DataFrame(rows), {"run_id": run_id},
                           overwrite=True, lake_dir=lake_dir)
+    # The swap ledger, at its own grain (v13.3). It is the only place the table states that a
+    # rotation does not clear its own hurdle, and it lived exclusively in the CLI render — so the
+    # dashboard showed the rows a rotation produces and never the verdict on the rotation. An
+    # EMPTY ledger is written too: "this table implies no rotation" is a fact, and leaving the
+    # last run's pairings standing would answer a question about today with yesterday's trades.
+    lake.append_partition(_SWAP_TABLE,
+                          pd.DataFrame([{**w, "run_id": run_id, "strategy": result["strategy"],
+                                         "as_of": result["as_of"], "computed_at": computed_at}
+                                        for w in (result.get("swaps") or [])]
+                                       or [{"run_id": run_id, "strategy": result["strategy"],
+                                            "as_of": result["as_of"],
+                                            "computed_at": computed_at}]),
+                          {"run_id": run_id}, overwrite=True, lake_dir=lake_dir)
     _log_unrecorded(result, lake_dir=lake_dir)
     _log_budget_defers(result, lake_dir=lake_dir)
     return len(rows)
@@ -3175,16 +3488,24 @@ def render(res: dict) -> str:
     out.append("COLUMNS  rk = rank in this run's full ranking (— = not scored this run) · "
                "caZ = catalyst-score z among the model book's names — the declared prior that "
                "sized the target (— = outside the book, nothing sized) · "
-               "b/e% = friction ÷ capital moved · data = age of the catalyst evidence behind "
+               "b/e% = friction ÷ capital moved · "
+               "Δz req = the composite_z gap that friction demands, = b/e ÷ (IC · σ_cs); "
+               "∞ = the measured IC stands aside, so no gap justifies the friction. It is a "
+               "COLUMN: it blocks nothing, and while it reads ∞ it says the same thing about "
+               "every row — it starts telling rows apart the day the IC arms · "
+               "data = age of the catalyst evidence behind "
                "the score (qualifies the row, never vetoes it) · a trailing * on the action = "
                "queued by a scarcity (trade slot or deployment ramp), logged and priced like any "
-               "deviation — the rows to execute today are the THIS ITERATION block above")
+               "deviation; ** = the row exceeds a whole ramp tranche, so it is not queued for "
+               "later — it is unbuyable at full size until a constant or the ask changes "
+               "— the rows to execute today are the THIS ITERATION block above")
     out.append(f"SIZING   SELL = 100% of the line · REDUCE = {rf:.0f}% · TRIM = back to target"
                + (f" (or {float(lf) * 100:.0f}% on a ladder rung)" if lf else ""))
     out.append("")
 
     hdr = f"{'sector':<30} {'vehicle':<9} {'rk':>4} {'caZ':>5} {'tgt%':>6} {'act%':>6} " \
-          f"{'gap€':>8} {'ACTION':<7} {'trade€':>8} {'b/e%':>6} {'data':<13} reason"
+          f"{'gap€':>8} {'ACTION':<8} {'trade€':>8} {'b/e%':>6} {'Δz req':>7} " \
+          f"{'data':<13} reason"
     out += [hdr, "-" * len(hdr)]
     out += _render_rows(res["rows"])
     # The CASH row is a POSITION, priced like any other: the table is a closed book or it is two
@@ -3194,7 +3515,7 @@ def render(res: dict) -> str:
     cash_verb = "DEPLOY" if cash_act > 0 else ("RAISE" if cash_act < 0 else "HOLD")
     out.append(f"{'CASH':<30} {'—':<9} {'—':>4} {'—':>5} "
                f"{b['cash_target_pct']:>6.1f} {b['cash_actual_pct']:>6.1f} "
-               f"{-cash_act:>8.0f} {cash_verb:<7} {-cash_act:>8.0f} {'—':>6} {'—':<13} "
+               f"{-cash_act:>8.0f} {cash_verb:<8} {-cash_act:>8.0f} {'—':>6} {'—':>7} {'—':<13} "
                f"rule holds {b['cash_target_pct']:.0f}% in cash; you hold "
                f"{b['cash_actual_pct']:.0f}% — already allocated on the rows above; "
                f"declining a row IS the override, not the cash")
@@ -3254,6 +3575,20 @@ def render(res: dict) -> str:
                        f"(CGT €{w['tax_eur']:,.2f} + spread €{w['spread_eur']:,.2f})"
                        f"  →  BREAKEVEN {w['breakeven_pct']:.2f}%: {w['to_sector']} must beat "
                        f"{w['from_sector']} by that much{f' over {h}d' if h else ''}")
+            # v13.3 — the bet, in the same unit as the hurdle. Without this the ledger prices
+            # the ROTATION and never prices the CLAIM the rotation is making.
+            gap, req, pays = w.get("dz_gap"), w.get("dz_required"), w.get("pays")
+            if gap is not None:
+                verdict = ("hurdle UNMEASURED" if w.get("hurdle_verdict") == "UNMEASURED"
+                           else "DOES NOT PAY — the hurdle is unbounded while the ranking's "
+                                "measured edge stands aside" if req is None
+                           else ("PAYS" if pays else "DOES NOT PAY")
+                           + f" — needs Δz ≥ {req:.2f}")
+                out.append(f"         the bet: composite_z gap {gap:+.2f} "
+                           f"({w['to_sector']} − {w['from_sector']})"
+                           + (f", edge implied {w['edge_expected_pct']:+.2f}%"
+                              if w.get("edge_expected_pct") is not None else "")
+                           + f"  →  {verdict}")
         total_f = round(sum(w["friction_eur"] for w in swaps), 2)
         total_m = round(sum(w["moved_eur"] for w in swaps), 2)
         unpaired = round(b["sells_eur"] - total_m, 2)
@@ -3263,6 +3598,17 @@ def render(res: dict) -> str:
                       f"€{float(res.get('min_ticket_eur') or 0):.0f} ticket and lands "
                       f"in cash" if unpaired >= 1 else ""))
         out.append(f"  EVIDENCE for that spread: {ev.get('line')}")
+        hh = res.get("swap_hurdle") or {}
+        if hh:
+            out.append(f"  HURDLE {hh.get('why')}")
+            d = res.get("dispersion") or {}
+            if d.get("sigma_cs_pct") is not None:
+                out.append(f"         σ_cs = {d['sigma_cs_pct']:.2f}% "
+                           f"(median of {d['n_windows']} complete {d['horizon_days']}d "
+                           f"window(s), p25 {d['p25']:.2f} · p75 {d['p75']:.2f}) — "
+                           f"E[Δr] ≈ IC · Δz · σ_cs, so Δz_required = breakeven ÷ (IC · σ_cs). "
+                           f"It is not a constant: it falls with friction, rises as skill or "
+                           f"dispersion fall, and goes to ∞ when the IC stands aside.")
         out.append(f"  The rule fires on its own trigger, not on an expected return. The "
                    f"breakeven is the claim you are accepting: that the rank signal is worth "
                    f"more than the friction. That claim is testable a horizon later.")
@@ -3297,6 +3643,37 @@ def render(res: dict) -> str:
             live = f"  → {p['action']} LIVE" if p["live"] else ""
             out.append(f"  {str(p['sector_id'])[:30]:<30} {g:>7} "
                        f"{str(p['rank'] or '—'):>3}  {lad_s:<44}{ow_s:<24}{live}")
+
+    # v13.3 — WHAT THE MODEL ACTUALLY CONTRIBUTES, printed instead of assumed. With λ=0 the
+    # ranking sizes nothing, so the whole of the model's contribution is the top-N cut; these
+    # three lines say how close that cut was, whether order shows up in size at all, and which
+    # theses have decayed since they were bought. None of them moves a euro.
+    sm = res.get("selection_margin")
+    rho = res.get("rank_size_spearman")
+    drifted = sorted([r for r in res.get("rows") or []
+                      if r.get("composite_drift") is not None],
+                     key=lambda r: float(r["composite_drift"]))
+    if sm or rho is not None or drifted:
+        out.append("")
+        lam = float(res.get("tilt_lambda") or 0.0)
+        out.append(f"SELECTION — with λ={lam:.2f} the ranking does not size the book, so what the "
+                   f"model contributes IS the cut")
+        if sm:
+            out.append(f"  boundary   {sm['note']}")
+        if rho is not None:
+            out.append(f"  rank↔size  Spearman {rho:+.2f} between rank and target weight — "
+                       + ("order does not show up in size (correct at λ=0: the risk budget "
+                          "sizes, the ranking selects)" if abs(rho) < 0.5
+                          else "order and size still move together"))
+        if drifted:
+            out.append(f"  drift      composite at entry → now, for the lines held. NO RULE "
+                       f"READS THIS COLUMN — `decide_action` sees level, regime and the exit "
+                       f"watcher, never direction.")
+            for r in drifted:
+                out.append(f"             {str(r['sector_id'])[:30]:<30} "
+                           f"{float(r['composite_at_entry']):>5.1f} → "
+                           f"{float(r['composite_now']):>5.1f}  "
+                           f"({float(r['composite_drift']):+.1f})")
 
     out.append("")
     out.append(f"EDGE     bucket E[r] {c.get('buckets')} — {c.get('note')}")

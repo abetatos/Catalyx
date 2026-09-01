@@ -34,7 +34,12 @@
 #   broker_access:  verified = operado de hecho por el usuario (evidencia en data/movements/)
 #                   assumed  = UCITS en LSE/XETRA/Euronext/SIX; alta probabilidad en
 #                              Revolut ES pero SIN confirmar en la app todavia
-#                   (no existe `blocked`: lo bloqueado no se lista, se borra)
+#                   broker_absent = instrumento VALIDO (UCITS + KID + plaza PRIIPs) que el
+#                              broker del usuario NO lista. Se BUSCO y no aparece.
+#                   (sigue sin existir `blocked`: lo REGULATORIAMENTE imposible -- un US
+#                   no-UCITS sin KID -- no se lista, se borra. `broker_absent` es otra cosa
+#                   y por eso se conserva: el instrumento es correcto y volveria entero el
+#                   dia que cambie el broker o la lista. Borrarlo perderia la verificacion.)
 #   instrument:     etf = UCITS ETF | etc = Exchange Traded Commodity (nota abajo)
 #   recommendation_tier: 1 preferido | 2 alternativa viable | 3 solo monitorizar
 #   aum_m_usd:      totalAssets de yfinance al last_verified (null = no expuesto)
@@ -710,24 +715,33 @@ etf_universe:
       currency: USD
       ucits: true
       instrument: etf
-      broker_access: assumed
+      broker_access: broker_absent
       ter: null
       aum_m_usd: 280
-      recommendation_tier: 2
-      notes: "Rescata el sector: equivalente UCITS de WCLD/CLOU. SaaS puro, alta beta."
-      last_verified: "2026-08-27"
+      recommendation_tier: 3
+      notes: >-
+        NO LISTADO EN REVOLUT ES (buscado 2026-09-01: ticker, nombre e ISIN IE00BJGWQN72,
+        en las cuatro plazas -- LSE USD, Milan EUR, Paris EUR, SIX USD -- y la linea GBp
+        KLWD.L; ninguna aparece, y solo se ofrece CFD). El instrumento es correcto: UCITS
+        irlandes, SaaS puro, alta beta. El `assumed` que llevaba desde 2026-08-27 queda
+        FALSADO -- este es el primer assumed que se comprueba y falla. Se conserva porque
+        volveria entero si cambia el broker o su lista curada.
+      last_verified: "2026-09-01"
     - ticker: "DGTL.L"
       name: "iShares Digitalisation UCITS ETF USD (Acc)"
       exchange: LSE
       currency: USD
       ucits: true
       instrument: etf
-      broker_access: assumed
+      broker_access: broker_absent
       ter: null
       aum_m_usd: 761
-      recommendation_tier: 2
-      notes: "Mas amplio y mas liquido; menos puro en SaaS."
-      last_verified: "2026-08-27"
+      recommendation_tier: 3
+      notes: >-
+        NO LISTADO EN REVOLUT ES (buscado 2026-09-01 en LSE USD, Amsterdam EUR y SIX).
+        Mas amplio y mas liquido; menos puro en SaaS. Mismo caso que WCLD.L: assumed
+        falsado, instrumento valido, se conserva.
+      last_verified: "2026-09-01"
 
   # ==========================================================================
   # SALUD

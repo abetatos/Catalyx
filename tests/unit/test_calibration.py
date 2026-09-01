@@ -209,3 +209,33 @@ def test_effective_windows_counts_horizons_not_rows():
     df2 = _ic_frame([{"start": "2026-01-01", "horizon_days": 63},
                      {"start": "2026-06-01", "horizon_days": 63}])
     assert cal._effective_windows(df2) == 2
+
+
+# ── Cross-sectional dispersion — the unit that turns a z-gap into money (v13.3) ─
+
+
+def test_cross_sectional_sigma_is_in_percent():
+    """`σ_cs` is quoted beside a breakeven in percent; a fraction there would understate the
+    hurdle by 100× and silently make every rotation look payable."""
+    assert cal.cross_sectional_sigma([0.10, -0.10]) is None      # n < 3: not a cross-section
+    s = cal.cross_sectional_sigma([0.10, 0.0, -0.10, 0.05])
+    assert 8.0 < s < 9.0
+
+
+def test_cross_sectional_sigma_ignores_missing_returns():
+    """A sector with no forward return is absent, never a zero — a zero would shrink the
+    dispersion and lower the hurdle by pretending an unmeasured name did nothing."""
+    a = cal.cross_sectional_sigma([0.10, 0.0, -0.10, 0.05])
+    b = cal.cross_sectional_sigma([0.10, 0.0, -0.10, 0.05, None, float("nan")])
+    assert a == b
+
+
+def test_cross_sectional_sigma_is_zero_only_when_nothing_spread():
+    assert cal.cross_sectional_sigma([0.07, 0.07, 0.07]) == 0.0
+
+
+def test_dispersion_reports_unmeasured_rather_than_a_default(tmp_path):
+    """"Nobody measured it" and "it is small" are different claims, and only the first can be
+    told from a missing column. A plausible default here would arm a hurdle on nothing."""
+    d = cal.dispersion(lake_dir=tmp_path)
+    assert d["sigma_cs_pct"] is None and d["n_windows"] == 0

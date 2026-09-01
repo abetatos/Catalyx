@@ -1445,6 +1445,79 @@ const eur = (v, d = 0) => (v === null || v === undefined || Number.isNaN(Number(
 function actionPill(a) { return a ? `<span class="pill ${ACTION_CLASS[a] || ''}">${escapeHtml(a)}</span>` : '—'; }
 function freshPill(f) { const c = { fresh: 'g', stale: 'a', very_stale: 'r' }[f] || ''; return f ? `<span class="pill ${c}">${escapeHtml(String(f).replace('_', ' '))}</span>` : ''; }
 
+// What the model actually contributes, printed instead of assumed. With the conviction tilt
+// shrunk to zero the ranking does not size the book at all, so the whole of the model's
+// contribution is WHICH names fall inside the cut — and until now the page showed the rows that
+// cut produces and never the margin they rest on. Three read-outs, none of which moves money:
+// how close the cut was, whether rank order shows up in position size, and which theses have
+// decayed since they were bought. That last one is not read by any rule.
+function selectionPanel(R) {
+  const S = R.selection || null;
+  const drifted = (R.rows || [])
+    .filter((r) => r.composite_drift !== null && r.composite_drift !== undefined)
+    .sort((a, b) => Number(a.composite_drift) - Number(b.composite_drift));
+  if (!S && !drifted.length) return '';
+  const rows = [];
+  if (S && S.margin_z != null) {
+    rows.push(`<tr><td>boundary</td><td class="num"><b>${num(S.margin_z, 3)}</b></td>
+      <td class="hint">composite z — ${sectorLink(S.last_in)} is in, ${sectorLink(S.first_out)} is out</td></tr>`);
+  }
+  if (S && S.rank_size_spearman != null) {
+    rows.push(`<tr><td>rank &rarr; size</td><td class="num"><b>${num(S.rank_size_spearman, 2)}</b></td>
+      <td class="hint">Spearman between rank and target weight — ${Math.abs(Number(S.rank_size_spearman)) < 0.5
+        ? 'order does not show up in size, which is correct while the tilt is neutral: the risk budget sizes, the ranking selects'
+        : 'order and size still move together'}</td></tr>`);
+  }
+  drifted.forEach((r) => {
+    const d = Number(r.composite_drift);
+    rows.push(`<tr><td>${sectorLink(r.sector_id)}</td>
+      <td class="num ${d < 0 ? 'neg' : 'pos'}"><b>${d > 0 ? '+' : ''}${num(d, 1)}</b></td>
+      <td class="hint">composite ${num(r.composite_at_entry, 1)} at entry &rarr; ${num(r.composite_now, 1)} now</td></tr>`);
+  });
+  return `<div class="card" style="margin-top:14px">
+    <div class="lbl" style="text-transform:uppercase;letter-spacing:.5px;font-size:10px">selection — what the model contributes is the cut</div>
+    <div class="tblwrap"><table><tbody>${rows.join('')}</tbody></table></div>
+    <p class="hint" style="margin:6px 0 0">Score drift is a column, not a rule. The action table reads
+    level (rank), regime and the exit watcher — never the direction a score has travelled — so a thesis
+    can decay while its rank holds and nothing fires on it.</p></div>`;
+}
+
+// The rotations the table implies, priced. Every row above states its friction; this states
+// what that friction BUYS — the composite gap the rotation is betting on, against the gap the
+// friction demands. Until now this lived only in the CLI, so the page could show a sale and a
+// purchase and never the verdict on the trade they add up to. Nothing here cancels a row: when a
+// rotation does not clear its hurdle the table still recommends it, and that disagreement is
+// exactly what this block exists to make visible rather than implicit.
+function swapLedger(R) {
+  const W = R.swaps || [];
+  if (!W.length) return '';
+  const verdict = (w) => {
+    if (w.pays === true) return '<span class="pill g">clears its hurdle</span>';
+    if (w.pays === false && w.dz_required == null) return '<span class="pill a">does not pay — hurdle unbounded</span>';
+    if (w.pays === false) return '<span class="pill a">does not pay</span>';
+    return '<span class="pill">not measured</span>';
+  };
+  return `<div class="card" style="margin-top:14px">
+    <div class="lbl" style="text-transform:uppercase;letter-spacing:.5px;font-size:10px">swap ledger — what each rotation costs, and the hurdle it must clear</div>
+    <div class="tblwrap"><table>
+      <thead><tr><th>out</th><th>in</th><th class="num">moved</th><th class="num">friction</th>
+        <th class="num">b/e %</th><th class="num">gap Δz</th><th class="num">needs Δz</th><th>verdict</th></tr></thead>
+      <tbody>${W.map((w) => `<tr>
+        <td>${sectorLink(w.from_sector)} <span class="hint">${escapeHtml(w.from_action || '')}</span></td>
+        <td>${sectorLink(w.to_sector)} <span class="hint">${escapeHtml(w.to_action || '')}</span></td>
+        <td class="num">${eur(w.moved_eur)}</td>
+        <td class="num">${eur(w.friction_eur, 2)}<span class="hint"> CGT ${eur(w.tax_eur, 2)}</span></td>
+        <td class="num">${num(w.breakeven_pct, 2)}%</td>
+        <td class="num">${w.dz_gap == null ? '—' : (Number(w.dz_gap) > 0 ? '+' : '') + num(w.dz_gap, 2)}</td>
+        <td class="num">${w.dz_required == null ? '∞' : num(w.dz_required, 2)}</td>
+        <td>${verdict(w)}</td></tr>`).join('')}</tbody></table></div>
+    <p class="hint" style="margin:6px 0 0">The hurdle is <b>breakeven ÷ (IC × σ)</b>: how big a composite
+    gap has to be before acting on it pays its own friction. It is not a fixed number — it falls with the
+    row&rsquo;s friction, rises as measured skill or cross-sectional dispersion fall, and is unbounded while
+    the measured IC stands aside, which is when no gap justifies rotating at all. It is a read-out, not a
+    veto: a rotation marked <i>does not pay</i> is still recommended above.</p></div>`;
+}
+
 function renderRebalance() {
   const R = OV.rebalance;
   const card = (l, v, cls, sub) => `<div class="card"><div class="lbl">${l}</div><div class="big ${cls || ''}">${v}</div>${sub ? `<div class="lbl">${sub}</div>` : ''}</div>`;
@@ -1491,6 +1564,20 @@ function renderRebalance() {
     cards.push(card('this tranche', num(RP.step_pp, 0) + 'pp', '',
       `to ${eur(RP.allowed_after_eur)} · full deployment in ~${Math.round(RP.reviews_to_full || 0)} reviews`));
   }
+  // The hurdle: how large a score gap has to be before acting on it pays its own friction.
+  // Unbounded (∞) when the measured IC stands aside — the same discipline λ applies to sizing,
+  // applied to turnover. A column, never a veto: nothing on this page is cancelled by it.
+  const H = R.hurdle || null;
+  if (H) {
+    const unpayable = H.verdict === 'UNPAYABLE';
+    cards.push(card('swap hurdle', unpayable ? '∞' : (H.verdict === 'UNMEASURED' ? '—' : 'live'),
+      unpayable ? 'a' : '',
+      unpayable
+        ? `IC ${num(H.ic, 3)} stands aside — no gap justifies the friction`
+        : (H.sigma_cs_pct != null
+          ? `IC ${num(H.ic_effective, 3)} × σ ${num(H.sigma_cs_pct, 1)}%`
+          : 'dispersion not measured')));
+  }
   $('reb-summary').innerHTML = cards.join('');
 
   // A row for a sector that can no longer be bought is not a neutral row — say so loudly.
@@ -1522,21 +1609,28 @@ function renderRebalance() {
     </div>` : '') + `<div class="tblwrap"><table>
     <thead><tr><th>sector</th><th>ETF</th><th class="num">target</th><th class="num">actual</th>
       <th class="num">gap</th><th>action</th><th class="num">trade</th><th class="num">CGT</th>
-      <th class="num">b/e %</th><th>catalyst</th><th>why</th></tr></thead><tbody>
+      <th class="num">b/e %</th><th class="num">Δz req</th><th>catalyst</th><th>why</th></tr></thead><tbody>
     ${rows.map((r) => `<tr>
       <td>${sectorLink(r.sector_id)}</td>
       <td class="hint">${escapeHtml(r.etf || '—')}</td>
       <td class="num">${num(r.target_pct, 1)}%</td>
       <td class="num">${num(r.actual_pct, 1)}%</td>
       <td class="num ${(r.gap_eur ?? 0) >= 0 ? '' : 'neg'}">${eur(r.gap_eur)}</td>
-      <td>${actionPill(r.rule_action)}${queued(r)
+      <td>${actionPill(r.rule_action)}${r.ramp_never_fits
+        ? '<span class="hint" title="this row exceeds a WHOLE ramp tranche — it is not queued for later, it is unbuyable at full size until a constant or the ask changes">**</span>'
+        : queued(r)
         ? `<span class="hint" title="${r.ramp_state === 'deferred' ? 'queued behind this review\'s deployment tranche' : 'no free trade slot this review'}">*</span>` : ''}</td>
       <td class="num"><b>${r.trade_eur ? eur(r.trade_eur) : '—'}</b></td>
       <td class="num">${r.tax_eur ? eur(r.tax_eur) : '—'}</td>
       <td class="num">${r.breakeven_pct == null ? '—' : num(r.breakeven_pct, 2) + '%'}</td>
+      <td class="num hint" title="the composite_z gap this row's friction demands = b/e ÷ (IC × σ). ∞ = the measured IC stands aside, so no gap justifies it. A column — it blocks nothing.">${
+        (r.breakeven_pct == null || !r.dz_hurdle_verdict || r.dz_hurdle_verdict === 'UNMEASURED')
+          ? '—' : (r.dz_required == null ? '∞' : num(r.dz_required, 2))}</td>
       <td>${freshPill(r.catalyst_freshness)} ${regimePill(r.regime_state)}</td>
       <td class="hint">${escapeHtml(r.reason || '')}</td></tr>`).join('')}
-    </tbody></table></div>`;
+    </tbody></table></div>` + swapLedger(R) + selectionPanel(R);
+
+
 
   // Risk share above capital share = amber (this line is a bigger bet than it looks); a NEGATIVE
   // contribution is green — the position is lowering total book volatility, not adding to it.

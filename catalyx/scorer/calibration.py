@@ -161,6 +161,29 @@ def top_k_spread(scores: list[float], returns: list[float], k: int = TOP_K) -> d
             "spread": round(float(top - rest) * 100, 2), "k": k}
 
 
+def cross_sectional_sigma(returns: list[float]) -> float | None:
+    """Sample stdev of ONE window's forward returns ACROSS sectors, in percent.
+
+    The missing unit. A composite gap is dimensionless (`composite_z`), a friction hurdle is a
+    percentage, and the rebalance table puts them side by side on every row — so until this
+    number exists the two cannot be compared at all, and "rank 8, sell it" is a claim with no
+    denominator. What a ranking can earn from a gap is `IC · Δz · σ_cs`: σ_cs is how far apart
+    the outcomes actually spread, IC is how much of that ordering the score captures.
+
+    Measured, not assumed, and per window — dispersion is a regime property (it collapses in a
+    calm quarter and doubles in a dislocation), which is exactly why the hurdle it feeds must
+    not be a constant. Sample stdev (ddof=1): with ~26 sectors the difference is immaterial, but
+    the population form would claim a precision the cross-section does not have.
+    """
+    xs = [float(r) for r in returns if r is not None and r == r]
+    n = len(xs)
+    if n < 3:
+        return None
+    mean = sum(xs) / n
+    var = sum((x - mean) ** 2 for x in xs) / (n - 1)
+    return round(var ** 0.5 * 100.0, 3)
+
+
 def bucket_returns(scores: list[float], returns: list[float],
                    buckets=BUCKETS) -> dict[str, float | None]:
     """Mean forward return (%) per rank bucket, ranked by score descending.
@@ -306,6 +329,55 @@ def _effective_windows(df) -> int:
             n += 1
             last = s
     return n
+
+
+def dispersion(lake_dir: Path | None = None) -> dict:
+    """Median cross-sectional σ of forward returns over the COMPLETE calibration windows.
+
+    Read, never assumed: a swap hurdle written against a guessed dispersion is a constant
+    wearing a formula's clothes. The MEDIAN across windows rather than the mean, because two
+    dislocated quarters would otherwise set the hurdle for every calm one; the quartiles ship
+    beside it so the reader sees how much the number itself moves.
+
+    Returns `sigma_cs_pct: None` when no complete window carries the column — older calibration
+    partitions predate it. "Not measured" is a state the consumer must be able to see, so it is
+    never silently replaced by a plausible default.
+    """
+    from catalyx.store import lake
+
+    empty = {"sigma_cs_pct": None, "p25": None, "p75": None, "n_windows": 0,
+             "horizon_days": DEFAULT_HORIZON_DAYS,
+             "note": "no complete calibration window carries a dispersion measurement yet"}
+    try:
+        df = lake.read_table(_TABLE, lake_dir=lake_dir)
+    except Exception:                                          # pragma: no cover - defensive
+        return empty
+    if df.empty or "fwd_dispersion_pct" not in df.columns:
+        return empty
+    if "window_complete" in df.columns:
+        df = df[df["window_complete"].fillna(False).astype(bool)]
+    # One value per RUN: the column is a run-level property repeated across the dimension rows.
+    if "run_id" in df.columns:
+        df = df.drop_duplicates(subset=["run_id"])
+    vals = sorted(float(v) for v in df.get("fwd_dispersion_pct", []) if v == v)
+    if not vals:
+        return empty
+
+    def _q(p: float) -> float:
+        if len(vals) == 1:
+            return vals[0]
+        i = p * (len(vals) - 1)
+        lo, hi = int(i), min(int(i) + 1, len(vals) - 1)
+        return vals[lo] + (i - lo) * (vals[hi] - vals[lo])
+
+    horizons = [int(h) for h in df.get("horizon_days", []) if h == h]
+    med = round(_q(0.5), 3)
+    return {"sigma_cs_pct": med, "p25": round(_q(0.25), 3), "p75": round(_q(0.75), 3),
+            "n_windows": len(vals),
+            "horizon_days": horizons[0] if horizons else DEFAULT_HORIZON_DAYS,
+            "note": (f"median cross-sectional σ of {horizons[0] if horizons else DEFAULT_HORIZON_DAYS}d "
+                     f"forward returns = {med:.2f}% over {len(vals)} complete window(s) "
+                     f"[p25 {_q(0.25):.2f} · p75 {_q(0.75):.2f}]")}
 
 
 def skill_lambda(lake_dir: Path | None = None, dimension: str = "composite",
@@ -797,6 +869,9 @@ def compute_run(run_id: str, run_start: str, horizon_days: int | None = DEFAULT_
         "horizon_days": horizon_days, "window_complete": complete,
         "n_sectors": n, "se": se, "dimensions": dims, "spread": spread,
         "buckets": buckets,
+        # v13.3 — how far apart this window's outcomes actually spread. Run-level, not
+        # per-dimension: every dimension is ranked against the SAME forward returns.
+        "fwd_dispersion_pct": cross_sectional_sigma(sn["fwd"].tolist()),
         "computed_at": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -880,6 +955,7 @@ def persist(results: list[dict], lake_dir: Path | None = None) -> int:
             "rank_ic": d["rank_ic"], "as_used_ic": d["as_used_ic"], "verdict": d["verdict"],
             "candidate": bool(d.get("candidate", False)),
             "top_k_spread_pct": r.get("spread", {}).get("spread"),
+            "fwd_dispersion_pct": r.get("fwd_dispersion_pct"),
             "computed_at": r["computed_at"],
         } for dim, d in r["dimensions"].items()]
         if rows:

@@ -47,7 +47,7 @@ console = Console(highlight=False)
 # (= creacion/reembolso = flujo) en fondos US. Momentum = precio que operas (UCITS);
 # flujo = senal de demanda del tema (proxy US valido). No unificar las dos tablas.
 #
-# Cobertura: los 26 sectores investables de sector_taxonomy.yaml v2.0. Los 27 retirados
+# Cobertura: los 25 sectores investables de sector_taxonomy.yaml v2.0. Los 28 retirados
 # a watch-only quedan fuera por definicion — no tienen vehiculo comprable.
 # Tickers en GBp (RAYS.L, INRG.L, SPGP.L, SSLN.L, SPAG.L, INFR.L) no dan
 # problema: el momentum es un RETORNO, y la escala peniques/libras se cancela. Lo que
@@ -83,7 +83,9 @@ SECTOR_TICKERS: dict[str, list[str]] = {
     "ai_infrastructure_data_centers":["V9N.DE", "XAIX.DE", "AIAI.L"],
     "robotics_automation":           ["2B76.DE", "RBOT.L"],   # 2B76 = misma clase en Xetra; antes IQQR.DE = MSCI Eastern Europe (sector equivocado)
     "cybersecurity_commercial":      ["USPY.L", "LOCK.L"],
-    "cloud_software_saas":           ["WCLD.L", "DGTL.L"],
+    # cloud_software_saas RETIRADO a watch_only 2026-09-01 (ningun vehiculo listado en el
+    # broker: WCLD/SKYE/SKYU/FSKY/SKYY/DGTL buscados uno a uno, ninguno aparece). Su cadena
+    # era ["WCLD.L", "DGTL.L"] — anotada aqui para que vuelva intacta si el sector vuelve.
     # ── Salud ────────────────────────────────────────────────────────────────
     "pharma_large_cap":              ["IUHE.AS", "IUHC.L"],
     "biotech_drug_development":      ["BTEC.L", "HEAL.L"],

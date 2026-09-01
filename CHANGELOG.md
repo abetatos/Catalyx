@@ -13,6 +13,191 @@
 
 
 
+## v14.0 — El primer `assumed` que se comprueba y falla: cloud sale del universo (2026-09-01)
+
+**No salió de un test ni de una auditoría: el usuario fue a comprar y el vehículo no estaba.**
+`WCLD.L` llevaba `broker_access: assumed` desde el corte de universo del 2026-08-27 — «UCITS en
+LSE/XETRA/Euronext/SIX, alta probabilidad en Revolut ES, SIN confirmar en la app». Es el primero
+que se comprueba de verdad, y falla.
+
+**Lo comprobado, no lo supuesto.** Se buscaron uno a uno, con ticker, nombre e ISIN: WisdomTree
+Cloud Computing (`IE00BJGWQN72`) en sus cuatro plazas — LSE USD, Milán EUR, París EUR, SIX USD —
+más la línea GBp `KLWD.L`; First Trust Cloud Computing (`IE00BFD2H405`) como `SKYE` en Xetra y
+Ámsterdam, `FSKY` en Milán, `SKYU` en LSE; HAN-GINS `SKYY` en LSE y Milán; iShares Digitalisation
+`DGTL` en Ámsterdam, LSE y SIX. **Ninguno aparece**, y solo se ofrece CFD. El control es lo que
+hace la conclusión firme: `USPY.L`, `SEMI.L` y `4COP.DE` **sí** aparecen en el mismo buscador —
+los tres `verified`, operados de hecho. **El problema es la lista curada del bróker, no la
+regulación ni el buscador**, y por eso no es el caso PRIIPs de `oil_field_services`: allí no
+existe UCITS; aquí existen cuatro y son correctos.
+
+**Se evaluaron dos sustitutos y los dos miden la beta equivocada.** No se aceptó ninguno, y las
+dos razones son medidas, no argumentadas.
+- **`QDVE.DE`** (iShares S&P 500 IT, Xetra, EUR, AUM $18.400M) es un instrumento impecable y no
+  es cloud: ρ semanal en EUR sobre 52 semanas **0,74 con `SEMI.L`** — que YA se tiene — contra
+  **0,36 con `WCLD.L`**, el que sustituiría. Comprarlo como cloud es **doblar semis** y anotarlo
+  en la casilla equivocada; es el defecto por el que `XAIX.DE` está degradado a tier-2.
+- **`USPY.L`** correlaciona **0,83** con `WCLD.L`, y precisamente por eso es la trampa: es el
+  vehículo de `cybersecurity_commercial` **cerrado ese mismo día** (+€42,82 brutos, €8,14 de CGT
+  ya devengados), y recomprarlo bajo otra etiqueta convierte una rotación ejecutada en un
+  round-trip. Además ρ 0,83 **no es identidad**: en el mismo run puntúan momentum **81,5 contra
+  41,7** y CA **71,9 contra 97,7** — comparten el factor «software US de beta alta», no el nivel
+  ni la tendencia ni los drivers. Sustituir por correlación es meter ρ en la **SELECCIÓN**, que
+  es exactamente lo que v13.0 declinó hacer sin un IC delante.
+
+**Qué se hizo.** `cloud_software_saas` → `investable: false` + `watch_only: true`, con el patrón
+completo de los retirados: la entrada se queda ENTERA en la taxonomía con `retired_2026_09_01`,
+el motivo medido, y **dos `watch_triggers`** que la devuelven sola (que Revolut liste cualquiera
+de los seis como ETF, o que se abra un bróker con acceso a LSE/Xetra — el vehículo y la tesis ya
+están verificados, solo faltaba la plaza). En `etf_universe.yaml` **tampoco se borra nada**: se
+introduce un tercer valor, **`broker_access: broker_absent`** = instrumento VÁLIDO (UCITS + KID +
+plaza PRIIPs) que el bróker del usuario NO lista, buscado y ausente. Sigue sin existir `blocked`:
+lo *regulatoriamente* imposible se borra; esto se conserva porque volvería intacto.
+
+**Y el filtro tenía que vivir en el read-path, no en si la fila existe.** `snapshot_repo.primary_etf`
+filtraba por VENUE, que es una **heurística** de comprabilidad; `broker_absent` es una **medición**
+de lo mismo, y la medición gana. Sin ese cambio la entrada conservada seguiría resolviendo como
+vehículo primario — un `BUY €1.265,87` contra un ticker que no se puede comprar, que es
+literalmente el fallo que el docstring de esa función lleva describiendo desde el 08-28: *«un
+fallback silencioso a un ticker no comprable es estrictamente peor que None»*. `primary_etf` ahora
+excluye `broker_absent`, y el sector resuelve a `None`.
+
+**El coste, medido.** Era el **rank 2 de 26** (composite 62,2, CA 97,7, crowding 2,8) con un BUY
+vivo de **€1.265,87**. El libro REAL nunca lo tuvo — ningún `movement` lo referencia — así que no
+hay posición que deshacer ni P&L que realizar. El universo pasa de 26 a **25** sectores.
+
+**Lo que el re-score destapa vale más que la retirada, y son dos cosas que nadie habría buscado.**
+- **El hueco no fue a la siguiente idea comprable: fue a caja.** Los targets de las otras cinco
+  filas quedan **idénticos** al punto decimal (pharma 14,91 · semis 10,24 · water 17,32 · robotics
+  10,05). El 6º puesto del libro modelo lo hereda `biotech_drug_development` con **€1.265,87** —
+  el mismo euro que tenía cloud — y la tabla lo emite **HOLD**: *«gap open but no rule condition
+  met»*. Es `buy_if.rank_max: 5` contra un `rank_in_portfolio` de 6. **Antes ese 6º puesto lo
+  ocupaba `copper_miners`, que está HELD**, así que la regla nunca tuvo que comprarlo y el techo
+  no mordía. Ahora el 6º puesto del libro es estructuralmente **incomprable**. Esto es evidencia
+  NUEVA para la decisión abierta de v12 sobre `buy_if`, cuyo propio comentario dice *«no cuesta
+  nada hoy: las compras están en rank 1, 2 y 4»* — hoy cuesta **€1.265,87**, y el shortfall de
+  despliegue sube **48,68 → 54,33pp**.
+- **Cyber NO vuelve por sí solo, y pierde terreno.** Sale de 8/26 y entra en **8/25**: con cloud
+  fuera todos los de debajo suben un puesto y cyber es el único que no. Le adelanta
+  `uranium_miners` (9 → **7**), y el mecanismo es que **el crowding se re-percentila al cambiar el
+  universo**: cloud era el ancla baja (2,8, el menos concentrado de los 26), así que al salir el
+  crowding MEDIDO de uranium cae **58,3 → 44,1** y su composite sube 53,9 → 55,6. El de cyber se
+  queda clavado en **75,0** porque no está medido — es el valor de la ETIQUETA `crowded` de
+  `crowding_from_maturity`. **Cyber compite con una etiqueta contra rivales medidos, y la etiqueta
+  no responde a un cambio de universo.** Es el `crowding_source` de v8 (etiqueta como fallback
+  declarado) mostrando su coste por primera vez en una decisión concreta.
+
+**Riesgo: la retirada concentra el libro y la tabla lo dice.** `struct_ai_capex_supercycle` pasa a
+**92,1% de la varianza del libro** contra un presupuesto de 35% (+57,1pp), y `BOOK RISK` avisa de
+que la tabla deja el libro MÁS correlacionado de lo que lo encontró (ρ 0,197 → 0,263). Cloud era
+un diversificador real — v13.1 lo midió en ρ 0,08 contra el resto. Perderlo tiene ese precio y
+queda impreso, no escondido.
+
+910 tests en verde (+3 respecto a los 907 que quedaban tras retirar el sector de las tablas de
+señal; la suite ya tenía el invariante que lo exige — `test_flow_data` y
+`test_config_feasibility` fallaron los tres a la vez en cuanto la taxonomía cambió, que es
+exactamente para lo que están).
+
+---
+
+## v13.3 — El ramp tiraba su propio tramo, y el ranking no tenía denominador (2026-09-01)
+
+**Tres huecos que salieron de auditar la tabla del 2026-09-01 como analista externo, no de un
+test.** Ninguno era una constante mal elegida; los tres eran cosas que el sistema hacía sin
+medirlas o medía sin decirlas.
+
+**H1 — el ramp encolaba detrás de la primera fila que no cabía, y tiraba el resto del tramo que
+él mismo acababa de autorizar.** `deployment_ramp_plan` ponía `full = False` en el primer row que
+no entraba y difería TODO lo que venía por detrás. La justificación escrita — «no es una mochila
+que se saltaría al líder para meter dos nombres más baratos» — no aplica: **una fila que no cabe
+se difiere igual**, así que seguir bajando por el ranking no desplaza a nadie; sólo deja de tirar
+el remanente. Vivo: **€1.059,67 de headroom autorizado sin usar**, marcado `headroom_usable: True`,
+con dos filas que SÍ cabían (semis €564, pharma €935) encoladas detrás de una que no (cloud
+€1.266). Colocados €440 de €1.500 autorizados y 2 de 10 operaciones del mes. **El orden por rank
+sigue siendo absoluto** — nunca se salta a un líder PARA HACER SITIO a uno peor, y las concesiones
+siguen siendo a tamaño completo; lo único que cambia es que un row que no cabe deja de bloquear a
+los que vienen detrás. Medido sobre el run vivo: concede además `semiconductors_design` €564,
+desplegado tras el tramo **30,7% → 36,4%**.
+**Y el conflicto de constantes que esto destapa se NOMBRA en vez de resolverse por decreto:**
+`max_step_pp` (15pp = €1.500) es MENOR que `max_position_pct` (17,5% = €1.750), así que una línea a
+tamaño completo no cabe en un tramo entero y no es «para la próxima revisión» — es **nunca**, hasta
+que se mueva una constante o la petición. `tranche_eur` + `unfittable_rows` + un `**` en la acción
+lo separan del `*` de «encolado». Hoy no dispara — la venta de cyber agranda el tramo a €2.064 y
+`water_infrastructure` (€1.732) entra —, y ésa es exactamente la razón de medirlo **después** de
+las ventas: una venta agranda el tramo de verdad. La constante NO se ha tocado: es umbral congelado
+y el mando que limita la mayor apuesta de timing del sistema.
+*Defecto derivado, arreglado en el mismo paso:* el aviso de shortfall citaba `allowed_after_eur`
+(el TECHO que autoriza el tramo) como «ejecuta las filas concedidas». Coincidían mientras el
+llenado gastaba el tramo entero o nada; con backfill el techo **sobreestima** lo que produce
+ejecutar la tabla — aquí en €496. Pasa a `after_eur`.
+
+**H2 — la tabla ponía un breakeven en % al lado de un rank, y nada convertía uno en otro.** Un
+rank es una posición en un orden adimensional; `breakeven_pct` es dinero real. Sin denominador,
+«rank 8 → vende» es un veredicto sin unidades — y la tabla viva vendía una línea al **2,574%** de
+breakeven para comprar otra **0,32 composite_z** por encima. La aritmética es la misma sobre la
+que descansa λ: `E[Δr] ≈ IC · Δz · σ_cs`, luego
+
+    Δz_requerido = breakeven_pct / (IC · σ_cs)
+
+**No es un threshold, y ésa es toda la gracia.** Respira con la fricción de la fila (una compra
+desde caja paga ~0,20%, una rotación ~2,57%: la MISMA fórmula hace desplegar caja **~13× más
+barato** que rotar, una asimetría que nadie tiene que imponer), con la dispersión medida del
+régimen, y con el skill medido. Y tiene la propiedad que el proyecto ya exige en todas partes:
+**IC → 0 manda el listón a infinito**, así que sin edge establecido NINGUNA rotación por rank está
+justificada. Es la medicina que `skill_lambda` da al SIZING, aplicada por fin al turnover — hoy el
+sizing se aparta por falta de edge y la selección rota a pleno rendimiento, y ésa era la costura.
+Pieza nueva en `calibration`: `cross_sectional_sigma` (σ transversal de los retornos forward de una
+ventana, en %) persistida por run como `fwd_dispersion_pct`, y `dispersion()` que devuelve la
+MEDIANA sobre ventanas completas con sus cuartiles. Medido: **σ_cs = 12,26%** (4 ventanas de 63d,
+p25 12,04 · p75 12,78). Con IC 0,20 la rotación cyber→water pediría **1,05z** cuando el gap real es
+0,32z y el spread ENTERO del rank 1 al rank 6 del run son 0,42z.
+**COLUMNA, NO PUERTA, y a propósito.** Promoverla a veto es un cambio de política sobre evidencia
+que aún no existe (el scorecard no tiene ninguna ventana completa), y la disciplina v7 del propio
+proyecto es que una señal nueva viaja a peso 0 hasta que tres ventanas independientes hablen. No
+cancela nada. Las salidas fundamentales — exit watcher, régimen roto, driver muerto, drawdown,
+racha de rank-out — son sobre la POSICIÓN, no sobre un gap marginal, y quedarían fuera del listón
+aunque algún día se armara. `pays` es de **tres valores**: `None` = no medido, y colapsarlo en
+`False` se leería como «medido y rechazado».
+
+**H3 — lo que el modelo aporta de verdad no se imprimía en ningún sitio.** Con λ=0 el ranking no
+dimensiona nada, así que el 100% de la contribución del modelo es QUÉ nombres quedan dentro del
+corte. Tres líneas nuevas, ninguna mueve un euro:
+- **`selection_margin`** — el corte del run se decidió por **+0,025 composite_z** (`copper_miners`
+  dentro, `biotech_drug_development` fuera). Toda la maquinaria colgando de una moneda al aire, y
+  nada lo decía.
+- **`rank_size_spearman`** — **+0,03** entre rank y peso objetivo. Correcto por diseño (el
+  presupuesto de riesgo dimensiona, el ranking selecciona), pero era un hecho asumido y nunca
+  impreso. Y las razones de la tabla decían «rank 4, not held» al lado de un euro en el que el
+  rank no participó: pasan a «rank 4 opens the gate, Xpp under the **risk-budget** target».
+- **`composite_drift` por fila** — `decide_action` lee nivel (rank), régimen y exit watcher, y
+  **nunca la DIRECCIÓN** en la que ha viajado el score. Una tesis puede caerse 23 puntos con el
+  rank intacto y ninguna regla lo ve: `cybersecurity_commercial` **77,1 → 54,0 (−23,1)**, el peor
+  del libro, mientras la tabla lo vendía por «rank 8» — el motivo correcto existía y no estaba en
+  la tabla de reglas. Se publica como columna; convertir el drift en una salida es una regla nueva
+  y necesita su propia evidencia.
+
+**Y el hueco de verdad estaba en el front: el swap ledger NUNCA ha existido en la página.** El
+usuario lo vio antes que yo — «lo veo igual» sobre una tabla que ya llevaba la columna `Δz req`.
+Cierto: la tabla de acciones sólo puede cambiar un asterisco (el fill del ramp concede semis), y el
+único sitio donde el sistema DICE que una rotación no paga es el bloque `SWAP LEDGER`, que se
+calculaba en `plan()`, se renderizaba en el CLI y **no se persistía**. Un dashboard que se hornea
+del lake no puede enseñar lo que el lake no guarda. Nueva tabla `rebalance_swap` (grano propio: una
+rotación es un PAR, no un sector) y bloque nuevo en la página con out/in, fricción, b/e, el gap Δz
+apostado, el Δz que exige el listón y el veredicto. **Se escribe también el ledger VACÍO**: «esta
+tabla no implica ninguna rotación» es un hecho, y dejar en pie el emparejamiento del run anterior
+contestaría una pregunta sobre hoy con las operaciones de ayer.
+
+**En el dashboard, no sólo en el CLI.** Los tres bloques son propiedades del RUN, así que viajan
+al lake a nivel de libro (`book_swap_hurdle_*`, `book_sigma_cs_*`, `book_rank_size_spearman`,
+`book_selection_*`, `book_ramp_tranche_eur|headroom_eur|unfittable`) y el front los hornea desde
+ahí — una página que los re-derivara estaría enseñando los números de otra tarde. Las columnas por
+fila (`dz_required`, `dz_hurdle_verdict`, `composite_drift`…) ya persistían solas, porque `persist`
+serializa la fila entera. En `site/app.js`: tarjeta `swap hurdle` en la tira de resumen, columna
+`Δz req` en la tabla de acciones, `**` para el row que excede un tramo entero, y un panel
+**SELECTION** con el margen del corte, el ρ rank↔tamaño y el drift por línea. Copy en inglés, como
+todo el dashboard.
+
+909 tests en verde (+19).
+
 ## v13.2 — El techo de posición se aplicaba sobre una base que no era la suya, y aplastaba el sizing entero a equiponderado (2026-09-01)
 
 **Salió de una observación del usuario sobre la tabla, no de un test:** «los que pones 700 es para

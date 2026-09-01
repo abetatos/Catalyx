@@ -503,9 +503,36 @@ sectors:
 - id: cloud_software_saas
   label: "Cloud Software & SaaS"
   parent: technology
-  investable: true
+  investable: false
   etf_proxy_quality: good
   demand_drivers: ["Enterprise IT spend", "AI feature monetization", "ARR growth rates"]
+
+  watch_only: true
+  retired_2026_09_01: true
+  retired_reason: >-
+    Sin vehiculo listado en el broker del usuario (Revolut ES). NO es el caso PRIIPs de
+    oil_services / us_defense_primes: los UCITS EXISTEN y son comprables en teoria
+    (WisdomTree Cloud Computing IE00BJGWQN72 en LSE/Milan/Paris/SIX; First Trust Cloud
+    Computing IE00BFD2H405 como SKYE en Xetra y Amsterdam; HAN-GINS SKYY; iShares
+    Digitalisation DGTL). El usuario los busco uno a uno el 2026-09-01 y NINGUNO aparece,
+    mientras USPY.L / SEMI.L / 4COP.DE si aparecen en el mismo buscador -- asi que el
+    problema es la lista curada del broker, no la regulacion ni el buscador. Retirado en
+    vez de sustituido: los dos candidatos que se evaluaron miden la beta equivocada.
+    QDVE.DE (iShares S&P 500 IT) correlaciona 0.74 semanal EUR con SEMI.L -- que YA se
+    tiene -- contra 0.36 con WCLD.L: comprarlo como "cloud" es doblar semis. Y USPY.L es
+    el vehiculo de cybersecurity_commercial cerrado ese mismo dia; correlaciona 0.83 con
+    WCLD.L pero puntua momentum 81.5 contra 41.7, o sea comparten el factor "software US
+    de beta alta" y no el nivel ni la tendencia. Sustituir por correlacion es meter rho en
+    la SELECCION, que es justo lo que v13.0 declino hacer sin un IC delante.
+    Coste de la retirada, medido sobre run_20260901: era el rank 2 de 26 (composite 62.2,
+    CA 97.7) con un BUY vivo de EUR 1265.87 en la tabla. No se pierde nada mas: el libro
+    real nunca lo tuvo (no hay movement que lo referencie), asi que no hay posicion que
+    deshacer ni P&L que realizar.
+  watch_triggers:
+  - Revolut ES lista cualquiera de WCLD / SKYE / SKYU / FSKY / SKYY / DGTL como ETF (no CFD)
+  - >-
+    El usuario abre un broker adicional con acceso a LSE o Xetra (entonces vuelve directo --
+    el vehiculo y la tesis ya estan verificados, solo faltaba la plaza)
 
 - id: robotics_automation
   label: "Robotics & Industrial Automation"

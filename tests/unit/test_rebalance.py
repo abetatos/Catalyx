@@ -1090,6 +1090,64 @@ def test_ramp_fills_in_rank_order_to_full_size():
     assert plan["after_eur"] == 3500.0 and plan["deferred"] == 2
 
 
+def test_ramp_backfills_behind_a_row_that_does_not_fit():
+    """v13.3 — the tranche is spent, not abandoned at the first row too big for it.
+
+    THE BUG. The fill stopped at the first non-fitting row and queued everything behind it,
+    which on 2026-09-01 left €1,059.67 of ITS OWN authorised headroom unspent while two rows
+    that fit sat in the queue. The written rationale — "not a knapsack that would skip the
+    leader" — does not apply: the leader is deferred either way, so continuing displaces nobody.
+    """
+    rows = [_rm("leader", "BUY", 3000, rank=1), _rm("small", "BUY", 600, rank=4),
+            _rm("smaller", "BUY", 400, rank=6)]
+    plan = rb.deployment_ramp_plan(rows, deployed_eur=2000, deployable_eur=7500,
+                                   total_capital_eur=10000, cfg=_ramp_cfg())
+    assert plan["allowed_after_eur"] == 3500.0
+    assert rows[0]["ramp_state"] == "deferred"            # €3,000 never fit a €1,500 tranche
+    assert rows[1]["ramp_state"] == "granted"             # …and it no longer blocks these
+    assert rows[2]["ramp_state"] == "granted"
+    assert plan["after_eur"] == 3000.0 and plan["headroom_eur"] == 500.0
+
+
+def test_ramp_never_reorders_to_make_room_for_a_lower_rank():
+    """Backfilling is not knapsacking. A row is granted only when it fits AT THE MOMENT the
+    ranking reaches it — never by skipping a higher-ranked row that WOULD have fitted."""
+    # Listed in the WRONG order on purpose: rank 1 is second in the list and smaller-but-first
+    # would have eaten the room. Only one of the two fits the €1,500 tranche.
+    rows = [_rm("lower_rank", "BUY", 1000, rank=2), _rm("leader", "BUY", 1200, rank=1)]
+    plan = rb.deployment_ramp_plan(rows, deployed_eur=2000, deployable_eur=7500,
+                                   total_capital_eur=10000, cfg=_ramp_cfg())
+    assert rows[1]["ramp_state"] == "granted"             # rank 1 gets first refusal
+    assert rows[0]["ramp_state"] == "deferred"            # …and rank 2 does not jump it
+    assert rows[1]["trade_eur"] == 1200.0                 # grants stay FULL size
+    assert plan["after_eur"] == 3200.0
+
+
+def test_ramp_names_a_row_that_exceeds_a_whole_tranche():
+    """`max_step_pp` 15pp against `max_position_pct` 17.5pp makes a full-size line unbuyable in
+    ANY review, not merely this one. Deferred and never-fits look identical on the table and are
+    not the same state: one says "next review", the other says "never, until a constant moves"."""
+    rows = [_rm("too_big", "BUY", 1750, rank=1)]
+    plan = rb.deployment_ramp_plan(rows, deployed_eur=2000, deployable_eur=7500,
+                                   total_capital_eur=10000, cfg=_ramp_cfg())
+    assert plan["tranche_eur"] == 1500.0
+    assert plan["unfittable"] == 1
+    assert plan["unfittable_rows"][0]["excess_eur"] == 250.0
+    assert rows[0]["ramp_never_fits"] is True
+    assert "EXCEED a whole tranche" in plan["note"]
+
+
+def test_ramp_sell_room_can_make_a_big_row_fittable():
+    """The never-fits test runs AFTER the sells have given their room back — a sale genuinely
+    enlarges this review's tranche, and calling the row permanently unbuyable would be false."""
+    rows = [_rm("out", "TRIM", -600, rank=9), _rm("too_big", "BUY", 1750, rank=1)]
+    plan = rb.deployment_ramp_plan(rows, deployed_eur=2000, deployable_eur=7500,
+                                   total_capital_eur=10000, cfg=_ramp_cfg())
+    assert plan["tranche_eur"] == 2100.0
+    assert plan["unfittable"] == 0
+    assert rows[1]["ramp_state"] == "granted"
+
+
 def test_ramp_caps_the_net_so_a_rotation_is_untouched():
     """It rations scaling IN, not turnover: sell €1,000 and buy €1,000 and the deployed share
     has not moved, so the ramp has nothing to say about it."""
@@ -1239,3 +1297,120 @@ def test_an_unmigrated_config_centres_the_ramp_on_its_old_cliff():
                              "floor": 0.40, "ceiling": 1.00}}
     assert rb.deploy_ratio(5, 25.0, legacy)["vix_brake_pp"] == pytest.approx(0.0)
     assert rb.deploy_ratio(5, 35.0, legacy)["vix_brake_pp"] == pytest.approx(0.20)
+
+
+# ── The swap hurdle — friction and skill in one unit (v13.3) ─────────────────
+
+_DISP = {"sigma_cs_pct": 12.26, "n_windows": 4, "horizon_days": 63}
+
+
+def test_swap_hurdle_is_unbounded_when_the_ic_stands_aside():
+    """The property the whole mechanism exists for: IC → 0 sends the hurdle to infinity, so with
+    no measured edge NO rank-based rotation is justified — the same discipline `skill_lambda`
+    already applies to SIZING, finally applied to turnover."""
+    h = rb.swap_hurdle({"armed": False, "ic": -0.143, "why": "STANDS ASIDE — IC negative"}, _DISP)
+    assert h["verdict"] == "UNPAYABLE"
+    assert h["ic_effective"] == 0.0
+    assert rb.dz_required(2.574, h) is None               # None = unbounded, never 0
+
+
+def test_swap_hurdle_never_inverts_on_a_negative_ic():
+    """A negative IC disables the hurdle; it never runs it backwards to reward churn."""
+    h = rb.swap_hurdle({"armed": True, "ic": -0.30, "why": "armed"}, _DISP)
+    assert h["ic_effective"] == 0.0 and rb.dz_required(1.0, h) is None
+
+
+def test_swap_hurdle_unmeasured_is_not_unpayable():
+    """Two different states that must not wear the same answer: nobody measured the dispersion
+    vs the dispersion is measured and the skill cannot pay for the trade."""
+    h = rb.swap_hurdle({"armed": True, "ic": 0.25, "why": "armed"}, {"sigma_cs_pct": None})
+    assert h["verdict"] == "UNMEASURED"
+
+
+def test_swap_hurdle_makes_deploying_cash_cheaper_than_rotating():
+    """The asymmetry nobody has to impose: a buy from cash pays its spread (~0.20%), a rotation
+    pays CGT too (~2.57%), so the same formula demands ~13× the gap to churn."""
+    h = rb.swap_hurdle({"armed": True, "ic": 0.20, "why": "armed"}, _DISP)
+    rotate, deploy = rb.dz_required(2.574, h), rb.dz_required(0.20, h)
+    assert rotate > deploy
+    assert 12.0 < rotate / deploy < 13.5
+
+
+def test_swap_hurdle_falls_as_dispersion_rises():
+    """Not a threshold: the same friction is a smaller ask when outcomes spread further apart."""
+    h_calm = rb.swap_hurdle({"armed": True, "ic": 0.20, "why": ""}, {"sigma_cs_pct": 10.0})
+    h_wild = rb.swap_hurdle({"armed": True, "ic": 0.20, "why": ""}, {"sigma_cs_pct": 20.0})
+    assert rb.dz_required(2.0, h_calm) > rb.dz_required(2.0, h_wild)
+
+
+def test_swap_edge_pays_is_three_valued():
+    """`pays: None` means "not measured" and must never collapse into False, which would read as
+    "measured and rejected"."""
+    z = {"a": {"composite_z": 0.10}, "b": {"composite_z": 1.60}}
+    armed = rb.swap_hurdle({"armed": True, "ic": 0.20, "why": ""}, _DISP)
+    assert rb._swap_edge("a", "b", 2.574, z, armed)["pays"] is True
+    assert rb._swap_edge("a", "b", 2.574, {"a": {"composite_z": 0.10},
+                                           "b": {"composite_z": 0.30}}, armed)["pays"] is False
+    unmeasured = rb.swap_hurdle({"armed": True, "ic": 0.20, "why": ""}, {"sigma_cs_pct": None})
+    assert rb._swap_edge("a", "b", 2.574, z, unmeasured)["pays"] is None
+    assert rb._swap_edge("a", "unknown", 2.574, z, armed)["pays"] is None
+
+
+def test_rank_size_spearman_reports_that_rank_did_not_size():
+    """At λ=0 the ranking selects and the risk budget sizes — a fact the table asserted in its
+    reasons and never measured."""
+    # The live 2026-09-01 book: rank 1 is 5th by size and the largest name is rank 4.
+    rows = [{"score_rank": 1, "target_pct": 10.1}, {"score_rank": 2, "target_pct": 12.7},
+            {"score_rank": 3, "target_pct": 10.2}, {"score_rank": 4, "target_pct": 17.3},
+            {"score_rank": 5, "target_pct": 14.9}, {"score_rank": 6, "target_pct": 9.8}]
+    assert abs(rb.rank_size_spearman(rows)) < 0.5
+    ordered = [{"score_rank": i, "target_pct": 20 - i} for i in range(1, 6)]
+    assert rb.rank_size_spearman(ordered) == -1.0         # rank 1 = biggest
+
+
+def test_rank_size_spearman_needs_a_sample():
+    assert rb.rank_size_spearman([{"score_rank": 1, "target_pct": 5.0}]) is None
+    assert rb.rank_size_spearman([{"score_rank": None, "target_pct": 5.0}]) is None
+
+
+def test_selection_margin_names_both_sides_of_the_cut():
+    """100% of the model's contribution is the cut when λ=0, so how close it was is the number
+    the book hangs on."""
+    z = {"in1": {"composite_z": 0.90}, "in2": {"composite_z": 0.42},
+         "out1": {"composite_z": 0.40}, "out2": {"composite_z": -0.8}}
+    m = rb.selection_margin(z, {"in1", "in2"})
+    assert m["last_in"] == "in2" and m["first_out"] == "out1"
+    assert m["margin_z"] == 0.02
+
+
+def test_selection_margin_is_none_without_both_sides():
+    z = {"in1": {"composite_z": 0.9}}
+    assert rb.selection_margin(z, {"in1"}) is None
+    assert rb.selection_margin(z, set()) is None
+
+
+def test_swap_ledger_is_persisted_at_its_own_grain(tmp_path):
+    """The one line that says a rotation does not pay for itself lived only in the CLI render, so
+    the dashboard could not show it at all. An EMPTY ledger is written too: "this table implies no
+    rotation" is a fact, and leaving the previous run's pairings standing would answer a question
+    about today with yesterday's trades."""
+    from catalyx.store import lake
+
+    res = {"run_id": "run_test", "strategy": "catalyx", "as_of": "2026-09-01",
+           "book": {"deploy_ratio": {"ratio": 0.75}, "total_capital_eur": 10000.0,
+                    "deployable_eur": 7500.0, "cash_target_eur": 2500.0, "cash_eur": 7500.0,
+                    "cash_action_eur": 0.0, "model": {}},
+           "rows": [{"sector_id": "a", "rule_action": "HOLD", "trade_eur": 0.0}],
+           "swaps": [{"from_sector": "a", "to_sector": "b", "moved_eur": 500.0,
+                      "breakeven_pct": 2.5, "dz_gap": 0.3, "dz_required": None,
+                      "hurdle_verdict": "UNPAYABLE", "pays": False}]}
+    rb.persist(res, lake_dir=tmp_path)
+    df = lake.read_table("rebalance_swap", lake_dir=tmp_path)
+    assert len(df) == 1 and df.iloc[0]["from_sector"] == "a"
+    assert bool(df.iloc[0]["pays"]) is False
+
+    res["swaps"] = []
+    rb.persist(res, lake_dir=tmp_path)
+    df = lake.read_table("rebalance_swap", lake_dir=tmp_path)
+    assert len(df) == 1                                   # the marker row, not the stale pairing
+    assert "from_sector" not in df.columns or df.iloc[0].get("from_sector") is None

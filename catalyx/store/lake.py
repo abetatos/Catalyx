@@ -101,6 +101,13 @@ TABLES: dict[str, tuple[str, list[str]]] = {
     # and the after-tax net edge. Persisted per run so a recommendation can be audited later —
     # did we follow it, and did it pay?
     "rebalance":          ("portfolio/rebalance",         ["run_id"]),
+    # the SWAP ledger: one row per (sell leg → buy leg) pairing the table implies, with the CGT
+    # pro-rated across the legs a single sale funds, the round-trip breakeven, and — since v13.3 —
+    # the composite_z gap the rotation is betting on against the gap its own friction demands.
+    # A different grain from `rebalance` (a rotation is a PAIR, not a sector), so its own table.
+    # Persisted because the one line that says a rotation does not pay for itself lived only in
+    # the CLI render, and the dashboard therefore could not show it at all.
+    "rebalance_swap":     ("portfolio/rebalance_swap",    ["run_id"]),
     # every deviation from a rule action, with author + reason. The anti-conservatism ledger:
     # overrides are scored against the rule they replaced once the window matures.
     "override_log":       ("portfolio/override_log",      ["run_id"]),
