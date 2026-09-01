@@ -13,6 +13,129 @@
 
 
 
+## v14.2 — Dos cotizaciones del mismo fondo, y la tabla solo veía una (2026-09-01)
+
+**No salió de un test: salió de ejecutar.** El usuario ejecutó las cuatro filas de la tabla del
+run `run_20260901_165828` entre las 18:34 y las 18:39 — pharma €935, semis €564, water €1.732,
+robotics €1.005 — y al registrarlas y recalcular, la tabla volvió a pedir **`ADD semis €564`**:
+dinero que ya estaba puesto.
+
+**La causa es una línea.** `movement_repo.positions()` está indexado por ETF, y eso es correcto y
+tiene que seguir así — dos cotizaciones de un fondo son dos LOTES, con su cantidad, su base de
+coste y su divisa de cotización, y el NAV tiene que marcar cada uno a su propio precio. Pero la
+tabla de rebalanceo hace una pregunta de SECTOR («cuánto del libro está en semis») y la contestaba
+con `{p["sector_id"]: p for p in book["positions"]}`: **con dos lotes del mismo sector, el segundo
+pisa al primero**. Gana el último, y el dinero del otro lote desaparece de la comparación sin
+error, sin aviso y sin traza.
+
+**Por qué apareció justo ahora.** El add de semis se ejecutó en **SEC0.DE** — la línea de Xetra en
+EUR — mientras el lote en cartera vivía en **SEMI.L**, la de LSE en GBP. Mismo fondo (`longName`
+idéntico en yfinance, mismo AUM), una sola posición económica, dos lotes. La tabla leyó `act% 4,6`
+del lote de SEMI.L solo e imprimió un `ADD €564` **para comprar por segunda vez la misma
+exposición**. Todo lo demás estaba bien: el fill, el fichero de movimiento y `positions()` eran
+correctos. Pharma no lo sufrió porque su add fue sobre `IUHE.AS`, el mismo ETF que ya tenía — el
+defecto solo se manifiesta cuando el bróker te lleva a otra línea del mismo fondo, que es
+exactamente lo que acaba de pasar por primera vez.
+
+**El arreglo es `_positions_by_sector()`, y cada regla de fusión se inclina hacia ACTUAR:**
+- `invested_eur` **suma**. Ese era el problema entero.
+- `market_value_eur` suma **solo si TODOS los lotes están marcados**, si no `None`. Sumar un lote
+  marcado a mercado con uno a base de coste es el bug de divisas de v2.25 con otro disfraz;
+  `None` es un hecho que el llamante ya sabe tratar (cae a `invested` sumado), una mezcla no.
+- `suggested_action` y `drawdown` toman **el más severo** de los lotes. Una fusión que escondiera
+  la señal de salida de un lote detrás de otro más sano sería un mecanismo que cancela una venta,
+  y esos tienen que fallar **hacia la venta**.
+- `etf` nombra el lote que la tabla debe operar: el que coincide con el `primary_etf` de hoy si
+  alguno lo hace, si no el mayor por base de coste. Nombrar un vehículo que hoy nadie compraría es
+  cómo un universo stale llega a la orden.
+- `attribution` concatena — un driver detrás de cualquier lote es un driver detrás de la posición.
+
+**Medido, misma cartera y mismos scores:** semis pasa de `act% 4,6` con `ADD €564` a **`act% 10,2`
+contra un target de 10,2 → HOLD**, gap €1. Desplegado **57% → 63%** (los €564 fantasma dejan de
+contar como caja), y la tabla queda en **HOLD en las cinco líneas**: el libro está donde el modelo
+lo quiere.
+
+**Estado tras ejecutar las cuatro filas:** desplegado **21% → 63%** (€6.306), shortfall **54,3 →
+11,9pp**, vol del libro **13,0%**, ρ medio 0,271. `struct_ai_capex_supercycle` sigue en **85,2% de
+la varianza** contra un presupuesto del 35% — la concentración que la salida de cloud agravó no la
+arregla desplegar.
+
+**Las tres filas encoladas se ejecutaron, y eso es un override, no cumplimiento.** El ramp
+concedió UNA fila este ciclo (robotics €1.005) y encoló las otras tres (€3.231). Se ejecutaron
+igual, llevando el despliegue de 21% a 63% a los precios de una sola tarde — que es la apuesta de
+timing que `max_step_pp` existe para trocear. Registrado en el `override_log` de
+`run_20260901_165828`, autor **`user`**, `rule_trade_eur: 0` contra el `chosen_trade_eur` real, y
+se preciará a ~21 días contra el €0 que el ramp autorizaba. La razón que lo sostiene, escrita: el
+shortfall llevaba 3 runs por encima del límite y la regla de persistencia obliga a ejecutar o a
+justificar. `water` además venía marcada `**` — excedía un tramo entero (€1.732 > €1.500), o sea
+que a tamaño completo no era «la próxima revisión» sino **nunca**; ejecutarla resuelve de facto el
+conflicto entre `max_step_pp` y `max_position_pct` que el fichero de proyecto dejó a propósito sin
+resolver.
+
+**Config tocada por los fills, no por criterio.** `SEC0.DE` entra en `etf_universe.yaml` como
+`verified` tier-1 (mismo fondo que SEMI.L, línea EUR — para un residente en España evita el spread
+de FX que la GBP cobra en cada operación), y pasa a **cabeza de la cadena de momentum**: la regla
+es puntuar el vehículo que se OPERA, y `test_the_scored_vehicle_is_the_recommended_vehicle` lo
+cazó en el mismo commit en cuanto `primary_etf` y `SECTOR_TICKERS[0]` divergieron. `IQQQ.DE` y
+`2B76.DE` pasan de `assumed` a `verified` con su `verified_note` — el contrapunto útil al `assumed`
+de WCLD.L que falló el mismo día.
+
+918 tests en verde (+4): los tres de fusión de lotes y el de paso-por-referencia cuando el sector
+tiene un solo lote.
+
+---
+
+## v14.1 — El segundo `assumed` que falla, y esta vez lo que falta es la PLAZA, no el fondo (2026-09-01)
+
+**Mismo disparador que v14.0 y desenlace opuesto.** El usuario, delante del buscador del broker:
+«el BTEC no lo tengo, tengo OM3E y NBTK». `BTEC.L` era tier-1 de `biotech_drug_development` desde
+el corte del 08-27, era el ticker contra el que se puntuaba el sector y el que la tabla venía
+recomendando. Es el segundo `assumed` comprobado en 24 horas y el segundo que se cae — pero
+**aquí el instrumento existe y es comprable**: `OM3E` es el MISMO fondo (iShares IV,
+`IE00BYXG2H39`), su línea alemana en EUR. Lo ausente es la cotización de LSE, no el vehículo, así
+que **el sector no se retira**: es el patrón de `IQQQ.DE`, `PPFB.DE` y `2B76.DE` (comprar la línea
+que el buscador devuelve), no el de `cloud_software_saas`. Lo que sí es nuevo frente a esos tres
+es que **cambia el emisor**, porque del fondo de iShares no hay línea de Xetra: yfinance solo lo
+cotiza en plazas regionales (Múnich, Düsseldorf, Hamburgo).
+
+**Cuál de los dos comprables PUNTÚA es una decisión medida, no una preferencia.** `OM3E` es el
+fondo grande ($1.147M) y el sucesor natural, y aun así **no es el que se puntúa**: su cotización de
+Múnich es de creador de mercado — volumen medio **6 títulos**, bid/ask 8,789/9,11 = **358bps**,
+**245 de 254 días a volumen cero** — y mide **ρ semanal EUR 0,727 contra SU PROPIA línea de LSE**,
+que siendo el mismo fondo debería dar ~1,00. Ese 0,27 es ruido de cotización, no exposición, y
+puntuar sobre él lo metería entero en el compuesto. `NBTK.DE` (Invesco NASDAQ Biotech UCITS,
+XETRA, EUR, $476M, volumen medio ~6.000, spread **37bps**) sigue el **mismo índice** NASDAQ
+Biotechnology y mide **ρ 0,984** contra `BTEC.L`, con retornos 3m/6m/12m dentro de **0,6pp**.
+Nótese el contraste con v14.0, donde los dos sustitutos evaluados medían la beta equivocada
+(`QDVE.DE` ρ 0,74 con semis, que ya se tienen): **aquí el sustituto ES el índice**, así que
+sustituir no es meterse en la SELECCIÓN. `NBTK.DE` a tier-1 (y `SECTOR_TICKERS`), `OM3E.MU` tier-2
+comprable, `HEAL.L` sin comprobar, `BTEC.L` a **`broker_absent`** tier-3 — conservado intacto,
+vuelve a tier-1 el día que aparezca. `primary_etf` → `NBTK.DE`; `flow_data` mantiene `IBB` detrás
+porque, siguiendo NBTK el mismo índice, `IBB` es su hermano US exacto. Ambos nuevos quedan
+`assumed`, no `verified`: en este fichero `verified` significa **operado de hecho**, y la
+confirmación del buscador va en las notas, igual que en `PPFB.DE`.
+
+**El estudio se corrige donde está vivo y NO se le toca la fecha.** `key_metrics_to_monitor` decía
+«BTEC.L (traded vehicle)» y ahora nombra `NBTK.DE`/`OM3E`; el bloque `etf_analysis` (DEPRECATED
+desde schema 1.3) se anota apuntando a `etf_universe.yaml`. `last_updated` **no se sube a
+propósito**: ha cambiado el vehículo, no la evidencia, y subirla fingiría frescura sobre un estudio
+que la propia tabla marca `blind` a 148 días.
+
+**Y el hallazgo del re-score vale más que el cambio de vehículo.** El coste directo es
+despreciable: momentum **79,0 → 79,4**. Pero `NBTK.DE` **no tiene retorno 12-1**, porque un fetch
+de `period="1y"` devuelve **251 barras** en Xetra y `_safe_return` necesita 253 — así que biotech
+cae del spec oficial de v8 (`12_1_52w`, promovido con backtest) al `3m6m_fallback`. Medido sobre
+el universo entero: **15 de 26** vehículos de `chain[0]` están HOY en el fallback, y una ventana de
+15 meses recupera el 12-1 en todos los probados (NBTK 53,72 · 4COP 92,44 · IQQQ 1,37 · 2B76 39,39
+· INFR 9,70 · GLUX −0,76). O sea: **el spec oficial de momentum se está aplicando a 11 de 26
+sectores**, y los excluidos son justamente las líneas de Xetra que la migración por realidad del
+bróker no para de añadir — la cobertura ENCOGE cada vez que se corrige un vehículo. **No se
+arregla aquí:** ampliar la ventana de fetch re-rankea el universo entero, y hacerlo dentro del edit
+que cambia un vehículo destruye la atribución del efecto — la misma razón por la que `n_target`
+sigue sin moverse. Queda como decisión abierta con la medición delante. 914 tests en verde.
+
+---
+
 ## v14.0 — El primer `assumed` que se comprueba y falla: cloud sale del universo (2026-09-01)
 
 **No salió de un test ni de una auditoría: el usuario fue a comprar y el vehículo no estaba.**

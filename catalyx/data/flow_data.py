@@ -131,7 +131,7 @@ SECTOR_FLOW_TICKERS: dict[str, list[str]] = {
     # Su cadena era ["WCLD.L", "WCLD", "CLOU", "IGV"].
     # ── SALUD ───────────────────────────────────────────────────────────────────
     "pharma_large_cap":               ["IUHE.AS", "XLV", "IHE"],           # IUHE.AS sigue S&P500 Health Care → XLV es el hermano US exacto
-    "biotech_drug_development":       ["BTEC.L", "IBB", "XBI"],
+    "biotech_drug_development":       ["NBTK.DE", "IBB", "XBI"],   # NBTK.DE sigue el NASDAQ Biotechnology → IBB es su hermano US exacto
     # ── ACTIVOS REALES Y CONSUMO ────────────────────────────────────────────────
     "infrastructure_core":            ["INFR.L", "IFRA", "PAVE"],
     "luxury_goods":                   ["GLUX.SW", "LUXU.L"],               # sin ETF US de lujo puro — solo UCITS, puede quedarse en `estimated`

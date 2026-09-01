@@ -493,12 +493,16 @@ etf_universe:
       currency: EUR
       ucits: true
       instrument: etf
-      broker_access: assumed
+      broker_access: verified
       ter: null
       aum_m_usd: 2196
       recommendation_tier: 1
       notes: "MISMO fondo que IH2O.L, linea Xetra en EUR. Promovido a tier-1 el 2026-09-01 porque el buscador del broker NO devuelve IH2O: devuelve HTO (H2O America) y GWRS (Global Water Resources), dos utilities US de ACCION UNICA — el matcheo es por el texto 'water', no por el vehiculo. IQQQ si aparece. Es tambien la linea correcta para puntuar: se paga en EUR."
       last_verified: "2026-09-01"
+      verified_note: >-
+        `assumed` -> `verified` el 2026-09-01: apertura ejecutada de hecho en Revolut
+        (26.48723046 uds a 65.39 EUR = EUR 1732). Segundo `assumed` que se comprueba, y
+        este pasa -- contrapunto util al de WCLD.L, que fallo el mismo dia.
     - ticker: "IH2O.L"
       name: "iShares Global Water UCITS ETF USD (Dist)"
       exchange: LSE
@@ -549,6 +553,27 @@ etf_universe:
   # ==========================================================================
 
   semiconductors_design:
+    - ticker: "SEC0.DE"
+      name: "iShares MSCI Global Semiconductors UCITS ETF USD Acc"
+      exchange: XETRA
+      currency: EUR
+      ucits: true
+      instrument: etf
+      broker_access: verified
+      ter: null
+      aum_m_usd: 5457
+      recommendation_tier: 1
+      notes: >-
+        EN CARTERA desde 2026-09-01 (add de EUR 564). MISMO FONDO que SEMI.L -- identico
+        longName en yfinance, mismo AUM -- pero es la linea de XETRA cotizada en EUR, no la
+        de LSE en GBP. Se anade porque se opero de hecho: el add del rebalance se ejecuto
+        aqui, asi que la posicion de semis vive AHORA EN DOS COTIZACIONES del mismo fondo,
+        con dos divisas de cotizacion. No es un error de identidad (el gate del universo v2.0
+        se cumple: longName verificado contra yfinance el 2026-09-01, 16.52 EUR de fill
+        contra 16.566 de cierre previo), pero SI es dos lotes que hay que sumar para leer la
+        exposicion del sector. Tier 1 igual que SEMI.L: para un residente en Espana la linea
+        EUR evita el spread de FX que la GBP cobra en cada operacion.
+      last_verified: "2026-09-01"
     - ticker: "SEMI.L"
       name: "iShares MSCI Global Semiconductors UCITS ETF USD Acc"
       exchange: LSE
@@ -651,12 +676,15 @@ etf_universe:
       currency: EUR
       ucits: true
       instrument: etf
-      broker_access: assumed
+      broker_access: verified
       ter: null
       aum_m_usd: 5217
       recommendation_tier: 1
       notes: "MISMO fondo que RBOT.L (acumulacion), linea Xetra en EUR. Promovido a tier-1 el 2026-09-01: es el codigo con el que el vehiculo aparece en el buscador del broker. Cotizar en EUR no cubre la divisa — la exposicion subyacente sigue siendo USD."
       last_verified: "2026-09-01"
+      verified_note: >-
+        `assumed` -> `verified` el 2026-09-01: apertura ejecutada de hecho en Revolut
+        (55.52486187 uds a 18.10 EUR = EUR 1005).
     - ticker: "RBOT.L"
       name: "iShares Automation & Robotics UCITS ETF USD (Acc)"
       exchange: LSE
@@ -774,18 +802,47 @@ etf_universe:
       last_verified: "2026-08-27"
 
   biotech_drug_development:
-    - ticker: "BTEC.L"
-      name: "iShares Nasdaq US Biotechnology UCITS ETF USD (Acc)"
-      exchange: LSE
-      currency: USD
+    - ticker: "NBTK.DE"
+      name: "Invesco NASDAQ Biotech UCITS ETF"
+      exchange: XETRA
+      currency: EUR
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 476
+      recommendation_tier: 1
+      notes: >-
+        MISMO INDICE que BTEC.L (NASDAQ Biotechnology, la forma IBB del sector), pero otra
+        gestora y linea de XETRA en EUR. Promovido a tier-1 el 2026-09-01: el usuario NO tiene
+        BTEC en el buscador del broker y SI tiene este y OM3E. Es ademas el que se PUNTUA
+        (`market_data.SECTOR_TICKERS`) porque de los dos comprables es el unico con serie
+        fiable -- XETRA, volumen medio ~6.000 titulos, bid/ask 64,16/64,40 = 37bps, rho semanal
+        EUR 0,984 contra BTEC.L y retornos 3m/6m/12m dentro de 0,6pp. Misma regla que IQQQ.DE
+        y PPFB.DE (comprar la linea que el broker devuelve), con una diferencia: aqui cambia el
+        EMISOR, porque del fondo de iShares no existe linea de Xetra.
+      last_verified: "2026-09-01"
+    - ticker: "OM3E.MU"
+      name: "iShares IV plc - iShares NASDAQ US Biotechnology UCITS ETF"
+      exchange: MUNICH
+      currency: EUR
       ucits: true
       instrument: etf
       broker_access: assumed
       ter: null
       aum_m_usd: 1147
-      recommendation_tier: 1
-      notes: "Rescata el sector: equivalente UCITS de IBB. Sustituye a XBI/IBB (US)."
-      last_verified: "2026-08-27"
+      recommendation_tier: 2
+      notes: >-
+        MISMO FONDO que BTEC.L (iShares IV, IE00BYXG2H39), linea alemana en EUR: es el codigo
+        con el que el usuario SI lo ve en el broker (2026-09-01). COMPRABLE, y por tamano
+        ($1.147M vs $476M) el vehiculo preferible del sector. NO es el que se puntua: yfinance
+        solo lo cotiza en plazas regionales (Munich, Dusseldorf, Hamburgo -- no hay linea de
+        Xetra) y esa cotizacion es de creador de mercado -- volumen medio 6 titulos, bid/ask
+        8,789/9,11 = 358bps, 245 de 254 dias con volumen cero. MEDIDO: rho semanal EUR 0,727
+        contra SU PROPIA linea de LSE, que siendo el mismo fondo deberia ser ~1,00; ese 0,27
+        es ruido de cotizacion, no exposicion, y puntuar sobre el meteria ese ruido en el
+        compuesto. MUNICH no esta en PRIIPS_VENUES, asi que `primary_etf` tampoco lo elige.
+      last_verified: "2026-09-01"
     - ticker: "HEAL.L"
       name: "iShares Healthcare Innovation UCITS ETF USD (Acc)"
       exchange: LSE
@@ -796,8 +853,26 @@ etf_universe:
       ter: null
       aum_m_usd: 1186
       recommendation_tier: 2
-      notes: "Innovacion en salud (mas amplio: genomica + dispositivos). Absorbe genomics_precision_medicine y medical_devices, ya watch-only."
+      notes: "Innovacion en salud (mas amplio: genomica + dispositivos). Absorbe genomics_precision_medicine y medical_devices, ya watch-only. No comprobado en el buscador del broker."
       last_verified: "2026-08-27"
+    - ticker: "BTEC.L"
+      name: "iShares Nasdaq US Biotechnology UCITS ETF USD (Acc)"
+      exchange: LSE
+      currency: USD
+      ucits: true
+      instrument: etf
+      broker_access: broker_absent
+      ter: null
+      aum_m_usd: 1147
+      recommendation_tier: 3
+      notes: >-
+        NO LISTADO EN REVOLUT ES (usuario, 2026-09-01: 'el BTEC no lo tengo'). Era tier-1 desde
+        el corte del 08-27 y es el ticker contra el que se venia puntuando y recomendando el
+        sector. A DIFERENCIA de cloud_software_saas, el FONDO si esta disponible: es OM3E, su
+        linea alemana en EUR -- lo ausente es la plaza de LSE, no el instrumento, asi que el
+        sector NO se retira. Se conserva intacto (nada se borra) y vuelve a tier-1 si aparece.
+        BTEK.L es la misma clase en GBp; tampoco comprobada.
+      last_verified: "2026-09-01"
 
   # ==========================================================================
   # ACTIVOS REALES Y CONSUMO

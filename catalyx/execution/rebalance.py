@@ -2109,6 +2109,87 @@ def _unrecorded_defers(lake_dir: Path | None = None) -> list[dict]:
     return df[df["author"] == "unrecorded"].to_dict("records")
 
 
+def _positions_by_sector(rows: list[dict]) -> dict[str, dict]:
+    """Merge a sector's LOTS into one position. Keyed by sector, because the table is.
+
+    `movement_repo.positions()` is keyed by ETF and must stay that way — two listings of one
+    fund are two lots with their own quantity, cost basis and quoting currency, and NAV has to
+    mark each on its own price. But the rebalance table asks a SECTOR question ("how much of the
+    book is in semis"), and it used to answer it with `{p["sector_id"]: p for p in ...}`, where a
+    second lot in the same sector silently overwrites the first — last one wins, the other lot's
+    money simply vanishes from the comparison.
+
+    That went live on 2026-09-01. The semis add was executed on SEC0.DE (the Xetra EUR line)
+    while the held lot sat on SEMI.L (the LSE GBP line) — the same fund, one economic position.
+    The table read `act% 4.6` from the SEMI.L lot alone and printed `ADD €564` for money that was
+    already in the sector: a recommendation to buy the same exposure twice. Nothing else was
+    wrong — the fill, the movement file and `positions()` were all correct.
+
+    Merge rules, and each errs on the side of ACTING rather than of a comfortable number:
+      • `invested_eur` sums. That is the whole point.
+      • `market_value_eur` sums only if EVERY lot has one, else None. Adding a marked lot to a
+        cost-basis lot would be the currency-mixing bug this project already shipped once (v2.25);
+        None is a fact the caller handles (it falls back to summed invested), a blend is not.
+      • `suggested_action` and `drawdown` take the MOST SEVERE across lots. A merge that hides a
+        lot's exit signal behind a healthier lot would be a mechanism that cancels a sale, and
+        those must fail toward the sale.
+      • `etf` names the lot the table should trade: the one matching today's `primary_etf` if any
+        lot does, else the largest by cost basis. Naming a vehicle nobody would buy today is how
+        a stale universe reaches the order ticket.
+      • `attribution` concatenates — `_catalyst_status` reads the union, and a driver behind any
+        lot is a driver behind the position.
+    """
+    from catalyx.store.snapshot_repo import primary_etf
+
+    by_sid: dict[str, list[dict]] = {}
+    for r in rows:
+        sid = r.get("sector_id")
+        if sid:
+            by_sid.setdefault(sid, []).append(r)
+
+    dd_sev = {"exit": 3, "reduce": 2, "warn": 1, "clear": 0, None: -1}
+    out: dict[str, dict] = {}
+    for sid, lots in by_sid.items():
+        if len(lots) == 1:
+            out[sid] = lots[0]
+            continue
+        merged = dict(max(lots, key=lambda x: float(x.get("invested_eur") or 0.0)))
+        merged["invested_eur"] = sum(float(x.get("invested_eur") or 0.0) for x in lots)
+
+        mvs = [((x.get("tax") or {}).get("market_value_eur")) for x in lots]
+        tax = dict(merged.get("tax") or {})
+        tax["market_value_eur"] = (sum(float(v) for v in mvs)
+                                   if mvs and all(v is not None for v in mvs) else None)
+        merged["tax"] = tax
+
+        acts = [x.get("suggested_action") for x in lots if x.get("suggested_action") in PRECEDENCE]
+        merged["suggested_action"] = (min(acts, key=PRECEDENCE.index) if acts
+                                      else next((x.get("suggested_action") for x in lots
+                                                 if x.get("suggested_action")), None))
+
+        dds = [x.get("drawdown") for x in lots if x.get("drawdown")]
+        if dds:
+            merged["drawdown"] = max(dds, key=lambda d: dd_sev.get(d.get("tier"), -1))
+
+        try:
+            pe = primary_etf(sid)
+        except Exception:
+            pe = None
+        match = next((x for x in lots if x.get("etf") == pe), None)
+        merged["etf"] = (match or merged).get("etf")
+
+        attrs: list = []
+        for x in lots:
+            attrs.extend(x.get("attribution") or [])
+        if attrs:
+            merged["attribution"] = attrs
+
+        merged["lots"] = [{"etf": x.get("etf"), "invested_eur": x.get("invested_eur")}
+                          for x in lots]
+        out[sid] = merged
+    return out
+
+
 def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None = None,
           exit_fn=None, lake_dir: Path | None = None, total_capital: float | None = None,
           expected_fn=None, overrides_fn=None) -> dict:
@@ -2123,7 +2204,7 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
 
     exit_fn = exit_fn or (lambda: exit_watcher.assess(persist=False, lake_dir=lake_dir))
     book = exit_fn()
-    positions = {p["sector_id"]: p for p in book.get("positions", []) if p.get("sector_id")}
+    positions = _positions_by_sector(book.get("positions", []) or [])
 
     # The model book is read from the LAST RECORDED RUN, which may predate a taxonomy change or
     # a universe cut. A BUY recommendation for a sector that is no longer buyable is worse than

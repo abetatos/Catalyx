@@ -1414,3 +1414,59 @@ def test_swap_ledger_is_persisted_at_its_own_grain(tmp_path):
     df = lake.read_table("rebalance_swap", lake_dir=tmp_path)
     assert len(df) == 1                                   # the marker row, not the stale pairing
     assert "from_sector" not in df.columns or df.iloc[0].get("from_sector") is None
+
+
+# ── Two listings of one fund are ONE sector position (2026-09-01) ────────────
+#
+# `movement_repo.positions()` is keyed by ETF and must stay so; the rebalance table asks a
+# SECTOR question and used to answer it with a dict comprehension where the second lot
+# overwrote the first. Live consequence: the semis add executed on SEC0.DE while the held lot
+# sat on SEMI.L, and the table read only SEMI.L's EUR 500 — printing `ADD EUR 564` for money
+# already in the sector.
+
+def _lot(sector, etf, invested, mv=None, action=None, dd=None):
+    p = {"sector_id": sector, "etf": etf, "invested_eur": invested,
+         "tax": {"market_value_eur": mv}}
+    if action:
+        p["suggested_action"] = action
+    if dd:
+        p["drawdown"] = dd
+    return p
+
+
+def test_two_lots_of_one_sector_sum_instead_of_overwriting():
+    merged = rb._positions_by_sector([
+        _lot("semiconductors_design", "SEC0.DE", 564.0),
+        _lot("semiconductors_design", "SEMI.L", 500.0),
+    ])
+    assert set(merged) == {"semiconductors_design"}
+    assert merged["semiconductors_design"]["invested_eur"] == 1064.0
+    assert {l["etf"] for l in merged["semiconductors_design"]["lots"]} == {"SEC0.DE", "SEMI.L"}
+
+
+def test_market_value_sums_only_when_every_lot_is_marked():
+    both = rb._positions_by_sector([
+        _lot("s", "A.DE", 100.0, mv=110.0), _lot("s", "B.L", 100.0, mv=90.0)])
+    assert both["s"]["tax"]["market_value_eur"] == 200.0
+
+    # One lot unmarked: a blend of a mark and a cost basis is the currency bug of v2.25 in
+    # another costume. None is a fact the caller already handles (it falls back to invested).
+    partial = rb._positions_by_sector([
+        _lot("s", "A.DE", 100.0, mv=110.0), _lot("s", "B.L", 100.0, mv=None)])
+    assert partial["s"]["tax"]["market_value_eur"] is None
+    assert partial["s"]["invested_eur"] == 200.0
+
+
+def test_the_merge_fails_toward_the_sale():
+    """A healthier lot must never hide another lot's exit signal."""
+    merged = rb._positions_by_sector([
+        _lot("s", "BIG.DE", 900.0, action="HOLD", dd={"tier": "clear"}),
+        _lot("s", "SMALL.L", 100.0, action="SELL", dd={"tier": "exit"}),
+    ])["s"]
+    assert merged["suggested_action"] == "SELL"      # not the dominant lot's HOLD
+    assert merged["drawdown"]["tier"] == "exit"
+
+
+def test_a_single_lot_sector_is_passed_through_untouched():
+    only = _lot("s", "A.DE", 100.0, mv=110.0)
+    assert rb._positions_by_sector([only])["s"] is only

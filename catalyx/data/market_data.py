@@ -77,7 +77,11 @@ SECTOR_TICKERS: dict[str, list[str]] = {
     "eu_retail_banking":             ["EXV1.DE"],
     "crypto_infrastructure":         ["DAPP.L"],
     # ── Tecnologia ───────────────────────────────────────────────────────────
-    "semiconductors_design":         ["SEMI.L", "SMGB.L"],
+    # 2026-09-01: SEC0.DE pasa a cabeza. Es el MISMO fondo que SEMI.L (longName identico en
+    # yfinance) pero la linea de Xetra en EUR, y es donde se ejecuto el add de ese dia. La
+    # regla es puntuar el vehiculo que se OPERA: `test_the_scored_vehicle_is_the_recommended_vehicle`
+    # lo caza en cuanto la cabeza de esta cadena y `primary_etf` divergen.
+    "semiconductors_design":         ["SEC0.DE", "SEMI.L", "SMGB.L"],
     # V9N = Global X Data Center REITs UCITS (53% REITs: EQIX/DLR/AMT/CCI). Antes XAIX.DE,
     # que es IA generalista (0% real estate) y media la beta de otro sector.
     "ai_infrastructure_data_centers":["V9N.DE", "XAIX.DE", "AIAI.L"],
@@ -88,7 +92,13 @@ SECTOR_TICKERS: dict[str, list[str]] = {
     # era ["WCLD.L", "DGTL.L"] — anotada aqui para que vuelva intacta si el sector vuelve.
     # ── Salud ────────────────────────────────────────────────────────────────
     "pharma_large_cap":              ["IUHE.AS", "IUHC.L"],
-    "biotech_drug_development":      ["BTEC.L", "HEAL.L"],
+    # BTEC.L fuera de la cadena 2026-09-01: no esta en el buscador del broker (usuario).
+    # NBTK.DE = mismo indice NASDAQ Biotechnology, linea Xetra EUR, rho semanal EUR 0,984
+    # contra BTEC.L. OM3E.MU es el MISMO fondo que BTEC y tambien comprable, pero su
+    # cotizacion de Munich es de creador de mercado (245/254 dias a volumen cero, spread
+    # 358bps) y mide rho 0,727 contra su propia linea de LSE: se queda fuera de la cadena
+    # a proposito -- un fallback silencioso a una serie de ese ruido puntua otra cosa.
+    "biotech_drug_development":      ["NBTK.DE", "HEAL.L"],
     # ── Activos reales y consumo ─────────────────────────────────────────────
     "infrastructure_core":           ["INFR.L"],
     "luxury_goods":                  ["GLUX.SW", "LUXU.L"],
