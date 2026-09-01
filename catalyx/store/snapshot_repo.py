@@ -90,19 +90,34 @@ def _crowding_for(maturity: str | None) -> float:
     return float(weights.crowding_from_maturity().get(maturity, 35))
 
 
+# Venues whose listings carry a PRIIPs KID and are therefore sellable to a Spanish retail
+# account. This is the buyability test — NOT `ucits`. See `primary_etf`.
+PRIIPS_VENUES = frozenset({"LSE", "XETRA", "EURONEXT", "SIX", "BME", "BORSA_ITALIANA"})
+
+
 def primary_etf(sector_id: str) -> str | None:
     """The vehicle this sector is actually BUYABLE through, or None. One definition, one place.
 
-    UCITS only. The old implementation fell back to the non-UCITS pool (`pool = ucits or etfs`)
-    when a sector had no UCITS entry, which is how `BUY biotech_drug_development €891` came to be
-    printed against **IBB** — a US ETF that PRIIPs makes impossible for this account — on
-    2026-08-28, while `etf_universe.yaml` had carried BTEC.L since the 08-27 universe cut.
+    The filter is the LISTING VENUE, not the `ucits` flag. The original implementation fell back
+    to the non-UCITS pool (`pool = ucits or etfs`) when a sector had no UCITS entry, which is how
+    `BUY biotech_drug_development €891` came to be printed against **IBB** — a US ETF that PRIIPs
+    makes impossible for this account — on 2026-08-28, while `etf_universe.yaml` had carried
+    BTEC.L since the 08-27 universe cut. That was fixed by demanding `ucits: true`, and the fix
+    over-corrected: **UCITS is not what makes a vehicle buyable, a PRIIPs KID is.** A single-metal
+    fund CANNOT be UCITS — UCITS diversification forbids it — so every physical gold and silver
+    vehicle in Europe is legally an ETC, ships a KID, and trades on Xetra and the LSE. The flag
+    conflated "US, no KID, illegal to sell here" with "EU note that is perfectly buyable", and
+    `gold_physical` + `silver_physical` (2 of the 26 investable sectors) resolved to None for
+    months — no ETF in the ranking table, ineligible for a BUY — while the operator could see
+    the fund in the broker (2026-09-01: PPFB, iShares Physical Gold ETC, in Revolut).
 
-    A silent fallback to an unbuyable ticker is strictly worse than `None`: `None` is a fact the
-    caller can act on (drop the sector, substitute another), a US ticker is a recommendation that
-    looks actionable and is not. Sector-level `investable` is NOT the same guarantee — that flag
-    lives in the taxonomy and can lag the universe file — so the vehicle is resolved here, from
-    `etf_universe.yaml`, every time it is needed.
+    A silent fallback to an unbuyable ticker is still strictly worse than `None`: `None` is a fact
+    the caller can act on (drop the sector, substitute another), a US ticker is a recommendation
+    that looks actionable and is not. A US listing fails this test whatever `ucits` or
+    `instrument` claims, which is the guarantee the 08-28 fix was actually reaching for.
+    Sector-level `investable` is NOT the same guarantee — that flag lives in the taxonomy and can
+    lag the universe file — so the vehicle is resolved here, from `etf_universe.yaml`, every time
+    it is needed.
     """
     try:
         data = yaml.safe_load(_ETF_PATH.read_text(encoding="utf-8")) or {}
@@ -112,10 +127,11 @@ def primary_etf(sector_id: str) -> str | None:
     etfs = sectors.get(sector_id) or []
     if not isinstance(etfs, list) or not etfs:
         return None
-    ucits = [e for e in etfs if e.get("ucits")]
-    if not ucits:
+    buyable = [e for e in etfs
+               if str(e.get("exchange", "")).strip().upper() in PRIIPS_VENUES]
+    if not buyable:
         return None
-    return sorted(ucits, key=lambda e: e.get("recommendation_tier", 9))[0].get("ticker")
+    return sorted(buyable, key=lambda e: e.get("recommendation_tier", 9))[0].get("ticker")
 
 
 # Internal alias kept so the existing call sites read unchanged.
@@ -279,6 +295,16 @@ def record_run(top_n: int = 10, notes: str | None = None,
     scored = [score_sector(sid, crowding_risk=crowd_official[sid][0],
                            momentum_snapshot_path=momentum_snapshot_path)
               for sid in sector_ids]
+    # v11 P6 — event tape check: did the market move the way each event claimed? Fed the
+    # catalyst details already computed above so the scorer is not run a second time. Best
+    # effort like every other candidate source: unmeasurable stays None, never 0.
+    try:
+        from catalyx.scorer.event_market_check import compute as _tape
+        tape = _tape({r["sector_id"]: (r.get("catalyst_detail") or {})
+                      for r in scored}).get("sectors", {})
+    except Exception:
+        tape = {}
+
     # v6 H1: the composite is combined in z-space across THIS run's universe, so a nominal
     # weight is the effective weight and a dead dimension is named instead of weighing zero
     # in silence. Must run over the whole universe, before ranking.
@@ -320,6 +346,10 @@ def record_run(top_n: int = 10, notes: str | None = None,
             "ca_unpriced": r.get("ca_unpriced"),
             "flow_resid": r.get("flow_resid"),
             "inst_sponsorship": r.get("inst_sponsorship_score"),
+            # v11 P5/P6 — CA at the ceiling, and whether the tape agreed with the events
+            "ca_logit": r.get("ca_logit"),
+            "event_tape_z": (tape.get(sid) or {}).get("event_tape_z"),
+            "event_tape_n": (tape.get(sid) or {}).get("event_tape_n"),
             "crowding_comomentum": (como.get(sid) or {}).get("crowding_comomentum"),
             "cot_crowding": (cot.get(sid) or {}).get("cot_crowding"),
             "trends_crowding": (trends.get(sid) or {}).get("trends_crowding"),
@@ -660,6 +690,8 @@ def _write_run_to_lake(run_id, run_at, version, git_commit, momentum_snapshot,
         "momentum_12_1": r.get("momentum_12_1"), "near_52w_high": r.get("near_52w_high"),
         "ca_unpriced": r.get("ca_unpriced"), "flow_resid": r.get("flow_resid"),
         "inst_sponsorship": r.get("inst_sponsorship"),
+        "ca_logit": r.get("ca_logit"), "event_tape_z": r.get("event_tape_z"),
+        "event_tape_n": r.get("event_tape_n"),
         "crowding_comomentum": r.get("crowding_comomentum"),
         "cot_crowding": r.get("cot_crowding"),
         "trends_crowding": r.get("trends_crowding"),

@@ -82,6 +82,11 @@ def _primaries_from_lake(snapshot_date: str | None = None) -> tuple[str, dict] |
 
     primaries = {
         row["sector_id"]: {
+            # v10.4: which currency basis the stored returns are on. Rows written before the
+            # migration carry no value → "native": a run must never present a mixed panel as
+            # if it were one basis, and "unknown" is not the same claim as EUR.
+            "return_basis": _clean(row.get("return_basis")) or "native",
+            "currency": _clean(row.get("currency")),
             "return_1m_pct": _clean(row.get("return_1m_pct")),
             "return_3m_pct": _clean(row.get("return_3m_pct")),
             "return_6m_pct": _clean(row.get("return_6m_pct")),
@@ -247,16 +252,29 @@ def compute_momentum_scores(snapshot_path: Path | None = None,
         scores[sector_id] = {
             "momentum_score": round(score, 1),
             "raw_momentum": round(raw, 4),
+            "return_basis": primaries[sector_id].get("return_basis") or "native",
             "momentum_spec_used": spec_used,
             "momentum_12_1": m121,
             "near_52w_high_pct": primaries[sector_id].get("near_52w_high_pct"),
             "data_source": "momentum_engine_v1",
         }
 
+    # v10.4 — a cross-sectional ranking is only meaningful on ONE basis. Say which, and say
+    # so LOUDLY when the panel is mixed (a partial migration, or an FX leg that failed):
+    # this is a diagnostic, never a gate — the rows still rank, they just stop pretending.
+    bases = sorted({(s.get("return_basis") or "native") for s in scores.values()})
+    basis_mixed = len(bases) > 1
+    if basis_mixed:
+        print(f"  WARN momentum panel spans MIXED currency bases {bases} — cross-sectional "
+              "ranks compare returns an operator could not all have earned.", file=sys.stderr)
+
     return {
         "snapshot_date": snapshot_date,
         "source": source,
         "normalization": normalization,
+        "return_basis": bases[0] if len(bases) == 1 else "mixed",
+        "return_basis_values": bases,
+        "basis_mixed": basis_mixed,
         "sector_count": len(scores),
         "momentum_12_1_count": len(raw_12_1s),
         "scores": scores,

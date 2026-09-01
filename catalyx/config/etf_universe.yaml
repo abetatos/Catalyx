@@ -62,6 +62,14 @@
 # ETCs (gold_physical, silver_physical, COPA.L): juridicamente son notas cotizadas,
 # no fondos UCITS. Suelen estar disponibles, pero es la categoria con mas riesgo de
 # no aparecer en Revolut -> marcados `instrument: etc` y priorizados para verificar.
+# NO SON UNA EXCEPCION AL FILTRO DE COMPRABILIDAD, Y NO PUEDEN SERLO: un fondo de un
+# solo metal no PUEDE ser UCITS (la diversificacion UCITS lo prohibe), asi que todo el
+# oro y la plata fisicos de Europa son ETCs, llevan KID y cotizan en Xetra y LSE. Lo que
+# hace comprable a un vehiculo es el KID de PRIIPs, no el sello UCITS —
+# `snapshot_repo.primary_etf` filtra por VENUE (`PRIIPS_VENUES`) por esa razon. Filtrar
+# por `ucits: true` dejaba `gold_physical` y `silver_physical` sin vehiculo asignado
+# (2 de 26 sectores, sin ETF en la tabla y fuera de cualquier BUY) mientras el fondo
+# aparecia en el broker. Corregido 2026-09-01.
 #
 # ADVERTENCIA DE ETIQUETADO (grid_infrastructure_utilities): no existe un UCITS de
 # infraestructura de red pura accesible. IQQH.DE/INRG.L son CLEAN ENERGY, no grid.
@@ -260,6 +268,22 @@ etf_universe:
   # ==========================================================================
 
   gold_physical:
+    - ticker: "PPFB.DE"
+      name: "iShares Physical Gold ETC"
+      exchange: XETRA
+      currency: EUR
+      ucits: false
+      instrument: etc
+      broker_access: assumed
+      ter: null
+      aum_m_usd: null
+      recommendation_tier: 1
+      notes: "MISMO ETC que IGLN.L/SGLN.L, linea Xetra EUR — y la que el buscador de Revolut
+        SI devuelve (usuario, 2026-09-01). Misma regla que IQQQ.DE sobre IH2O.L (v8.1): se
+        puntua el vehiculo que aparece en el broker, y la DIVISA de la linea no se cancela en
+        un retorno. Medido el 2026-09-01, mismo fondo, mismo dia: 1y +28.24% (EUR) contra
+        +24.62% (IGLN.L, USD) y 6m -15.75% contra -16.52%."
+      last_verified: "2026-09-01"
     - ticker: "IGLN.L"
       name: "iShares Physical Gold ETC"
       exchange: LSE
@@ -269,8 +293,8 @@ etf_universe:
       broker_access: assumed
       ter: null
       aum_m_usd: null
-      recommendation_tier: 1
-      notes: "Respaldo fisico. Linea USD."
+      recommendation_tier: 2
+      notes: "Respaldo fisico. Linea USD del mismo ETC; era tier-1 hasta 2026-09-01."
       last_verified: "2026-08-27"
     - ticker: "SGLN.L"
       name: "iShares Physical Gold ETC"
@@ -558,6 +582,23 @@ etf_universe:
       last_verified: "2026-08-27"
 
   ai_infrastructure_data_centers:
+    - ticker: "V9N.DE"
+      name: "Global X Data Center REITS & Digital Infrastructure UCITS ETF USD Acc"
+      exchange: XETRA
+      currency: EUR
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 342
+      recommendation_tier: 1
+      notes: >-
+        Visto en el buscador de Revolut. Es EL sector: 53.4% real estate (EQIX 13.3, DLR 12.3,
+        AMT 10.2, CCI 6.8) + 46.6% tech (MU, SK hynix, MRVL, AMD). Sustituye a XAIX.DE, que era
+        una cesta ancha de IA (70% tech, MSFT/AMZN/AAPL/WMT/BAC) con CERO solape en el top-10 y
+        beta duplicada con cloud_software_saas y semiconductors_design. AUM 342M supera el
+        umbral de 200M pero por poco: verificar spread antes de dimensionar.
+      last_verified: "2026-09-01"
     - ticker: "XAIX.DE"
       name: "Xtrackers Artificial Intelligence & Big Data UCITS ETF 1C"
       exchange: XETRA
@@ -567,8 +608,11 @@ etf_universe:
       broker_access: assumed
       ter: null
       aum_m_usd: 8556
-      recommendation_tier: 1
-      notes: "8.56B AUM, EUR. Sustituye a AIPO.DE (no resuelve) y BOTZ/SRVR (US)."
+      recommendation_tier: 2
+      notes: >-
+        Degradado de tier-1 el 2026-09-01. Mucho mas liquido, pero no es data centers: 0% real
+        estate y sus mayores posiciones son megacaps de IA (incluidas Walmart y Bank of America).
+        Puntuaba el sector con la beta equivocada — su momentum 67.3 vs 36.5 del vehiculo real.
       last_verified: "2026-08-27"
     - ticker: "AIAI.L"
       name: "L&G Artificial Intelligence UCITS ETF"

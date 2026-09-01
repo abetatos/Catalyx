@@ -90,7 +90,9 @@ def compute(weeks: int = _WEEKS_DEFAULT, as_of: str | None = None, price_fn=None
     start = (date.fromisoformat(end) - timedelta(weeks=weeks + 2)).isoformat()
     if price_fn is None:
         from catalyx.data import prices
-        price_fn = prices.read
+        # EUR since v10.4 — comomentum is a CROSS-SECTIONAL residual correlation, so it is
+        # exactly the shape of measurement a mixed-currency panel distorts.
+        price_fn = prices.read_eur
     try:
         px = price_fn(tickers, start, end)
     except Exception as e:  # noqa: BLE001

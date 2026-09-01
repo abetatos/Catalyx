@@ -153,3 +153,67 @@ def test_the_conviction_gate_cannot_empty_the_book():
     assert 0 < floor < 70, (
         f"catalyst_alignment floor {floor} is outside the sane band: at or below 0 it gates "
         f"nothing, at 70+ it starts cutting names the composite calls leaders")
+
+
+# ── Buyability: every investable sector must resolve to a vehicle ────────────────
+#
+# `primary_etf` filtered on `ucits: true` from 2026-08-28 (the IBB incident) until
+# 2026-09-01. UCITS is not what makes a vehicle buyable — a PRIIPs KID is — and a
+# single-metal fund cannot legally BE UCITS, so gold_physical and silver_physical
+# resolved to None for months: no ETF in the ranking table, ineligible for a BUY,
+# while the fund was visible in the broker. These tests fail the suite the next time
+# an investable sector loses its vehicle, instead of it surfacing as a dash in a table.
+
+def test_every_investable_sector_resolves_to_a_buyable_vehicle():
+    from catalyx.data.market_data import SECTOR_TICKERS
+    from catalyx.store.snapshot_repo import primary_etf
+
+    missing = [sid for sid in SECTOR_TICKERS if not primary_etf(sid)]
+    assert not missing, f"investable sectors with no buyable vehicle: {missing}"
+
+
+def test_the_scored_vehicle_is_the_recommended_vehicle():
+    """Momentum is measured on `SECTOR_TICKERS[sid][0]`; the table recommends
+    `primary_etf(sid)`. Scoring one instrument and buying another measures a return you
+    do not obtain — the same defect as the v2.0 universe cut (COPX scored, 4COP bought)."""
+    from catalyx.data.market_data import SECTOR_TICKERS
+    from catalyx.store.snapshot_repo import primary_etf
+
+    diverged = {sid: (primary_etf(sid), chain[0])
+                for sid, chain in SECTOR_TICKERS.items()
+                if primary_etf(sid) != chain[0]}
+    assert not diverged, f"universe vehicle != scored vehicle: {diverged}"
+
+
+def test_a_us_listing_never_resolves_whatever_it_claims(tmp_path, monkeypatch):
+    """The guard the UCITS filter was reaching for: venue decides, not the flags."""
+    from catalyx.store import snapshot_repo
+
+    f = tmp_path / "etf_universe.yaml"
+    f.write_text(
+        "etf_universe:\n"
+        "  fake_sector:\n"
+        "    - ticker: 'IBB'\n"
+        "      exchange: NASDAQ\n"
+        "      ucits: true\n"          # even a lying flag must not get it through
+        "      instrument: etf\n"
+        "      recommendation_tier: 1\n", encoding="utf-8")
+    monkeypatch.setattr(snapshot_repo, "_ETF_PATH", f)
+    assert snapshot_repo.primary_etf("fake_sector") is None
+
+
+def test_an_eu_listed_etc_resolves(tmp_path, monkeypatch):
+    """A physical-metal ETC is `ucits: false` by legal necessity and is still buyable."""
+    from catalyx.store import snapshot_repo
+
+    f = tmp_path / "etf_universe.yaml"
+    f.write_text(
+        "etf_universe:\n"
+        "  fake_gold:\n"
+        "    - ticker: 'PPFB.DE'\n"
+        "      exchange: XETRA\n"
+        "      ucits: false\n"
+        "      instrument: etc\n"
+        "      recommendation_tier: 1\n", encoding="utf-8")
+    monkeypatch.setattr(snapshot_repo, "_ETF_PATH", f)
+    assert snapshot_repo.primary_etf("fake_gold") == "PPFB.DE"

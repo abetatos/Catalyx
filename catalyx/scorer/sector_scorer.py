@@ -48,7 +48,7 @@ from pathlib import Path
 import yaml
 
 from catalyx.config import weights
-from catalyx.scorer.catalyst_scorer import compute_catalyst_alignment
+from catalyx.scorer.catalyst_scorer import _logit_score, compute_catalyst_alignment
 from catalyx.scorer.momentum_engine import compute_momentum_scores
 
 _REPO_ROOT = Path(__file__).parents[2]
@@ -444,6 +444,17 @@ def score_sector(
         "momentum_spec_used": md.get("momentum_spec_used"),
         "near_52w_high": md.get("near_52w_high_pct"),
         "ca_unpriced": cd.get("ca_unpriced"),
+        # v11 P5 — the same alignment on a scale that still discriminates at the ceiling, where
+        # nine sectors sit inside 1.7 points. `event_tape_z` (P6) needs price data and is
+        # injected by snapshot_repo, the same way crowding_comomentum/cot/trends are.
+        #
+        # Derived from the FINAL catalyst_alignment, not read off `catalyst_detail`: the detail
+        # returns early on both no-catalyst paths, and one of them — a study whose
+        # `active_catalyst_ids` is empty — is a MEASURED zero, not a missing one
+        # (`infrastructure_core` today). Reading the detail dropped exactly the row whose zero
+        # is a finding out of the column. An IMPUTED CA still yields None: that one really is
+        # not a measurement, and v6 H2 is the rule for it.
+        "ca_logit": None if ca_imputed else _logit_score(float(catalyst_alignment)),
         "flow_resid": None,
         "catalyst_detail": catalyst_detail,
         "momentum_detail": momentum_detail,

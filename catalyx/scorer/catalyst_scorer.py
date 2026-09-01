@@ -67,6 +67,63 @@ _REINFORCE_FACTOR = weights.reinforce_factor()
 _MATURITY_PRICED = weights.maturity_priced_in()
 _PRICED_PRIOR = weights.PRICED_IN_PRIOR
 
+# v11 P3/P4 — the two free cardinals an author still assigns per event.
+_HALFLIFE_SOURCE = weights.halflife_source()
+_TYPE_HALFLIVES = weights.catalyst_type_halflives()
+_STRENGTH_CAL = weights.event_strength_calibration()
+
+
+# ── The free cardinals: halflife (P3) and strength (P4) ────────────────────────
+
+def _halflife_for(ev: dict) -> tuple[float, bool]:
+    """(halflife_days, disagrees_with_table?) for one event.
+
+    Precedence under `halflife_source: stored` (the shipping default) is the event's own field,
+    then the type table, then the global default. Under `taxonomy` the per-type table wins over
+    the event's field — the LLM picks the TYPE, never the number.
+
+    The second element is reported either way: 6 of 16 active events disagree with the table
+    today, 5 toward longer persistence, and a disagreement nobody prints is how prose loses to
+    a field. `catalyst_audit` renders them; `_decayed_strength` just needs the number.
+    """
+    stored = ev.get("decay_halflife_days")
+    table = _TYPE_HALFLIVES.get(str(ev.get("catalyst_type") or ""))
+    disagrees = (stored is not None and table is not None and float(stored) != float(table))
+    if _HALFLIFE_SOURCE == "taxonomy" and table is not None:
+        return float(table), disagrees
+    if stored is not None:
+        return float(stored), disagrees
+    return (float(table) if table is not None else _DEFAULT_HALFLIFE), disagrees
+
+
+def calibrate_strength(raw: float, population: list[float]) -> tuple[float, bool]:
+    """(calibrated strength, was the transform applied?) — v11 P4.
+
+    Replaces the author's cardinal with its empirical percentile inside the registered-event
+    population, mapped back onto that population's OWN observed range. Range-preserving and
+    monotone by construction: the population min and max are fixed points, so this re-spaces
+    without re-scaling and can never reorder two events. What it removes is the part of the
+    spacing that carries session-to-session drift — the three events written as exactly "72"
+    resolve to one shared level instead of standing on a coincidence of round numbers.
+
+    Below `min_population` the raw score passes through: a percentile over a handful of
+    observations is noise, and the same "not measured is not a finding" rule that governs an
+    imputed CA governs this one.
+    """
+    if str(_STRENGTH_CAL.get("mode", "raw")) != "rank_within_population":
+        return float(raw), False
+    sample = [float(v) for v in population if isinstance(v, (int, float))]
+    if len(sample) < int(_STRENGTH_CAL.get("min_population", 12)):
+        return float(raw), False
+    lo, hi = min(sample), max(sample)
+    if hi <= lo:
+        return float(raw), False
+    n = len(sample)
+    below = sum(1 for s in sample if s < raw)
+    equal = sum(1 for s in sample if s == raw)
+    pct = (below + 0.5 * equal) / n
+    return round(lo + pct * (hi - lo), 2), True
+
 
 def _priced_in_structural(sc: dict) -> tuple[float, bool]:
     """(priced_in fraction, imputed?) from the structural's narrative_maturity."""
@@ -81,6 +138,17 @@ def _priced_in_event(ev: dict) -> tuple[float, bool]:
     if v is None:
         return _PRICED_PRIOR, True
     return float(v), False
+
+
+_LOGIT_EPS = 0.005   # ±5.3 in logit units — a measured 0 and a measured 100 stay finite and ordered
+
+
+def _logit_score(score: float) -> float:
+    """log(p/(1-p)) for a [0,100] score (v11 P5). Clamped by `_LOGIT_EPS` so the endpoints the
+    aggregator can actually produce — `infrastructure_core` scores a measured 0.0 today — map to
+    a finite value instead of dropping the row out of the column entirely."""
+    p = min(max(float(score) / 100.0, _LOGIT_EPS), 1.0 - _LOGIT_EPS)
+    return round(math.log(p / (1.0 - p)), 4)
 
 
 def _aggregate_alignment(modified_scores: list[float]) -> float:
@@ -238,8 +306,14 @@ def compute_catalyst_alignment(
         return {"sector_id": sector_id, "reason": "no_active_catalysts",
                 "error": "No active_catalyst_ids in sector study"}
 
-    # Load all active event catalysts once (also indexed by id for direct lookup)
-    all_events = [e for e in _load_all_event_catalysts() if e.get("status") == "active"]
+    # Load every registered event once. `all_events` is the ACTIVE subset that can score;
+    # `registered` (every status) is the reference population for the P4 rank calibration —
+    # an archived event still measures where a "72" sat when someone wrote it, and shrinking
+    # the reference as history accumulates is the opposite of what a calibration wants.
+    registered = _load_all_event_catalysts()
+    strength_pop = [e["strength_score"] for e in registered
+                    if isinstance(e.get("strength_score"), (int, float))]
+    all_events = [e for e in registered if e.get("status") == "active"]
     events_by_id = {e.get("id"): e for e in all_events}
 
     # Which of the listed ids are real structural catalysts (have a YAML)?
@@ -287,8 +361,9 @@ def compute_catalyst_alignment(
                     "note": "counted via linked structural (not double-counted)",
                 })
                 continue
-            strength = ev.get("strength_score", 0)
-            halflife = ev.get("decay_halflife_days", _DEFAULT_HALFLIFE)
+            raw_strength = ev.get("strength_score", 0)
+            strength, cal_applied = calibrate_strength(raw_strength, strength_pop)
+            halflife, hl_drift = _halflife_for(ev)
             detected = _anchor_date(ev)
             decayed = _decayed_strength(strength, halflife, detected)
             # A direct event contributes its decayed strength as a standalone signal.
@@ -300,9 +375,12 @@ def compute_catalyst_alignment(
                 "event_id": sid,
                 "type": "direct_event",
                 "relation": relation,
-                "strength_original": strength,
+                "strength_original": raw_strength,
+                "strength_calibrated": strength,
+                "strength_rank_calibrated": cal_applied,
                 "strength_decayed": decayed,
                 "halflife_days": halflife,
+                "halflife_disagrees_with_type": hl_drift,
                 "modified_score": round(decayed, 2) if contributes else None,
                 "priced_in": ev_priced,
                 "priced_in_imputed": ev_priced_imp,
@@ -336,8 +414,9 @@ def compute_catalyst_alignment(
 
         event_details = []
         for ev in related_events:
-            strength = ev.get("strength_score", 0)
-            halflife = ev.get("decay_halflife_days", _DEFAULT_HALFLIFE)
+            raw_strength = ev.get("strength_score", 0)
+            strength, cal_applied = calibrate_strength(raw_strength, strength_pop)
+            halflife, hl_drift = _halflife_for(ev)
             detected = _anchor_date(ev)
             decayed = _decayed_strength(strength, halflife, detected)
             relation = ev.get("relation_to_structural", "independent")
@@ -345,9 +424,12 @@ def compute_catalyst_alignment(
             event_details.append({
                 "event_id": ev["id"],
                 "relation": relation,
-                "strength_original": strength,
+                "strength_original": raw_strength,
+                "strength_calibrated": strength,
+                "strength_rank_calibrated": cal_applied,
                 "strength_decayed": decayed,
                 "halflife_days": halflife,
+                "halflife_disagrees_with_type": hl_drift,
                 "event_date": detected,
                 "modified_structural_score": modified,
             })
@@ -405,6 +487,19 @@ def compute_catalyst_alignment(
 
     catalyst_alignment = _aggregate_alignment(valid)
 
+    # v11 P5 — ca_logit: the same alignment on a scale that still discriminates at the ceiling.
+    # The noisy-OR is bounded by 100 and anchored on the strongest carrier, so a sector with
+    # several strong catalysts saturates: on the 2026-09-01 universe NINE sectors sit between
+    # 95.0 and 96.7, a 1.7-point span against a cross-sectional σ of 28.5 — 0.06σ, which is
+    # less resolution than the aggregation's own rounding. That band is not a curiosity; it is
+    # where the book concentrates, and `portfolio.ca_conviction_tilt` z-scores CA among exactly
+    # those selected names. The tilt is reading differences the level scale has stopped carrying.
+    # The logit is the natural fix (it is the inverse of the saturating map that created the
+    # ceiling): the same nine names span 0.212σ of the logit's own σ — ×3.56 the resolution.
+    # CANDIDATE COLUMN, weight 0. Whether the tilt should switch to it is a decision for the
+    # user with the IC in front of them, not a substitution made inside a scoring edit.
+    ca_logit = _logit_score(catalyst_alignment)
+
     # v7 M4: same pool, each carrier's score scaled by its unpriced fraction. Column, weight 0.
     unpriced_pool = [
         r["modified_score"] * (1.0 - r["priced_in"])
@@ -452,8 +547,14 @@ def compute_catalyst_alignment(
     return {
         "sector_id": sector_id,
         "catalyst_alignment": catalyst_alignment,
+        "ca_logit": ca_logit,
         "ca_unpriced": ca_unpriced,
         "ca_unpriced_imputed_n": ca_unpriced_imputed_n,
+        "halflife_source": _HALFLIFE_SOURCE,
+        "halflife_drift_n": sum(
+            1 for r in structural_results for ev in (r.get("events") or [])
+            if ev.get("halflife_disagrees_with_type")
+        ) + sum(1 for r in direct_event_results if r.get("halflife_disagrees_with_type")),
         "regime_state": sector_regime,
         "regime_review_recommended": sector_review,
         "structural_count": sum(1 for r in structural_results if r.get("modified_score") is not None),

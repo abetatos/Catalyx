@@ -124,7 +124,7 @@ SECTOR_FLOW_TICKERS: dict[str, list[str]] = {
     "crypto_infrastructure":          ["DAPP.L", "DAPP", "BITQ"],          # DAPP US = mismo indice VanEck, expone shares
     # ── TECNOLOGIA ──────────────────────────────────────────────────────────────
     "semiconductors_design":          ["SEMI.L", "SOXX", "SMH"],
-    "ai_infrastructure_data_centers": ["XAIX.DE", "AIQ", "BOTZ"],
+    "ai_infrastructure_data_centers": ["V9N.DE", "DTCR", "SRVR"],  # DTCR = hermano US exacto (mismo indice Global X); SRVR = Pacer, mismo tema, es el que tiene historia en el lake
     "robotics_automation":            ["2B76.DE", "ROBO", "BOTZ"],
     "cybersecurity_commercial":       ["USPY.L", "CIBR", "BUG"],
     "cloud_software_saas":            ["WCLD.L", "WCLD", "CLOU", "IGV"],
@@ -409,7 +409,9 @@ def _fetch_flow_for_ticker(ticker: str, health: dict,
 def _load_shares_series(ticker: str, lookback_days: int) -> list[tuple[date, float]]:
     """All stored (date, shares) for `ticker` within the lookback, strictly before today,
     real-source only (drops legacy derived_from_total_assets), ascending, one per date.
-    Matches either `ticker` or `flow_proxy_ticker` so a proxy's history is found."""
+    Matches `ticker`, `flow_proxy_ticker` or `shares_ticker` so a proxy's history is found —
+    `shares_ticker` is the only one of the three that is right on a CMF row, where
+    flow_proxy_ticker names the OHLCV vehicle and the shares belong to the US sibling."""
     try:
         import pandas as pd
         from catalyx.store import lake
@@ -420,10 +422,10 @@ def _load_shares_series(ticker: str, lookback_days: int) -> list[tuple[date, flo
         return []
     today = date.today()
     cutoff = today - timedelta(days=lookback_days)
-    if "flow_proxy_ticker" in df.columns:
-        mask = (df["ticker"] == ticker) | (df["flow_proxy_ticker"] == ticker)
-    else:
-        mask = df["ticker"] == ticker
+    mask = df["ticker"] == ticker
+    for col in ("flow_proxy_ticker", "shares_ticker"):
+        if col in df.columns:
+            mask = mask | (df[col] == ticker)
     sub = df[mask]
     if "shares_source" in sub.columns:
         sub = sub[sub["shares_source"] != "derived_from_total_assets"]
@@ -816,6 +818,11 @@ def fetch_flow_data(
         score = {
             "ticker": primary,
             "flow_proxy_ticker": signal_ticker,
+            # The ticker the SHARE COUNT belongs to. Normally == flow_proxy_ticker, but the CMF
+            # fallback below rewrites flow_proxy_ticker to the OHLCV vehicle, and without this
+            # field the fetched shares were written under a ticker that owns no shares — so the
+            # baseline was silently discarded and the sector could never graduate off CMF.
+            "shares_ticker": signal_ticker if (result and result.get("shares_outstanding")) else None,
             "flow_proxy_used": proxy_used,
             "flow_source": result.get("shares_source") if result else None,
             "flow_confirmation": _flow_score(flow_pct),
@@ -835,6 +842,11 @@ def fetch_flow_data(
         #   2) a money-flow APPROXIMATION from price+volume (CMF) — one fetch, no prior needed, so a
         #      brand-new sector still gets a signal on its first run. CMF is flagged DISTINCTLY
         #      (it diverges from true flow). Only if even OHLCV is unavailable → estimated (50).
+        # CMF is a STAND-IN, not a verdict on the share data: a chain whose US sibling resolved
+        # shares but has no prior yet is one run away from real flow, and that baseline must
+        # survive the fallback (it is carried in `shares_ticker`, untouched below). Six of the
+        # eight CMF sectors on 2026-08-31 were in exactly that state — AIQ/SLV/GLD/ICLN/DAPP/MOO
+        # all returned live share counts that the run then threw away, run after run.
         if score["data_quality"] == "estimated":
             carried = _carry_forward_flow(signal_ticker or primary)
             if carried:
@@ -897,14 +909,19 @@ def flow_to_rows(snapshot: dict) -> list[dict]:
     rows: list[dict] = []
     for sid, s in snapshot.get("sector_scores", {}).items():
         exec_ticker = s.get("ticker")
-        # raw flow data is keyed by the SIGNAL ticker (the proxy when one is used)
+        # raw flow data is keyed by the SIGNAL ticker (the proxy when one is used) — except
+        # under the CMF fallback, where flow_proxy_ticker names the OHLCV vehicle and the
+        # shares belong to `shares_ticker`. Looking up the wrong key here is what dropped
+        # the baseline on every CMF sector.
         signal_ticker = s.get("flow_proxy_ticker", exec_ticker)
-        raw = etfs.get(signal_ticker, {})
+        shares_ticker = s.get("shares_ticker") or signal_ticker
+        raw = etfs.get(shares_ticker, {})
         rows.append({
             **meta,
             "sector_id": sid,
             "ticker": exec_ticker,
             "flow_proxy_ticker": signal_ticker,
+            "shares_ticker": shares_ticker if raw.get("shares_outstanding") else None,
             "flow_proxy_used": bool(s.get("flow_proxy_used", False)),
             "flow_source": s.get("flow_source"),
             "flow_confirmation": s.get("flow_confirmation"),

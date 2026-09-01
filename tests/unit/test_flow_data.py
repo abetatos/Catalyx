@@ -243,3 +243,71 @@ def test_flow_to_rows_non_proxy_sector_defaults():
     assert r["flow_proxy_used"] is False
     assert r["flow_proxy_ticker"] == "COPX"
     assert r["shares_outstanding"] == 50_000_000
+
+
+# ── CMF must not eat the shares baseline (2026-09-01) ────────────────────────
+#
+# The CMF fallback rewrites flow_proxy_ticker to the OHLCV vehicle. flow_to_rows then
+# looked the raw shares up under THAT ticker, which owns no shares — so a US sibling that
+# had already returned a live share count was written as NaN and the sector could never
+# accumulate the two readings a flow delta needs. Six of the eight CMF sectors on
+# 2026-08-31 were stuck there permanently (AIQ, SLV, GLD, ICLN, DAPP, MOO).
+
+def test_cmf_row_still_carries_the_shares_baseline():
+    snapshot = {
+        "date": "2026-09-01", "generated_at": "2026-09-01", "source": "test",
+        "sector_scores": {
+            "gold_physical": {
+                "ticker": "IGLN.L",          # execution vehicle (UCITS, no shares)
+                "flow_proxy_ticker": "IGLN.L",  # CMF rewrote this to the OHLCV vehicle
+                "shares_ticker": "GLD",      # ...but the shares came from the US sibling
+                "flow_proxy_used": False,
+                "flow_confirmation": 79.0,
+                "flow_pct": None,
+                "data_quality": "volume_proxy",
+                "flow_source": "cmf",
+                "volume_cmf": 0.18,
+            },
+        },
+        "etfs": {"GLD": {"shares_outstanding": 352_400_000, "shares_source": "stockanalysis"}},
+    }
+    r = fd.flow_to_rows(snapshot)[0]
+    assert r["data_quality"] == "volume_proxy"       # the SCORE is still the CMF stand-in
+    assert r["flow_proxy_ticker"] == "IGLN.L"        # which vehicle the CMF was read from
+    assert r["shares_ticker"] == "GLD"               # ...and which one the count belongs to
+    assert r["shares_outstanding"] == 352_400_000    # the baseline SURVIVES the fallback
+    assert r["shares_source"] == "stockanalysis"
+
+
+def test_shares_ticker_is_none_when_no_shares_resolved():
+    snapshot = {
+        "date": "2026-09-01", "generated_at": "2026-09-01", "source": "test",
+        "sector_scores": {
+            "luxury_goods": {  # no US sibling exposes shares at all
+                "ticker": "GLUX.SW", "flow_proxy_ticker": "GLUX.SW", "shares_ticker": None,
+                "flow_proxy_used": False, "flow_confirmation": 55.0, "flow_pct": None,
+                "data_quality": "volume_proxy", "flow_source": "cmf",
+            },
+        },
+        "etfs": {},
+    }
+    r = fd.flow_to_rows(snapshot)[0]
+    assert r["shares_ticker"] is None
+    assert r["shares_outstanding"] is None
+
+
+def test_shares_series_finds_history_stored_under_shares_ticker(monkeypatch):
+    """A CMF row's shares are addressed by shares_ticker — the loader must match it,
+    or the baseline is written and then never found again."""
+    import pandas as pd
+    from datetime import date, timedelta
+
+    today = date.today()
+    df = pd.DataFrame([{
+        "date": (today - timedelta(days=7)).isoformat(),
+        "ticker": "IGLN.L", "flow_proxy_ticker": "IGLN.L", "shares_ticker": "GLD",
+        "shares_outstanding": 350_000_000.0, "shares_source": "stockanalysis",
+    }])
+    monkeypatch.setattr("catalyx.store.lake.read_table", lambda *a, **k: df)
+    series = fd._load_shares_series("GLD", 90)
+    assert series and series[0][1] == 350_000_000.0

@@ -14,6 +14,358 @@
 
 
 
+## v11.0 — El score de catalizadores es una fórmula, pero dos de sus entradas las escribía un LLM a mano (2026-09-01)
+
+**Salió de una observación del usuario: «veo números muy altos y de repente muy bajos… al fin y al
+cabo lo está asignando un LLM y estos tienen problemas».** La premisa era medio falsa y por eso el
+diagnóstico importa: la cadena **es determinista de punta a punta** — indicador → percentil sobre su
+propia historia → intensidad → interacción evento/estructural → noisy-OR. Ningún LLM asigna el score
+final. Pero el LLM entra por seis puertas en los INPUTS, y dos de ellas explican exactamente el
+patrón que el usuario veía.
+
+**Lo que causa el «alto y de repente bajo», medido, no supuesto.** La bimodalidad del digest (22
+sectores entre 63 y 97, luego 36 / 13,7 / 13,7 / 0) no es una medición del mundo: es **sesgo de
+selección doble**. Nadie escribe un catalizador estructural a intensidad 40, y el scan solo crea
+eventos con `strength_score ≥ 55` — la distribución está censurada por debajo **por diseño**. Y el
+techo está saturado: **nueve sectores entre 95,0 y 96,7**, un span de 1,7 puntos contra σ_cross de
+28,5, o sea **0,06σ** — menos resolución que el redondeo del propio agregador. Ahí es donde el libro
+concentra, y es donde `portfolio.ca_conviction_tilt` hace z-score entre los nombres seleccionados: el
+tilt lleva desde v10 leyendo diferencias que la escala de nivel ya no transporta.
+
+**P1 — la búsqueda solo miraba a un lado, y la ausencia de contradicción se leía como medición.**
+El registro tiene **31 eventos `confirms` contra 2 `contradicts`**, y `catalyx-scan.md` no contenía
+ni una instrucción de buscar evidencia contraria (verificado por grep: cero menciones). Toda query de
+C0 y C2 se escribe alrededor de la tesis del propio catalizador, así que recupera el corpus que le da
+la razón. Lo grave es lo de después: esa ausencia viaja aguas abajo como si hubiéramos mirado. Y el
+scorer **ya tenía la maquinaria montada** — `contradict_max_points: 15` contra `confirm_max_points:
+10` (una desconfirmación mueve el score vez y media más que una confirmación), y dos contradicts
+vivos vuelcan un estructural a `breaking` vía `structural_monitor`. Esa maquinaria llevaba toda la
+vida del proyecto corriendo sobre un flujo de entrada al que **nadie le había pedido que la
+alimentara**. Nuevo **Step C2c**: una query por catalizador de `must_reverify`, escrita para
+ROMPERLO (desde sus `invalidation_triggers`, enmarcada como el caso corto — «¿quién dice que X se
+acabó?» no recupera lo mismo que «¿sigue X siendo cierto?»), y el resultado se graba **encuentre o
+no**: `disconfirming: {searched, query, found, evidence}` en `scan_deltas`. `found: false` es la
+medición — es lo que separa «buscamos el caso corto y no está» de «nadie miró», dos estados que han
+sido indistinguibles durante toda la vida del registro. Misma doctrina que `not_attributed[]` ya
+aplica al drift de atribución: una pregunta contestada tiene que constar, o se vuelve a hacer eterna.
+
+**P2 — `strength_score` era el último cardinal libre, y se comportaba como tal.** La guía era prosa:
+«magnitude × consensus_surprise × confirmation», que es una fórmula solo si las tres están definidas,
+y ninguna lo estaba. Firma clásica: los 16 activos en [55, 91], σ=10, **agrupados en números
+redondos** — tres 72, dos 80, dos 82, dos 75. `novelty_score` es estable entre sesiones desde v1.5
+justamente porque es `count(true) × 20` sobre un rúbrica; `strength_score` no tenía ninguna. Ahora
+tiene **`strength_score_rubric`** (5 preguntas OBSERVABLES, pesos 25/25/20/15/15: ¿es grande la
+magnitud en términos del propio sector? ¿está DECIDIDO y no propuesto? ¿sorprendió al consenso? ¿lo
+corrobora una segunda fuente independiente? ¿cambia una TASA o solo un nivel?) y **`strength_anchors`**
+— la regla 3 de CLAUDE.md hecha mecánica: se nombra un evento registrado del que este es MÁS fuerte y
+otro del que es MÁS débil, y el score tiene que caer dentro. **El bracket es lo que persiste entre
+sesiones; el número absoluto nunca lo hizo.** Divergencia permitida contra la rúbrica: 15 puntos —
+exigir acuerdo exacto solo entrenaría al autor a retro-ajustar los booleanos a un número ya elegido.
+
+**P3 — el halflife era un SEGUNDO cardinal libre, y compone con el primero: decide cuánto tiempo
+sigue contando el número libre.** `catalyst_taxonomy.yaml` lleva un halflife por `catalyst_type`
+desde el principio y `catalyx-scan.md` dice en prosa «always set `decay_halflife_days` from
+`catalyst_taxonomy.yaml`». La prosa perdió: **6 de 16 eventos activos contradicen la tabla, 5 hacia
+MÁS persistencia** — que es la dirección que mantiene puntuando a un evento gastado.
+`commodity_supply` tabla 21 → almacenado 90/90/120; `institutional_flow` tabla 14 → almacenado 90.
+**Lo que NO se hizo, y es la decisión de diseño de esta versión.** `halflife_source` se envía como
+`stored`, no como `taxonomy`, aunque `taxonomy` sea el estado final correcto. Adoptar la tabla hoy
+movería el CA de una posición VIVA por la autoridad de una constante que seis reviews consecutivas
+declinaron usar: el evento confirmador del cobre decae **38,9 → 4,0**, el Niño 36,0 → 3,8, el
+contradict de crédito privado 21,9 → 0,0. O los seis autores se equivocaron o `commodity_supply: 21`
+está mal — y adoptar la tabla por defecto **contesta esa pregunta por decreto**, que es exactamente
+lo que CLAUDE.md prohíbe para el cap correlacionado («raising a cap first deletes a breach by
+decree»). Así que se publican las dos, el lint imprime la discrepancia con la consecuencia
+**preciada**, y el número queda como edit de umbral congelado del usuario con la tabla delante. Lo
+que sí queda cerrado es que el drift no puede CONTINUAR: schema 1.3 exige `halflife_override_reason`
+para discrepar, y el scan lo dice como regla, no como frase.
+
+**P4 — el nivel del strength se sustituye por su rango dentro de la población registrada.** Misma
+medicina que `intensity_engine` aplica desde v1.5 a los indicadores, y la regla 4 de CLAUDE.md
+(«ordinal beats cardinal») por fin actuando sobre eventos. `calibrate_strength` mapea cada score a su
+percentil empírico dentro de **todos** los eventos registrados —cualquier status: un evento archivado
+sigue midiendo dónde caía un «72» cuando alguien lo escribió, y encoger la referencia según se
+acumula historia es lo contrario de lo que quiere una calibración— y lo devuelve al **rango propio de
+esa población**. **Range-preserving a propósito: re-espacia, no re-escala.** El máximo y el mínimo son
+puntos fijos, es monótona (no puede reordenar nunca) y nada aguas abajo cambia de unidades. Efecto
+vivo: |Δ| máximo 5,8 puntos, media 2,4, y solo 4 sectores mueven su CA (ninguno cambia de rank) —
+suave por construcción. Los tres eventos escritos como exactamente «72» resuelven al mismo 69,4, que
+es lo correcto: un empate en la entrada es un empate, no una coincidencia de números redondos.
+
+**P5 — `ca_logit`, resolución donde la escala de nivel ya no tiene.** El logit es el inverso natural
+del mapa saturante que creó el techo: los mismos nueve sectores pasan de **0,06σ a 0,212σ**, **×3,56**
+de resolución. Columna candidata, **peso 0**. Que el `ca_conviction_tilt` deba cambiar a ella es una
+decisión del usuario con el IC delante, no una sustitución hecha dentro de un edit de scoring.
+
+**P6 — la primera entrada de la cadena que NO se lee de un documento.** Todo lo demás —un valor de
+indicador, un enum de `narrative_maturity`, un strength asignado tras leer noticias— viene de papel.
+Nada preguntaba nunca lo que un trader pregunta primero: cuando esto pasó, ¿se movió el sector?
+`event_market_check` mide, por (evento, sector), el retorno anormal del vehículo sobre la ventana
+posterior, en unidades de su propia volatilidad **previa** (medida estrictamente ANTES del evento: un
+denominador que contiene el movimiento que escala es un punto fijo sobre sí mismo, la familia de bug
+que `_trend_delta` ya documenta), con el signo de lo que el evento afirma — **un `contradicts` se
+confirma con una CAÍDA**. Ambas patas pasan por `nav_engine._eur_prices` antes de restarse: un
+benchmark USD contra un vehículo EUR apuntaría el movimiento del EURUSD de la ventana como alfa del
+sector — el defecto de v8.1 («la escala se cancela; la divisa no») un nivel más abajo. **Lo que ya
+nombra:** `cat_20260603_copper_supply_deficit_2026`, fuerza 78, el evento confirmador de la tesis de
+cobre, tiene z **−1,47** sobre el propio cobre y **−2,85** sobre grid — la cinta se movió en contra
+1,5σ en los cinco días siguientes. Columna candidata, peso 0, y **jamás una puerta**: un evento no
+confirmado se NOMBRA, nunca se degrada solo. Que el mercado vaya tarde es la premisa del mandato
+entero; automatizar «el mercado tiene razón» sería invertirlo.
+
+**Dos defectos que destapó la propia implementación, y valen más que las funciones.** (1) El mensaje
+de bracket invertido era **código muerto**: un bracket vacío falla una comprobación de cota para
+CUALQUIER score, así que el mensaje de cota siempre ganaba la carrera — y «score por debajo de su
+anchor stronger_than» manda al autor a cambiar el SCORE cuando lo que está mal es qué anchor fue a
+qué campo. La inversión se comprueba primero. (2) `ca_logit` se leía de `catalyst_detail`, que
+retorna temprano en los dos caminos sin catalizadores — y uno de ellos, un estudio con
+`active_catalyst_ids` vacío, es un cero **MEDIDO**, no ausente. La columna perdía exactamente la fila
+cuyo cero es un hallazgo (`infrastructure_core`). Se deriva del CA final; un CA **imputado** sigue
+dando None, porque ése sí no es una medición (v6 H2).
+
+**Lo que NO se tocó, con causa.** El peso de CA en el compuesto (0,35), la puerta de convicción de
+v10, y el `ca_conviction_tilt`: evidencia negativa sobre el score de catalizadores cambia **cómo se
+calcula**, nunca **si participa** (doctrina del usuario, 2026-09-01). Y nada de reponderar el
+compuesto sin IC delante — K1 sigue bloqueada por datos.
+
+Schema `catalyst_event` **1.2 → 1.3**. Migración: los 19 documentos existentes **no se reescriben** y
+siguen validando y puntuando — `schema_version` acepta `["1.2","1.3"]` y los campos nuevos son
+LINTADOS, nunca requeridos por el scorer, así que un evento pre-1.3 se reporta como cardinal desnudo
+en vez de caerse. Hoy el lint da **16/16 FAIL**, que es el lint funcionando: ni un solo evento
+registrado lleva rúbrica ni bracket. El run ya grabado **no se re-persiste** (sus overrides se
+firmaron contra esa tabla); las columnas aparecen en el próximo score run. 771 tests en verde (+36).
+
+---
+
+## v10.4 — La señal se medía en cuatro divisas; el libro se cobra en una (2026-09-01)
+
+**Salió de «arregla todo de golpe».** v10.3 restauró la lectura de la divisa y dejó la
+consecuencia abierta; esto la cierra. **15 de los 26 vehículos puntuados no cotizan en euros**
+(10 USD, 4 GBp, 1 GBP). Dentro de UNA serie la escala se cancela en un retorno; **entre series
+no**, y todo lo que ordena o mide compara series.
+
+**La pieza que más importa no era el momentum, era el TARGET.** `calibration.forward_returns`
+leía cierres nativos, así que el IC preguntaba *«¿el composite predice el retorno de un comprador
+en dólares?»* cuando lo que el operador cobra es el retorno en euros. Y de ese `fwd` cuelgan el
+rank IC que **gatea λ**, el scorecard de reglas contra la baseline HOLD, el tally del `ca_tilt` y
+el precio a 21d de cada override. Convertir solo la señal habría dejado los dos lados midiendo
+cosas distintas — peor que no tocar nada.
+
+**Cuatro consumidores, una implementación.** La conversión no es nueva: `nav_engine` convierte
+P&L desde el primer día. Se ha movido a `catalyx/data/prices.py`, que es la capa que ya posee la
+caché **y** la divisa por ticker, de modo que la regla GBp×0.01 existe UNA vez —
+`prices.to_eur` / `fx_series` / `read_eur` / `read_eur_with_basis` / `basis_by_ticker`.
+`nav_engine._to_eur` y `_default_fx_fn` quedan como delegados finos: el contrato inyectable
+`ccy_fn`/`fx_fn` del que dependen los tests de NAV no cambia. Consumidores migrados:
+`calibration.forward_returns`, `covariance._prices`, `comomentum` (price_fn por defecto) y
+`market_data.fetch_metrics` — este último no pasa por la caché, así que convierte su propia serie
+con el FX de la caché.
+
+**Lo medido, separando efectos en vez de sumarlos.**
+
+| | nativo | EUR | Δ |
+|---|---|---|---|
+| ρ semanal, 26 vehículos del universo | 0,199 | **0,179** | **−0,020** |
+| ρ semanal, libro modelo (6 nombres) | 0,3213 | 0,3238 | +0,0025 |
+| vol del libro modelo | 18,63% | 18,40% | −0,23pp |
+| ranking de momentum | — | — | **12 plazas, máx 2**, top-6 intacto |
+
+Dos lecturas que no se pueden saltar. **(1) La correlación BAJA al convertir, no sube.** La
+predicción intuitiva —«añadir un factor FX común eleva la correlación»— es **falsa aquí**: la
+pata FX compensa parcialmente el co-movimiento de las acciones. Y baja donde importa: los 26
+vehículos del universo son la muestra de la que se leyó la rodilla de `n_target`, no el libro de
+6. **(2) Sobre el libro VIVO el efecto es inmaterial** (+0,0025), así que nada de la tabla de
+riesgo de hoy se explica por la divisa. Las dos cosas son ciertas a la vez y decir solo una
+sería propaganda.
+
+**`n_target` NO se toca.** Un ρ 0,020 más bajo empuja hacia MÁS nombres, y `n_target: 6` es el
+mando único del que derivan `max_position_pct` y los `conviction_tiers`. Mover el mando en el
+mismo edit que cambia la base de medición es exactamente cómo se pierde la capacidad de saber
+cuál de los dos cambios hizo qué. Se publica el número y se decide después, con la tabla delante
+— la misma regla que el cap nocional contra el presupuesto de varianza.
+
+**Una fila declara su base, y una fila que no pudo convertirse NO dice EUR.** Cada fila de
+momentum lleva `return_basis`; `momentum_engine` publica `return_basis`, `return_basis_values` y
+`basis_mixed`, y **avisa por stderr cuando el panel mezcla bases** — un ranking transversal solo
+significa algo sobre UNA base. Es diagnóstico, nunca puerta: las filas siguen ordenando, solo
+dejan de aparentar. Las particiones anteriores a la migración no traen el campo y se leen como
+`"native"`, no como EUR: «no medido» y «medido en euros» son afirmaciones distintas, la misma
+doctrina que v6 H2 con un estudio ausente. Por el mismo motivo, una columna cuyo FX no se pudo
+traer **se queda nativa y lo dice**, en vez de desaparecer del frame — perder la columna
+encogería en silencio la sección transversal sobre la que se rankea, que es peor.
+
+**Y el confound de calendario, fijado con test.** El FX se reindexa **sobre las fechas de
+cotización del propio instrumento**. Un índice unión mete días en los que cotizó la divisa y no
+el fondo, así que «N filas atrás» abarca una ventana de calendario distinta: medido, ese
+artefacto **por sí solo duplicaba el efecto aparente** sobre el ranking (26 plazas y máx 3, contra
+las 12 y máx 2 reales). Es el mismo error de forma que el de `_load_shares_series` en v10.2 —
+una serie alineada contra la clave equivocada.
+
+782 tests en verde (+11).
+
+---
+
+## v10.3 — La divisa del vehículo se leía por defecto, no por lectura (2026-09-01)
+
+**Salió de un hallazgo colateral de v10.2 y de una pregunta del usuario: «esto tiene fix simple?».**
+La lectura sí. La consecuencia que destapa, no.
+
+`fetch_metrics` tomaba la divisa de `hist.attrs.get("currency", "USD")` y en esta versión de
+yfinance **`hist.attrs` viene siempre vacío** — comprobado en V9N.DE, XAIX.DE, SRVR, IH2O.L,
+IGLN.L y PPFB.DE. O sea, las 26 filas de momentum del lake decían `USD` **por defecto, no por
+lectura**. Y ésa es exactamente la comprobación en la que se apoyó v8.1 para cazar que `IH2O.L`
+cotiza en GBp mientras el operador paga en EUR: llevaba muerta en silencio desde entonces.
+
+**El arreglo:** `Ticker.history_metadata` trae `currency` en el MISMO response del chart — cero
+llamadas de red extra — y distingue correctamente `GBp` de `GBP`, `EUR` y `USD`. Cuando no se
+puede leer se escribe **`None`, nunca `"USD"`**: convertir «no medido» en un valor es el defecto
+que ocultó éste, y es la misma doctrina que v6 H2 aplica a un estudio ausente. `hist.attrs` se
+mantiene como fallback por si una versión futura de yfinance vuelve a poblarlo.
+
+**Lo que la columna restaurada deja ver, medido: 15 de los 26 vehículos puntuados NO cotizan en
+euros** — 11 EUR, 10 USD, 4 GBp, 1 GBP. Dentro de UNA serie la escala se cancela en un retorno
+(por eso ningún número cambia con este edit, y hay test que lo fija); lo que no se cancela es el
+FX ENTRE series, y el compuesto ordena 26 sectores medidos en cuatro divisas distintas. v10.1 ya
+lo había medido en un caso: mismo fondo, mismo día, 1y **+28,24% (EUR, PPFB.DE)** contra **+24,62%
+(USD, IGLN.L)**.
+
+**Tamaño del sesgo, medido sobre los 26 vehículos vivos** (convirtiendo cada serie a EUR con
+EURUSD/EURGBP reindexado SOBRE las fechas de cotización del propio ETF — un índice unión mete días
+en los que cotizó el FX y no el fondo, y eso por sí solo duplicaba el efecto aparente: 26 plazas y
+máximo 3 antes de alinear, **12 plazas y máximo 2** después): el top-6 no se mueve, y los cambios
+reales son `gold_miners` 11→9 y `copper_miners` 9→11. Segundo orden comparado con el error de
+identidad de vehículo de v10.2, que movió 7 plazas él solo — pero `gold_miners` está en cartera.
+
+**Lo que NO se hace aquí, y por qué.** Convertir los retornos a EUR no es un edit lateral: cambia
+la BASE de todas las series de momentum del lake, así que las filas de antes y después no son
+comparables — la misma rotura de escala que el `composite` pre-schema-1.4, y que allí exigió nota
+de migración y detección de escala. Necesita además serie FX cacheada por run y alineación de
+calendario por ticker. Queda como **decisión abierta del usuario** con la tabla delante, no como
+efecto colateral de arreglar una lectura. 735 tests en verde (+7).
+
+---
+
+## v10.2 — El vehículo medía otro sector, y el CMF se comía el dato que lo habría arreglado (2026-09-01)
+
+**Salió de dos frases del usuario:** «el xaix de data centers no ha podido calcular bien el flow»
+y «he buscado en revolut y tengo un v9n, son equivalentes?».
+
+**No lo son, y la diferencia no es de matiz.** `XAIX.DE` es Xtrackers **AI & Big Data** ($8.556M):
+70,1% tecnología, **0% real estate**, top-5 MSFT/AMZN/AAPL/NVDA/GOOGL — y Walmart y Bank of America
+en el top-10. `V9N.DE` es Global X **Data Center REITs & Digital Infrastructure** ($342M): **53,4%
+real estate**, top-5 Equinix 13,3 / Digital Realty 12,3 / American Tower 10,2 / Crown Castle 6,8 /
+NextDC 5,2. **Solape en el top-10: cero.** El `sector_id` se llama `ai_infrastructure_data_centers`
+y el vehículo que lo puntuaba no tenía un solo data center: era una cesta ancha de IA cuya beta ya
+estaba en el libro dos veces, en `cloud_software_saas` (rank 1) y `semiconductors_design` (rank 4).
+Identidad verificada contra yfinance (`longName`/`currency`/`exchange`) como exige el universo
+desde el incidente `IQQR.DE`. V9N.DE pasa a tier-1; XAIX.DE **baja a tier-2 con la razón escrita**,
+no se borra. Cadena de flujo `V9N.DE → DTCR → SRVR` (DTCR = hermano US exacto, mismo índice Global
+X; SRVR = Pacer, mismo tema, y es el que tiene historia en el lake). AUM 342M supera el umbral de
+200M pero por poco — verificar spread antes de dimensionar.
+
+**Lo que cuesta el vehículo equivocado, medido:** contrafactual sobre `run_20260831_184616`
+(baseline reproducido **exacto**, 26/26 ranks y composites). Momentum **67,3 → 36,5** — V9N a 3m
+−13,9% contra −4,8% de XAIX, a 6m +12,1% contra +35,8%, a 52w-high −14,8% contra −5,9%: los REITs
+de data center se comieron el golpe y la cesta de megacaps de IA no. Con el flujo real añadido,
+**rank 2 → 9, composite 60,5 → 53,4** (z +0,701 → +0,224). Descompuesto: solo momentum → rank 8;
+solo flujo real → rank 5. **El BUY de €1.500 aprobado para este sector se apoyaba en un rank que
+lo ganó otro fondo.** Ningún `Movement` referencia el sector — la orden nunca se ejecutó
+físicamente, así que no hay base de coste que tocar.
+
+**El defecto que destapó, que vale más que el cambio de ticker.** El flujo del sector no fallaba
+porque XAIX sea UCITS: la cadena `XAIX.DE → AIQ → BOTZ` **sí** resolvía shares (AIQ: 158.450.000
+vía stockanalysis). Lo que faltaba era la lectura ANTERIOR — sin dos lecturas no hay delta —, así
+que la resolución devolvía `kind: baseline` y caía al CMF. Y ahí, al entrar el CMF, `fetch_flow_data`
+sobrescribía `flow_proxy_ticker` con el vehículo de OHLCV, y `flow_to_rows` buscaba entonces
+`etfs["XAIX.DE"]` — que no existe — en vez de `etfs["AIQ"]`. **El baseline se tiraba a la basura en
+cada run**, de modo que el run siguiente volvía a empezar de cero: CMF permanente por construcción.
+La fila del lake lo confirmaba: `2026-08-31 | XAIX.DE | shares=NaN | volume_proxy`.
+
+**No era un sector: eran seis de los ocho que estaban en CMF.** Comprobado en vivo — `AIQ` 158,45M,
+`SLV` 545,85M, `GLD` 352,40M, `ICLN` 125,60M, `DAPP` 17,25M, `MOO` 12,30M, todos devolviendo un
+conteo real que el run descartaba. Solo `eu_defense_prime_contractors` y `luxury_goods` carecen de
+verdad de hermano US. Dicho de otro modo: el «13,1 puntos de error medio del CMF» que midió v6.9 se
+estaba pagando en seis sectores que no lo necesitaban.
+
+**El arreglo separa las dos preguntas que la fila mezclaba:** `flow_proxy_ticker` dice *de qué
+vehículo se leyó la señal* (bajo CMF, el de OHLCV) y el nuevo `shares_ticker` dice *a quién
+pertenece el conteo de acciones*. `flow_to_rows` busca el raw por `shares_ticker`, y
+`_load_shares_series` lo añade a los campos con los que casa una historia — es el único de los tres
+que es correcto en una fila CMF. La columna es aditiva (`union_by_name` en DuckDB, `pd.concat` en
+pandas), así que las particiones viejas se leen igual. **El score sigue siendo el del CMF y sigue
+marcado `volume_proxy`:** preservar el baseline no convierte una aproximación en una medición — la
+medición llega al run SIGUIENTE, porque `_load_shares_series` exige la lectura previa
+estrictamente anterior a hoy.
+
+**Efecto inmediato, verificado end-to-end sin escribir al lake:** `ai_infrastructure_data_centers`
+pasa a **flujo REAL hoy mismo** (`proxy_computed`, SRVR, −0,805% → 43,6) porque SRVR sí tiene
+historia en el lake — el sector la tuvo hasta el 2026-07-05 y el cambio de vehículo de universo v2.0
+la había roto. `gold_physical` y `silver_physical` siguen en CMF este run (correcto: aún no hay
+lectura previa) pero ya persisten `shares_ticker=GLD/SLV` con el conteo, así que gradúan en el
+siguiente. 728 tests en verde (+3).
+
+**Hallazgo colateral, NO corregido aquí:** `market_data.fetch_metrics` lee la divisa de
+`hist.attrs.get("currency", "USD")` y en esta versión de yfinance `hist.attrs` **viene siempre
+vacío** — comprobado en V9N.DE, XAIX.DE y SRVR. O sea, las 26 filas de momentum del lake dicen
+`USD` por defecto, no por lectura. Es exactamente la comprobación en la que se apoyó v8.1 para
+cazar el problema GBp/EUR de `IH2O.L`, y está muerta en silencio. No se toca en este edit porque
+afecta a toda la tabla de momentum y merece su propia entrada.
+
+---
+
+## v10.1 — UCITS no es lo que hace comprable a un vehículo; el KID de PRIIPs sí (2026-09-01)
+
+**Salió de una frase del usuario:** «veo que oro no tiene asignado etf, en Revolut veo PPFB».
+
+Las dos mitades eran ciertas y la segunda explica la primera. `gold_physical` y `silver_physical`
+imprimían `—` en la columna ETF del ranking, y no era un fallo de display:
+`portfolio.py:576` hace `df = df[df["primary_etf"].notna()]`, así que **los dos sectores estaban
+excluidos de la construcción del libro modelo**, y `rebalance` los rechazaba con «no buyable UCITS
+vehicle». `silver_physical` rankeaba **10º** este run — dentro del campo del que sale el top-N — y
+no podía recibir un euro por una razón que nadie había enunciado.
+
+**La causa es una sobrecorrección de la propia doctrina de comprabilidad.** El 2026-08-28
+`primary_etf` caía al pool no-UCITS cuando un sector no tenía entrada UCITS, y así imprimió
+`BUY biotech_drug_development €891` contra **IBB** — un ETF US que PRIIPs hace imposible para esta
+cuenta. El arreglo fue exigir `ucits: true`. Y `ucits` no es el discriminante:
+**lo que hace vendible un vehículo a un minorista español es el KID de PRIIPs, no el sello UCITS**.
+Un fondo de un solo metal **no puede** ser UCITS — la diversificación UCITS lo prohíbe —, así que
+todo el oro y la plata físicos de Europa son ETCs, llevan KID y cotizan en Xetra y LSE. El flag
+juntaba «US, sin KID, ilegal aquí» con «nota europea perfectamente comprable», y el universo v2.0
+ya no contiene **ni una sola** entrada en bolsa US: el filtro defendía de una amenaza que ya no
+está en el fichero mientras tiraba 2 de los 26 sectores investables.
+
+**El arreglo filtra por VENUE, que es la garantía que el parche del 08-28 buscaba de verdad.**
+`snapshot_repo.PRIIPS_VENUES` = {LSE, XETRA, EURONEXT, SIX, BME, BORSA_ITALIANA}; una cotización US
+falla el test **diga lo que diga** `ucits` o `instrument` — hay un test con un `IBB` que se declara
+`ucits: true` para fijarlo. El fallback silencioso a un ticker no comprable sigue siendo peor que
+`None`, y sigue prohibido.
+
+**El vehículo:** `PPFB.DE` (iShares Physical Gold ETC, EUR, Xetra — verificado contra yfinance
+`longName`/`currency`/`exchange`) pasa a tier-1 de `gold_physical` y a `chain[0]` de
+`SECTOR_TICKERS`; `IGLN.L` baja a tier-2 sin borrarse. Es el mismo ETC que `IGLN.L`/`SGLN.L`, y es
+**la línea que el buscador del broker devuelve** — misma regla que v8.1 (`IQQQ.DE` sobre `IH2O.L`,
+`2B76.DE` sobre `RBOT.L`). La escala se cancela en un retorno; **la divisa no**: mismo fondo, mismo
+día (2026-09-01), 1y **+28,24%** en EUR contra **+24,62%** en `IGLN.L` (USD), 6m −15,75% contra
+−16,52%. `4GLD.DE` (Xetra-Gold, EUR) sigue tier-2 a propósito: es un bono al portador alemán con
+fiscalidad distinta, no un ETC. `broker_access` sigue `assumed` — visto en el buscador, no operado.
+
+**Lo que NO cambia:** el run `run_20260831_184616` no se re-persiste. Sus overrides se firmaron
+contra esa tabla, y `primary_etf` se escribe en el snapshot (`snapshot_repo.py:345`), así que los
+dos sectores entran en el **próximo** score run — que es donde el criterio debe aparecer, no
+recortando por detrás una tabla ya decidida. Ninguno de los dos está en cartera; no se toca
+ninguna base de coste. `silver_physical` no gana vehículo nuevo (`PHAG.L` ya era `chain[0]`), solo
+deja de ser invisible; no se encontró línea Xetra en EUR de un ETC de plata al probar contra
+yfinance.
+
+**Cuatro tests nuevos en `test_config_feasibility.py`**, donde ya viven los invariantes de config:
+todo sector investable resuelve vehículo · **el vehículo que se puntúa es el que se recomienda**
+(`SECTOR_TICKERS[sid][0] == primary_etf(sid)`, que hoy se cumplía en 24 de 26 y fallaba justo en
+los dos rotos — es el defecto de la v2.0 «puntuar COPX y comprar 4COP» un nivel más abajo) · una
+cotización US nunca resuelve · un ETC europeo sí. 725 tests en verde (+16).
+
+---
+
 ## v10.0 — El libro solo tenía una manera de ser pequeño: fallar (2026-09-01)
 
 **Salió de dos frases del usuario:** «si bajo catalizadores o riesgo hay sectores que dejan de ser
@@ -280,6 +632,12 @@ más abajo. Comentario reescrito en `market_data.py`.
 Ambas líneas nuevas traen ≥2 años de histórico en yfinance, así que el momentum 12-1 de v8 no
 pierde cobertura. `broker_access` se queda en `assumed`: el usuario los ha visto en el buscador,
 no los ha operado, y `verified` significa operado de hecho. 663 tests en verde.
+
+## v6.9 — La dimensión de flujo medía otra cosa en 20 de 26 sectores (2026-08-31)
+
+**La dimensión de flujo medía otra cosa en 20 de 26 sectores.** Salió porque el usuario preguntó por qué el flow imprimía un warning. Lo imprimía con razón: `stockanalysis.com`, la fuente PRIMARIA de shares outstanding, devolvía **47 errores y 0 aciertos** — su endpoint no oficial había empezado a dar 404 —, así que todo caía en cascada hasta CMF, un oscilador de precio+volumen que la propia nota del módulo etiqueta «⚠ not true flow». Veinte sectores puntuaban `flow_confirmation` (peso 0,15) con un indicador técnico. **El arreglo:** el dato sigue en la página, solo murió la ruta. Dos caminos la sustituyen, el más pequeño primero — el payload `__data.json` de SvelteKit (~49 KB, cuya clave `sharesOut` guarda un ÍNDICE al array aplanado y hay que desreferenciar: leída como valor da 27) y la página renderizada (~228 KB) como respaldo. **Revalidado contra el screener oficial de iShares** en 8 fondos solapados: −4,15%..+0,92%, dentro de la banda ~0,25–1,75% con la que esta fuente se aceptó en su día. Cobertura de 6 a **18 de 26** sectores con shares reales. **Lo que la reparación MIDIÓ, que es lo que hay que quedarse:** doce sectores pasaron de CMF a shares reales de golpe, así que el error del sustituto ya no se supone, se observa — **|error| medio 13,1 puntos sobre 100, máximo 25,6** —, y los dos errores mayores cayeron justo en los dos nombres sobre los que la tabla actuaba: `gold_miners` inflado (CMF 78,2 vs 52,6 real) y `cybersecurity_commercial` desinflado (28,8 vs 54,2). **Una hipótesis se comprobó y se DESCARTÓ antes de escribirla:** CMF no es momentum disfrazado — su correlación con la dimensión de momentum es +0,16, así que el fallo es inexactitud, no doble contabilidad. **Por eso CMF ahora se imputa, no se puntúa:** quedan 8 sectores sin proxy US limpio, y 13 puntos de error medio no son un proxy. Se tratan como v6 H2 ya trata un estudio ausente — imputados al prior (z=0), fuera de los momentos de la dimensión, y marcados como COLUMNA (`flow_imputed`, `~flow` en el digest), nunca como puerta. La rama específica de CA en `commensurate` se generalizó a un mapa `_IMPUTED_FLAG` en vez de duplicarse, con un test que fija que el camino de CA no ha regresado. **Dos defectos de ranking que destapó el re-scoring, de la misma forma que el #3 de v6.8:** `composite_z` se guardaba con `round(s, 3)` — y desde que v6.8 lo convirtió en la unidad sobre la que se ordena, ese redondeo es el mismo defecto un decimal más abajo (`water_infrastructure` y `semiconductors_design` empataban en +0,457 y los separaba el orden de la lista); ahora 6 decimales, así que un empate es un empate de verdad. Y el digest imprimía solo `comp` a 1 decimal mientras ordenaba por z, lo que hacía parecer mal ordenada una tabla correcta; ahora imprime `z=` al lado. **Efecto en la tabla viva, que es por lo que esto no es cosmético:** `cybersecurity_commercial` pasa de rank **10 a 5**, convirtiendo un **TRIM −€565 en un ADD +€727** — el trim se apoyaba en un peldaño cuya condición es «el modelo ya no lidera este nombre», y el modelo solo dejó de liderarlo porque una fuente rota le había desinflado el flujo 25 puntos. `semiconductors_design` 5→6 (ADD → HOLD), `ai_infrastructure_data_centers` 6→8 (se cae su BUY de €1.456), `gold_miners` 8→11. De ocho acciones a seis, y el incumplimiento del cap de `struct_ai_capex_supercycle` baja de **55,4% a 38,8%** del nocional (€881 por encima, no €2.540). 614 tests en verde (+2).
+
+---
 
 ## v8.0 — Backtest punto-en-tiempo y promoción de candidatas: 12-1, comomentum y el reparto GK (2026-08-31)
 

@@ -76,6 +76,12 @@ CANDIDATE_DIMENSIONS = {
     "cot_crowding": True,
     "trends_crowding": True,
     "crowding_measured": True,
+    # v11 P5/P6. `ca_logit` is CA on a scale that still separates the nine sectors the level
+    # scale packs into 1.7 points — if it carries IC that CA does not, the resolution at the
+    # ceiling was doing work. `event_tape_z` is the first column in the chain that is not read
+    # from a document: it asks whether the market moved the way each event claimed.
+    "ca_logit": False,
+    "event_tape_z": False,
 }
 DIMENSIONS = {**DIMENSIONS, **CANDIDATE_DIMENSIONS}
 
@@ -353,15 +359,22 @@ def _investable_sectors() -> set[str]:
 
 
 def forward_returns(tickers: list[str], start: str, end: str, allow_fetch: bool = True) -> dict:
-    """{ticker: simple return over [start, end]} from the shared price cache.
+    """{ticker: simple return over [start, end]} from the shared price cache, IN EUR.
 
     Reading from the cache (not a fresh fetch) is what makes a calibration re-run reproducible:
     this number is the honest answer to "did the score predict anything" and must not drift
     because it was recomputed on a different afternoon.
+
+    EUR since v10.4, and this is the half that matters most. Everything here — the rank IC that
+    gates lambda, the rule scorecard's HOLD baseline, the CA-tilt tally, the override pricing —
+    scores a decision against WHAT THE OPERATOR EARNED. Native closes answer a different
+    question: what a dollar buyer would have earned. With 15 of 26 vehicles quoted outside the
+    euro that gap is not a rounding detail, and it lands on the TARGET, so it contaminated every
+    verdict regardless of what the signal was measured in.
     """
     from catalyx.data import prices
 
-    px = prices.read(tickers, start, end, allow_fetch=allow_fetch)
+    px = prices.read_eur(tickers, start, end, allow_fetch=allow_fetch)
     out = {}
     if px is None or px.empty:
         return out

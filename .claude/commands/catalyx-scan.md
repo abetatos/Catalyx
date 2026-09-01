@@ -174,6 +174,48 @@ All catalysts NOT touched by any finding: collapse into a **single** "no change:
 do not spend a row or a search on each. This is a RECOMMENDATION step — it never edits the YAML/JSON
 (that is `/catalyx-update` and the review's lifecycle gate).
 
+### Step C2c — Disconfirming search (MANDATORY, one query per `must_reverify`)
+
+**This step exists because the numbers proved the search was one-sided.** On 2026-09-01 the
+registry held **31 `confirms` against 2 `contradicts`**, and nothing above this line had ever
+told anyone to look for the second kind. That ratio is not a measurement of the world; it is a
+measurement of where we pointed the search. Every query in C0 and C2 is written around a
+catalyst's own thesis, so it retrieves the corpus that agrees with it — and the resulting absence
+of contradicting evidence then reads, downstream, as if we looked and found nothing.
+
+The scorer already handles contradicting evidence properly: `contradicts` carries
+`contradict_max_points: 15` against `confirm_max_points: 10` (a disconfirmation moves the score
+half again as hard as a confirmation), and two live contradicts flip a structural to `breaking`
+via `structural_monitor`. **That machinery has been running on an input stream that was never
+asked to feed it.**
+
+**For every catalyst on `work_list.must_reverify`, run ONE query written to BREAK it, not to
+check it.** Money is at risk on these; they are the ones worth the search budget.
+
+Write the query from the catalyst's own falsification condition — its `invalidation_triggers`,
+or the negation of the claim its indicators measure:
+
+```
+struct_ai_capex_supercycle    → "hyperscaler capex cut guidance lowered datacenter delay [MONTH YEAR]"
+struct_cb_gold_accumulation   → "central bank gold selling reserves reduced [MONTH YEAR]"
+struct_nato_rearmament        → "defense budget delayed cut procurement shortfall Europe [MONTH YEAR]"
+```
+
+Frame it as the SHORT case. "Is X still true?" retrieves the same articles as the confirming
+query; "who says X is over, and why?" does not.
+
+**Record the result whether or not it finds anything.** A `disconfirming` block goes in the
+scan_deltas entry for every catalyst searched — `found: false` is the measurement that turns an
+absent contradiction from a search artefact into evidence. This is the same doctrine
+`not_attributed[]` already applies to attribution drift: a question that was asked and answered
+must say so, or it gets re-asked forever.
+
+Anything the disconfirming search DOES find follows the ordinary path — Step C3 scores it,
+Step C4 writes it if it clears the bar, `relation_to_structural: "contradicts"`.
+
+**Budget:** one query per `must_reverify` catalyst (typically 3–5). Do not run disconfirming
+queries for `should_` or `optional_reverify` — nothing this cycle turns on them.
+
 ### Step C3 — Classify and score each significant result
 
 For each significant result found:
@@ -181,10 +223,39 @@ For each significant result found:
 - **Structural match**: does this accelerate an existing structural catalyst in `catalyx/config/structural_catalysts/`? If yes, set `linked_structural_catalyst_ids` and lower the novelty_score.
 - **Classify**: assign `catalyst_type` and `catalyst_subtype` from `catalyst_taxonomy.yaml`
 - **Score**:
-  - `novelty_score` (0-100): how different from prior catalysts of same type
-  - `strength_score` (0-100): magnitude × consensus_surprise × confirmation
-  - `consensus_surprise` (0-1): was this expected by the market?
-  - `is_priced_in_estimate` (0-1): based on asset price reaction since news broke
+  - `novelty_score` (0-100): `count(true) × 20` over `novelty_rubric_scores` — never assigned directly
+  - `strength_score` (0-100): **rubric + anchors, never a bare number** (see below)
+  - `consensus_surprise` (0-1): was this expected by the market? 0.1 increments only
+  - `is_priced_in_estimate` (0-1): one of the 5 steps, based on asset price reaction since news broke
+  - `decay_halflife_days`: **read it from `catalyst_taxonomy.yaml` for this `catalyst_type`.**
+    You choose the TYPE; the table chooses the number. To deviate you must write
+    `halflife_override_reason` (≥20 chars) — six pre-1.3 events overrode the table silently,
+    five toward longer persistence, which is the direction that keeps a spent event scoring.
+
+**How to score strength (schema 1.3, v11 P2).** `strength_score` was the last free cardinal in
+the system, and it behaved like one: the 16 active events cluster on round numbers — three 72s,
+two 80s, two 82s — inside a range censored from below by the `>= 55` write threshold. An "84"
+from one session is not an "84" from another. Two things fix that, and both go in the file:
+
+1. **Answer the rubric** (`scoring_weights.yaml strength_score_rubric`), writing the booleans to
+   `strength_rubric_scores`. The five questions are OBSERVABLE — is the magnitude large in its
+   own sector's terms, is it decided rather than proposed, did it surprise consensus, is it
+   corroborated by a second independent source, does it change a rate rather than a level. The
+   weighted total is your starting number.
+2. **Bracket it** (`strength_anchors`): name one registered event this one is **stronger than**
+   and one it is **weaker than**, and put the score between them. This is CLAUDE.md rule 3 made
+   mechanical, and it is the part that survives the session — the absolute number does not.
+
+You may set a score that differs from the rubric total; that is judgement, and it is allowed
+within `strength_anchoring.max_rubric_divergence` (15 points). What is not allowed is a number
+with neither a rubric nor a bracket behind it.
+
+Check your work before writing: `uv run python -m catalyx.scorer.catalyst_audit --active`.
+
+**Note on the scorer.** It re-spaces every strength by its rank inside the registered-event
+population before use (`event_strength_calibration`), so what your number has to get right is
+the ORDER and the BRACKET, not the second digit. That is the whole reason the anchors matter
+more than the level.
 
 ### Step C4 — Write CatalystEvent files
 
@@ -219,9 +290,18 @@ Present a unified summary table after both passes:
 | Gap ID | Theme | Previous signal_count | New signal_count | Weeks persistent |
 |---|---|---|---|---|
 
+### Pass 2 — Disconfirming search (one per must_reverify catalyst)
+| Catalyst ID | Query run | Contradicting evidence found? | Action |
+|---|---|---|---|
+
+A row per catalyst searched, **including the ones where nothing was found** — that row is the
+measurement. If the whole table reads "no", say so explicitly in one line: an unbroken column of
+"no" is either a genuinely robust book or a search that is still pointing the wrong way, and the
+queries are printed so the reader can tell which.
+
 ### Pass 2 — Classification: New catalysts registered (strength ≥ 55)
-| ID | Type | Strength | Sectors affected | Written? |
-|---|---|---|---|---|
+| ID | Type | Strength | Rubric total | Anchors (stronger/weaker than) | Halflife (table?) | Sectors affected | Written? |
+|---|---|---|---|---|---|---|---|
 
 ### Pass 2 — Classification: Events below threshold (not written)
 | Event | Strength | Reason skipped |
@@ -252,7 +332,11 @@ every catalyst read `very_stale` in `exit_watcher` even in the runs that had jus
   "verdict": "intact",
   "evidence": "NATO Hague 5% target reaffirmed; RHM order book +19% YoY",
   "source": "Rheinmetall Q2 2026 report",
-  "indicators": [{"id": "ind_02", "value": 0.19, "note": "Q2 print"}]}]
+  "indicators": [{"id": "ind_02", "value": 0.19, "note": "Q2 print"}],
+  "disconfirming": {"searched": true,
+                    "query": "defense budget delayed cut procurement shortfall Europe September 2026",
+                    "found": false,
+                    "evidence": null}}]
 ```
 
 - One entry per catalyst you actually LOOKED AT — including the `no change` ones (that is what
@@ -261,6 +345,11 @@ every catalyst read `very_stale` in `exit_watcher` even in the runs that had jus
   `breaking` REQUIRE `evidence` — the stamp is rejected without it.
 - `indicators[]` only when the search produced an actual number. No number → omit the key; a
   verdict-only entry stamps freshness and records nothing numeric.
+- **`disconfirming` is REQUIRED on every `must_reverify` catalyst** (Step C2c) and omitted on
+  the rest. `searched: true, found: false` is a RESULT, not a blank — it is what separates "we
+  looked for the short case and it is not there" from "nobody looked", and those two states have
+  been indistinguishable for the entire life of the registry. `found: true` requires `evidence`,
+  and the finding goes through C3/C4 as a `contradicts` event like any other.
 
 Three consumers read this one file (the review runs them; do not run them from here):
 `indicator_update batch` (values) · `catalyst_review batch` (freshness stamps) ·
@@ -282,5 +371,15 @@ Rule-5 deltas. WebSearch effort then goes to the indicators no API serves.
 - Never fabricate sources. If WebSearch returns no results for a query, say so.
 - If a search result is paywalled, note the headline only and mark `source.url` with the URL but leave `description` as a summary of what is inferable from the headline.
 - Do not register opinion pieces, analyst forecasts, or market commentary as CatalystEvents. Only register: policy decisions, official announcements, data releases, confirmed corporate events.
-- Always set `decay_halflife_days` from `catalyst_taxonomy.yaml` based on `catalyst_type`.
+- **The disconfirming search (C2c) is not optional and its NEGATIVE result is not a blank.** A
+  scan that only ever asks whether its catalysts are still right will only ever find that they
+  are. `searched: true, found: false` is the entry that makes an absent contradiction mean
+  something.
+- **`decay_halflife_days` comes from `catalyst_taxonomy.yaml` by `catalyst_type`.** You pick the
+  type; the table picks the number. Deviating requires `halflife_override_reason` in the file —
+  this rule existed in prose before v11 and was ignored by 6 of 16 events, so it is now a schema
+  field and a lint (`catalyx.scorer.catalyst_audit`), not a sentence.
+- **`strength_score` requires `strength_rubric_scores` AND `strength_anchors`.** A bare cardinal
+  is not reproducible across sessions, which is the one property the whole scoring layer exists
+  to have. Run `catalyst_audit --active` before you finish.
 - A gap proposal requires genuine differentiation. If the theme fits an existing sector even imperfectly, do not create a gap — instead tag it to the closest sector and note the imperfect fit.

@@ -195,6 +195,79 @@ def event_default_halflife() -> float:
     return float(decay["default_halflife_days"])
 
 
+_TAXONOMY_PATH = _WEIGHTS_PATH.with_name("catalyst_taxonomy.yaml")
+
+
+@lru_cache(maxsize=1)
+def catalyst_type_halflives() -> dict[str, float]:
+    """`{catalyst_type: halflife_days}` from catalyst_taxonomy.yaml (v11 P3).
+
+    The table the scan skill has told authors to use since it was written, now readable by the
+    code that consumes the number. Types whose halflife is null (the structural ones — a
+    `StructuralCatalyst` does not decay) are omitted rather than mapped to 0, because 0 means
+    "never decays" in `_decayed_strength` and would be the opposite of a missing value.
+    """
+    try:
+        data = yaml.safe_load(_TAXONOMY_PATH.read_text(encoding="utf-8")) or {}
+    except (FileNotFoundError, yaml.YAMLError):                # pragma: no cover - defensive
+        return {}
+    types = data.get("catalyst_types") or {}
+    out: dict[str, float] = {}
+    if not isinstance(types, dict):
+        return out
+    for name, spec in types.items():
+        hl = (spec or {}).get("decay_halflife_days") if isinstance(spec, dict) else None
+        if hl is not None:
+            out[str(name)] = float(hl)
+    return out
+
+
+def halflife_source() -> str:
+    """`stored` (the event's own field wins) or `taxonomy` (the per-type table wins).
+
+    Ships as `stored`. See scoring_weights.yaml `event_catalyst_decay` for why the correct end
+    state is not the safe default TODAY: adopting the table would move a held position's CA on
+    the authority of a constant six reviews declined to use, which decides the open question
+    instead of surfacing it."""
+    decay = _section("event_catalyst_decay", {"halflife_source": "stored"})
+    return str(decay.get("halflife_source", "stored"))
+
+
+def event_strength_calibration() -> dict:
+    """Rank calibration for the one free cardinal an LLM still assigns (v11 P4).
+
+    `mode`: `rank_within_population` re-spaces each event's strength by its percentile inside
+    the registered-event population, mapped back onto that population's own range (so the
+    transform is range-preserving and monotone); `raw` restores the pre-v11 level."""
+    return _section("event_strength_calibration",
+                    {"mode": "rank_within_population", "min_population": 12})
+
+
+def strength_score_rubric() -> list[dict]:
+    """The 5 observable questions `strength_score` is derived from (v11 P2), weights summing
+    to 100. Same shape as `novelty_score_rubric` — a cardinal is only reproducible across
+    sessions if it decomposes into things two sessions can both observe."""
+    r = _raw().get("strength_score_rubric")
+    return list(r) if isinstance(r, list) else []
+
+
+def strength_anchoring() -> dict:
+    """Anchor-bracket enforcement for `strength_score` (v11 P2). CLAUDE.md rule 3 made
+    mechanical: an event names one registered event it is stronger than and one it is weaker
+    than, and the assigned score must fall inside that bracket."""
+    return _section("strength_anchoring",
+                    {"required": True, "enforce_bracket": True, "max_rubric_divergence": 15})
+
+
+def event_tape_check() -> dict:
+    """Window/benchmark config for the event tape check (v11 P6) — the abnormal move of the
+    sector vehicle after an event, in units of its own vol, signed by what the event claims.
+    Candidate column, weight 0; it NAMES an unconfirmed event, it never downgrades one."""
+    return _section("event_tape_check",
+                    {"window_days": 5, "benchmark": "SPY", "vol_lookback_days": 120,
+                     "min_vol_days": 30, "max_event_age_days": 400})
+
+
 def reinforce_factor() -> float:
     """Multi-catalyst aggregation reinforcement [0,1]. 0 → max-only; 1 → full noisy-OR."""
     agg = _section("multi_catalyst_aggregation", {"reinforce_factor": 0.25})

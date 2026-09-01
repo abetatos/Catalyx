@@ -194,7 +194,13 @@ def _prices(tickers: list[str], weeks: int, as_of: str | None, price_fn=None):
         return price_fn(tickers, start.isoformat(), end.isoformat())
     # allow_fetch=False for the same reason as _sector_vols: pre_run.sh warms the cache once and
     # everything downstream reads it. A risk decomposition is not a fetch site.
-    return prices.read(tickers, start.isoformat(), end.isoformat(), allow_fetch=False)
+    # EUR since v10.4: the operator BEARS the FX, so it belongs in the covariance the risk
+    # budget is written against. Measured on the 26 live vehicles over the same window, the
+    # conversion moved mean pairwise weekly rho 0.199 -> 0.179 — it LOWERS it (the FX leg
+    # partly offsets equity co-movement), which is the opposite of what "adding a common
+    # factor raises correlation" predicts. rho is what n_target was read off, so the number
+    # is reported, never silently absorbed.
+    return prices.read_eur(tickers, start.isoformat(), end.isoformat(), allow_fetch=False)
 
 
 def analyze(portfolio_id: str = "catalyx", tickers: list[str] | None = None,

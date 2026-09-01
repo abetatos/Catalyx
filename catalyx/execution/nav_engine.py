@@ -68,38 +68,21 @@ def _default_fx_fn(currencies, start: str, end: str) -> dict:
 
     EURUSD=X quotes USD per EUR, so EUR-per-USD = 1/EURUSD; likewise 1/EURGBP for GBP.
     Pence (GBp/GBX) reuse the GBP series and are scaled ×0.01 at conversion time."""
-    pair_for = {"USD": "EURUSD=X", "GBP": "EURGBP=X"}
-    series: dict = {}
-    for ccy in currencies:
-        pair = pair_for.get(ccy)
-        if not pair:
-            continue
-        px = yfinance_prices([pair], start, end)
-        col = px[pair] if pair in getattr(px, "columns", []) else px.iloc[:, 0]
-        series[ccy] = 1.0 / col
-    return series
+    from catalyx.data import prices as _prices
+
+    return _prices.fx_series(currencies, start, end)
 
 
 def _to_eur(prices, ccy_map: dict, fx_by_ccy: dict):
-    """Convert each column of a price frame from its listing currency to EUR in place-of-copy.
-    A currency with no FX series (couldn't be fetched) is left native rather than dropped."""
-    if prices is None or len(prices) == 0:
-        return prices
-    out = prices.copy()
-    for t in list(getattr(out, "columns", [])):
-        ccy = (ccy_map.get(t) or "EUR")
-        pence = ccy in ("GBp", "GBX")
-        base = "GBP" if pence else ccy
-        col = out[t]
-        if base != "EUR":
-            fx = fx_by_ccy.get(base)
-            if fx is None:
-                continue
-            col = col * fx.reindex(out.index).ffill().bfill()
-        if pence:
-            col = col * 0.01
-        out[t] = col
-    return out
+    """Convert each column of a price frame from its listing currency to EUR.
+
+    Delegates to `prices.to_eur` (v10.4): the signal path needs the SAME conversion, and two
+    copies of the GBp x0.01 rule is one too many. Kept under this name because it is the
+    injection point every NAV/exit test drives.
+    """
+    from catalyx.data import prices as _prices
+
+    return _prices.to_eur(prices, ccy_map, fx_by_ccy)
 
 
 def _eur_prices(prices, start: str, end: str, ccy_fn, fx_fn):

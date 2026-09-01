@@ -103,9 +103,141 @@ crowding_source:
 # Event catalyst decay function: score = strength × exp(-lambda × days_since_detection)
 # lambda = ln(2) / halflife_days
 # Default halflife: 46 days (lambda ≈ 0.015)
+#
+# v11 P3 — WHO PICKS THE HALFLIFE. `catalyst_taxonomy.yaml` has carried a halflife per
+# `catalyst_type` since the beginning, and `catalyx-scan.md` has said "always set
+# decay_halflife_days from catalyst_taxonomy.yaml" in prose. Nothing enforced it, and the
+# prose lost: 6 of 16 active events override the table, 5 of them toward LONGER persistence
+# (commodity_supply table 21 → stored 90/90/120; institutional_flow table 14 → stored 90).
+# A halflife the author picks per event is a second free cardinal beside strength_score, and
+# it compounds with it — it decides how long the free number keeps counting.
+#
+# `halflife_source` decides who wins. It ships as `stored` DELIBERATELY:
+#   - `taxonomy` is the correct end state and the drift is now impossible to CONTINUE
+#     (schema 1.3 requires halflife_override_reason to disagree with the table; the audit
+#     lint names every existing disagreement every run).
+#   - but flipping it today would move a HELD position's catalyst_alignment on the authority
+#     of a constant that six consecutive reviews declined to use: copper's confirming event
+#     decays 38.9 → 4.0, el_nino 36.0 → 3.8, the private-credit contradict 21.9 → 0.0.
+#     Either the six authors were wrong or `commodity_supply: 21` is wrong, and adopting the
+#     table by default answers that question by decree — the same move CLAUDE.md forbids for
+#     the correlated cap ("raising a cap first deletes a breach by decree").
+# So both are published, the lint prints the disagreement, and the number is a frozen-threshold
+# edit for the user with the table in front of them. See CHANGELOG v11.0.
 event_catalyst_decay:
   default_halflife_days: 46
-  # Override per catalyst_type defined in catalyst_taxonomy.yaml
+  # Per-catalyst_type halflives live in catalyst_taxonomy.yaml (the LLM picks the TYPE).
+  halflife_source: "stored"   # "taxonomy" makes the per-type table authoritative
+
+# ─────────────────────────────────────────────────────────────────────────────
+# EVENT STRENGTH — RANK CALIBRATION (v11 P4)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# `strength_score` is the one number in the whole chain an LLM still assigns as a free
+# cardinal, and it shows every signature of one: the 16 active events live in [55, 91] with
+# σ=10 (the floor is the scan's own `strength_score >= 55` write threshold, so the sample is
+# censored from below), and they cluster on round numbers — three 72s, two 80s, two 82s,
+# two 75s. An "84" from one session is not an "84" from another; CLAUDE.md rule 4 already
+# says ordinal beats cardinal, and until now nothing acted on it for events.
+#
+# `rank_within_population` replaces the level with the event's empirical percentile inside
+# the population of ALL registered events, mapped back onto that population's OWN observed
+# range. RANGE-PRESERVING on purpose: it re-spaces, it does not re-scale — the strongest
+# event stays the strongest, the population's min and max are fixed points, and nothing about
+# the decay or boost arithmetic changes units. What it removes is the drift in the SPACING,
+# which is the part that carries the session-to-session noise.
+#
+# Effect on the live table: max |Δ| 5.8 points, mean 2.4 — mild by construction. The three
+# events the author wrote as "72" all resolve to the same 69.4, which is right: equal input,
+# equal output. Monotone, so it never reorders events; it only changes how far apart they are.
+#
+# Population = every registered event, whatever its status. Archived and invalidated events
+# still measure where a "72" sat when someone wrote it, and dropping them would make the
+# reference population shrink as history accumulates. Below `min_population` the transform
+# is skipped and the raw score passes through — a percentile over 6 events is noise.
+event_strength_calibration:
+  mode: "rank_within_population"   # "raw" restores the pre-v11 behavior
+  min_population: 12
+
+# ─────────────────────────────────────────────────────────────────────────────
+# EVENT STRENGTH RUBRIC (v11 P2) — the anchor that makes a cardinal reproducible
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# `novelty_score` has been rubric-derived since v1.5 (count(true) × 20) and is stable across
+# sessions for exactly that reason. `strength_score` had prose — "magnitude × surprise ×
+# confirmation" — which is a formula only if all three are defined, and none were.
+#
+# The rubric below is the same shape as the novelty one: OBSERVABLE booleans, each worth
+# points, summing to 100. It is not a replacement for judgement — it is what makes the
+# judgement reproducible enough that two sessions land in the same bracket.
+#
+# ANCHORING (CLAUDE.md rule 3, made mechanical): every new event names one registered event
+# it is STRONGER than and one it is WEAKER than. `catalyst_audit` fails the pair if the
+# assigned score falls outside that bracket. This is the part that persists across sessions —
+# the absolute number does not, and never did.
+strength_score_rubric:
+  - id: str_01
+    question: "Is the magnitude of the economic quantity involved large in its own sector's terms (>10% of a sector-relevant flow, budget, or supply)?"
+    weight: 25
+    example_yes: "NATO 5% GDP target — roughly doubles European defense procurement"
+    example_no: "One mine's quarterly output guidance cut by 2%"
+  - id: str_02
+    question: "Is it DECIDED rather than proposed — signed, voted, published, or reported as fact?"
+    weight: 25
+    example_yes: "Section 232 tariffs published in the Federal Register"
+    example_no: "An administration official says tariffs are 'under consideration'"
+  - id: str_03
+    question: "Did it surprise consensus (consensus_surprise >= 0.5)?"
+    weight: 20
+    example_yes: "Hawkish pivot when the curve priced a cut"
+    example_no: "A Fed hold that every economist forecast"
+  - id: str_04
+    question: "Is it corroborated by a SECOND independent source or an official primary document?"
+    weight: 15
+    example_yes: "Company report + regulatory filing"
+    example_no: "One wire story, no primary document"
+  - id: str_05
+    question: "Does it change a RATE or a persistent flow, rather than being a one-off level shift?"
+    weight: 15
+    example_yes: "Annual procurement budget raised for a 10-year horizon"
+    example_no: "A single cargo diverted"
+
+strength_anchoring:
+  required: true
+  # A score outside [weaker_than.score, stronger_than.score] is a lint failure, not a warning:
+  # the bracket IS the calibration. Both anchors must be registered events.
+  enforce_bracket: true
+  # How far the free-form score may sit from the rubric total before the lint names it. The
+  # rubric is coarse (5 booleans, 15-25 points each), so demanding exact agreement would just
+  # train the author to back-fit the booleans to a number they already chose.
+  max_rubric_divergence: 15
+
+# ─────────────────────────────────────────────────────────────────────────────
+# EVENT TAPE CHECK (v11 P6) — did the market notice the event we scored 91?
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Every input to catalyst_alignment is read from documents: an indicator value, a narrative
+# maturity enum, a strength an author assigned after reading the news. Nothing in the chain
+# ever asks the one question a trader would ask first — when this happened, did the sector
+# actually move? An event scored 91 that the tape never noticed is either mispriced (the
+# opportunity) or misjudged (the error), and the system currently cannot tell you which,
+# because it never looks.
+#
+# `event_tape_z` is the sector vehicle's abnormal return over the window after each event,
+# in units of its own daily volatility, signed by the direction the event claims: a
+# `contradicts` event is confirmed by a FALL. Strength-weighted across the events driving the
+# sector. It is a raw measurement with no invented constants, which is what lets `calibration`
+# rank-IC it like any other candidate.
+#
+# CANDIDATE COLUMN, weight 0 — measured for at least 3 independent 63d windows before anyone
+# argues for a weight (v7 discipline). It is NOT a gate: an event the tape did not confirm is
+# NAMED, never auto-downgraded. The market being slow is the premise of the entire mandate.
+event_tape_check:
+  window_days: 5          # trading days after the event date
+  benchmark: "SPY"
+  vol_lookback_days: 120
+  min_vol_days: 30
+  max_event_age_days: 400 # older than this, the cached price window is not worth fetching
 
 # ─────────────────────────────────────────────────────────────────────────────
 # STRUCTURAL CATALYST INTENSITY — ALGORITHMIC DERIVATION (v1.5)

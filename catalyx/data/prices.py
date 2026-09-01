@@ -283,6 +283,114 @@ def price_fn(tickers: list[str], start: str, end: str):
     return read(tickers, start, end)
 
 
+# ── native → EUR (v10.4) ─────────────────────────────────────────────────────
+#
+# WHY THIS LIVES HERE. The book is denominated in EUR and `nav_engine` has converted P&L
+# since day one — but the SIGNAL path never did: `momentum_engine`, `calibration`'s forward
+# returns, `covariance` and `comomentum` all read native closes. 15 of the 26 scored vehicles
+# do not quote in euros (10 USD, 4 GBp, 1 GBP), so the composite ranked 26 sectors measured in
+# four currencies, and the IC asked whether that ranking predicts a return the operator does
+# not earn. Within ONE series the scale cancels in a return; between series it does not.
+#
+# The conversion itself is not new — this is `nav_engine._to_eur` moved to the layer that
+# already owns both the cache and the per-ticker currency, so there is ONE implementation of
+# the GBp×0.01 rule instead of two. `nav_engine` keeps its names as thin delegates, so the
+# injectable ccy_fn/fx_fn contract every NAV test relies on is unchanged.
+
+def to_eur(frame, ccy_map: dict, fx_by_ccy: dict):
+    """Convert each column of a price frame from its listing currency to EUR.
+
+    A currency with no FX series (couldn't be fetched) is left NATIVE rather than dropped —
+    losing the column would silently shrink the cross-section a ranking is computed over,
+    which is worse than one row on a stale basis. Callers that care read `basis_by_ticker`.
+    """
+    if frame is None or len(frame) == 0:
+        return frame
+    out = frame.copy()
+    for t in list(getattr(out, "columns", [])):
+        ccy = (ccy_map.get(t) or "EUR")
+        pence = ccy in ("GBp", "GBX")
+        base = "GBP" if pence else ccy
+        col = out[t]
+        if base != "EUR":
+            fx = fx_by_ccy.get(base)
+            if fx is None:
+                continue
+            # reindex ONTO the frame's own dates: a union index would add days on which FX
+            # traded and the instrument did not, so "N rows back" would span a different
+            # calendar window and manufacture a return difference that is pure calendar.
+            col = col * fx.reindex(out.index).ffill().bfill()
+        if pence:
+            col = col * 0.01
+        out[t] = col
+    return out
+
+
+def fx_series(currencies_needed, start: str, end: str, allow_fetch: bool = True) -> dict:
+    """{base_ccy: Series of EUR per 1 unit}, served from this same cache.
+
+    EURUSD=X quotes USD per EUR, so EUR-per-USD = 1/EURUSD; likewise 1/EURGBP for GBP.
+    Pence (GBp/GBX) reuse the GBP series and are scaled x0.01 at conversion time.
+    """
+    pair_for = {"USD": "EURUSD=X", "GBP": "EURGBP=X"}
+    out: dict = {}
+    for ccy in currencies_needed:
+        pair = pair_for.get(ccy)
+        if not pair:
+            continue
+        px = read([pair], start, end, allow_fetch=allow_fetch)
+        if px is None or len(px) == 0 or pair not in getattr(px, "columns", []):
+            continue
+        col = px[pair].dropna()
+        if col.empty:
+            continue
+        out[ccy] = 1.0 / col
+    return out
+
+
+def basis_by_ticker(tickers: list[str], fx_by_ccy: dict, ccy_map: dict | None = None) -> dict:
+    """{ticker: "EUR" | "<native>"} — what basis each column ACTUALLY ended up on.
+
+    A row must declare its basis: an unconverted column (FX unavailable) is not EUR, and a
+    ranking that mixes the two without saying so is the defect this whole change is about.
+    """
+    ccy_map = ccy_map if ccy_map is not None else currencies(list(tickers))
+    out = {}
+    for t in tickers:
+        ccy = (ccy_map.get(t) or "EUR")
+        base = "GBP" if ccy in ("GBp", "GBX") else ccy
+        out[t] = "EUR" if (base == "EUR" or base in fx_by_ccy) else ccy
+    return out
+
+
+def read_eur(tickers: list[str], start: str, end: str, allow_fetch: bool = True,
+             lake_dir: Path | None = None):
+    """`read()` in EUR — the price_fn for anything that RANKS or MEASURES across vehicles.
+
+    Returns the frame only. Use `read_eur_with_basis` when the caller must record which
+    columns actually converted.
+    """
+    return read_eur_with_basis(tickers, start, end, allow_fetch, lake_dir)[0]
+
+
+def read_eur_with_basis(tickers: list[str], start: str, end: str, allow_fetch: bool = True,
+                        lake_dir: Path | None = None):
+    """(frame_in_eur, {ticker: basis}) — see `read_eur`."""
+    frame = read(tickers, start, end, allow_fetch=allow_fetch, lake_dir=lake_dir)
+    if frame is None or len(frame) == 0:
+        return frame, {}
+    cols = list(frame.columns)
+    ccy_map = currencies(cols, lake_dir=lake_dir)
+    needed = {("GBP" if c in ("GBp", "GBX") else c) for c in ccy_map.values() if c} - {"EUR"}
+    fx = fx_series(needed, start, end, allow_fetch=allow_fetch) if needed else {}
+    return to_eur(frame, ccy_map, fx), basis_by_ticker(cols, fx, ccy_map)
+
+
+def eur_price_fn(tickers: list[str], start: str, end: str):
+    """Bare EUR `price_fn(tickers, start, end)` for injection into the scorers."""
+    return read_eur(tickers, start, end)
+
+
 def currencies(tickers: list[str], ccy_fn=None, lake_dir: Path | None = None) -> dict[str, str]:
     """{ticker: listing currency} from the cache — the `ccy_fn` contract in `nav_engine`.
 

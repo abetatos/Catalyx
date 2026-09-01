@@ -65,7 +65,7 @@ SECTOR_TICKERS: dict[str, list[str]] = {
     "solar_energy":                  ["RAYS.L"],
     "grid_infrastructure_utilities": ["IQQH.DE", "INRG.L"],   # clean energy, no grid puro — ver aviso en etf_universe.yaml
     # ── Metales preciosos ────────────────────────────────────────────────────
-    "gold_physical":                 ["IGLN.L", "4GLD.DE"],
+    "gold_physical":                 ["PPFB.DE", "IGLN.L", "4GLD.DE"],  # PPFB.DE = mismo ETC de iShares, linea Xetra EUR; es la que devuelve el buscador del broker
     "gold_miners":                   ["SPGP.L", "GDX.L", "AUCO.L"],
     "silver_physical":               ["PHAG.L", "SSLN.L"],
     # ── Metales industriales y agro ──────────────────────────────────────────
@@ -78,7 +78,9 @@ SECTOR_TICKERS: dict[str, list[str]] = {
     "crypto_infrastructure":         ["DAPP.L"],
     # ── Tecnologia ───────────────────────────────────────────────────────────
     "semiconductors_design":         ["SEMI.L", "SMGB.L"],
-    "ai_infrastructure_data_centers":["XAIX.DE", "AIAI.L", "WTAI.L"],
+    # V9N = Global X Data Center REITs UCITS (53% REITs: EQIX/DLR/AMT/CCI). Antes XAIX.DE,
+    # que es IA generalista (0% real estate) y media la beta de otro sector.
+    "ai_infrastructure_data_centers":["V9N.DE", "XAIX.DE", "AIAI.L"],
     "robotics_automation":           ["2B76.DE", "RBOT.L"],   # 2B76 = misma clase en Xetra; antes IQQR.DE = MSCI Eastern Europe (sector equivocado)
     "cybersecurity_commercial":      ["USPY.L", "LOCK.L"],
     "cloud_software_saas":           ["WCLD.L", "DGTL.L"],
@@ -129,11 +131,52 @@ def momentum_score(ret_1m: float | None, ret_3m: float | None, ret_6m: float | N
     return round(score, 1)
 
 
-def fetch_metrics(ticker: str, period: str = "1y") -> dict | None:
-    """Fetch yfinance history and return computed metrics dict."""
+def _to_eur_series(closes, quote_ccy: str, fx_fn=None):
+    """One price series, native → EUR. None when the FX leg is unavailable (stay native).
+
+    The FX is reindexed ONTO the instrument's own trading dates. A union index would insert
+    days on which the currency traded and the fund did not, so "N rows back" would span a
+    different calendar window — measured, that confound alone doubled the apparent size of
+    the FX effect on the ranking (26 places / max 3 vs the true 12 / max 2).
+    """
+    import pandas as pd
+
+    from catalyx.data import prices
+
+    base = "GBP" if quote_ccy in ("GBp", "GBX") else quote_ccy
+    if base == "EUR":
+        return closes
+    start = closes.index[0].strftime("%Y-%m-%d")
+    end = closes.index[-1].strftime("%Y-%m-%d")
+    fx = (fx_fn or prices.fx_series)({base}, start, end).get(base)
+    if fx is None or len(fx) == 0:
+        return None
+    idx = closes.index
+    try:
+        aligned = fx.reindex(fx.index.union(idx)).ffill().reindex(idx)
+    except (TypeError, ValueError):
+        # tz-aware equity index vs tz-naive FX (or vice versa) — normalise and retry.
+        fx2 = fx.copy()
+        fx2.index = pd.to_datetime(fx2.index).tz_localize(None).normalize()
+        naive = pd.to_datetime(idx).tz_localize(None).normalize()
+        aligned = fx2.reindex(fx2.index.union(naive)).ffill().reindex(naive)
+        aligned.index = idx
+    out = (closes * aligned).dropna()
+    if len(out) < 5:
+        return None
+    return out * (0.01 if quote_ccy in ("GBp", "GBX") else 1.0)
+
+
+def fetch_metrics(ticker: str, period: str = "1y", fx_fn=None) -> dict | None:
+    """Fetch yfinance history and return computed metrics dict, returns in EUR (v10.4)."""
     try:
         stock = yf.Ticker(ticker)
         hist = stock.history(period=period, auto_adjust=True)
+        # Quote currency comes free with the chart response. `hist.attrs` — the old source —
+        # is EMPTY in this yfinance version, so every row said "USD" by DEFAULT, not by
+        # reading: the check v8.1 relied on to catch IH2O.L quoting in GBp was dead in
+        # silence. None (not "USD") when unreadable — "not measured" must not read as a value.
+        quote_ccy = (getattr(stock, "history_metadata", None) or {}).get("currency")
     except Exception as e:
         console.print(f"[yellow]WARN {ticker}: {e}[/yellow]")
         return None
@@ -150,6 +193,22 @@ def fetch_metrics(ticker: str, period: str = "1y") -> dict | None:
     if len(closes) < 5:
         console.print(f"[yellow]WARN {ticker}: insufficient data after dropna[/yellow]")
         return None
+    # ── native → EUR (v10.4) ────────────────────────────────────────────────
+    # Within ONE series the quote scale cancels in a return, so this changes nothing for an
+    # EUR-quoted line. Between series it does NOT cancel: 15 of the 26 scored vehicles quote
+    # outside the euro (10 USD, 4 GBp, 1 GBP), and the composite RANKS them against each
+    # other. Measured on the live universe: 12 places of rank movement, max 2, top-6 intact —
+    # second order next to a wrong vehicle, but `gold_miners` 11->9 and `copper_miners` 9->11
+    # are held names. `return_basis` says which basis the row is on; a row that could not be
+    # converted stays native and SAYS SO rather than passing as EUR.
+    return_basis = quote_ccy or "unknown"
+    if quote_ccy and quote_ccy != "EUR":
+        conv = _to_eur_series(closes, quote_ccy, fx_fn=fx_fn)
+        if conv is not None:
+            closes, return_basis = conv, "EUR"
+    elif quote_ccy == "EUR":
+        return_basis = "EUR"
+
     current = float(closes.iloc[-1])
     high_52w = float(closes.max())
     low_52w = float(closes.min())
@@ -164,7 +223,8 @@ def fetch_metrics(ticker: str, period: str = "1y") -> dict | None:
     return {
         "ticker": ticker,
         "current_price": round(current, 4),
-        "currency": hist.attrs.get("currency", "USD"),
+        "currency": quote_ccy or hist.attrs.get("currency") or None,
+        "return_basis": return_basis,
         "return_1m_pct": round(r1m * 100, 2) if r1m is not None else None,
         "return_3m_pct": round(r3m * 100, 2) if r3m is not None else None,
         "return_6m_pct": round(r6m * 100, 2) if r6m is not None else None,
