@@ -11,8 +11,8 @@
     "currency": "EUR"
   },
   "amount_eur": 500.0,
-  "qty": 72.27,
-  "price": 6.9182,
+  "qty": 72.013257,
+  "price": 6.9432,
   "fees": 0.0,
   "attribution": [
     {
@@ -90,7 +90,7 @@
     "created_at": "2026-07-31T00:00:00Z",
     "created_by": "abetatos",
     "attribution_note": "Uncatalyzed (weight 1.0) — user attributed this to defensive healthcare beta / quality rotation, not to a specific catalyst (GLP-1, patent-cliff M&A, and Section-232 tariffs were offered and declined).",
-    "fill_note": "Registered retroactively on 2026-07-31 from the user's broker (position opened 2026-06-16 but never recorded via /catalyx-open). Fill: €500 gross at IUHE.AS close 6.9182 EUR on 2026-06-16 -> qty 72.27, avg cost approx 6.9182 EUR/share. EUR-quoted (Amsterdam) so no FX on the mark. As of 2026-07-31 IUHE.AS approx 7.357 EUR -> value approx 531.7 EUR (+6.3%).",
+    "fill_note": "Registered retroactively on 2026-07-31 from the user's broker (position opened 2026-06-16 but never recorded via /catalyx-open). Fill: €500 gross at IUHE.AS close 6.9182 EUR on 2026-06-16 -> qty 72.27, avg cost approx 6.9182 EUR/share. EUR-quoted (Amsterdam) so no FX on the mark. As of 2026-07-31 IUHE.AS approx 7.357 EUR -> value approx 531.7 EUR (+6.3%). CORRECCION DE CANTIDAD 2026-09-01: qty 72.27 -> 72.013257. El broker muestra la linea de IUHE con 190.97 unidades y el fill de hoy es exacto (118.956743 uds por 935 EUR), asi que el lote de junio son 190.97 - 118.956743 = 72.013257 uds, no 72.27. El broker es la autoridad sobre unidades; `amount_eur` (500) es la autoridad sobre euros y NO se toca. Prueba cruzada: con la cantidad corregida la base es 1435 EUR sobre 190.97 uds = 7.5142/u, y la app marca +3.24%, que es exactamente 1481.46/1435 - 1. Con la cantidad vieja el numero no cerraba.",
     "tax_entry_year": 2026,
     "tags": [
       "healthcare",
