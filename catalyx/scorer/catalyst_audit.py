@@ -38,6 +38,7 @@ import json
 import sys
 
 from catalyx.config import weights
+from catalyx.scorer import catalyst_scorer as cs
 from catalyx.scorer.catalyst_scorer import (_anchor_date, _decayed_strength,
                                             _load_all_event_catalysts, calibrate_strength)
 
@@ -88,6 +89,40 @@ def anchor_bracket(score: float, weaker: float | None, stronger: float | None) -
 
 
 # ── Audit ────────────────────────────────────────────────────────────────────
+
+def _halflife_sector_impact() -> list[dict]:
+    """What adopting the type table would do to each sector's `catalyst_alignment`.
+
+    v12 — the drift table below prices the disagreement in DECAYED STRENGTH, which is not what
+    anything downstream reads. That proxy is actively misleading: the copper event's decayed
+    strength collapses 38.9 → 4.0, and CLAUDE.md has been quoting exactly that number as the
+    reason the decision is expensive — but copper's own CA moves **0.1 points**, because the
+    noisy-OR is saturated there and the event is not the carrier. The sector whose CA actually
+    moves is `agriculture_soft_commodities` (−32.3), which the strength column never named.
+    A decision priced in the wrong unit is not priced.
+
+    Two full scans (stored, then taxonomy) over every sector with a study. `_HALFLIFE_SOURCE`
+    is a module constant read at import, so it is swapped and restored around the second scan.
+    """
+    def scan() -> dict:
+        return {sid: cs.compute_catalyst_alignment(sid).get("catalyst_alignment")
+                for sid in cs._all_sector_ids()}
+    prev = cs._HALFLIFE_SOURCE
+    try:
+        cs._HALFLIFE_SOURCE = "stored"
+        stored = scan()
+        cs._HALFLIFE_SOURCE = "taxonomy"
+        table = scan()
+    finally:
+        cs._HALFLIFE_SOURCE = prev
+    out = []
+    for sid, a in stored.items():
+        b = table.get(sid)
+        if a is None or b is None or abs(a - b) < 0.05:
+            continue
+        out.append({"sector_id": sid, "ca_stored": a, "ca_taxonomy": b, "delta": round(b - a, 1)})
+    return sorted(out, key=lambda r: r["delta"])
+
 
 def audit(active_only: bool = False) -> dict:
     events = _load_all_event_catalysts()
@@ -159,6 +194,7 @@ def audit(active_only: bool = False) -> dict:
     n_fail = sum(1 for r in rows if r["verdict"] == "FAIL")
     drift = [r for r in rows if r["halflife_drift"]]
     return {
+        "halflife_sector_impact": _halflife_sector_impact() if drift else [],
         "n_events": len(rows), "n_fail": n_fail,
         "n_no_rubric": sum(1 for r in rows if r["rubric_total"] is None),
         "n_no_anchors": sum(1 for r in rows if not r["anchors"]["stronger_than"]
@@ -197,12 +233,24 @@ def render(res: dict) -> str:
                 continue
             out.append(f"  {r['event_id']:<50} {d['stored']:>7.0f} {d['table']:>7.0f} "
                        f"{d['decayed_stored']:>10.1f} → {d['decayed_table']:<9.1f}")
-        out += ["", "  `decayed now` is what each event contributes TODAY under each halflife. The",
-                "  column is the size of the disagreement, not a recommendation: adopting the table",
-                "  by default would move a held position's CA on the authority of a constant six",
-                "  reviews declined to use. Flip `event_catalyst_decay.halflife_source` to",
-                "  `taxonomy` — or edit the table — as a frozen-threshold decision, with this",
-                "  table in front of you."]
+        out += ["", "  `decayed now` is what each event contributes TODAY under each halflife —",
+                "  the size of the disagreement in STRENGTH, which is not the unit anything",
+                "  downstream reads. The table below prices it where it lands."]
+
+        imp = res.get("halflife_sector_impact") or []
+        out += ["", f"  WHAT IT MOVES — catalyst_alignment per sector, {len(imp)} sector(s) affected:", ""]
+        if not imp:
+            out += ["    none — every drifting event sits under a saturated aggregate", ""]
+        else:
+            hh = f"  {'sector':<38} {'stored':>8} {'taxonomy':>9} {'Δ CA':>8}"
+            out += [hh, "  " + "-" * (len(hh) - 2)]
+            for r in imp:
+                out.append(f"  {r['sector_id']:<38} {r['ca_stored']:>8.1f} "
+                           f"{r['ca_taxonomy']:>9.1f} {r['delta']:>+8.1f}")
+        out += ["", "  Not a recommendation: adopting the table by default would move a held",
+                "  position's CA on the authority of a constant six reviews declined to use.",
+                "  Flip `event_catalyst_decay.halflife_source` to `taxonomy` — or edit the",
+                "  table — as a frozen-threshold decision, with this table in front of you."]
     return "\n".join(out)
 
 

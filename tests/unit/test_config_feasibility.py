@@ -16,10 +16,11 @@ from __future__ import annotations
 
 import math
 
+import pytest
 import yaml
 
 from catalyx.config import weights
-from catalyx.execution import portfolio
+from catalyx.execution import portfolio, rebalance
 
 
 def test_position_cap_admits_the_target_book():
@@ -84,7 +85,7 @@ def test_yaml_mirrors_the_derived_values():
     assert weights.rebalance_rules()["max_position_pct"] == bs["max_position_pct"]
     raw = yaml.safe_load(weights._WEIGHTS_PATH.read_text(encoding="utf-8"))
     for tier, pct in weights.conviction_tiers().items():
-        assert round(float(raw["conviction_tiers"][tier]["max_position_pct"]) * 100.0) == pct
+        assert round(float(raw["conviction_tiers"][tier]["max_position_pct"]) * 100.0, 1) == pct
 
 
 def test_model_book_is_executable_under_the_real_books_rules():
@@ -217,3 +218,41 @@ def test_an_eu_listed_etc_resolves(tmp_path, monkeypatch):
         "      recommendation_tier: 1\n", encoding="utf-8")
     monkeypatch.setattr(snapshot_repo, "_ETF_PATH", f)
     assert snapshot_repo.primary_etf("fake_gold") == "PPFB.DE"
+
+
+def test_the_deploy_ceiling_is_reachable_by_the_book_that_is_counted():
+    """v12 B3 — `deploy_max` is not free-standing: `book_shape` reads the neutral weight, every
+    conviction tier and `max_position_pct` off it. It used to take the step term from
+    `intact_rank_max` (8) while `rebalance.py` counts `n_intact` over the MODEL BOOK, which
+    holds at most `n_target` = 6 — so the whole ladder rested on a deployment ratio the counter
+    could never produce (0.85 declared, 0.75 reachable), and `max_position_pct` shipped 2.5pp
+    too high. `intact_rank_max: 8` was a leftover from a 10-name book.
+
+    This asserts the identity against `deploy_ratio` itself rather than re-deriving it, so the
+    two cannot drift again: a FULL, fully-intact book, no VIX brake, must reach exactly the
+    ceiling the position cap is derived from. The other feasibility tests all passed while this
+    was broken because they only ever compared derived values to each other.
+    """
+    bs = weights.book_shape()
+    cfg = weights.rebalance_rules()
+    full = rebalance.deploy_ratio(bs["n_target"], None, cfg)["ratio"]
+    assert full == pytest.approx(bs["deploy_max"]), (
+        f"a full intact {bs['n_target']}-name book deploys {full:.0%}, but the cap ladder is "
+        f"derived from deploy_max {bs['deploy_max']:.0%} — the ceiling is unreachable")
+
+
+def test_every_rank_ceiling_is_reachable():
+    """v12 B4 — a `rank_max` above `max_positions` is dead config. `decide_action` is handed
+    `rank_in_portfolio`, which runs 1..max_positions (6), so `buy_if.rank_max: 8` passed every
+    member of the model book and filtered nothing. It was written for a 10-name book and was
+    never re-read when v6 L1 cut the book to 6; CLAUDE.md still cites it as a live constraint.
+    """
+    cfg = weights.rebalance_rules()
+    n_max = int(portfolio.load_profile("catalyx")["construction"]["max_positions"])
+    for rule in ("buy_if", "add_if"):
+        rm = (cfg.get(rule) or {}).get("rank_max")
+        if rm is None:
+            continue
+        assert int(rm) <= n_max, (
+            f"{rule}.rank_max = {rm} but rank_in_portfolio never exceeds max_positions "
+            f"({n_max}) — the ceiling can never bind")

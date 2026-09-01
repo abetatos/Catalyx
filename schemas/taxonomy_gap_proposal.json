@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "catalyx/schemas/taxonomy_gap_proposal.json",
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "title": "TaxonomyGapProposal",
   "description": "An investment theme detected via market signals that does not map to any existing sector in sector_taxonomy.yaml. Output of the Discovery Pass. Accumulates evidence across monthly reviews. Promotion to sector_taxonomy.yaml is always a user decision — the system only records evidence.",
   "type": "object",
@@ -94,8 +94,8 @@
     },
     "investability_assessment": {
       "type": "string",
-      "enum": ["not_yet", "proxy_only", "investable_pending_etf_verify", "investable"],
-      "description": "not_yet: no ETF vehicle. proxy_only: only via a broader ETF at low weight. investable_pending_etf_verify: ETF found but not yet confirmed UCITS/accessible. investable: full ETF coverage confirmed."
+      "enum": ["not_yet", "proxy_only", "investable_pending_etf_verify", "investable", "not_investable_no_buyable_vehicle"],
+      "description": "not_yet: no ETF vehicle. proxy_only: only via a broader ETF at low weight. investable_pending_etf_verify: a vehicle was found but its buyability is not confirmed. investable: a BUYABLE vehicle is confirmed. not_investable_no_buyable_vehicle: a vehicle exists but the operator cannot buy it. v12 B13 — the enum was missing that last value, which a live proposal had carried since 2026-06-04 with nothing validating it, and the old wording ('confirmed UCITS/accessible') is the test v10.1 disproved: UCITS is not what makes a vehicle buyable, a PRIIPs KID is, and a single-metal fund cannot be UCITS at all. The check is the trading VENUE (snapshot_repo.PRIIPS_VENUES), never the flag."
     },
     "evidence": {
       "type": "array",

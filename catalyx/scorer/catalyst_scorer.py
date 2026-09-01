@@ -216,12 +216,24 @@ def _anchor_date(ev: dict) -> str:
 
 def _apply_confirms(structural: float, decayed: float) -> float:
     """Additive boost (v1.5): +confirm_max_points at decayed=100, scaled linearly.
-    Floor at structural (a confirm never lowers it), cap at the independent blend
-    (a confirm never outscores an equally-strong independent signal)."""
+    Floor at structural (a confirm never lowers it), cap at 100.
+
+    v12 B1 — the cap used to be the independent blend (`0.45·S + 0.55·D`), and that cap sits
+    BELOW its own floor for every event weaker than the structural it confirms:
+    `0.45S + 0.55D > S ⟺ D > S`. Live structurals run 77–95 against decayed strengths of
+    14–45, so `min(raw, case_c)` was swallowed by the `max(structural, ·)` floor and the boost
+    was annihilated: all 32 linked `confirms` in the registry contributed EXACTLY 0, while
+    `contradicts` bit unconditionally. The event layer was a one-way ratchet downward, inside a
+    module whose own aggregation docstring says more confirming catalysts = stronger signal.
+    The cap was guarding a comparison that does not need guarding: a linked `independent`
+    REPLACES the structural in the pool rather than competing with it for a slot, and an event
+    that corroborates an already-strong thesis genuinely is stronger evidence than an unrelated
+    event of the same size. Removing it restores the symmetry with `_apply_contradicts`, which
+    floors at 0 and caps at the no-event case — confirms now floors at the no-event case and
+    caps at 100.
+    """
     boost = _CONFIRM_MAX_POINTS * (decayed / 100.0)
-    raw = structural + boost
-    case_c = structural * _STRUCTURAL_SUB_WEIGHT + decayed * _EVENT_SUB_WEIGHT
-    return round(max(structural, min(raw, case_c)), 2)
+    return round(max(structural, min(structural + boost, 100.0)), 2)
 
 
 def _apply_contradicts(structural: float, decayed: float) -> float:
@@ -233,7 +245,18 @@ def _apply_contradicts(structural: float, decayed: float) -> float:
 
 
 def _apply_independent(structural: float, decayed: float) -> float:
-    return round(structural * _STRUCTURAL_SUB_WEIGHT + decayed * _EVENT_SUB_WEIGHT, 2)
+    """Blend of the two carriers, floored at the no-event case (v12 B2).
+
+    The bare blend `0.45·S + 0.55·D` had no floor, so a DECAYING independent event dragged the
+    structural down as it died: `consumer_india_em` read 64.5 → 61.81 on an event decayed to
+    59.6, and the limit as D→0 is `0.45·S` = 29.0 — an event fading to nothing removed a third
+    of a structural intensity it never contradicted. The correct D→0 limit is the no-event
+    case, `S`, and with the floor the function is continuous with "no event at all".
+    `independent` means "hits this sector, says nothing about this thesis": it may ADD a
+    carrier, never subtract one. Only `contradicts` is licensed to lower a structural.
+    """
+    blend = structural * _STRUCTURAL_SUB_WEIGHT + decayed * _EVENT_SUB_WEIGHT
+    return round(max(structural, blend), 2)
 
 
 def _apply_interaction(structural: float, decayed: float, relation: str) -> float:
@@ -242,6 +265,57 @@ def _apply_interaction(structural: float, decayed: float, relation: str) -> floa
     if relation == "contradicts":
         return _apply_contradicts(structural, decayed)
     return _apply_independent(structural, decayed)
+
+
+def _sector_direction(ev: dict, sector_id: str, relation: str) -> tuple[str, bool]:
+    """Is this DIRECT event good or bad for THIS sector? `(direction, was_it_stated?)` (v12 B5).
+
+    `relation_to_structural` answers a different question — how the event relates to a
+    structural THESIS — and a direct event has no structural parent, so the scorer had nothing
+    to read and assumed every direct event was a positive carrier: `contributes = relation in
+    ("independent", "confirms")`. The noisy-OR is monotone increasing, so the direct-event
+    channel could only ever RAISE `catalyst_alignment`. Live, `cat_20260617_fed_hawkish_pivot`
+    (a hawkish Fed, strength 80, filed `independent`) entered as +14.3 of support on seven
+    sectors including gold, copper and EU retail banking. A `contradicts` with no structural
+    parent was silently dropped instead — the one direction the registry is starved of.
+
+    `sector_impact` (event schema 1.4) is where an author states it: `{sector_id: supportive |
+    adverse}`. It is OPTIONAL and its absence is reported (`sector_direction_stated: false`),
+    not guessed away — an unstated direction keeps today's behaviour so this addition moves no
+    live number, and `catalyst_audit` counts how much CA rests on the assumption. Turning
+    "nobody said" into "adverse" would be the same error in the other direction.
+    """
+    impact = ev.get("sector_impact") or {}
+    stated = str(impact.get(sector_id) or "").lower()
+    if stated in ("supportive", "adverse"):
+        return stated, True
+    if relation == "contradicts":
+        # No structural to dampen, but the author DID state a direction — against the thesis
+        # that put this event on the sector's list. Dropping it was never neutral.
+        return "adverse", True
+    return "supportive", False
+
+
+def _net_event_impact(base_score: float, modified: list[float]) -> float:
+    """Net the strongest LIFT and the strongest DRAG on one structural (v12 B2b).
+
+    The rule used to be `max(events, key=|impact|)` — exactly ONE event survived per
+    structural, so a confirm of magnitude 4.5 erased a live contradict of magnitude 3.0 from
+    the score. In a registry holding 31 `confirms` against 2 `contradicts`, under a config that
+    deliberately prices disconfirmation higher (contradict 15 vs confirm 10), that is the wrong
+    direction to lose evidence in; the contradiction survived only in `regime_state`, which
+    annotates and never scores.
+
+    With events in ONE direction this is identical to the old rule — it changes the number only
+    when a structural carries both, the case the old rule got wrong. Still one event per
+    DIRECTION, deliberately: several confirming headlines about the same development are
+    correlated, and stacking them is exactly the double-count `_REINFORCE_FACTOR` damps one
+    level up.
+    """
+    impacts = [m - base_score for m in modified]
+    lift = max([d for d in impacts if d > 0], default=0.0)
+    drag = min([d for d in impacts if d < 0], default=0.0)
+    return round(min(100.0, max(0.0, base_score + lift + drag)), 2)
 
 
 # ── Data loaders ───────────────────────────────────────────────────────────────
@@ -366,22 +440,24 @@ def compute_catalyst_alignment(
             halflife, hl_drift = _halflife_for(ev)
             detected = _anchor_date(ev)
             decayed = _decayed_strength(strength, halflife, detected)
-            # A direct event contributes its decayed strength as a standalone signal.
-            # `contradicts` has no structural target in this context, so it is recorded
-            # but not aggregated (nothing to dampen).
-            contributes = relation in ("independent", "confirms")
+            direction, dir_stated = _sector_direction(ev, sector_id, relation)
             ev_priced, ev_priced_imp = _priced_in_event(ev)
             direct_event_results.append({
                 "event_id": sid,
                 "type": "direct_event",
                 "relation": relation,
+                "sector_direction": direction,
+                "sector_direction_stated": dir_stated,
                 "strength_original": raw_strength,
                 "strength_calibrated": strength,
                 "strength_rank_calibrated": cal_applied,
                 "strength_decayed": decayed,
                 "halflife_days": halflife,
                 "halflife_disagrees_with_type": hl_drift,
-                "modified_score": round(decayed, 2) if contributes else None,
+                # `supportive` is a carrier in the noisy-OR pool; `adverse` is applied to the
+                # AGGREGATE after it (see below), because there is no structural here to dampen.
+                "modified_score": round(decayed, 2) if direction == "supportive" else None,
+                "adverse_strength": round(decayed, 2) if direction == "adverse" else None,
                 "priced_in": ev_priced,
                 "priced_in_imputed": ev_priced_imp,
             })
@@ -434,12 +510,11 @@ def compute_catalyst_alignment(
                 "modified_structural_score": modified,
             })
 
-        # Pick the dominant event per structural: highest absolute impact
-        if event_details:
-            dominant = max(event_details, key=lambda e: abs(e["modified_structural_score"] - base_score))
-            modified_score = dominant["modified_structural_score"]
-        else:
-            modified_score = base_score
+        # Both directions are applied — see `_net_event_impact` (v12 B2b).
+        modified_score = (
+            _net_event_impact(base_score, [e["modified_structural_score"] for e in event_details])
+            if event_details else base_score
+        )
 
         # Regime state: fundamental gate (indicator health) + TIME-INDEPENDENT persistence gate.
         # Persistence = DISTINCT contradicting developments that are still live (decayed strength
@@ -486,6 +561,18 @@ def compute_catalyst_alignment(
         }
 
     catalyst_alignment = _aggregate_alignment(valid)
+
+    # An ADVERSE direct event has no structural to dampen, so it is applied to the aggregate —
+    # the same `_apply_contradicts` penalty the scorer already gives a contradicted structural,
+    # against the sector's whole case rather than one carrier of it. Strongest only, for the
+    # same reason `_net_event_impact` takes one per direction.
+    adverse = [r["adverse_strength"] for r in direct_event_results
+               if r.get("adverse_strength") is not None]
+    if adverse:
+        catalyst_alignment = _apply_contradicts(catalyst_alignment, max(adverse))
+    n_direction_unstated = sum(1 for r in direct_event_results
+                               if r.get("modified_score") is not None
+                               and r.get("sector_direction_stated") is False)
 
     # v11 P5 — ca_logit: the same alignment on a scale that still discriminates at the ceiling.
     # The noisy-OR is bounded by 100 and anchored on the strongest carrier, so a sector with
@@ -548,6 +635,7 @@ def compute_catalyst_alignment(
         "sector_id": sector_id,
         "catalyst_alignment": catalyst_alignment,
         "ca_logit": ca_logit,
+        "direct_events_direction_unstated": n_direction_unstated,
         "ca_unpriced": ca_unpriced,
         "ca_unpriced_imputed_n": ca_unpriced_imputed_n,
         "halflife_source": _HALFLIFE_SOURCE,

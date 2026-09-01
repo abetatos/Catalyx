@@ -20,7 +20,19 @@ construction:
   min_composite_z: 0.0
   min_composite: 55        # pre-v6, read one major more for unmigrated profiles
   min_momentum: 40
-  max_crowding: 85
+  # CROWDING IS PRICED ONCE, IN THE COMPOSITE (v13.1). 85 -> 100: no binary veto. Crowding keeps
+  # its 0.135 weight, where it is a penalty a name must OUT-RANK; it no longer also deletes the
+  # name. v12.1 removed this same double charge on the EXIT side and left entry unexamined.
+  # The bar's only two victims universe-wide (pharma 94.4, biotech 94.4) were the book's two
+  # DIVERSIFIERS (pharma rho_bar 0.168, 0.00 vs semis) — a two-name blacklist of the cure for
+  # the concentration the rest of the book has. Restoring the pool: vol 16.8 -> 14.1%, mean
+  # composite 59.0 -> 59.8, top driver 83 -> 74%. Lower risk AND higher score, so there was no
+  # trade-off to weigh — evidence the bar mispriced rather than preferred.
+  # GIVEN UP, and it is a real argument: crowding prices what the NEXT buyer pays, so new money
+  # into a crowded name is not the same as holding one. Defence = the composite penalty plus
+  # every ordinary exit. `equal_weight` (85) and `low_crowding` (55) keep their bars as the
+  # standing counterfactual; rebalance's v12.1 TRIM-suppression stays live for them.
+  max_crowding: 100
   exclude_narrative_maturity: [exhausted]
 
   # ── CONVICTION GATE (v10 P1) — the ABSOLUTE standard, beside the relative floor ──
@@ -48,7 +60,12 @@ construction:
     enabled: true
     min_catalyst_alignment: 40
   weighting: composite
-  max_position_pct: 20
+  max_position_pct: 17.5
+  # v13.2: DERIVED as `tier_multiples[0] × deploy_max/n_target` — 17.5% of TOTAL capital. Model
+  # weights are fractions of the DEPLOYED book, where the same ceiling is 23.33% (= mult[0]/
+  # n_target). Applied on the wrong base it sat 0.83pp over equal weight and flattened every
+  # sizing step. The baselines keep `deployed` — their caps were hand-picked, not derived.
+  max_position_basis: total
   # Conviction sizing (overrides global portfolio_weighting): the flagship book expresses the
   # ranking in the WEIGHTS, not just the selection. softmax over z-normalized composite spreads
   # the narrow score band (≈65–74) into dispersed weights; the deadband caps tax-churn.

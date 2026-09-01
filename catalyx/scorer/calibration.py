@@ -466,12 +466,40 @@ def ca_tilt_edge(portfolio_id: str = "catalyx", horizon_days: int = DEFAULT_HORI
         windows.append({"run_id": by_date[d8], "start": start.isoformat(),
                         "end": window_end.isoformat(), "delta": delta,
                         "edge_pp": round(edge, 3),
+                        **_gross_decomposition(contribs),
                         "contributions": sorted(contribs, key=lambda c: c["edge_pp"])})
 
     if not windows:
         return {**empty, "note": "the CA-tilt ledger exists but no window has closed yet — "
                                  f"first verdict ~{horizon_days}d after the first post-P8 run"}
     return _edge_summary(empty, windows, per_sector, int(horizon_days), label="the CA tilt")
+
+
+def _gross_decomposition(contribs: list[dict]) -> dict:
+    """Split a tilt window's edge into the reallocation it intended and the GROSS it did not.
+
+    v12 B9 — `edge_pp = Σ dwᵢ·rᵢ` is only "what the tilt bought" when `Σdw = 0`. `ca_tilt` is
+    total-preserving by construction, but `water_fill`, the contested gross-down and the
+    deadband all run AFTER it, and they do not have to give back exactly what they took: on
+    `run_20260831_184616` the recorded book summed to 99.90% against a pre-tilt 99.33%, so
+    +0.57pp of extra GROSS was being priced as tilt skill. That term is beta — it pays whenever
+    the book is up, whatever the tilt chose. The identity is exact:
+
+        Σ dwᵢ·rᵢ  =  (Σdw)·r̄  +  Σ dwᵢ·(rᵢ − r̄)
+
+    `edge_pp` keeps its meaning (what the book actually got — the number is not silently
+    redefined); `edge_pp_ex_gross` is the reallocation on its own, which is the part the tilt's
+    δ is answerable for, and `gross_dw_pp` says how far apart they are.
+    """
+    if not contribs:
+        return {"gross_dw_pp": 0.0, "edge_pp_ex_gross": 0.0, "gross_edge_pp": 0.0}
+    gross_dw = sum(c["delta_w_pp"] for c in contribs) / 100.0
+    mean_r = sum(c["fwd_pct"] for c in contribs) / len(contribs) / 100.0
+    gross_edge = gross_dw * mean_r * 100.0
+    total = sum(c["edge_pp"] for c in contribs)
+    return {"gross_dw_pp": round(gross_dw * 100.0, 3),
+            "gross_edge_pp": round(gross_edge, 3),
+            "edge_pp_ex_gross": round(total - gross_edge, 3)}
 
 
 def _review_cycle_dates(dates: list[str], min_gap_days: int = 21) -> list[str]:
@@ -514,13 +542,24 @@ def _edge_summary(base: dict, windows: list[dict], per_sector: dict[str, dict],
     mean = round(total / len(windows), 3)
     worst = next(iter(per_catalyst.items()), None)
     verdict = "paid" if mean > 0 else ("cost" if mean < 0 else "flat")
+    # v12 B9 — the beta-free half, and how big the gross term it removes actually is. Reported
+    # beside the realized number, never instead of it: `edge_pp` is what the book got, and
+    # `mean_edge_pp_ex_gross` is the part δ is answerable for.
+    mean_ex = round(sum(w.get("edge_pp_ex_gross", w["edge_pp"]) for w in windows)
+                    / len(windows), 3)
+    max_dw = max((abs(w.get("gross_dw_pp") or 0.0) for w in windows), default=0.0)
     return {
         **base,
         "windows": windows, "n_windows": len(windows), "effective_windows": n_eff,
         "mean_edge_pp": mean, "total_edge_pp": total,
+        "mean_edge_pp_ex_gross": mean_ex, "max_gross_dw_pp": round(max_dw, 3),
         "per_sector": per_sector, "per_catalyst": per_catalyst, "verdict": verdict,
         "note": (f"{label} {verdict} {mean:+.2f}pp of book per {horizon_days}d window over "
                  f"{len(windows)} window(s) (~{n_eff} independent)."
+                 + (f" The priced rows carry up to {max_dw:+.2f}pp of NET weight, so "
+                    f"{mean - mean_ex:+.2f}pp of that is gross (beta), not tilt: "
+                    f"{mean_ex:+.2f}pp is the reallocation on its own."
+                    if max_dw >= 0.1 else "")
                  + (f" Largest drag: {worst[0]} ({worst[1]:+.2f}pp) — evidence about HOW that "
                     f"catalyst's score is computed, never about disabling CA."
                     if worst is not None and worst[1] < 0 else "")),
@@ -667,6 +706,7 @@ def ca_tilt_edge_retro(portfolio_id: str = "catalyx", horizon_days: int = DEFAUL
                         "end": window_end.isoformat(), "delta": delta,
                         "scale": scale_used,
                         "edge_pp": round(edge, 3), "n_priced": n_priced,
+                        **_gross_decomposition(contribs),
                         "contributions": sorted(contribs, key=lambda c: c["edge_pp"])})
 
     if not windows:

@@ -247,6 +247,56 @@ def catalyst_ledger(movements_dir: Path | None = None,
     return sorted(out, key=lambda x: -x["exposure_eur"])
 
 
+def _risk_book(post_book: dict, held_qty: dict, proposed: list[dict] | None) -> dict:
+    """`post_book` marked to MARKET in EUR, for the risk decomposition only (v12 B8).
+
+    `post_book` mixes two units by construction: held lines carry `invested_eur`, which
+    `positions()` computes as average COST BASIS, while a proposed leg carries `trade_eur`,
+    which is market. That mix is correct for the notional cap — CLAUDE.md pins the cap to
+    `exposure_eur` ("how much money moves if this driver breaks") and pins the SELL deduction
+    to the exposure basis, so a winner sold above cost cannot retire more exposure than it
+    carried. It is NOT correct for a VARIANCE share: a line up 40% carries 40% more risk than
+    its cost basis says, and feeding cost basis into the covariance understates exactly the
+    winners a concentration limit exists to catch.
+
+    So the two books are built separately rather than one being bent to serve both. Prices come
+    from the cache with `allow_fetch=False` — `covariance` is about to read the same window, so
+    this adds no network — and any ticker without a cached close keeps its cost basis rather
+    than dropping out of the book, which would silently shrink the denominator every share is
+    computed against.
+    """
+    book = {sid: [etf, eur] for sid, (etf, eur) in post_book.items()}
+    tickers = [v[0] for v in book.values() if v[0]]
+    marked: dict[str, float] = {}
+    if tickers:
+        try:
+            from datetime import timedelta
+
+            from catalyx.data import prices
+            end = datetime.now(timezone.utc).date()
+            frame = prices.read_eur([t for t in dict.fromkeys(tickers)],
+                                    (end - timedelta(days=30)).isoformat(),
+                                    end.isoformat(), allow_fetch=False)
+            if frame is not None and len(frame):
+                for t in frame.columns:
+                    col = frame[t].dropna()
+                    if len(col):
+                        marked[str(t)] = float(col.iloc[-1])
+        except Exception:                                      # pragma: no cover - defensive
+            marked = {}
+    for sid, row in book.items():
+        px, qty = marked.get(row[0]), float(held_qty.get(sid) or 0.0)
+        if px and qty:
+            row[1] = px * qty
+    for p in proposed or []:
+        sid = str(p.get("sector_id") or "")
+        eur = float(p.get("trade_eur") or 0.0)
+        if not sid or eur == 0.0 or sid not in book:
+            continue
+        book[sid][1] += eur                     # already market — no conversion needed
+    return {sid: v for sid, v in book.items() if v[1] > 0}
+
+
 def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[dict]:
     """The book's exposure AFTER the proposed table, against `correlated_catalyst_cap`.
 
@@ -293,10 +343,12 @@ def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[d
     # would add. Built here rather than re-derived, so the risk and the notional describe the
     # same hypothetical book.
     post_book: dict[str, list] = {}
+    held_qty: dict[str, float] = {}
     for etf_row in positions(movements_dir).get("holdings", []):
         sid = str(etf_row.get("sector_id") or "")
         if sid and float(etf_row.get("invested_eur") or 0.0) > 0:
             post_book[sid] = [str(etf_row.get("etf") or ""), float(etf_row["invested_eur"])]
+            held_qty[sid] = float(etf_row.get("qty") or 0.0)
 
     for p in proposed or []:
         eur = float(p.get("trade_eur") or 0.0)
@@ -328,6 +380,16 @@ def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[d
             if row[1] <= 0:                # closed by the table — not a member of any cluster
                 post_book.pop(sid, None)
 
+    # Drivers CARRIED by the post-trade book, independent of whether covariance can be built —
+    # an untouched, unmeasurable cluster must still appear as a row (v12 B7).
+    _all_book_drivers: dict[str, set] = {}
+    for sid in post_book:
+        mov = held.get(sid)
+        for c in (({merged.get(a["catalyst_id"], a["catalyst_id"])
+                    for a in effective_attribution(mov)[0]} if mov is not None
+                   else {merged.get(c2, c2) for c2 in (smap.get(sid) or [])}) & structural):
+            _all_book_drivers.setdefault(c, set()).add(sid)
+
     # v6 I2: the RISK a cluster carries, beside the notional the cap reads. The cap stays
     # notional and stays `warn` — a measurement is evidence FOR a config edit, never the edit.
     # None when the covariance cannot be built: an unmeasured risk must not read as zero risk.
@@ -337,13 +399,20 @@ def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[d
         from catalyx.scorer import covariance
         clusters = {cid: sorted(by_catalyst.get(cid, ())) for cid in added}
         # the cluster's members are every sector attributed to it in the post-trade book, not
-        # only the ones this table touches — the cap is about the whole bucket
+        # only the ones this table touches — the cap is about the whole bucket.
+        # v12 B7: and so is the SET of clusters. `clusters` was seeded from `added`, i.e. only
+        # the drivers this table negotiates, so a bucket already over the variance budget that
+        # today's table happens not to touch was never measured, never flagged, and never
+        # offered a trim candidate — which is half of what v10 P7 was built to do. With an
+        # empty proposed table `cap_check` returned NOTHING at all, on a live book carrying
+        # clusters at 44.6% of variance against a 35% budget.
         for sid, (etf, _eur) in post_book.items():
             mov = held.get(sid)
             drivers = ({merged.get(a["catalyst_id"], a["catalyst_id"])
                         for a in effective_attribution(mov)[0]} if mov is not None
                        else {merged.get(c, c) for c in (smap.get(sid) or [])})
-            for c in drivers & structural & set(clusters):
+            for c in drivers & structural:
+                clusters.setdefault(c, [])
                 if sid not in clusters[c]:
                     clusters[c].append(sid)
         # v10 P7 — each member ALSO gets a singleton cluster, so the risk budget can name WHICH
@@ -354,7 +423,7 @@ def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[d
         # the matrix per member would pay for the same estimate N times.
         singles = {f"{_MEMBER_RISK_PREFIX}{s}": [s] for s in post_book}
         risk = covariance.cluster_risk_for(
-            {s: (v[0], v[1]) for s, v in post_book.items()},
+            {s: (v[0], v[1]) for s, v in _risk_book(post_book, held_qty, proposed).items()},
             {**clusters, **singles}) or {}
         member_risk = {k[len(_MEMBER_RISK_PREFIX):]: v for k, v in risk.items()
                        if k.startswith(_MEMBER_RISK_PREFIX)}
@@ -363,7 +432,11 @@ def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[d
         risk, member_risk = {}, {}
 
     out = []
-    for cid, add_eur in added.items():
+    # Every driver present in the post-trade book, plus every driver the table touches even if
+    # the table closes it out (v12 B7). `added` alone was the set of drivers being NEGOTIATED,
+    # never the set being CARRIED.
+    for cid in sorted(set(added) | {c for c in (risk or {})} | set(_all_book_drivers)):
+        add_eur = added.get(cid, 0.0)
         post = max(0.0, current.get(cid, 0.0) + add_eur)
         pct = post / total * 100.0
         r = risk.get(cid) or {}
@@ -391,7 +464,10 @@ def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[d
                                 else round(float(ctr) - var_cap_pct, 2)),
             # The two rules disagreeing on the SAME bucket is the finding, not a glitch.
             "rules_disagree": over_risk is not None and (pct > cap_pct) != over_risk,
-            "sectors": sorted(by_catalyst.get(cid, ())),
+            # the whole bucket, not only the part this table negotiates (v12 B7)
+            "sectors": sorted(set(by_catalyst.get(cid, ())) | _all_book_drivers.get(cid, set())),
+            "sectors_traded": sorted(by_catalyst.get(cid, ())),
+            "touched_by_table": cid in added,
             # Which member carries the risk — what a trim candidate is chosen on (v10 P7).
             # Sorted by contribution so the caller never has to re-rank; empty when unmeasured.
             "members_by_risk": sorted(

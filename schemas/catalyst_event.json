@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "catalyx/schemas/catalyst_event.json",
-  "schema_version": "1.3",
+  "schema_version": "1.4",
   "title": "CatalystEvent",
   "description": "A discrete, timestamped macro event that may drive sector repricing. Decays in relevance over time.",
   "type": "object",
@@ -115,6 +115,35 @@
       "type": ["string", "null"],
       "enum": ["confirms", "contradicts", "independent", null],
       "description": "Relationship of this event to its linked structural catalyst. Determines scoring interaction: confirms → amplification, contradicts → dampening, independent → additive. Required when related_catalyst_ids contains a struct_ ID. See scoring_weights.yaml catalyst_interaction_factors."
+    },
+    "sector_impact": {
+      "type": ["object", "null"],
+      "additionalProperties": { "type": "string", "enum": ["supportive", "adverse"] },
+      "description": "OPTIONAL, schema 1.4 (v12 B5). Direction of this event on EACH sector that lists it directly in active_catalyst_ids, keyed by sector_id. relation_to_structural answers a different question — how the event relates to a structural THESIS — so a DIRECT event (no structural parent) left the scorer with nothing to read and it assumed every one of them was supportive; the noisy-OR is monotone increasing, so that channel could only RAISE catalyst_alignment (a hawkish Fed pivot filed `independent` added +14.3 of support to gold, copper and EU retail banking, and a `contradicts` with no parent was dropped outright). Absence is REPORTED, never guessed (direct_events_direction_unstated): an unstated direction keeps the pre-1.4 behaviour, so adding the field moved no live score. A relation_to_structural of `contradicts` implies `adverse` when this map is silent.",
+      "examples": [{ "gold_miners": "adverse", "eu_defense_prime_contractors": "supportive" }]
+    },
+    "affected_sectors": {
+      "type": ["array", "null"],
+      "items": { "type": "string" },
+      "description": "sector_ids this event hits — CLAUDE.md's answer to 'one catalyst = one driver': a driver may strike several sectors, and this is where that is said. Written since the registry began and only DECLARED at 1.4 (v12 B13); additionalProperties:false had been rejecting 11 of the 19 live documents with nothing in the suite checking."
+    },
+    "status_last_reviewed": {
+      "type": ["string", "null"],
+      "description": "ISO date of the last /catalyx-scan verdict on this event. Declared at 1.4 (v12 B13)."
+    },
+    "review_log": {
+      "type": ["array", "null"],
+      "items": { "type": "object", "additionalProperties": true },
+      "description": "Append-only scan verdicts, newest last. Carries the C2c disconfirming search (`found: false` is a RESULT, never a blank). Declared at 1.4 (v12 B13)."
+    },
+    "lifecycle_log": {
+      "type": ["array", "null"],
+      "items": { "type": "object", "additionalProperties": true },
+      "description": "Append-only status transitions written by catalyst_lifecycle. Declared at 1.4 (v12 B13)."
+    },
+    "invalidation_reason": {
+      "type": ["string", "null"],
+      "description": "Why the event was invalidated — nothing is deleted. Declared at 1.4 (v12 B13)."
     },
     "decay_halflife_days": {
       "type": "number",

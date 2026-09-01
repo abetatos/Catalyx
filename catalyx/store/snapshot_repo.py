@@ -56,11 +56,29 @@ _EVENT_CAT_DIR = _REPO_ROOT / "data" / "catalysts"
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
+_FORMULA_DIR = _REPO_ROOT / "catalyx" / "scorer"
+
+
 def _scoring_version() -> str:
+    """Hash of everything that decides a score: the weights YAML AND the formula layer.
+
+    v12 B12 — it used to hash the YAML alone, so a change to a FORMULA left the version string
+    identical and the lake asserted that rows either side of it were comparable. That is not
+    hypothetical: the v12 B1/B2 interaction fixes moved `catalyst_alignment` on 15 of 25
+    sectors by up to +4.5 without touching a single weight. `git_commit` is recorded beside it
+    and would have let someone reconstruct the truth, but a version field that silently says
+    "same scoring" is worse than no field — every consumer that segments by it (calibration
+    windows, the rule scorecard, `score_ic`) would pool two different scoring functions.
+    Sorted filenames so the digest is stable across platforms.
+    """
     try:
-        return hashlib.md5(_WEIGHTS_PATH.read_bytes()).hexdigest()[:12]
+        h = hashlib.md5(_WEIGHTS_PATH.read_bytes())
     except FileNotFoundError:
         return "unknown"
+    for f in sorted(_FORMULA_DIR.glob("*.py")):
+        h.update(f.name.encode("utf-8"))
+        h.update(f.read_bytes())
+    return h.hexdigest()[:12]
 
 
 def _git_commit() -> str | None:

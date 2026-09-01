@@ -386,15 +386,27 @@ _BOOK_SHAPE_DEFAULT = {
 
 
 def deploy_max() -> float:
-    """Highest deployment ratio the rules can ask for (every top-`intact_rank_max` sector
-    intact), as a fraction. The number the position cap must be feasible against: a ceiling
-    that cannot absorb the deployment the same config demands resolves as a permanent
-    shortfall or a permanent breach."""
+    """Highest deployment ratio the rules can ACTUALLY ask for, as a fraction. The number the
+    position cap must be feasible against: a ceiling that cannot absorb the deployment the same
+    config demands resolves as a permanent shortfall or a permanent breach.
+
+    v12 B3 — the step term was read off `intact_rank_max` (8) alone, giving 0.85. But
+    `n_intact` is counted over the MODEL BOOK (`rebalance.py`), which holds at most
+    `n_target` = 6 names, so `base + step·(8−5)` describes a state the counter cannot reach:
+    the true ceiling is 0.75 and the live run already prints `base 0.70 + 0.05×(6−5) → 75%`,
+    pinned there. `intact_rank_max: 8` is a leftover from when `max_positions` was 10.
+    The number matters far beyond the deployment target, because `book_shape` reads the whole
+    ladder off it: an unreachable 0.85 inflated the neutral weight, and with it every
+    conviction tier and `max_position_pct` — the one constant this project insists is DERIVED.
+    So the count is bounded by what can be counted. `test_config_feasibility` now asserts the
+    link directly against `deploy_ratio`, which is what would have caught this.
+    """
     d = rebalance_rules().get("deployment", {}) or {}
     base = float(d.get("base", 0.70))
     step = float(d.get("step_per_intact_sector", 0.05))
     intact_min = float(d.get("intact_min", 5))
-    intact_max = float(d.get("intact_rank_max", 8))
+    n_target = max(1, int(_section("book_shape", _BOOK_SHAPE_DEFAULT).get("n_target", 6)))
+    intact_max = min(float(d.get("intact_rank_max", 8)), float(n_target))
     raw = base + step * max(0.0, intact_max - intact_min)
     return max(float(d.get("floor", 0.40)), min(float(d.get("ceiling", 1.00)), raw))
 
@@ -412,11 +424,19 @@ def book_shape() -> dict:
     mult = [float(m) for m in (c.get("tier_multiples") or [1.4, 1.0, 0.5])]
     dmax = deploy_max()
     neutral = dmax * 100.0 / n
-    tiers = {i: round(neutral * m) for i, m in enumerate(mult, 1)}
+    tiers = {i: round(neutral * m, 1) for i, m in enumerate(mult, 1)}
     tb = {**_BOOK_SHAPE_DEFAULT["trade_budget"], **(c.get("trade_budget") or {})}
     return {"n_target": n, "tier_multiples": mult, "deploy_max": dmax,
             "neutral_weight_pct": round(neutral, 2), "tiers": tiers,
-            "max_position_pct": float(tiers[1]), "trade_budget": tb}
+            "max_position_pct": float(tiers[1]),
+            # The SAME ceiling expressed on the base the model weights actually live in (v13.2).
+            # Model weights are fractions of the DEPLOYED book, so equal weight on n_target names
+            # is 100/n there — and `deploy_max/n` of total capital. The tier-1 ceiling is
+            # therefore `mult[0] × 100/n`, and `deploy_max` cancels out. Applying the
+            # total-capital 17.5 to a deployed-base weight left 0.83pp of room over neutral
+            # instead of 6.67pp, flattening every sizing step to equal weight by arithmetic.
+            "max_position_pct_deployed": round(100.0 * mult[0] / n, 2),
+            "trade_budget": tb}
 
 
 def conviction_tiers() -> dict:

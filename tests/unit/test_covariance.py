@@ -169,5 +169,6 @@ def test_the_tier_loss_budget_is_what_the_ceilings_and_the_stop_imply():
     stop = abs(weights.exit_signals()["drawdown_exit_pct"]) / 100.0
     tiers = weights.conviction_tiers()
     budget = {t: round(pct * stop, 2) for t, pct in tiers.items()}
-    assert budget == {1: 6.0, 2: 4.2, 3: 2.1}
+    # v12 B3: 6.0/4.2/2.1 rested on a deploy_max of 0.85 the counter could not reach.
+    assert budget == {1: 5.25, 2: 3.75, 3: 1.86}
     assert budget[1] < 10.0, "a single line able to cost 10% of the book is not fractional Kelly"

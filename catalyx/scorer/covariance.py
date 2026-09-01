@@ -156,6 +156,168 @@ def risk_contributions(sigma, weights) -> list[dict]:
             for wi, m, c in zip(w, marginal, ctr)]
 
 
+def risk_budget_weights(sigma, budgets, iters: int = 500, tol: float = 1e-12) -> dict:
+    """Weights whose RISK contributions are proportional to `budgets` (v13).
+
+    Solves `w_i · (Σw)_i ∝ b_i` — position i carries share b_i of portfolio variance — by cyclical
+    coordinate descent on Spinu's (2013) convex program `min ½y'Σy − Σ bᵢ·log yᵢ`, whose
+    stationary point is exactly that condition (Griveau-Billion et al. 2013). Each coordinate is
+    the positive root of a scalar quadratic, so every step is closed-form: deterministic, no
+    random start, no tuning constant, same run → same book, which is what keeps the model book
+    reproducible from a run alone. The naive `w ← b/(Σw)` normalized each step has the same fixed
+    point but OSCILLATES (verified: it fails to converge on a plain diagonal Σ in 500 steps and
+    returns its own starting guess), so it is not used — a sizing step that silently returns its
+    input when it fails to converge is the worst available failure.
+
+    WHY THIS EXISTS. Every sizing rule before it read a LABEL. The correlated-catalyst cap asks
+    which driver a position is *attributed* to, and it was right about the accounting and wrong
+    about the risk: on the live top-12, robotics and cloud are the same declared cluster and
+    measure ρ 0.28, while cloud–cyber (different clusters) measure 0.65 and water — also labelled
+    ai_capex — is the book's best diversifier at ρ −0.00 against cloud. Correlation is the thing
+    the labels were a proxy for, and it is measurable, so the sizing step measures it. The cap
+    stays: declared exposure and measured co-movement are different questions (v10 P6).
+
+    WHAT IT DOES NOT DO. It never touches SELECTION and never enters the composite — a
+    correlation term inside the score would need an IC to justify a weight, and this is a RISK
+    statement, the same footing on which `vol_tilt` sizes without ever ranking. The names in the
+    book are exactly the names the composite chose.
+
+    THE TILT IS SQRT-COMPRESSED, and that is the honest reading, not a side effect. With Σ
+    diagonal the fixed point is `w ∝ sqrt(b)/σ`, so a 4:1 budget ratio lands as 2:1 in euros:
+    a budget is a claim about VARIANCE and a weight is a claim about money. With the composite's
+    live rank IC still noise (−0.027, 1 window) a conviction tilt that arrives compressed is the
+    direction λ already argues for; when the IC earns λ, the budgets spread and the euros follow.
+
+    Args:
+        sigma: covariance matrix (any consistent period; the solution is scale-free in Σ).
+        budgets: desired risk shares, any positive scale. Non-positive → that name gets 0.
+    Returns:
+        {"weights": [...] summing to 1, "converged": bool, "iters": int, "ctr_pct": [...]}
+    """
+    import numpy as np
+
+    b = np.asarray(budgets, dtype=float)
+    Sig = np.asarray(sigma, dtype=float)
+    n = b.size
+    if n == 0:
+        return {"weights": [], "converged": True, "iters": 0, "ctr_pct": []}
+    live = np.isfinite(b) & (b > 0)
+    if not live.any() or Sig.shape != (n, n) or not np.isfinite(Sig).all():
+        return {"weights": [0.0] * n, "converged": False, "iters": 0, "ctr_pct": [None] * n}
+
+    bl = np.where(live, b, 0.0)
+    bl = bl / bl.sum()
+    var_i = np.diag(Sig).astype(float)
+    if np.any(var_i[live] <= 0):
+        return {"weights": [0.0] * n, "converged": False, "iters": 0, "ctr_pct": [None] * n}
+
+    # start at vol-parity on the budget — the exact answer when Σ is diagonal, so the solver
+    # begins on the manifold it would otherwise have to walk to
+    y = np.where(live, np.sqrt(bl) / np.sqrt(np.where(live, var_i, 1.0)), 0.0)
+    converged, used = False, 0
+    for k in range(1, iters + 1):
+        used, prev = k, y.copy()
+        for i in range(n):
+            if not live[i]:
+                y[i] = 0.0
+                continue
+            # ∂/∂yᵢ of ½y'Σy − bᵢ·log yᵢ = 0  →  Σᵢᵢ·yᵢ² + c·yᵢ − bᵢ = 0, c = Σ_{j≠i} Σᵢⱼ·yⱼ
+            c = float(Sig[i] @ y) - var_i[i] * y[i]
+            y[i] = (-c + (c * c + 4.0 * var_i[i] * bl[i]) ** 0.5) / (2.0 * var_i[i])
+        s = y.sum()
+        if not np.isfinite(s) or s <= 0:
+            break
+        if np.abs(y / s - prev / max(prev.sum(), 1e-300)).max() < tol:
+            converged = True
+            break
+    s = y.sum()
+    w = y / s if np.isfinite(s) and s > 0 else np.zeros(n)
+
+    var = float(w @ Sig @ w)
+    ctr = [round(float(wi * (Sig @ w)[i]) / var * 100.0, 2) if var > 0 else None
+           for i, wi in enumerate(w)]
+    return {"weights": [float(x) for x in w], "converged": converged, "iters": used,
+            "ctr_pct": ctr}
+
+
+def budget_sigma(tickers: list[str], weeks: int, min_weeks: int, as_of: str | None = None,
+                 price_fn=None) -> dict:
+    """Σ over an arbitrary vehicle list, with short-history rows IMPUTED rather than dropped.
+
+    Dropping a name would shrink the very cross-section the book is being sized over — the
+    `_load_shares_series` shape of bug (v10.2) one layer up. A name without enough weeks gets its
+    own σ when it has any usable history (else the panel median) and the panel's LW constant
+    correlation `r_bar` against everyone: the prior, never the best case (uniqueness = 1 would
+    hand an unmeasured name the largest weight in the book) and never the worst.
+
+    Returns {"sigma", "tickers", "imputed", "weeks", "r_bar", "shrinkage", "psd_clipped"} or
+    {"error": ...} when fewer than 2 names are measurable — at which point there is no tape to
+    read and the caller must say so rather than size off an invented matrix.
+    """
+    import numpy as np
+
+    frame = _prices(list(tickers), weeks, as_of, price_fn)
+    if frame is None or getattr(frame, "empty", True):
+        return {"error": "no cached prices for the book's vehicles — run scripts/pre_run.sh"}
+    weekly = to_weekly(frame)
+    if getattr(weekly, "empty", True):
+        return {"error": "price frame has no weekly observations"}
+
+    full = [t for t in tickers
+            if t in weekly.columns and int(weekly[t].notna().sum()) >= min_weeks]
+    aligned = weekly[full].dropna() if full else None
+    if len(full) < 2 or aligned is None or len(aligned) < min_weeks:
+        return {"error": f"fewer than 2 vehicles with {min_weeks}+ aligned weeks",
+                "measured": full}
+
+    lw = ledoit_wolf(aligned.values)
+    S = np.asarray(lw["sigma"], dtype=float)
+    sd_full = np.sqrt(np.diag(S))
+    C_full = S / np.outer(sd_full, sd_full)
+    r_bar = float(lw["r_bar"])
+    med_sd = float(np.median(sd_full))
+
+    idx_full = {t: i for i, t in enumerate(full)}
+    n = len(tickers)
+    sd = np.empty(n)
+    imputed = []
+    for i, t in enumerate(tickers):
+        if t in idx_full:
+            sd[i] = sd_full[idx_full[t]]
+            imputed.append(False)
+        else:
+            own = weekly[t].dropna() if t in weekly.columns else None
+            # 8 weeks is not enough to estimate a CORRELATION but is enough for a variance;
+            # using it beats the panel median, which would flatten a genuinely wild vehicle
+            sd[i] = (float(own.std()) if own is not None and len(own) >= 8
+                     and float(own.std()) > 0 else med_sd)
+            imputed.append(True)
+
+    C = np.full((n, n), r_bar, dtype=float)
+    for i, ti in enumerate(tickers):
+        C[i, i] = 1.0
+        if ti not in idx_full:
+            continue
+        for j, tj in enumerate(tickers):
+            if i != j and tj in idx_full:
+                C[i, j] = C_full[idx_full[ti], idx_full[tj]]
+
+    # blending a measured block with a constant-correlation border can leave C slightly
+    # indefinite; clip and renormalize rather than hand a risk solver a matrix with a negative
+    # eigenvalue in it. Reported, because a silently repaired matrix is a silently wrong one.
+    evals, evecs = np.linalg.eigh(C)
+    psd_clipped = bool(evals.min() < 1e-10)
+    if psd_clipped:
+        C = evecs @ np.diag(np.clip(evals, 1e-10, None)) @ evecs.T
+        d = np.sqrt(np.diag(C))
+        C = C / np.outer(d, d)
+
+    return {"sigma": (C * np.outer(sd, sd)).tolist(), "tickers": list(tickers),
+            "imputed": imputed, "weeks": int(len(aligned)), "r_bar": round(r_bar, 4),
+            "shrinkage": round(float(lw["shrinkage"]), 4), "psd_clipped": psd_clipped,
+            "n_measured": len(full)}
+
+
 def cluster_risk(sigma, weights, members: list[int]) -> dict:
     """Risk carried by a SUBSET of the book — the shape a catalyst cluster needs.
 

@@ -13,6 +13,545 @@
 
 
 
+## v13.2 — El techo de posición se aplicaba sobre una base que no era la suya, y aplastaba el sizing entero a equiponderado (2026-09-01)
+
+**Salió de una observación del usuario sobre la tabla, no de un test:** «los que pones 700 es para
+llegar a 1300, todos tienen aprox el mismo dinero — nuestro cálculo no está bien hecho, los pesos
+deberían cambiar según lo que hemos definido». Cierto y medible: el libro modelo del run
+`run_20260901_142127` tenía sus **6 nombres dentro de una banda de 2,08pp** (15,42–17,50%), con
+dos pegados al techo. Softmax, λ, el CA-tilt y el presupuesto de riesgo de v13.0 estaban todos
+corriendo — y ninguno se veía.
+
+**LA CAUSA ES ARITMÉTICA, NO DE CRITERIO, y estaba escrita en este mismo fichero desde v13.0 como
+decisión abierta.** Los pesos del libro modelo son fracciones del libro **DESPLEGADO**
+(`target_eur = weight_pct/100 × deployable`), y la prueba es exacta: peso igual sobre `n_target`=6
+nombres = 16,67% del desplegado = **12,50% del total = `deploy_max/n_target`**, el neutral
+declarado. Pero `max_position_pct: 17,5` está derivado como `tier_multiples[0] × deploy_max/
+n_target`, es decir **17,5% del capital TOTAL**, y `water_fill` lo aplicaba tal cual sobre pesos en
+base desplegada. El techo acababa en **1,050 × neutral** en vez de los **1,400 ×** que declara la
+tabla de tiers: **0,83pp de margen sobre el peso igual en vez de 6,67pp**. Con 6 nombres y 17,5%
+de techo el rango entero alcanzable es [12,5%, 17,5%] — el libro salía equiponderado **por
+aritmética, no por decisión**, y cualquier paso de sizing que se añadiera encima moría ahí.
+
+**Lo que NO se ha hecho, y es la parte que importa: no se ha tocado la constante.** 17,5 sigue
+siendo 17,5% del capital total, derivado de `n_target` como siempre. Lo que se corrige es la
+CONVERSIÓN de base, que es un bug, no un umbral. `book_shape()` publica ahora
+`max_position_pct_deployed` = `tier_multiples[0] × 100/n_target` = **23,33%** — y nótese que
+`deploy_max` se cancela: el techo en espacio desplegado no depende del ratio de despliegue vivo,
+así que no se mueve con él. `portfolio.cap_frac()` hace la conversión y **un perfil declara sobre
+qué base está su número** (`max_position_basis`, por defecto `deployed`): sólo `catalyx` lleva
+`total`, porque es el único cuyo techo es DERIVADO. Los baselines (`equal_weight` 12,
+`low_crowding` 16, `momentum` 18) tienen números elegidos a mano contra los pesos que capan;
+reescalarlos en silencio cambiaría lo que mide el contrafactual, que es lo único que un libro de
+control no puede hacer.
+
+**El mismo error estaba una vez más aguas abajo.** `close_target_weights` (rebalance) re-aplica el
+techo DESPUÉS del rescale, también sobre pesos en base desplegada, y leía `cfg["max_position_pct"]`
+directo — habría deshecho el arreglo un paso después, en silencio. Ahora usa `cap_frac` con el
+perfil de la estrategia. Los otros dos usos del número en `rebalance.py` sí son euros sobre capital
+total (`cap_eur` del holding excluido por crowding en la línea 2030, `cap_headroom_eur` en la 2119)
+y se quedan como estaban: ahí la base correcta ya era el total.
+
+**Medido sobre el run vivo** (`run_20260901_143420`, misma selección, mismos scores):
+
+| | antes (base mala) | después |
+|---|---|---|
+| dispersión de pesos (máx−mín) | 2,08pp | **9,99pp** |
+| vol anualizada del libro modelo | 16,16% | **14,94%** |
+| paso de riesgo v13.0 (`w_pre_erc` → `w`) | −0,38pp de vol | **−0,68pp** |
+| pesos | 15,4–17,5 (todos) | water 23,1 · pharma 19,9 · cloud 16,9 · semis 13,7 · robotics 13,4 · copper 13,1 |
+
+El orden es el que dicta el riesgo, no el score: `robotics` es el nombre con más composite (62,7)
+y baja de 21,2% (camino pre-v13) a **13,4%** porque es el más correlacionado del libro (ρ̄ 0,27);
+`cloud` sube de 12,7% a 16,9% con ρ̄ 0,08. **Eso es exactamente lo que v13.0 construyó y lo que el
+techo mal-basado impedía ver** — el «casi inerte» que su propia entrada reportó era este bug, no el
+mecanismo.
+
+La tabla de rebalanceo resultante: `TRIM cybersecurity −€565` y `BUY robotics €1.005` hoy, con
+`ADD pharma €935`, `ADD semis €564`, `BUY water €1.732` y `BUY cloud €1.266` encolados por el ramp
+(15pp por review). 890 tests en verde (+7), en `tests/unit/test_position_cap_basis.py`, incluida
+una regresión en la dirección del bug (sin el flag de base, el libro vuelve a salir dentro de 3pp).
+
+---
+
+## v13.1 — El crowding se cobraba dos veces, y las dos víctimas eran los diversificadores (2026-09-01)
+
+**Salió de seguir la pregunta de v13 hasta el final: si el sizing ya lee la correlación, ¿por qué
+sigue el libro con el 83% detrás de un solo driver?** La respuesta no estaba en la regla de
+selección. Probada la versión principista — **maximizar el score ponderado por riesgo**, sin
+constante nueva ni parámetro de diversificación — elige **exactamente los mismos 6 nombres**: la
+ventaja en score de los líderes supera lo que compra diversificar. Resultado negativo, y es el
+que reorienta el diagnóstico.
+
+**El pool tenía 9 candidatos para 6 plazas, y los dos que faltaban eran los diversificadores.**
+`pharma_large_cap` (rank 4, ρ̄ **0,168**, ρ 0,00 contra semis, 0,12 contra cloud) y
+`biotech_drug_development` (rank 7, ρ̄ 0,239) quedaban fuera por `max_crowding: 85` con 94,4 los
+dos — **y eran los dos ÚNICOS sectores del universo por encima de 90**. La barra no era un filtro:
+era una lista negra de dos nombres, y los dos nombres eran la cura de la concentración que tiene
+el resto del libro.
+
+**Es el mismo doble cargo que v12.1 quitó del lado de la VENTA, en el lado de la ENTRADA.** Aquella
+entrada ya lo escribió: «el compuesto ya cobra crowding a 0,135, y pharma le ganó a esa penalización
+hasta el **4º de 26** antes de que un veto binario lo matara». Arregló el exit y dejó la entrada sin
+revisar. `max_crowding: 85 → 100`: el crowding conserva su peso 0,135 en el compuesto, donde es una
+penalización que el nombre tiene que GANAR; lo que deja de hacer es además borrarlo.
+
+**Medido, y sale sin trade-off que negociar:**
+
+```
+                       vol libro   composite medio   driver más cargado
+con veto (85)             16,8%          59,0              83%
+sin veto (100)            14,1%          59,8              74%
+```
+
+Menos riesgo **y** más score. La misma regla mete `pharma` como la MAYOR posición y saca
+`cybersecurity` — que mide ρ **0,65** contra cloud y es el duplicado real del libro. Que no haya
+trade-off es en sí la evidencia de que la barra estaba mal preciando algo, no expresando una
+preferencia.
+
+**Lo que se cede, y es un argumento real:** el crowding precia lo que paga el SIGUIENTE comprador,
+así que meter dinero NUEVO en un tema masificado no es lo mismo que mantenerlo, y este libro ya
+puede hacerlo. La defensa es la penalización del compuesto más todas las salidas ordinarias
+(rank-out, conviction gate, reglas de venta, escalera de beneficios). Los libros baseline
+**conservan sus barras** — `equal_weight` a 85 y `low_crowding` a 55 son el contrafactual
+permanente: si esto fue un error, el lake lo dirá contra dos libros que no lo cometieron.
+
+**EL DEFECTO QUE DESTAPÓ EL EDIT, Y QUE VALE MÁS QUE EL EDIT.** Al levantar la barra, la tabla viva
+imprimió **`TRIM pharma_large_cap −€556`** — un cierre de la posición que este cambio existe
+justamente para admitir. Causa: `_crowding_excluded` **reconstruye** la selección con la config de
+HOY sobre el run GRABADO, y su docstring afirmaba que eso es «exacto, no una aproximación de con
+qué se construyó el libro persistido». Cierto **sólo mientras la config no se mueve**. Cuando se
+mueve, las dos discrepan en la única dirección que cuesta dinero: el libro persistido sigue
+EXCLUYENDO el nombre (se construyó con la barra vieja) mientras la reconstrucción ya lo INCLUYE,
+así que `crowding_excluded` sale vacío, la supresión de v12.1 no puede dispararse, y la línea viva
+se lee como máximamente sobreponderada contra un target del 0%. **Un edit de config, él solo,
+fabricó una venta.**
+
+**Un libro modelo construido con otras reglas no es un target de cero: es «no lo sabemos»** — y
+este fichero ya tiene el veredicto para ese estado. Un nombre EN CARTERA y ausente de un libro
+modelo stale degrada a **RE-SCORE**, que no mueve dinero, exactamente como un SELL por rank degrada
+cuando el sector no tiene un rank sobre el que vender. La detección reutiliza el `config_version`
+que cada holding ya persiste: si ninguno de los grabados coincide con el actual, el libro es stale.
+Se resuelve solo en el siguiente score run. Es estrecho por construcción — sólo marca nombres
+AUSENTES del libro modelo, así que un miembro del libro 5,6pp sobreponderado se sigue trimeando de
+verdad, con test que lo fija.
+
+**Verificado end-to-end:** reconstruido el libro modelo con la config nueva, `pharma` entra al
+17,5% y la tabla pasa de `TRIM −€556` a **`ADD +€756`**, mientras `cybersecurity` sale con
+`TRIM −€565`. 883 tests en verde (+2).
+
+---
+
+## v13.0 — El sizing leía una ETIQUETA de cluster; la cinta dice otra cosa, y ahora la lee (2026-09-01)
+
+**Salió de: «Cuando creamos las recomendaciones no estamos teniendo en cuenta la concentración
+[...] ¿cómo diversificamos sin alejarnos de nuestras tesis?», y al proponer un llenado por
+cluster declarado, del rechazo correcto: «pero robotics no es ai capex, no es el que más se
+alinea. Hay que tener un score de correlación y asignar pesos basado en ello».**
+
+**La premisa del rechazo se verifica y es cierta.** Toda regla de tamaño anterior leía una
+etiqueta *declarada* (la atribución a un driver estructural). Medido sobre el top-12 vivo, 56
+semanas, retornos SEMANALES en EUR, Ledoit–Wolf:
+
+| par | ρ medido | etiqueta |
+|---|---|---|
+| robotics–cloud | **0,28** | MISMO cluster declarado (`ai_capex`) — dimensionados como una apuesta |
+| cloud–cyber | **0,65** | clusters DISTINTOS — el duplicado real del libro |
+| semis–data_centers | 0,63 | mismo cluster (aquí la etiqueta acierta) |
+| pharma–biotech | 0,59 · copper–uranium 0,52 | |
+| water_infrastructure | ρ̄ **0,20**, ρ −0,00 vs cloud | etiquetado `ai_capex`, es **el diversificador del libro** |
+
+La etiqueta era un proxy de la correlación, y la correlación **se mide**. Así que el paso de
+sizing la mide. El cap nocional por driver **se queda**: exposición declarada («cuánto dinero se
+mueve si este driver se rompe») y co-movimiento medido son preguntas distintas, y v10 P6 ya
+decidió que corren en paralelo.
+
+**El mecanismo.** El score deja de ser un peso y pasa a ser una **cuota de VARIANZA**; la Σ
+medida de los vehículos seleccionados la convierte en euros — `covariance.risk_budget_weights`,
+que resuelve `wᵢ·(Σw)ᵢ ∝ bᵢ` por descenso coordinado cíclico sobre la forma convexa de Spinu
+(2013). Dos nombres muy correlacionados se reparten solos el presupuesto que su ρ dice que son
+uno de: **no hace falta ninguna etiqueta**. `vol_tilt` es el caso particular exacto — con Σ
+diagonal la solución es `w ∝ √b/σ` —, así que **lo reemplaza en vez de apilarse** (la diagonal de
+Σ ya cobra la vol; correr los dos la cobraría dos veces).
+
+**Lo que NO toca: la selección.** Los nombres son los que eligió el composite, top-N por score,
+conviction gate intacto. Meter ρ DENTRO del composite exigiría un IC que lo justificara; esto es
+un término de RIESGO y dimensiona sin rankear nunca, el mismo estatuto que `vol_tilt` ha tenido
+siempre.
+
+**El tilt llega comprimido en raíz** — 4:1 de presupuesto aterriza como 2:1 en euros, porque un
+presupuesto es una afirmación sobre varianza y un peso lo es sobre dinero. Con el rank IC del
+composite todavía en ruido (−0,027, 1 ventana), un tilt de convicción que llega comprimido es la
+dirección que `skill_lambda` ya defiende; cuando el IC se gane λ, los presupuestos se abren y los
+euros los siguen.
+
+**El defecto del solver que se cazó implementándolo:** el punto fijo ingenuo `w ← b/(Σw)`
+normalizado en cada paso tiene el fixed point CORRECTO pero **oscila** — verificado, falla en
+converger sobre una Σ diagonal en 500 pasos y devuelve su propia semilla. Un paso de sizing que
+devuelve su entrada en silencio cuando no converge es el peor fallo disponible, así que se usa
+CCD (Griveau-Billion et al. 2013), cerrado en forma en cada coordenada. Una no-convergencia
+devuelve los scores de entrada **intactos**: a medio camino entre dos reglas de tamaño hay un
+libro que ninguna de las dos suscribe.
+
+**Imputación, no descarte.** Un vehículo con menos de `rb_min_weeks` semanas conserva su fila:
+su propia σ si tiene historia usable (≥8 semanas — insuficiente para una correlación, suficiente
+para una varianza), y el `r_bar` del panel contra todos. Descartarlo encogería la sección
+transversal que se está dimensionando — la forma de defecto de `_load_shares_series` (v10.2) —, y
+`uniqueness = 1` le daría al nombre NO medido el mayor peso del libro. Σ imposible de construir →
+`sizing_mode: tiers_fallback` **publicado**, nunca en silencio. Mezclar un bloque medido con un
+borde de correlación constante puede dejar C ligeramente indefinida: se clipan los autovalores y
+se **reporta** (`psd_clipped`) — una matriz reparada en silencio es una matriz mal en silencio.
+
+**LO QUE MIDE HOY, Y ES LA PARTE QUE IMPORTA MÁS QUE EL MECANISMO.** Sobre el libro vivo de 6
+nombres el paso mueve la vol del libro **18,65% → 18,61%**. Es decir: **prácticamente inerte**, y
+la causa no es el mecanismo sino el techo — que aplasta por igual al softmax, a λ, al CA-tilt y
+al vol_tilt. Sin el cap, la misma Σ y los mismos presupuestos dan **14,61%** (−4,0pp), con
+`water_infrastructure` pedido al 41,1% por ser el diversificador.
+
+**Y la razón por la que el techo aplasta tanto es un desajuste de BASE, medido aquí y NO
+corregido** (es edit de umbral congelado y decisión del usuario):
+
+```
+neutral      = deploy_max / n_target      = 0,75/6 = 12,50%  de capital TOTAL
+tier 1       = 1,4 x neutral              =         17,50%  de capital TOTAL  <- max_position_pct
+peso igual sobre 6 nombres = 16,67% del DESPLEGADO = 12,50% del total  <- == neutral, EXACTO
+```
+
+Esa última igualdad es la prueba: los pesos del libro modelo son fracciones del libro
+**DESPLEGADO** (`rebalance`: `target_eur = weight_pct/100 × deployable`). Pero `water_fill`
+aplica `max_position_pct: 17,5` contra esa MISMA base, no contra la base de capital total sobre
+la que está derivado. Resultado: el techo se sitúa en **1,050 × neutral** cuando la tabla de
+tiers dice **1,400 ×** — deja **0,83pp** de margen sobre el peso igual en vez de 6,67pp, y el
+libro sale equiponderado **por aritmética, no por decisión**. Se ve en el propio output del
+rebalance vivo: todos los `tgt%` son **13,1% = 17,5 × 0,75**. `rebalance.py:2081` sí usa la base
+correcta (`total_capital × max_position_pct`), así que el proyecto usa las dos bases a la vez.
+Contrafactual con la base derivada (23,33% sobre el libro modelo): tiers 17,99% de vol, risk
+budget **17,59%**, dispersión de pesos 4,96pp → 11,71pp.
+
+**No se toca el cap.** Es una constante congelada de la que cuelga la escalera entera, cambiarla
+mueve los tamaños del libro vivo, y decidir por decreto es justo lo que este fichero prohíbe para
+el cap correlado y para el halflife. Se publica la medición y decide el usuario. Nótese que
+incluso con la base corregida el efecto es modesto (−0,40pp de vol): ERC quiere concentrar en el
+diversificador y un techo de concentración lo prohíbe — **el techo haciendo su trabajo**, tal y
+como el comentario de `vol_tilt_alpha` ya anticipaba («si esa dispersión es el objetivo, el
+instrumento es un presupuesto de riesgo, no α»). La palanca de diversificación por TESIS sigue
+estando en la selección, no en el sizing; son complementarias.
+
+**Ledger.** `w_pre_erc_pct` persiste el libro pre-v13 al lado del nuevo, para que
+`calibration` pueda preciar el paso por ventana completa igual que hace con el CA-tilt — un paso
+de sizing que no se puede contrastar contra el libro al que sustituye no puede demostrar nunca
+que se ha ganado su sitio. Columnas nuevas por fila: `sizing_mode`, `w_pre_erc_pct`,
+`risk_contribution_pct` (Euler, la magnitud que el presupuesto dice fijar), `rho_bar_book` (el
+número medido que la etiqueta representaba), `rho_imputed`. A nivel libro: `sizing_mode`,
+`risk_budget` (cov_weeks_used, n_measured, n_rho_imputed, r_bar, shrinkage, psd_clipped,
+book_vol_pct, pre_erc_vol_pct). Los runs anteriores no llevan `w_pre_erc_pct` y se leen como
+`sizing_mode: tiers`. Los libros `momentum` y `equal` quedan limpios: son baselines
+contrafactuales y dimensionarlos con Σ les haría medir dos cambios a la vez.
+
+**Config** (`scoring_weights.yaml`): `sizing_mode: "risk_budget"` · `rb_cov_weeks: 56` (la misma
+ventana que ya lee `cluster_risk_pass`) · `rb_min_weeks: 40`. 881 tests en verde (+16), incluido
+el que fija la propiedad de verdad: un par a ρ=0,99 con presupuestos IGUALES se reparte, mientras
+la vol-parity sobre las mismas tres vol idénticas les da 1/3 a cada uno, ciega a ρ.
+
+---
+
+## v12.1 — El crowding mide el precio que pagaría el SIGUIENTE comprador, y estaba vendiendo a los que ya habían pagado (2026-09-01)
+
+**Salió de una observación del usuario sobre una posición viva: «farma descorrelaciona y ahora
+mismo es lo que más ha subido de mi cartera. Ha sido una buena apuesta. Pero ahora no lo estamos
+identificando como tal. En nuestra pipeline falta algo».** La premisa era medio falsa y el matiz
+es el hallazgo: pharma **no** es lo que más ha subido (cyber +12,9% contra +11,3%). Es la mejor
+por retorno por unidad de vol — 11,3/19 = **0,59** contra 0,36 (cyber), 0,12 (copper), −0,15
+(semis) — y con contribución de riesgo **negativa**. O sea, el instinto medía una dimensión que
+la cadena no calcula en ningún punto.
+
+**El diagnóstico, y por qué no es el umbral.** Los filtros de construcción se aplican idénticos a
+un nombre que ya tienes y a uno que vas a comprar ([`portfolio.py`] filtro `max_crowding`). No hay
+histéresis, y un filtro escrito para decidir QUÉ COMPRAR estaba decidiendo QUÉ VENDER: excluido
+del libro modelo → target 0% → el TRIM por sobrepeso lee la línea entera como exceso y la vende.
+La primera idea fue histéresis (barra de entrada 85, de salida 95) y **se descartó con los datos
+delante**: en el universo del run sólo hay dos sectores por encima de 90 (pharma y biotech, ambos
+94,4), así que una barra en 95 no afina el criterio, **mata la regla** — nada podría salir nunca
+por crowding. Elegir 95 habría sido escoger el número que produce la respuesta deseada, que es
+exactamente lo que este fichero prohíbe para el `correlated_catalyst_cap`.
+
+**El defecto es la dirección, no el nivel. El crowding mide lo que pagaría el comprador marginal
+por entrar al tema; quien ya está dentro pagó el precio viejo, y la masa es la que le está
+pagando.** «No compres un tema concurrido» es sólido. «Vende porque el tema se concurrió» está del
+revés. Y compone con un segundo hecho mecánico: **el crowding SUBE cuando aciertas** — un tema se
+vuelve concurrido *por* funcionar. La serie de pharma lo enseña entera: composite 28,5 → 80,5
+mientras crowding iba 55 → 75 → 94,4 (el salto 75 → 93,3 es además el swap v8 N4 de etiqueta
+narrativa a comomentum medido, en `run_20260831_184616`). La regla vendía ganadores por haber
+ganado. Encima **contaba dos veces**: crowding ya pesa 0,135 invertido en el compuesto — pharma
+pagó esa penalización y aun así rankea **4º de 26** — y después moría a un veto binario sobre la
+misma métrica.
+
+**Dónde NO va el arreglo, y esto decidió la implementación.** No en `portfolio.py`: el libro
+modelo es una estrategia de referencia y debe ser reproducible desde un run solo. En el momento en
+que consulta lo que TIENES, su NAV deja de ser comparable con el del libro real y la medición de
+alfa de ejecución muere. Así que el libro modelo **sigue excluyendo** a pharma, y la decisión
+sobre un nombre TENIDO se toma donde el target del modelo se encuentra con el libro real —
+`rebalance`, que ya tiene el precedente exacto: `RE-SCORE`, en lo que degrada un SELL por rank
+cuando el rank no es motivo suficiente para vender.
+
+**Lo que se construyó:**
+- `portfolio.build_model_holdings` publica `crowding_excluded`. **Es un contrafactual, no una
+  comparación con el umbral:** un nombre se lista sólo si levantar la barra lo habría
+  seleccionado DE VERDAD. Por eso hoy aparece pharma (rank 4) y **no** biotech, que está en el
+  mismo 94,4 de crowding pero se quedaría fuera del top-6 igualmente. Un sector que tampoco
+  llegaba está sobrepesado de verdad y se recorta de verdad; decir lo contrario le daría a
+  `rebalance` una excusa para cancelar una salida sana. La cadena de filtros se factorizó en
+  `_filter_and_select(frame, apply_crowding)` para que las dos pasadas difieran **sólo** en eso.
+- `rebalance.decide_action` suprime **únicamente** el TRIM por sobrepeso cuando
+  `crowding_excluded_only`, y devuelve HOLD nombrando la causa con sus números. No toca nada más:
+  un driver invalidado, un régimen `breaking`, el exit watcher y el rank-out siguen vendiendo, y
+  la escalera de beneficio — que dispara por GANANCIA, no por el gap — sigue alcanzando a la
+  posición. Hay test por cada una de esas cuatro puertas.
+- `rebalance._crowding_excluded` **falla hacia la venta a propósito**: cualquier excepción
+  devuelve `{}`, ningún row recibe el flag y el TRIM dispara como antes de este cambio. Un
+  mecanismo cuyo trabajo es CANCELAR una venta tiene que fallar vendiendo — una excepción
+  silenciosa que se quedara la posición sería la misma clase de bug que el fallback a un ticker
+  no comprable.
+
+**Segunda pata: una rotación decía lo que cuesta OPERARLA, nunca lo que cuesta el LIBRO que deja.**
+Todo coste de la tabla es coste del TRADE — CGT, spread, el breakeven que la rotación debe superar.
+Ninguno es coste de la cartera resultante. Así que la tabla podía vender la única posición que
+diversifica y comprar un quinto nombre dentro del cluster que ya carga la mayor parte de la
+varianza, y **ningún número de la página se movía**. Medido sobre este run, contrafactual de los
+dos libros de 6 nombres, semanales y 56 semanas (el muestreo que el propio proyecto declara
+correcto, no el diario sesgado por Epps): vender pharma y mantener cyber deja ρ **0,2215** y vol
+**19%**; mantener pharma y dejar salir a cyber por rank deja ρ **0,1883** y vol **16%**. La regla
+estaba rotando hacia el libro **más** correlado y **más** volátil, y el ticket de esa rotación
+imprimía €12,92 de fricción. Nuevo `book_risk_delta` + bloque `BOOK RISK`: vol y ρ medio del libro
+antes y después de la tabla, **sólo con las filas que se ejecutarían hoy** (una fila que el ramp o
+el presupuesto de operaciones encoló no es parte del libro de hoy, y contarla preciaría una cartera
+que nadie va a tener). Es **columna, no puerta** — misma doctrina que `data`, `ca_imputed` y el
+cluster no medido: precia y no cancela nada; quien actúa sobre riesgo sigue siendo
+`cluster_risk_pass`, y sólo del lado de la compra. **Un riesgo no medible devuelve `None`, nunca un
+cero tranquilizador**, porque un libro cuya correlación no se puede calcular no es un libro cuya
+correlación no se mueve.
+
+**Efecto vivo:** pharma pasa de `TRIM −€556` a `HOLD` con la causa escrita en la fila («no model
+target: excluded by the ENTRY crowding filter (94.4 > 85) — held at rank 4, not sold for being
+crowded»). La tabla de hoy dispara además el aviso nuevo: BUY robotics lleva el libro de ρ 0,120 a
+0,200 y de vol 20,0% a 21,0%.
+
+**Lo que NO se hizo, con causa.** Meter covarianza en la SELECCIÓN (objetivo por contribución
+marginal) se descartó: con el IC del compuesto en −0,143 sobre ~1 ventana independiente, montar un
+optimizador consciente de covarianza encima de un ranking que todavía no ordena nada es ajustar
+ruido con más maquinaria — el error que `skill_lambda` existe para no cometer. Y el término
+ajustado por riesgo en `movement_outcome` (hoy registra `return_pct` y `right_thesis`, así que
+pharma se cerrará como «+11,3%, acertada» sin que quede escrito lo único que la hizo la mejor
+línea del libro) queda **abierto**: es real, no es urgente, y necesita el contrafactual que ya
+existe en `w_pre_ca_pct`. 864 tests en verde (+11).
+
+## v12.0 — La capa de eventos era un trinquete de un solo sentido, y la escalera de posición descansaba en un número inalcanzable (2026-09-01)
+
+**Salió de una petición de auditoría del usuario: «hemos tocado muchas cosas sobre cómo calculamos
+el score de catalyx, cómo hacemos las particiones de cuánto dinero, de qué quitamos, dónde
+ponemos… ¿puedes revisar las cadenas, encontrar bugs y proponer mejoras?».** Auditoría de las dos
+cadenas de punta a punta, cada hipótesis falsada contra los datos vivos con contrafactuales
+`persist=False` antes de tocar una línea. Lo que sigue es lo que sobrevivió a esa comprobación,
+en el orden en que hay que arreglarlo — porque tiene dependencias.
+
+**B1 — el canal `confirms` era aritméticamente inerte: 32 de 32 instancias aportaban EXACTAMENTE
+0.** `_apply_confirms` calculaba `max(S, min(S + boost, 0.45·S + 0.55·D))`. Ese techo cae **por
+debajo de su propio suelo** siempre que el evento sea más débil que el estructural que confirma:
+`0.45S + 0.55D > S ⟺ D > S`. Los estructurales vivos corren 77–95 contra fuerzas decaídas de
+14–45, así que el `min` quedaba tragado por el `max` y el boost se anulaba, **cada vez, desde
+v1.5** — mientras `_apply_contradicts` mordía incondicionalmente. La capa de eventos era un
+trinquete que solo podía girar hacia ABAJO, dentro de un módulo cuyo propio docstring de
+agregación dice que más catalizadores confirmando = señal más fuerte. El techo defendía una
+comparación que no necesita defensa: un `independent` enlazado **sustituye** al estructural en el
+pool, no compite con él por una plaza, y un evento que corrobora una tesis ya fuerte sí es
+evidencia más fuerte que un evento ajeno del mismo tamaño. Quitarlo restaura la simetría con
+`_apply_contradicts` (suelo 0, techo el caso sin evento). **Medido: 15 de 25 sectores se mueven,
+todos hacia arriba, de +1,2 a +4,5** — `eu_defense` +4,5, `lithium`/`solar` +4,0, `cybersecurity`
++2,6, `uranium`/`water` +2,5, `cloud`/`semis` +2,2, `copper`/`grid` +1,9, `ai_infra` +1,7. **La
+selección NO cambia**: los mismos seis nombres, y los tres sectores bajo la puerta de convicción
+(CA < 40) siguen siendo los mismos tres.
+
+**B2 — un evento `independent` enlazado destruía el estructural según se moría.** `_apply_independent`
+era la mezcla desnuda `0,45·S + 0,55·D`, sin suelo, así que su límite cuando D→0 era `0,45·S`:
+`consumer_india_em` leía 64,5 → 61,81 sobre un evento decaído a 59,6, camino de 29,0. Un evento
+apagándose se llevaba por delante un tercio de una intensidad estructural que nunca contradijo. El
+límite correcto cuando D→0 es el caso **sin evento**, `S`; con el suelo la función es continua con
+«no hay evento». `independent` significa «golpea al sector, no dice nada sobre esta tesis»: puede
+AÑADIR un portador, nunca restar uno. **Solo `contradicts` está autorizado a bajar un estructural**,
+y hay test que lo fija para las tres relaciones a la vez.
+
+**B2b — un `confirms` podía silenciar un `contradicts` vivo.** La regla era `max(eventos,
+key=|impacto|)`: sobrevivía **un** evento por estructural, así que un confirm de magnitud 4,5
+borraba del score un contradict de magnitud 3,0 — en un registro que tiene 31 `confirms` contra 2
+`contradicts`, bajo una config que precia deliberadamente la desconfirmación más alto (contradict
+15 vs confirm 10). La contradicción sobrevivía solo en `regime_state`, que anota y no puntúa.
+Ahora se aplican el mayor empuje y el mayor arrastre, **los dos** (`_net_event_impact`). Con
+eventos en una sola dirección es idéntica a la regla vieja — hoy **ningún** estructural lleva las
+dos, así que esto no mueve un número: es un defecto latente cerrado, no un cambio de tabla. Sigue
+siendo un evento POR DIRECCIÓN, a propósito: varios titulares confirmando el mismo desarrollo
+están correlacionados, y apilarlos es justo el doble conteo que `_REINFORCE_FACTOR` amortigua un
+nivel más arriba.
+
+**B12 — y nada de esto habría aparecido en el lake.** `scoring_version` era el hash del YAML de
+pesos **solo**, así que un cambio de FÓRMULA dejaba la cadena de versión idéntica y el lake
+afirmando que las filas de antes y después son comparables. No es hipotético: B1/B2 mueven el CA
+de 15 de 25 sectores sin tocar un peso. `git_commit` va al lado y habría permitido reconstruir la
+verdad, pero un campo de versión que dice en silencio «mismo scoring» es peor que no tenerlo —
+todo consumidor que segmenta por él (ventanas de `calibration`, el scorecard de reglas,
+`score_ic`) mezclaría dos funciones de scoring distintas. Ahora el hash cubre el YAML **y** la capa
+de fórmulas (`catalyx/scorer/*.py`): `6ef216707e66` → `77064452e8e5`.
+
+**B4 — la decisión pendiente del halflife estaba preciada en la unidad equivocada, y ese era el
+motivo del orden.** `catalyst_audit` imprimía la discrepancia en FUERZA DECAÍDA, que no es lo que
+lee nada aguas abajo. CLAUDE.md llevaba desde v11 citando «el evento confirmador del cobre pasa de
+aportar 38,9 a aportar 4,0» como la razón de que la decisión fuera cara — pero **el CA del cobre se
+mueve 0,1 puntos**, porque ahí el noisy-OR está saturado y el evento no es el portador. Con el
+canal `confirms` inerte (B1) la adopción de la tabla tocaba **2 de 26** sectores; con el canal
+vivo toca **8**, y el que de verdad se mueve es `agriculture_soft_commodities` (36,1 → **3,8**),
+que la columna de fuerza nunca nombró, más `lithium_miners` y `solar_energy` (−3,6 cada uno). El
+audit ahora publica la tabla POR SECTOR junto a la de fuerza. **La decisión sigue siendo del
+usuario y `halflife_source` sigue en `stored`**: adoptar la tabla por defecto contestaría por
+decreto — lo que este fichero prohíbe para el cap correlacionado — la pregunta de si se
+equivocaron los seis autores o la constante. Lo que cambia es que ahora está preciada donde
+aterriza. Nota: `agriculture` ya está por debajo de la puerta de convicción con las dos lecturas,
+así que la adopción tampoco cambiaría la selección de hoy.
+
+**B3 — `deploy_max` era 0,85 y el contador no puede llegar ahí; toda la escalera de posición
+colgaba de ese número.** El término del step se leía de `intact_rank_max: 8`, pero `n_intact` se
+cuenta sobre el **LIBRO MODELO**, que tiene como mucho `n_target` = 6 nombres: `base + step·(8−5)`
+describe un estado imposible, y el run vivo ya imprimía `base 0.70 + 0.05×(6−5) → 75%`, clavado en
+su techo real. `intact_rank_max: 8` es un resto de cuando `max_positions` era 10. El número importa
+mucho más allá del objetivo de despliegue, porque `book_shape` lee de él la escalera entera — y
+`max_position_pct` es **la constante que este proyecto insiste en que es DERIVADA**. Corregido:
+`deploy_max` 0,85 → **0,75**, peso neutral 14,2% → **12,5%**, tiers 20/14/7 → **17,5/12,5/6,2**,
+`max_position_pct` 20 → **17,5**. El presupuesto de pérdida por línea que v6 I5 dejó escrito baja
+en consecuencia: 6,0/4,2/2,1 → **5,25/3,75/1,86%** del libro. **Efecto en el libro modelo vivo:
+los mismos seis nombres; cinco topan ahora en 17,5% y `cybersecurity` sube a 12,5%** — el libro
+queda más plano porque un techo más bajo lo alcanzan más nombres. Los otros seis tests de
+factibilidad pasaban con el bug puesto porque **solo comparaban valores derivados entre sí**; el
+test nuevo asserta la identidad contra `deploy_ratio` mismo, que es lo que lo habría cazado.
+
+**B4b — `buy_if.rank_max: 8` era config muerta.** `decide_action` recibe `rank_in_portfolio`, que
+va de 1 a `max_positions` = 6, así que un techo de 8 dejaba pasar a **todo** miembro del libro
+modelo y no filtraba nada; se escribió para un libro de 10 nombres y nadie lo releyó cuando v6 L1
+lo cortó a 6. CLAUDE.md aún lo citaba como restricción viva («`eu_retail_banking`, a un trimestre
+del techo rank-8 de `buy_if`»). Puesto a **5**, no a 6: el comentario de la propia regla dice «a
+new line needs a stronger case than an add» y el 8 lo **contradecía** — buy ya es más estricto que
+add en gap (4,0 vs 3,0), en régimen (excluye además `contested`) y en madurez (excluye
+`exhausted`), y era más LAXO en rank. `= add_if.rank_max` es el mínimo que quita la contradicción,
+y **no mueve un euro hoy**: las compras de este run están en `rank_in_portfolio` 1, 2 y 4 (tabla
+verificada idéntica antes y después). Bajar de `add_if` haría buy estrictamente más fuerte en las
+cuatro dimensiones y es una decisión de umbral congelado aparte; `test_config_feasibility` ahora
+tumba cualquier techo que no pueda vincular. `sell_if_any.rank_out_of_top: 10` **no** tenía este defecto (se compara contra el rank de
+UNIVERSO, 26 sectores) pero su comentario afirmaba una coincidencia con `max_positions` que
+desapareció en v6 L1; corregido en el sitio.
+
+**B5 — el canal de eventos DIRECTOS era ciego al signo y solo podía SUBIR el CA.**
+`relation_to_structural` contesta otra pregunta — cómo se relaciona el evento con una TESIS
+estructural — y un evento directo no tiene padre estructural, así que el scorer no tenía nada que
+leer y asumía que todos eran portadores positivos (`contributes = relation in ("independent",
+"confirms")`); el noisy-OR es monótono creciente. Vivo: `cat_20260617_fed_hawkish_pivot` (Fed
+hawkish, fuerza 80, archivado `independent`) entraba como **+14,3 de apoyo** a siete sectores,
+entre ellos oro, cobre y banca minorista europea. Y un `contradicts` sin padre estructural se
+**descartaba** — la única dirección de la que el registro está famélico. Nuevo campo opcional
+`sector_impact` (`catalyst_event` schema 1.3 → **1.4**): `{sector_id: supportive | adverse}`. Un
+`adverse` se aplica al AGREGADO con la misma penalización `_apply_contradicts` que ya recibe un
+estructural contradicho (no hay portador que amortiguar); un `contradicts` directo implica
+`adverse`. **La ausencia se REPORTA, nunca se adivina**: sin el campo se conserva el
+comportamiento previo — este añadido no mueve ningún score vivo — y
+`direct_events_direction_unstated` cuenta cuánto CA descansa sobre una suposición que nadie hizo:
+hoy **12 eventos directos en 11 sectores**, entre ellos los CA de 14,3 de `eu_retail_banking` y
+`oil_majors_integrated`, que se sostienen **enteros** sobre ese único evento sin dirección
+declarada. Convertir «nadie lo dijo» en «adverso» sería el mismo error en la otra dirección.
+**Y el campo tiene productor**: `/catalyx-scan` lo pide por sector en C3/C4, lo explica con el
+caso del Fed hawkish delante, y en C2b hace backfill de los eventos que un hallazgo TOQUE este
+ciclo — nunca un barrido sobre el registro entero. Un campo que nadie tiene orden de rellenar es
+un mecanismo muerto, y los eventos que nadie toca mueren por decay, que es la misma eliminación
+que v11 eligió para los cardinales desnudos de `strength_score`.
+
+**B13 — 11 de los 19 documentos de evento no validaban contra su propio esquema, y nada lo
+comprobaba.** `catalyst_event.json` declara `additionalProperties: false` y el pipeline llevaba
+escribiendo cinco campos que el esquema nunca declaró: `affected_sectors` — **que CLAUDE.md cita
+como la respuesta a «un catalizador = un driver»** —, `review_log`, `status_last_reviewed`,
+`lifecycle_log`, `invalidation_reason`. El CHANGELOG de v11 registra «los 19 documentos siguen
+validando»; validaban 8. El protocolo de cambio de esquema de CLAUDE.md manda «comprobar cada JSON
+existente en `data/`» y no había nada que lo hiciera. Los cinco campos quedan declarados (schema
+1.4) y **`tests/unit/test_schema_documents_validate.py` valida ahora los 53 documentos Tier-1** —
+eventos, estudios, movimientos y propuestas de taxonomía — contra su esquema. El test cazó de
+inmediato una segunda deriva: `taxonomy_gap_proposal` llevaba desde 2026-06-04 un valor
+(`not_investable_no_buyable_vehicle`) fuera de su propio enum, cuya descripción además seguía
+diciendo «confirmed UCITS/accessible» — el test que v10.1 demostró equivocado (lo que hace
+comprable a un vehículo es el KID de PRIIPs, y un fondo de un solo metal no puede ser UCITS).
+Esquema 1.0 → 1.1 con la doctrina de VENUE escrita.
+
+**B7 — el presupuesto de riesgo solo miraba los clusters que la tabla TOCA.** `cap_check`
+construía sus filas iterando `added`, es decir, los drivers que el review está negociando, nunca
+los que el libro está CARGANDO. Un cluster ya por encima de su presupuesto de varianza que la
+tabla de hoy no toca no se medía, no se marcaba y no recibía candidato a TRIM — que es la mitad de
+lo que v10 P7 existe para hacer. Con la tabla vacía, `cap_check` devolvía **cero filas** sobre un
+libro vivo. Ahora enumera todo driver presente en el libro post-trade: **4 clusters, 2 de ellos
+por encima del presupuesto del 35%** (`struct_ai_capex_supercycle` 82,4%,
+`struct_energy_transition_grid` 65,1%), ninguno tocado por la tabla. `sectors` nombra el bucket
+entero; `sectors_traded` y `touched_by_table` conservan la distinción.
+
+**B8 — la descomposición de riesgo corría sobre BASE DE COSTE.** `post_book` mezclaba dos unidades
+por construcción: las líneas tenidas llevaban `invested_eur`, que `positions()` calcula como coste
+medio, y las patas propuestas llevaban `trade_eur`, que es mercado. Esa mezcla es **correcta** para
+el cap nocional — CLAUDE.md lo fija a `exposure_eur` y fija la deducción del SELL a la base de
+coste, para que un ganador vendido por encima de coste no retire más exposición de la que llevaba —
+y es **incorrecta** para una cuota de varianza: una línea +40% carga un 40% más de riesgo del que
+dice su coste, y meter coste en la covarianza infravalora justo a los ganadores que un límite de
+concentración existe para cazar. Los dos libros se construyen ahora por separado en vez de doblar
+uno para servir a ambos (`_risk_book`); los precios salen de la caché con `allow_fetch=False`
+—`covariance` va a leer la misma ventana— y un ticker sin cierre cacheado **conserva su base de
+coste** en vez de caerse del libro, que encogería en silencio el denominador contra el que se
+calcula cada cuota.
+
+**B9 — el tally del CA-tilt podía cobrarse un término de beta.** `edge_pp = Σ dwᵢ·rᵢ` solo
+significa «lo que compró el tilt» cuando `Σdw = 0`. `ca_tilt` preserva el total por construcción,
+pero `water_fill`, el gross-down por contested y el deadband corren DESPUÉS y no tienen que
+devolver exactamente lo que quitaron. La identidad es exacta:
+`Σ dwᵢ·rᵢ = (Σdw)·r̄ + Σ dwᵢ·(rᵢ − r̄)`. Se publican las dos mitades: `edge_pp` conserva su
+significado (lo que el libro se llevó — el número no se redefine en silencio) y
+`edge_pp_ex_gross` es la reasignación sola, que es de lo que responde δ. Medido en el retro vivo:
+las filas preciadas cargan **+5,00pp de peso NETO** — porque una fila sin retorno disponible sale
+de `contribs` pero su dw no —, así que de un edge de −0,01pp, **+0,11pp era beta y −0,12pp era el
+tilt**.
+
+**B10 — las dos escaseces se contradecían en el orden.** El ramp llena las compras por
+`score_rank` y lo dice por escrito («the model's own ordering, not trade size»); después
+`trade_budget_plan` re-ordenaba a los supervivientes por `-abs(trade_eur)`, así que un BUY grande
+de rank bajo le quitaba la plaza a uno más pequeño de rank alto que el ramp acababa de priorizar.
+Se raciona el cash antes que las plazas precisamente para que ambos coincidan en QUÉ nombres.
+Ahora, dentro de cada tier, rank primero y tamaño como desempate — donde sí hacía trabajo real:
+entre dos filas de igual calidad de rank, la mayor compra más exposición por plaza.
+
+**B11 — `risk_state` era una columna muerta.** `cluster_risk_pass` terminaba con
+`r.setdefault("risk_state", "n/a")` y nada le asignaba nunca otra cosa. Ahora dice qué concluyó el
+pase sobre la fila (`blocked` · `trim_candidate` · `over_cluster` · `unmeasured` · `n/a`), que es
+la única forma de que un lector distinga una fila que el presupuesto de riesgo DECLINÓ de una que
+ni miró.
+
+**C1 — la migración a EUR de v10.4 se quedó a medias en el sitio que más pesa.**
+`portfolio._sector_vols` seguía leyendo `prices.read` (nativo) mientras `covariance._prices` ya
+leía `read_eur`: **dos modelos de riesgo sobre dos bases dentro de un mismo build**, y con
+`vol_tilt_alpha: 1.0` y λ=0 el `vol_tilt` es el mayor determinante del sizing. Efecto medido sobre
+el libro de hoy: **≤0,08pp de peso** — un defecto de coherencia, no una fuga de dinero, y por eso
+sobrevivió a la migración: nada imprimía mal.
+
+**Lo que NO se hizo, con causa.** No se adopta la tabla de halflife (decisión del usuario, ahora
+preciada donde aterriza). No se mueve `n_target` — sigue siendo la decisión abierta de v10.4, y
+B3 la hace más urgente, no menos: la escalera que cuelga de él acaba de cambiar. No se rellena
+`sector_impact` en los 19 documentos: la dirección de un evento sobre un sector se contesta con la
+evidencia del evento delante, así que se rellena en el próximo `/catalyx-scan` para los que sigan
+vivos, igual que la rúbrica de `strength_score` de v11. Y no se re-persiste el run ya grabado
+(`run_20260901_095443`): sus overrides se firmaron contra esa tabla, y los criterios nuevos
+aparecen en el PRÓXIMO score run en vez de recortar por detrás una tabla ya decidida — misma regla
+que v10.1 y v10 P8.
+
+**853 tests en verde (+56).**
+
+
 
 ## v11.0 — El score de catalizadores es una fórmula, pero dos de sus entradas las escribía un LLM a mano (2026-09-01)
 

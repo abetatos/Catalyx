@@ -211,12 +211,14 @@ def _seed_retro(tmp_path, run_id, holdings, snapshot):
 
 
 def test_retro_prices_the_recorded_books_point_in_time(tmp_path, monkeypatch):
-    # Equal recorded weights BELOW the cap, CA 90/50/10 as frozen by that run's snapshot:
+    # Equal recorded weights BELOW the cap (12% against the 17.5% tier-1 ceiling — at 15% the
+    # tilt pushed "hi" INTO the cap and the symmetry assertion below measured the water-fill
+    # instead of the tilt), CA 90/50/10 as frozen by that run's snapshot:
     # today's δ moves weight from "lo" to "hi". hi then returns +10%, lo −10% → PAID.
     _seed_retro(tmp_path, "run_20260101_090000",
-                [{"sector_id": "hi", "primary_etf": "AAA", "weight_pct": 15.0},
-                 {"sector_id": "mid", "primary_etf": "CCC", "weight_pct": 15.0},
-                 {"sector_id": "lo", "primary_etf": "BBB", "weight_pct": 15.0}],
+                [{"sector_id": "hi", "primary_etf": "AAA", "weight_pct": 12.0},
+                 {"sector_id": "mid", "primary_etf": "CCC", "weight_pct": 12.0},
+                 {"sector_id": "lo", "primary_etf": "BBB", "weight_pct": 12.0}],
                 [{"sector_id": "hi", "catalyst_alignment": 90.0, "ca_imputed": False},
                  {"sector_id": "mid", "catalyst_alignment": 50.0, "ca_imputed": False},
                  {"sector_id": "lo", "catalyst_alignment": 10.0, "ca_imputed": False}])

@@ -197,6 +197,44 @@ def decide_action(row: dict, cfg: dict) -> dict:
 
         # ── TRIM — overweight, or a rung of the profit ladder.
         over = -gap_pp                                    # positive = above target
+        # CROWDING PRICES THE MARGINAL BUYER, NOT A POSITION ALREADY HELD (v11.1).
+        #
+        # `max_crowding` is an ENTRY filter, and the overweight TRIM below cannot tell an
+        # exclusion from a verdict: a held name the bar kept out of the model book has a 0%
+        # target, so it reads as maximally overweight and is sold — not because the ranking
+        # demoted it, but because it never got to be ranked. Two things make that the wrong
+        # sale. Crowding measures what the NEXT buyer pays into a theme; a holder already paid
+        # the old price, and the crowd is what is paying them. And crowding RISES WITH SUCCESS —
+        # a theme becomes crowded by working — so the filter systematically sells winners for
+        # having won (pharma_large_cap: composite 28.5 → 80.5 while crowding went 55 → 94.4).
+        #
+        # Crowding is not thereby ignored: it keeps its 0.135 weight in the composite, where it
+        # is a penalty the name must out-rank, and a crowded holding still exits by falling out
+        # of the top-N, by a sell rule, or by the conviction gate. What it no longer does is
+        # veto a position twice on the same metric — once weighted, then again absolutely.
+        #
+        # NARROW BY CONSTRUCTION: `crowding_excluded_only` is set only when lifting the bar
+        # would ACTUALLY have selected the name (`portfolio.crowding_excluded`). A holding that
+        # would have missed the cut anyway is overweight for real, and is trimmed for real.
+        #
+        # IT SUPPRESSES THE EXIT, NOT THE CEILING. Such a row's target is re-read upstream as
+        # "no opinion, capped at `max_position_pct`" rather than 0% — see `build`. So `over` is
+        # zero while the position sits inside the ceiling and becomes real above it, and the
+        # ordinary TRIM below both fires and SIZES correctly: back to the cap, never to the 0%
+        # the entry filter produced. Crowding does not force an exit; it does not exempt a
+        # position from the concentration ceiling either.
+        # ORDER MATTERS, AND A TEST CAUGHT IT: this HOLD sits AFTER both trims, not before.
+        # Placed first it swallowed the profit ladder — which fires on GAIN, not on the target
+        # gap — so a crowding-excluded winner could never give back a rung. The suppression is
+        # for the exit the entry filter manufactured, and for nothing else.
+        # A STALE MODEL BOOK IS NOT A ZERO TARGET (v13.1). Before the overweight TRIM, because
+        # the whole defect is that a 0% target manufactured by a config change reads as maximal
+        # overweight. RE-SCORE moves no money — the same degradation a rank-based SELL takes
+        # when there is no rank worth selling on.
+        if row.get("stale_model_cfg"):
+            return {"action": "RE-SCORE",
+                    "reason": f"no model target: {row['stale_model_cfg']} — re-run the score "
+                              f"before acting on this line"}
         if over >= float(trim.get("overweight_pp_min", 4.0)):
             return {"action": "TRIM", "reason": f"{over:.1f}pp above target"}
         rung = profit_ladder_step(row.get("unrealized_pct"), rank, cfg.get("profit_ladder"))
@@ -204,6 +242,16 @@ def decide_action(row: dict, cfg: dict) -> dict:
             return {"action": "TRIM",
                     "reason": f"profit ladder: +{row.get('unrealized_pct'):.0f}% ≥ "
                               f"{rung['gain_pct_min']:.0f}%"}
+        if row.get("crowding_excluded_only"):
+            cr = row.get("crowding_risk")
+            bar = row.get("max_crowding")
+            level = (f" ({cr:.1f} > {bar:.0f})"
+                     if cr is not None and bar is not None else "")
+            urank = row.get("score_rank")
+            where = f" — held at rank {urank}" if urank is not None else " — held"
+            return {"action": "HOLD",
+                    "reason": f"no model target: excluded by the ENTRY crowding filter{level}"
+                              f"{where}, not sold for being crowded"}
 
     # ── ADD / BUY — the side an LLM under-uses, so the conditions are explicit.
     if gap_pp >= deadband:
@@ -572,6 +620,74 @@ def _fnum(v, ndigits: int = 2) -> float | None:
     return round(float(v), ndigits)
 
 
+def book_risk_delta(rows: list[dict], analyze_fn=None) -> dict | None:
+    """What THIS TABLE does to book volatility and mean correlation, before vs after (v11.1).
+
+    THE GAP THIS FILLS. Every cost on a row is a cost of the TRADE — CGT, spread, the breakeven
+    the rotation must clear. None of them is a cost of the resulting BOOK. So a table could sell
+    the one holding that diversifies and buy a fifth name inside the cluster already carrying
+    most of the variance, and every number on the page would say the rotation was cheap. Measured
+    on 2026-09-01: rotating out of `pharma_large_cap` into the model's next name took the book
+    from ρ 0.188 / vol 16% to ρ 0.222 / vol 19% — a third of the book's volatility, invisible
+    beside a €12.92 friction line.
+
+    IT IS A COLUMN, NOT A GATE — the same doctrine as `data`, `ca_imputed` and the unmeasured
+    cluster. It prices what the table does; it never cancels a row. `cluster_risk_pass` is the
+    thing that acts on risk, and deliberately only on the BUY side.
+
+    ONLY THE ROWS THAT WOULD ACTUALLY EXECUTE. A row the ramp or the trade budget queued is not
+    part of today's book, and counting it would price a book nobody is about to hold.
+
+    Returns None when the covariance cannot be computed — never a zero, never "unchanged".
+    A book whose risk is not measurable must not read as a book whose risk does not move.
+    """
+    if analyze_fn is None:                                     # pragma: no cover - thin wiring
+        from catalyx.scorer.covariance import analyze as analyze_fn
+
+    def _book(after: bool) -> dict[str, float]:
+        out: dict[str, float] = {}
+        for r in rows:
+            etf = r.get("etf")
+            if not etf or r.get("sector_id") == "CASH":
+                continue
+            eur = float(r.get("actual_eur") or 0.0)
+            if after and r.get("budget_state") != "deferred" \
+                    and r.get("ramp_state") != "deferred":
+                eur += float(r.get("trade_eur") or 0.0)
+            if eur > 0:
+                out[etf] = out.get(etf, 0.0) + eur
+        return out
+
+    before, after = _book(False), _book(True)
+    if len(before) < 2 or len(after) < 2:
+        return None
+
+    def _measure(book: dict[str, float]) -> dict | None:
+        gross = sum(book.values())
+        if gross <= 0:
+            return None
+        tk = list(book)
+        try:
+            res = analyze_fn(tickers=tk, weights=[book[t] / gross for t in tk])
+        except Exception:                                      # pragma: no cover - defensive
+            return None
+        vol, rho = res.get("portfolio_vol_annual_pct"), res.get("mean_pairwise_corr_weekly")
+        if vol is None:
+            return None
+        return {"vol_pct": round(float(vol) * 100.0, 2),
+                "mean_corr": None if rho is None else round(float(rho), 4),
+                "n_vehicles": len(tk)}
+
+    b, a = _measure(before), _measure(after)
+    if not b or not a:
+        return None
+    d_vol = round(a["vol_pct"] - b["vol_pct"], 2)
+    d_rho = (None if b["mean_corr"] is None or a["mean_corr"] is None
+             else round(a["mean_corr"] - b["mean_corr"], 4))
+    return {"before": b, "after": a, "delta_vol_pp": d_vol, "delta_mean_corr": d_rho,
+            "more_correlated": bool(d_rho is not None and d_rho > 0)}
+
+
 def partial_rungs(rows: list[dict], cfg: dict) -> list[dict]:
     """Distance to EACH partial-sale rung, per held position.
 
@@ -768,9 +884,18 @@ def trade_budget_plan(rows: list[dict], cfg: dict) -> dict:
     # cash, and rationing slots against it would spend the allowance on rows nobody will place.
     movers = [r for r in rows if float(r.get("trade_eur") or 0.0) != 0.0
               and r.get("ramp_state") != "deferred"]
+    # v12 B10 — WITHIN a tier, rank, not size. The two scarcities used to disagree: the ramp
+    # fills buys in `score_rank` order and says so ("the model's own ordering, not trade size"),
+    # and then the slot budget re-sorted the survivors by `-abs(trade_eur)`, so a large low-rank
+    # BUY took the slot from a smaller high-rank one the ramp had just prioritised. Cash is
+    # rationed before slots precisely so the two agree on WHICH names; letting them order
+    # differently spends the scarcer resource against the model's own ranking. Size stays as
+    # the tiebreak, where it was doing real work: between two rows of equal rank quality, the
+    # bigger one buys more exposure per slot.
     ranked = sorted(movers, key=lambda r: (
         -1 if _exempt(r) else _BUDGET_TIERS.get(r.get("rule_action"), 3),
-        -abs(float(r.get("trade_eur") or 0.0))))     # most money moved per scarce slot
+        _clean_rank(r.get("score_rank")) or 999,
+        -abs(float(r.get("trade_eur") or 0.0))))
 
     granted, deferred = [], []
     for r in ranked:
@@ -998,6 +1123,28 @@ def cluster_risk_pass(rows: list[dict], clusters: list[dict], cfg: dict) -> dict
             "members_by_risk": c.get("members_by_risk") or [],
         })
 
+    # v12 B11 — `risk_state` used to be set to "n/a" on every row and nothing ever assigned it
+    # anything else: a column the report could print but that carried no information. It now
+    # says what this pass concluded about the row, which is the only way a reader can tell a row
+    # the risk budget declined from one it never looked at.
+    for f in findings:
+        for b in f["blocked"]:
+            r = by_sector.get(b["sector_id"])
+            if r is not None:
+                r["risk_state"] = "blocked"
+        t = f.get("trim_candidate")
+        if t and by_sector.get(t["sector_id"]) is not None:
+            by_sector[t["sector_id"]]["risk_state"] = "trim_candidate"
+        for m in f.get("members_by_risk") or []:
+            r = by_sector.get(m["sector_id"])
+            if r is not None:
+                r.setdefault("risk_state", "over_cluster")
+    unmeasured_sectors = {s for c in (clusters or []) if c.get("over_risk") is None
+                          for s in (c.get("sectors") or [])}
+    for sid in unmeasured_sectors:
+        r = by_sector.get(sid)
+        if r is not None:
+            r.setdefault("risk_state", "unmeasured")
     for r in rows:
         r.setdefault("risk_state", "n/a")
     return {
@@ -1342,6 +1489,29 @@ def _model_holdings(portfolio_id: str, run_id: str, lake_dir: Path | None = None
         return []
     df = df[(df["portfolio_id"] == portfolio_id) & (df["run_id"] == run_id)]
     return df.sort_values("rank_in_portfolio").to_dict("records")
+
+
+def _crowding_excluded(portfolio_id: str, run_id: str,
+                       lake_dir: Path | None = None) -> dict[str, dict]:
+    """sector_id → crowding facts, for names the ENTRY bar ALONE kept out of the model book.
+
+    Rebuilt rather than read from the lake because it is a statement about sectors that are
+    NOT in the book, so there is no holding row to carry it. The rebuild is the same pure
+    dataframe pass over the same recorded run (~0.3s, no network) and is therefore exact, not
+    an approximation of what the persisted book was built from.
+
+    FAILURE IS BIASED TOWARD THE SALE, DELIBERATELY. Any error returns {}, which restores the
+    pre-v11.1 behaviour: the overweight TRIM fires. A mechanism whose job is to CANCEL a sell
+    must fail toward selling — a silent exception that quietly keeps a position would be the
+    same class of bug as a fallback to an unbuyable ticker.
+    """
+    try:
+        from catalyx.execution.portfolio import build_model_holdings
+        res = build_model_holdings(portfolio_id, run_id, persist=False, lake_dir=lake_dir)
+    except Exception:                                          # pragma: no cover - defensive
+        return {}
+    return {e["sector_id"]: e for e in (res.get("crowding_excluded") or [])
+            if e.get("sector_id")}
 
 
 def _snapshot_ranks(run_id: str, lake_dir: Path | None = None) -> dict[str, int]:
@@ -1761,9 +1931,17 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         m["rank_in_portfolio"] = i
 
     # Close the book: rescale what substitution could not replace, re-cap per position.
+    # The re-cap runs on DEPLOYED-base weights, so it needs the cap on that base too (v13.2) —
+    # applying the total-capital ceiling here would undo the fix `portfolio.cap_frac` makes.
     max_dropped = float(cfg.get("max_dropped_pct", 40.0))
+    try:
+        from catalyx.execution.portfolio import cap_frac, load_profile
+        close_cap = cap_frac({**(load_profile(strategy).get("construction") or {}),
+                              "max_position_pct": float(cfg.get("max_position_pct", 12.0))}) * 100.0
+    except Exception:                                          # pragma: no cover - defensive
+        close_cap = float(cfg.get("max_position_pct", 12.0))
     closed = close_target_weights([float(m.get("weight_pct") or 0.0) for m in model],
-                                  float(cfg.get("max_position_pct", 12.0)), max_dropped)
+                                  close_cap, max_dropped)
     for m, w in zip(model, closed["weights"]):
         m["weight_pct_effective"] = w
 
@@ -1801,6 +1979,33 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
     sell_cfg = cfg.get("sell_if_any", {}) or {}
     streaks = _rank_streaks(int(sell_cfg.get("rank_out_of_top", 12)), lake_dir=lake_dir)
     score_ranks = _snapshot_ranks(run_id, lake_dir=lake_dir) if run_id else {}
+    crowd_excl = _crowding_excluded(strategy, run_id, lake_dir=lake_dir) if run_id else {}
+
+    # IS THE PERSISTED MODEL BOOK STILL THE ONE THIS CONFIG WOULD BUILD? (v13.1)
+    #
+    # `_crowding_excluded` rebuilds the selection with TODAY's config over the RECORDED run, and
+    # its docstring called that "exact, not an approximation of what the persisted book was built
+    # from". True only while the config has not moved. When it has, the two disagree in the one
+    # direction that costs money: the persisted book still EXCLUDES a name (built under the old
+    # bar) while the rebuild now INCLUDES it, so `crowd_excl` is empty, the v12.1 suppression
+    # never fires, and the held name reads as maximally overweight against a 0% target. Lifting
+    # `max_crowding` 85 → 100 did exactly that live: pharma_large_cap — the position that change
+    # exists to admit — flipped to `TRIM −€556`. A config edit alone manufactured a sale.
+    #
+    # A model book built under different rules is not a target of zero; it is "we do not know",
+    # and this file already has the verdict for that state. So a held name absent from a STALE
+    # model book degrades to RE-SCORE, which moves no money, exactly as a rank-based SELL does
+    # when the sector has no rank worth selling on. It resolves itself on the next score run.
+    stale_cfg = None
+    if model:
+        try:
+            from catalyx.execution.portfolio import config_version
+            built = {str(m.get("config_version")) for m in model if m.get("config_version")}
+            now = config_version(strategy)
+            if built and now not in built:
+                stale_cfg = f"model book built under config {sorted(built)[0][:8]}, now {now[:8]}"
+        except Exception:                                      # pragma: no cover - defensive
+            stale_cfg = None
 
     model_by_sector = {m["sector_id"]: m for m in model}
     sectors = list(dict.fromkeys(list(model_by_sector) + list(positions)))
@@ -1820,6 +2025,18 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         actual_eur = round(float(mv), 2) if mv is not None else (
             round(float(invested), 2) if invested is not None else 0.0)
         denom = total_capital or 1.0
+        # A HELD name the ENTRY crowding filter kept out of the model book has NO model target,
+        # which is not the same statement as a target of 0% (v12.1). Reading "the model declined
+        # to express an opinion" as "the model says zero" is the category error this file already
+        # removed twice — an imputed CA is not a failed CA, an unmeasured cluster is not a
+        # compliant one. So the target becomes "whatever is held, ceilinged at
+        # `max_position_pct`": the gap closes to zero inside the ceiling, and above it the
+        # ordinary overweight TRIM fires AND sizes correctly — back to the cap, not to zero.
+        # Without this the suppression in `decide_action` would also disable the only mechanism
+        # that trims for SIZE, and the position could grow to any share of the book unchecked.
+        if sid in crowd_excl and p is not None:
+            cap_eur = denom * float(cfg.get("max_position_pct", 100.0)) / 100.0
+            target_eur = round(min(actual_eur, cap_eur), 2)
         target_pct = round(target_eur / denom * 100.0, 2)
         actual_pct = round(actual_eur / denom * 100.0, 2)
         gap_pp = round(target_pct - actual_pct, 2)
@@ -1844,6 +2061,15 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
             # The universe rank — what every rendered `rk` column shows and every rank-out
             # reason names. `rank` (model-book) stays internal: it exists only for book members.
             "score_rank": score_ranks.get(sid),
+            # v11.1 — set only when lifting `max_crowding` would ACTUALLY have selected this
+            # name. See `decide_action`: it suppresses the overweight TRIM and nothing else.
+            "crowding_excluded_only": sid in crowd_excl,
+            "crowding_risk": (crowd_excl.get(sid) or {}).get("crowding_risk"),
+            "max_crowding": (crowd_excl.get(sid) or {}).get("max_crowding"),
+            # v13.1 — held, but absent from a model book built under a config that has since
+            # changed. Not a 0% target: an unknown one. See `stale_cfg` above.
+            "stale_model_cfg": (stale_cfg if (stale_cfg and p is not None
+                                              and sid not in model_by_sector) else None),
         }
         decision = decide_action(ctx, cfg)
         action = decision["action"]
@@ -2052,6 +2278,8 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
     swaps = swap_ledger(rows, cfg, horizon_days=exp.get("horizon_days"))
     evidence = rank_edge_evidence(exp, cfg)
     partials = partial_rungs(rows, cfg)
+    # What the table does to the BOOK, beside what each row costs to trade (v11.1).
+    risk_delta = book_risk_delta(rows)
 
     # ── What NOT acting costs (plan v4 §4 C1/C3/C4) ─────────────────────────────────────────
     as_of = date.today().isoformat()
@@ -2137,6 +2365,7 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         "as_of": as_of, "strategy": strategy, "run_id": run_id,
         "book": book_metrics, "warnings": warnings, "overrides": overrides,
         "swaps": swaps, "rank_edge_evidence": evidence, "partials": partials,
+        "book_risk_delta": risk_delta,
         # What the deployment pressure rests on, when the ranking's own edge is not it (v5 F1).
         "selection_prior": selection_prior(evidence,
                                            (book_metrics.get("model") or {}).get("tilt_lambda")),
@@ -2992,6 +3221,23 @@ def render(res: dict) -> str:
             out.append(f"  {u['rule_action']:<7}{u['sector_id']:<34}"
                        f"€{abs(u['trade_eur']):>8,.0f}  not executed, not overridden")
     c = res["calibration"]
+
+    # What the table does to the BOOK, printed beside what its rows cost to TRADE (v11.1).
+    # A column, never a gate: it prices the rotation's effect on risk and cancels nothing.
+    brd = res.get("book_risk_delta")
+    if brd:
+        bb, aa = brd["before"], brd["after"]
+        rho = ("" if brd.get("delta_mean_corr") is None else
+               f" · mean ρ {bb['mean_corr']:.3f} → {aa['mean_corr']:.3f} "
+               f"({brd['delta_mean_corr']:+.3f})")
+        out.append("")
+        out.append(f"BOOK RISK — what THIS TABLE does to the book it leaves behind "
+                   f"(executable rows only; queued rows excluded)")
+        out.append(f"  vol {bb['vol_pct']:.1f}% → {aa['vol_pct']:.1f}% "
+                   f"({brd['delta_vol_pp']:+.1f}pp){rho}")
+        if brd.get("more_correlated"):
+            out.append("  ⚠ this table leaves the book MORE correlated than it found it. No row "
+                       "is blocked by that — it is the cost the friction lines do not carry.")
 
     swaps = res.get("swaps") or []
     if swaps:

@@ -169,6 +169,12 @@ wasted output. For each catalyst a finding touches, emit a delta row:
   stored state? (For structurals, this is the input to `/catalyx-update`; flag the specific indicator.)
 - **Invalidation trigger:** did an event reverse (policy walked back, ceasefire, deal signed) or a
   structural's thesis break? Flag it for the lifecycle gate — recommend `invalidated` / `weakening`.
+- **Backfill `sector_impact` while you are in the file.** Every event written before schema 1.4
+  lacks it, so the scorer is still assuming `supportive` for each of them — 12 direct events
+  across 11 sectors at the time the field shipped. Fill it for any event you touch this cycle;
+  do NOT sweep the registry to backfill events no finding touched, and do not infer a direction
+  you cannot read off the evidence. The ones nobody touches die by decay, which is the same
+  disposal v11 chose for the bare `strength_score` cardinals.
 
 All catalysts NOT touched by any finding: collapse into a **single** "no change: [id, id, …]" line —
 do not spend a row or a search on each. This is a RECOMMENDATION step — it never edits the YAML/JSON
@@ -231,6 +237,8 @@ For each significant result found:
     You choose the TYPE; the table chooses the number. To deviate you must write
     `halflife_override_reason` (≥20 chars) — six pre-1.3 events overrode the table silently,
     five toward longer persistence, which is the direction that keeps a spent event scoring.
+  - `sector_impact`: **one of `supportive` / `adverse` for EVERY sector in `affected_sectors`**
+    (schema 1.4, see below). Not optional in practice — the scorer's fallback is `supportive`.
 
 **How to score strength (schema 1.3, v11 P2).** `strength_score` was the last free cardinal in
 the system, and it behaved like one: the 16 active events cluster on round numbers — three 72s,
@@ -251,6 +259,34 @@ within `strength_anchoring.max_rubric_divergence` (15 points). What is not allow
 with neither a rubric nor a bracket behind it.
 
 Check your work before writing: `uv run python -m catalyx.scorer.catalyst_audit --active`.
+
+**How to set `sector_impact` (schema 1.4, v12 B5).** `relation_to_structural` answers how the
+event relates to a structural THESIS. It does NOT say whether the event is good or bad for a
+SECTOR, and those are different questions — so an event listed directly in a sector's
+`active_catalyst_ids`, with no structural parent, left the scorer nothing to read. It assumed
+every one of them was supportive, and because the noisy-OR is monotone increasing, the
+direct-event channel could only ever RAISE `catalyst_alignment`. Live consequence:
+`cat_20260617_fed_hawkish_pivot` — a hawkish Fed, strength 80, filed `independent` — entered as
+**+14.3 of support** on seven sectors including gold, copper and EU retail banking, and the CA of
+14.3 that `eu_retail_banking` and `oil_majors_integrated` carry today rests **entirely** on it.
+
+So, per sector, one word:
+
+```json
+"affected_sectors": ["gold_miners", "eu_defense_prime_contractors"],
+"sector_impact": { "gold_miners": "adverse", "eu_defense_prime_contractors": "supportive" }
+```
+
+Ask it in the sector's own terms, not the event's: *does this make owning that sector better or
+worse?* The same event is routinely both — a hawkish pivot is adverse for gold and supportive for
+banks, which is exactly why one `relation` field could never carry it. An `adverse` entry applies
+the `contradicts` penalty to the sector's aggregate; a `contradicts` relation implies `adverse`
+when the map is silent.
+
+**Omitting it is a measurement, not a default.** The scorer keeps the old behaviour and counts the
+row in `direct_events_direction_unstated`, so "nobody said" stays visible instead of passing as
+"we checked and it helps". Leave it out only when you genuinely cannot tell from the evidence in
+front of you — and then say so in the scan summary.
 
 **Note on the scorer.** It re-spaces every strength by its rank inside the registered-event
 population before use (`event_strength_calibration`), so what your number has to get right is
@@ -379,6 +415,11 @@ Rule-5 deltas. WebSearch effort then goes to the indicators no API serves.
   type; the table picks the number. Deviating requires `halflife_override_reason` in the file —
   this rule existed in prose before v11 and was ignored by 6 of 16 events, so it is now a schema
   field and a lint (`catalyx.scorer.catalyst_audit`), not a sentence.
+- **A direct event must state its DIRECTION per sector (`sector_impact`).** Without it the
+  scorer falls back to `supportive`, and since the aggregation is monotone increasing that makes
+  the direct-event channel a one-way ratchet upward — a hawkish Fed added +14.3 to gold and to
+  EU retail banking. `relation_to_structural` cannot carry this: it describes the relation to a
+  THESIS, and the same event is routinely supportive for one sector and adverse for another.
 - **`strength_score` requires `strength_rubric_scores` AND `strength_anchors`.** A bare cardinal
   is not reproducible across sessions, which is the one property the whole scoring layer exists
   to have. Run `catalyst_audit --active` before you finish.

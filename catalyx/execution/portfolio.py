@@ -162,6 +162,29 @@ def conviction_gate(df, c: dict) -> tuple:
 
 # ── Weighting ────────────────────────────────────────────────────────────────
 
+def cap_frac(c: dict) -> float:
+    """`max_position_pct` as a fraction OF THE DEPLOYED BOOK — the space `water_fill` works in.
+
+    THE DEFECT (v13.2). Model weights are fractions of deployable, not of total capital:
+    equal weight on 6 names is 16.67% here and 12.50% of total — which is exactly
+    `deploy_max/n_target`, the declared neutral. But `max_position_pct: 17.5` is derived as
+    `tier_multiples[0] × deploy_max/n_target`, i.e. 17.5% OF TOTAL, and it was applied straight
+    to a deployed-base weight. The ceiling landed at 1.050 × neutral instead of the tier table's
+    1.400 × — 0.83pp of room above equal weight instead of 6.67pp — so softmax, λ, the CA tilt
+    and the v13 risk budget all came out flattened to equal weight by ARITHMETIC, not by
+    decision. Live book: 6 names inside a 2.08pp band, every one of them at or near the cap.
+
+    A profile declares which base its number is on. `total` (the derived cap) is converted;
+    `deployed` (the hand-picked caps of the baseline books) is left alone — those numbers were
+    chosen against the weights they cap, and silently rescaling them would change what the
+    counterfactual measures.
+    """
+    cap = float(c["max_position_pct"]) / 100.0
+    if str(c.get("max_position_basis", "deployed")).lower() == "total":
+        cap /= max(1e-9, float(weights_cfg.deploy_max()))
+    return cap
+
+
 def water_fill(scores: list[float], max_w: float) -> list[float]:
     """Allocate weights ∝ `scores`, no weight exceeding `max_w` (a fraction in (0,1]).
 
@@ -375,6 +398,29 @@ def vol_tilt(scores: list[float], vols_pct: list[float | None], alpha: float,
     return [x * tot_in / tot_out for x in out] if tot_out else out
 
 
+def _rb_solve(sigma, scores: list[float]) -> list[float]:
+    """`scores` as RISK budgets → weights, via the measured Σ (v13). Falls back to `scores`.
+
+    The generalization of `vol_tilt`: that function divides by σ^α and so can only see a
+    vehicle's OWN variance, which makes two names that move together look like two bets. Σ sees
+    the covariance, so a correlated pair splits the budget its correlation says it is one of.
+    `vol_tilt` is the exact special case — with Σ diagonal the solution is `w ∝ sqrt(b)/σ`,
+    i.e. α=1 on a sqrt-compressed budget — which is why the two never run together.
+
+    A non-converged solve returns the INPUT scores untouched rather than a half-solved book:
+    partway between two sizing rules is a book neither rule endorses.
+    """
+    from catalyx.scorer import covariance as _cov
+
+    if not scores:
+        return list(scores)
+    res = _cov.risk_budget_weights(sigma, [max(float(s), 0.0) for s in scores])
+    w = res.get("weights") or []
+    if not res.get("converged") or len(w) != len(scores) or sum(w) <= 0:
+        return list(scores)
+    return [float(x) for x in w]
+
+
 def _sector_vols(tickers: list[str], lookback_days: int, as_of: str | None = None,
                  price_fn=None) -> dict[str, float]:
     """Annualized vol per traded vehicle over a COMMON recent window. {} when unavailable.
@@ -394,8 +440,17 @@ def _sector_vols(tickers: list[str], lookback_days: int, as_of: str | None = Non
         # `allow_fetch=False` on purpose: the portfolio builder is not a fetch site. `pre_run.sh`
         # warms the cache once per run and everything downstream reads it, so a cold ticker here
         # drops to the median vol rather than opening a network round-trip inside a weighting loop.
+        #
+        # v12 C1 — `read_eur`, not `read`. The v10.4 migration converted the signal, the target,
+        # the covariance and comomentum and stopped here, so `vol_tilt` — which at `alpha: 1.0`
+        # is the largest determinant of sizing while λ = 0 — was equalising risk across 26
+        # vehicles measured in four currencies, and `covariance` was then decomposing the SAME
+        # book on EUR weekly returns. Two risk models on two bases inside one build. The effect
+        # on today's book is small (≤0.08pp of weight — this is a coherence fix, not a money
+        # leak), which is exactly why it survived the migration: nothing printed wrong.
         frame = (price_fn(tickers, start.isoformat(), end.isoformat()) if price_fn
-                 else prices.read(tickers, start.isoformat(), end.isoformat(), allow_fetch=False))
+                 else prices.read_eur(tickers, start.isoformat(), end.isoformat(),
+                                      allow_fetch=False))
     except Exception:
         return {}
     if frame is None or getattr(frame, "empty", True):
@@ -602,16 +657,6 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
     # The ABSOLUTE gate runs beside the relative floor, never instead of it: one asks "is this
     # above average today", the other "is this worth owning at all". See `conviction_gate`.
     df, gate_excluded = conviction_gate(df, c)
-    df = df[df["momentum"] >= c.get("min_momentum", 0)]
-    df = df[df["crowding_risk"] <= c.get("max_crowding", 100)]
-    excl = set(c.get("exclude_narrative_maturity") or [])
-    if excl:
-        df = df[~df["narrative_maturity"].isin(excl)]
-    df = df[df["primary_etf"].notna()]
-    # regime overlay: drop `breaking` sectors (permanent rotation) before selection
-    if risk_overlay and exclude_breaking:
-        df = df[df["regime_state"] != "breaking"]
-
     # 2. select + 3. dedupe by ETF + top N — ranked by the STRATEGY's signal.
     weighting = c["weighting"]                       # momentum | composite | equal
     rank_col = "momentum" if weighting == "momentum" else "composite"
@@ -621,9 +666,58 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
     # fallback rule as `_apply_composite_floor`). See `sector_scorer.rank_key`.
     if rank_col == "composite" and "composite_z" in df.columns and df["composite_z"].notna().all():
         rank_col = "composite_z"
-    df = df.sort_values(rank_col, ascending=False)
-    df = df.drop_duplicates("primary_etf", keep="first")
-    df = df.head(int(c["max_positions"]))
+
+    crowding_bar = c.get("max_crowding", 100)
+    excl = set(c.get("exclude_narrative_maturity") or [])
+
+    def _filter_and_select(frame, apply_crowding: bool):
+        """The remaining filters + the top-N cut, as one reusable pass.
+
+        Factored out ONLY so it can be run a second time with the crowding filter lifted —
+        see `crowding_excluded` below. The `apply_crowding` flag is the single difference
+        between the two calls; everything else must stay identical or the counterfactual
+        stops answering the question it is asked.
+        """
+        f = frame[frame["momentum"] >= c.get("min_momentum", 0)]
+        if apply_crowding:
+            f = f[f["crowding_risk"] <= crowding_bar]
+        if excl:
+            f = f[~f["narrative_maturity"].isin(excl)]
+        f = f[f["primary_etf"].notna()]
+        # regime overlay: drop `breaking` sectors (permanent rotation) before selection
+        if risk_overlay and exclude_breaking:
+            f = f[f["regime_state"] != "breaking"]
+        f = f.sort_values(rank_col, ascending=False)
+        f = f.drop_duplicates("primary_etf", keep="first")
+        return f.head(int(c["max_positions"]))
+
+    pre_filter = df
+    df = _filter_and_select(pre_filter, apply_crowding=True)
+
+    # CROWDING IS AN ENTRY TEST, AND THE MODEL BOOK IS RIGHT TO APPLY IT (v11.1).
+    #
+    # This publishes WHICH names the crowding bar alone kept out, so `rebalance` can tell an
+    # exit caused by the bar from an exit caused by the ranking. It does NOT change the book:
+    # the model book is a strategy benchmark and must stay reproducible from a run alone —
+    # the moment it consults what you HOLD, its NAV stops being comparable to the real book's
+    # and the execution-alpha measurement dies. So the model book still excludes these names,
+    # and the decision about a HELD one is made where model target meets real book.
+    #
+    # The test is the counterfactual, not the threshold: a name is listed only if lifting the
+    # bar would ACTUALLY have selected it. A sector that also fails momentum, or that would
+    # have missed the top-N anyway, is not "excluded by crowding" — it is simply not good
+    # enough, and saying otherwise would hand `rebalance` a reason to cancel a sound exit.
+    kept = set(df["sector_id"])
+    crowding_excluded = [
+        {"sector_id": r["sector_id"],
+         "crowding_risk": float(r["crowding_risk"]) if r["crowding_risk"] == r["crowding_risk"]
+         else None,
+         "crowding_source": r.get("crowding_source"),
+         "max_crowding": float(crowding_bar),
+         "rank": int(r["rank"]) if "rank" in r and r["rank"] == r["rank"] else None}
+        for _, r in _filter_and_select(pre_filter, apply_crowding=False).iterrows()
+        if r["sector_id"] not in kept
+    ]
 
     if df.empty:
         return {"portfolio_id": portfolio_id, "run_id": run_id, "holdings": [],
@@ -736,13 +830,66 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
         if held_map:
             held = [held_map.get(r["sector_id"]) for _, r in df.iterrows()]
 
-    def _finalize(sc: list[float]) -> list[float]:
-        """vol_tilt → cap → contested gross-down → deadband — identically for the real scores
-        and the δ=0 counterfactual, because the CA-tilt ledger is only honest if both books
-        walk the same downstream path (v10 P8)."""
-        if alpha > 0 and vols_list is not None:
+    # RISK-BUDGET SIZING (v13): the score stops being a weight and becomes a VARIANCE share,
+    # which the measured Σ of the selected vehicles converts into euros. It replaces `vol_tilt`
+    # rather than stacking on it — Σ's diagonal already charges vol, and running both would
+    # charge it twice. Selection is untouched: these are the names the composite chose.
+    rb_info: dict | None = None
+    rb_sigma = None
+    sizing_mode = str(c.get("sizing_mode", pw.get("sizing_mode", "tiers"))).lower()
+    if sizing_mode == "risk_budget" and weighting not in ("momentum", "equal"):
+        from catalyx.scorer import covariance as _cov
+        rb_tickers = [str(r.get("primary_etf") or "") for _, r in df.iterrows()]
+        rb_weeks = int(c.get("rb_cov_weeks", pw.get("rb_cov_weeks", 56)))
+        rb_min = int(c.get("rb_min_weeks", pw.get("rb_min_weeks", 40)))
+        bs: dict = {"error": "no vehicle for one or more selected rows"}
+        if all(rb_tickers) and len(rb_tickers) >= 2:
+            try:
+                # as_of from the RUN, not today: a book rebuilt from an old run must get that
+                # run's matrix, or it stops being reproducible from the run alone.
+                from catalyx.execution.nav_engine import _run_date
+                bs = _cov.budget_sigma(rb_tickers, weeks=rb_weeks, min_weeks=rb_min,
+                                       as_of=_run_date(run_id))
+            except Exception as exc:                       # pragma: no cover - defensive
+                bs = {"error": f"covariance unavailable: {exc}"}
+        if bs.get("error"):
+            # NEVER silently: a book sized off the pre-v13 path while the config asked for the
+            # tape must say which one it walked, or the weights are unattributable.
+            sizing_mode = "tiers_fallback"
+            rb_info = {"mode": sizing_mode, "error": bs["error"],
+                       "note": f"risk-budget sizing unavailable ({bs['error']}) — fell back to "
+                               f"vol_tilt/water_fill; weights are NOT risk-budgeted"}
+        else:
+            rb_sigma = bs["sigma"]
+            rb_info = {"mode": "risk_budget", "cov_weeks_used": bs["weeks"],
+                       "n_measured": bs["n_measured"],
+                       "n_rho_imputed": sum(1 for x in bs["imputed"] if x),
+                       "imputed": bs["imputed"], "r_bar": bs["r_bar"],
+                       "shrinkage": bs["shrinkage"], "psd_clipped": bs["psd_clipped"]}
+    elif sizing_mode == "risk_budget":
+        sizing_mode = "tiers"      # momentum/equal books are counterfactual baselines, kept clean
+
+    # The ceiling in the base the weights below are actually expressed in — see `cap_frac`.
+    cap_pct = round(cap_frac(c) * 100.0, 4)
+
+    def _finalize(sc: list[float], risk_budgeted: bool = True) -> list[float]:
+        """risk budget (or vol_tilt) → cap → contested gross-down → deadband — identically for
+        the real scores and the δ=0 counterfactual, because the CA-tilt ledger is only honest if
+        both books walk the same downstream path (v10 P8).
+
+        `risk_budgeted=False` walks the PRE-v13 path on the same scores — that is the `w_pre_erc`
+        counterfactual, and it exists for the same reason `w_pre_ca_pct` does: a sizing step that
+        cannot be priced against the book it replaced can never be shown to have earned its place.
+        """
+        if rb_sigma is not None and risk_budgeted:
+            # water_fill allocates PROPORTIONALLY to what it is given, so handing it the solved
+            # weights applies `max_position_pct` in weight space exactly as it always has. The
+            # cap is not re-solved under the risk constraint — same approximation the cap has
+            # always made after `vol_tilt`, and the ceiling keeps meaning what it says.
+            sc = _rb_solve(rb_sigma, sc)
+        elif alpha > 0 and vols_list is not None:
             sc = vol_tilt(sc, vols_list, alpha, min_vol)
-        w = water_fill(sc, float(c["max_position_pct"]) / 100.0)
+        w = water_fill(sc, cap_pct / 100.0)
         if veto_on and contested_action == "cash":
             # gross-down: trim contested FINAL weights; the freed weight stays as cash (not
             # redistributed). exp_2026-06-05 A/B: this is what actually cuts a broad-risk-off
@@ -753,12 +900,39 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
         # run), so tiny score wiggles don't trigger taxable rebalances. No prior run → no-op.
         if held is not None:
             pct = apply_deadband([x * 100.0 for x in w], held, deadband,
-                                 max_position_pct=float(c["max_position_pct"]))
+                                 max_position_pct=cap_pct)
             w = [p / 100.0 for p in pct]
         return w
 
     weights = _finalize(scores)
     weights_pre_ca = _finalize(scores_pre_ca) if scores_pre_ca is not None else None
+    weights_pre_erc = _finalize(scores, risk_budgeted=False) if rb_sigma is not None else None
+
+    # Per-name risk facts of the book AS BUILT — after the cap, because a ρ̄ or a risk share
+    # quoted on the uncapped solve describes a book that was never held.
+    rho_bar_book: list[float | None] = [None] * len(weights)
+    risk_ctr: list[float | None] = [None] * len(weights)
+    if rb_sigma is not None:
+        try:
+            import numpy as _np
+            from catalyx.scorer import covariance as _cov
+            _S = _np.asarray(rb_sigma, dtype=float)
+            _sd = _np.sqrt(_np.diag(_S))
+            _C = _S / _np.outer(_sd, _sd)
+            _n = len(weights)
+            if _n > 1:
+                rho_bar_book = [round(float((_C[i].sum() - 1.0) / (_n - 1)), 4) for i in range(_n)]
+            risk_ctr = [x["ctr_pct"] for x in
+                        _cov.risk_contributions(rb_sigma, [w * 100.0 for w in weights])]
+            if rb_info is not None:
+                rb_info["book_vol_pct"] = round(
+                    _cov.portfolio_vol(rb_sigma, [w * 100.0 for w in weights]), 2)
+                if weights_pre_erc is not None:
+                    rb_info["pre_erc_vol_pct"] = round(
+                        _cov.portfolio_vol(rb_sigma, [w * 100.0 for w in weights_pre_erc]), 2)
+        except Exception as exc:                           # pragma: no cover - defensive
+            if rb_info is not None:
+                rb_info["risk_columns_error"] = str(exc)
 
     entry_prices = _entry_prices(lake_dir)
     cfg_ver = config_version(portfolio_id)
@@ -802,6 +976,16 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
             "ca_tilt_x": (ca_rows[idx]["x"] if ca_rows else None),
             "w_pre_ca_pct": (round(weights_pre_ca[idx] * 100.0, 2)
                              if weights_pre_ca is not None else None),
+            # RISK-BUDGET LEDGER (v13). `w_pre_erc_pct` is the same scores sized the pre-v13 way,
+            # so the step can be priced per complete window exactly like the CA tilt; `ctr_pct` is
+            # what the book actually carries (Euler), which is the quantity the budget claims to
+            # set; `rho_bar_book` is the measured number the declared cluster label stood in for.
+            "sizing_mode": sizing_mode,
+            "w_pre_erc_pct": (round(weights_pre_erc[idx] * 100.0, 2)
+                              if weights_pre_erc is not None else None),
+            "risk_contribution_pct": risk_ctr[idx],
+            "rho_bar_book": rho_bar_book[idx],
+            "rho_imputed": ((rb_info or {}).get("imputed") or [None] * len(weights))[idx],
             "entry_price": entry_prices.get(r["sector_id"]),
             "built_at": built_at,
         })
@@ -840,6 +1024,7 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
     return {"portfolio_id": portfolio_id, "run_id": run_id, "config_version": cfg_ver,
             "positions": len(rows), "cash_pct": cash_pct, "overlay": risk_overlay,
             "contested": n_contested, "tilt": lam_info, "ca_tilt": ca_info,
+            "sizing_mode": sizing_mode, "risk_budget": rb_info,
             "conviction_gate": {
                 "enabled": bool((c.get("entry_gate") or {}).get("enabled", True)
                                 and (c.get("entry_gate") or {}).get("min_catalyst_alignment")
@@ -859,6 +1044,7 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
                          + (": " + ", ".join(e["sector_id"] for e in gate_excluded)
                             if gate_excluded else "")),
             },
+            "crowding_excluded": crowding_excluded,
             "holdings": rows, "catalyst_exposure": exposure}
 
 
