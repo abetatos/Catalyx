@@ -14,6 +14,116 @@
 
 
 
+## v9.0 — La regla decía DÓNDE debe estar el libro y nunca dijo A QUÉ VELOCIDAD (2026-09-01)
+
+**Salió de dos frases del usuario:** «en rebalanceo hay algo mal, pone 773 hold y yo tengo 565 en
+uspy» y «me gustaría que rebalanceo sea la tabla maestra de esta iteración; no meter los 10.000 de
+golpe, ir escalando».
+
+**Lo del 773 no era un defecto: era un TARGET de otro run.** `773,97` es el `target_eur` de
+`cybersecurity_commercial` en `run_20260828_102925`; el `actual_eur` de esa misma fila es `564,57`
+— exactamente los €565 que el usuario ve en el bróker. La columna «actual» ha sido correcta todo el
+tiempo; lo que confunde es que la tabla contesta DOS preguntas a la vez (a dónde va el libro, y qué
+se ejecuta hoy) y las imprime en columnas contiguas. Esa confusión es el defecto real, y es lo que
+arregla el bloque **THIS ITERATION**: las filas que sobreviven a las dos escaseces, en orden de
+ejecución, arriba del todo, con la fricción de cada una. Lo demás de la tabla es en qué se apoyan.
+
+**La rampa de despliegue (`deployment.ramp.max_step_pp: 15.0`).** El `deploy_ratio` decía «el 75%
+debería estar trabajando» y no decía nada sobre cuánto tarda en llegar, así que cada review
+infra-desplegado pedía el hueco ENTERO de una vez: €4.868 en seis nombres a los precios de una sola
+tarde — la mayor apuesta de timing que el sistema puede hacer, y la única que nadie eligió. La
+rampa es la mitad que faltaba: el destino no cambia (`deployable`), la RUTA son 15 puntos de
+capital total por review. Tres propiedades la separan de un escondite para el efectivo:
+
+- **Limita el NETO** (`Σ trade_eur`), así que una rotación pura —vender un nombre y comprar otro—
+  pasa sin tocarla. Raciona escalar EN, no la rotación.
+- **Rellena por RANK y a tamaño COMPLETO**: un tramo compra un nombre a peso de convicción, no seis
+  cuartos de posición. Un cuarto de posición no es una apuesta más pequeña, es una peor — el mismo
+  hueco de operación y el mismo spread para un cuarto de la exposición.
+- **No borra el incumplimiento.** El shortfall se sigue midiendo contra el `deployable` COMPLETO,
+  el cash drag se sigue imprimiendo al lado, y cada fila encolada se registra (autor `ramp`) y se
+  precia a 21 días como cualquier desviación. Si el marcador dice que la rampa costó dinero, el
+  número que cambia es este. Los 15pp son un parámetro de AVERSIÓN, como `base`, no una derivación:
+  a `n_target=6` y despliegue máximo 0,85 es un nombre a peso neutro por review, y llegar al 75%
+  desde 26% cuesta ~4 reviews (~4 meses a la cadencia de 30-45d). Test de factibilidad incluido: el
+  tramo debe poder colocar al menos una posición neutra completa.
+
+**Tres defectos que el cambio destapó, y que valen más que la función nueva:**
+
+1. **El presupuesto de operaciones racionaba huecos entre filas que la rampa iba a encolar.** Con
+   el orden viejo (huecos antes que caja) seis BUYs consumían la asignación y **echaban de la tabla
+   el TRIM de `pharma_large_cap`** — justo la fila que el usuario ya había aprobado. Ahora: CAJA
+   primero (qué cabe en el tramo), HUECOS después (qué cabe en las 6 operaciones del review). Con
+   el orden corregido el tramo pasa de 3 filas a 5, y la que entra es la venta.
+2. **`cap_check` ignoraba las ventas que financian las compras.** Tenía un `if eur <= 0: continue`,
+   así que una tabla que cierra `copper_miners` para comprar dentro del MISMO clúster se medía como
+   si la venta no ocurriera. En vivo hoy la diferencia es la decisión entera:
+   `struct_ai_capex_supercycle` leía **39,1% (incumple, €913 por encima)** contando el cobre que se
+   está vendiendo, y **29,1% (cumple)** contándolo bien. El cap pregunta cuánto dinero se mueve si
+   el driver se rompe, y después de la tabla ese dinero ya no está. La deducción se limita a la
+   BASE de exposición: un ganador vendido por encima de coste no puede retirar más exposición de la
+   que llegó a llevar.
+3. **Re-correr el rebalance del mismo score run duplicaba los DEFER automáticos**, y un DEFER de
+   máquina de un corte anterior sobrevivía aunque el corte nuevo concediera la fila — un registro
+   que dice «diferido» sobre una fila que el usuario ejecuta, y que `override_edge` habría preciado
+   como real. Ahora los DEFER de autor `budget`/`ramp` se **reconcilian** contra la tabla vigente
+   (se retractan los que ya no aplican) y nunca se archiva un segundo veredicto sobre una fila que
+   una PERSONA ya contestó. La autoría humana no se toca: una decisión de una persona no es de la
+   máquina para retirarla.
+
+El marcador `*` de la tabla pasa a significar «encolada por una escasez (hueco u ramp)». El
+dashboard gana la tarjeta **this tranche** y el mismo bloque de orden de ejecución, y persiste
+`ramp_state`/`budget_state` por fila más la ruta (`book_ramp_*`) para que un run releído mañana
+diga por qué una fila estaba encolada. `review_report` añade `ramp` a los autores automáticos: la
+línea RAMP ya nombra cada fila retenida, y un marcador que pide prosa por una decisión que nadie
+tomó enseña a saltarse los marcadores. 664 tests en verde (+9).
+
+**Efecto en la tabla viva:** el tramo de esta iteración son 5 filas —SELL `copper_miners` €1.051,
+SELL `pharma_large_cap` €556, ADD `semiconductors_design` €374, BUY `ai_infrastructure_data_centers`
+€1.500, BUY `cloud_software_saas` €913— que dejan el libro al 38,1% desplegado; `water_infrastructure`
+(€1.499) y `robotics_automation` (€1.468) quedan encolados al siguiente review. Con el cap ya
+contando la venta del cobre, las cinco juntas dejan `struct_ai_capex_supercycle` en **32,9%**
+(incumple por €287) y sin el ADD de semis en **29,1%** — que es dónde está la decisión.
+
+---
+
+## v8.1 — El vehículo que sale en el buscador es el vehículo que se puntúa (2026-09-01)
+
+**Salió de una pregunta del usuario, no de un test:** buscando `IH2O` en el bróker no aparece el
+ETF — aparecen **HTO** (H2O America) y **GWRS** (Global Water Resources), dos *utilities* de agua
+estadounidenses de **acción única**. El buscador matchea el texto «water», no el vehículo, y las dos
+respuestas que ofrece son instrumentos de otra clase de riesgo. `RBOT` tampoco resuelve; el fondo
+aparece como **2B76**.
+
+La regla de la v2.0 del universo dice que `chain[0]` es el vehículo **realmente comprable**, porque
+puntuar `COPX` y comprar `4COP.DE` mide un retorno que no obtienes. Un ticker que el bróker no
+devuelve incumple esa regla exactamente igual: no es comprable *de hecho*, aunque lo sea sobre el
+papel. Así que se promueve a tier-1 la línea con la que el vehículo SÍ aparece:
+
+| sector | tier-1 antes | tier-1 ahora | mismo fondo |
+|---|---|---|---|
+| `water_infrastructure` | `IH2O.L` (LSE, GBp) | **`IQQQ.DE`** (Xetra, EUR) | sí — iShares Global Water UCITS, USD (Dist) |
+| `robotics_automation` | `RBOT.L` (LSE, USD) | **`2B76.DE`** (Xetra, EUR) | sí — iShares Automation & Robotics UCITS, USD (Acc) |
+
+Identidad verificada contra yfinance (`longName`/`currency`/`exchange`), que es lo que exige el
+universo desde el incidente `IQQR.DE`. Las líneas viejas **no se borran**: bajan a tier-2 con la
+razón escrita. Ninguna de las dos está en cartera (`data/movements/` no las menciona), así que el
+cambio no toca ninguna base de coste.
+
+**Lo que el cambio corrige además, y no es cosmético.** El comentario de `SECTOR_TICKERS` afirmaba
+que una cotización en GBp «no da problema porque el momentum es un RETORNO y la escala se cancela».
+La escala se cancela; **la divisa no**. `IH2O.L` medía el retorno de un comprador en GBP y el
+operador paga en EUR — sobre el mismo fondo, el mismo día, la diferencia es real: 1y **−0,09%** en
+GBp contra **+1,51%** en EUR, 6m **−6,41%** contra **−3,90%**. La promoción alinea la divisa de la
+medición con la divisa en la que se paga, que es el mismo argumento que la doctrina v2.0, un nivel
+más abajo. Comentario reescrito en `market_data.py`.
+
+`SECTOR_FLOW_TICKERS` se actualiza solo en su primer elemento por coherencia; los proxies US
+(`PHO`/`FIW`, `ROBO`/`BOTZ`) siguen haciendo el trabajo — las dos tablas siguen sin unificarse.
+Ambas líneas nuevas traen ≥2 años de histórico en yfinance, así que el momentum 12-1 de v8 no
+pierde cobertura. `broker_access` se queda en `assumed`: el usuario los ha visto en el buscador,
+no los ha operado, y `verified` significa operado de hecho. 663 tests en verde.
+
 ## v8.0 — Backtest punto-en-tiempo y promoción de candidatas: 12-1, comomentum y el reparto GK (2026-08-31)
 
 **El usuario decidió que esperar ~3 ventanas vivas (≈2027-05) para usar las candidatas de v7 no
@@ -2013,6 +2123,14 @@ effectively dead — 16 of 26 files failed against 1.2, before any change here):
   is never to claim false precision, so the schema now permits the honest gap.
 
 **Result:** 26/26 studies validate (was 10/26). A `core` study is ~714 bytes vs ~25,000.
+
+---
+
+## v6.8 — Seis defectos que el review se encontró a sí mismo (2026-08-31)
+
+> Rotada desde la tabla `Recent Changes` de CLAUDE.md, verbatim.
+
+**Seis defectos que el review se encontró a sí mismo, y el que llevaba meses reescribiendo scores.** Salieron al correr un SEGUNDO `/catalyx-review` el mismo día — condición que varios necesitaban para hacerse visibles. Ningún threshold movido; todo son correcciones. **(1) La intensidad alimentaba su propia tendencia.** `write_back` escribía la fila de HOY en `intensity.history` y `_trend_delta` leía `scores[0]-scores[1]` — o sea, su propia estimación previa. El score era una iteración de punto fijo sobre sí mismo: `struct_cb_gold_accumulation` hizo **78,6 → 68,5 → 64,5** en dos runs con el mundo quieto, cada paso reportado como `↓ falling 1 period`. Compone, y en la única dirección que parece una tesis muriéndose. Arreglado en tres capas: `compute_intensity` excluye la fila con la fecha de hoy (es su propia estimación, no un periodo cerrado; una etiqueta explícita `--period 2026-Q3` no casa y se conserva), `write_back` REEMPLAZA la fila de ese periodo en vez de apilar otra, y `_trend_delta` deduplica por periodo al leer, lo que repara todo fichero ya escrito del modo viejo. **Nueve de trece catalizadores tenían periodos duplicados —hasta SEIS filas de `2026-Q2`—, así que esto llevaba meses malleyendo la pata de tendencia**, no solo hoy. Un test fija que tres write-backs seguidos dan salida idéntica. **(2) `--all --write-back` escribía los scores en los ficheros EQUIVOCADOS.** `compute_all()` salta `merged` y `role: macro_context` (13 resultados) pero el CLI los emparejaba con un `glob("*.yaml")` fresco (18 rutas): el score del oro acabó en `biopharma_patent_cliff_ma`, el de `ai_capex` en `commercial_space`, y los últimos cinco ficheros no se escribieron nunca. Los resultados ya llevan `_source_file`; ahora cada escritura se direcciona por él. Es el comando que la entrada de v6.7 manda ejecutar, así que el bug estaba armado esperando a quien siguiera las instrucciones. **(3) El rank publicado salía del compuesto REDONDEADO.** `composite` va a un decimal, así que cualquier par a menos de 0,05 era un empate resuelto por el orden del fichero de taxonomía — cuando v6/H1 ya había declarado `composite_z` la unidad comparable. En vivo hoy: `space_defense_satellite` (49,4, z −0,041) por encima de `nuclear_energy` (49,4, z −0,038) por pura suerte alfabética. `sector_scorer.rank_key()` elige la unidad y se usa en todos los sitios que ordenan, incluido el corte top-N de `portfolio` — que es donde el redondeo cuesta dinero. **(4) El ranking del work list no era el ranking grabado:** `--universe` pasaba un `--crowd` plano a todos, σ_cross de crowding = 0 y el lint de dimensión muerta lo cantaba, en la vista cuyo único trabajo es alimentar los estudios. **(5) Cinco sellos de frescura rebotaron, en los catalizadores recién verificados:** el enum de `catalyst_review` tenía tres valores mientras `catalyx-scan.md` documentaba cinco, y el docstring afirmaba que mapeaban «sin traducción». `strengthening` se rechazaba, así que tres drivers de posiciones abiertas seguían leyéndose stale el día que se re-verificaron. **(6) Dos líneas que mentían en el transcript:** `catalyst_lifecycle --apply` imprimía «dry run — use --apply» cuando no había transiciones, e `indicator_update batch` imprimía `Σ None` en la única línea que dice qué catalizador se movió. 612 tests en verde (+6).
 
 ---
 

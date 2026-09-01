@@ -49,8 +49,11 @@ console = Console(highlight=False)
 #
 # Cobertura: los 26 sectores investables de sector_taxonomy.yaml v2.0. Los 27 retirados
 # a watch-only quedan fuera por definicion — no tienen vehiculo comprable.
-# Tickers en GBp (RAYS.L, INRG.L, SPGP.L, SSLN.L, SPAG.L, IH2O.L, INFR.L) no dan
-# problema: el momentum es un RETORNO, y la escala peniques/libras se cancela.
+# Tickers en GBp (RAYS.L, INRG.L, SPGP.L, SSLN.L, SPAG.L, INFR.L) no dan
+# problema: el momentum es un RETORNO, y la escala peniques/libras se cancela. Lo que
+# NO se cancela es la DIVISA de cotizacion: una linea en GBp mide el retorno de un
+# comprador en GBP. Por eso, cuando el mismo fondo cotiza en EUR y esa es la linea que
+# se opera, chain[0] es la EUR (2026-09-01: IQQQ.DE sobre IH2O.L, 2B76.DE sobre RBOT.L).
 SECTOR_TICKERS: dict[str, list[str]] = {
     # ── Defensa y espacio ────────────────────────────────────────────────────
     "eu_defense_prime_contractors":  ["EUDF.L", "NATO.PA", "DFEN.DE"],
@@ -69,14 +72,14 @@ SECTOR_TICKERS: dict[str, list[str]] = {
     "copper_miners":                 ["4COP.DE", "COPX.L"],
     "lithium_miners":                ["VOLT.L", "LITU.L"],
     "agriculture_soft_commodities":  ["SPAG.L"],
-    "water_infrastructure":          ["IH2O.L"],
+    "water_infrastructure":          ["IQQQ.DE", "IH2O.L"],   # linea Xetra EUR; IH2O.L (GBp) no aparece en el buscador
     # ── Financiero ───────────────────────────────────────────────────────────
     "eu_retail_banking":             ["EXV1.DE"],
     "crypto_infrastructure":         ["DAPP.L"],
     # ── Tecnologia ───────────────────────────────────────────────────────────
     "semiconductors_design":         ["SEMI.L", "SMGB.L"],
     "ai_infrastructure_data_centers":["XAIX.DE", "AIAI.L", "WTAI.L"],
-    "robotics_automation":           ["RBOT.L"],              # antes IQQR.DE = MSCI Eastern Europe (sector equivocado)
+    "robotics_automation":           ["2B76.DE", "RBOT.L"],   # 2B76 = misma clase en Xetra; antes IQQR.DE = MSCI Eastern Europe (sector equivocado)
     "cybersecurity_commercial":      ["USPY.L", "LOCK.L"],
     "cloud_software_saas":           ["WCLD.L", "DGTL.L"],
     # ── Salud ────────────────────────────────────────────────────────────────

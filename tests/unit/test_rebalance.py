@@ -1024,6 +1024,150 @@ def test_budget_is_an_allowed_override_author_and_is_not_unrecorded():
     assert "budget" != "unrecorded"
 
 
+# ── v9 R1: the deployment ramp — a route, not a destination ──────────────────
+
+def _rm(sid, action, eur, rank=None):
+    return {"sector_id": sid, "rule_action": action, "trade_eur": float(eur),
+            "score_rank": rank, "budget_state": "granted"}
+
+
+def _ramp_cfg(step_pp=15.0, **over):
+    cfg = {"deployment": {"ramp": {"enabled": True, "max_step_pp": step_pp, **over}},
+           "min_ticket_eur": 150.0}
+    return cfg
+
+
+def test_ramp_fills_in_rank_order_to_full_size():
+    """One conviction-weight name per tranche, not six quarter-positions: a quarter-position
+    costs the same slot and the same spread to buy a quarter of the exposure."""
+    rows = [_rm("best", "BUY", 1500, rank=2), _rm("second", "BUY", 900, rank=4),
+            _rm("third", "BUY", 800, rank=7)]
+    plan = rb.deployment_ramp_plan(rows, deployed_eur=2000, deployable_eur=7500,
+                                   total_capital_eur=10000, cfg=_ramp_cfg())
+    assert plan["allowed_after_eur"] == 3500.0            # 2000 + 15pp of 10k
+    assert rows[0]["ramp_state"] == "granted"             # rank 2 first, at FULL size
+    assert rows[1]["ramp_state"] == "deferred" and rows[2]["ramp_state"] == "deferred"
+    assert plan["after_eur"] == 3500.0 and plan["deferred"] == 2
+
+
+def test_ramp_caps_the_net_so_a_rotation_is_untouched():
+    """It rations scaling IN, not turnover: sell €1,000 and buy €1,000 and the deployed share
+    has not moved, so the ramp has nothing to say about it."""
+    rows = [_rm("out", "TRIM", -1000, rank=9), _rm("in", "BUY", 1000, rank=1)]
+    plan = rb.deployment_ramp_plan(rows, deployed_eur=2000, deployable_eur=7500,
+                                   total_capital_eur=10000, cfg=_ramp_cfg())
+    assert plan["deferred"] == 0
+    assert all(r["ramp_state"] == "granted" for r in rows)
+    assert plan["after_eur"] == 2000.0
+
+
+def test_ramp_never_asks_for_more_than_the_deploy_rule():
+    """The ramp is the route; `deployable` is still the destination. A tranche bigger than the
+    remaining gap is clipped to the gap, never carried past it."""
+    plan = rb.deployment_ramp_plan([], deployed_eur=7000, deployable_eur=7500,
+                                   total_capital_eur=10000, cfg=_ramp_cfg())
+    assert plan["allowed_after_eur"] == 7500.0
+    assert plan["reviews_to_full"] == 1
+
+
+def test_ramp_never_zeroes_the_rules_ask():
+    """Same contract as the trade budget: the queued row keeps the rule's action and €, so the
+    scorecard still judges the RULE and the deferral is priced separately."""
+    rows = [_rm("a", "BUY", 5000, rank=1)]
+    rb.deployment_ramp_plan(rows, deployed_eur=0, deployable_eur=7500,
+                            total_capital_eur=10000, cfg=_ramp_cfg())
+    assert rows[0]["rule_action"] == "BUY" and rows[0]["trade_eur"] == 5000.0
+    assert rows[0]["ramp_state"] == "deferred"
+
+
+def test_ramp_disabled_leaves_every_row_alone():
+    rows = [_rm("a", "BUY", 5000, rank=1)]
+    plan = rb.deployment_ramp_plan(rows, deployed_eur=0, deployable_eur=7500,
+                                   total_capital_eur=10000,
+                                   cfg=_ramp_cfg(enabled=False))
+    assert plan["enabled"] is False and rows[0]["ramp_state"] == "n/a"
+
+
+def test_ramp_does_not_touch_the_shortfall_it_schedules():
+    """The cost of being under-deployed is measured against the FULL deployable — otherwise the
+    ramp would delete a breach by decree, which is the one thing it must not do."""
+    assert rb.shortfall_pp(2000, 7500, 10000) == 55.0     # ramp or no ramp, the gap is the gap
+
+
+def test_cash_is_rationed_before_slots_are():
+    """A slot spent on a row the ramp is about to queue is a slot spent on nothing. With the
+    budget running first, six BUYs consumed the allowance and pushed a TRIM out of the table
+    that the ramp would then have let through — the row the user had already approved."""
+    rows = [_rm("out", "TRIM", -600, rank=9)] + [_rm(f"b{i}", "BUY", 1000, rank=i + 1)
+                                                 for i in range(6)]
+    rb.deployment_ramp_plan(rows, deployed_eur=2000, deployable_eur=7500,
+                            total_capital_eur=10000, cfg=_ramp_cfg())
+    for r in rows:                                   # the budget has not run yet
+        r.pop("budget_state", None)
+    rb.trade_budget_plan(rows, _budget_cfg(planned_max_per_review=6))
+    queued = [r for r in rows if r["ramp_state"] == "deferred"]
+    assert queued, "the fixture must actually exceed the tranche"
+    assert all(r["budget_state"] == "n/a" for r in queued)
+    assert rows[0]["budget_state"] != "deferred"     # the TRIM keeps its slot
+
+
+def test_a_queued_row_is_never_filed_twice(tmp_path):
+    """Re-running the table for the same score run must not log a second DEFER, and a machine
+    author must never file a verdict on a row a PERSON already answered — either way the tally
+    counts one decision twice and the override edge is scored against a phantom."""
+    result = {"run_id": "run_x",
+              "trade_budget": {"budget": 1,
+                               "deferred_rows": [{"sector_id": "a", "rule_action": "BUY",
+                                                  "trade_eur": 500.0}]},
+              "deployment_ramp": {"max_step_pp": 15.0, "allowed_after_pct": 41.0,
+                                  "deferred_rows": [{"sector_id": "b", "rule_action": "BUY",
+                                                     "trade_eur": 900.0}]}}
+    assert rb._log_budget_defers(result, lake_dir=tmp_path) == 2
+    assert rb._log_budget_defers(result, lake_dir=tmp_path) == 0
+    rb.log_override("run_x", "c", "BUY", "DEFER", reason="the user declined it in writing",
+                    author="user", lake_dir=tmp_path)
+    result["deployment_ramp"]["deferred_rows"].append(
+        {"sector_id": "c", "rule_action": "BUY", "trade_eur": 100.0})
+    assert rb._log_budget_defers(result, lake_dir=tmp_path) == 0
+
+
+def test_a_machine_defer_is_retracted_when_the_table_stops_queueing_the_row(tmp_path):
+    """A later cut of the same score run can GRANT a row an earlier cut queued. Left behind, the
+    log says "deferred" about a row the user then executed — a false record `override_edge` would
+    price as real. A person's decision is never withdrawn this way."""
+    result = {"run_id": "run_y", "trade_budget": {"budget": 1, "deferred_rows": []},
+              "deployment_ramp": {"max_step_pp": 15.0, "allowed_after_pct": 41.0,
+                                  "deferred_rows": [{"sector_id": "still_queued",
+                                                     "rule_action": "BUY", "trade_eur": 900.0}]}}
+    rb.log_override("run_y", "now_granted", "ADD", "DEFER", reason="no slot last time",
+                    author="budget", chosen_trade_eur=0.0, lake_dir=tmp_path)
+    rb.log_override("run_y", "human_call", "BUY", "HOLD", reason="the cap, in writing",
+                    author="claude", chosen_trade_eur=0.0, lake_dir=tmp_path)
+    rb._log_budget_defers(result, lake_dir=tmp_path)
+
+    left = {r["sector_id"]: r["author"] for r in rb._overrides_for_run("run_y", lake_dir=tmp_path)}
+    assert "now_granted" not in left, "a machine DEFER the table no longer makes is retracted"
+    assert left.get("human_call") == "claude", "a person's override is not the machine's to drop"
+    assert left.get("still_queued") == "ramp"
+
+
+def test_ramp_is_an_allowed_override_author():
+    """A queued row is logged and priced at 21 days like any deviation — that is what makes the
+    schedule falsifiable instead of a habit."""
+    assert "ramp" in weights.rebalance_rules()["overrides"]["authors_allowed"]
+
+
+def test_ramp_step_is_configured_and_feasible():
+    """The step must buy at least one neutral-weight name, or the tranche cannot place a full
+    position and the ramp silently becomes the quarter-position book it exists to prevent."""
+    depl = weights.rebalance_rules()["deployment"]
+    step_pp = float(depl["ramp"]["max_step_pp"])
+    shape = weights.book_shape()
+    neutral_pp = (float(depl["base"]) + float(depl["step_per_intact_sector"])
+                  * (8 - int(depl["intact_min"]))) * 100 / int(shape["n_target"])
+    assert step_pp >= neutral_pp * 0.9
+
+
 # ── v6 I6: the VIX brake ramps, it does not cliff ────────────────────────────
 
 def test_the_vix_brake_has_no_cliff(cfg):

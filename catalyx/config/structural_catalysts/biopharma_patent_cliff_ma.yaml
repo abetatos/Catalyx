@@ -39,13 +39,17 @@ user_notes: >
   are the primary confirmation; refresh quarterly against IQVIA/BioPharma deal trackers.
 
 intensity:
-  current_score: 87.5
+  current_score: 90.5
   computation_method: computed
-  last_updated: "2026-08-31"
+  last_updated: "2026-09-01"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: just below struct_ai_capex_supercycle (89.9). Durable
     LOE-driven takeout pressure with clear deal-flow indicators.
   history:
+  - period: '2026-09-01'
+    score: 90.5
+    note: 'Computed 2026-09-01: avg=85.47 trend=↑↑ (rising 2+ consecutive) (was 87.5)'
+    computation_method: computed
   - period: '2026-08-31'
     score: 87.5
     note: 'Computed 2026-08-31: avg=85.47 trend=↑ (rising 1 period) (was 86.0)'

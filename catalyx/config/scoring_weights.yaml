@@ -1056,6 +1056,22 @@ rebalance_rules:
     # Counted per REVIEW DATE, never per run id: two runs in one afternoon are one review.
     max_shortfall_pp: 10.0
     max_shortfall_runs: 2
+    # RAMP (v9 R1) — the ratio said WHERE the book should be and never said HOW FAST to get
+    # there, so a book 48pp under the rule was asked to close the whole gap in one afternoon:
+    # six names bought on one day's prices, which is the single largest timing bet the system
+    # can make and the one nobody chose. `max_step_pp` is the most the DEPLOYED share may rise
+    # in one review, in points of total capital. It caps the NET, so rotations are untouched —
+    # this rations scaling in, not turnover — and it fills in RANK order to FULL size, because
+    # six quarter-positions cost six slots and six spreads to buy a quarter of the exposure.
+    # 15pp: at n_target=6 and deploy_max 0.85 that is one neutral-weight name per review, and
+    # it reaches 75% from a standing start in ~4 reviews (~4 months at the 30-45d cadence).
+    # It is an AVERSION parameter like `base`, not a derivation, and it is not free: the ERP it
+    # forgoes is priced every run by `cash_drag`, the shortfall keeps being measured against the
+    # FULL deployable, and every queued row is logged (author `ramp`) and scored at 21 days.
+    # If that tally says the ramp cost money, this number is what changes.
+    ramp:
+      enabled: true
+      max_step_pp: 15.0
 
   # Does the trade pay after tax? Asymmetric BY DESIGN, and the asymmetry is the point:
   #   - a sale that REALIZES a gain pays Spanish CGT now, irreversibly → it must clear the gate
@@ -1113,7 +1129,11 @@ rebalance_rules:
                                  # window are one observation, not five.
 
   overrides:
-    authors_allowed: [user, claude, unrecorded, budget]
+    authors_allowed: [user, claude, unrecorded, budget, ramp]
+                                   # `ramp` is the deployment schedule, filed like `budget` and
+                                   # for the same reason: a row queued behind this review's
+                                   # tranche is the rule working, and pricing it at 21 days is
+                                   # what makes the schedule falsifiable rather than a habit.
                                    # `budget` is the trade allowance, not a person: a row with no
                                    # free slot left is the rule working, not silence, so it is
                                    # filed apart from `unrecorded` — and still scored, which is

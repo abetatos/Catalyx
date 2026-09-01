@@ -200,10 +200,16 @@ def test_a_conditional_marker_tracks_its_condition_in_both_directions():
     rr = _report_module()
     text = rr.build("2026-08-28")
 
-    # No deliberate override is pending on this book, so that marker stays out.
-    assert "for each override logged THIS run" not in text
-    for f in rr.lint_completeness(text):
-        assert "Overrides" not in f["section"]
+    # The marker owes prose only for a deviation a PERSON chose. `unrecorded`, `budget` and
+    # `ramp` DEFERs are the machinery working, and the expectation is read off the override log
+    # rather than frozen here — this half of the test used to hardcode "no override is pending"
+    # and started failing the day the book acquired one, which is the frozen expectation the
+    # docstring warns about.
+    from catalyx.execution import rebalance as rb
+    deliberate = [p for p in (rb.score_overrides().get("pending") or [])
+                  if str(p.get("author")) not in ("unrecorded", "budget", "ramp")]
+    assert ("for each override logged THIS run" in text) is bool(deliberate)
+    assert any("Overrides" in f["section"] for f in rr.lint_completeness(text)) is bool(deliberate)
 
     proposed = [{"sector_id": r.get("sector_id"), "trade_eur": r.get("trade_eur")}
                 for r in rr._rebalance_rows() if r.get("rule_action") in ("BUY", "ADD")]

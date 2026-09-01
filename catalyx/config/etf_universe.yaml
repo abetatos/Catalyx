@@ -458,6 +458,18 @@ etf_universe:
       last_verified: "2026-08-27"
 
   water_infrastructure:
+    - ticker: "IQQQ.DE"
+      name: "iShares Global Water UCITS ETF USD (Dist)"
+      exchange: XETRA
+      currency: EUR
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 2196
+      recommendation_tier: 1
+      notes: "MISMO fondo que IH2O.L, linea Xetra en EUR. Promovido a tier-1 el 2026-09-01 porque el buscador del broker NO devuelve IH2O: devuelve HTO (H2O America) y GWRS (Global Water Resources), dos utilities US de ACCION UNICA — el matcheo es por el texto 'water', no por el vehiculo. IQQQ si aparece. Es tambien la linea correcta para puntuar: se paga en EUR."
+      last_verified: "2026-09-01"
     - ticker: "IH2O.L"
       name: "iShares Global Water UCITS ETF USD (Dist)"
       exchange: LSE
@@ -467,8 +479,8 @@ etf_universe:
       broker_access: assumed
       ter: null
       aum_m_usd: 2196
-      recommendation_tier: 1
-      notes: "Sustituye a WTRD.L (no resuelve) y PHO (US)."
+      recommendation_tier: 2
+      notes: "Misma clase del mismo fondo, linea LSE en GBp. Degradado a tier-2 el 2026-09-01: no localizable en el buscador. Sustituyo en su dia a WTRD.L (no resuelve) y PHO (US)."
       last_verified: "2026-08-27"
 
   # ==========================================================================
@@ -584,6 +596,18 @@ etf_universe:
       last_verified: "2026-08-27"
 
   robotics_automation:
+    - ticker: "2B76.DE"
+      name: "iShares Automation & Robotics UCITS ETF USD (Acc)"
+      exchange: XETRA
+      currency: EUR
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: null
+      aum_m_usd: 5217
+      recommendation_tier: 1
+      notes: "MISMO fondo que RBOT.L (acumulacion), linea Xetra en EUR. Promovido a tier-1 el 2026-09-01: es el codigo con el que el vehiculo aparece en el buscador del broker. Cotizar en EUR no cubre la divisa — la exposicion subyacente sigue siendo USD."
+      last_verified: "2026-09-01"
     - ticker: "RBOT.L"
       name: "iShares Automation & Robotics UCITS ETF USD (Acc)"
       exchange: LSE
@@ -593,8 +617,8 @@ etf_universe:
       broker_access: assumed
       ter: null
       aum_m_usd: 5217
-      recommendation_tier: 1
-      notes: "CORRIGE UN ERROR GRAVE: la v1.1 ponia IQQR.DE como tier-1, que es iShares MSCI EASTERN EUROPE Capped — sector completamente distinto."
+      recommendation_tier: 2
+      notes: "Misma clase del mismo fondo, linea LSE en USD. Degradado a tier-2 el 2026-09-01. CORRIGIO UN ERROR GRAVE: la v1.1 ponia IQQR.DE como tier-1, que es iShares MSCI EASTERN EUROPE Capped — sector completamente distinto."
       last_verified: "2026-08-27"
 
   cybersecurity_commercial:

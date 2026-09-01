@@ -634,8 +634,17 @@ def _bake_overview(dist: Path) -> dict:
             meta = q("SELECT max(run_id) AS run_id FROM rebalance")
             rid = meta[0]["run_id"] if meta and meta[0].get("run_id") is not None else None
             if rid is not None:
+                # Columns added after a partition was written are absent from it, and `q` turns a
+                # missing column into an EMPTY TAB rather than an error — so anything newer than
+                # the oldest partition is asked for only once the schema actually carries it.
+                have = {str(c.get("column_name")) for c in q("DESCRIBE rebalance")}
+                optional = ", ".join(c for c in (
+                    "budget_state", "ramp_state", "book_ramp_step_pp",
+                    "book_ramp_allowed_after_eur", "book_ramp_after_pct",
+                    "book_ramp_reviews_to_full") if c in have)
                 rows = q(
-                    "SELECT sector_id, etf, rank, score_rank, bucket, target_pct, actual_pct, "
+                    "SELECT " + (f"{optional}, " if optional else "")
+                    + "sector_id, etf, rank, score_rank, bucket, target_pct, actual_pct, "
                     "gap_pp, target_eur, actual_eur, gap_eur, rule_action, reason, trade_eur, "
                     "unrealized_pct, realized_gain_eur, expected_edge_eur, net_edge_eur, "
                     "breakeven_pct, "
@@ -669,6 +678,13 @@ def _bake_overview(dist: Path) -> dict:
                     "run_id": rid,
                     "as_of": rows[0].get("as_of") if rows else None,
                     "deploy_ratio": rows[0].get("deploy_ratio") if rows else None,
+                    # The SCHEDULE the table was cut to (v9 R1). Without it the page shows a set
+                    # of queued rows and no reason they are queued.
+                    "ramp": ({"step_pp": rows[0].get("book_ramp_step_pp"),
+                              "allowed_after_eur": rows[0].get("book_ramp_allowed_after_eur"),
+                              "after_pct": rows[0].get("book_ramp_after_pct"),
+                              "reviews_to_full": rows[0].get("book_ramp_reviews_to_full")}
+                             if rows and rows[0].get("book_ramp_step_pp") is not None else None),
                     "tilt_lambda": rows[0].get("book_tilt_lambda") if rows else None,
                     # The cost of NOT acting, alongside the cost of acting (plan v4 §4 C1/C4).
                     "inaction": ({

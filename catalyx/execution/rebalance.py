@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import sys
 from datetime import date, datetime, timedelta, timezone
@@ -540,7 +541,8 @@ def _render_rows(rows: list[dict]) -> list[str]:
         age = row.get("data_age")
         # A row the rule wants but no trade slot can carry this cycle. Marked on the ACTION, not
         # by zeroing the trade: the rule's ask stays visible and the constraint is what is new.
-        act = row["rule_action"] + ("*" if row.get("budget_state") == "deferred" else "")
+        act = row["rule_action"] + ("*" if row.get("budget_state") == "deferred"
+                                    or row.get("ramp_state") == "deferred" else "")
         out.append(f"{row['sector_id'][:30]:<30} {str(row.get('etf') or '—')[:9]:<9} "
                    f"{(str(sr) if sr is not None else '—'):>4} "
                    f"{row['target_pct']:>6.1f} {row['actual_pct']:>6.1f} {row['gap_eur']:>8.0f} "
@@ -724,7 +726,10 @@ def trade_budget_plan(rows: list[dict], cfg: dict) -> dict:
     free, reserve = int(tb.get("free_per_month", 10)), int(tb.get("reserve_for_events", 3))
     budget = max(0, min(int(tb.get("planned_max_per_review", 6)), free - reserve))
 
-    movers = [r for r in rows if float(r.get("trade_eur") or 0.0) != 0.0]
+    # A row the ramp already queued does not compete for a slot: the scarcity that stopped it is
+    # cash, and rationing slots against it would spend the allowance on rows nobody will place.
+    movers = [r for r in rows if float(r.get("trade_eur") or 0.0) != 0.0
+              and r.get("ramp_state") != "deferred"]
     ranked = sorted(movers, key=lambda r: (
         -1 if r.get("rule_action") in exempt else _BUDGET_TIERS.get(r.get("rule_action"), 3),
         -abs(float(r.get("trade_eur") or 0.0))))     # most money moved per scarce slot
@@ -754,6 +759,97 @@ def trade_budget_plan(rows: list[dict], cfg: dict) -> dict:
                     if deferred else "")
                  + (f" {over} risk-removal row(s) push PAST the budget — they are never deferred."
                     if over else "")),
+    }
+
+
+# ── The deployment ramp — scaling in is a SCHEDULE, not a hesitation (v9 R1) ─
+
+def deployment_ramp_plan(rows: list[dict], deployed_eur: float, deployable_eur: float,
+                         total_capital_eur: float, cfg: dict) -> dict:
+    """Cap how far ONE review may raise the deployed share of the book.
+
+    The deploy ratio answers "how much should be at work"; it never answered "how fast do we get
+    there", so every review under-deployed asked for the WHOLE gap at once — €4,868 across six
+    names in an afternoon. The ramp is the missing second half of that rule: the destination is
+    unchanged (`deployable_eur`), the ROUTE is `max_step_pp` points of total capital per review.
+
+    Three properties keep it from becoming a hiding place for cash:
+
+    - It caps the NET (`Σ trade_eur`), so a pure rotation — sell one name, buy another — is
+      unconstrained. The ramp governs scaling in, not turnover.
+    - It fills in RANK order and to FULL size, so a tranche buys one conviction-weight name
+      rather than six quarter-positions. A quarter-position is not a smaller bet, it is a worse
+      one: the same slot, the same spread, a quarter of the exposure.
+    - Deferred rows are logged (author `ramp`) and priced 21 days later like any deviation, so
+      the schedule itself is falsifiable. The shortfall keeps being measured against the FULL
+      `deployable_eur` — the ramp changes what this review must execute, never what it costs to
+      be under-deployed, and the cash drag stays printed beside it.
+    """
+    d = ((cfg or {}).get("deployment") or {}).get("ramp") or {}
+    step_pp = float(d.get("max_step_pp", 0.0) or 0.0)
+    total = float(total_capital_eur or 0.0)
+    movers = [r for r in rows if float(r.get("trade_eur") or 0.0) != 0.0]
+    ask_eur = round(sum(float(r.get("trade_eur") or 0.0) for r in movers), 2)
+    enabled = bool(d.get("enabled", True)) and step_pp > 0 and total > 0
+
+    for r in rows:
+        r.setdefault("ramp_state", "n/a")
+    if not enabled:
+        return {"enabled": False, "ask_eur": ask_eur, "deferred": 0, "deferred_rows": [],
+                "note": ""}
+
+    step_eur = round(total * step_pp / 100.0, 2)
+    deployed = float(deployed_eur or 0.0)
+    allowed_after = round(min(float(deployable_eur or 0.0), deployed + step_eur), 2)
+    min_ticket = float((cfg or {}).get("min_ticket_eur", 150.0))
+
+    # Sells and trims never queue: they lower deployment, which is the direction the ramp is not
+    # rationing. Buys fill in rank order — the model's own ordering, not trade size.
+    running, deferred = deployed, []
+    for r in movers:
+        if float(r["trade_eur"]) < 0:
+            r["ramp_state"] = "granted"
+            running = round(running + float(r["trade_eur"]), 2)
+    buys = sorted([r for r in movers if float(r["trade_eur"]) > 0],
+                  key=lambda r: (_clean_rank(r.get("score_rank")) or 999,
+                                 -float(r.get("trade_eur") or 0.0)))
+    full = True
+    for r in buys:
+        trade = float(r["trade_eur"])
+        if full and round(running + trade, 2) <= allowed_after:
+            r["ramp_state"] = "granted"
+            running = round(running + trade, 2)
+        else:
+            # Once a row does not fit, the rest queue behind it: the ramp is a rank-ordered fill,
+            # not a knapsack that would skip the leader to squeeze in two cheaper names.
+            full = False
+            r["ramp_state"] = "deferred"
+            deferred.append(r)
+
+    headroom = round(allowed_after - running, 2)
+    gap_to_full = round(float(deployable_eur or 0.0) - deployed, 2)
+    reviews = int(math.ceil(gap_to_full / step_eur)) if step_eur > 0 and gap_to_full > 0 else 0
+    return {
+        "enabled": True, "max_step_pp": step_pp, "step_eur": step_eur,
+        "deployed_eur": round(deployed, 2), "allowed_after_eur": allowed_after,
+        "allowed_after_pct": round(allowed_after / (total or 1.0) * 100, 2),
+        "ask_eur": ask_eur, "planned_after_eur": round(deployed + ask_eur, 2),
+        "after_eur": round(running, 2),
+        "after_pct": round(running / (total or 1.0) * 100, 2),
+        "headroom_eur": headroom, "headroom_usable": bool(headroom >= min_ticket),
+        "reviews_to_full": reviews,
+        "deferred": len(deferred),
+        "deferred_eur": round(sum(float(r["trade_eur"]) for r in deferred), 2),
+        "deferred_rows": [{"sector_id": r["sector_id"], "rule_action": r["rule_action"],
+                           "trade_eur": float(r["trade_eur"])} for r in deferred],
+        "note": (f"scaling in {step_pp:.0f}pp of capital per review — this one may take the book "
+                 f"to {allowed_after / (total or 1.0) * 100:.0f}% "
+                 f"({_eur(allowed_after)}), the deploy rule's {_eur(deployable_eur)} arrives in "
+                 f"~{reviews} review(s)."
+                 + (f" {len(deferred)} row(s) queue behind the tranche, "
+                    f"{_eur(sum(float(r['trade_eur']) for r in deferred))} held back: "
+                    + ", ".join(r["sector_id"] for r in deferred) + "."
+                    if deferred else " Every row fits this tranche.")),
     }
 
 
@@ -1527,9 +1623,14 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
 
     rows.sort(key=lambda r: (PRECEDENCE.index(r["rule_action"]) if r["rule_action"] in PRECEDENCE
                              else 9, -abs(r["trade_eur"])))
-    budget = trade_budget_plan(rows, cfg)
-
     invested_now = round(sum(r["actual_eur"] for r in rows), 2)
+    # CASH first, then SLOTS. How far this ONE review may move the deployed share (v9 R1) — it
+    # queues rows, never rewrites them, and the shortfall below still measures against the full
+    # `deployable`. It runs BEFORE the trade budget because a slot spent on a row the ramp is
+    # about to queue is a slot spent on nothing: with the budget first, six BUYs consumed the
+    # allowance and pushed a TRIM out of the table that the ramp would then have let through.
+    ramp = deployment_ramp_plan(rows, invested_now, deployable, total_capital, cfg)
+    budget = trade_budget_plan(rows, cfg)
     buys = round(sum(r["trade_eur"] for r in rows if r["trade_eur"] > 0), 2)
     sells = round(-sum(r["trade_eur"] for r in rows if r["trade_eur"] < 0), 2)
     after = round(invested_now + buys - sells, 2)
@@ -1664,9 +1765,20 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
                                        open_defers=_unrecorded_defers(lake_dir=lake_dir))
 
     if short["breached"]:
-        warnings.append(f"DEPLOYMENT SHORTFALL — {short['note']}. Declining a row IS the override; "
-                        f"leaving the shortfall unaddressed for another run is a decision nobody "
-                        f"signed.")
+        # With a ramp declared, what this review must execute is the TRANCHE, not the whole gap —
+        # so the breach is answered by executing the granted rows. What the ramp does NOT do is
+        # delete the shortfall: it is still measured against the full `deployable` and still
+        # printed with the cash drag beside it, which is what keeps the schedule a cost and not a
+        # free pass. A row queued by the ramp is already logged and priced (author `ramp`).
+        warnings.append(f"DEPLOYMENT SHORTFALL — {short['note']}. "
+                        + (f"The ramp answers it on a schedule: execute this review's granted "
+                           f"rows ({_eur(ramp['allowed_after_eur'])}, "
+                           f"{ramp['allowed_after_pct']:.0f}% deployed) and the breach is "
+                           f"answered; the remaining gap closes in ~{ramp['reviews_to_full']} "
+                           f"review(s). Declining a GRANTED row is still an override."
+                           if ramp.get("enabled") else
+                           "Declining a row IS the override; leaving the shortfall unaddressed "
+                           "for another run is a decision nobody signed."))
     if unrecorded:
         warnings.append(f"{len(unrecorded)} UNRECORDED DEVIATION(S) from run {prior_run_id}: "
                         + ", ".join(f"{u['rule_action']} {u['sector_id']}" for u in unrecorded)
@@ -1680,6 +1792,7 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         "selection_prior": selection_prior(evidence,
                                            (book_metrics.get("model") or {}).get("tilt_lambda")),
         "shortfall": short, "cash_drag": drag, "trade_budget": budget,
+        "deployment_ramp": ramp,
         "unrecorded": unrecorded, "prior_run_id": prior_run_id,
         "gate": gate, "composite_ic": ic_stat,
         # The entire partial-sale vocabulary, in one place, so the table can state it before the
@@ -1739,7 +1852,15 @@ def persist(result: dict, lake_dir: Path | None = None) -> int:
              "book_cash_verdict": (result.get("cash_drag") or {}).get("verdict"),
              "book_shortfall_pp": (result.get("shortfall") or {}).get("shortfall_pp"),
              "book_shortfall_runs": (result.get("shortfall") or {}).get("runs_breached"),
-             "book_shortfall_breached": (result.get("shortfall") or {}).get("breached")}
+             "book_shortfall_breached": (result.get("shortfall") or {}).get("breached"),
+             # The schedule this table was cut to. Without it a row read back later says DEFER
+             # with no trace of which scarcity queued it (v9 R1).
+             "book_ramp_step_pp": (result.get("deployment_ramp") or {}).get("max_step_pp"),
+             "book_ramp_allowed_after_eur": (result.get("deployment_ramp") or {}).get(
+                 "allowed_after_eur"),
+             "book_ramp_after_pct": (result.get("deployment_ramp") or {}).get("after_pct"),
+             "book_ramp_reviews_to_full": (result.get("deployment_ramp") or {}).get(
+                 "reviews_to_full")}
     rows = [{**r, **const, "run_id": run_id, "strategy": result["strategy"],
              "as_of": result["as_of"], "computed_at": computed_at} for r in result["rows"]]
     lake.append_partition(_TABLE, pd.DataFrame(rows), {"run_id": run_id},
@@ -1747,6 +1868,28 @@ def persist(result: dict, lake_dir: Path | None = None) -> int:
     _log_unrecorded(result, lake_dir=lake_dir)
     _log_budget_defers(result, lake_dir=lake_dir)
     return len(rows)
+
+
+_AUTO_DEFER_AUTHORS = ("budget", "ramp")
+
+
+def _retract_stale_auto_defers(run_id: str, queued: set[str],
+                               lake_dir: Path | None = None) -> int:
+    """Drop machine-authored DEFERs for rows this table no longer queues. Humans are untouched."""
+    from catalyx.store import lake
+
+    existing = lake.read_table(_OVERRIDE_TABLE, lake_dir=lake_dir)
+    if existing.empty or not {"run_id", "author", "sector_id"} <= set(existing.columns):
+        return 0
+    sub = existing[existing["run_id"] == run_id]
+    if sub.empty:
+        return 0
+    kept = sub[~sub["author"].isin(_AUTO_DEFER_AUTHORS) | sub["sector_id"].isin(queued)]
+    if len(kept) == len(sub):
+        return 0
+    lake.append_partition(_OVERRIDE_TABLE, kept, {"run_id": run_id},
+                          overwrite=True, lake_dir=lake_dir)
+    return len(sub) - len(kept)
 
 
 def _log_budget_defers(result: dict, lake_dir: Path | None = None) -> int:
@@ -1761,14 +1904,48 @@ def _log_budget_defers(result: dict, lake_dir: Path | None = None) -> int:
     Logged against the CURRENT run (this run made the call), which also means next run's
     `unrecorded_deviations` finds an override for that sector and does not re-file it as silence.
     """
+    # A machine-authored DEFER describes THIS table, so one left behind by an earlier cut of the
+    # same score run is retracted rather than left to be scored: re-running the rebalance after a
+    # rule change can grant a row a previous cut queued, and a log saying "deferred" about a row
+    # the user then executes is a false record that `override_edge` would price as real. Human
+    # authorship is never touched — a person's decision is not the machine's to withdraw.
+    queued = {d["sector_id"] for d in
+              ((result.get("trade_budget") or {}).get("deferred_rows") or [])
+              + ((result.get("deployment_ramp") or {}).get("deferred_rows") or [])}
+    _retract_stale_auto_defers(result["run_id"], queued, lake_dir=lake_dir)
+
+    # A row whose decision is already on the log is not filed again. Re-running the rebalance for
+    # the same score run used to append a second DEFER per queued row, and a machine author must
+    # never file a verdict on a row a PERSON already answered — either way the tally would count
+    # one decision twice and the override edge would be scored against a phantom.
+    already = {str(r.get("sector_id")) for r in _overrides_for_run(result["run_id"],
+                                                                   lake_dir=lake_dir)}
     n = 0
     for d in (result.get("trade_budget") or {}).get("deferred_rows") or []:
+        if d["sector_id"] in already:
+            continue
         try:
             log_override(result["run_id"], d["sector_id"], d["rule_action"], "DEFER",
                          reason=(f"No trade slot: {d['rule_action']} {d['sector_id']} "
                                  f"€{abs(d['trade_eur']):,.0f} fell outside this review's budget "
                                  f"of {(result['trade_budget'] or {}).get('budget')} trades."),
                          author="budget", chosen_trade_eur=0.0, lake_dir=lake_dir)
+            already.add(d["sector_id"])
+            n += 1
+        except Exception:                                      # pragma: no cover - defensive
+            continue
+    ramp = result.get("deployment_ramp") or {}
+    for d in ramp.get("deferred_rows") or []:
+        if d["sector_id"] in already:
+            continue
+        try:
+            log_override(result["run_id"], d["sector_id"], d["rule_action"], "DEFER",
+                         reason=(f"Deployment ramp: {d['rule_action']} {d['sector_id']} "
+                                 f"€{abs(d['trade_eur']):,.0f} queues behind this review's "
+                                 f"{ramp.get('max_step_pp')}pp tranche "
+                                 f"(deployed to {ramp.get('allowed_after_pct')}%)."),
+                         author="ramp", chosen_trade_eur=0.0, lake_dir=lake_dir)
+            already.add(d["sector_id"])
             n += 1
         except Exception:                                      # pragma: no cover - defensive
             continue
@@ -2262,6 +2439,43 @@ def _summary_line(res: dict) -> str:
             f"overrides: {ov_txt}")
 
 
+def _render_ticket(res: dict) -> list[str]:
+    """The rows to execute THIS iteration, in order, with what each one costs to place.
+
+    The rest of the table is the model's destination and its reasoning. This block is the subset
+    that survived both scarcities — the trade slots and the deployment ramp — which is the only
+    part that should be typed into a broker today.
+    """
+    rows = res.get("rows") or []
+    live = [r for r in rows
+            if float(r.get("trade_eur") or 0.0) != 0.0
+            and r.get("budget_state") != "deferred" and r.get("ramp_state") != "deferred"]
+    queued = [r for r in rows
+              if float(r.get("trade_eur") or 0.0) != 0.0
+              and (r.get("budget_state") == "deferred" or r.get("ramp_state") == "deferred")]
+    if not live and not queued:
+        return []
+    out = ["THIS ITERATION — the rows to execute now; everything below is what they rest on"]
+    # Sells first: they raise the cash the buys spend, and a buy placed before its funding sale
+    # is a buy on margin nobody authorised.
+    for r in sorted(live, key=lambda r: (float(r.get("trade_eur") or 0.0) > 0,
+                                         PRECEDENCE.index(r["rule_action"])
+                                         if r["rule_action"] in PRECEDENCE else 9)):
+        t = float(r["trade_eur"])
+        cost = float(r.get("cost_drag_eur") or 0.0)
+        out.append(f"  {('SELL' if t < 0 else 'BUY '):<5} {r['sector_id'][:30]:<30} "
+                   f"{str(r.get('etf') or '—')[:9]:<9} {_eur(abs(t)):>9}"
+                   f"   [{r['rule_action']}]"
+                   + (f" · friction {_eur(cost)}" if cost else ""))
+    if not live:
+        out.append("  (nothing — every money-moving row is queued behind a scarcity below)")
+    if queued:
+        out.append("  QUEUED to the next review, logged and priced like any deviation: "
+                   + ", ".join(f"{r['rule_action']} {r['sector_id']} {_eur(float(r['trade_eur']))}"
+                               for r in queued))
+    return out + [""]
+
+
 def render(res: dict) -> str:
     b = res["book"]
     r = b["deploy_ratio"]
@@ -2299,7 +2513,15 @@ def render(res: dict) -> str:
     tb = res.get("trade_budget") or {}
     if tb.get("deferred") or tb.get("over_budget"):
         out += _wrap(tb["note"], width=96, indent=" " * 20, first=f"{'BUDGET':<20}")
+    rp = res.get("deployment_ramp") or {}
+    if rp.get("enabled"):
+        out += _wrap(rp["note"], width=96, indent=" " * 20, first=f"{'RAMP':<20}")
     out.append("")
+
+    # THE ORDER TICKET. Everything below this line is the reasoning; this is the doing. It exists
+    # because the table answers two different questions at once — where the book is going, and
+    # what to execute today — and a reader who conflates them either over-trades or freezes.
+    out += _render_ticket(res)
 
     # The partial-sale vocabulary, stated ONCE before any verdict is read: three fractions are
     # the whole language (plan v4 §2 A5), and a reader who does not know them cannot tell a
@@ -2309,7 +2531,8 @@ def render(res: dict) -> str:
     out.append("COLUMNS  rk = rank in this run's full ranking (— = not scored this run) · "
                "b/e% = friction ÷ capital moved · data = age of the catalyst evidence behind "
                "the score (qualifies the row, never vetoes it) · a trailing * on the action = "
-               "deferred for lack of a trade slot, logged and priced like any deviation")
+               "queued by a scarcity (trade slot or deployment ramp), logged and priced like any "
+               "deviation — the rows to execute today are the THIS ITERATION block above")
     out.append(f"SIZING   SELL = 100% of the line · REDUCE = {rf:.0f}% · TRIM = back to target"
                + (f" (or {float(lf) * 100:.0f}% on a ladder rung)" if lf else ""))
     out.append("")
@@ -2334,9 +2557,12 @@ def render(res: dict) -> str:
                f"{b['deployed_pct'] + b['cash_actual_pct']:>6.1f} "
                f"{0:>8.0f}")
     out.append("")
+    rp = res.get("deployment_ramp") or {}
     out.append(f"ACTIONS  {b['n_actions']} non-HOLD · buys {_eur(b['buys_eur'])} · "
                f"sells {_eur(b['sells_eur'])} · turnover {b['turnover_pct']:.1f}% → deployed after "
-               f"{b['deployed_after_pct']:.0f}%")
+               f"{b['deployed_after_pct']:.0f}%"
+               + (f" if all of it ran; {rp['after_pct']:.0f}% after THIS iteration's tranche"
+                  if rp.get("enabled") and rp.get("deferred") else ""))
     # What the LAST run asked for and never got. Read from the movements on disk, not from the
     # review's own account of itself.
     unrec = res.get("unrecorded") or []

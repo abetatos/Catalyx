@@ -65,7 +65,7 @@ user_notes: >
   schedule) is the novel angle: AI-specific security spend is a NEW budget line, not a reallocation.
 
 intensity:
-  current_score: 79.0
+  current_score: 76.0
   computation_method: computed
   computation_note: >
     Bootstrap at creation (2026-06-05). Anchor: stronger than struct_copper_datacenter_demand (83.9)
@@ -79,8 +79,12 @@ intensity:
     ind_05 (ZS AI Security ARR $400M, ahead of schedule → strong) → ~85.
     Unweighted avg ≈ 85.2, flat trend (no prior period to compute delta) → 85.2 → round to 86.0.
     Run /catalyx-update after first quarterly data update to switch to computed method.
-  last_updated: "2026-08-31"
+  last_updated: "2026-09-01"
   history:
+  - period: '2026-09-01'
+    score: 76.0
+    note: 'Computed 2026-09-01: avg=79.0 trend=↓ (falling 1 period) (was 79.0)'
+    computation_method: computed
   - period: '2026-08-31'
     score: 79.0
     note: 'Computed 2026-08-31: avg=79.0 trend=→ (flat) (was 84.0)'

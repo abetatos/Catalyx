@@ -451,6 +451,41 @@ def test_cap_check_prices_the_proposed_table_not_just_the_held_book(tmp_path, mo
     assert "struct_glp1" not in got, "an ADD must not resurrect a driver the review declined"
 
 
+def test_cap_check_counts_the_sells_that_fund_the_buys(tmp_path, monkeypatch):
+    """A table that closes a position to fund a buy in the SAME cluster was measured as if the
+    sell never happened — the cap read a book nobody proposed. It asks how much money moves if
+    the driver breaks, and after the table runs that money is gone.
+
+    The deduction is capped at the exposure BASIS: the cap is denominated in what the position
+    cost, so a winner sold above cost must not retire more exposure than it ever carried.
+    """
+    from catalyx.config import weights
+    from catalyx.execution import portfolio
+    from catalyx.store import structural_catalyst_repo as scr
+
+    monkeypatch.setattr(scr, "merged_map", lambda: {})
+    monkeypatch.setattr(scr, "_load_all", lambda: [{"id": "struct_ai"}])
+    monkeypatch.setattr(portfolio, "_sector_catalyst_map",
+                        lambda: {"a_semis": ["struct_ai"], "a_dc": ["struct_ai"]})
+    monkeypatch.setattr(weights, "total_capital_eur", lambda: 10000.0)
+    monkeypatch.setattr(weights, "correlated_catalyst_cap",
+                        lambda: {"max_combined_pct": 20.0, "enforcement": "warn"})
+
+    _write_mov(tmp_path, "mov_20260608_a_semis", "SEMI", "open", 1, 1000.0, sector_id="a_semis",
+               attribution=[{"catalyst_id": "struct_ai", "weight": 1.0}])
+
+    buy_only = {c["catalyst_id"]: c for c in mr.cap_check(
+        [{"sector_id": "a_dc", "trade_eur": 1200.0}], movements_dir=tmp_path)}
+    assert buy_only["struct_ai"]["post_eur"] == 2200.0
+    assert buy_only["struct_ai"]["over"] is True
+
+    funded = {c["catalyst_id"]: c for c in mr.cap_check(
+        [{"sector_id": "a_semis", "trade_eur": -1400.0},      # sold ABOVE its €1,000 basis
+         {"sector_id": "a_dc", "trade_eur": 1200.0}], movements_dir=tmp_path)}
+    assert funded["struct_ai"]["post_eur"] == 1200.0, "the basis leaves, not the market value"
+    assert funded["struct_ai"]["over"] is False
+
+
 def test_drift_closes_by_claiming_or_by_declining_in_writing(tmp_path, monkeypatch):
     """Both halves of the human answer close the row. A driver the review looked at and declined
     must stop reappearing — a check that re-raises an answered question trains its reader to skip

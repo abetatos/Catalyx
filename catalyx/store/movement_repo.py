@@ -296,8 +296,17 @@ def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[d
     for p in proposed or []:
         eur = float(p.get("trade_eur") or 0.0)
         sid = str(p.get("sector_id") or "")
-        if eur <= 0 or not sid:
+        if eur == 0.0 or not sid:
             continue
+        # A SELL in the same table is money LEAVING its drivers, and skipping it measured a book
+        # nobody proposed: this table funds its buys by closing copper, whose €1,000 sits in the
+        # very cluster being bought — counted as if it stayed, the cluster reads 39.1% and
+        # breaches; counted honestly it reads 29.1% and does not. The cap asks how much money
+        # moves if the driver breaks, and after the table runs that money is gone.
+        if eur < 0:
+            # The trade is at MARKET value; the cap is denominated in the exposure basis, so a
+            # winner sold for more than it cost must not retire more exposure than it carried.
+            eur = -min(-eur, float((post_book.get(sid) or ["", 0.0])[1]))
         mov = held.get(sid)
         if mov is not None:
             attribution, _, _ = effective_attribution(mov)
@@ -311,6 +320,8 @@ def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[d
         if etf:
             row = post_book.setdefault(sid, [etf, 0.0])
             row[1] += eur
+            if row[1] <= 0:                # closed by the table — not a member of any cluster
+                post_book.pop(sid, None)
 
     # v6 I2: the RISK a cluster carries, beside the notional the cap reads. The cap stays
     # notional and stays `warn` — a measurement is evidence FOR a config edit, never the edit.
@@ -336,7 +347,7 @@ def cap_check(proposed: list[dict], movements_dir: Path | None = None) -> list[d
 
     out = []
     for cid, add_eur in added.items():
-        post = current.get(cid, 0.0) + add_eur
+        post = max(0.0, current.get(cid, 0.0) + add_eur)
         pct = post / total * 100.0
         r = risk.get(cid) or {}
         out.append({

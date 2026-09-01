@@ -1446,6 +1446,14 @@ function renderRebalance() {
     cards.push(card('shortfall persists', num(IA.shortfall_pp, 1) + 'pp', 'neg',
       `${Math.round(IA.shortfall_runs || 0)} reviews — execute or override`));
   }
+  // The route, beside the destination. The deploy ratio says where the book belongs; the ramp
+  // says how much of that distance THIS review may cover, which is the number the reader needs
+  // before typing anything into a broker.
+  const RP = R.ramp || null;
+  if (RP && RP.step_pp) {
+    cards.push(card('this tranche', num(RP.step_pp, 0) + 'pp', '',
+      `to ${eur(RP.allowed_after_eur)} · full deployment in ~${Math.round(RP.reviews_to_full || 0)} reviews`));
+  }
   $('reb-summary').innerHTML = cards.join('');
 
   // A row for a sector that can no longer be bought is not a neutral row — say so loudly.
@@ -1456,8 +1464,25 @@ function renderRebalance() {
        run recorded before the current universe. Re-score before treating these as candidates.</p></div>`
     : '';
 
-  // ── the table ──
-  $('reb-table').innerHTML = `<div class="tblwrap"><table>
+  // ── the order ticket: the rows that survived both scarcities (slots, ramp) ──
+  // The table below answers "where is the book going"; this answers "what do I place today".
+  // Conflating the two is how a reader either over-trades or freezes.
+  const queued = (r) => r.budget_state === 'deferred' || r.ramp_state === 'deferred';
+  const movers = rows.filter((r) => Number(r.trade_eur || 0) !== 0);
+  const live = movers.filter((r) => !queued(r));
+  const held = movers.filter(queued);
+  $('reb-table').innerHTML = (movers.length ? `<div class="card" style="margin-bottom:14px">
+      <div class="lbl" style="text-transform:uppercase;letter-spacing:.5px;font-size:10px">this iteration — the rows to place now</div>
+      ${live.length ? `<ul style="margin:8px 0 0;padding-left:18px">${live
+        .slice().sort((a, b) => (Number(a.trade_eur) > 0) - (Number(b.trade_eur) > 0))
+        .map((r) => `<li><b>${Number(r.trade_eur) < 0 ? 'SELL' : 'BUY'}</b> ${escapeHtml(r.sector_id)}
+          <span class="hint">${escapeHtml(r.etf || '')}</span> — <b>${eur(Math.abs(Number(r.trade_eur)))}</b>
+          <span class="hint">[${escapeHtml(r.rule_action)}]${r.cost_drag_eur ? ` · friction ${eur(r.cost_drag_eur)}` : ''}</span></li>`)
+        .join('')}</ul>`
+      : '<p class="hint" style="margin:6px 0 0">Nothing — every money-moving row is queued behind a scarcity.</p>'}
+      ${held.length ? `<p class="hint" style="margin:6px 0 0">Queued to the next review, logged and priced like any
+        deviation: ${held.map((r) => `${escapeHtml(r.rule_action)} ${escapeHtml(r.sector_id)} ${eur(r.trade_eur)}`).join(' · ')}</p>` : ''}
+    </div>` : '') + `<div class="tblwrap"><table>
     <thead><tr><th>sector</th><th>ETF</th><th class="num">target</th><th class="num">actual</th>
       <th class="num">gap</th><th>action</th><th class="num">trade</th><th class="num">CGT</th>
       <th class="num">b/e %</th><th>catalyst</th><th>why</th></tr></thead><tbody>
@@ -1467,7 +1492,8 @@ function renderRebalance() {
       <td class="num">${num(r.target_pct, 1)}%</td>
       <td class="num">${num(r.actual_pct, 1)}%</td>
       <td class="num ${(r.gap_eur ?? 0) >= 0 ? '' : 'neg'}">${eur(r.gap_eur)}</td>
-      <td>${actionPill(r.rule_action)}</td>
+      <td>${actionPill(r.rule_action)}${queued(r)
+        ? `<span class="hint" title="${r.ramp_state === 'deferred' ? 'queued behind this review\'s deployment tranche' : 'no free trade slot this review'}">*</span>` : ''}</td>
       <td class="num"><b>${r.trade_eur ? eur(r.trade_eur) : '—'}</b></td>
       <td class="num">${r.tax_eur ? eur(r.tax_eur) : '—'}</td>
       <td class="num">${r.breakeven_pct == null ? '—' : num(r.breakeven_pct, 2) + '%'}</td>

@@ -498,7 +498,9 @@ def section_overrides() -> str:
     # rule chose them, not a person, the rebalance table's BUDGET line already names what was
     # held back and why, and "the evidence the rule was missing" is by construction nothing.
     # A marker that demands prose for a decision nobody made trains its reader to skip markers.
-    _AUTO_AUTHORS = ("unrecorded", "budget")
+    # `ramp` (v9 R1) joins them on the same argument: the deployment schedule queued the row, not
+    # a person, and the RAMP line already names every row it held back and until when.
+    _AUTO_AUTHORS = ("unrecorded", "budget", "ramp")
     chosen = [p for p in pending if str(p.get("author")) not in _AUTO_AUTHORS]
     if chosen:
         lines.append("\n<!-- CLAUDE: for each override logged THIS run, one line: what the rule "

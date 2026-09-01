@@ -33,9 +33,13 @@ user_notes: "Less crowded than pure AI play. Copper miners is the physical commo
   infrastructure expression."
 
 intensity:
-  current_score: 85.4
-  last_updated: "2026-08-31"
+  current_score: 92.4
+  last_updated: "2026-09-01"
   history:
+  - period: '2026-09-01'
+    score: 92.4
+    note: 'Computed 2026-09-01: avg=92.4 trend=→ (flat) (was 85.4)'
+    computation_method: computed
   - period: '2026-08-31'
     score: 85.4
     note: 'Computed 2026-08-31: avg=92.37 trend=↓↓ (falling 2+ consecutive) (was 84.0)'
@@ -106,13 +110,13 @@ indicators:
   name: "Copper price trend (spot, USD/tonne)"
   source: "LME spot price"
   check_frequency: monthly
-  current_value: 14746.7035
+  current_value: 14810.637
   unit: USD_per_tonne
   direction: higher_is_stronger
   threshold_strong: 9000
   threshold_weak: 7000
-  last_value: 14418.0
-  last_date: "2026-08-31"
+  last_value: 14746.7035
+  last_date: "2026-09-01"
   update_note: "auto: COMEX copper front month, USD/lb → USD/tonne"
 
   semaphore: 🟢
@@ -221,7 +225,7 @@ indicators:
     value: 9017.0
   - date: '2021-07-01'
     value: 9878.0
-  score: 94.6
+  score: 94.7
 deactivation_conditions:
 - id: deact_01
   condition: "Grid connection queue clears materially (lead times drop below 6 months for 2 consecutive quarters)."
@@ -234,7 +238,7 @@ deactivation_conditions:
 linked_event_catalyst_ids: []
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-08-31"
+status_last_reviewed: "2026-09-01"
 absorbed_catalyst_ids:
 - struct_solar_lcoe_deployment
 - struct_battery_storage_supercycle

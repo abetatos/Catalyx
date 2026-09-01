@@ -118,14 +118,14 @@ SECTOR_FLOW_TICKERS: dict[str, list[str]] = {
     "copper_miners":                  ["4COP.DE", "COPX", "CPER"],
     "lithium_miners":                 ["VOLT.L", "LIT", "BATT"],
     "agriculture_soft_commodities":   ["SPAG.L", "MOO", "VEGI"],           # SPAG.L es agronegocio (equity) → MOO, no DBA (futuros)
-    "water_infrastructure":           ["IH2O.L", "PHO", "FIW"],
+    "water_infrastructure":           ["IQQQ.DE", "PHO", "FIW"],
     # ── FINANCIERO ──────────────────────────────────────────────────────────────
     "eu_retail_banking":              ["EXV1.DE", "EUFN"],                 # EUFN cotiza en US (→ expone shares) pero tiene financieras EU
     "crypto_infrastructure":          ["DAPP.L", "DAPP", "BITQ"],          # DAPP US = mismo indice VanEck, expone shares
     # ── TECNOLOGIA ──────────────────────────────────────────────────────────────
     "semiconductors_design":          ["SEMI.L", "SOXX", "SMH"],
     "ai_infrastructure_data_centers": ["XAIX.DE", "AIQ", "BOTZ"],
-    "robotics_automation":            ["RBOT.L", "ROBO", "BOTZ"],
+    "robotics_automation":            ["2B76.DE", "ROBO", "BOTZ"],
     "cybersecurity_commercial":       ["USPY.L", "CIBR", "BUG"],
     "cloud_software_saas":            ["WCLD.L", "WCLD", "CLOU", "IGV"],
     # ── SALUD ───────────────────────────────────────────────────────────────────

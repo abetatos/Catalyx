@@ -50,13 +50,17 @@ user_notes: >
   struct_cb_gold_accumulation (84). Run intensity_engine after the first indicator refresh to replace bootstrap.
 
 intensity:
-  current_score: 87.8
+  current_score: 85.8
   computation_method: computed
-  last_updated: "2026-08-31"
+  last_updated: "2026-09-01"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: on par with struct_cb_gold_accumulation (84), below
     struct_ai_capex_supercycle (89.9). Consensus/mainstream but TAM still expanding (oral + Medicare onset).
   history:
+  - period: '2026-09-01'
+    score: 85.8
+    note: 'Computed 2026-09-01: avg=85.85 trend=→ (flat) (was 87.8)'
+    computation_method: computed
   - period: '2026-08-31'
     score: 87.8
     note: 'Computed 2026-08-31: avg=85.85 trend=↑ (rising 1 period) (was 85.8)'
