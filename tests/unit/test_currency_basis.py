@@ -108,37 +108,28 @@ def test_covariance_reads_eur(monkeypatch):
     assert not covariance._prices(["X"], 4, "2026-02-01").empty
 
 
-def test_momentum_row_declares_its_basis(monkeypatch):
+def test_momentum_row_declares_its_basis():
+    """v14.3: the basis is now decided by `prices.read_eur_with_basis` (one implementation of
+    the GBp/FX rule, not a second copy in `market_data`) and market_data RECORDS it."""
     from catalyx.data import market_data as md
 
-    class _T:
-        def history(self, **_):
-            idx = pd.date_range("2025-11-01", periods=300, freq="B")
-            return pd.DataFrame({"Close": [100.0 + i * 0.1 for i in range(300)]}, index=idx)
-        @property
-        def history_metadata(self):
-            return {"currency": "USD"}
-
-    monkeypatch.setattr(md.yf, "Ticker", lambda t: _T())
-    monkeypatch.setattr(prices, "fx_series",
-                        lambda ccys, s, e, **kw: {"USD": pd.Series(
-                            [1.1] * 400, index=pd.date_range("2025-10-01", periods=400, freq="D"))})
-    m = md.fetch_metrics("USDFUND")
+    idx = pd.date_range("2025-11-01", periods=300, freq="B")
+    frame = pd.DataFrame({"USDFUND": [100.0 + i * 0.1 for i in range(300)]}, index=idx)
+    m = md.fetch_metrics("USDFUND",
+                         frame_fn=lambda t, s, e: (frame, {"USDFUND": "EUR"}),
+                         ccy_fn=lambda t, **kw: {"USDFUND": "USD"})
     assert m["currency"] == "USD" and m["return_basis"] == "EUR"
 
 
-def test_momentum_row_stays_native_and_says_so_when_fx_is_unavailable(monkeypatch):
+def test_momentum_row_stays_native_and_says_so_when_fx_is_unavailable():
+    """An unconverted row must not claim EUR. `prices` leaves the column native when the FX
+    leg is missing (losing it would silently shrink the cross-section), so the basis map is
+    what tells the row apart — and this asserts market_data believes it."""
     from catalyx.data import market_data as md
 
-    class _T:
-        def history(self, **_):
-            idx = pd.date_range("2025-11-01", periods=300, freq="B")
-            return pd.DataFrame({"Close": [100.0 + i * 0.1 for i in range(300)]}, index=idx)
-        @property
-        def history_metadata(self):
-            return {"currency": "USD"}
-
-    monkeypatch.setattr(md.yf, "Ticker", lambda t: _T())
-    monkeypatch.setattr(prices, "fx_series", lambda *a, **k: {})
-    m = md.fetch_metrics("USDFUND")
-    assert m["return_basis"] == "USD"      # NOT "EUR" — an unconverted row must not claim EUR
+    idx = pd.date_range("2025-11-01", periods=300, freq="B")
+    frame = pd.DataFrame({"USDFUND": [100.0 + i * 0.1 for i in range(300)]}, index=idx)
+    m = md.fetch_metrics("USDFUND",
+                         frame_fn=lambda t, s, e: (frame, {"USDFUND": "USD"}),
+                         ccy_fn=lambda t, **kw: {"USDFUND": "USD"})
+    assert m["return_basis"] == "USD"      # NOT "EUR"

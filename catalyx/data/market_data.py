@@ -1,7 +1,10 @@
 """
 Market data fetcher for CATALYX Phase 0.5.
-Fetches ETF price history via yfinance, computes momentum metrics,
+Reads ETF price history from the shared `prices` cache, computes momentum metrics,
 and writes a snapshot JSON for the heatmap skill to consume.
+
+This module talks to `catalyx.data.prices`, never to yfinance. It was the last consumer
+still fetching independently (v14.3) — see MOMENTUM_HISTORY_DAYS for what that cost.
 
 Usage:
     uv run python -m catalyx.data.market_data
@@ -17,7 +20,6 @@ import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-import yfinance as yf
 from rich.console import Console
 from rich.table import Table
 
@@ -111,6 +113,35 @@ MOMENTUM_WEIGHTS = {"1m": 0.20, "3m": 0.45, "6m": 0.35}
 # Trading day approximations
 TRADING_DAYS = {"1m": 22, "3m": 63, "6m": 126, "1y": 252}
 
+# The 52w-high window, in BARS — the same unit `_safe_return` counts in, so the high and the
+# 12-1 anchor are read off the same slice of the same series.
+MOMENTUM_WINDOW_BARS = 252
+
+# ── WHY THIS IS 450 AND NOT `period="1y"` (v14.3) ────────────────────────────────────────
+# The official momentum spec (v8 Q1, §momentum_spec) is 0.635 x pct(12-1) + 0.365 x
+# pct(52w-high). 12-1 needs `return_1y_pct`, and `_safe_return(closes, 252)` needs 253 BARS.
+# `period="1y"` asks for 365 CALENDAR days, and how many bars that returns is a property of
+# the exchange's calendar, not of the fund: measured 2026-09-01 across the live universe,
+# Xetra returned 251-252, SIX 247, LSE 252-254, Euronext 255. So the cut at 253 fell straight
+# through the middle of the venue distribution and the official spec reached 12 of 25 sectors
+# — every `.DE` line in the fallback, none of them for want of history.
+#
+# The bias was SYSTEMATIC and self-worsening: broker-reality migrations move vehicles TOWARD
+# Xetra (v14.1 BTEC.L->NBTK.DE, v14.2 SEMI.L->SEC0.DE), so each correction to a more buyable
+# vehicle shrank the coverage of the scored one. Next run would have been 10 of 25.
+#
+# Measured effect of closing the gap (same vehicles, same everything else, only the window):
+# 12-1 coverage 13/26 -> 26/26; composite rank moves on 19 of 25 sectors, max 8 places,
+# Spearman 0.906 — and the top-6, which IS the book at `n_target: 6`, changes membership
+# (`water_infrastructure` 2->8 out, `ai_infrastructure_data_centers` 12->6 in, copper 5->1).
+# A 42%-coverage dimension was not noise; it was picking positions.
+#
+# 450 days ~= 305-315 bars, so ~55 bars of margin over the 253 the anchor needs. 400 (the
+# cache's own cold-fetch depth) would have worked at 272-282 bars, but GLUX.SW sat 19 bars
+# from the cliff and a thin margin here fails the way the old one did: silently, per venue,
+# in the direction of less coverage.
+MOMENTUM_HISTORY_DAYS = 450
+
 
 def _safe_return(series, lookback_days: int) -> float | None:
     """Return percentage change over lookback_days, or None if insufficient data."""
@@ -143,100 +174,45 @@ def momentum_score(ret_1m: float | None, ret_3m: float | None, ret_6m: float | N
     return round(score, 1)
 
 
-def _to_eur_series(closes, quote_ccy: str, fx_fn=None):
-    """One price series, native → EUR. None when the FX leg is unavailable (stay native).
+def compute_metrics(ticker: str, closes, quote_ccy: str | None,
+                    return_basis: str | None) -> dict | None:
+    """Momentum metrics for ONE already-priced series. Pure: no network, no cache, no FX.
 
-    The FX is reindexed ONTO the instrument's own trading dates. A union index would insert
-    days on which the currency traded and the fund did not, so "N rows back" would span a
-    different calendar window — measured, that confound alone doubled the apparent size of
-    the FX effect on the ranking (26 places / max 3 vs the true 12 / max 2).
+    `closes` arrives in the basis `return_basis` names (EUR wherever the FX leg resolved),
+    because conversion belongs to the layer that owns the cache and the per-ticker currency
+    — `prices.to_eur` — not to a second copy here. This function used to hold that copy.
     """
-    import pandas as pd
-
-    from catalyx.data import prices
-
-    base = "GBP" if quote_ccy in ("GBp", "GBX") else quote_ccy
-    if base == "EUR":
-        return closes
-    start = closes.index[0].strftime("%Y-%m-%d")
-    end = closes.index[-1].strftime("%Y-%m-%d")
-    fx = (fx_fn or prices.fx_series)({base}, start, end).get(base)
-    if fx is None or len(fx) == 0:
-        return None
-    idx = closes.index
-    try:
-        aligned = fx.reindex(fx.index.union(idx)).ffill().reindex(idx)
-    except (TypeError, ValueError):
-        # tz-aware equity index vs tz-naive FX (or vice versa) — normalise and retry.
-        fx2 = fx.copy()
-        fx2.index = pd.to_datetime(fx2.index).tz_localize(None).normalize()
-        naive = pd.to_datetime(idx).tz_localize(None).normalize()
-        aligned = fx2.reindex(fx2.index.union(naive)).ffill().reindex(naive)
-        aligned.index = idx
-    out = (closes * aligned).dropna()
-    if len(out) < 5:
-        return None
-    return out * (0.01 if quote_ccy in ("GBp", "GBX") else 1.0)
-
-
-def fetch_metrics(ticker: str, period: str = "1y", fx_fn=None) -> dict | None:
-    """Fetch yfinance history and return computed metrics dict, returns in EUR (v10.4)."""
-    try:
-        stock = yf.Ticker(ticker)
-        hist = stock.history(period=period, auto_adjust=True)
-        # Quote currency comes free with the chart response. `hist.attrs` — the old source —
-        # is EMPTY in this yfinance version, so every row said "USD" by DEFAULT, not by
-        # reading: the check v8.1 relied on to catch IH2O.L quoting in GBp was dead in
-        # silence. None (not "USD") when unreadable — "not measured" must not read as a value.
-        quote_ccy = (getattr(stock, "history_metadata", None) or {}).get("currency")
-    except Exception as e:
-        console.print(f"[yellow]WARN {ticker}: {e}[/yellow]")
-        return None
-
-    if hist.empty or len(hist) < 5:
-        console.print(f"[yellow]WARN {ticker}: insufficient data[/yellow]")
-        return None
-
-    # Drop NaN closes BEFORE any return math. yfinance appends an empty bar for
-    # today's session when the exchange has not yet opened/settled (e.g. US ETFs
-    # fetched during European morning hours), making closes.iloc[-1] NaN and
-    # poisoning every return → momentum_score. Use only settled closes.
-    closes = hist["Close"].dropna()
+    closes = closes.dropna()
     if len(closes) < 5:
         console.print(f"[yellow]WARN {ticker}: insufficient data after dropna[/yellow]")
         return None
-    # ── native → EUR (v10.4) ────────────────────────────────────────────────
-    # Within ONE series the quote scale cancels in a return, so this changes nothing for an
-    # EUR-quoted line. Between series it does NOT cancel: 15 of the 26 scored vehicles quote
-    # outside the euro (10 USD, 4 GBp, 1 GBP), and the composite RANKS them against each
-    # other. Measured on the live universe: 12 places of rank movement, max 2, top-6 intact —
-    # second order next to a wrong vehicle, but `gold_miners` 11->9 and `copper_miners` 9->11
-    # are held names. `return_basis` says which basis the row is on; a row that could not be
-    # converted stays native and SAYS SO rather than passing as EUR.
-    return_basis = quote_ccy or "unknown"
-    if quote_ccy and quote_ccy != "EUR":
-        conv = _to_eur_series(closes, quote_ccy, fx_fn=fx_fn)
-        if conv is not None:
-            closes, return_basis = conv, "EUR"
-    elif quote_ccy == "EUR":
-        return_basis = "EUR"
 
     current = float(closes.iloc[-1])
-    high_52w = float(closes.max())
-    low_52w = float(closes.min())
+
+    # ── THE 52-WEEK WINDOW IS 52 WEEKS, not "whatever we happened to fetch" (v14.3) ──
+    # This was `closes.max()` over the WHOLE fetched series, which tied the meaning of the
+    # 52w-high dimension — 36.5% of the official momentum blend — to the fetch window. While
+    # that window was `period="1y"` the two coincided and nothing was visibly wrong; the
+    # moment the window widens to give 12-1 the coverage it needs, `near_52w_high_pct` would
+    # silently start measuring proximity to a 15-month high for all 26 rows. Measured at the
+    # 400-day cache the delta is exactly 0.00 on every vehicle (no ticker set a new high in
+    # the extra ~26 bars), so this change moves nothing today — which is the point: the
+    # coupling is latent, undefended, and one bar away from re-scoring the universe by
+    # accident. Windowed explicitly, the number means what its name says at any fetch depth.
+    window = closes.iloc[-MOMENTUM_WINDOW_BARS:]
+    high_52w = float(window.max())
+    low_52w = float(window.min())
 
     r1m = _safe_return(closes, TRADING_DAYS["1m"])
     r3m = _safe_return(closes, TRADING_DAYS["3m"])
     r6m = _safe_return(closes, TRADING_DAYS["6m"])
     r1y = _safe_return(closes, TRADING_DAYS["1y"])
 
-    mscore = momentum_score(r1m, r3m, r6m)
-
     return {
         "ticker": ticker,
         "current_price": round(current, 4),
-        "currency": quote_ccy or hist.attrs.get("currency") or None,
-        "return_basis": return_basis,
+        "currency": quote_ccy,
+        "return_basis": return_basis or "unknown",
         "return_1m_pct": round(r1m * 100, 2) if r1m is not None else None,
         "return_3m_pct": round(r3m * 100, 2) if r3m is not None else None,
         "return_6m_pct": round(r6m * 100, 2) if r6m is not None else None,
@@ -244,10 +220,44 @@ def fetch_metrics(ticker: str, period: str = "1y", fx_fn=None) -> dict | None:
         "high_52w": round(high_52w, 4),
         "low_52w": round(low_52w, 4),
         "near_52w_high_pct": round((current / high_52w - 1) * 100, 2),
-        "momentum_score": mscore,
+        "momentum_score": momentum_score(r1m, r3m, r6m),
         "data_points": len(closes),
         "last_date": closes.index[-1].strftime("%Y-%m-%d"),
     }
+
+
+def price_panel(tickers: list[str], history_days: int = MOMENTUM_HISTORY_DAYS,
+                end: str | None = None, frame_fn=None, ccy_fn=None):
+    """(EUR frame, {ticker: basis}, {ticker: quote ccy}) for `tickers`, from the SHARED cache.
+
+    ONE call for the whole universe. `prices` fetches only what it is missing, so a second
+    module in the same run pays nothing.
+    """
+    from catalyx.data import prices
+
+    end = str(end or date.today().isoformat())[:10]
+    start = (date.fromisoformat(end) - timedelta(days=history_days)).isoformat()
+    frame, basis = (frame_fn or prices.read_eur_with_basis)(list(tickers), start, end)
+    if frame is None or len(frame) == 0:
+        return frame, {}, {}
+    # default=None: the quote currency is a DIAGNOSTIC column here, and an unreadable one
+    # must stay None rather than pass as a reading (see `prices.currencies`).
+    ccy = (ccy_fn or prices.currencies)(list(getattr(frame, "columns", [])), default=None)
+    return frame, basis, ccy
+
+
+def fetch_metrics(ticker: str, history_days: int = MOMENTUM_HISTORY_DAYS,
+                  end: str | None = None, frame_fn=None, ccy_fn=None) -> dict | None:
+    """Metrics for ONE ticker, served from the shared price cache.
+
+    Single-ticker convenience over `price_panel` + `compute_metrics`. `run_snapshot` does NOT
+    call this in a loop — it prices the whole universe once.
+    """
+    frame, basis, ccy = price_panel([ticker], history_days, end, frame_fn, ccy_fn)
+    if frame is None or len(frame) == 0 or ticker not in getattr(frame, "columns", []):
+        console.print(f"[yellow]WARN {ticker}: no prices[/yellow]")
+        return None
+    return compute_metrics(ticker, frame[ticker], ccy.get(ticker), basis.get(ticker))
 
 
 def run_snapshot(
@@ -270,18 +280,29 @@ def run_snapshot(
     snapshot: dict = {
         "generated_at": datetime.now().isoformat(),
         "date": today_str,
-        "source": "yfinance",
+        "source": "prices_cache",
         "sectors": {},
         "standalone_tickers": {},
     }
 
     all_results: list[dict] = []
 
+    # ONE priced panel for the whole universe — `prices` is the shared cache this module was
+    # the last consumer to bypass (its docstring names `market_data` first among the ~15
+    # independent yfinance hits it was built to collapse). Beyond the round-trips, a per-
+    # ticker `yf.Ticker().history(period="1y")` made the LOOKBACK a per-venue accident; the
+    # cache answers a date range, so every row is read off the same window.
+    every_ticker = sorted({t for lst in jobs.values() for t in lst})
+    console.print(f"  Pricing {len(every_ticker)} tickers from the shared cache...")
+    frame, basis, ccy = price_panel(every_ticker, end=today_str)
+    columns = set(getattr(frame, "columns", []))
+
     for sector_or_ticker, ticker_list in jobs.items():
         sector_results = []
         for tkr in ticker_list:
-            console.print(f"  Fetching {tkr}...", end=" ")
-            metrics = fetch_metrics(tkr)
+            console.print(f"  {tkr}...", end=" ")
+            metrics = (compute_metrics(tkr, frame[tkr], ccy.get(tkr), basis.get(tkr))
+                       if tkr in columns else None)
             if metrics:
                 # Newly-listed ETFs (e.g. DRAM, launched 2026) lack 3m/6m history → None.
                 # Format defensively so a short-history ticker doesn't crash the snapshot.
@@ -313,7 +334,14 @@ def run_snapshot(
     if output_path is None:
         output_dir = Path("data/snapshots")
         output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = output_dir / f"momentum_snapshot_{today_str}.json"
+        # An ad-hoc `--tickers` run is NOT the day's snapshot and must not claim its filename.
+        # It already skips the lake partition for exactly that reason ("would collide with the
+        # real daily partition") — but it still overwrote the dated JSON, so a two-ticker
+        # smoke test replaced the 25-sector snapshot of a recorded run with two standalone
+        # rows, silently and under the name every reader resolves by date. Same rule, both
+        # sinks: an ad-hoc run writes an ad-hoc file.
+        name = f"momentum_snapshot_{today_str}.json" if not tickers else f"momentum_adhoc_{today_str}.json"
+        output_path = output_dir / name
 
     output_path.write_text(json.dumps(snapshot, indent=2, ensure_ascii=False))
     console.print(f"\n[bold green]Snapshot written → {output_path}[/bold green]")

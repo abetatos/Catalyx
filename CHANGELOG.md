@@ -13,6 +13,100 @@
 
 
 
+## v14.3 — El spec oficial de momentum llegaba al 48% del universo, y lo decidía el calendario de la plaza (2026-09-02)
+
+**Observación del usuario, no un test:** «la prioridad real es la cobertura, no el horizonte —
+un lookback bien elegido que solo alcanza al 42% del universo es un problema mayor que la
+diferencia entre 9-1 y 12-1». Correcto, y peor de lo anotado: el run vivo
+`run_20260901_165828` corría con **12 de 25** sectores en `12_1_52w` y 13 en `3m6m_fallback`.
+
+**La causa es una resta.** `momentum_spec.mode: "12_1_52w"` es el spec PROMOVIDO CON BACKTEST
+en v8 (176 meses, IC +0,104 contra +0,080 del 3m6m). Necesita `return_1y_pct`, y
+`_safe_return(closes, 252)` pide **253 BARRAS**. `fetch_metrics` pedía `period="1y"` = 365 días
+**de calendario**, y cuántas barras devuelve eso no es una propiedad del fondo sino de la plaza:
+medido sobre el universo vivo, **Xetra 251-252 · SIX 247 · LSE 252-254 · Euronext 255**. El
+corte caía justo por el medio de esa distribución. Ningún sector estaba en el fallback por
+falta de historia — los fondos tienen años; estaban por el calendario de su bolsa.
+
+**Y el sesgo se agravaba solo.** Las migraciones por realidad del bróker mueven vehículos HACIA
+Xetra (v14.1 `BTEC.L`→`NBTK.DE`, v14.2 `SEMI.L`→`SEC0.DE`), así que cada corrección hacia un
+vehículo más comprable ENCOGÍA la cobertura del vehículo puntuado. El siguiente run habría sido
+10 de 25.
+
+**El arreglo no es ampliar `period=`, es dejar de tener una segunda fuente.**
+`catalyx/data/prices.py` existe desde v3 para colapsar los ~15 fetches independientes de un
+review, y su docstring nombra a `market_data` **el primero** de la lista de ofensores —
+`market_data` era el ÚLTIMO módulo que seguía sin usarlo, con su propio
+`yf.Ticker().history()` por ticker y el cache compartido solo para el FX. Ese cache ya tenía
+400 días / 276-282 barras para los 26 vehículos, **en el lake, hoy**: la cobertura se arreglaba
+sin una sola llamada de red nueva. Ahora `run_snapshot` pide UN panel para todo el universo
+(`price_panel`), `compute_metrics` es pura y no sabe de red, y la conversión a EUR sale de
+`market_data` entera — `_to_eur_series` era una segunda implementación de la regla GBp/FX que
+`prices.to_eur` ya tenía, y de la que este fichero exige una sola copia. `market_data` ya no
+importa yfinance, y un test lo fija.
+
+**`MOMENTUM_HISTORY_DAYS: 450`, no 400.** El cache cold-fetch está en 400 y habría funcionado
+(272-282 barras contra 253), pero `GLUX.SW` quedaba a **19 barras** del precipicio y un margen
+fino aquí falla como falló el anterior: en silencio, por plaza, y hacia MENOS cobertura. 450 da
+306-315 barras, ~55 de margen. Medido tras el cambio: **25 de 25** sectores en `12_1_52w`, los
+25 en base EUR.
+
+**El otro arreglo va en el mismo commit porque el primero lo habría roto.** `high_52w` era
+`closes.max()` sobre **toda la serie traída**, o sea el significado de la proximidad al máximo
+de 52 semanas —el **36,5%** del blend oficial— estaba atado a la ventana de fetch. Mientras la
+ventana fue `period="1y"` las dos coincidían y nada se veía mal; profundizarla para arreglar la
+cobertura habría convertido `near_52w_high_pct` en proximidad a un máximo de 15 meses para las
+26 filas a la vez, en silencio. Windowed a `MOMENTUM_WINDOW_BARS = 252` — la misma unidad en la
+que cuenta `_safe_return`, así que el máximo y el ancla del 12-1 se leen del mismo trozo de la
+misma serie. **Medido, el efecto de este acoplamiento hoy era exactamente 0,00 en los 26
+vehículos** (nadie hizo máximo en las ~26 barras extra del cache de 400 días): no arregla nada
+visible, y ése es el punto — era latente, sin test, y a una barra de re-rankear el universo por
+accidente. Cuatro tests lo fijan, incluido el invariante que hace seguro el cambio de ventana
+(misma serie, fetch más profundo, lectura idéntica del máximo).
+
+**El re-rank, medido dos veces.** Contrafactual offline (mismos vehículos, mismos scores en todo
+lo demás, solo la ventana) y después el run grabado, y coinciden: **19 de 25 sectores se mueven,
+máx 8 puestos, Spearman 0,90**. Un 42% de cobertura no era ruido de segundo orden — **el top-6,
+que CON `n_target: 6` ES EL LIBRO, cambia de composición**:
+
+| sector | rank | momentum | spec anterior |
+|---|---|---|---|
+| `copper_miners` | 5 → **1** | 63,5 → 88,2 | `3m6m_fallback` |
+| `ai_infrastructure_data_centers` | 12 → **6** | 36,5 → 72,5 | `3m6m_fallback` — **ENTRA** |
+| `water_infrastructure` | 2 → **7** | 59,6 → 38,4 | `3m6m_fallback` — **SALE** |
+| `space_defense_satellite` | 21 → **13** | 5,8 → 50,3 | `3m6m_fallback` |
+| `luxury_goods` | 13 → **20** | 40,4 → 25,0 | `3m6m_fallback` |
+
+**Lo que esto le hace a la tabla hay que decirlo entero:** `water_infrastructure` es la fila de
+**€1.732 ejecutada ayer** —encolada por el ramp, ejecutada como override autor `user`— y la
+tabla nueva emite **`TRIM water_infrastructure €-1.738`** (17,4pp sobre target) + **`BUY
+biotech_drug_development €1.490`**. El `SELECTION` lo cifra: el corte se decidió por **+0,074
+composite_z**. No se ejecuta nada aquí — el review recomienda y no opera —, pero la fila
+existe porque la cobertura elegía posiciones, que es exactamente lo que había que arreglar.
+
+**Lo que NO se ha tocado, a propósito.** Ni un peso, ni un umbral congelado, ni un vehículo, ni
+el propio spec: sigue siendo `12_1_52w` con el reparto 0,635/0,365 que promovió el backtest. La
+pregunta 9-1 vs 12-1 sigue abierta y sin evidencia, y mezclarla aquí habría destruido la
+atribución del efecto — el re-rank de arriba es de la VENTANA y de nada más.
+
+**Residual nombrado, no arreglado:** `_safe_return` cuenta BARRAS, no fechas, así que el ancla
+de «252 barras atrás» cae en un rango de **13 días** entre sectores (2025-08-21 `GLUX.SW` ↔
+2025-09-03 `IUHE.AS`) y un ranking transversal compara ventanas ligeramente distintas. Es de
+segundo orden al lado de lo anterior, pero es el mismo mecanismo, y arreglarlo mueve TODOS los
+retornos — o sea, otro re-rank por otra razón dentro del mismo edit. Queda como decisión
+abierta con el precio delante.
+
+**Y un footgun preexistente que salió al probar el propio arreglo:** un `--tickers` ad-hoc
+escribía el snapshot del DÍA. Ya se saltaba la partición del lake por esta razón exacta
+(«colisionaría con la partición diaria real»), pero el JSON lo pisaba igual — un smoke test de
+dos tickers reemplazó el snapshot de 25 sectores de un run ya grabado, en silencio y bajo el
+nombre que todo lector resuelve por fecha. El JSON se reconstruyó desde la partición del lake
+(que es la fuente de verdad y estaba intacta) y ahora un run ad-hoc escribe un fichero ad-hoc:
+misma regla en los dos sumideros. Test incluido.
+
+930 tests (+12), 1 fallo **preexistente y ajeno**
+(`test_intensity_is_idempotent_across_repeated_write_backs`, verificado contra HEAD).
+
 ## v14.2 — Dos cotizaciones del mismo fondo, y la tabla solo veía una (2026-09-01)
 
 **No salió de un test: salió de ejecutar.** El usuario ejecutó las cuatro filas de la tabla del

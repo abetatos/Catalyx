@@ -90,8 +90,11 @@ def _primaries_from_lake(snapshot_date: str | None = None) -> tuple[str, dict] |
             "return_1m_pct": _clean(row.get("return_1m_pct")),
             "return_3m_pct": _clean(row.get("return_3m_pct")),
             "return_6m_pct": _clean(row.get("return_6m_pct")),
-            # v7 M2/M3: both have been fetched and lake-written since the beginning
-            # (fetch_metrics asks for period="1y") — nothing ever read them.
+            # v7 M2/M3: both have been fetched and lake-written since the beginning —
+            # nothing ever read them. v14.3: and when v7 finally did, `period="1y"` was too
+            # shallow for 13 of 26 venues, so `return_1y_pct` came back None and the row fell
+            # to `3m6m_fallback` by exchange calendar. `market_data` now asks the shared
+            # cache for MOMENTUM_HISTORY_DAYS (450) and every row carries a 12-1.
             "return_1y_pct": _clean(row.get("return_1y_pct")),
             "near_52w_high_pct": _clean(row.get("near_52w_high_pct")),
         }

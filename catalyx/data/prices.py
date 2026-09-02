@@ -391,11 +391,19 @@ def eur_price_fn(tickers: list[str], start: str, end: str):
     return read_eur(tickers, start, end)
 
 
-def currencies(tickers: list[str], ccy_fn=None, lake_dir: Path | None = None) -> dict[str, str]:
+def currencies(tickers: list[str], ccy_fn=None, lake_dir: Path | None = None,
+               default: str | None = "EUR") -> dict[str, str | None]:
     """{ticker: listing currency} from the cache — the `ccy_fn` contract in `nav_engine`.
 
     Before this, every NAV/exit run called `yf.Ticker(t).fast_info` per ticker (one network
     round-trip EACH) to learn a value that never changes.
+
+    `default` is what an UNREADABLE currency becomes. "EUR" is right for `to_eur`, whose
+    question is "convert or not" and for which not-knowing and no-conversion-needed are the
+    same action. It is wrong for a DIAGNOSTIC column: `market_data` publishes the quote
+    currency so a GBp line cannot pass as EUR, and there a default is the defect itself —
+    v8.1's `hist.attrs.get("currency", "USD")` said "USD" by default rather than by reading
+    for all 26 rows. Those callers pass `default=None`, and "not measured" stays None.
     """
     meta = _read_meta(lake_dir)
     known = {r["ticker"]: r.get("currency") for _, r in meta.iterrows()} if not meta.empty else {}
@@ -411,7 +419,7 @@ def currencies(tickers: list[str], ccy_fn=None, lake_dir: Path | None = None) ->
                         "fetched_at": datetime.now(timezone.utc).isoformat()})
             lake.append_partition(_META, pd.DataFrame([row]), {"ticker": t},
                                   overwrite=True, lake_dir=lake_dir)
-    return {t: (v or "EUR") for t, v in out.items()}
+    return {t: (v or default) for t, v in out.items()}
 
 
 def coverage(lake_dir: Path | None = None) -> list[dict]:

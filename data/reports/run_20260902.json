@@ -1,0 +1,729 @@
+{
+  "as_of": "2026-09-02",
+  "schema_version": "1.0",
+  "sources": {
+    "state": null,
+    "scan_deltas": null,
+    "lake": "data/lake",
+    "report": "data/reports/review_20260902.md"
+  },
+  "missing": [
+    "data/reports/state_20260902.json (run `bash scripts/pre_run.sh`)",
+    "data/reports/scan_deltas_20260902.json (no /catalyx-scan this run)"
+  ],
+  "book": null,
+  "attention": null,
+  "work_list": null,
+  "lifecycle_transitions": null,
+  "stale_verdicts": null,
+  "scan": null,
+  "ranking": [
+    {
+      "sector_id": "copper_miners",
+      "rank": 1,
+      "composite": 60.8,
+      "momentum": 88.2,
+      "catalyst_alignment": 98.1,
+      "crowding_risk": 32.4,
+      "narrative_maturity": "crowded",
+      "primary_etf": "4COP.DE"
+    },
+    {
+      "sector_id": "robotics_automation",
+      "rank": 2,
+      "composite": 60.8,
+      "momentum": 64.9,
+      "catalyst_alignment": 97.9,
+      "crowding_risk": 14.7,
+      "narrative_maturity": "mainstream",
+      "primary_etf": "2B76.DE"
+    },
+    {
+      "sector_id": "semiconductors_design",
+      "rank": 3,
+      "composite": 60.0,
+      "momentum": 71.7,
+      "catalyst_alignment": 97.7,
+      "crowding_risk": 44.1,
+      "narrative_maturity": "crowded",
+      "primary_etf": "SEC0.DE"
+    },
+    {
+      "sector_id": "pharma_large_cap",
+      "rank": 4,
+      "composite": 57.9,
+      "momentum": 55.5,
+      "catalyst_alignment": 94.3,
+      "crowding_risk": 94.1,
+      "narrative_maturity": "crowded",
+      "primary_etf": "IUHE.AS"
+    },
+    {
+      "sector_id": "biotech_drug_development",
+      "rank": 5,
+      "composite": 56.2,
+      "momentum": 74.4,
+      "catalyst_alignment": 94.4,
+      "crowding_risk": 94.1,
+      "narrative_maturity": "mainstream",
+      "primary_etf": "NBTK.DE"
+    },
+    {
+      "sector_id": "ai_infrastructure_data_centers",
+      "rank": 6,
+      "composite": 56.1,
+      "momentum": 72.5,
+      "catalyst_alignment": 98.3,
+      "crowding_risk": 55.9,
+      "narrative_maturity": "crowded",
+      "primary_etf": "V9N.DE"
+    },
+    {
+      "sector_id": "water_infrastructure",
+      "rank": 7,
+      "composite": 55.0,
+      "momentum": 38.4,
+      "catalyst_alignment": 97.4,
+      "crowding_risk": 2.9,
+      "narrative_maturity": "emerging",
+      "primary_etf": "IQQQ.DE"
+    },
+    {
+      "sector_id": "grid_infrastructure_utilities",
+      "rank": 8,
+      "composite": 54.0,
+      "momentum": 40.9,
+      "catalyst_alignment": 98.1,
+      "crowding_risk": 26.5,
+      "narrative_maturity": "crowded",
+      "primary_etf": "IQQH.DE"
+    },
+    {
+      "sector_id": "uranium_miners",
+      "rank": 9,
+      "composite": 52.9,
+      "momentum": 24.5,
+      "catalyst_alignment": 97.4,
+      "crowding_risk": 50.0,
+      "narrative_maturity": "mainstream",
+      "primary_etf": "URNM.L"
+    },
+    {
+      "sector_id": "cybersecurity_commercial",
+      "rank": 10,
+      "composite": 52.5,
+      "momentum": 71.1,
+      "catalyst_alignment": 71.8,
+      "crowding_risk": 75.0,
+      "narrative_maturity": "crowded",
+      "primary_etf": "USPY.L"
+    },
+    {
+      "sector_id": "eu_defense_prime_contractors",
+      "rank": 11,
+      "composite": 51.1,
+      "momentum": 33.7,
+      "catalyst_alignment": 82.2,
+      "crowding_risk": 8.8,
+      "narrative_maturity": "crowded",
+      "primary_etf": "EUDF.L"
+    },
+    {
+      "sector_id": "lithium_miners",
+      "rank": 12,
+      "composite": 50.8,
+      "momentum": 47.8,
+      "catalyst_alignment": 97.4,
+      "crowding_risk": 67.6,
+      "narrative_maturity": "emerging",
+      "primary_etf": "VOLT.L"
+    },
+    {
+      "sector_id": "space_defense_satellite",
+      "rank": 13,
+      "composite": 50.2,
+      "momentum": 50.3,
+      "catalyst_alignment": 86.3,
+      "crowding_risk": 20.6,
+      "narrative_maturity": "emerging",
+      "primary_etf": "JEDI.DE"
+    },
+    {
+      "sector_id": "nuclear_energy",
+      "rank": 14,
+      "composite": 47.3,
+      "momentum": 21.3,
+      "catalyst_alignment": 98.1,
+      "crowding_risk": 61.8,
+      "narrative_maturity": "mainstream",
+      "primary_etf": "NUKL.DE"
+    },
+    {
+      "sector_id": "eu_retail_banking",
+      "rank": 15,
+      "composite": 47.2,
+      "momentum": 87.5,
+      "catalyst_alignment": 14.0,
+      "crowding_risk": 55.0,
+      "narrative_maturity": "mainstream",
+      "primary_etf": "EXV1.DE"
+    }
+  ],
+  "rank_moves": [
+    {
+      "sector_id": "space_defense_satellite",
+      "event_type": "rank_up",
+      "from_rank": 21,
+      "to_rank": 13,
+      "delta": 8
+    },
+    {
+      "sector_id": "luxury_goods",
+      "event_type": "rank_down",
+      "from_rank": 13,
+      "to_rank": 20,
+      "delta": -7
+    },
+    {
+      "sector_id": "ai_infrastructure_data_centers",
+      "event_type": "entered_topN",
+      "from_rank": 12,
+      "to_rank": 6,
+      "delta": 6
+    },
+    {
+      "sector_id": "water_infrastructure",
+      "event_type": "rank_down",
+      "from_rank": 2,
+      "to_rank": 7,
+      "delta": -5
+    }
+  ],
+  "portfolios": [
+    {
+      "portfolio_id": "momentum",
+      "kind": "model",
+      "date": "2026-09-01",
+      "nav": 103.6704,
+      "return_pct": 3.6704,
+      "benchmark_etf": "SPY",
+      "vs_benchmark_pct": -0.0456,
+      "mode": "live",
+      "mwr_pct": NaN
+    },
+    {
+      "portfolio_id": "catalyx",
+      "kind": "model",
+      "date": "2026-09-01",
+      "nav": 102.727,
+      "return_pct": 2.727,
+      "benchmark_etf": "SPY",
+      "vs_benchmark_pct": -0.989,
+      "mode": "live",
+      "mwr_pct": NaN
+    },
+    {
+      "portfolio_id": "equal_weight",
+      "kind": "model",
+      "date": "2026-09-01",
+      "nav": 101.889,
+      "return_pct": 1.889,
+      "benchmark_etf": "SPY",
+      "vs_benchmark_pct": -1.827,
+      "mode": "live",
+      "mwr_pct": NaN
+    },
+    {
+      "portfolio_id": "low_crowding",
+      "kind": "model",
+      "date": "2026-08-31",
+      "nav": 100.7293,
+      "return_pct": 0.7293,
+      "benchmark_etf": "SPY",
+      "vs_benchmark_pct": -3.7515,
+      "mode": "live",
+      "mwr_pct": NaN
+    },
+    {
+      "portfolio_id": "real",
+      "kind": "real",
+      "date": "2026-09-01",
+      "nav": 97.253,
+      "return_pct": -2.747,
+      "benchmark_etf": "SPY",
+      "vs_benchmark_pct": -6.463,
+      "mode": NaN,
+      "mwr_pct": -3.67,
+      "execution_alpha_vs": "catalyx",
+      "execution_alpha_pp": -5.47,
+      "execution_alpha_note": null
+    }
+  ],
+  "book_metrics": {
+    "total_capital_eur": 10000.0,
+    "invested_eur": 6236.0,
+    "marked_eur": 6278.77,
+    "deployed_pct": 62.79,
+    "cash_eur": 3721.23,
+    "unrealized_eur": 42.77,
+    "n_positions": 5,
+    "hhi": 2112.3,
+    "fx_exposure_pct": "{\"EUR\": 100.0}",
+    "vol_pct": 26.73,
+    "sharpe": 0.64,
+    "sharpe_ci95": 3.95,
+    "max_drawdown_pct": -9.2,
+    "beta_vs_spy": 1.02,
+    "corr_vs_spy": 0.51,
+    "tracking_error_vs_model_pct": 20.33,
+    "active_share_pct": 35.98,
+    "model_overlap_pct": 45.41,
+    "nav_points": 63,
+    "twr_pct": -2.75,
+    "metrics_reliable": false,
+    "metrics_note": "62/120 daily observations — risk metrics are indicative only, the confidence interval is wider than the estimate",
+    "run_id": "run_20260902_064125",
+    "as_of": "2026-09-02",
+    "computed_at": "2026-09-02T06:42:02.659260+00:00",
+    "effective_n": 4.73,
+    "book_vol_from_cov_pct": 17.6,
+    "risk_window_days": 62.0,
+    "line_risk_stop_pct": 30.0,
+    "line_risk_total_pct": 18.83,
+    "risk_basis": "daily"
+  },
+  "positions": [
+    {
+      "sector_id": "copper_miners",
+      "etf": "4COP.DE",
+      "invested_eur": 1000.0,
+      "market_value_eur": 1031.75,
+      "unrealized_eur": 31.75,
+      "unrealized_pct": 3.17,
+      "pnl_price_eur": 31.51,
+      "pnl_fx_eur": 0.0,
+      "days_held": 89,
+      "max_drawdown_from_peak_pct": -19.66,
+      "composite_at_entry": 70.9,
+      "composite_now": 60.8,
+      "composite_drift": -10.1,
+      "rank_now": 1,
+      "rank_drift": null,
+      "catalyst_freshness": "fresh",
+      "regime_state": "intact",
+      "exit_action": "watch",
+      "drawdown_tier": "clear",
+      "capital_pct_of_book": 16.43,
+      "vol_common_window_pct": 42.97,
+      "risk_contribution_pct": 32.95
+    },
+    {
+      "sector_id": "water_infrastructure",
+      "etf": "IQQQ.DE",
+      "invested_eur": 1732.0,
+      "market_value_eur": 1738.09,
+      "unrealized_eur": 6.09,
+      "unrealized_pct": 0.35,
+      "pnl_price_eur": 6.09,
+      "pnl_fx_eur": 0.0,
+      "days_held": 1,
+      "max_drawdown_from_peak_pct": null,
+      "composite_at_entry": 58.8,
+      "composite_now": 55.0,
+      "composite_drift": -3.8,
+      "rank_now": 7,
+      "rank_drift": 3.0,
+      "catalyst_freshness": "fresh",
+      "regime_state": "intact",
+      "exit_action": "hold",
+      "drawdown_tier": "clear",
+      "capital_pct_of_book": 27.68,
+      "vol_common_window_pct": 12.94,
+      "risk_contribution_pct": 7.28
+    },
+    {
+      "sector_id": "pharma_large_cap",
+      "etf": "IUHE.AS",
+      "invested_eur": 1435.0,
+      "market_value_eur": 1472.76,
+      "unrealized_eur": 37.76,
+      "unrealized_pct": 2.63,
+      "pnl_price_eur": 37.76,
+      "pnl_fx_eur": 0.0,
+      "days_held": 78,
+      "max_drawdown_from_peak_pct": -3.82,
+      "composite_at_entry": 34.0,
+      "composite_now": 57.9,
+      "composite_drift": 23.9,
+      "rank_now": 4,
+      "rank_drift": -33.0,
+      "catalyst_freshness": "fresh",
+      "regime_state": "intact",
+      "exit_action": "hold",
+      "drawdown_tier": "clear",
+      "capital_pct_of_book": 23.46,
+      "vol_common_window_pct": 17.53,
+      "risk_contribution_pct": -2.58
+    },
+    {
+      "sector_id": "semiconductors_design",
+      "etf": "SEC0.DE",
+      "invested_eur": 1064.0,
+      "market_value_eur": 1014.51,
+      "unrealized_eur": -49.49,
+      "unrealized_pct": -4.65,
+      "pnl_price_eur": -49.49,
+      "pnl_fx_eur": 0.0,
+      "days_held": 86,
+      "max_drawdown_from_peak_pct": -28.43,
+      "composite_at_entry": 72.8,
+      "composite_now": 60.0,
+      "composite_drift": -12.8,
+      "rank_now": 3,
+      "rank_drift": -6.0,
+      "catalyst_freshness": "fresh",
+      "regime_state": "intact",
+      "exit_action": "hold",
+      "drawdown_tier": "clear",
+      "capital_pct_of_book": 16.16,
+      "vol_common_window_pct": 53.44,
+      "risk_contribution_pct": 39.8
+    },
+    {
+      "sector_id": "robotics_automation",
+      "etf": "2B76.DE",
+      "invested_eur": 1005.0,
+      "market_value_eur": 1021.66,
+      "unrealized_eur": 16.66,
+      "unrealized_pct": 1.66,
+      "pnl_price_eur": 16.66,
+      "pnl_fx_eur": 0.0,
+      "days_held": 1,
+      "max_drawdown_from_peak_pct": null,
+      "composite_at_entry": 62.7,
+      "composite_now": 60.8,
+      "composite_drift": -1.9,
+      "rank_now": 2,
+      "rank_drift": 1.0,
+      "catalyst_freshness": "fresh",
+      "regime_state": "intact",
+      "exit_action": "hold",
+      "drawdown_tier": "clear",
+      "capital_pct_of_book": 16.27,
+      "vol_common_window_pct": 29.19,
+      "risk_contribution_pct": 22.56
+    }
+  ],
+  "rebalance": {
+    "run_id": "run_20260902_064125",
+    "strategy": "catalyx",
+    "deploy_ratio": 0.75,
+    "total_capital_eur": 10000.0,
+    "deployable_eur": 7500.0,
+    "cash_target_eur": 2500.01,
+    "cash_actual_eur": 3721.23,
+    "cash_action_eur": 1221.22,
+    "tilt_lambda": 0.0,
+    "shortfall_pp": 12.21,
+    "shortfall_runs": 4.0,
+    "shortfall_breached": true,
+    "cash_drag_eur": null,
+    "cash_idle_since": "2026-09-01",
+    "cash_idle_days": 1.0,
+    "benchmark_return_pct": null,
+    "model_return_pct": null,
+    "cash_model_forgone_eur": null,
+    "cash_verdict": null,
+    "n_actions": 2,
+    "n_hold": 5,
+    "actions": [
+      {
+        "sector_id": "water_infrastructure",
+        "etf": "IQQQ.DE",
+        "score_rank": 7,
+        "target_pct": 0.0,
+        "actual_pct": 17.38,
+        "gap_eur": -1738.09,
+        "rule_action": "TRIM",
+        "trade_eur": -1738.09,
+        "tax_eur": 1.16,
+        "breakeven_pct": 0.267,
+        "reason": "17.4pp above target",
+        "regime_state": "intact",
+        "exit_action": "hold",
+        "flags": "",
+        "data_age": "stale (90d)"
+      },
+      {
+        "sector_id": "biotech_drug_development",
+        "etf": "NBTK.DE",
+        "score_rank": 5,
+        "target_pct": 14.9,
+        "actual_pct": 0.0,
+        "gap_eur": 1490.4,
+        "rule_action": "BUY",
+        "trade_eur": 1490.4,
+        "tax_eur": 0.0,
+        "breakeven_pct": 0.2,
+        "reason": "rank 5 opens the gate, not held, 14.9pp under the risk-budget target",
+        "regime_state": "intact",
+        "exit_action": null,
+        "flags": "",
+        "data_age": "blind (150d)"
+      }
+    ],
+    "holds": [
+      "copper_miners",
+      "robotics_automation",
+      "semiconductors_design",
+      "pharma_large_cap",
+      "ai_infrastructure_data_centers"
+    ],
+    "swaps": [
+      {
+        "from_sector": "water_infrastructure",
+        "from_etf": "IQQQ.DE",
+        "to_sector": "biotech_drug_development",
+        "to_etf": "NBTK.DE",
+        "from_action": "TRIM",
+        "to_action": "BUY",
+        "moved_eur": 1490.4,
+        "tax_eur": 0.99,
+        "spread_eur": 5.96,
+        "fee_eur": 0.0,
+        "friction_eur": 6.96,
+        "breakeven_pct": 0.467,
+        "horizon_days": 63,
+        "dz_gap": null,
+        "dz_required": null,
+        "edge_expected_pct": null,
+        "hurdle_verdict": null,
+        "pays": null
+      }
+    ],
+    "rank_edge_evidence": {
+      "spread_pp": -7.044,
+      "effective_windows": 1,
+      "horizon_days": 63,
+      "verdict": "NONE",
+      "why": "~1 independent window(s) < the 3 the gate requires — the sign is not established",
+      "line": "rank-bucket top3−rest = -7.04pp → NONE (~1 independent window(s) < the 3 the gate requires — the sign is not established)"
+    },
+    "selection_prior": {
+      "verdict": "NONE",
+      "tilt_lambda": 0.0,
+      "note": "WHAT THIS TABLE RESTS ON — the ranking's measured edge is NONE (~1 independent window(s) < the 3 the gate requires — the sign is not established). The deployment asked for below does not rest on it: the rule picks NAMES on an edge not yet established, while the SIZE of each name is already neutralized (λ=0.00, inverse-vol). Accepting the rows is accepting that prior — that being invested in ranked leaders pays even before this ranking has shown it orders. The registered alternative is an override naming the deployment shortfall."
+    },
+    "partials": [
+      {
+        "sector_id": "water_infrastructure",
+        "etf": "IQQQ.DE",
+        "unrealized_pct": 0.35,
+        "rank": 7,
+        "action": "TRIM",
+        "live": true,
+        "ladder_need_gain_pct": 24.65,
+        "ladder_rank_ok": true,
+        "overweight_need_pp": null
+      },
+      {
+        "sector_id": "copper_miners",
+        "etf": "4COP.DE",
+        "unrealized_pct": 3.17,
+        "rank": 1,
+        "action": "HOLD",
+        "live": false,
+        "ladder_need_gain_pct": 21.83,
+        "ladder_rank_ok": false,
+        "overweight_need_pp": 2.79
+      },
+      {
+        "sector_id": "robotics_automation",
+        "etf": "2B76.DE",
+        "unrealized_pct": 1.66,
+        "rank": 2,
+        "action": "HOLD",
+        "live": false,
+        "ladder_need_gain_pct": 23.34,
+        "ladder_rank_ok": false,
+        "overweight_need_pp": 3.83
+      },
+      {
+        "sector_id": "semiconductors_design",
+        "etf": "SEC0.DE",
+        "unrealized_pct": -4.65,
+        "rank": 3,
+        "action": "HOLD",
+        "live": false,
+        "ladder_need_gain_pct": 29.65,
+        "ladder_rank_ok": false,
+        "overweight_need_pp": 3.0
+      },
+      {
+        "sector_id": "pharma_large_cap",
+        "etf": "IUHE.AS",
+        "unrealized_pct": 2.63,
+        "rank": 4,
+        "action": "HOLD",
+        "live": false,
+        "ladder_need_gain_pct": 22.37,
+        "ladder_rank_ok": false,
+        "overweight_need_pp": 6.61
+      }
+    ],
+    "partial_rungs": {
+      "ladder": "+25% & rank ≥ 6 → trim 33%",
+      "ladder_rank_min": 6,
+      "overweight": "≥ 4pp above target"
+    },
+    "gate": {
+      "armed": false,
+      "windows": 1,
+      "ic": -0.1432,
+      "ic_se": 0.2,
+      "ic_verdict": "noise",
+      "requires": {
+        "min_independent_windows": 3,
+        "min_abs_ic": 0.2,
+        "ic_sign_must_be_positive": true
+      },
+      "why": "STANDS ASIDE — ~1 independent window(s) < 3; |IC| 0.143 < 0.20 — the ranking orders nothing; IC -0.143 is NEGATIVE — arming would invert the rule, not enforce it"
+    }
+  },
+  "exposure": [
+    {
+      "catalyst_id": "struct_ai_capex_supercycle",
+      "exposure_eur": 4801.0,
+      "pct": 48.0,
+      "sectors": [
+        "copper_miners",
+        "robotics_automation",
+        "semiconductors_design",
+        "water_infrastructure"
+      ],
+      "absorbed_ids": []
+    },
+    {
+      "catalyst_id": "uncatalyzed",
+      "exposure_eur": 1435.0,
+      "pct": 14.3,
+      "sectors": [
+        "pharma_large_cap"
+      ],
+      "absorbed_ids": []
+    },
+    {
+      "catalyst_id": "struct_biopharma_patent_cliff_ma",
+      "exposure_eur": 1435.0,
+      "pct": 14.3,
+      "sectors": [
+        "pharma_large_cap"
+      ],
+      "absorbed_ids": []
+    },
+    {
+      "catalyst_id": "struct_nato_rearmament",
+      "exposure_eur": 1005.0,
+      "pct": 10.1,
+      "sectors": [
+        "robotics_automation"
+      ],
+      "absorbed_ids": []
+    },
+    {
+      "catalyst_id": "struct_energy_transition_grid",
+      "exposure_eur": 1000.0,
+      "pct": 10.0,
+      "sectors": [
+        "copper_miners"
+      ],
+      "absorbed_ids": []
+    },
+    {
+      "catalyst_id": "struct_enterprise_cyber_spend_supercycle",
+      "exposure_eur": 0.0,
+      "pct": 0.0,
+      "sectors": [],
+      "absorbed_ids": []
+    }
+  ],
+  "cap_breaches": [
+    {
+      "catalyst_id": "struct_ai_capex_supercycle",
+      "current_eur": 4801.0,
+      "proposed_eur": 0.0,
+      "post_eur": 4801.0,
+      "post_pct": 48.0,
+      "cap_pct": 30.0,
+      "over_by_eur": 1801.0,
+      "over": true,
+      "risk_ctr_pct": 87.48,
+      "risk_standalone_vol_pct": 13.83,
+      "risk_cap_pct": 35.0,
+      "over_risk": true,
+      "risk_over_by_pp": 52.48,
+      "rules_disagree": false,
+      "sectors": [
+        "copper_miners",
+        "robotics_automation",
+        "semiconductors_design",
+        "water_infrastructure"
+      ],
+      "sectors_traded": [],
+      "touched_by_table": false,
+      "members_by_risk": [
+        {
+          "sector_id": "copper_miners",
+          "ctr_pct": 29.11,
+          "eur": 1000.0
+        },
+        {
+          "sector_id": "semiconductors_design",
+          "ctr_pct": 24.43,
+          "eur": 1064.0
+        },
+        {
+          "sector_id": "robotics_automation",
+          "ctr_pct": 22.78,
+          "eur": 1005.0
+        },
+        {
+          "sector_id": "water_infrastructure",
+          "ctr_pct": 11.16,
+          "eur": 1732.0
+        }
+      ]
+    }
+  ],
+  "attribution_drift": [
+    {
+      "sector_id": "pharma_large_cap",
+      "movement_id": "mov_20260901_pharma_large_cap_rebalance_add",
+      "amount_eur": 935.0,
+      "recorded": [
+        "struct_biopharma_patent_cliff_ma",
+        "uncatalyzed"
+      ],
+      "current": [
+        "struct_biopharma_patent_cliff_ma",
+        "struct_glp1_obesity_supercycle"
+      ],
+      "unattributed": [
+        "struct_glp1_obesity_supercycle"
+      ],
+      "uncatalyzed": false,
+      "reattributed_at": null
+    }
+  ],
+  "overrides": {
+    "note": "override_edge_eur = (chosen − rule exposure) × EUR return since the run. `rule_cost_eur` (the CGT + spread the rule would have paid) is shown beside it, never added: deferring tax is not earning it."
+  },
+  "scorecard": {
+    "horizon_days": 63,
+    "n_pending": 111,
+    "rows": [],
+    "effective_windows": 0,
+    "scoreable": false,
+    "note": "rule_edge_pp = (mean forward return − the HOLD baseline) × the direction the rule moved money, so POSITIVE always means the rule was right. ~0 non-overlapping 63d window(s) — below the 2 this table needs before any row earns a verdict."
+  }
+}
