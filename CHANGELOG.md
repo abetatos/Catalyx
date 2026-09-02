@@ -105,7 +105,12 @@ nombre que todo lector resuelve por fecha. El JSON se reconstruyó desde la part
 misma regla en los dos sumideros. Test incluido.
 
 930 tests (+12), 1 fallo **preexistente y ajeno**
-(`test_intensity_is_idempotent_across_repeated_write_backs`, verificado contra HEAD).
+(`test_intensity_is_idempotent_across_repeated_write_backs`, verificado contra HEAD) —
+**arreglado justo después**, y no era un bug del motor sino deriva de fixture: el test leía la
+historia VIVA de `cb_gold_accumulation.yaml` para afirmar que el score se MUEVE, y
+`_TREND_DELTAS` es una función escalón, así que cuando la historia real de gold se volvió una
+racha bajista la fila que el test inyectaba cayó en el mismo escalón. Rehecho sobre un
+catalizador sintético: **931 en verde**.
 
 ## v14.2 — Dos cotizaciones del mismo fondo, y la tabla solo veía una (2026-09-01)
 

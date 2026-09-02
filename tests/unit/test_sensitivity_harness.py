@@ -193,26 +193,67 @@ def test_write_back_targets_the_file_each_result_was_computed_from():
         assert got["id"] == r["id"], "a result is addressed to a file describing another catalyst"
 
 
+def _synthetic_catalyst(history: list[dict]) -> dict:
+    """A catalyst with ONE flat indicator, so `indicator_avg` is constant and every movement in
+    `computed_score` comes from the trend. The live YAMLs cannot play this role: their history is
+    rewritten by every review, so a test that reads one is asserting against today's world."""
+    return {
+        "id": "struct_synthetic_trend_probe",
+        "indicators": [{"id": "ind_01", "name": "probe", "direction": "higher_is_stronger",
+                        "current_value": 50.0, "threshold_strong": 80.0, "threshold_weak": 20.0}],
+        "intensity": {"current_score": 50.0, "history": history},
+    }
+
+
 def test_intensity_is_idempotent_across_repeated_write_backs():
     """The score fed its own trend: `write_back` wrote today's row and `_trend_delta` then read
     it as the most-recent period, so recomputing moved the number again. Two reviews in one day
     took gold 78.6 → 68.5 → 64.5 on a world that had not moved. Compute must give the same
     answer whether or not write_back has already run today."""
     from catalyx.scorer import intensity_engine as IE
+    from datetime import date as _date
 
     path = Path(IE._CATALYSTS_DIR) / "cb_gold_accumulation.yaml"
     first = IE.compute_from_yaml(path)["computed_score"]
 
     cat = yaml.safe_load(path.read_text(encoding="utf-8"))
-    from datetime import date as _date
     cat["intensity"]["history"].insert(
         0, {"period": _date.today().isoformat(), "score": first, "note": "as write_back writes it"})
     assert IE.compute_intensity(cat)["computed_score"] == pytest.approx(first)
 
-    # a row from a PRIOR period is real history and still drives the trend
-    cat["intensity"]["history"][0]["period"] = "2020-01-01"
-    cat["intensity"]["history"][0]["score"] = first - 40
-    assert IE.compute_intensity(cat)["computed_score"] != pytest.approx(first)
+
+def test_dropping_todays_row_does_not_also_drop_real_history():
+    """The other half of the same guard: the today-filter must swallow ONLY today. A row from a
+    PRIOR period is real history and must still drive the trend.
+
+    This assertion used to be spliced onto the test above, mutating `cb_gold_accumulation.yaml`'s
+    real history and asserting the score MOVED. It stopped failing honestly and started failing
+    by fixture drift: gold's own history became a falling streak (68.5 → 71.5 → 81.1), so the
+    baseline was ALREADY `↓↓ falling 2+` and the spiked-down row landed in the same bucket —
+    same delta, same score, red test, no bug. `_TREND_DELTAS` is a step function, so any test
+    that asserts "the score moved" must control which STEP it starts on. Hence the synthetic
+    catalyst: flat indicator, hand-built history, one variable."""
+    from catalyx.scorer import intensity_engine as IE
+    from datetime import date as _date
+
+    rising = [{"period": "2026-Q3", "score": 80.0},
+              {"period": "2026-Q2", "score": 70.0},
+              {"period": "2026-Q1", "score": 60.0}]
+    base = IE.compute_intensity(_synthetic_catalyst(rising))
+    assert base["trend_label"].startswith("↑↑"), base["trend_label"]
+
+    # a PRIOR-period row that reverses the streak must be seen
+    reversed_ = [{"period": "2026-Q4", "score": 40.0}] + rising
+    moved = IE.compute_intensity(_synthetic_catalyst(reversed_))
+    assert moved["trend_label"].startswith("↓"), moved["trend_label"]
+    assert moved["computed_score"] != pytest.approx(base["computed_score"])
+    assert moved["indicator_avg"] == pytest.approx(base["indicator_avg"]), \
+        "only the trend may differ — otherwise this proves nothing about the filter"
+
+    # ...and TODAY's row must not be, on the very same history
+    today = [{"period": _date.today().isoformat(), "score": 40.0}] + rising
+    assert IE.compute_intensity(_synthetic_catalyst(today))["computed_score"] == \
+        pytest.approx(base["computed_score"])
 
 
 def test_a_cmf_flow_reading_is_imputed_not_scored():
