@@ -1,0 +1,161 @@
+# StructuralCatalyst: Higher policy rates and a positive curve restore bank net interest margins
+#
+# Calibration anchor (Rule 3): bootstrap 60 — BELOW struct_cb_gold_accumulation (71). Policy-driven and
+# cyclical rather than secular, and the Q3-2026 prints already carry a contrary signal (deposit
+# competition is compressing margins at Citi and Wells Fargo). intensity_engine recomputes from the
+# indicators after creation; the bootstrap number only marks where this sits in the ordering.
+#
+# Drives eu_retail_banking and us_retail_banking. Created 2026-10-17 from the report comparison that
+# found financials — the sector the Q4-2026 strategist reports favour most — scoring on momentum alone
+# because no registered catalyst could reach it. The Fed hike (2026-09-16) and ECB hike (2026-09-10)
+# are EVENTS inside this driver and are NOT linked here: they are scored on their own path, and linking
+# them as confirms would be a decision about double counting that belongs to the review, not to creation.
+
+id: struct_higher_rates_bank_margins
+type: structural
+schema_version: "1.4"
+title: "Higher policy rates and a positive curve restore bank net interest margins"
+description: >
+  After the 2022-24 cycle, policy rates are rising again in both blocs (ECB deposit rate 2.00% → 2.50%
+  across June and September 2026; Fed funds 3.75-4.00% after the 2026-09-16 hike, with 16 of 18 FOMC
+  participants expecting another before year-end) and the US curve has re-steepened (10y-2y +44bp on
+  2026-10-09, after being inverted until September 2024). For banks the mechanism is asset repricing
+  faster than deposit repricing: floating-rate and short-duration loan books reset upward immediately,
+  while a sticky deposit base follows with a lag. Evidence that it is working: the FDIC industry net
+  interest margin reached 3.32% in Q2 2026 (+6bp YoY); JPMorgan raised 2026 net interest income guidance
+  to $106.2B on 2026-10-13 (Q3 NII $27.1B, +13% YoY); 13 of the 30 largest European banks raised
+  full-year NII guidance after Q2. This is cyclical, not secular, and it has a known failure mode:
+  rising Treasury yields pull deposits toward higher-yielding alternatives, forcing banks to pay up —
+  Citi and Wells Fargo guided Q3 margins DOWN (about 2.46% and 2.41%) even as NII grew. European banks
+  with fixed-rate books are hurt rather than helped. Modeled as a driver for the two retail-banking
+  sectors only; it is a headwind for rate-sensitive sectors (utilities, real estate) but that channel
+  is not scored here.
+
+created_at: "2026-10-17T00:00:00Z"
+created_by: system
+onset_period: "2026-Q2"
+onset_evidence: >
+  ECB raised all three key rates in June 2026 (deposit rate 2.25%) and again on 2026-09-10 (2.50%,
+  effective 2026-09-16); the Fed pivoted hawkish on 2026-06-17 and hiked on 2026-09-16. FDIC industry NIM
+  rose to 3.32% in Q2 2026 from about 3.26% a year earlier (FDIC Quarterly Banking Profile, Aug 2026).
+
+catalyst_type: monetary_policy
+catalyst_subtype: policy_rate_normalization_bank_nim
+geography: [USA, EU]
+thematic_tags: [rates, banks, net_interest_margin, curve_steepening, fed, ecb, financials]
+user_rank:
+user_notes: >
+  Proposed by Claude on 2026-10-17 after comparing the pipeline against the Q4-2026 sell-side and
+  asset-manager outlooks; not yet affirmed by the user. Rule 5: re-check every value by WebSearch each
+  review (the Q3 bank prints are still arriving). The honest weak point is deposit competition — see
+  deact_03 and the Citi/Wells Fargo margin guidance.
+
+intensity:
+  current_score: 69.3
+  computation_method: computed
+  last_updated: "2026-10-17"
+  computation_note: >
+    Bootstrap at creation 2026-10-17. Anchor: below struct_cb_gold_accumulation (71) — cyclical, with a
+    live contrary signal in deposit competition.
+  history:
+  - period: '2026-09-16'
+    score: 69.3
+    note: 'Computed 2026-10-17: avg=69.35 trend=→ (flat — insufficient history) (was 60)'
+    computation_method: computed
+  - period: '2026-10-17'
+    score: 60
+    note: 'Bootstrap at creation 2026-10-17, anchored below struct_cb_gold_accumulation (71).'
+    computation_method: bootstrap
+
+indicators:
+- id: ind_01
+  name: "US 10-year minus 2-year Treasury spread (bp)"
+  source: "FRED T10Y2Y / U.S. Treasury"
+  source_url_template: "https://fred.stlouisfed.org/series/T10Y2Y"
+  check_frequency: weekly
+  current_value: 44.0
+  unit: bp
+  direction: higher_is_stronger
+  threshold_strong: 100
+  threshold_weak: 0
+  last_value: 44
+  last_date: "2026-10-09"
+  update_note: >-
+    10y 5.24 minus 2y 4.80
+  semaphore: 🟡
+  value_history: []
+  score: 63.2
+- id: ind_02
+  name: "FDIC industry net interest margin (%)"
+  source: "FDIC Quarterly Banking Profile"
+  source_url_template: "https://www.fdic.gov/quarterly-banking-profile"
+  check_frequency: quarterly
+  current_value: 3.32
+  unit: percent
+  direction: higher_is_stronger
+  threshold_strong: 3.5
+  threshold_weak: 3.0
+  last_value: 3.32
+  last_date: "2026-06-30"
+  update_note: >-
+    NIM 3.32, +1bp QoQ
+  semaphore: 🟡
+  value_history:
+  - date: "2026-03-31"
+    value: 3.31
+  score: 69.2
+- id: ind_03
+  name: "European top-30 banks that raised full-year net interest income guidance (count)"
+  source: "S&P Global Market Intelligence (post-quarter results)"
+  source_url_template: "https://www.spglobal.com/market-intelligence/en/news-insights/articles/2026/9/european-banks-hike-lending-income-guidance-on-higher-rates-strong-loan-volumes-105171285"
+  check_frequency: quarterly
+  current_value: 13.0
+  unit: count_of_30
+  direction: higher_is_stronger
+  threshold_strong: 15
+  threshold_weak: 3
+  last_value: 13
+  last_date: "2026-08-31"
+  update_note: >-
+    13 of top-30 EU banks raised FY NII guidance
+  semaphore: 🟡
+  value_history: []
+  score: 75.0
+- id: ind_04
+  name: "ECB deposit facility rate (%)"
+  source: "European Central Bank"
+  source_url_template: "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html"
+  check_frequency: monthly
+  current_value: 2.5
+  unit: percent
+  direction: higher_is_stronger
+  threshold_strong: 3.0
+  threshold_weak: 1.5
+  last_value: 2.5
+  last_date: "2026-09-16"
+  update_note: >-
+    deposit facility rate 2.50 effective 09-16
+  semaphore: 🟡
+  value_history:
+  - date: "2026-06-11"
+    value: 2.25
+
+  score: 70.0
+deactivation_conditions:
+- id: deact_01
+  condition: "Both the Fed and the ECB cut at their next scheduled meetings — the tightening cycle has ended."
+  action: downgrade_to_weak
+- id: deact_02
+  condition: "The US 10y-2y spread returns below 0 for two consecutive monthly readings — the inverted-curve regime that compressed
+    margins in 2022-24."
+  action: review_required
+- id: deact_03
+  condition: "FDIC industry NIM falls for two consecutive quarters — deposit competition is outpacing asset repricing (already
+    visible at Citi and Wells Fargo in Q3 2026)."
+  action: review_required
+
+linked_event_catalyst_ids: []
+linked_structural_catalyst_ids: []
+narrative_maturity: "mainstream"
+status: active
+status_last_reviewed: "2026-09-16"

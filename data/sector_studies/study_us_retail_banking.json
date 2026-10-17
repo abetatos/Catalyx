@@ -1,0 +1,60 @@
+{
+  "id": "study_us_retail_banking",
+  "schema_version": "1.4",
+  "sector_id": "us_retail_banking",
+  "sector_label": "US Retail Banking",
+  "created_at": "2026-10-17",
+  "last_updated": "2026-10-17",
+  "study_type": "core",
+
+  "taxonomy": {
+    "parent_sector": "financials",
+    "adjacent_sectors": ["eu_retail_banking", "insurance_eu", "asset_management", "fintech_payments"],
+    "differentiation_note": "US banks earn on a USD curve and a US credit cycle (card delinquency, commercial real estate) that eu_retail_banking does not carry, and the Fed and the ECB are on different paths. The vehicle (iShares S&P U.S. Banks, 39 holdings) is large money-centre and super-regional banks, so it also carries capital-markets and trading income, not only retail margins. It is not the regional-bank exposure (KRE/KBE) the original retirement named."
+  },
+
+  "cycle_position": {
+    "assessment": "Mid-cycle on margins with a deposit-competition headwind.",
+    "rationale": "FDIC industry NIM 3.32% in Q2 2026 (+6bp YoY) and JPMorgan raised 2026 NII guidance to $106.2B on 2026-10-13, but Citi (NIM ~2.46%) and Wells Fargo (~2.41%) guided Q3 margins down as higher Treasury yields forced deposit repricing. The sector ETF is 9.4% below its 52-week high with a 3-month return of -7.7% (2026-10-17).",
+    "last_assessed": "2026-10-17"
+  },
+
+  "key_metrics_to_monitor": [
+    {
+      "metric": "FDIC industry net interest margin",
+      "unit": "percent",
+      "source": "FDIC Quarterly Banking Profile",
+      "current": 3.32,
+      "comment": "Q2 2026; Q3 report due Nov/Dec. Two consecutive declines is deact_03 of struct_higher_rates_bank_margins."
+    },
+    {
+      "metric": "US 10y minus 2y Treasury spread",
+      "unit": "bp",
+      "source": "FRED T10Y2Y",
+      "current": 44,
+      "comment": "2026-10-09: 10y 5.24%, 2y 4.80%."
+    },
+    {
+      "metric": "JPMorgan 2026 net interest income guidance",
+      "unit": "usd_billion",
+      "source": "JPMorgan 3Q26 earnings, 2026-10-13",
+      "current": 106.2,
+      "comment": "Raised from 105.5. Q4 guide 28.0; 2027 NII ex-markets 107."
+    }
+  ],
+
+  "active_catalyst_ids": ["struct_higher_rates_bank_margins", "cat_20260617_fed_hawkish_pivot", "cat_20260916_fed_rate_hike"],
+
+  "risks": [
+    "Deposit competition: rising Treasury yields pull deposits to higher-yielding alternatives, forcing banks to pay up; Citi and Wells Fargo guided Q3 margins down.",
+    "Fed path: another hike in October/December supports asset yields but slows loan demand and lifts credit costs.",
+    "Credit quality: card delinquency and commercial real estate exposure are the sector's named demand-side weak points.",
+    "Vehicle concentration: 39 holdings, money-centre heavy; trading and capital-markets income is part of the return.",
+    "Venue: IUS2.DE is broker_access assumed until confirmed in the broker app."
+  ],
+
+  "narrative_maturity": "mainstream",
+  "analyst_narrative_score": 60,
+  "narrative_trend": "stable",
+  "narrative_notes": "Strategist reports (State Street, Goldman, Morgan Stanley) rate financials positive on loan growth and capital-markets activity, so the sector is widely recommended, but the ETF itself is down 7.7% over three months, so the narrative is not crowded in price."
+}
