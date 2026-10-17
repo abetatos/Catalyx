@@ -39,7 +39,47 @@ commodity, a live rate decision), split that one and only that one — spend the
 decision hangs on it, not on a fixed list.
 
 **Output of C0:** a short bullet summary of the current macro/geopolitical state. Carry any fresh
-theme it surfaces into Pass 1, and any development touching a known catalyst into the Pass 2 refresh.
+theme it surfaces into Pass 1, and any development touching a known catalyst into the Pass 2 refresh. If `work_list.calendar_upcoming`
+(state file) names a central-bank decision in the next days, say so in the bullets — the next scan
+will find it as `calendar_due`.
+
+### Step C0b — Triage (MANDATORY)
+
+C0 reads decided facts; this step forces a decision about each one. **Why it exists:** the Fed
+hiked on 2026-09-16 and C0 read it — it was used as evidence in the gold refresh (`struct_cb_gold_accumulation`
+"weakening") and never registered as an event, so for a month the only live Fed event was a June
+one weighing ~6%. Using a fact as evidence for ANOTHER catalyst does not triage the fact itself.
+Like C2c, this is not optional because the failure is silent.
+
+1. Read `work_list.calendar_due` in `data/reports/state_<date>.json`. Every row is a central-bank
+   decision that has happened and no scan has triaged. Search what it decided (one query; C0 may
+   already cover it).
+2. For **every** `calendar_due` row, and for **every C0 bullet that is a decided or official fact**
+   (central-bank decision — including a hold —, law passed, tariff in force, quota executed, market
+   move already happened), write one row in `data/reports/scan_triage_<date>.json`:
+
+```json
+{"scan_date": "2026-10-28",
+ "items": [
+  {"key": "fed:2026-10-28", "source": "calendar",
+   "fact": "FOMC held at 3.75-4.00%, 10-2 vote", "outcome": "below_threshold",
+   "reason": "strength_score 40 by rubric: no surprise, fully priced"},
+  {"key": "c0:brent-above-100", "source": "c0",
+   "fact": "Brent above $100 on Hormuz traffic <50%", "outcome": "refresh_of",
+   "catalyst_id": "cat_20260817_hormuz_reescalation",
+   "reason": "that event already records this same fact; refreshed in scan_deltas"}]}
+```
+
+- `source`: `calendar` (key = the calendar's, `<bank>:<YYYY-MM-DD>`) or `c0` (key = `c0:<short-slug>`).
+- `outcome` ∈ `registered` · `refresh_of` · `below_threshold` · `not_an_event`.
+  - `registered` / `refresh_of` require an existing `catalyst_id` (event in `data/catalysts/` or
+    structural). A candidate for `registered` goes through C3/C4 like any event — the row records
+    the result.
+  - `refresh_of` ONLY if that catalyst already records **this same fact**. "It is evidence for the
+    gold thesis" is not `refresh_of` — that was the failure.
+  - `below_threshold` requires `reason` with the `strength_score` the rubric gave (< 55).
+  - `not_an_event` requires `reason` (opinion, forecast, commentary — nothing decided).
+  - A "hold" is a decided fact. It may be `below_threshold`; it may not be missing.
 
 ---
 
@@ -386,6 +426,15 @@ every catalyst read `very_stale` in `exit_watcher` even in the runs that had jus
   looked for the short case and it is not there" from "nobody looked", and those two states have
   been indistinguishable for the entire life of the registry. `found: true` requires `evidence`,
   and the finding goes through C3/C4 as a `contradicts` event like any other.
+
+**Also write `data/reports/scan_triage_<date>.json`** (Step C0b format). It is a separate file on
+purpose: this one is a LIST iterated by four consumers. The LAST step of the scan is
+
+```
+uv run python -m catalyx.store.scan_triage check --date <date>
+```
+Exit 1 lists what is missing (an untriaged `calendar_due`, zero C0 rows, a refresh with no
+`catalyst_id`…). Fix and repeat — **the scan is not finished until it exits 0**.
 
 Three consumers read this one file (the review runs them; do not run them from here):
 `indicator_update batch` (values) · `catalyst_review batch` (freshness stamps) ·

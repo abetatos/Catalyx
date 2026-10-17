@@ -104,8 +104,17 @@ list: a review that opens with searches discovers its own book's problems last.
 Delegate to a subagent following `.claude/commands/catalyx-scan.md`. It returns the C0 digest, one
 delta per catalyst **on the work list**, and any new gaps/events, and writes
 `data/reports/scan_deltas_<date>.json`. Budget ≈ 6 C0 + 3 discovery + one per `must_reverify` + 2
-analyst-revision ≈ **15 searches**. Catalysts not on the work list collapse to one "no change" line
+analyst-revision ≈ **15 searches**, **+1 per `calendar_due`**. Catalysts not on the work list collapse to one "no change" line
 and are **not stamped** — freshness must reflect what was actually checked.
+
+The subagent's prompt MUST include verbatim the `work_list.calendar_due` list from the state file
+(central-bank decisions that happened and no scan has triaged) and the reminder that the scan ends
+with `scan_triage check` green (Step C0b). Right after the scan and **before Step 2**, run:
+```bash
+uv run python -m catalyx.store.scan_triage check --date $(date +%F)
+```
+Exit 1 → send its output back to the subagent (SendMessage) to complete the triage. **No delta is
+applied while the triage is red.**
 
 Never read `sector_taxonomy.yaml` during the discovery pass: reading it first biases the search
 toward known sectors, and finding what the taxonomy misses is the entire point of the pass.
