@@ -13,9 +13,63 @@
 
 
 
-## v15.0 (in progress) — que el pipeline capte los catalizadores macro (docs/PLAN_v15_catalyst_capture.md)
+## v15.0 — Que el pipeline capte los catalizadores macro (2026-10-17)
 
-Entrada completa al cerrar la Fase 6. Migración de schema ya vigente:
+**Plan:** `docs/PLAN_v15_catalyst_capture.md`. **Origen:** el Fed subió tipos el 2026-09-16 (y el BCE
+el 09-10) y el pipeline automático no registró nada: los eventos solo existieron porque el usuario los
+señaló. Análisis de causa raíz, cuatro hechos:
+
+- **F1 — el heartbeat llevaba muerto desde el 2026-09-04.** Bajo launchd el PATH no incluye
+  `~/.local/bin`, así que `uv` daba rc 127 en `pre_run.sh --check`; `heartbeat.sh` solo hablaba con
+  rc 10 y trataba todo lo demás como «quiet». Once ejecuciones seguidas imprimieron «nada que
+  revisar».
+- **F2 — una decisión con fecha pública no estaba en ningún sitio.** El evento del BCE ya citaba las
+  fechas de la Fed y del BoJ en sus propias notas; nada las vigilaba.
+- **F3 — el scan LEYÓ la subida y no la registró.** C0 la recogió y se usó como evidencia del
+  refresh del oro (`struct_cb_gold_accumulation` «weakening»); nunca se decidió qué era ella misma.
+  Además la regla de novedad («si solapa con un catalizador existente, salta») la dejaba pasar como
+  «mismo driver» que el evento de junio, que a esas alturas pesaba ~6% (el decay se ancla en
+  `event_date`) mientras cada scan lo sellaba «strengthening».
+- **F4 — registrar no basta: el scorer no lee `affected_sectors`.** Un evento entra en un sector solo
+  por `active_catalyst_ids` del estudio, o vía un estructural listado que el evento nombre en
+  `related_catalyst_ids`. La subida registrada pesaba sobre ningún sector.
+
+**Lo hecho (6 fases, en commits propios):**
+
+0. **Heartbeat reparado.** `scripts/{pre_run,score_run,post_run,heartbeat}.sh` resuelven `uv`
+   (`command -v uv || ~/.local/bin/uv`, exit 3 si falta); el plist lleva `~/.local/bin` en el PATH
+   (`--install` sustituye `__HOME__`); el heartbeat trata cualquier rc distinto de 0/10 como
+   `HEARTBEAT BROKEN`; `--check` escribe su propio log (`pre_run_check_<date>.log`); un check que no
+   puede evaluarse (rebalance, review-age, VIX, caché de precios obsoleta) alerta en vez de callar.
+1. **Calendario de bancos centrales.** `catalyx/config/macro_calendar.yaml` (Fed/BCE/BoJ/BoE,
+   2026-09 → 2027-12, fechas leídas de las webs oficiales; Fed 2027 y BoE 2027 provisionales, BoE
+   2026-09-17 y 12-17 sin confirmar en su página) + `store/macro_calendar.py` (`due`/`upcoming`).
+   Una reunión es *due* si ocurrió y ninguna `scan_triage_*.json` la contiene. Publicada en
+   `run_state.work_list.calendar_due` y como alerta del heartbeat; un calendario ilegible es error,
+   nunca lista vacía. Hoy: ecb:09-10, fed:09-16, boe:09-17 y boj:09-18 *due* (BoE/BoJ de septiembre
+   nunca se revisaron).
+2. **Triaje obligatorio (C0b).** `data/reports/scan_triage_<date>.json` — fichero aparte porque
+   `scan_deltas` es una lista que iteran cuatro consumidores. Una fila por cada `calendar_due` y por
+   cada hecho decidido de C0, con `outcome` ∈ registered/refresh_of/below_threshold/not_an_event.
+   `store/scan_triage.py check --date` (exit 1) valida; el scan no termina hasta que sale 0 y el
+   review no aplica deltas con el triaje en rojo. «Usar un hecho como evidencia de otro catalizador
+   no lo triaja.»
+3. **Regla de novedad: mismo hecho ≠ mismo driver.** Una decisión tomada es un evento nuevo aunque
+   una guía anterior existiera (id y `event_date` propios, el anterior en `related_catalyst_ids`).
+   `catalyst_audit` gana `reinforced_but_decayed` (activo, <25% de su fuerza, última revisión por
+   FECHA «strengthening») y `same_driver_stack` (pares enlazados con sector común, ambos ≥50%).
+   Informativos: no tocan `verdict` ni `--strict`. Hoy: `cat_20260617_fed_hawkish_pivot` 5,9% y
+   `cat_20260624_memory_shortage_confirmed` 6,9%, ambos «strengthening».
+4. **Que un evento llegue al score.** `catalyst_audit` gana `event_not_linked` (réplica exacta de la
+   condición del scorer) y los estudios pueden declinar por escrito. Hoy: **16 pares** sin enlazar,
+   incluida la subida del Fed en 9 sectores.
+5. **Disparadores de mercado.** `^TNX`, `BZ=F`, `^STOXX50E` en la caché (series nativas, nunca EUR);
+   `scorer/review_triggers.py`; `work_list.market_moves`; alerta del heartbeat; fila obligatoria en
+   C0b. Umbrales MEDIDOS sobre 10,8 años con la regla «ninguno >15% de los días»: 10y ≥40pb en 20
+   sesiones (9,9% de días, 2,2 episodios/año; el 25pb del plan daba 24,5%), Brent ≥15% (10,3%),
+   drawdown ≥5% desde el máximo de 20 sesiones en SPY (10,7%) y Euro Stoxx 50 (11,5%).
+
+**Migración de schema:**
 
 - **`schemas/sector_study.json` 1.3 → 1.4.** Añade el campo OPCIONAL `declined_catalyst_ids`
   (`[{catalyst_id, date, reason}]`): eventos registrados que nombran el sector en
@@ -23,6 +77,16 @@ Entrada completa al cerrar la Fase 6. Migración de schema ya vigente:
   1.3 se leen sin cambios (el campo es opcional y el enum de versión conserva 1.2/1.3); no hay
   modelo Pydantic que actualizar, el lector es el schema + `catalyst_audit.event_not_linked`.
   Ningún estudio necesita migración.
+
+**No se tocó:** ni un peso, ni un umbral congelado, ni `catalyst_scorer.py` / `sector_scorer.py`.
+**Fuera de alcance, a propósito:** un estructural de régimen adverso persistente, que el scorer lea
+`affected_sectors` (cambiaría el CA de muchos sectores a la vez; exige medir con y sin), el calendario
+de datos macro (CPI/NFP), una búsqueda adversarial de libro completo (la búsqueda sí encontró la
+subida: el fallo fue de canalización) y la cadencia del review.
+
+**Lo que deja corriendo y necesita el próximo scan, no código:** triar las 4 decisiones de septiembre,
+registrar la subida del Fed/BCE donde corresponda, y resolver los 16 pares `event_not_linked`
+(enlazar o declinar con motivo).
 
 ## v14.3 — El spec oficial de momentum llegaba al 48% del universo, y lo decidía el calendario de la plaza (2026-09-02)
 
