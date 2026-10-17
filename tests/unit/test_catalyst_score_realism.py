@@ -192,14 +192,34 @@ def test_anchor_bracket_requires_at_least_one_anchor():
     assert not ok and why == "no anchors"
 
 
-def test_audit_names_every_live_event_as_a_bare_cardinal():
-    """The finding v11 was built to expose: not one registered event carries a rubric or a
-    bracket. This must keep failing until events are rewritten — it is the lint working."""
+def test_audit_names_a_bare_cardinal_and_a_stretched_halflife(monkeypatch):
+    """The finding v11 was built to expose, pinned on a FIXTURE: an event with no rubric and no
+    bracket is named as a bare cardinal, and a halflife stretched past its type's table is
+    counted as drift toward persistence.
+
+    It used to assert this about the LIVE registry ("not one event carries a rubric"), which is
+    exactly the state the v11 workflow is designed to remove — scan by scan the rubric gets
+    filled, and on 2026-10-17 the test failed for being succeeded. A lint's test should pin the
+    lint, not the data it happens to be linting this month."""
+    from catalyx.config import weights
+    ctype, table = next(iter(weights.catalyst_type_halflives().items()))
+    rubric_ids = [q["id"] for q in weights.strength_score_rubric()]
+    base = {"catalyst_type": ctype, "status": "active", "strength_score": 60,
+            "event_date": "2026-09-01T00:00:00Z"}
+    bare = {**base, "id": "cat_20260901_bare", "decay_halflife_days": float(table) * 4}
+    scored = {**base, "id": "cat_20260901_scored", "decay_halflife_days": float(table),
+              "strength_rubric_scores": {i: True for i in rubric_ids[:3]},
+              "strength_anchors": {"stronger_than": "cat_20260901_bare"}}
+    monkeypatch.setattr(audit, "_load_all_event_catalysts", lambda: [bare, scored])
+
     res = audit.audit(active_only=True)
-    assert res["n_events"] > 0
-    assert res["n_no_rubric"] == res["n_events"]
-    assert res["n_halflife_drift"] >= 1
-    assert res["n_halflife_drift_longer"] >= 1
+    rows = {r["event_id"]: r for r in res["events"]}
+    assert res["n_events"] == 2
+    assert res["n_no_rubric"] == 1
+    assert any("bare cardinal" in i for i in rows["cat_20260901_bare"]["issues"])
+    assert rows["cat_20260901_scored"]["rubric_total"] is not None
+    assert res["n_halflife_drift"] == 1
+    assert res["n_halflife_drift_longer"] == 1
 
 
 # ── P6 — did the tape agree with the event? ─────────────────────────────────

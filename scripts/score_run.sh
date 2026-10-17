@@ -13,11 +13,19 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# launchd's PATH has no ~/.local/bin, so a bare `uv` fails there with rc 127 — which the
+# heartbeat used to print as "quiet". Resolve it once; exit 3 (neither 0 nor 10) if absent.
+UV="$(command -v uv || echo "$HOME/.local/bin/uv")"
+if [ ! -x "$UV" ]; then
+  echo "⚠ uv not found (PATH=$PATH, fallback $HOME/.local/bin/uv) — cannot run" >&2
+  exit 3
+fi
+
 NOTES="${1:-scheduled run}"
 REPORT="${2:-}"
 LOG="data/reports/score_run_$(date +%Y%m%d).log"
 : > "$LOG"
-quiet() { echo "\$ uv run $*" >>"$LOG"; uv run "$@" >>"$LOG" 2>&1; }
+quiet() { echo "\$ uv run $*" >>"$LOG"; "$UV" run "$@" >>"$LOG" 2>&1; }
 
 # v7 candidate-signal snapshots, best-effort BEFORE the run records (each degrades to None).
 # Trends is NOT here — rate-limited source; refresh monthly via `python -m catalyx.data.trends_data`.
@@ -50,22 +58,22 @@ fi
 echo "── OPPORTUNITY & REGIME FACTS — consume these; the escalation / buy / rotate calls are YOURS ──"
 echo ""
 echo "### auto-observable indicators — live vs stored (DRY; apply via the scan)"
-uv run python -m catalyx.data.indicator_sources || true
+"$UV" run python -m catalyx.data.indicator_sources || true
 echo ""
 echo "### regime_state + persistence (catalyst_scorer --all)"
-uv run python -m catalyx.scorer.catalyst_scorer --all --digest
+"$UV" run python -m catalyx.scorer.catalyst_scorer --all --digest
 echo ""
 echo "### fundamentals health (structural_monitor --all)"
-uv run python -m catalyx.thesis.structural_monitor --all
+"$UV" run python -m catalyx.thesis.structural_monitor --all
 echo ""
 echo "### dislocation — opportunities + diversifiers (full universe by design; persists lake table)"
-uv run python -m catalyx.scorer.dislocation --window 5
+"$UV" run python -m catalyx.scorer.dislocation --window 5
 echo ""
 if [ -n "$SCOPE" ]; then
   echo "### entry_timing — micro-tension + event overhangs (scoped to held ∪ top-N)"
-  uv run python -m catalyx.scorer.entry_timing --sectors "$SCOPE"
+  "$UV" run python -m catalyx.scorer.entry_timing --sectors "$SCOPE"
 else
   echo "### entry_timing — micro-tension + event overhangs (no state digest → full universe)"
   echo "    (run \`bash scripts/pre_run.sh\` first to scope this step)"
-  uv run python -m catalyx.scorer.entry_timing --all
+  "$UV" run python -m catalyx.scorer.entry_timing --all
 fi

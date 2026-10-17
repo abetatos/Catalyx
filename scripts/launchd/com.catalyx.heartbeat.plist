@@ -20,7 +20,7 @@
   <key>StandardErrorPath</key><string>__REPO__/data/reports/heartbeat_launchd.err</string>
   <key>EnvironmentVariables</key>
   <dict>
-    <key>PATH</key><string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+    <key>PATH</key><string>__HOME__/.local/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
   </dict>
 </dict>
 </plist>

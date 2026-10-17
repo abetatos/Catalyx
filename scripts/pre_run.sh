@@ -25,6 +25,14 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# launchd's PATH has no ~/.local/bin, so a bare `uv` fails there with rc 127 — which the
+# heartbeat used to print as "quiet". Resolve it once; exit 3 (neither 0 nor 10) if absent.
+UV="$(command -v uv || echo "$HOME/.local/bin/uv")"
+if [ ! -x "$UV" ]; then
+  echo "⚠ uv not found (PATH=$PATH, fallback $HOME/.local/bin/uv) — cannot run" >&2
+  exit 3
+fi
+
 OFFLINE=0
 CHECK=0
 for a in "$@"; do
@@ -32,13 +40,19 @@ for a in "$@"; do
   [ "$a" = "--check" ] && CHECK=1
 done
 
-LOG="data/reports/pre_run_$(date +%Y%m%d).log"
+# --check writes its OWN log: a manual session the same day used to truncate the 08:12 heartbeat's
+# log, erasing the evidence of a failed unattended run (10-06 and 10-09 did exactly that).
+if [ "$CHECK" = "1" ]; then
+  LOG="data/reports/pre_run_check_$(date +%Y%m%d).log"
+else
+  LOG="data/reports/pre_run_$(date +%Y%m%d).log"
+fi
 : > "$LOG"
-quiet() { echo "\$ uv run $*" >>"$LOG"; uv run "$@" >>"$LOG" 2>&1; }
+quiet() { echo "\$ uv run $*" >>"$LOG"; "$UV" run "$@" >>"$LOG" 2>&1; }
 # In --check mode every narrated step goes to the log instead of stdout; only the alert block
 # at the end may speak.
 say()  { [ "$CHECK" = "1" ] && echo "$@" >>"$LOG" || echo "$@"; }
-show() { if [ "$CHECK" = "1" ]; then quiet "$@"; else uv run "$@"; fi; }
+show() { if [ "$CHECK" = "1" ]; then quiet "$@"; else "$UV" run "$@"; fi; }
 
 if [ "$OFFLINE" = "1" ]; then
   say "▶ offline mode — serving the warm price cache, no network"
@@ -82,7 +96,7 @@ if [ "$CHECK" = "1" ]; then
   # The heartbeat verdict. Reads the state file this run just wrote plus a fresh rebalance (the
   # price cache is already warm, so it costs no extra fetch) and decides whether a human is
   # needed. Silence here is a RESULT, not a failure — see the --check note at the top.
-  uv run python - "$LOG" <<'PY'
+  "$UV" run python - "$LOG" <<'PY'
 import json, subprocess, sys
 from datetime import date
 from pathlib import Path
@@ -93,7 +107,7 @@ if not state.exists():
 st = json.loads(state.read_text(encoding="utf-8"))
 att, book = st.get("attention", {}), st.get("book", {})
 
-n_actions, summary = 0, None
+n_actions, summary, check_errors = 0, None, []
 try:
     out = subprocess.run([sys.executable, "-m", "catalyx.execution.rebalance",
                           "--json", "--no-persist"], capture_output=True, text=True, check=True)
@@ -104,9 +118,12 @@ try:
                f"{n_actions} rule actions")
 except Exception as exc:
     summary = f"rebalance unavailable ({exc})"
+    check_errors.append(f"rule-action check could not be evaluated: {exc}")
 
 move = book.get("unrealized_pct")
-alerts = []
+# A check that cannot be computed is an ALERT, never a quiet zero (that is how a dead heartbeat
+# read as "nothing to do" for six weeks).
+alerts = list(check_errors)
 
 # Adaptive review cadence (doctrine 2026-08-04): ~30d floor pulled forward by the triggers
 # below, HARD 45d ceiling regardless. The ceiling is what stops a quiet market from silencing
@@ -119,8 +136,10 @@ try:
     if not runs.empty:
         last = str(runs.sort_values("run_id")["run_at"].iloc[-1])[:10]
         review_age = (date.today() - date.fromisoformat(last)).days
-except Exception:
-    pass
+except Exception as exc:
+    alerts.append(f"review-age check could not be evaluated: {exc}")
+if review_age is None and not any("review-age" in a for a in alerts):
+    alerts.append("review-age check could not be evaluated: no score run in the lake")
 if review_age is not None and review_age >= REVIEW_CEILING_D:
     alerts.append(f"last score run is {review_age}d old — past the hard {REVIEW_CEILING_D}d ceiling")
 
@@ -129,14 +148,29 @@ try:
     from catalyx.config import weights as _w
     from catalyx.data import prices as _p
     vix_start = float((_w.rebalance_rules().get("deployment") or {}).get("vix_ramp_start", 25.0))
-    ser = _p.read(["^VIX"], str(date.today().replace(day=1)), str(date.today()),
+    from datetime import timedelta
+    ser = _p.read(["^VIX", "SPY"], str(date.today() - timedelta(days=10)), str(date.today()),
                   allow_fetch=False)
-    if ser is not None and not ser.empty:
-        vix = float(ser["^VIX"].dropna().iloc[-1])
+    vix_ser = ser["^VIX"].dropna() if ser is not None and "^VIX" in ser else None
+    if vix_ser is None or vix_ser.empty:
+        alerts.append("VIX check could not be evaluated: no ^VIX in the price cache")
+    else:
+        vix = float(vix_ser.iloc[-1])
         if vix >= vix_start:
             alerts.append(f"VIX {vix:.1f} ≥ {vix_start:.0f} (deployment ramp) — hot tape pull-forward")
-except Exception:
-    pass
+    # Every market trigger reads the cache with allow_fetch=False, so a cache that stopped
+    # refreshing makes them all silently read old prices (it sat on 2026-10-09 for a week).
+    # 4 calendar days covers a weekend plus a Monday holiday.
+    spy_ser = ser["SPY"].dropna() if ser is not None and "SPY" in ser else None
+    if spy_ser is None or spy_ser.empty:
+        alerts.append("price cache stale: no SPY close in the last 10 days")
+    else:
+        last_px = spy_ser.index[-1].date()
+        if (date.today() - last_px).days > 4:
+            alerts.append(f"price cache stale: last SPY close {last_px} "
+                          f"({(date.today() - last_px).days}d ago)")
+except Exception as exc:
+    alerts.append(f"VIX/price-cache check could not be evaluated: {exc}")
 if n_actions:
     alerts.append(f"{n_actions} rule action(s) on the book — {summary}")
 flagged = att.get("positions_needing_action") or []

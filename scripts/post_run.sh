@@ -16,9 +16,17 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# launchd's PATH has no ~/.local/bin, so a bare `uv` fails there with rc 127 — which the
+# heartbeat used to print as "quiet". Resolve it once; exit 3 (neither 0 nor 10) if absent.
+UV="$(command -v uv || echo "$HOME/.local/bin/uv")"
+if [ ! -x "$UV" ]; then
+  echo "⚠ uv not found (PATH=$PATH, fallback $HOME/.local/bin/uv) — cannot run" >&2
+  exit 3
+fi
+
 LOG="data/reports/post_run_$(date +%Y%m%d).log"
 : > "$LOG"
-quiet() { echo "\$ uv run $*" >>"$LOG"; uv run "$@" >>"$LOG" 2>&1; }
+quiet() { echo "\$ uv run $*" >>"$LOG"; "$UV" run "$@" >>"$LOG" 2>&1; }
 
 echo "▶ build 4 model portfolios (verbose → $LOG)"
 quiet python -m catalyx.execution.portfolio build-all
@@ -32,13 +40,13 @@ quiet python -m catalyx.execution.portfolio build-all
 # import graphs and four passes over the same warm price cache, to answer four questions about
 # that one cache. 10.4s → 1.9s, identical numbers.
 echo "▶ live NAV vs SPY per strategy (the real walk-forward track record):"
-uv run python -m catalyx.execution.nav_engine live-all
+"$UV" run python -m catalyx.execution.nav_engine live-all
 
 echo "▶ real-book NAV vs SPY:"
-uv run python -m catalyx.execution.nav_engine real real --benchmark SPY
+"$UV" run python -m catalyx.execution.nav_engine real real --benchmark SPY
 
 echo "▶ rotation targets (anchored to held sectors; verbose → $LOG)"
-held=$(uv run python -m catalyx.store.movement_repo positions 2>>"$LOG" \
+held=$("$UV" run python -m catalyx.store.movement_repo positions 2>>"$LOG" \
   | python3 -c "import sys,json;print(','.join(sorted({h['sector_id'] for h in json.load(sys.stdin).get('holdings',[])})))" 2>>"$LOG" || true)
 if [ -n "${held:-}" ]; then
   quiet python -m catalyx.scorer.dislocation --anchor-sectors "$held"
@@ -60,7 +68,7 @@ fi
 echo ""
 echo "── POSITION & BOOK METRICS — measurement only ──"
 echo ""
-uv run python -m catalyx.execution.position_metrics
+"$UV" run python -m catalyx.execution.position_metrics
 
 # EXIT SIGNALS, PERSISTED (2026-09-02). `rebalance` calls the watcher with persist=False — it
 # needs the verdict, not the record — and NOTHING in this chain wrote the `exit_signal` table, so
@@ -75,7 +83,7 @@ quiet python -m catalyx.scorer.exit_watcher
 echo ""
 echo "── REBALANCE — pipeline target vs the real book, in €, after tax ──"
 echo ""
-uv run python -m catalyx.execution.rebalance --strategy catalyx
+"$UV" run python -m catalyx.execution.rebalance --strategy catalyx
 
 # THE state file for this run (v4 plan D-b). Everything above is now assembled into ONE JSON the
 # review reads instead of threading state_<date>.json + scan_deltas + three stdout digests + the
@@ -84,7 +92,7 @@ uv run python -m catalyx.execution.rebalance --strategy catalyx
 echo ""
 echo "── RUN DIGEST — one file, every deterministic fact this run produced ──"
 echo ""
-uv run python -m catalyx.store.run_digest --write
+"$UV" run python -m catalyx.store.run_digest --write
 
 echo ""
 echo "✅ post-run refresh complete. Report each strategy's vs_benchmark_pct from the digest above,"
