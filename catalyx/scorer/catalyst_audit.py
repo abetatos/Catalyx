@@ -39,7 +39,7 @@ import sys
 
 from catalyx.config import weights
 from catalyx.scorer import catalyst_scorer as cs
-from catalyx.scorer.catalyst_scorer import (_anchor_date, _decayed_strength,
+from catalyx.scorer.catalyst_scorer import (_anchor_date, _decayed_strength, _halflife_for,
                                             _load_all_event_catalysts, calibrate_strength)
 
 _RUBRIC = weights.strength_score_rubric()
@@ -124,6 +124,55 @@ def _halflife_sector_impact() -> list[dict]:
     return sorted(out, key=lambda r: r["delta"])
 
 
+# ── v15 Phase 3 — decay warnings (informational: they never touch `verdict` or --strict) ─────────
+
+REINFORCED_DECAYED_BELOW = 0.25   # retained fraction under which "strengthening" is not enough
+STACK_MIN_RETAINED = 0.50         # both events must still carry this much to double-count
+
+
+def _retained(ev: dict) -> float:
+    """Fraction of its strength an event still carries — the scorer's own decay, same halflife
+    and anchor, so the warning cannot disagree with the number the score uses."""
+    hl, _ = _halflife_for(ev)
+    return _decayed_strength(100.0, hl, _anchor_date(ev)) / 100.0
+
+
+def _latest_review(ev: dict) -> dict | None:
+    """Most recent review_log entry BY DATE — the list order is not a contract."""
+    log = [r for r in (ev.get("review_log") or []) if isinstance(r, dict) and r.get("date")]
+    return max(log, key=lambda r: str(r["date"])[:10]) if log else None
+
+
+def decay_warnings(events: list[dict]) -> dict:
+    active = [e for e in events if e.get("status") == "active" and e.get("id")]
+    reinforced = []
+    for e in sorted(active, key=lambda x: x["id"]):
+        last = _latest_review(e)
+        ret = _retained(e)
+        if last and last.get("verdict") == "strengthening" and ret < REINFORCED_DECAYED_BELOW:
+            reinforced.append({
+                "event_id": e["id"], "retained_pct": round(ret * 100, 1),
+                "last_review": str(last["date"])[:10],
+                "note": "candidate for a new dated event (C3 novelty rule), not for a status edit"})
+    stack = []
+    ret = {e["id"]: _retained(e) for e in active}
+    seen: set[tuple[str, str]] = set()
+    for a in sorted(active, key=lambda x: x["id"]):
+        for b_id in a.get("related_catalyst_ids") or []:
+            b = next((e for e in active if e["id"] == b_id), None)
+            if b is None:
+                continue
+            pair = tuple(sorted((a["id"], b_id)))
+            if pair in seen:
+                continue
+            seen.add(pair)
+            shared = sorted(set(a.get("affected_sectors") or []) & set(b.get("affected_sectors") or []))
+            if shared and ret[a["id"]] >= STACK_MIN_RETAINED and ret[b_id] >= STACK_MIN_RETAINED:
+                stack.append({"events": list(pair), "shared_sectors": shared,
+                              "retained_pct": {k: round(ret[k] * 100, 1) for k in pair}})
+    return {"reinforced_but_decayed": reinforced, "same_driver_stack": stack}
+
+
 def audit(active_only: bool = False) -> dict:
     events = _load_all_event_catalysts()
     by_id = {e.get("id"): e for e in events if e.get("id")}
@@ -204,6 +253,7 @@ def audit(active_only: bool = False) -> dict:
                                        if r["halflife_drift"]["direction"] == "longer"),
         "halflife_source": weights.halflife_source(),
         "strength_calibration": weights.event_strength_calibration().get("mode"),
+        **decay_warnings(events),
         "events": rows,
     }
 
@@ -251,6 +301,23 @@ def render(res: dict) -> str:
                 "  position's CA on the authority of a constant six reviews declined to use.",
                 "  Flip `event_catalyst_decay.halflife_source` to `taxonomy` — or edit the",
                 "  table — as a frozen-threshold decision, with this table in front of you."]
+    rd, st = res.get("reinforced_but_decayed") or [], res.get("same_driver_stack") or []
+    if rd:
+        out += ["", f"  REINFORCED BUT DECAYED — {len(rd)} event(s) last reviewed 'strengthening' "
+                    f"while retaining <{REINFORCED_DECAYED_BELOW:.0%} of their strength:", ""]
+        for r in rd:
+            out.append(f"    {r['event_id']:<50} {r['retained_pct']:>5.1f}%  (last review {r['last_review']})")
+        out += ["", "  A strengthening verdict does not revive an event: decay is anchored on",
+                "  `event_date`. A candidate for a new dated event (C3 novelty rule), not a status edit."]
+    if st:
+        out += ["", f"  SAME-DRIVER STACK — {len(st)} linked pair(s) both still above "
+                    f"{STACK_MIN_RETAINED:.0%} of their strength on a shared sector:", ""]
+        for r in st:
+            a, b = r["events"]
+            out.append(f"    {a} ({r['retained_pct'][a]:.0f}%) ↔ {b} ({r['retained_pct'][b]:.0f}%)"
+                       f"  on {', '.join(r['shared_sectors'])}")
+        out += ["", "  Real double counting if they are one driver; the review decides (CLAUDE.md:",
+                "  one catalyst = one driver). Sequential guidance → decision is allowed."]
     return "\n".join(out)
 
 

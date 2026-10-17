@@ -265,7 +265,21 @@ queries for `should_` or `optional_reverify` — nothing this cycle turns on the
 ### Step C3 — Classify and score each significant result
 
 For each significant result found:
-- **Novelty check**: does this substantially overlap with any existing catalyst in `data/catalysts/`? If yes, skip.
+- **Novelty check — a duplicate is the SAME FACT, not the same driver.** Skip only if an existing
+  event already records this specific dated fact (same decision, same date). A *decided* action —
+  a rate decision, an enacted law, an executed quota — of a driver that an earlier event recorded
+  as guidance or expectation is a **new event**: its own id and `event_date`, the earlier event in
+  `related_catalyst_ids`, its own rubric and anchors. Do not edit the earlier event's status or
+  strength: decay and `catalyst_lifecycle` retire it. Why: the 2026-09-16 Fed hike "overlapped" the
+  June hawkish-pivot event, which by then weighed ~6% of its strength (decay is anchored on
+  `event_date`) — a strengthening regime vanished from the score while every scan stamped the old
+  event "strengthening". `catalyst_audit` now prints `REINFORCED BUT DECAYED` for that pattern.
+- **Link to the score**: besides `affected_sectors` (which the scorer does NOT read), decide whether
+  the new event must name a structural in `related_catalyst_ids` — it reaches every sector that
+  lists that structural. **Careful with `contradicts`:** two live `contradicts` put the structural
+  in `breaking`, which can end in a sale. A macro headwind (higher rates) does **not** invalidate a
+  structural's demand thesis; express it with `sector_impact: adverse` on the sector, never as
+  `contradicts` on the structural.
 - **Structural match**: does this accelerate an existing structural catalyst in `catalyx/config/structural_catalysts/`? If yes, set `linked_structural_catalyst_ids` and lower the novelty_score.
 - **Classify**: assign `catalyst_type` and `catalyst_subtype` from `catalyst_taxonomy.yaml`
 - **Score**:

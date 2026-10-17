@@ -153,7 +153,7 @@ que los emisores US no publican. No es el bróker, es regulatorio — no hay wor
 **Un catalizador = un driver económico.** Dos catalizadores que suben y bajan por la misma razón
 cuentan doble en `catalyst_alignment` y burlan el `correlated_catalyst_cap` (que existe justo para
 eso). Un driver puede golpear varios sectores — para eso está `affected_sectors`; lo que no puede
-haber es el mismo driver modelado dos veces. Al fusionar: el superviviente conserva su `id` (lake y
+haber es el mismo driver modelado dos veces. (Una guía y su realización —el Fed que avisa en junio y sube en septiembre— son eventos SECUENCIALES, no el mismo driver dos veces; el doble conteo real lo vigila `catalyst_audit` como `same_driver_stack`.) Al fusionar: el superviviente conserva su `id` (lake y
 sector studies lo referencian), el absorbido queda `status: merged` + `merged_into` +
 `merge_rationale`, y **los indicadores NO se copian** — su historia vive en el lake indexada por el
 `catalyst_id` original y moverla falsearía el percentil de `intensity_engine`. `compute_all()` salta
