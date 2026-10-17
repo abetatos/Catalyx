@@ -220,3 +220,17 @@ def test_the_offline_switch_cannot_leak_in_from_the_developers_shell():
 
     assert os.environ.get("CATALYX_PRICES_OFFLINE") is None
     assert prices._offline() is False
+
+
+def test_a_future_end_is_not_recorded_as_covered_and_a_poisoned_row_self_repairs(tmp_path, fake_fetch):
+    """Both FX pairs were requested with end=2026-12-25 once, recorded as covered through then,
+    and never refreshed again: the series stopped 46 days before the run that used it."""
+    from datetime import date, timedelta
+    future = (date.today() + timedelta(days=60)).isoformat()
+    start = (date.today() - timedelta(days=30)).isoformat()
+    prices.refresh(["AAA"], start, future, fetch_fn=fake_fetch, lake_dir=tmp_path)
+    row = {r["ticker"]: r for r in prices.coverage(tmp_path)}["AAA"]
+    assert row["fetched_through"] <= date.today().isoformat()
+    # a row written by the old code (future coverage) is treated as covered only up to today
+    assert prices._clamp_through(future) is None            # unknown → missing_tail refetches
+    assert prices._clamp_through(None) is None

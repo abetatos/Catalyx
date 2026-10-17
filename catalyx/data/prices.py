@@ -190,6 +190,17 @@ def yfinance_currencies(tickers: list[str]) -> dict[str, str]:
 
 # ── Public API ───────────────────────────────────────────────────────────────
 
+def _clamp_through(fetched_through: str | None) -> str | None:
+    """Coverage date to trust. One past today is an artefact (a future `end` was once recorded
+    as fetched) and says nothing about what was really downloaded, so it reads as UNKNOWN (None):
+    `missing_tail` then refetches, and the rewritten row is honest. Repairs rows already written
+    without a migration."""
+    if not fetched_through:
+        return None
+    t = str(fetched_through)[:10]
+    return t if t <= date.today().isoformat() else None
+
+
 def refresh(tickers: list[str], start: str | None = None, end: str | None = None,
             fetch_fn=None, ccy_fn=None, lake_dir: Path | None = None,
             force: bool = False) -> dict:
@@ -206,7 +217,7 @@ def refresh(tickers: list[str], start: str | None = None, end: str | None = None
     stale = []
     for t in tickers:
         row = _meta_row(meta, t)
-        if force or row is None or missing_tail(row.get("fetched_through"), end) \
+        if force or row is None or missing_tail(_clamp_through(row.get("fetched_through")), end) \
                 or missing_head(row.get("fetched_from"), start):
             stale.append(t)
 
@@ -252,7 +263,13 @@ def refresh(tickers: list[str], start: str | None = None, end: str | None = None
         prior = _meta_row(meta, t) or {}
         ccy = known_ccy.get(t) or fresh_ccy.get(t) or "EUR"
         fetched_from = min([x for x in (prior.get("fetched_from"), start) if x] or [start])
-        fetched_through = max([x for x in (prior.get("fetched_through"), end) if x] or [end])
+        # Coverage can never reach past TODAY: a request with a future `end` (2026-12-25 on both FX
+        # pairs) used to be recorded as covered through that date, so `missing_tail` never fired
+        # again and the series sat on 2026-09-01 for 46 days while every USD/GBP vehicle was
+        # converted with it.
+        covered_end = min(end, date.today().isoformat())
+        fetched_through = max([x for x in (_clamp_through(prior.get("fetched_through")), covered_end)
+                               if x] or [covered_end])
         meta_rows.append({"ticker": t, "currency": ccy, "fetched_from": fetched_from,
                           "fetched_through": fetched_through, "fetched_at": fetched_at,
                           "n_rows": int(len(merged))})
