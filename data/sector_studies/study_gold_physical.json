@@ -131,10 +131,7 @@
     }
   ],
 
-  "active_catalyst_ids": [
-    "struct_cb_gold_accumulation",
-    "cat_20260617_fed_hawkish_pivot"
-  ],
+  "active_catalyst_ids": ["struct_cb_gold_accumulation", "cat_20260617_fed_hawkish_pivot", "cat_20260916_fed_rate_hike", "cat_20260910_ecb_rate_hike"],
 
   "historical_catalyst_performance": {
     "summary": "Physical gold ETCs track gold spot with minimal deviation. Historically: (1) Fed easing cycles — gold +32% in 2019-2020 (Fed cut 2.5%→0%); (2) Geopolitical shocks — gold +25% in 2022 post-Ukraine; (3) Banking crises — gold +15% March 2023 (SVB); (4) Stagflation — 1973-1980 gold $65→$850 (+1,200%), gold's strongest historical environment. Current correction analog: 2021 correction ($2,070→$1,680, -19%) driven by TIPS spiking 0%→+0.8%. Present is deeper (-28%) at higher absolute TIPS levels. Structural CB buying at ~900t/year is new vs 2021 (~400t/year) — absorbing more of the selling. Resolution scenario: TIPS peaks when stagflation confirms growth deceleration → Fed cannot hike into recession → real yields reverse → gold resumes. June 17 hawkish pivot (cat_20260617) is consistent with a rates PEAK near-term rather than indefinite escalation.",

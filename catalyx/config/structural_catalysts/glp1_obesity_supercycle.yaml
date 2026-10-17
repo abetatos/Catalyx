@@ -250,8 +250,18 @@ linked_structural_catalyst_ids: []
 
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-10-06"
+status_last_reviewed: "2026-10-17"
 review_log:
+- date: '2026-10-17'
+  verdict: intact
+  evidence: 'Demand: IQVIA weekly scripts for week of 2026-04-13 show Wegovy total prescriptions 416,338 (oral Wegovy 124,608,
+    15th week of launch) and Zepbound 615,251; Zepbound new prescriptions passed Wegovy for the first time in the week ending
+    2026-03-08; Wegovy pill >3M prescriptions since the 2026-01-05 launch (June 2026). Coverage: CMS Medicare GLP-1 Bridge
+    ($50 copay for Wegovy/Zepbound) began 2026-07-01, running to 2027-12-31, with the BALANCE model next. No indicator recorded:
+    the stored ind_01 (9.0M scripts/week, all GLP-1) cannot be matched to the two-brand weekly counts, ind_02 market size
+    consensus varies by source and horizon (Goldman USD 130B by 2030, JPM USD 200B incretin by 2030), and no Medicare covered-lives
+    count was published.'
+  source: IQVIA weekly prescriptions via UBS notes (2026-04-27); KFF / CMS Medicare GLP-1 Bridge memo (March 2026)
 - date: '2026-10-06'
   verdict: intact
   evidence: "Volume drivers keep widening: Novo's oral Wegovy has passed 3M cumulative prescriptions and runs ~142,000 prescriptions

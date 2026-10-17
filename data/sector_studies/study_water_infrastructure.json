@@ -5,7 +5,7 @@
   "sector_id": "water_infrastructure",
   "sector_label": "Water — Infrastructure & Utilities",
   "created_at": "2026-06-05",
-  "last_updated": "2026-10-06",
+  "last_updated": "2026-10-17",
   "study_type": "core",
   "taxonomy": {
     "parent_sector": "real_assets",
@@ -37,8 +37,8 @@
   "technology_maturity": null,
   "cycle_position": {
     "assessment": "Early-stage secular re-rating; mid-cycle capex ramp",
-    "rationale": "Water infrastructure has been structurally underinvested for three decades — the average US water pipe is 45 years old and the renewal gap is now $2.1T. The sector is entering a multi-decade upgrade cycle that is policy-catalyzed (IIJA), AI-demand-accelerated (data center water stress), and climate-forced (desalination buildout in stressed regions). Unlike the grid sector which is mid-cycle in its AI buildout response, water is still early: PHO gained only ~5% YTD in H1 2026 vs double-digit returns for defense and AI-infra ETFs, suggesting the narrative is emerging but not yet crowded. Xylem Q1 2026 earnings beat confirms execution; Pentair guiding cautiously on residential recovery but expanding commercial. The main risk is IIJA expiry creating a fiscal cliff in H2 2026 — but private-side data center water capex is policy-independent and growing. Cycle position: early-to-mid re-rating, 3-7 year tailwind. Refresh 2026-10-06: read unchanged (early-to-mid re-rating), but the near-term evidence tilted negative: the federal authorization lapsed unreplaced, Xylem cut its sales guide, and rates rose. The AI-capex link (struct_ai_capex_supercycle, intact: Q2 hyperscaler capex $166B, +87% YoY) remains the only registered catalyst; its data-center water channel is unchanged.",
-    "last_assessed": "2026-10-06"
+    "rationale": "Water infrastructure has been structurally underinvested for three decades — the average US water pipe is 45 years old and the renewal gap is now $2.1T. The sector is entering a multi-decade upgrade cycle that is policy-catalyzed (IIJA), AI-demand-accelerated (data center water stress), and climate-forced (desalination buildout in stressed regions). Unlike the grid sector which is mid-cycle in its AI buildout response, water is still early: PHO gained only ~5% YTD in H1 2026 vs double-digit returns for defense and AI-infra ETFs, suggesting the narrative is emerging but not yet crowded. Xylem Q1 2026 earnings beat confirms execution; Pentair guiding cautiously on residential recovery but expanding commercial. The main risk is IIJA expiry creating a fiscal cliff in H2 2026 — but private-side data center water capex is policy-independent and growing. Cycle position: early-to-mid re-rating, 3-7 year tailwind. Refresh 2026-10-06: read unchanged (early-to-mid re-rating), but the near-term evidence tilted negative: the federal authorization lapsed unreplaced, Xylem cut its sales guide, and rates rose. The AI-capex link (struct_ai_capex_supercycle, intact: Q2 hyperscaler capex $166B, +87% YoY) remains the only registered catalyst; its data-center water channel is unchanged. Refresh 2026-10-17: read unchanged (early-to-mid re-rating). New evidence is mixed: Xylem Q2 orders +42% to $3.1B and a record $850M outsourced-water contract, with data-centre orders >+300% from a small base, against a trimmed revenue guide on electric metering and China; the SRF authorization is still lapsed with WRDA 2026 past committee only. The AI-capex link is real in the data-centre channel but small (Bluefield: ~$2.0B/yr US data-centre water spend by 2030) and the vehicle shows no measurable AI-factor loading (beta to ^SOX ~0.02 over 41 weeks of 2026).",
+    "last_assessed": "2026-10-17"
   },
   "etf_analysis": [
     {
@@ -77,28 +77,28 @@
       "metric": "US IIJA water SRF reauthorization status",
       "unit": "legislative status",
       "source": "Congress.gov / National League of Cities",
-      "current": "Authorization lapsed 2026-09-30 without full passage. WRDA 2026 (4-year SRF reauthorization: $14B CWSRF over 4 years, $16.5B DWSRF over 5 years, WIFIA reauthorized) has been advanced by the Senate EPW committee but not enacted as of the latest sources found; Bluefield notes the funding 'cliff' hits states on four distinct timelines, so existing obligated IIJA money keeps flowing for some time.",
+      "current": "As of 2026-10-17 no floor passage or enactment found. Authorization lapsed 2026-09-30. WRDA 2026 cleared BOTH committees in July (House T&I H.R. 9497 on 2026-07-14, Senate EPW S. 4949 on 2026-07-15, both unanimous; Senate text: DWSRF $3.75B in FY27 rising $250M/yr to $4.5B by 2030, CWSRF $3.5B/yr through 2030, WIFIA $65M/yr; 4-year reauthorization). Newest dated item found is mid-July; nothing newer surfaced. Obligated IIJA money keeps flowing on state-specific timelines (Bluefield).",
       "comment": "Binary catalyst. Reauthorization = $8B/year flow continues. Expiry = fiscal cliff for 50,000 small utilities. Monitor vote scheduling monthly."
     },
     {
       "metric": "Xylem (XYL) revenue growth and order backlog",
       "unit": "% organic growth YoY",
       "source": "XYL quarterly earnings (EDGAR)",
-      "current": "Q2 2026: FY26 revenue guide cut to ~$9.2B, adjusted EPS guide raised to $5.55-5.70 (from $5.35-5.60); consensus FY26 EPS ~$5.67 (+11.6% YoY). Street has been cutting price targets (12 Strong Buy / 9 Hold across 22 analysts, down from 13 Strong Buy a month earlier).",
+      "current": "Q2 2026 (reported 2026-07-28): revenue +1.5-2% to ~$2.3B, orders +42% to $3.1B, backlog $5.3B including an $850M 23-year outsourced-water contract (largest in company history); Applied Water orders tied to data centres >+300% in the quarter, management expects data-centre revenue ~+200% in 2026 (no dollar share disclosed). FY26 revenue guide trimmed ~0.5% to ~$9.2B while adjusted EPS guide raised to $5.55-5.70. CORRECTION to the 10-06 reading: the guide trim is attributed to delayed electric-metering investment (utility affordability) and China weakness in Measurement & Control, with US municipal water described as resilient - not to SRF funding. XYL -13.7% YTD (Barchart, undated mid-October). Q3 print not yet out as of 2026-10-17.",
       "comment": "Best single-name indicator for sector demand. Xylem has highest AI/smart-metering revenue exposure of any major water company. Order book leads revenue by 6-12 months."
     },
     {
       "metric": "US data center water withdrawal intensity",
       "unit": "billion gallons/year",
       "source": "Bluefield Research / S&P Global Sustainable1",
-      "current": "150.4B gallons projected 2025-2030 cumulative; $4.1B capex commitment through 2030",
+      "current": "Bluefield (2026): US data-centre water spend (capex+opex) scaling from ~$1.2B/yr today toward ~$2.0B/yr by 2030, $4.1B cumulative capex through 2030; Europe EUR6.8B cumulative 2026-2036, ~62% capex (Water Magazine / WaterOnline, 2026-07-28). For scale: Xylem alone guides ~$9.2B revenue in FY26. 150.4B gallons withdrawal projection (2025-2030) unchanged and not re-checked.",
       "comment": "Emerging demand vector. Accelerates as AI inference buildout scales. Track quarterly Bluefield updates."
     },
     {
       "metric": "PHO ETF price return vs S&P 500 (relative performance)",
       "unit": "% relative YTD",
       "source": "Yahoo Finance / ETFdb.com",
-      "current": "Not re-measured this refresh (last stored ~+5% YTD Jan 2026); the Street de-rating of Xylem argues against a narrative going mainstream.",
+      "current": "Refreshed 2026-10-17: PHO +1.1% YTD / -1.7% over 1y (undated mid-October snippet). Held vehicle IQQQ.DE (iShares Global Water, S&P Global Water Index, 68 holdings; AWK ~7.7%, XYL ~7.4%, SABESP ~7.3%) +6.2% YTD to 2026-10-15 (yfinance) vs ^SOX +51.2% and XLU -0.2%. DRIVER-LINK TEST (yfinance, 41 weekly obs 2026-01-02..2026-10-15, native currencies): IQQQ.DE weekly beta to ^SOX 0.02 (R2 0.00, rho 0.05) vs rho 0.53 with XLU; since 2026-10-06 ^SOX -12.4% while IQQQ.DE +0.2%.",
       "comment": "Track as narrative crowding signal. When water starts outperforming broadly, narrative is going mainstream."
     },
     {
@@ -116,9 +116,7 @@
       "comment": "Rising deal activity signals private capital entering structural buildout. Track as forward demand indicator for Xylem and Pentair equipment."
     }
   ],
-  "active_catalyst_ids": [
-    "struct_ai_capex_supercycle"
-  ],
+  "active_catalyst_ids": ["struct_ai_capex_supercycle", "cat_20260916_fed_rate_hike"],
   "historical_catalyst_performance": {
     "summary": "Water infrastructure ETFs have historically re-rated sharply on drought/scarcity events with a 2-6 month lag as market first interprets drought as a macro event before recognizing infrastructure investment implications. PHO 2015-2022 returns show the sector is strongly pro-cyclical in growth environments (+23.6% in 2017, +37.6% in 2019, +31.3% in 2021) and meaningfully negative in broad risk-off years (-15.3% in 2015, -14.9% in 2022). This means the sector behaves more like industrial equities than defensive utilities in market stress — an important portfolio construction note. The EU regulatory catalyst (mandatory data center water reporting, rolling out 2026) has no historical precedent to map returns onto, but the analog from GDPR/digital regulation compliance waves suggests 12-24 month pull-forward in equipment demand. The IRA/IIJA infrastructure spending wave (2022-2025) drove PHO YTD +5% in early 2026 — outperforming broad water history but lagging AI-infra, indicating the narrative has not yet attracted flows commensurate with fundamental rerating.",
     "pho_2015_return_pct": -15.25,
@@ -137,15 +135,16 @@
     }
   },
   "risks": [
-    "IIJA expiry / fiscal cliff: SRF authorization lapsed 2026-09-30 and WRDA 2026 has cleared only the Senate EPW committee. The White House FY2026 budget proposed a 31.5% cut to EPA SRFs. Already visible in the Street: Xylem cut its FY26 revenue guide and analysts trimmed targets on funding conditions. Municipal is ~45% of Xylem revenue; private data center water capex only partly offsets.",
+    "IIJA expiry / fiscal cliff: SRF authorization lapsed 2026-09-30 and WRDA 2026 has cleared only the Senate EPW committee. The White House FY2026 budget proposed a 31.5% cut to EPA SRFs. Already visible in the Street: Xylem cut its FY26 revenue guide and analysts trimmed targets on funding conditions. Municipal is ~45% of Xylem revenue; private data center water capex only partly offsets. UPDATE 2026-10-17: the Xylem guide trim was NOT a funding signal - the Q2 call attributes it to electric-metering affordability delays and China, with US municipal water resilient; the funding cliff is therefore still a risk on paper, not yet visible in company data. WRDA 2026 has cleared both House T&I and Senate EPW committees (July) but no floor action was found.",
     "Interest rate sensitivity of water utilities: regulated utilities (American Water Works, Essential Utilities, Veolia) are long-duration assets. Their regulated WACC-based returns compress when rates rise, and their stock prices behave like bonds in rate-shock environments. Water equipment companies (Xylem, Pentair) are less rate-sensitive but still correlated. If ECB or Fed resumes hiking, utilities re-rate down sharply. Update 2026-10-06: the Fed hiked on 2026-09-16, which turns this from a latent into an active headwind for the utility half of the vehicle.",
     "Xylem/Evoqua integration execution risk: Xylem's 2023 acquisition of Evoqua ($7.5B) nearly doubled its size. Full-year 2026 is the critical integration year. Management tightened guidance in Q1 2026, suggesting execution is on track — but cost synergy miss or revenue dis-synergy would be a negative re-rating catalyst for the largest water infrastructure holding in PHO and WTRD.",
     "Narrative crowding if AI/water nexus becomes consensus: the data center water demand thesis is currently emerging-to-mainstream. If Goldman Sachs, JPM, and Morgan Stanley simultaneously publish major water-as-AI-infrastructure reports (watch for these in H2 2026), the narrative crowding will compress forward returns. Monitor ETF inflow data (WTRD.L weekly AUM changes) as early warning.",
     "Regulatory price cap compression: in the UK and EU, water utility regulators (Ofwat, national equivalents) periodically set allowed returns that can undershoot actual capital costs. Ofwat's PR24 determination (effective 2025-2030) set allowed equity returns below the cost of equity for some operators, compressing re-investment incentives. Similar political risk in France (Veolia) and Spain.",
-    "Desalination energy cost exposure: desalination is energy-intensive (3-10 kWh/m3 vs 0.2-0.4 for conventional treatment). A sustained electricity price spike in the Middle East or California would compress desalination operator margins and slow buildout. Links water infrastructure risk to energy commodity markets."
+    "Desalination energy cost exposure: desalination is energy-intensive (3-10 kWh/m3 vs 0.2-0.4 for conventional treatment). A sustained electricity price spike in the Middle East or California would compress desalination operator margins and slow buildout. Links water infrastructure risk to energy commodity markets.",
+    "DRIVER-LINK RISK (2026-10-17): struct_ai_capex_supercycle is the only registered catalyst and the held line carries it at attribution weight 1.0, but sector-specific evidence supports the link only at company level. Bluefield sizes US data-centre water spend at ~$1.2B/yr rising to ~$2.0B/yr by 2030 against Xylem alone at ~$9.2B of revenue, and the vehicle is dominated by regulated utilities and equipment names (AWK, XYL, SABESP) whose weekly beta to ^SOX over 2026 is ~0.02 (R2 0.00) with rho 0.53 to XLU. The line trades as a defensive/duration instrument, not an AI-capex proxy; a hyperscaler-capex shock would barely touch it, and an AI-capex boom would barely lift it. Xylem's data-centre orders (>+300% in Q2) prove the channel exists; they do not show it moves the vehicle. Keeping the link in active_catalyst_ids is therefore a statement about the sector's exposure, not a claim that the position is an AI-capex bet."
   ],
   "narrative_maturity": "emerging",
   "narrative_trend": "stable",
-  "narrative_notes": "Stays 'emerging' (score 35), trend softened increasing -> stable. Coverage is still specialist (AWWA, Bluefield, DPIMC/listed-infrastructure outlooks) and the Street is moving the opposite way from crowding: Xylem now has 12 Strong Buy / 1 Moderate Buy / 9 Hold across 22 analysts versus 13 Strong Buy a month earlier, with several price-target cuts and at least one downgrade after Q2 (FY26 revenue guide cut to ~$9.2B while adjusted EPS guide was raised to $5.55-5.70). The 2026-09-16 Fed hike is a headwind for the long-duration utility half of the sector. No bulge-bracket thematic wave and no ETF AUM breakout was found, so neither upgrade trigger (3+ bank reports in a quarter, WTRD AUM > $2B) fired. Score unchanged from the 2026-06-05 read; the flat-to-down sentiment is consistent with an unpriced, not an exhausted, narrative.",
+  "narrative_notes": "Stays 'emerging' (score 35), trend stable - core refresh 2026-10-17, checked and unchanged on level. The Street is not crowding in: Xylem is -13.7% YTD against the S&P 500 +13.1% (Barchart, undated mid-October page), PHO is +1.1% YTD, and the held vehicle IQQQ.DE is +6.2% YTD to 2026-10-15 (yfinance) against ^SOX +51%. Coverage is still specialist (AWWA, Bluefield); no bulge-bracket thematic wave and no ETF AUM breakout was found, so neither upgrade trigger (3+ bank reports in a quarter, WTRD AUM > $2B) fired. Dated 2026 facts that do not move the level: American Water and Essential Utilities are merging all-stock (~$40B, three state approvals, close expected by end Q1 2027; AWK Q2 call 2026-07-30), which is consolidation of the regulated half, not narrative heat. DRIVER-LINK FINDING 2026-10-17: the AI-capex water channel is real at company level (Xylem data-centre orders >+300% in Q2, 2026-07-28) but immaterial for the vehicle - see risks[] and cycle_position. Score unchanged from the 2026-06-05 read.",
   "analyst_narrative_score": 35
 }

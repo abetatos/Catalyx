@@ -260,8 +260,30 @@ linked_event_catalyst_ids:
 - cat_20260603_nato_defense_gdp
 - cat_20260603_nato_hague_5pct_gdp
 status: active
-status_last_reviewed: "2026-10-06"
+status_last_reviewed: "2026-10-17"
 review_log:
+- date: '2026-10-17'
+  verdict: strengthening
+  evidence: 'NATO 2026 defence-expenditure estimates (reported 2026-07-07, Anadolu/Reuters): alliance combined defence spending
+    >USD 1.8T in 2026 (+~11% vs ~1.63T in 2025); NATO-wide average core defence spending 2.86% of GDP, European allies + Canada
+    2.53% core (3.93% incl. related); five allies (Lithuania, Estonia, Latvia, Poland, Greece) above 3.5% core. Industry confirmation:
+    Rheinmetall Q2 2026 (2026-08-06) backlog ~EUR 80-80.5B (vs EUR 63B at 2025-06-30, press summaries quote +44%, unreconciled),
+    Leonardo H1 2026 (2026-07-30) backlog ~EUR 59B (+30% vs EUR 45B at 2025-06-30, includes ~EUR 6B from consolidated Iveco
+    Defence Vehicles) with EUR 16.3B new orders (+44.6%), Airbus Defence and Space H1 2026 order intake EUR 9.3B vs EUR 5.1B.
+    ind_02 (combined order-book growth) NOT recorded: Airbus D&S backlog not found and the Rheinmetall growth rate is inconsistent
+    across sources, so the three-company combined figure cannot be computed. ind_03 (EU defence ETF monthly AUM change) not
+    recorded: only a level snapshot is observable (EUDF.L totalAssets USD 4.37B on 2026-10-17), not a monthly change. [ind_01
+    NOT recorded in the review: 2.86 is an alliance-wide aggregate, the stored 2.34 is the average per member — different
+    statistic]'
+  source: NATO 2026 defence expenditure estimates via Anadolu (2026-07-07) and Reuters/Internazionale (2026-07-07); 
+    Rheinmetall Q2 2026; Leonardo H1 2026 press release 2026-07-30; Airbus H1 2026 press release
+- date: '2026-10-17'
+  verdict: intact
+  evidence: NATO reports European allies and Canada raising defence spending ~11% to USD 634B in 2026 (2.53% of GDP 
+    core, 3.93% with related spend); USD 50B+ in procurements secured at the Ankara summit defence-industry forum and a 
+    USD 40B five-year drone initiative; ICDS 2026-09-14 tracks national plans to the 3.5% + 1.5% by 2035 target. No 
+    numeric indicator recorded.
+  source: Brussels Times and Qatar Tribune NATO reports; ICDS 2026-09-14; HANetf Future of Defence July 2026
 - date: '2026-10-06'
   verdict: intact
   evidence: 'Rheinmetall H1 2026 (2026-08-06): Q2 sales EUR 3.289B +69% YoY, operating result +115%, backlog above EUR 80B

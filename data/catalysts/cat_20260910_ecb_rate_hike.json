@@ -15,7 +15,10 @@
   "catalyst_type": "monetary_policy",
   "catalyst_subtype": "rate_hike",
   "description": "At its 2026-09-10 meeting the ECB raised its three key rates by 25bp, taking the deposit rate from 2.25% to 2.5% -- its SECOND hike since the US-Iran war began (the first was 2026-06-11). The move followed euro-area August inflation at 3.3% YoY (energy inflation 14.3%) and was WIDELY EXPECTED going in, so it confirms rather than surprises. Growth forecasts were upgraded (2026: 0.9%, 2027: 1.4%) while the inflation path was pushed higher for 2027/2028 (2.5% / 2.1%). This corroborates cat_20260617_fed_hawkish_pivot and the same Iran/Hormuz energy-shock driver (cat_20260817_hormuz_reescalation): three major central banks (Fed, ECB, and a BoJ decision due 2026-09-17/18) are now hiking in the same window, a synchronized-tightening regime the market had not priced as of mid-2026.",
-  "geography": ["EU", "GLOBAL"],
+  "geography": [
+    "EU",
+    "GLOBAL"
+  ],
   "magnitude": "medium",
   "novelty_score": 60,
   "novelty_rubric_scores": {
@@ -46,7 +49,11 @@
     "cat_20260617_fed_hawkish_pivot",
     "cat_20260817_hormuz_reescalation"
   ],
-  "affected_sectors": ["eu_retail_banking", "grid_infrastructure_utilities", "gold_physical"],
+  "affected_sectors": [
+    "eu_retail_banking",
+    "grid_infrastructure_utilities",
+    "gold_physical"
+  ],
   "sector_impact": {
     "eu_retail_banking": "supportive",
     "grid_infrastructure_utilities": "adverse",
@@ -57,7 +64,22 @@
   "expires_at": null,
   "user_rank": null,
   "user_notes": "Registrado en el scan del 2026-09-14 disparado por la pregunta del usuario sobre el cambio de tipos de interes. No es un evento aislado: Fed (decision 15-16/09, mercado pricing 85-90% de subida tras el CPI del 11/09), ECB (ya subida, 10/09) y BoJ (decision 17-18/09, 62% de subida priced) se mueven en la MISMA ventana por el MISMO driver -- el shock energetico Iran/Hormuz. sector_impact adverse en grid_infrastructure_utilities es DIRECTO sobre una posicion abierta (IQQH.DE): mayor coste de capital para el buildout de red, corroborado por la rebaja de outlook de Fitch a utilities el mismo mes (ver refresh de struct_energy_transition_grid). gold_physical adverse es el canal de tipo real, distinto del canal de acumulacion de bancos centrales (struct_cb_gold_accumulation), que sigue neto comprador.",
-  "tags": ["ecb", "rate_hike", "monetary_policy", "eurozone", "inflation", "macro", "rate_sensitive"],
-  "status_last_reviewed": "2026-09-14",
-  "review_log": []
+  "tags": [
+    "ecb",
+    "rate_hike",
+    "monetary_policy",
+    "eurozone",
+    "inflation",
+    "macro",
+    "rate_sensitive"
+  ],
+  "status_last_reviewed": "2026-10-17",
+  "review_log": [
+    {
+      "date": "2026-10-17",
+      "verdict": "intact",
+      "evidence": "Deposit rate 2.50% after the 2026-09-10 hike; Lagarde says the energy-driven inflation shock lasts longer than expected, Schnabel says further hikes will likely be needed; markets and most economists expect a hold on 2026-10-29 and a hike in December. September euro-area PMI price pressures sharpest in four months.",
+      "source": "investingLive ECB coverage (Lagarde/Ouest-France, Schnabel, PMI) search 2026-10-17"
+    }
+  ]
 }

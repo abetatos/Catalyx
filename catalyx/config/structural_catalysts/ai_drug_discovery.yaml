@@ -205,7 +205,7 @@ linked_structural_catalyst_ids:
 
 narrative_maturity: "emerging"
 status: active
-status_last_reviewed: "2026-10-06"
+status_last_reviewed: "2026-10-17"
 absorbed_catalyst_ids:
 - struct_crispr_gene_editing_validation
 - struct_biosecure_biomanufacturing_reshoring
@@ -223,6 +223,25 @@ absorbed_note: |
     - struct_crispr_gene_editing_validation (intensity 77.8): In-vivo gene-editing programs in Phase 3 / BLA (count), Whole-genome sequencing cost floor ($/genome, research), FDA gene/cell-therapy approvals YTD (count)
     - struct_biosecure_biomanufacturing_reshoring (intensity 83.0): Twist Bioscience quarterly revenue ($M), DNA synthesis cost ($/base pair), US federal / DoD biomanufacturing contract commitments ($B cumulative)
 review_log:
+- date: '2026-10-17'
+  verdict: strengthening
+  evidence: 'Capital: BioPharma Dive / PharmaVoice H1 2026 venture review (USD 9.1B across 68 biotechs, highest first half
+    since 2022) and BioCentury note AI biotechs were 3x as likely to raise >USD 200M rounds; Isomorphic Labs USD 2.1B Series
+    B, Chai Discovery USD 400M (USD 3.8B valuation), Earendil Labs USD 787M (March 2026), Aureka USD 100M Series B (August
+    2026). Clinic: ASCO 2026 analysis counts 117 AI-enabled assets in interventional trials (60 completed Phase 1, 8 completed
+    Phase 2); Insilico registered its 320-patient Phase 3 for rentosertib on 2026-07-07. No indicator recorded: stored ind_01
+    (6 USD B TTM), ind_02 (22 molecules) and ind_03 (20 partnerships) use definitions that none of the 2026 sources match
+    (117 assets / 173 programs vs 22 molecules), so any number would be a guess. The stored ind_02 = 22 looks materially low
+    against every 2026 count found, flagged for definition review.'
+  source: BioPharma Dive H1 2026 VC review; BioCentury 1H26 AI megarounds; ASCO 2026 analysis as summarised by 
+    IntuitionLabs; Insilico Phase 3 registration 2026-07-07
+- date: '2026-10-17'
+  verdict: intact
+  evidence: 'No dated October-2026 development. Standing picture: no AI-discovered drug has full FDA approval as of October
+    2026; ASCO 2026 analysis counts 117 AI-enabled assets in human trials, 60 (51.3%) completed Phase 1 and 8 (6.8%) completed
+    Phase 2; Phase 2 success ~40%, in line with historical norms; Isomorphic USD 2.1B Series B (May 2026). No numeric indicator
+    recorded.'
+  source: IntuitionLabs AI-discovered drugs 2026 (search 2026-10-17, results mostly undated)
 - date: '2026-10-06'
   verdict: intact
   evidence: 'Funding and pipeline continue but the validation record is mixed. Isomorphic Labs closed a $2.1B Series B in

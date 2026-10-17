@@ -72,6 +72,12 @@
   "review_log": [
     {
       "date": "2026-10-17",
+      "verdict": "strengthening",
+      "evidence": "WTI rose from USD 91.09 on 2026-10-08 to USD 101.37 on 2026-10-16 (+3.4 that day) on risk of US escalation in Iran; Trump said on 2026-10-08 no attack before the 2026-11-03 midterms while the US naval blockade stays in force; Iran's Mehr agency denies a deal. Stored event records Brent ~94 on 2026-08-24, so the oil level has moved well beyond it. Re-verify on 2026-11-03.",
+      "source": "investingLive Americas wraps 2026-10-08 and 2026-10-16"
+    },
+    {
+      "date": "2026-10-17",
       "verdict": "intact",
       "evidence": "Brent settled ~103 USD after Trump said on ~2026-10-08 the US will not attack Iran before the 2026-11-03 midterms while the naval blockade 'remains in full force'; WTI 95.12 on 2026-10-14. Sources conflict on the level (89 vs 103; one result showing 83 is an April-dated page and was discarded). Brent is therefore elevated but the escalation risk has a stated pause until 2026-11-03, which is the date to re-verify. sector_impact BACKFILLED: oil_majors_integrated supportive, eu_defense_prime_contractors supportive. Not registered as a new event or an oil structural: same economic driver as this event, and the energy shock is also the cause of cat_20260617_fed_hawkish_pivot / cat_20260916_fed_rate_hike (a second oil catalyst would double count).",
       "source": "democrata.es / Yahoo Finance Trump-Iran deadline coverage 2026-10-08; investingLive CPI wrap 2026-10-14"

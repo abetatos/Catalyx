@@ -131,10 +131,7 @@
       "comment": "Q2 2026: 288.9t, +62% YoY (+74% on The National's framing), the largest quarterly total on record — Poland +51t, China +33t (its largest addition since late 2023), Uzbekistan +16t, Kazakhstan +15t. H1 2026 total is 345t, the weakest first half since 2022. The two facts are reconciled by the WGC itself: the H1 weakness is a Q1 artefact ('a notable Q1 slowdown following a downward revision to our data'), after which buying 'recovered sharply to the lofty levels typical of the last four years'. Read the QUARTERLY run rate, not the half."
     }
   ],
-  "active_catalyst_ids": [
-    "struct_cb_gold_accumulation",
-    "cat_20260617_fed_hawkish_pivot"
-  ],
+  "active_catalyst_ids": ["struct_cb_gold_accumulation", "cat_20260617_fed_hawkish_pivot", "cat_20260916_fed_rate_hike"],
   "historical_catalyst_performance": {
     "summary": "Gold miners respond most strongly to: (1) Fed pivot signals — miners lead gold by 3-6 months as investors position before rate cycle turns (MOST RELEVANT NOW: if Warsh hawkishness peaks near-term, miners would be first to re-rate); (2) CB buying acceleration — slower but more sustained; (3) Geopolitical crises — initial spike fades unless gold sustains. Key 2026 update: Q1 2026 record earnings (Newmont FCF $3.1B, Barrick FCF +195%) and Brent now $72 (from $120 peak) are creating conditions for a Q2 AISC positive surprise in July earnings. The GDX/GLD ratio broke out of a 15-year base in Q1 2026 — the new regime is holding even through the correction (ratio ~0.19, above prior structural base of 0.15-0.17). If the ratio holds above the prior base through this correction, the structural re-rating is confirmed.",
     "avg_response_to_fed_pivot_signal_pct": 0.18,

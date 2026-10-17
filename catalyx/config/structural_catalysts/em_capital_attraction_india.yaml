@@ -130,13 +130,13 @@ indicators:
   source: "ICE / Bloomberg DXY"
   source_url_template: "https://www.marketwatch.com/investing/index/dxy"
   check_frequency: weekly
-  current_value: 102.305
+  current_value: 101.84
   unit: dxy_index
   direction: lower_is_stronger
   threshold_strong: 97
   threshold_weak: 104
-  last_value: 102.032
-  last_date: "2026-10-13"
+  last_value: 102.305
+  last_date: "2026-10-16"
   update_note: >-
     auto: ICE DXY (yfinance)
   semaphore: 🔴
@@ -205,7 +205,7 @@ indicators:
   direction: lower_is_stronger
   threshold_strong: 92
   threshold_weak: 97
-  last_value: 96.31
+  last_value: 96.73
   last_date: "2026-10-09"
   update_note: >-
     auto: INR/USD (FRED DEXINUS)
@@ -240,7 +240,7 @@ linked_structural_catalyst_ids:
 
 narrative_maturity: "emerging"
 status: dormant
-status_last_reviewed: "2026-10-09"
+status_last_reviewed: "2026-10-16"
 review_log:
 - date: '2026-09-14'
   verdict: weakening

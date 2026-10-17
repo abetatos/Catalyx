@@ -65,7 +65,7 @@ user_notes: >
   schedule) is the novel angle: AI-specific security spend is a NEW budget line, not a reallocation.
 
 intensity:
-  current_score: 72.3
+  current_score: 72.0
   computation_method: computed
   computation_note: >
     Bootstrap at creation (2026-06-05). Anchor: stronger than struct_copper_datacenter_demand (83.9)
@@ -79,8 +79,12 @@ intensity:
     ind_05 (ZS AI Security ARR $400M, ahead of schedule → strong) → ~85.
     Unweighted avg ≈ 85.2, flat trend (no prior period to compute delta) → 85.2 → round to 86.0.
     Run /catalyx-update after first quarterly data update to switch to computed method.
-  last_updated: "2026-10-16"
+  last_updated: "2026-10-17"
   history:
+  - period: '2026-10-17'
+    score: 72.0
+    note: 'Computed 2026-10-17: avg=72.0 trend=→ (flat) (was 72.3)'
+    computation_method: computed
   - period: '2026-10-16'
     score: 72.3
     note: 'Computed 2026-10-16: avg=72.28 trend=→ (flat)'
@@ -283,13 +287,13 @@ indicators:
   source: "ETF Database / Bloomberg ETF flow data (monthly)"
   source_url_template: "https://etfdb.com/etf/CIBR/"
   check_frequency: monthly
-  current_value: 15390
+  current_value: 19411.0
   unit: USD_million_combined_aum
   direction: higher_is_stronger
   threshold_strong: 10000
   threshold_weak: 5000
-  last_value: 6000
-  last_date: "2026-06-01"
+  last_value: 15390
+  last_date: "2026-10-17"
   value_history:
   - value: 6000
     date: "2025-01-01"
@@ -299,14 +303,11 @@ indicators:
     date: "2024-01-01"
   - value: 4200
     date: "2023-06-01"
-  update_note: >
-    CIBR AUM as of June 2026: $14.5B (grew from $5.1B). BUG AUM: ~$890M. Combined ~$15.39B.
-    CIBR 3-month net flows: $210.55M; 6-month: $261.99M; 1-year: $1.77B net inflows.
-    AUM tripling from ~$5B to $14.5B in ~18 months confirms institutional positioning is accelerating.
-    Well above threshold_strong ($10B). Monitor for reversal in monthly flows as crowding signal.
+  update_note: >-
+    CIBR 17,322M + BUG 2,089M USD, yfinance totalAssets snapshot 2026-10-17. Rule 5: +26% vs stored 15,390 (2026-06-01).
 
   semaphore: 🟢
-  score: 90.4
+  score: 89.0
 deactivation_conditions:
 - id: deact_01
   condition: >
@@ -340,8 +341,22 @@ linked_structural_catalyst_ids:
 - struct_ai_capex_supercycle    # AI capex expands attack surface (LLM workloads, model theft, prompt injection) → compounding demand
 
 status: active
-status_last_reviewed: "2026-10-06"
+status_last_reviewed: "2026-10-17"
 review_log:
+- date: '2026-10-17'
+  verdict: intact
+  evidence: 'ind_05 combined cybersecurity ETF AUM: CIBR USD 17,322M + BUG USD 2,089M = USD 19,411M (yfinance totalAssets
+    snapshot retrieved 2026-10-17) vs stored 15,390 (2026-06-01), +26%. AUM includes price appreciation, so it is a positioning
+    proxy, not net flows; source differs from the stored ETF Database series (snapshot vs month-end), treat the level change
+    as indicative.'
+  source: yfinance Ticker.info totalAssets for CIBR and BUG, retrieved 2026-10-17
+- date: '2026-10-17'
+  verdict: intact
+  evidence: No dated October-2026 evidence either way. Gartner 2026 forecast stands (USD 240B, +12.5%, USD 51.3B AI 
+    security); Morgan Stanley CIO surveys rank security software as the least-cut IT budget line; Palo Alto revenue 
+    expected USD 11.5B FY26 to USD 16.2B FY28 at 23.2x forward revenue. The 'cyber fatigue' and CrowdStrike 
+    forecast-miss items in the short-case search are 2022-2025 pages and were discarded. No numeric indicator recorded.
+  source: tikr.com Palo Alto note; betashares AI sell-off note (undated); Gartner via 2026-10-09 scan
 - date: '2026-10-06'
   verdict: intact
   evidence: 'Vendor prints are strong: Palo Alto FQ4 FY26 revenue +34% to $3.41B with next-gen security ARR +63% to $9.1B

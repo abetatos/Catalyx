@@ -115,10 +115,7 @@
     }
   ],
 
-  "active_catalyst_ids": [
-    "cat_20260228_hormuz_closure",
-    "cat_20260617_fed_hawkish_pivot"
-  ],
+  "active_catalyst_ids": ["cat_20260228_hormuz_closure", "cat_20260617_fed_hawkish_pivot", "cat_20260817_hormuz_reescalation"],
 
   "historical_catalyst_performance": {
     "summary": "Oil majors exhibit well-documented performance patterns in geopolitical supply shocks. Russia-Ukraine 2022: XLE +66% (vs S&P -18%), five supermajors generated $467B profits over 2022-2024, then XLE gave back ~30% from peak in 6 months as oil normalised. The 2026 Hormuz cycle has been faster: XLE +34% YTD peak (vs +66% in 2022 full-cycle), suggesting faster institutional pricing and better playbook memory. The resolution phase is underway: XLE -15% from $63.46 peak to $53.84, consistent with partial normalization. Full normalization (Brent $65-70) would imply further XLE downside to $48-52 based on the 2022 analog. KEY DIFFERENCE vs 2022: OPEC+ cartel is now fragmenting (UAE exited, Iraq threatening). In 2022, OPEC+ remained intact and could moderate downside. In 2026, fragmentation means less price-floor support — increasing the range of downside scenarios.",

@@ -88,5 +88,12 @@
     "rate_sensitive"
   ],
   "status_last_reviewed": "2026-10-17",
-  "review_log": []
+  "review_log": [
+    {
+      "date": "2026-10-17",
+      "verdict": "intact",
+      "evidence": "FOMC hiked 25bp to 3.75-4.00% on 2026-09-16; September CPI 3.7% vs 3.6% expected (2026-10-14); import prices +1.1% vs +0.8% (2026-10-16); US 10y 5.09% on 2026-10-16 (5.219% on 2026-10-14). Counter-signal: NY Fed's Williams said one more hike in 2026 may be sufficient, and October-hike odds range 20-50% across sources. Next FOMC 2026-10-28.",
+      "source": "investingLive 2026-10-16 wraps; scotsmanguide / coingape CPI-odds pieces (2026-10-14/15)"
+    }
+  ]
 }

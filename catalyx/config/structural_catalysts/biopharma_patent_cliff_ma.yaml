@@ -39,13 +39,17 @@ user_notes: >
   are the primary confirmation; refresh quarterly against IQVIA/BioPharma deal trackers.
 
 intensity:
-  current_score: 87.8
+  current_score: 85.0
   computation_method: computed
-  last_updated: "2026-10-16"
+  last_updated: "2026-10-17"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: just below struct_ai_capex_supercycle (89.9). Durable
     LOE-driven takeout pressure with clear deal-flow indicators.
   history:
+  - period: '2026-10-17'
+    score: 85.0
+    note: 'Computed 2026-10-17: avg=84.97 trend=→ (flat) (was 87.8)'
+    computation_method: computed
   - period: '2026-10-16'
     score: 87.8
     note: 'Computed 2026-10-16: avg=87.78 trend=→ (flat)'
@@ -149,15 +153,16 @@ indicators:
   source: "SPDR S&P Biotech ETF"
   source_url_template: "https://www.ssga.com/"
   check_frequency: monthly
-  current_value: 80.3
+  current_value: 34.3
   unit: percent_ttm
   direction: higher_is_stronger
   threshold_strong: 25
   threshold_weak: 0
-  last_value: 50
-  last_date: "2026-08-31"
+  last_value: 80.3
+  last_date: "2026-10-17"
   update_note: >-
-    TTM total return %, computed from adjusted closes
+    XBI 12M total return to 2026-10-16 (adj close 107.45 on 2025-10-16 -> 144.32 on 2026-10-16), yfinance. Rule 5: -57% vs
+    stored 80.3 (2026-08-31); mostly rolling-window base effect, XBI -11.2% from the 2026-08-31 close.
   semaphore: 🟢
   value_history:
   - date: "2026-05-31"
@@ -165,7 +170,7 @@ indicators:
   - date: "2025-12-31"
     value: 30
 
-  score: 95.7
+  score: 84.5
 - id: ind_03
   name: "Average clinical-stage takeout premium (%)"
   source: "Fierce Pharma / deal disclosures"
@@ -230,8 +235,28 @@ linked_structural_catalyst_ids:
 
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-10-06"
+status_last_reviewed: "2026-10-17"
 review_log:
+- date: '2026-10-17'
+  verdict: intact
+  evidence: 'ind_02 XBI trailing-12M total return recomputed from yfinance adjusted closes: +34.3% (2025-10-16 close 107.45
+    -> 2026-10-16 close 144.32) vs stored 80.3 (2026-08-31). This is mostly a base effect (XBI was 89.4 at 2025-08-31 and
+    112.2 at 2025-10-31) plus a -11.2% pullback from the 2026-08-31 close of 162.5. M&A flow itself is intact: BioBucks H1
+    2026 report (2026-06-30) counts 49 control transactions, ~USD 149B disclosed value, with Q2 nearly double Q1 deal count;
+    Gibson Dunn / BofA H1 2026 surveys also describe a strong first half. ind_03 (takeout premium) NOT recorded: BofA states
+    82% average premium across 16 US-listed therapeutics acquisitions H1 2026, while BioBucks (18 public acquisitions, 2026-06-30)
+    reports mean ~39% / median ~36% (13-24% for large de-risked assets) vs stored 55 - the two sources disagree by 2x on definition,
+    so no like-for-like number is written. ind_04 (LOE revenue at risk) NOT recorded: Evaluate (>USD 300B 2025-2030), GlobalData
+    (>USD 230B US-only) and Morgan Stanley (USD 183.5B) use different bases from the stored 265.'
+  source: yfinance XBI adjusted closes (computed 2026-10-17); BioBucks H1 2026 M&A report (2026-06-30); BofA 'Will the 
+    surge in biotech M&A persist?'
+- date: '2026-10-17'
+  verdict: intact
+  evidence: 'Deal flow persists into the rate shock: Sun Pharma/Organon USD 11.75B, GSK/Nuvalent USD 10.6B, J&J/Centessa up
+    to USD 7.8B, Lilly/Orna up to USD 2.4B (mostly undated in the sources; no dated October deal verified this scan); biopharma
+    deal value through July 2026 USD 186.69B, +13% on 2025; more USD 1B+ deals YTD than in all of 2025. USD ~150B of 2025
+    sales lose protection by 2030. No numeric ind_01 update: trackers disagree on YTD volume (Rule 5 flag unresolved).'
+  source: Gibson Dunn H1 2026 mid-cap survey; BioWorld July 2026; GEN top takeover targets 2026 (search 2026-10-17)
 - date: '2026-10-06'
   verdict: strengthening
   evidence: '2026 biopharma M&A is running at a record pace: BioWorld reports $199.2B of deal value for January-August 2026

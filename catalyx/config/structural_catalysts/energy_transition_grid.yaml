@@ -168,13 +168,13 @@ indicators:
   name: "Copper price trend (spot, USD/tonne)"
   source: "LME spot price"
   check_frequency: monthly
-  current_value: 14892.2084
+  current_value: 14398.3735
   unit: USD_per_tonne
   direction: higher_is_stronger
   threshold_strong: 9000
   threshold_weak: 7000
-  last_value: 14689.3833
-  last_date: "2026-10-13"
+  last_value: 14892.2084
+  last_date: "2026-10-16"
   update_note: "auto: COMEX copper front month, USD/lb → USD/tonne"
 
   semaphore: 🟡
@@ -296,7 +296,7 @@ deactivation_conditions:
 linked_event_catalyst_ids: []
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-10-13"
+status_last_reviewed: "2026-10-17"
 absorbed_catalyst_ids:
 - struct_solar_lcoe_deployment
 - struct_battery_storage_supercycle
@@ -314,6 +314,21 @@ absorbed_note: |
     - struct_solar_lcoe_deployment (intensity 64.1): US utility-scale solar LCOE (BloombergNEF global benchmark, fixed-axis), US utility-scale solar capacity additions (annualized, GW), China polysilicon spot price (CNY/kg) — inverse signal: lower price = developer tailwind, not structural strength, North American utility-scale solar PPA price (USD/MWh, LevelTen Energy quarterly index)
     - struct_battery_storage_supercycle (intensity 87.0): Lithium carbonate battery-grade spot (USD/t), Global grid-scale BESS annual installations (GWh), BESS share of total lithium demand (%), Global EV sales run-rate (millions units/yr)
 review_log:
+- date: '2026-10-17'
+  verdict: intact
+  evidence: 'ind_03 recorded by indicator_sources --apply (1.44e+04, 2026-10-16). ind_02 (EU grid investment announced, EUR
+    B rolling 12M) NOT recorded: no like-for-like rolling-12M figure found. Context only: TenneT reports EUR 14.8B electricity-infrastructure
+    investment in 2025 vs EUR 10.6B in 2024; Eurelectric says distribution-grid investment must rise from ~EUR 33B/yr to ~EUR
+    67B/yr; EC European Grids Package (December 2025) frames EUR 1.2T EU grid need by 2040. These are needs and single-operator
+    figures, not the announced-investment series.'
+  source: TenneT 2025 annual investment release; Eurelectric Grids for Speed study; European Commission Grids Package 
+    (December 2025)
+- date: '2026-10-17'
+  verdict: intact
+  evidence: 'Physical demand intact: transformer shortage is the binding constraint (lead times 36-38 months per the 2026-10-09
+    scan; multi-billion projects delayed). The cost-of-capital channel (US 10y 5.09% on 2026-10-16, down from 5.2-5.3%) is
+    carried by the Fed and ECB hike events with sector_impact adverse, not by this structural. No numeric indicator recorded.'
+  source: enkiai transformer shortage data; latitudemedia project cancellations (search 2026-10-17, undated)
 - date: '2026-10-06'
   verdict: intact
   evidence: 'Demand is intact and the bottleneck persists: global grid capex set to surpass $650B in 2026 (Rystad, +5% YoY,

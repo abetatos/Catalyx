@@ -51,8 +51,14 @@
     "goldman_sachs",
     "jpmorgan"
   ],
-  "status_last_reviewed": "2026-08-31",
+  "status_last_reviewed": "2026-10-17",
   "review_log": [
+    {
+      "date": "2026-10-17",
+      "verdict": "intact",
+      "evidence": "No reversal of the July bank revisions found and no new bank revisions on cybersecurity surfaced (the analyst-revision query returned biotech and semiconductor price-target raises from JPMorgan and Morgan Stanley, none on cyber). Event is 81 days old on a 30-day halflife and carries little weight.",
+      "source": "analyst-revision search 2026-10-17"
+    },
     {
       "date": "2026-08-31",
       "verdict": "intact",

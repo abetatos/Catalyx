@@ -15,7 +15,10 @@
   "catalyst_type": "regulatory",
   "catalyst_subtype": "crypto_market_structure",
   "description": "The CLARITY Act — US crypto market-structure legislation that would assign clear SEC/CFTC jurisdiction and de-risk token issuance/custody for institutions — is at the Senate committee stage but NOT floor-voted, with 2026 enactment odds cut to ~48-50% (Galaxy from 75%, Polymarket ~48%) on a tightening Senate calendar. The stablecoin leg cleared Senate Banking 15-9. This is the idiosyncratic BINARY re-rating catalyst for crypto_infrastructure: passage would be a durable structural positive (regulatory certainty unlocks institutional allocation), failure keeps the status quo. It sits against a bearish near-term macro backdrop the sector is NOT credited for here (Fed hawkish pivot, record ~$4.4B spot-BTC-ETF outflows, BTC ~$59-62K) — so treat crypto_infrastructure's catalyst_alignment as reflecting REGULATORY OPTIONALITY only, with the macro headwind carried in the study narrative and the composite's momentum/flow legs. Moderate strength: high magnitude x ~50% probability.",
-  "geography": ["US", "GLOBAL"],
+  "geography": [
+    "US",
+    "GLOBAL"
+  ],
   "magnitude": "high",
   "novelty_score": 40,
   "novelty_rubric_scores": {
@@ -36,5 +39,24 @@
   "expires_at": null,
   "user_rank": 4,
   "user_notes": "Registered 2026-07-01 in the sectors-without-catalyst review. The sector-specific binary catalyst for crypto_infrastructure. relation_to_structural='independent' so it contributes its decayed strength as a standalone positive term — deliberately the ONLY catalyst linked to crypto, because the dominant macro driver (Fed hawkish pivot, ETF outflows) is a HEADWIND that must not be added as a positive alignment term; that bearishness lives in the study narrative + the composite's momentum/flow legs. strength 55 reflects high magnitude x ~50% passage odds; is_priced_in 0.25. Re-score UP on a Senate floor vote / passage, DOWN toward decayed if the bill dies in the 2026 session. This gives crypto a documented forward catalyst without pretending the macro tape is bullish.",
-  "tags": ["crypto", "clarity_act", "regulation", "market_structure", "sec", "cftc", "bitcoin", "binary", "optionality"]
+  "tags": [
+    "crypto",
+    "clarity_act",
+    "regulation",
+    "market_structure",
+    "sec",
+    "cftc",
+    "bitcoin",
+    "binary",
+    "optionality"
+  ],
+  "status_last_reviewed": "2026-10-17",
+  "review_log": [
+    {
+      "date": "2026-10-17",
+      "verdict": "weakening",
+      "evidence": "Senate cloture on the CLARITY Act FAILED 49-50 on 2026-09-15 (60 required, 11 short); no Democrat voted yes; BTC -4% and Coinbase -8% on the day; digital-asset rules fall to SEC/CFTC for at least two years. The stored description ('Senate committee stage, 48-50% odds') is stale and the regulatory optionality it priced is gone for 2026. Recommend the lifecycle gate treat this as a reversal. The event is not edited here.",
+      "source": "cointelegraph / decrypt / bitcoin.com reports of the 2026-09-15 vote (search 2026-10-17)"
+    }
+  ]
 }

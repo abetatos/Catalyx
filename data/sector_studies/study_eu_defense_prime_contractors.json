@@ -127,11 +127,7 @@
       "comment": "Escalation to broader magnet/alloy restrictions would materially impact delivery schedules for guided munitions, drones, and EW systems within 6–12 months. Monitor monthly. Bullish threshold: restrictions lifted. Bearish threshold: extended to all rare-earth magnets."
     }
   ],
-  "active_catalyst_ids": [
-    "struct_nato_rearmament",
-    "cat_20260603_nato_defense_gdp",
-    "cat_20260603_nato_hague_5pct_gdp"
-  ],
+  "active_catalyst_ids": ["struct_nato_rearmament", "cat_20260603_nato_defense_gdp", "cat_20260603_nato_hague_5pct_gdp", "cat_20260817_hormuz_reescalation"],
   "historical_catalyst_performance": {
     "summary": "EU defense prime contractors have a documented pattern of delivering outsized returns in the 12–24 months following a credible step-change in NATO commitment, followed by a consolidation phase once the new budget baseline is priced. Post-Zeitenwende (Feb 2022): Rheinmetall rose ~+400% from Feb 2022 to Dec 2024, EUDF.DE ~+180% over the same period. The 2022–2024 move was multiple-expansion driven (P/E re-rating from ~10x to ~30x) as markets priced in higher spending trajectories. The current phase (2025–2027) is structurally different: the re-rating is largely complete and alpha now comes from earnings delivery as €73B+ backlogs convert to revenue at 19%+ operating margins, with Rheinmetall projecting the backlog to reach ~€135B by year-end 2026. The Q1 2026 earnings miss (Rheinmetall revenue €1.94B vs. ~€2.3B consensus) is early evidence that the earnings-delivery phase carries its own binary risk — historically, the second leg of defense cycles (production ramp) is lower-beta but more volatile on individual earnings events than the initial re-rating leg. Post-9/11 US defense analog (Lockheed Martin, 2001–2005): the earnings delivery phase after an initial re-rating produced +150% returns over 4 years with significant drawdowns on quarterly production misses. The key monitoring signal for cycle end is book-to-bill dropping below 1.0x for two consecutive quarters — currently at >2x, so the cycle is intact."
   },

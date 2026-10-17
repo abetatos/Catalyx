@@ -31,9 +31,13 @@ user_notes: "Most visible structural catalyst in the market. Risk of being price
   cooling, networking as higher-alpha adjacent plays."
 
 intensity:
-  current_score: 91.4
-  last_updated: "2026-10-16"
+  current_score: 88.3
+  last_updated: "2026-10-17"
   history:
+  - period: '2026-10-17'
+    score: 88.3
+    note: 'Computed 2026-10-17: avg=88.3 trend=→ (flat) (was 91.4)'
+    computation_method: computed
   - period: '2026-10-16'
     score: 91.4
     note: 'Computed 2026-10-16: avg=91.4 trend=→ (flat)'
@@ -168,19 +172,21 @@ indicators:
   name: "Global data center power demand growth (IEA estimate)"
   source: "IEA Electricity report"
   check_frequency: quarterly
-  current_value: 0.28
+  current_value: 0.17
   unit: yoy_growth_rate
   direction: higher_is_stronger
   threshold_strong: 0.15
   threshold_weak: 0.05
-  last_value: 0.24
-  last_date: "2026-03-01"
+  last_value: 0.28
+  last_date: "2026-10-17"
 
   semaphore: 🟢
   value_history:
   - date: "2026-03-01"
     value: 0.24
-  score: 91.9
+  score: 82.6
+  update_note: 'IEA published 2026-04-16: global data-centre electricity demand growth in calendar 2025 = 17% (observation
+    is the 2025 actual, not a forward estimate). Rule 5: -39% vs stored 0.28 (2026-03-01).'
 deactivation_conditions:
 - id: deact_01
   condition: "Combined hyperscaler capex guidance drops >30% YoY for two consecutive quarters."
@@ -194,7 +200,7 @@ linked_event_catalyst_ids: []
 linked_structural_catalyst_ids:
 - struct_copper_datacenter_demand    # Commodity expression: copper miners as physical beneficiary
 status: active
-status_last_reviewed: "2026-10-06"
+status_last_reviewed: "2026-10-17"
 absorbed_catalyst_ids:
 - struct_copper_datacenter_demand
 absorbed_at: '2026-08-27'
@@ -210,6 +216,23 @@ absorbed_note: |
   decidir explicitamente cual de estos indicadores merece promoverse a este fichero:
     - struct_copper_datacenter_demand (intensity 78.7): Combined hyperscaler AI capex guidance (Microsoft + Google + Amazon + Meta, $B quarterly), LME copper spot price (USD/tonne), LME copper warehouse inventory (tonnes) — low inventory = supply tightness, Data center copper demand estimate — analyst consensus (Wood Mackenzie / CRU)
 review_log:
+- date: '2026-10-17'
+  verdict: intact
+  evidence: "IEA 'Key Questions on Energy and AI' (press release 2026-04-16): global data-centre electricity demand grew 17%
+    in 2025 (AI-focused data centres +50%), vs 3% for total global electricity demand; demand projected to double by 2030;
+    capex of five large tech companies >USD 400B in 2025 and set to rise a further 75% in 2026. Demand side confirmed. The
+    stored ind_03 (0.28, 2026-03-01) is a different, higher growth figure; the IEA-published 2025 actual is 0.17 (-39%), but
+    the direction of the series (large double-digit growth, bottlenecks in turbines/transformers/chips) is unchanged."
+  source: IEA, Data centre electricity use surged in 2025 (2026-04-16), 
+    iea.org/news/data-centre-electricity-use-surged-in-2025-even-with-tightening-bottlenecks-driving-a-scramble-for-solutions
+- date: '2026-10-17'
+  verdict: intact
+  evidence: 'Demand side confirmed by primary data: TSMC Q3 2026 (2026-10-15) revenue US$46.72B, +41.2% YoY, gross margin
+    66.4%, 2026 USD sales growth forecast raised to 44%; capex guidance MAINTAINED at USD 60-64B (correcting the 2026-10-09
+    wording that said raised from 52-56B). Hyperscaler capex plans USD ~660-725B carried unchanged, no cut found. The live
+    risk is financing and customer revenue, see disconfirming. No numeric indicator recorded (no like-for-like figure for
+    ind_01-ind_03).'
+  source: TSMC Form 6-K Q3 2026 (sec.gov) and Focus Taiwan 2026-10-15; investingLive Americas wrap 2026-10-16
 - date: '2026-10-06'
   verdict: intact
   evidence: "NVIDIA Q2 FY27 (reported 2026-08-26): data center revenue $89.0B, +117% YoY and +18% QoQ; Q3 FY27 guide $108.0B

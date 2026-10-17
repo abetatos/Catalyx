@@ -1,6 +1,6 @@
 {
   "id": "study_cloud_software_saas",
-  "schema_version": "1.3",
+  "schema_version": "1.4",
   "sector_id": "cloud_software_saas",
   "sector_label": "Cloud Software & SaaS",
   "created_at": "2026-06-05",
@@ -137,9 +137,13 @@
   "narrative_maturity": "crowded",
   "narrative_trend": "stable",
   "narrative_notes": "LEVEL UNCHANGED at 'crowded' -- that is the field the scorer reads (crowding_risk 75) and nothing today moved it. TREND revised 'increasing' -> 'stable' on the same day, and the revision is evidence-driven rather than churn: the morning read set 'increasing' on media intensity alone (CNBC 2026-08-07 'SaaSpocalypse debate INTENSIFIES', Fortune 'The SaaSpocalypse that wasn't' 2026-08-26, Benioff calling the thesis 'nonsense' the same week). The afternoon added the FLOW half of the 'crowded' criteria, and it points the other way: the 2026-08-24 US sector rotation has Technology losing relative strength to Energy, Financials and Healthcare, i.e. capital rotating OUT of the parent sector. Per scoring_weights.yaml the observable criteria for 'crowded' are daily Bloomberg/CNBC coverage AND accelerating thematic inflows; the first is intact and the second has stopped confirming, so the two components of 'increasing' now disagree and 'stable' is the only defensible read. It is still not 'exhausted' -- that requires flows REVERSING with only momentum traders left, and one week of relative-strength rotation is not a reversal. Note the distinction that matters for this sector: the AI narrative broadly INTENSIFIED today (Nvidia's print), but the AI-infrastructure narrative and the SaaS narrative are not the same narrative -- for the application layer that print is as much a cost story as a demand story, which is precisely why maximum disagreement, not maximum enthusiasm, is the state being recorded. analyst_narrative_score is deprecated and left null; the enum carries the judgement.",
-  "active_catalyst_ids": [
-    "struct_ai_capex_supercycle",
-    "cat_20260601_us_ai_chip_export_controls"
+  "active_catalyst_ids": ["struct_ai_capex_supercycle", "cat_20260601_us_ai_chip_export_controls"],
+  "declined_catalyst_ids": [
+    {
+      "catalyst_id": "cat_20260617_fed_hawkish_pivot",
+      "date": "2026-10-17",
+      "reason": "watch-only sector (broker_absent, investable:false): cannot receive capital, so no event is linked; revisit if it returns to the universe"
+    }
   ],
   "historical_catalyst_performance": {
     "summary": "Cloud Software & SaaS has historically exhibited three distinct catalyst-response patterns: (1) Risk-on macro expansion: during periods of falling rates and strong risk appetite (2020-2021 ZIRP era), SaaS outperformed dramatically — ARK Innovation ETF and cloud ETFs returned 150-200%+ as duration-sensitive growth multiples expanded. The sector is high-beta to monetary easing. (2) Rate-shock compression: the 2022 rate cycle compressed NTM EV/Revenue multiples from 25-40x to 5-8x for many SaaS names, a 60-80% drawdown for growth SaaS. The mechanism was purely multiple-driven, not fundamental (ARR growth remained positive). This establishes that SaaS is extremely sensitive to discount rate changes — more than most equity sectors. (3) AI narrative catalyst: the 2023-2024 AI wave initially benefited SaaS through 'AI feature monetization' optimism, then the February 2026 'SaaSpocalypse' showed the same catalyst can invert violently when AI is framed as supply-side competition rather than demand-side expansion. The May 2026 +21% recovery (best month since 2001) demonstrates the sector's high mean-reversion speed once a narrative panic resolves into earnings evidence. Key lesson: SaaS responds to narrative catalysts faster and more violently than most sectors, with recoveries proportional to the size of the preceding selloff when earnings data validates the underlying growth thesis.",

@@ -243,7 +243,7 @@ linked_structural_catalyst_ids: []
 
 narrative_maturity: "emerging"
 status: active
-status_last_reviewed: "2026-08-27"
+status_last_reviewed: "2026-10-17"
 revehicled_at: '2026-08-27'
 revehicled_note: |
   Universo v2.0: su sector objetivo fintech_payments paso a watch-only (FINX.L tiene
@@ -251,3 +251,10 @@ revehicled_note: |
   expresa ahora via crypto_infrastructure (DAPP.L, VanEck Crypto & Blockchain, 511M USD),
   que captura exchanges y rails on-chain. Es un proxy MAS AMPLIO que la tesis original
   de rails de pago: revisar el ajuste antes de abrir posicion.
+review_log:
+- date: '2026-10-17'
+  verdict: intact
+  evidence: The CLARITY failure (2026-09-15) concerns exchange and market-structure rules; the GENIUS Act covers payment
+    stablecoins and is separate (carried from the 2026-10-09 scan, not re-searched this scan). Rails thesis untouched by
+    the vote.
+  source: CLARITY cloture reports 2026-09-15; GENIUS Act status carried from the 2026-10-09 scan

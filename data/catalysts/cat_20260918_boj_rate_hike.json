@@ -1,0 +1,69 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20260918_boj_rate_hike",
+  "schema_version": "1.3",
+  "type": "event",
+  "created_at": "2026-10-17T00:00:00Z",
+  "detected_at": "2026-10-17T00:00:00Z",
+  "event_date": "2026-09-18T00:00:00Z",
+  "source": {
+    "type": "official_statement",
+    "url": "https://www.nippon.com/en/news/yjj2026091800484/",
+    "publication": "Jiji Press via nippon.com / BoJ policy statement",
+    "published_at": "2026-09-18T00:00:00Z"
+  },
+  "catalyst_type": "monetary_policy",
+  "catalyst_subtype": "rate_hike",
+  "description": "At its 2026-09-18 meeting the Bank of Japan raised its policy rate 25bp to about 1.25%, the highest in roughly 31 years, by 7-2 (Toichiro Asada and Ayano Sato dissented in favour of holding); the new rate takes effect on 2026-09-24. It is the shortest interval between hikes under Governor Ueda (first hike in three months) and was explained by inflation expected to run clearly above 2% from the second half of fiscal 2026. The move matched forecasts and was received as dovish: with two dissents and no promise of further hikes the yen FELL rather than rose. Registered late: the 2026-10-17 scan triaged it first as below_threshold on a -5 judgement adjustment off a rubric total of 55; the review applied the rubric as written (55 meets the 55 threshold), since the adjustment is exactly the cardinal the rubric exists to remove. The scorer-relevant link is structural: it confirms the BoJ-normalisation leg of struct_japan_carry_unwind; no investable sector is claimed (that structural is listed in no sector study), and the global-yield channel into held sectors is already carried by the Fed and ECB hike events.",
+  "geography": [
+    "JP",
+    "GLOBAL"
+  ],
+  "magnitude": "medium",
+  "novelty_score": 40,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": false,
+    "nov_02_new_sector": false,
+    "nov_03_new_source": true,
+    "nov_04_changes_rate": true,
+    "nov_05_consensus_surprise_gt50": false
+  },
+  "strength_score": 55,
+  "strength_rubric_scores": {
+    "str_01": false,
+    "str_02": true,
+    "str_03": false,
+    "str_04": true,
+    "str_05": true
+  },
+  "strength_anchors": {
+    "weaker_than": "cat_20260910_ecb_rate_hike",
+    "note": "Rubric total 55 (str_02+str_04+str_05), assigned as written. Weaker than the ECB hike (56): same three observable facts, but a smaller policy-relevance for the held sectors and a dovish split vote. No registered event scores below 55, so there is no stronger_than anchor."
+  },
+  "consensus_surprise": 0.1,
+  "is_priced_in_estimate": 0.75,
+  "relation_to_structural": "confirms",
+  "decay_halflife_days": 30,
+  "related_catalyst_ids": [
+    "struct_japan_carry_unwind",
+    "cat_20260916_fed_rate_hike",
+    "cat_20260910_ecb_rate_hike"
+  ],
+  "affected_sectors": [],
+  "sector_impact": {},
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": null,
+  "user_rank": null,
+  "user_notes": "Registered in the 2026-10-17 review, reversing the scan's below_threshold row (see description). Independent decision: whether this should stay registered given that it reaches no sector today.",
+  "tags": [
+    "boj",
+    "rate_hike",
+    "monetary_policy",
+    "japan",
+    "yen",
+    "macro"
+  ],
+  "status_last_reviewed": "2026-10-17",
+  "review_log": []
+}
