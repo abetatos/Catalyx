@@ -1,0 +1,101 @@
+{
+  "scan_date": "2026-10-17",
+  "items": [
+    {
+      "key": "ecb:2026-09-10",
+      "source": "calendar",
+      "fact": "ECB raised its three key rates 25bp on 2026-09-10 (deposit rate 2.25% to 2.50%), second hike since the Iran war began",
+      "outcome": "refresh_of",
+      "catalyst_id": "cat_20260910_ecb_rate_hike",
+      "reason": "that event already records this same decision and date (25bp, deposit 2.5%, 2026-09-10); corroborated this scan by investingLive: second hike since the Iran war, deposit rate 2.5%, October expected hold and December hike"
+    },
+    {
+      "key": "fed:2026-09-16",
+      "source": "calendar",
+      "fact": "FOMC raised the federal funds target range 25bp to 3.75-4.00% on 2026-09-16 (12-0)",
+      "outcome": "refresh_of",
+      "catalyst_id": "cat_20260916_fed_rate_hike",
+      "reason": "that event records this exact decision, date and vote; corroborated by two independent sources this scan"
+    },
+    {
+      "key": "boe:2026-09-17",
+      "source": "calendar",
+      "fact": "BoE MPC held Bank Rate at 3.75% on 2026-09-17 by 6-3; Greene, Mann and Pill voted for a 25bp rise to 4%; hold was the near-unanimous survey expectation",
+      "outcome": "below_threshold",
+      "reason": "strength_score 40 by rubric: decided and corroborated (str_02 + str_04 = 40) but a hold that nearly all respondents expected, no change of rate (str_05 false), no sector-relative magnitude, no surprise. Hawkish dissents are guidance, not a decision. Source: kaeltripton.com summary of the BoE release, mtsinsights, lines.com; next BoE decision 2026-11-05"
+    },
+    {
+      "key": "boj:2026-09-18",
+      "source": "calendar",
+      "fact": "BoJ raised its policy rate 25bp to 1.25% on 2026-09-18 (31-year high), 7-2 vote with two members voting to hold; no promise of further hikes; yen fell on the day",
+      "outcome": "registered",
+      "reason": "Reversed in the review: the scan adjusted the rubric total (55) down by 5 by judgement; the rubric applies as written and 55 meets the registration threshold. Registered as confirms of struct_japan_carry_unwind with no sector claim.",
+      "catalyst_id": "cat_20260918_boj_rate_hike"
+    },
+    {
+      "key": "c0:us-cpi-sep-2026-10-14",
+      "source": "c0",
+      "fact": "US September CPI 3.7% YoY vs 3.6% expected, core 2.6% vs 2.5% (released 2026-10-14); US September import prices +1.1% vs +0.8% expected (2026-10-16)",
+      "outcome": "refresh_of",
+      "catalyst_id": "cat_20260916_fed_rate_hike",
+      "reason": "that event already records the 2026-10-14 CPI print (3.7% vs 3.6%, core 2.6% vs 2.5%); the import-price beat is the same inflation reading and adds no new decision"
+    },
+    {
+      "key": "c0:fomc-minutes-2026-10-07",
+      "source": "c0",
+      "fact": "FOMC minutes published 2026-10-07: most participants judge another increase likely appropriate by year end",
+      "outcome": "refresh_of",
+      "catalyst_id": "cat_20260916_fed_rate_hike",
+      "reason": "that event already records the 2026-10-07 minutes and the year-end-hike language. Counter-signal found this scan: NY Fed's Williams said on 2026-10-14 that one more hike in 2026 may be sufficient, and October hike odds were reported around 20%-50% depending on the source; the 2026-10-28 decision stays open"
+    },
+    {
+      "key": "c0:tsmc-q3-results-2026-10-15",
+      "source": "c0",
+      "fact": "TSMC Q3 2026 (reported 2026-10-15): revenue US$46.72B, +41.2% YoY, gross margin 66.4%; 2026 USD sales growth forecast raised to 44%; 2026 capex guidance MAINTAINED at USD 60-64B; Q4 guide US$52.3-54.3B",
+      "outcome": "below_threshold",
+      "reason": "strength_score 40 by rubric: decided and corroborated by the 6-K plus press (str_02 + str_04), but the capex budget was unchanged, a raised sales forecast on a company already guiding to +40% is not a surprise, and it is a quarterly level, not a rate shift. It confirms struct_ai_capex_supercycle (refreshed in scan_deltas) and sits beside cat_20260728_hyperscaler_capex_guidance_raise (75) without exceeding it. The 2026-10-09 deltas file wrote 'raised capex to 60-64B from 52-56B': the primary 6-K says capex was maintained, so that wording is corrected here"
+    },
+    {
+      "key": "c0:nasdaq-sox-selloff-2026-10-16",
+      "source": "c0",
+      "fact": "Nasdaq -2.3% on the week to 2026-10-16 (worst since April 2025), SOX down eight sessions in a row; reports that CoreWeave may use equity to meet debt obligations; CoreWeave 9.625% 2032 bonds quoted at ~15% yield on 2026-10-14 (one secondary source); FT 2026-10-08: OpenAI run-rate ~USD 50B vs ~70B expected",
+      "outcome": "below_threshold",
+      "reason": "strength_score 45 by rubric: price moves and a bond quote are facts (str_02) and two sources agree (str_04), but 'may use equity' is a report not an action, the CoreWeave yield rests on one non-primary source, the OpenAI revenue gap carries a gross-vs-net definition caveat, and no capex figure has been cut anywhere. This is the live short case against struct_ai_capex_supercycle (recorded as disconfirming found:true) and the first thing to re-score if a hyperscaler cuts guidance or a financing fails"
+    },
+    {
+      "key": "c0:wti-101-2026-10-16",
+      "source": "c0",
+      "fact": "WTI +3.4 to USD 101.37 on 2026-10-16 (from 91.09 on 2026-10-08) on risk of US escalation in Iran; gold USD 4,168; US 10y 5.09%",
+      "outcome": "below_threshold",
+      "reason": "strength_score 40 by rubric: a price print (str_02) corroborated by two outlets (str_04) with no decision behind it and no surprise. cat_20260817_hormuz_reescalation records Brent ~94 on 2026-08-24, NOT this level, so this is not refresh_of; the driver is covered by that event (refreshed in scan_deltas as strengthening)"
+    },
+    {
+      "key": "c0:trump-no-iran-attack-before-midterms-2026-10-08",
+      "source": "c0",
+      "fact": "Trump said on 2026-10-08 'We will not be attacking Iran any time soon' and no attack before the 2026-11-03 midterms; US naval blockade stays in force (reimposed 2026-07-13)",
+      "outcome": "not_an_event",
+      "reason": "a statement of intent, not an enacted action; the blockade is a 2026-07-13 decision already outside this window. Re-verify on 2026-11-03"
+    },
+    {
+      "key": "c0:boj-ueda-continue-hikes-2026-10-16",
+      "source": "c0",
+      "fact": "BoJ Governor Ueda said on 2026-10-16 the bank would continue to raise rates as underlying inflation approaches 2%; USDJPY slipped below key moving averages",
+      "outcome": "not_an_event",
+      "reason": "forward guidance and commentary, nothing decided; the next BoJ decision is 2026-10-30 and will arrive as calendar_due"
+    },
+    {
+      "key": "c0:ecb-oct-hold-expected-2026-10-29",
+      "source": "c0",
+      "fact": "Markets and most economists expect an ECB hold on 2026-10-29 and a hike in December; Lagarde says the inflation shock lasts longer than expected, Schnabel says further hikes will likely be needed",
+      "outcome": "not_an_event",
+      "reason": "market expectation and speeches, nothing decided; the 2026-10-29 decision arrives as calendar_due next scan"
+    },
+    {
+      "key": "c0:clarity-cloture-failed-2026-09-15",
+      "source": "c0",
+      "fact": "US Senate cloture on the CLARITY Act failed 49-50 on 2026-09-15 (60 needed); Coinbase -8%, BTC -4% on the day; digital-asset rules now fall to SEC/CFTC rulemaking",
+      "outcome": "below_threshold",
+      "reason": "strength_score 40 by rubric: voted and corroborated (str_02 + str_04) but the move was small against the sector (Coinbase -8%, BTC -4%), enactment odds were already ~48-50%, and it is a level (bill dead for 2026) rather than a rate. cat_20260620_clarity_act_market_structure does NOT record the failure (it still reads 'Senate committee stage'), so this is not refresh_of: it is the reversal of that event, flagged weakening in scan_deltas for the lifecycle gate"
+    }
+  ]
+}

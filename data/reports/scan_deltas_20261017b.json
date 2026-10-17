@@ -1,0 +1,69 @@
+[
+  {
+    "catalyst_id": "struct_ai_capex_supercycle",
+    "verdict": "intact",
+    "evidence": "IEA 'Key Questions on Energy and AI' (press release 2026-04-16): global data-centre electricity demand grew 17% in 2025 (AI-focused data centres +50%), vs 3% for total global electricity demand; demand projected to double by 2030; capex of five large tech companies >USD 400B in 2025 and set to rise a further 75% in 2026. Demand side confirmed. The stored ind_03 (0.28, 2026-03-01) is a different, higher growth figure; the IEA-published 2025 actual is 0.17 (-39%), but the direction of the series (large double-digit growth, bottlenecks in turbines/transformers/chips) is unchanged.",
+    "source": "IEA, Data centre electricity use surged in 2025 (2026-04-16), iea.org/news/data-centre-electricity-use-surged-in-2025-even-with-tightening-bottlenecks-driving-a-scramble-for-solutions",
+    "indicators": [
+      {
+        "id": "ind_03",
+        "value": 0.17,
+        "note": "IEA published 2026-04-16: global data-centre electricity demand growth in calendar 2025 = 17% (observation is the 2025 actual, not a forward estimate). Rule 5: -39% vs stored 0.28 (2026-03-01)."
+      }
+    ]
+  },
+  {
+    "catalyst_id": "struct_biopharma_patent_cliff_ma",
+    "verdict": "intact",
+    "evidence": "ind_02 XBI trailing-12M total return recomputed from yfinance adjusted closes: +34.3% (2025-10-16 close 107.45 -> 2026-10-16 close 144.32) vs stored 80.3 (2026-08-31). This is mostly a base effect (XBI was 89.4 at 2025-08-31 and 112.2 at 2025-10-31) plus a -11.2% pullback from the 2026-08-31 close of 162.5. M&A flow itself is intact: BioBucks H1 2026 report (2026-06-30) counts 49 control transactions, ~USD 149B disclosed value, with Q2 nearly double Q1 deal count; Gibson Dunn / BofA H1 2026 surveys also describe a strong first half. ind_03 (takeout premium) NOT recorded: BofA states 82% average premium across 16 US-listed therapeutics acquisitions H1 2026, while BioBucks (18 public acquisitions, 2026-06-30) reports mean ~39% / median ~36% (13-24% for large de-risked assets) vs stored 55 - the two sources disagree by 2x on definition, so no like-for-like number is written. ind_04 (LOE revenue at risk) NOT recorded: Evaluate (>USD 300B 2025-2030), GlobalData (>USD 230B US-only) and Morgan Stanley (USD 183.5B) use different bases from the stored 265.",
+    "source": "yfinance XBI adjusted closes (computed 2026-10-17); BioBucks H1 2026 M&A report (2026-06-30); BofA 'Will the surge in biotech M&A persist?'",
+    "indicators": [
+      {
+        "id": "ind_02",
+        "value": 34.3,
+        "note": "XBI 12M total return to 2026-10-16 (adj close 107.45 on 2025-10-16 -> 144.32 on 2026-10-16), yfinance. Rule 5: -57% vs stored 80.3 (2026-08-31); mostly rolling-window base effect, XBI -11.2% from the 2026-08-31 close."
+      }
+    ]
+  },
+  {
+    "catalyst_id": "struct_nato_rearmament",
+    "verdict": "strengthening",
+    "evidence": "NATO 2026 defence-expenditure estimates (reported 2026-07-07, Anadolu/Reuters): alliance combined defence spending >USD 1.8T in 2026 (+~11% vs ~1.63T in 2025); NATO-wide average core defence spending 2.86% of GDP, European allies + Canada 2.53% core (3.93% incl. related); five allies (Lithuania, Estonia, Latvia, Poland, Greece) above 3.5% core. Industry confirmation: Rheinmetall Q2 2026 (2026-08-06) backlog ~EUR 80-80.5B (vs EUR 63B at 2025-06-30, press summaries quote +44%, unreconciled), Leonardo H1 2026 (2026-07-30) backlog ~EUR 59B (+30% vs EUR 45B at 2025-06-30, includes ~EUR 6B from consolidated Iveco Defence Vehicles) with EUR 16.3B new orders (+44.6%), Airbus Defence and Space H1 2026 order intake EUR 9.3B vs EUR 5.1B. ind_02 (combined order-book growth) NOT recorded: Airbus D&S backlog not found and the Rheinmetall growth rate is inconsistent across sources, so the three-company combined figure cannot be computed. ind_03 (EU defence ETF monthly AUM change) not recorded: only a level snapshot is observable (EUDF.L totalAssets USD 4.37B on 2026-10-17), not a monthly change. [ind_01 NOT recorded in the review: 2.86 is an alliance-wide aggregate, the stored 2.34 is the average per member — different statistic]",
+    "source": "NATO 2026 defence expenditure estimates via Anadolu (2026-07-07) and Reuters/Internazionale (2026-07-07); Rheinmetall Q2 2026; Leonardo H1 2026 press release 2026-07-30; Airbus H1 2026 press release",
+    "indicators": []
+  },
+  {
+    "catalyst_id": "struct_enterprise_cyber_spend_supercycle",
+    "verdict": "intact",
+    "evidence": "ind_05 combined cybersecurity ETF AUM: CIBR USD 17,322M + BUG USD 2,089M = USD 19,411M (yfinance totalAssets snapshot retrieved 2026-10-17) vs stored 15,390 (2026-06-01), +26%. AUM includes price appreciation, so it is a positioning proxy, not net flows; source differs from the stored ETF Database series (snapshot vs month-end), treat the level change as indicative.",
+    "source": "yfinance Ticker.info totalAssets for CIBR and BUG, retrieved 2026-10-17",
+    "indicators": [
+      {
+        "id": "ind_05",
+        "value": 19411,
+        "note": "CIBR 17,322M + BUG 2,089M USD, yfinance totalAssets snapshot 2026-10-17. Rule 5: +26% vs stored 15,390 (2026-06-01)."
+      }
+    ]
+  },
+  {
+    "catalyst_id": "struct_ai_drug_discovery",
+    "verdict": "strengthening",
+    "evidence": "Capital: BioPharma Dive / PharmaVoice H1 2026 venture review (USD 9.1B across 68 biotechs, highest first half since 2022) and BioCentury note AI biotechs were 3x as likely to raise >USD 200M rounds; Isomorphic Labs USD 2.1B Series B, Chai Discovery USD 400M (USD 3.8B valuation), Earendil Labs USD 787M (March 2026), Aureka USD 100M Series B (August 2026). Clinic: ASCO 2026 analysis counts 117 AI-enabled assets in interventional trials (60 completed Phase 1, 8 completed Phase 2); Insilico registered its 320-patient Phase 3 for rentosertib on 2026-07-07. No indicator recorded: stored ind_01 (6 USD B TTM), ind_02 (22 molecules) and ind_03 (20 partnerships) use definitions that none of the 2026 sources match (117 assets / 173 programs vs 22 molecules), so any number would be a guess. The stored ind_02 = 22 looks materially low against every 2026 count found, flagged for definition review.",
+    "source": "BioPharma Dive H1 2026 VC review; BioCentury 1H26 AI megarounds; ASCO 2026 analysis as summarised by IntuitionLabs; Insilico Phase 3 registration 2026-07-07",
+    "indicators": []
+  },
+  {
+    "catalyst_id": "struct_glp1_obesity_supercycle",
+    "verdict": "intact",
+    "evidence": "Demand: IQVIA weekly scripts for week of 2026-04-13 show Wegovy total prescriptions 416,338 (oral Wegovy 124,608, 15th week of launch) and Zepbound 615,251; Zepbound new prescriptions passed Wegovy for the first time in the week ending 2026-03-08; Wegovy pill >3M prescriptions since the 2026-01-05 launch (June 2026). Coverage: CMS Medicare GLP-1 Bridge ($50 copay for Wegovy/Zepbound) began 2026-07-01, running to 2027-12-31, with the BALANCE model next. No indicator recorded: the stored ind_01 (9.0M scripts/week, all GLP-1) cannot be matched to the two-brand weekly counts, ind_02 market size consensus varies by source and horizon (Goldman USD 130B by 2030, JPM USD 200B incretin by 2030), and no Medicare covered-lives count was published.",
+    "source": "IQVIA weekly prescriptions via UBS notes (2026-04-27); KFF / CMS Medicare GLP-1 Bridge memo (March 2026)",
+    "indicators": []
+  },
+  {
+    "catalyst_id": "struct_energy_transition_grid",
+    "verdict": "intact",
+    "evidence": "ind_03 recorded by indicator_sources --apply (1.44e+04, 2026-10-16). ind_02 (EU grid investment announced, EUR B rolling 12M) NOT recorded: no like-for-like rolling-12M figure found. Context only: TenneT reports EUR 14.8B electricity-infrastructure investment in 2025 vs EUR 10.6B in 2024; Eurelectric says distribution-grid investment must rise from ~EUR 33B/yr to ~EUR 67B/yr; EC European Grids Package (December 2025) frames EUR 1.2T EU grid need by 2040. These are needs and single-operator figures, not the announced-investment series.",
+    "source": "TenneT 2025 annual investment release; Eurelectric Grids for Speed study; European Commission Grids Package (December 2025)",
+    "indicators": []
+  }
+]

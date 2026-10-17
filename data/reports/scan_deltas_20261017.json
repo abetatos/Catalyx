@@ -2,35 +2,35 @@
  {
   "catalyst_id": "struct_ai_capex_supercycle",
   "verdict": "intact",
-  "evidence": "Demand side re-confirmed: TSMC Q3 2026 (reported 2026-10-15) revenue ~NT$1.49T, +~50% YoY, HPC 61% of revenue, and it RAISED 2026 capex to USD 60-64B from 52-56B citing structural AI demand; ASML market cap passed USD 500B on the print. Hyperscaler 2026 capex plans stay ~USD 660-725B with no guidance cut found (carried from the 2026-10-06 scan: Alphabet 195-205B, Meta 115-135B, Microsoft 110-120B). Friction is on the revenue side and the financing side, not on orders: see disconfirming. No numeric indicator recorded (no like-for-like figure for ind_01-ind_03 in the sources found).",
-  "source": "TSMC Q3 2026 results 2026-10-15 (Morningstar / letsdatascience / bits-chips summaries); FT via heygotrade 2026-10-08; Yahoo Finance hyperscaler capex summaries",
+  "evidence": "Demand side confirmed by primary data: TSMC Q3 2026 (2026-10-15) revenue US$46.72B, +41.2% YoY, gross margin 66.4%, 2026 USD sales growth forecast raised to 44%; capex guidance MAINTAINED at USD 60-64B (correcting the 2026-10-09 wording that said raised from 52-56B). Hyperscaler capex plans USD ~660-725B carried unchanged, no cut found. The live risk is financing and customer revenue, see disconfirming. No numeric indicator recorded (no like-for-like figure for ind_01-ind_03).",
+  "source": "TSMC Form 6-K Q3 2026 (sec.gov) and Focus Taiwan 2026-10-15; investingLive Americas wrap 2026-10-16",
   "disconfirming": {
    "searched": true,
-   "query": "hyperscaler capex cut lowered datacenter delay financing bond yields October 2026 / OpenAI revenue AI stocks Nasdaq week October 13 2026",
+   "query": "CoreWeave debt equity AI funding concerns hyperscaler capex cut data center delay October 2026",
    "found": true,
-   "evidence": "(1) FT reported on 2026-10-08 that OpenAI's annualised revenue run-rate is approaching USD 50B vs ~70B assumed by the market; the Philadelphia Semiconductor Index fell ~3.4% that day (Intel -5.3%, Micron -4.8%, Broadcom -4.3%, Nvidia -3%) and the Nasdaq had its worst day since August. A gross-vs-net revenue definition may explain part of the gap, so it is not verified as a demand break, and a single-source press report scored 45 on the strength rubric (below the 55 write threshold, so NOT registered as a contradicts event). (2) Project-level friction: transformer lead times 36-38 months and reports that more than half of US data-centre projects planned for 2026 are delayed or cancelled. (3) Financing: hyperscaler capex is outrunning internal cash flow (FactSet, 2026-09-21: ~USD 600B gap through 2028) while the 10y yields ~5.2-5.3%. TSMC's raised capex on 2026-10-15 is the counter-evidence that orders have not broken. Net: demand intact, funding cost and customer-revenue evidence are the live risks for a book carrying ~63-76% of its variance in this driver."
+   "evidence": "Funding-side stress, not an order cut: Nasdaq -2.3% on the week to 2026-10-16 with SOX down eight sessions (investingLive 2026-10-16); reports that CoreWeave may use equity to meet debt obligations; CoreWeave 9.625% 2032 bonds quoted ~15% yield on 2026-10-14 (single secondary source, unverified), total liabilities ~USD 52B at end-June; FT 2026-10-08 OpenAI run-rate ~USD 50B vs ~70B expected (gross-vs-net caveat). Scored 45 on the strength rubric, below the 55 write threshold, so NOT registered as contradicts. No hyperscaler capex cut found; TSMC held its capex and raised sales growth. Book carries a large share of its variance in this driver."
   }
  },
  {
   "catalyst_id": "struct_ai_drug_discovery",
   "verdict": "intact",
-  "evidence": "No dated October-2026 development found. Standing picture unchanged from the 2026-10-06 scan: funding continues (Isomorphic USD 2.1B Series B, May 2026) but no AI-discovered drug holds full FDA approval as of August 2026. No numeric indicator recorded.",
-  "source": "IntuitionLabs AI-discovered drugs 2026; ai2.work 'USD 8.9B into AI drug design' (undated); search 2026-10-09 (results largely undated)",
+  "evidence": "No dated October-2026 development. Standing picture: no AI-discovered drug has full FDA approval as of October 2026; ASCO 2026 analysis counts 117 AI-enabled assets in human trials, 60 (51.3%) completed Phase 1 and 8 (6.8%) completed Phase 2; Phase 2 success ~40%, in line with historical norms; Isomorphic USD 2.1B Series B (May 2026). No numeric indicator recorded.",
+  "source": "IntuitionLabs AI-discovered drugs 2026 (search 2026-10-17, results mostly undated)",
   "disconfirming": {
    "searched": true,
-   "query": "AI drug discovery trial failure setback biotech funding drought October 2026",
-   "found": true,
-   "evidence": "Same standing evidence as the 2026-10-06 scan, not new: no AI-designed drug has passed Phase 3 or been approved (as of August 2026), pure-play AI-drug VC deals are fewer than 20 a year at about half the 2021 peak, and Recursion shelved three candidates after the Exscientia merger. Results were mostly undated or 2023-2025 pages, so there is no October-2026 event; it stays an open 'maturing narrative' risk against deact_01, not met."
+   "query": "AI drug discovery clinical trial failure biotech funding October 2026",
+   "found": false,
+   "evidence": null
   }
  },
  {
   "catalyst_id": "struct_biopharma_patent_cliff_ma",
-  "verdict": "strengthening",
-  "evidence": "Deal flow continues into the rate shock: Sun Pharma / Organon USD 11.75B, Eli Lilly / Ajax Therapeutics up to USD 2.3B (Lilly's sixth acquisition of the year) and Lilly / Kelonia USD 7B; USD 300B+ of branded revenue exposed to patent expiry by 2030. Trackers disagree on 2026 YTD volume (USD 66B on a stricter eMarketer definition vs ~USD 199B BioWorld/Biobucks recorded on 2026-10-06), so no numeric ind_01 update is recorded (Rule 5 flag unresolved).",
-  "source": "eMarketer 'Drugmakers race to lock up assets in USD 66B deal blitz'; BioSpace deals pages; marketscale patent-cliff piece (search 2026-10-09)",
+  "verdict": "intact",
+  "evidence": "Deal flow persists into the rate shock: Sun Pharma/Organon USD 11.75B, GSK/Nuvalent USD 10.6B, J&J/Centessa up to USD 7.8B, Lilly/Orna up to USD 2.4B (mostly undated in the sources; no dated October deal verified this scan); biopharma deal value through July 2026 USD 186.69B, +13% on 2025; more USD 1B+ deals YTD than in all of 2025. USD ~150B of 2025 sales lose protection by 2030. No numeric ind_01 update: trackers disagree on YTD volume (Rule 5 flag unresolved).",
+  "source": "Gibson Dunn H1 2026 mid-cap survey; BioWorld July 2026; GEN top takeover targets 2026 (search 2026-10-17)",
   "disconfirming": {
    "searched": true,
-   "query": "biotech M&A slowdown deal collapsed FTC rising rates XBI October 2026",
+   "query": "biotech M&A slowdown deal blocked FTC higher rates XBI biotech selloff October 2026",
    "found": false,
    "evidence": null
   }
@@ -38,23 +38,23 @@
  {
   "catalyst_id": "struct_energy_transition_grid",
   "verdict": "intact",
-  "evidence": "Physical demand intact: BloombergNEF expects global grid spending above USD 500B in 2026 and transformer lead times have stretched to 36-38 months (a supply constraint that supports pricing for equipment makers). The cost-of-capital channel is adverse and is carried by cat_20260910_ecb_rate_hike and cat_20260916_fed_rate_hike (sector_impact adverse on grid_infrastructure_utilities), not by this structural. No numeric indicator recorded.",
-  "source": "BloombergNEF grid outlook via datacentres.com 2026-08-10; transformers-magazine; search 2026-10-09",
+  "evidence": "Physical demand intact: transformer shortage is the binding constraint (lead times 36-38 months per the 2026-10-09 scan; multi-billion projects delayed). The cost-of-capital channel (US 10y 5.09% on 2026-10-16, down from 5.2-5.3%) is carried by the Fed and ECB hike events with sector_impact adverse, not by this structural. No numeric indicator recorded.",
+  "source": "enkiai transformer shortage data; latitudemedia project cancellations (search 2026-10-17, undated)",
   "disconfirming": {
    "searched": true,
-   "query": "utility capex cut grid buildout delayed rising yields cost of capital renewables cancelled October 2026",
-   "found": true,
-   "evidence": "PG&E is reported to defer ~USD 2B of planned spending, cutting 2027 capex to USD 11.4B after a wildfire-liability bill failed (result undated); Fitch cut its utilities outlook in September (cited in the 2026-09-14 refresh). The SSE / Orsted cuts in the same results are 2023-2025 pages and were discarded. Pressure is on utility balance sheets and on the cost of capital with the 10y ~5.2-5.3%, not on grid-equipment demand; not an invalidation."
+   "query": "utilities grid capex cut rising yields renewable project cancelled transformer October 2026",
+   "found": false,
+   "evidence": "Results are a shortage and cancellation backlog (nearly 2,000 US power projects, 266 GW cancelled since the start of 2025, mostly solar/storage/wind generation) and undated; none is a grid-equipment demand cut or a dated October-2026 utility capex reduction. The PG&E 2B deferral and the Fitch utilities outlook cut from the 2026-10-09 scan are carried, not re-verified."
   }
  },
  {
   "catalyst_id": "struct_enterprise_cyber_spend_supercycle",
   "verdict": "intact",
-  "evidence": "No dated October-2026 evidence found; Gartner's 2026 forecast stands (USD 240B, +12.5% YoY, with USD 51.3B in AI-security spend). The vendor results surfaced (Palo Alto FY26 guide, CrowdStrike Q3 FY26) are 2025-dated and were not used. The revision event cat_20260728_cybersecurity_ai_beneficiary_revision is the live corroboration. No numeric indicator recorded.",
-  "source": "Gartner 2026 forecast (search 2026-10-09; results mostly undated)",
+  "evidence": "No dated October-2026 evidence either way. Gartner 2026 forecast stands (USD 240B, +12.5%, USD 51.3B AI security); Morgan Stanley CIO surveys rank security software as the least-cut IT budget line; Palo Alto revenue expected USD 11.5B FY26 to USD 16.2B FY28 at 23.2x forward revenue. The 'cyber fatigue' and CrowdStrike forecast-miss items in the short-case search are 2022-2025 pages and were discarded. No numeric indicator recorded.",
+  "source": "tikr.com Palo Alto note; betashares AI sell-off note (undated); Gartner via 2026-10-09 scan",
   "disconfirming": {
    "searched": true,
-   "query": "enterprise IT security budgets cut slowdown cybersecurity stocks fall October 2026",
+   "query": "cybersecurity spending slowdown security budgets cut software stocks selloff valuation October 2026",
    "found": false,
    "evidence": null
   }
@@ -62,55 +62,49 @@
  {
   "catalyst_id": "struct_nato_rearmament",
   "verdict": "intact",
-  "evidence": "NATO says European allies and Canada raise defence spending ~11% to USD 634B in 2026 and pledged EUR 70B for Ukraine in 2026 and again in 2027; Secretary-General Rutte announced 'tens of billions' of new contracts at the Ankara summit. No numeric indicator recorded.",
-  "source": "Brussels Times / Qatar Tribune NATO spending reports; Washington Examiner Rutte contracts (search 2026-10-09)",
+  "evidence": "NATO reports European allies and Canada raising defence spending ~11% to USD 634B in 2026 (2.53% of GDP core, 3.93% with related spend); USD 50B+ in procurements secured at the Ankara summit defence-industry forum and a USD 40B five-year drone initiative; ICDS 2026-09-14 tracks national plans to the 3.5% + 1.5% by 2035 target. No numeric indicator recorded.",
+  "source": "Brussels Times and Qatar Tribune NATO reports; ICDS 2026-09-14; HANetf Future of Defence July 2026",
   "disconfirming": {
    "searched": true,
-   "query": "defense budget delayed cut procurement shortfall Europe October 2026",
-   "found": true,
-   "evidence": "Il Foglio (2026-09-30): Europe spends more on defence than in thirty years 'but is not ready' (execution capacity, not budgets); samsearch reports European procurement delays despite higher budgets; militarnyi reports Italy preparing programme cuts to meet EU fiscal requirements (undated). Friction is on delivery and on the fiscal side (5%+ long yields tighten deficit-financed budgets), not a budget reversal; verdict stays intact."
+   "query": "NATO defence spending Europe procurement October 2026 budget cut delay",
+   "found": false,
+   "evidence": null
   }
  },
  {
   "catalyst_id": "cat_20260620_clarity_act_market_structure",
   "verdict": "weakening",
-  "evidence": "Senate cloture on the CLARITY Act FAILED 49-50 on 2026-09-15 (60 required); four Republicans (Collins, Hawley, Moran, Tillis) voted no. The stored description ('Senate committee stage, 48-50% odds') is stale: the optionality the event priced has been voted down for now. The GENIUS Act (payment stablecoins) is separate and already enacted. Recommend the lifecycle gate treat this as a reversal; the event is not edited here.",
-  "source": "Senate cloture vote reported by stablecoininsider.org (search 2026-10-09)"
+  "evidence": "Senate cloture on the CLARITY Act FAILED 49-50 on 2026-09-15 (60 required, 11 short); no Democrat voted yes; BTC -4% and Coinbase -8% on the day; digital-asset rules fall to SEC/CFTC for at least two years. The stored description ('Senate committee stage, 48-50% odds') is stale and the regulatory optionality it priced is gone for 2026. Recommend the lifecycle gate treat this as a reversal. The event is not edited here.",
+  "source": "cointelegraph / decrypt / bitcoin.com reports of the 2026-09-15 vote (search 2026-10-17)"
  },
  {
   "catalyst_id": "cat_20260728_cybersecurity_ai_beneficiary_revision",
   "verdict": "intact",
-  "evidence": "No reversal of the July analyst revisions found; no new bank revisions on cybersecurity surfaced. Event is 80+ days old on a 30-day halflife.",
-  "source": "search 2026-10-09 (analyst-revision query returned no cyber items)"
+  "evidence": "No reversal of the July bank revisions found and no new bank revisions on cybersecurity surfaced (the analyst-revision query returned biotech and semiconductor price-target raises from JPMorgan and Morgan Stanley, none on cyber). Event is 81 days old on a 30-day halflife and carries little weight.",
+  "source": "analyst-revision search 2026-10-17"
  },
  {
   "catalyst_id": "struct_stablecoin_payment_rails",
   "verdict": "intact",
-  "evidence": "GENIUS Act (68-30 Senate vote) is enacted and covers payment stablecoins, reserves and audits; the CLARITY failure concerns exchange/market-structure rules and does not touch the payment-rails thesis directly.",
-  "source": "a16z crypto regulatory update; cointelegraph (search 2026-10-09)"
+  "evidence": "The CLARITY failure (2026-09-15) concerns exchange and market-structure rules; the GENIUS Act covers payment stablecoins and is separate (carried from the 2026-10-09 scan, not re-searched this scan). Rails thesis untouched by the vote.",
+  "source": "CLARITY cloture reports 2026-09-15; GENIUS Act status carried from the 2026-10-09 scan"
  },
  {
-  "catalyst_id": "struct_cb_gold_accumulation",
+  "catalyst_id": "cat_20260916_fed_rate_hike",
   "verdict": "intact",
-  "evidence": "Gold fell ~6% in September to a seven-week low (~USD 4,110) after the 2026-09-16 Fed hike while central banks bought a record 289t in Q2: a rate-driven price move, not a break in official-sector buying. 10y at ~5.2-5.3% remains the headwind carried by the Fed events' sector_impact on gold. Checked only because the macro query touched it.",
-  "source": "Bloomberg 2026-09-16; Modern Diplomacy 2026-09-08 (carried from the 2026-10-06 scan)"
- },
- {
-  "catalyst_id": "cat_20260617_fed_hawkish_pivot",
-  "verdict": "strengthening",
-  "evidence": "FOMC hiked 25bp to 3.75-4.00% on 2026-09-16 (12-0); minutes 2026-10-07: another hike likely by year end; September CPI 3.7% vs 3.6% expected (2026-10-14). The realised hike is registered as cat_20260916_fed_rate_hike.",
-  "source": "Schwab FOMC recap; CNBC minutes 2026-10-07; XTB / investingLive 2026-10-14"
- },
- {
-  "catalyst_id": "cat_20260817_hormuz_reescalation",
-  "verdict": "intact",
-  "evidence": "Brent ~USD 103 after Trump's pause on strikes until 2026-11-03 with the naval blockade still in force; WTI USD 95.12 on 2026-10-14. Re-verify on 2026-11-03.",
-  "source": "democrata.es / Yahoo Finance 2026-10-08; investingLive 2026-10-14"
+  "evidence": "FOMC hiked 25bp to 3.75-4.00% on 2026-09-16; September CPI 3.7% vs 3.6% expected (2026-10-14); import prices +1.1% vs +0.8% (2026-10-16); US 10y 5.09% on 2026-10-16 (5.219% on 2026-10-14). Counter-signal: NY Fed's Williams said one more hike in 2026 may be sufficient, and October-hike odds range 20-50% across sources. Next FOMC 2026-10-28.",
+  "source": "investingLive 2026-10-16 wraps; scotsmanguide / coingape CPI-odds pieces (2026-10-14/15)"
  },
  {
   "catalyst_id": "cat_20260910_ecb_rate_hike",
   "verdict": "intact",
-  "evidence": "Corroborated by the Fed hike and the hot US CPI; next ECB decision 2026-10-29.",
-  "source": "XTB / investingLive 2026-10-14"
+  "evidence": "Deposit rate 2.50% after the 2026-09-10 hike; Lagarde says the energy-driven inflation shock lasts longer than expected, Schnabel says further hikes will likely be needed; markets and most economists expect a hold on 2026-10-29 and a hike in December. September euro-area PMI price pressures sharpest in four months.",
+  "source": "investingLive ECB coverage (Lagarde/Ouest-France, Schnabel, PMI) search 2026-10-17"
+ },
+ {
+  "catalyst_id": "cat_20260817_hormuz_reescalation",
+  "verdict": "strengthening",
+  "evidence": "WTI rose from USD 91.09 on 2026-10-08 to USD 101.37 on 2026-10-16 (+3.4 that day) on risk of US escalation in Iran; Trump said on 2026-10-08 no attack before the 2026-11-03 midterms while the US naval blockade stays in force; Iran's Mehr agency denies a deal. Stored event records Brent ~94 on 2026-08-24, so the oil level has moved well beyond it. Re-verify on 2026-11-03.",
+  "source": "investingLive Americas wraps 2026-10-08 and 2026-10-16"
  }
 ]
