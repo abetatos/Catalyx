@@ -81,6 +81,13 @@ Like C2c, this is not optional because the failure is silent.
   - `not_an_event` requires `reason` (opinion, forecast, commentary — nothing decided).
   - A "hold" is a decided fact. It may be `below_threshold`; it may not be missing.
 
+3. Read `work_list.market_moves` in the same state file (tape triggers with no date: US 10y,
+   Brent, SPY/Euro Stoxx drawdown). Each present move is triaged as a `source: c0` row with
+   `key: market:<ticker>:<date>` exactly as the state prints it — search what drove it, and decide
+   `registered` / `refresh_of` / `not_an_event` like any other decided fact. A `market:<ticker>:unavailable`
+   row means the trigger could not be evaluated: say so in `reason`, it is a data problem to flag,
+   not a quiet market.
+
 ---
 
 ## Pass 1 — Discovery Pass

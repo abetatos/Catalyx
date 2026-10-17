@@ -185,6 +185,10 @@ cal_due = wl.get("calendar_due") or []
 if cal_due:
     alerts.append(f"{len(cal_due)} central-bank decision(s) not triaged by any scan: "
                   + ", ".join(d["key"] for d in cal_due))
+if st.get("market_error"):
+    alerts.append(f"market triggers could not be evaluated: {st['market_error']}")
+for m in wl.get("market_moves") or []:
+    alerts.append(f"market move: {m['message']}")
 if att.get("stale_verdicts"):
     alerts.append(f"{att['stale_verdicts']} catalyst verdict(s) past the freshness limit")
 if att.get("pending_lifecycle"):

@@ -50,6 +50,10 @@ def validate(triage: dict, state: dict, catalyst_ids: set[str]) -> list[str]:
             problems.append(f"central-bank decision {d['key']} ({d['days_ago']}d ago) has no row "
                             "in the triage — search what it decided and triage it")
 
+    for m in wl.get("market_moves") or []:
+        if m["key"] not in keys:
+            problems.append(f"market move {m['key']} ({m['message']}) has no row in the triage")
+
     if not any(isinstance(i, dict) and i.get("source") == "c0" for i in items):
         problems.append("no `source: c0` row — C0 always yields decided/official facts; "
                         "zero rows means C0 was not triaged")

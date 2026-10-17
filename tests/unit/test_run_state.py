@@ -210,3 +210,15 @@ def test_render_shows_calendar_due_and_error():
     text = run_state.render(_digest(work_list=wl, calendar_error="ValueError: x"))
     assert "CALENDAR DUE" in text and "fed:2026-09-16" in text
     assert "CALENDAR ERROR" in text and "fed:2026-10-28" in text
+
+
+def test_market_block_error_is_not_an_empty_list(monkeypatch):
+    from catalyx.scorer import review_triggers
+    from catalyx.store import run_state
+    from datetime import date
+
+    def boom(*a, **k):
+        raise RuntimeError("cache unreadable")
+    monkeypatch.setattr(review_triggers, "current_moves", boom)
+    moves, err = run_state._market_block(date(2026, 10, 17))
+    assert moves is None and "cache unreadable" in err

@@ -100,3 +100,12 @@ def test_disk_wrapper_end_to_end(tmp_path):
     (tmp_path / "scan_triage_20261020.json").write_text("{not json")
     assert any("unreadable" in e for e in st.check("2026-10-20", reports_dir=tmp_path,
                                                     events_dir=ev, structural_dir=sd))
+
+
+def test_a_fired_market_move_needs_its_row():
+    state = {"work_list": {"calendar_due": [], "market_moves": [
+        {"key": "market:BZ=F:2026-10-16", "message": "Brent +21%"}]}}
+    errs = st.validate({"items": [_item()]}, state, IDS)
+    assert any("market:BZ=F:2026-10-16" in e for e in errs)
+    ok = {"items": [_item(), _item("market:BZ=F:2026-10-16")]}
+    assert st.validate(ok, state, IDS) == []

@@ -1548,3 +1548,19 @@ risk_metrics:
                              # zero, so this is a floor against nonsense, not a claim of rigour.
   min_days_for_vol: 30       # vol converges faster than a ratio of mean to vol (no mean to
                              # estimate), so it earns a lower bar than Sharpe.
+
+# ── v15 Phase 5 — market review triggers ─────────────────────────────────────────────────────────
+# Pull a review forward when the TAPE moves without a dated event (Hormuz, a bond rout). NOT a
+# score input and NOT a rule action: it only feeds the heartbeat alert and the scan's C0b triage.
+# Thresholds were MEASURED, not chosen, on 10.8y of history (2016-01 → 2026-10, scratch script):
+# the rule was "no trigger above 15% of days". Share of days fired / distinct episodes per year:
+#   us10y |Δ20d| ≥ 25bp  24.5% / 4.5  → too hot (plan default).   ≥ 40bp  9.9% / 2.2   ← chosen
+#   brent |Δ20d| ≥ 15%   10.3% / 3.5                              ← chosen (kept)
+#   SPY       ≤ -5% from the 20-session high  10.7% / 2.3         ← chosen (kept)
+#   ^STOXX50E ≤ -5% from the 20-session high  11.5% / 2.8         ← chosen (kept)
+# ^TNX is a yield in percent: 40bp = 0.40 in the series. Brent is a continuous future, so the move
+# is read over 20 sessions, never daily (roll jumps).
+review_triggers:
+  us10y_change_bp_20d: 40
+  brent_change_pct_20d: 15
+  equity_drawdown_pct_from_20d_high: 5

@@ -58,6 +58,10 @@ DEFAULT_HISTORY_DAYS = 400
 # `exit_watcher` stop fetching them independently.
 FX_TICKERS = ("EURUSD=X", "EURGBP=X")
 BENCHMARK_TICKERS = ("SPY", "^VIX")
+# v15 Phase 5 — review-trigger inputs (rates, oil, EU equity). NATIVE series, never EUR-converted:
+# ^TNX is a YIELD in percent (5.1 = 5.1%), not a price, and BZ=F is a continuous future. Read with
+# `allow_fetch=False`; `catalyx.scorer.review_triggers` is the only consumer. Not in any return panel.
+MACRO_TICKERS = ("^TNX", "BZ=F", "^STOXX50E")
 
 
 def _offline() -> bool:
@@ -456,7 +460,8 @@ def universe_tickers() -> list[str]:
                 tk = (e or {}).get("ticker") if isinstance(e, dict) else None
                 if tk:
                     tickers.append(str(tk))
-    return list(dict.fromkeys(tickers + list(BENCHMARK_TICKERS) + list(FX_TICKERS)))
+    return list(dict.fromkeys(tickers + list(BENCHMARK_TICKERS) + list(MACRO_TICKERS)
+                                    + list(FX_TICKERS)))
 
 
 # ── CLI ──────────────────────────────────────────────────────────────────────

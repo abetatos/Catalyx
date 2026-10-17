@@ -738,3 +738,16 @@ def risk_metrics() -> dict:
     """Sample-size floors below which vol/Sharpe/beta are shown as indicative, not as findings.
     See scoring_weights.yaml `risk_metrics` for why a two-month Sharpe is not a measurement."""
     return _section("risk_metrics", _RISK_METRICS_DEFAULT)
+
+
+_REVIEW_TRIGGERS_DEFAULT = {
+    "us10y_change_bp_20d": 40,
+    "brent_change_pct_20d": 15,
+    "equity_drawdown_pct_from_20d_high": 5,
+}
+
+
+def review_triggers() -> dict:
+    """Market moves that pull a review forward (review_triggers.py). Measured on 10.8y of history;
+    the share of days each fires is in scoring_weights.yaml. Not a score input, not a rule action."""
+    return _section("review_triggers", _REVIEW_TRIGGERS_DEFAULT)
