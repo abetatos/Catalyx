@@ -47,11 +47,67 @@ user_notes: >
 intensity:
   current_score: 86.6
   computation_method: computed
-  last_updated: "2026-09-01"
+  last_updated: "2026-10-16"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: on par with struct_solar_lcoe_deployment (64.1). Onset-phase,
     high-novelty adoption trend with an incumbent-capture floor.
   history:
+  - period: '2026-10-16'
+    score: 86.6
+    note: 'Computed 2026-10-16: avg=86.58 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-13'
+    score: 86.6
+    note: 'Computed 2026-10-13: avg=86.58 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-09'
+    score: 86.6
+    note: 'Computed 2026-10-09: avg=86.58 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-06'
+    score: 86.6
+    note: 'Computed 2026-10-06: avg=86.58 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-02'
+    score: 86.6
+    note: 'Computed 2026-10-02: avg=86.58 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-29'
+    score: 86.6
+    note: 'Computed 2026-09-29: avg=86.58 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-25'
+    score: 86.6
+    note: 'Computed 2026-09-25: avg=86.58 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-22'
+    score: 86.6
+    note: 'Computed 2026-09-22: avg=86.58 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-18'
+    score: 86.6
+    note: 'Computed 2026-09-18: avg=86.58 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-15'
+    score: 86.6
+    note: 'Computed 2026-09-15: avg=86.58 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-14'
+    score: 86.6
+    note: 'Computed 2026-09-14: avg=86.58 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-11'
+    score: 86.6
+    note: 'Computed 2026-09-11: avg=86.58 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-08'
+    score: 86.6
+    note: 'Computed 2026-09-08: avg=86.58 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-04'
+    score: 86.6
+    note: 'Computed 2026-09-04: avg=86.58 trend=→ (flat)'
+    computation_method: computed
   - period: '2026-09-01'
     score: 86.6
     note: 'Computed 2026-09-01: avg=86.58 trend=→ (flat) (was 88.6)'

@@ -49,8 +49,14 @@
     "Blackwell",
     "sanctions"
   ],
-  "status_last_reviewed": "2026-08-31",
+  "status_last_reviewed": "2026-10-06",
   "review_log": [
+    {
+      "date": "2026-10-06",
+      "verdict": "intact",
+      "evidence": "No change to the 2026-06-01 BIS guidance (licence requirements apply to all China-headquartered firms including overseas subsidiaries); the case-by-case regime for H200 / MI325X exports from the US to China (rule of 2026-01-15) still stands. Enforcement continues: federal prosecutors charged a California man in early October 2026 with smuggling servers containing ~$300M of NVIDIA chips to China. NVIDIA remains described as effectively foreclosed from China data center compute.",
+      "source": "Bloomberg 2026-10-02 (smuggling charge); Al Jazeera 2026-06-01; NVIDIA FY2026 10-K"
+    },
     {
       "date": "2026-08-31",
       "verdict": "intact",

@@ -54,8 +54,14 @@
     "Zambia",
     "mine_supply"
   ],
-  "status_last_reviewed": "2026-08-31",
+  "status_last_reviewed": "2026-10-06",
   "review_log": [
+    {
+      "date": "2026-10-06",
+      "verdict": "weakening",
+      "evidence": "Deficit forecasts hold (ING 600kt refined deficit for 2026; ICSG 150kt; Benchmark ~591kt Grasberg loss through end-2026; Kamoa-Kakula ~300kt across 2025-26) and LME copper set a record of USD 14,875/t on 2026-09-10, but the PHYSICAL squeeze the event describes has loosened: LME warehouse stocks rose 3.59% to 242,900 t, reported at their highest in over six years, and the spot-to-three-month spread flipped to a USD 67.50/t contango; price closed at 14,014.50 on 2026-09-22, ~6% below the record, and copper fell on a firmer dollar and Fed hike bets. Gold-style rate pressure rather than supply news is now driving the tape. Recommend holding the stored strength while the stocks/spread are watched; a second print of rising stocks should be re-scored.",
+      "source": "Business Recorder / Reuters copper 3-week low (LME stocks, contango); MINING.COM LME stockpiles highest in six years; Bloomberg 2026-09-23; Benchmark Minerals Grasberg analysis"
+    },
     {
       "date": "2026-08-31",
       "verdict": "intact",

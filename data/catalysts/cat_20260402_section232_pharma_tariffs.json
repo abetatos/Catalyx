@@ -54,8 +54,14 @@
     "contradicts",
     "glp1"
   ],
-  "status_last_reviewed": "2026-08-31",
+  "status_last_reviewed": "2026-10-06",
   "review_log": [
+    {
+      "date": "2026-10-06",
+      "verdict": "intact",
+      "evidence": "Section 232 tiers took effect on schedule: 2026-07-31 for Annex III companies and 2026-09-29 for the rest, headline up to 100% ad valorem. The carve-outs that make it a smaller headwind than the headline are confirmed: 0% for companies with MFN pricing agreements through 2029-01-20, 20% for companies with approved onshoring plans from 2026-09-29, reduced rate for EU, Japan, South Korea and Switzerland (15%), generics and biosimilars exempt. No stock-price impact data was found in the results.",
+      "source": "Crowell & Moring alert (tiered structure, 2026-07-31); C.H. Robinson CBP advisory 2026-07-31; Federal Register onshoring procedures 2026-05-13; Mallory Group Section 232 guide"
+    },
     {
       "date": "2026-08-31",
       "verdict": "intact",

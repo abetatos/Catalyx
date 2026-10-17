@@ -55,8 +55,20 @@
     "macro",
     "rate_sensitive"
   ],
-  "status_last_reviewed": "2026-08-31",
+  "status_last_reviewed": "2026-10-17",
   "review_log": [
+    {
+      "date": "2026-10-17",
+      "verdict": "strengthening",
+      "evidence": "Thesis realised: FOMC hiked 25bp to 3.75-4.00% on 2026-09-16 (12-0); 2026-10-07 minutes say another hike is likely by year end; hot September CPI on 2026-10-14 (3.7% vs 3.6% expected; core 2.6% vs 2.5%) lifted October-hike odds from ~20% to 37-50% and December is priced ~81%; 10y ~5.2-5.3%. sector_impact BACKFILLED this scan (it was unstated, so the scorer assumed supportive on nine sectors, including +14.3 of CA for eu_retail_banking and oil_majors_integrated that rested entirely on this event): adverse for oil_majors_integrated (5%+ Treasuries compete with dividend yield, stronger USD) and for the long-duration/financed sectors, supportive only for eu_retail_banking. The oil_majors direction is the lowest-confidence call: the energy shock that CAUSED the hawkishness is supportive for majors but is carried by cat_20260817_hormuz_reescalation, not by this event.",
+      "source": "Schwab FOMC recap 2026-09-16; CNBC FOMC minutes 2026-10-07; XTB / investingLive CPI wraps 2026-10-14"
+    },
+    {
+      "date": "2026-09-14",
+      "verdict": "strengthening",
+      "evidence": "August CPI (released 2026-09-11) held above the Fed's 2% target; CME/Polymarket odds of a 25bp HIKE at the 2026-09-15/16 FOMC rose to ~85-90% (from ~55% at Jackson Hole, per the 2026-08-31 review_log entry). This is now corroborated by an ACTUAL action, not just guidance: the ECB hiked 25bp on 2026-09-10 (its second hike since the Iran war began, registered separately as cat_20260910_ecb_rate_hike) on euro-area inflation of 3.3% YoY, and the BoJ is priced at 62% odds of a further 25bp hike at its 2026-09-17/18 meeting, with board member Masu explicitly reaffirming a continued-hiking stance. Three major central banks moving in the same 10-day window on the same energy-shock driver is the confirmation this catalyst's thesis needed: the disinflation-cut path is not just paused, it has reversed into synchronized tightening.",
+      "source": "Bloomberg/Chase/Forbes Fed coverage 2026-09-05/12; ECB monetary policy statement 2026-09-10; Bloomberg BoJ Masu remarks 2026-09-10"
+    },
     {
       "date": "2026-08-31",
       "verdict": "strengthening",
@@ -75,5 +87,39 @@
       "evidence": "Fed held the funds rate at 3.50-3.75% for a fifth consecutive meeting in July 2026 with markets assigning roughly one-in-three odds to a HIKE; Chair Warsh used Jackson Hole to flag that underlying inflation is not slowing. CPI running +3.5% YoY as of August 2026 with the effective funds rate at 3.63%. The hawkish-pivot thesis is confirmed, not fading. DATA HYGIENE: search returned a '+2.5% August CPI' figure that traces to 2024-dated articles (fxstreet/tradingview 2024 URLs) — discarded, not recorded.",
       "source": "TradingEconomics US Fed Funds Rate; Jackson Hole 2026 remarks (Warsh); Investing.com sector-rotation note 2026-08-24 (accessed 2026-08-31)"
     }
-  ]
+  ],
+  "affected_sectors": [
+    "ai_infrastructure_data_centers",
+    "cybersecurity_commercial",
+    "copper_miners",
+    "gold_physical",
+    "gold_miners",
+    "eu_retail_banking",
+    "grid_infrastructure_utilities",
+    "oil_majors_integrated",
+    "cloud_software_saas"
+  ],
+  "sector_impact": {
+    "ai_infrastructure_data_centers": "adverse",
+    "cybersecurity_commercial": "adverse",
+    "copper_miners": "adverse",
+    "gold_physical": "adverse",
+    "gold_miners": "adverse",
+    "eu_retail_banking": "supportive",
+    "grid_infrastructure_utilities": "adverse",
+    "oil_majors_integrated": "adverse",
+    "cloud_software_saas": "adverse"
+  },
+  "strength_rubric_scores": {
+    "str_01": false,
+    "str_02": true,
+    "str_03": true,
+    "str_04": true,
+    "str_05": true
+  },
+  "strength_anchors": {
+    "stronger_than": "cat_20260910_ecb_rate_hike",
+    "weaker_than": "cat_20260603_nato_defense_gdp",
+    "note": "Rubric total 75 (str_02+str_03+str_04+str_05; magnitude is a guidance flip, not a quantity). Stored 80 is within the 15-point divergence. Backfilled 2026-10-17: surprise was real at the time (curve priced a cut, dots flipped to a hike); the hike itself is now registered separately as cat_20260916_fed_rate_hike."
+  }
 }

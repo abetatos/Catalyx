@@ -56,8 +56,14 @@
     "earnings",
     "confirms_ai_capex"
   ],
-  "status_last_reviewed": "2026-08-31",
+  "status_last_reviewed": "2026-10-06",
   "review_log": [
+    {
+      "date": "2026-10-06",
+      "verdict": "strengthening",
+      "evidence": "Micron FQ4 FY26 (period ended 2026-09-03; reported 2026-09-30): revenue $54.23B vs $11.32B a year earlier, FY26 revenue $133.19B; CEO expects demand to exceed supply in both 2027 and 2028 with no date for balance. HBM3E spot reached ~$2,100 per 36GB module on 2026-09-04, 4-5x the $300-400 long-term-agreement price; DRAM and NAND prices set record highs in August. JPMorgan models HBM shortages of 20% (2026), 19% (2027), 16% (2028); an analyst raised the Micron target to $1,325 from $1,016. The 30-day halflife on this corporate_event means the stored decay is the binding limit on how much a confirmation is worth.",
+      "source": "Winbuzzer 2026-10-01 (Micron shortages through 2028); Benzinga 2026-09 (JPMorgan HBM shortage analysis); TheStreet Micron targets September 2026"
+    },
     {
       "date": "2026-08-31",
       "verdict": "strengthening",

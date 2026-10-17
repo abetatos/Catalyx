@@ -39,13 +39,69 @@ user_notes: >
   are the primary confirmation; refresh quarterly against IQVIA/BioPharma deal trackers.
 
 intensity:
-  current_score: 92.8
+  current_score: 87.8
   computation_method: computed
-  last_updated: "2026-09-01"
+  last_updated: "2026-10-16"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: just below struct_ai_capex_supercycle (89.9). Durable
     LOE-driven takeout pressure with clear deal-flow indicators.
   history:
+  - period: '2026-10-16'
+    score: 87.8
+    note: 'Computed 2026-10-16: avg=87.78 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-13'
+    score: 87.8
+    note: 'Computed 2026-10-13: avg=87.78 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-09'
+    score: 87.8
+    note: 'Computed 2026-10-09: avg=87.78 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-06'
+    score: 87.8
+    note: 'Computed 2026-10-06: avg=87.78 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-02'
+    score: 87.8
+    note: 'Computed 2026-10-02: avg=87.78 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-29'
+    score: 87.8
+    note: 'Computed 2026-09-29: avg=87.78 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-25'
+    score: 87.8
+    note: 'Computed 2026-09-25: avg=87.78 trend=→ (flat) (was 89.8)'
+    computation_method: computed
+  - period: '2026-09-22'
+    score: 89.8
+    note: 'Computed 2026-09-22: avg=87.78 trend=↑ (rising 1 period) (was 87.8)'
+    computation_method: computed
+  - period: '2026-09-18'
+    score: 87.8
+    note: 'Computed 2026-09-18: avg=87.78 trend=→ (flat) (was 80.8)'
+    computation_method: computed
+  - period: '2026-09-15'
+    score: 80.8
+    note: 'Computed 2026-09-15: avg=87.78 trend=↓↓ (falling 2+ consecutive)'
+    computation_method: computed
+  - period: '2026-09-14'
+    score: 80.8
+    note: 'Computed 2026-09-14: avg=87.78 trend=↓↓ (falling 2+ consecutive) (was 84.8)'
+    computation_method: computed
+  - period: '2026-09-11'
+    score: 84.8
+    note: 'Computed 2026-09-11: avg=87.78 trend=↓ (falling 1 period) (was 87.8)'
+    computation_method: computed
+  - period: '2026-09-08'
+    score: 87.8
+    note: 'Computed 2026-09-08: avg=87.78 trend=→ (flat) (was 92.8)'
+    computation_method: computed
+  - period: '2026-09-04'
+    score: 92.8
+    note: 'Computed 2026-09-04: avg=87.78 trend=↑↑ (rising 2+ consecutive)'
+    computation_method: computed
   - period: '2026-09-01'
     score: 92.8
     note: 'Computed 2026-09-01: avg=87.78 trend=↑↑ (rising 2+ consecutive) (was 90.5)'
@@ -174,8 +230,28 @@ linked_structural_catalyst_ids:
 
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-09-01"
+status_last_reviewed: "2026-10-06"
 review_log:
+- date: '2026-10-06'
+  verdict: strengthening
+  evidence: '2026 biopharma M&A is running at a record pace: BioWorld reports $199.2B of deal value for January-August 2026
+    and Biobucks tracks ~$199.4B across 70 acquisitions, vs $55.6B for the same eight months of 2025 (PharmaDossier counts
+    33 deals / $134B with a stricter definition). September deals continue: Argenx / Forte Biosciences $2.2B all-cash at ~86%
+    premium; GSK / Nuvalent $10.6B in June at a 40% premium. Federal antitrust posture is described as less stringent after
+    FTC leadership changes. NO numeric ind_01 update recorded: the three trackers disagree ($134B vs $199B) because of definitions,
+    and the stored 130 is the IQVIA H1 basis; Rule 5 flag raised (+3% to +53% depending on tracker), to be resolved on one
+    like-for-like source next review. ind_02 (XBI TTM, stored 80.3) sources disagree 60.4% to 85.2% as of 2026-09-29, so it
+    is also left alone; the auto price series should be the source. ind_03 premiums are mixed (86% Forte, 40% Nuvalent) vs
+    the stored 55% average.'
+  source: BioWorld 'Blockbusters lift 2026 biopharma deal value to record $199B'; Biobucks M&A tracker 2026; 
+    PharmaDossier biopharma M&A by the numbers 2026; IQVIA mid-year 2026 update
+- date: '2026-09-14'
+  verdict: strengthening
+  evidence: "Deal-making is ACCELERATING despite the rate headwind: H1 2026 aggregate M&A value already ~$130B (near full-year
+    2025), average deal size $3.1B (up from $2.7B in 2025), the second-highest since 2021. Sources explicitly flag 'a deteriorating
+    interest rate environment following the Iran war', naming the same driver behind this scan, yet dealmaking proved resilient
+    through it -- the patent-cliff urgency is outrunning the financing-cost headwind, not the other way round."
+  source: IQVIA Biopharma M&A mid-year 2026 update; JPMorgan Biopharma/Medtech Q2 2026 deal report, accessed 2026-09-14
 - date: '2026-09-01'
   verdict: strengthening
   evidence: 'IQVIA mid-year 2026 update: aggregate biopharma M&A deal value reached $130B in H1 2026, already almost matching

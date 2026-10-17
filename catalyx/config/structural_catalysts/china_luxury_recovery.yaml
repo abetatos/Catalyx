@@ -46,14 +46,70 @@ user_notes: >
   in confirmation and capped by tariff margin drag + EUR strength. Run intensity_engine after first refresh.
 
 intensity:
-  current_score: 81.7
+  current_score: 71.5
   computation_method: computed
-  last_updated: "2026-09-01"
+  last_updated: "2026-10-16"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: near struct_solar_lcoe_deployment (64.1); below
     struct_cb_gold_accumulation (84) because the recovery is only one-to-two quarters confirmed and
     tariff/FX drags cap the near-term upside.
   history:
+  - period: '2026-10-16'
+    score: 71.5
+    note: 'Computed 2026-10-16: avg=69.53 trend=↑ (rising 1 period) (was 67.4)'
+    computation_method: computed
+  - period: '2026-10-13'
+    score: 67.4
+    note: 'Computed 2026-10-13: avg=67.42 trend=→ (flat) (was 60.4)'
+    computation_method: computed
+  - period: '2026-10-09'
+    score: 60.4
+    note: 'Computed 2026-10-09: avg=67.42 trend=↓↓ (falling 2+ consecutive) (was 61.1)'
+    computation_method: computed
+  - period: '2026-10-06'
+    score: 61.1
+    note: 'Computed 2026-10-06: avg=68.12 trend=↓↓ (falling 2+ consecutive) (was 64.6)'
+    computation_method: computed
+  - period: '2026-10-02'
+    score: 64.6
+    note: 'Computed 2026-10-02: avg=67.6 trend=↓ (falling 1 period) (was 71.0)'
+    computation_method: computed
+  - period: '2026-09-29'
+    score: 71.0
+    note: 'Computed 2026-09-29: avg=70.97 trend=→ (flat) (was 76.0)'
+    computation_method: computed
+  - period: '2026-09-25'
+    score: 76.0
+    note: 'Computed 2026-09-25: avg=70.97 trend=↑↑ (rising 2+ consecutive) (was 75.5)'
+    computation_method: computed
+  - period: '2026-09-22'
+    score: 75.5
+    note: 'Computed 2026-09-22: avg=73.53 trend=↑ (rising 1 period) (was 73.0)'
+    computation_method: computed
+  - period: '2026-09-18'
+    score: 73.0
+    note: 'Computed 2026-09-18: avg=72.97 trend=→ (flat) (was 70.1)'
+    computation_method: computed
+  - period: '2026-09-15'
+    score: 70.1
+    note: 'Computed 2026-09-15: avg=77.12 trend=↓↓ (falling 2+ consecutive) (was 69.5)'
+    computation_method: computed
+  - period: '2026-09-14'
+    score: 69.5
+    note: 'Computed 2026-09-14: avg=76.5 trend=↓↓ (falling 2+ consecutive) (was 73.8)'
+    computation_method: computed
+  - period: '2026-09-11'
+    score: 73.8
+    note: 'Computed 2026-09-11: avg=76.78 trend=↓ (falling 1 period) (was 76.7)'
+    computation_method: computed
+  - period: '2026-09-08'
+    score: 76.7
+    note: 'Computed 2026-09-08: avg=76.7 trend=→ (flat) (was 81.7)'
+    computation_method: computed
+  - period: '2026-09-04'
+    score: 81.7
+    note: 'Computed 2026-09-04: avg=76.7 trend=↑↑ (rising 2+ consecutive)'
+    computation_method: computed
   - period: '2026-09-01'
     score: 81.7
     note: 'Computed 2026-09-01: avg=76.7 trend=↑↑ (rising 2+ consecutive) (was 78.7)'
@@ -152,16 +208,16 @@ indicators:
   source: "ECB / Bloomberg USD/CNY"
   source_url_template: "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/"
   check_frequency: monthly
-  current_value: 6.726
+  current_value: 6.692
   unit: cny_per_usd
   direction: lower_is_stronger
   threshold_strong: 6.9
   threshold_weak: 7.4
-  last_value: 6.721
-  last_date: "2026-08-28"
+  last_value: 6.7038
+  last_date: "2026-10-09"
   update_note: >-
     auto: USD/CNY (FRED DEXCHUS)
-  semaphore: 🟢
+  semaphore: 🟡
   value_history:
   - date: "2026-05-31"
     value: 7.28
@@ -170,7 +226,7 @@ indicators:
   - date: "2025-06-30"
     value: 7.25
 
-  score: 84.3
+  score: 55.6
 deactivation_conditions:
 - id: deact_01
   condition: >
@@ -193,4 +249,4 @@ linked_structural_catalyst_ids: []
 
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-08-28"
+status_last_reviewed: "2026-10-09"

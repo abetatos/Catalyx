@@ -43,13 +43,69 @@ user_notes: >
   stale on its old weak-dollar premise and should be refreshed via /catalyx-sector-study.
 
 intensity:
-  current_score: 64.5
+  current_score: 38.1
   computation_method: computed
-  last_updated: "2026-09-01"
+  last_updated: "2026-10-16"
   computation_note: >
     Bootstrap at creation 2026-07-01. Deliberately weakest active structural: real long-run EM-consumption floor
     but the near-term driver is contested (RBI on hold, DXY back to ~101, FPI outflows).
   history:
+  - period: '2026-10-16'
+    score: 38.1
+    note: 'Computed 2026-10-16: avg=33.15 trend=↑↑ (rising 2+ consecutive) (was 40.0)'
+    computation_method: computed
+  - period: '2026-10-13'
+    score: 40.0
+    note: 'Computed 2026-10-13: avg=38.02 trend=↑ (rising 1 period) (was 36.1)'
+    computation_method: computed
+  - period: '2026-10-09'
+    score: 36.1
+    note: 'Computed 2026-10-09: avg=39.08 trend=↓ (falling 1 period) (was 32.9)'
+    computation_method: computed
+  - period: '2026-10-06'
+    score: 32.9
+    note: 'Computed 2026-10-06: avg=32.85 trend=→ (flat) (was 35.8)'
+    computation_method: computed
+  - period: '2026-10-02'
+    score: 35.8
+    note: 'Computed 2026-10-02: avg=35.8 trend=→ (flat) (was 36.6)'
+    computation_method: computed
+  - period: '2026-09-29'
+    score: 36.6
+    note: 'Computed 2026-09-29: avg=36.6 trend=→ (flat) (was 38.6)'
+    computation_method: computed
+  - period: '2026-09-25'
+    score: 38.6
+    note: 'Computed 2026-09-25: avg=36.6 trend=↑ (rising 1 period) (was 38.8)'
+    computation_method: computed
+  - period: '2026-09-22'
+    score: 38.8
+    note: 'Computed 2026-09-22: avg=38.8 trend=→ (flat) (was 35.5)'
+    computation_method: computed
+  - period: '2026-09-18'
+    score: 35.5
+    note: 'Computed 2026-09-18: avg=42.5 trend=↓↓ (falling 2+ consecutive) (was 37.3)'
+    computation_method: computed
+  - period: '2026-09-15'
+    score: 37.3
+    note: 'Computed 2026-09-15: avg=44.3 trend=↓↓ (falling 2+ consecutive) (was 45.2)'
+    computation_method: computed
+  - period: '2026-09-14'
+    score: 45.2
+    note: 'Computed 2026-09-14: avg=52.25 trend=↓↓ (falling 2+ consecutive) (was 54.3)'
+    computation_method: computed
+  - period: '2026-09-11'
+    score: 54.3
+    note: 'Computed 2026-09-11: avg=57.35 trend=↓ (falling 1 period) (was 58.5)'
+    computation_method: computed
+  - period: '2026-09-08'
+    score: 58.5
+    note: 'Computed 2026-09-08: avg=58.53 trend=→ (flat) (was 66.1)'
+    computation_method: computed
+  - period: '2026-09-04'
+    score: 66.1
+    note: 'Computed 2026-09-04: avg=61.1 trend=↑↑ (rising 2+ consecutive) (was 64.5)'
+    computation_method: computed
   - period: '2026-09-01'
     score: 64.5
     note: 'Computed 2026-09-01: avg=59.5 trend=↑↑ (rising 2+ consecutive) (was 61.1)'
@@ -74,16 +130,16 @@ indicators:
   source: "ICE / Bloomberg DXY"
   source_url_template: "https://www.marketwatch.com/investing/index/dxy"
   check_frequency: weekly
-  current_value: 99.487
+  current_value: 102.305
   unit: dxy_index
   direction: lower_is_stronger
   threshold_strong: 97
   threshold_weak: 104
-  last_value: 99.413
-  last_date: "2026-09-01"
+  last_value: 102.032
+  last_date: "2026-10-13"
   update_note: >-
     auto: ICE DXY (yfinance)
-  semaphore: 🟡
+  semaphore: 🔴
   value_history:
   - date: "2026-05-31"
     value: 99
@@ -92,7 +148,7 @@ indicators:
   - date: "2025-06-30"
     value: 104
 
-  score: 69.3
+  score: 12.5
 - id: ind_02
   name: "FPI net equity+debt flows into India, trailing 12M ($B)"
   source: "NSDL / CDSL FPI data"
@@ -144,23 +200,23 @@ indicators:
   source: "RBI / Bloomberg USD/INR"
   source_url_template: "https://www.rbi.org.in/"
   check_frequency: weekly
-  current_value: 95.38
+  current_value: 96.73
   unit: inr_per_usd
   direction: lower_is_stronger
   threshold_strong: 92
   threshold_weak: 97
-  last_value: 95.7
-  last_date: "2026-08-28"
+  last_value: 96.31
+  last_date: "2026-10-09"
   update_note: >-
     auto: INR/USD (FRED DEXINUS)
-  semaphore: 🟡
+  semaphore: 🔴
   value_history:
   - date: "2026-05-31"
     value: 95.5
   - date: "2025-12-31"
     value: 94.0
 
-  score: 59.7
+  score: 11.1
 deactivation_conditions:
 - id: deact_01
   condition: >
@@ -183,5 +239,19 @@ linked_structural_catalyst_ids:
 - struct_japan_carry_unwind   # both are USD/DXY-gated EM-flow regimes; watch together
 
 narrative_maturity: "emerging"
-status: active
-status_last_reviewed: "2026-09-01"
+status: dormant
+status_last_reviewed: "2026-10-09"
+review_log:
+- date: '2026-09-14'
+  verdict: weakening
+  evidence: "The same synchronized-tightening regime driving this scan directly threatens this USD-gated thesis: rising Fed-hike
+    odds narrow the India-vs-US bond yield spread, are already pressuring FPI outflows and the rupee, and are forcing the
+    RBI to weigh defending INR (selling dollars, rate hikes) against supporting growth -- the opposite of the reflow this
+    catalyst measures. Not on this cycle's must_reverify list (drives no open position) so no disconfirming search was run
+    per protocol, but the evidence surfaced unprompted while researching the rate story and is recorded rather than discarded."
+  source: MUFG Research IndiaPulse/RBI coverage 2026; Outlook Money Fed-rate-hike-impact-on-India, accessed 2026-09-14
+lifecycle_log:
+- date: '2026-10-06'
+  from: active
+  to: dormant
+  reason: intensity 32.9 < 40.0 for 7 consecutive cycles (need 2)

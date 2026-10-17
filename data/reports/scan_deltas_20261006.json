@@ -1,0 +1,124 @@
+[
+  {
+    "catalyst_id": "struct_ai_capex_supercycle",
+    "verdict": "intact",
+    "evidence": "NVIDIA Q2 FY27 (reported 2026-08-26): data center revenue $89.0B, +117% YoY and +18% QoQ; Q3 FY27 guide $108.0B +/-2%. Q2 2026 combined hyperscaler capex reported at $166.0B, +87% YoY and +27% QoQ; FY2026 guidance for the big four stays $720-745B (Alphabet $195-205B, Meta $115-135B, Microsoft $110-120B). Micron FQ4 (period ended 2026-09-03) revenue $54.23B vs $11.32B a year earlier. No hyperscaler guidance cut found. NOTE ind_02 basis: stored 0.22 is not a YoY figure (NVDA Q1 FY27 data center was +92% YoY; 22% matches the QoQ step), so 0.18 is recorded on the SAME QoQ basis as the stored value; the label 'yoy_growth_rate' on ind_02 is misleading and should be fixed by the user (YoY would be 1.17).",
+    "source": "NVIDIA Q2 FY27 8-K (sec.gov, 2026-08-26); FactSet/Broadband Breakfast hyperscaler capex 2026; yieldtheory hyperscaler capex tracker; Micron FQ4 2026 results",
+    "indicators": [
+      {
+        "id": "ind_02",
+        "value": 0.18,
+        "note": "NVDA Q2 FY27 data center +18% QoQ ($89.0B vs $75.2B); same QoQ basis as stored 0.22 (-18%, Rule 5 flag). YoY on the same quarter is +117%."
+      }
+    ],
+    "disconfirming": {
+      "searched": true,
+      "query": "hyperscaler capex cut guidance lowered datacenter delay AI bubble October 2026",
+      "found": true,
+      "evidence": "No capex CUT was found: every hyperscaler guidance in the results is flat or raised. The contradicting material is physical and financial, not a demand break: (1) 30-50% of US data center projects planned for 2026 are reported delayed or cancelled and ~7 GW of planned US AI capacity is slipping on power/transformer/switchgear constraints (a forecast, contested by SemiAnalysis, as in the 2026-09-01 scan); (2) as of 2026-09-21 the four largest hyperscalers are expected to spend $1.8T on capex through 2028, ~$600B more than their businesses generate in cash, i.e. external financing dependence (FactSet: capex outrunning cash flow). Recorded as evidence, not registered as an event; it constrains the data-center REIT vehicle and confirms struct_energy_transition_grid."
+    }
+  },
+  {
+    "catalyst_id": "struct_ai_drug_discovery",
+    "verdict": "intact",
+    "evidence": "Funding and pipeline continue but the validation record is mixed. Isomorphic Labs closed a $2.1B Series B in May 2026 (Thrive; Alphabet, GV, MGX, Temasek) and moved two AI-designed molecules into Phase I; 12 announced AI drug-discovery financings between 2026-03-03 and 2026-07-22 totalled ~$2.64B; ~175 AI-originated programs have entered human trials cumulatively and 15-20 could enter Phase 3 in 2026. No numeric indicator recorded: the sources count CUMULATIVE entrants (175) while ind_02 counts molecules currently in the clinic (22), and the TTM capital figure for ind_01 cannot be built from the window found, so a number would inject a definitional break into the percentile history. All three ind_01-03 remain stale (2025-12-31).",
+    "source": "IntuitionLabs Isomorphic Labs / AI-discovered drugs clinical trials 2026; newmarketpitch AI drug discovery funding news (September 2026); AI Media House 2026 clinical reality",
+    "disconfirming": {
+      "searched": true,
+      "query": "AI drug discovery setback trial failure funding drought layoffs September 2026",
+      "found": true,
+      "evidence": "The first AI-designed molecules are failing at the same Phase 2 rate as non-AI drugs and none has passed Phase 3 or reached FDA approval: BenevolentAI's BEN-2293 failed a Phase 2a and the company laid off ~180 of 363 staff; Verge Genomics' VRG50635 (ALS) failed and it cut ~90% of staff and rebranded. Funding is also thinning: no clearly qualifying pure-play financing was identified between 2026-07-22 and 2026-09-02. Dates of the individual failures were not stated in the results. This is the 'maturing narrative' risk already noted in the YAML (2026-09-14) and sits against deact_01 (two consecutive quarters of net pipeline attrition) without meeting it; not an invalidation. Recommend the user decides whether failures with no offsetting entrants should move the verdict to weakening at the next scan."
+    }
+  },
+  {
+    "catalyst_id": "struct_biopharma_patent_cliff_ma",
+    "verdict": "strengthening",
+    "evidence": "2026 biopharma M&A is running at a record pace: BioWorld reports $199.2B of deal value for January-August 2026 and Biobucks tracks ~$199.4B across 70 acquisitions, vs $55.6B for the same eight months of 2025 (PharmaDossier counts 33 deals / $134B with a stricter definition). September deals continue: Argenx / Forte Biosciences $2.2B all-cash at ~86% premium; GSK / Nuvalent $10.6B in June at a 40% premium. Federal antitrust posture is described as less stringent after FTC leadership changes. NO numeric ind_01 update recorded: the three trackers disagree ($134B vs $199B) because of definitions, and the stored 130 is the IQVIA H1 basis; Rule 5 flag raised (+3% to +53% depending on tracker), to be resolved on one like-for-like source next review. ind_02 (XBI TTM, stored 80.3) sources disagree 60.4% to 85.2% as of 2026-09-29, so it is also left alone; the auto price series should be the source. ind_03 premiums are mixed (86% Forte, 40% Nuvalent) vs the stored 55% average.",
+    "source": "BioWorld 'Blockbusters lift 2026 biopharma deal value to record $199B'; Biobucks M&A tracker 2026; PharmaDossier biopharma M&A by the numbers 2026; IQVIA mid-year 2026 update",
+    "disconfirming": {
+      "searched": true,
+      "query": "biotech M&A slowdown FTC antitrust patent cliff deal drought tariffs September 2026",
+      "found": false,
+      "evidence": null
+    }
+  },
+  {
+    "catalyst_id": "struct_energy_transition_grid",
+    "verdict": "intact",
+    "evidence": "Demand is intact and the bottleneck persists: global grid capex set to surpass $650B in 2026 (Rystad, +5% YoY, more than double 2020); large power transformers (>=100 MVA) now 48-72 month lead time vs 12-18 in 2019 with indicative prices +70-100%; typical EU/North American manufacturer lead times 2-3 years; switchgear reported sold out through 2028; US investor-owned utilities plan $1.4T capex through 2030 ($686B T&D). Over 2,500 GW of solar/wind/storage is stalled in interconnection queues. Copper spot ind_03 already re-recorded today at 14,643 USD/t (LME record 14,875 on 2026-09-10; 14,014 on 2026-09-22; ~-6% off record). ind_01 stays at 26 months (EU second-tier range 20-28 recorded 2026-09-01, no new survey) and ind_02 (EU grid investment, stored 96, last 2026-03-01) has no fresh print: sources give EC need of EUR 65-100B per year to 2030, within the stored range.",
+    "source": "Rystad Energy via pv magazine USA (grid capex 2026); GridReadiness HV transformer lead times 2026; Deluair 2026 grid capex supercycle; Bruegel / ENTSO-E investment needs; Bloomberg 2026-10-01 copper",
+    "disconfirming": {
+      "searched": true,
+      "query": "grid investment delayed cut transformer demand slowdown utilities capex cancel renewables permitting October 2026",
+      "found": false,
+      "evidence": null
+    }
+  },
+  {
+    "catalyst_id": "struct_enterprise_cyber_spend_supercycle",
+    "verdict": "intact",
+    "evidence": "Vendor prints are strong: Palo Alto FQ4 FY26 revenue +34% to $3.41B with next-gen security ARR +63% to $9.1B and FY27 revenue guide $14.1-14.2B (+23-24%); CrowdStrike reported its best quarter ever, revenue +26% to $1.47B and a full-year forecast of ~$6B. Gartner puts 2026 worldwide information-security end-user spending at $244B (stored 240, +1.7%, within noise; series definitions vary so no numeric update recorded) and projects AI cybersecurity spend rising from $51.3B (2026) to ~$86B (2027). ind_02 not updated: the +26% is quarterly REVENUE growth, not ARR growth (stored 0.24 is ARR).",
+    "source": "Benzinga 2026-09 AI cybersecurity stocks rally (PANW FQ4 FY26, CRWD); Gartner 2026 security forecast via Fool.com 2026-10-03; Cybersecurity Dive earnings coverage",
+    "disconfirming": {
+      "searched": true,
+      "query": "cybersecurity budgets cut AI replaces security vendors consolidation spending slowdown October 2026",
+      "found": true,
+      "evidence": "Enterprise budget growth is decelerating even as vendors beat: cybersecurity budgets grew just 5% in 2026, 45% of organizations reported no increase and 10% a decrease (ETR / TechTarget, 'cyber budgets flatline as CISOs shift new spending to AI'); the share of organizations expecting to ADD security vendors fell from 51% (2024) to 35% (2026) while 'stay the same' rose from 37% to 52%, i.e. platform consolidation concentrates spend in fewer vendors. This is consistent with the 2025 deceleration already recorded in the 2026-09-01 scan; it softens the broad-spend leg of the thesis but not the leading vendors. Not registered as an event (survey data, not a decided or dated event)."
+    }
+  },
+  {
+    "catalyst_id": "struct_nato_rearmament",
+    "verdict": "intact",
+    "evidence": "Rheinmetall H1 2026 (2026-08-06): Q2 sales EUR 3.289B +69% YoY, operating result +115%, backlog above EUR 80B (+44% YoY, 70% fixed), Q2 order intake EUR 11.4B (+476%, book-to-bill above 3.0x), backlog guided to EUR 100-120B by end-2026; shares nonetheless fell 5.7% on cash-flow concerns. NATO European allies on track for ~2.3% of GDP in 2026 (IISS), with European NATO plus Canada at ~2.53% (~$634B); the 3.5% core / 5% total 2035 target stands. EU states agreed on 2026-09-25 to release EUR 6.6B of stalled European Peace Facility aid for Ukraine. No numeric indicator recorded: ind_02 is a three-company combined order-book growth and only Rheinmetall (+44%) was found; ind_01 (stored 2.34) vs 2.3-2.53 is within 10%; no flow data for ind_03 (only AUM levels: WisdomTree EUR 4,335M, iShares EUR 348.8M at 2026-09-29).",
+    "source": "Rheinmetall H1 2026 financial report / Q2 2026 call (investing.com, quartr); IISS 'NATO defence spending: navigating the noise' (2026-07); Euronews 2026-09-25",
+    "disconfirming": {
+      "searched": true,
+      "query": "European defense budget delayed cut procurement shortfall Ukraine ceasefire defense stocks fall 2026",
+      "found": true,
+      "evidence": "Delivery and sentiment risks, not budget cuts: Germany cancelled the multi-billion F126 frigate programme after delays and cost increases and Rheinmetall shares fell sharply on it; investors question whether defense valuations have outrun production capacity (CNBC 2026-07-01: equipment stocks in European NATO states remain below 2021 levels); the European defense sector slid more than 5% over two sessions on expectations the Ukraine war was nearing an end (date not stated in the result) before recovering 1%; Ukraine faces a ~$27B 2026 defense budget gap. No NATO member was found cutting its 3.5%/5% pledge. A Ukraine settlement would hit the event channel faster than the structural budget floor; recommend the next scan checks for ceasefire-talk status explicitly."
+    }
+  },
+  {
+    "catalyst_id": "cat_20260402_section232_pharma_tariffs",
+    "verdict": "intact",
+    "evidence": "Section 232 tiers took effect on schedule: 2026-07-31 for Annex III companies and 2026-09-29 for the rest, headline up to 100% ad valorem. The carve-outs that make it a smaller headwind than the headline are confirmed: 0% for companies with MFN pricing agreements through 2029-01-20, 20% for companies with approved onshoring plans from 2026-09-29, reduced rate for EU, Japan, South Korea and Switzerland (15%), generics and biosimilars exempt. No stock-price impact data was found in the results.",
+    "source": "Crowell & Moring alert (tiered structure, 2026-07-31); C.H. Robinson CBP advisory 2026-07-31; Federal Register onshoring procedures 2026-05-13; Mallory Group Section 232 guide"
+  },
+  {
+    "catalyst_id": "cat_20260601_us_ai_chip_export_controls",
+    "verdict": "intact",
+    "evidence": "No change to the 2026-06-01 BIS guidance (licence requirements apply to all China-headquartered firms including overseas subsidiaries); the case-by-case regime for H200 / MI325X exports from the US to China (rule of 2026-01-15) still stands. Enforcement continues: federal prosecutors charged a California man in early October 2026 with smuggling servers containing ~$300M of NVIDIA chips to China. NVIDIA remains described as effectively foreclosed from China data center compute.",
+    "source": "Bloomberg 2026-10-02 (smuggling charge); Al Jazeera 2026-06-01; NVIDIA FY2026 10-K"
+  },
+  {
+    "catalyst_id": "cat_20260603_copper_supply_deficit_2026",
+    "verdict": "weakening",
+    "evidence": "Deficit forecasts hold (ING 600kt refined deficit for 2026; ICSG 150kt; Benchmark ~591kt Grasberg loss through end-2026; Kamoa-Kakula ~300kt across 2025-26) and LME copper set a record of USD 14,875/t on 2026-09-10, but the PHYSICAL squeeze the event describes has loosened: LME warehouse stocks rose 3.59% to 242,900 t, reported at their highest in over six years, and the spot-to-three-month spread flipped to a USD 67.50/t contango; price closed at 14,014.50 on 2026-09-22, ~6% below the record, and copper fell on a firmer dollar and Fed hike bets. Gold-style rate pressure rather than supply news is now driving the tape. Recommend holding the stored strength while the stocks/spread are watched; a second print of rising stocks should be re-scored.",
+    "source": "Business Recorder / Reuters copper 3-week low (LME stocks, contango); MINING.COM LME stockpiles highest in six years; Bloomberg 2026-09-23; Benchmark Minerals Grasberg analysis"
+  },
+  {
+    "catalyst_id": "cat_20260624_memory_shortage_confirmed",
+    "verdict": "strengthening",
+    "evidence": "Micron FQ4 FY26 (period ended 2026-09-03; reported 2026-09-30): revenue $54.23B vs $11.32B a year earlier, FY26 revenue $133.19B; CEO expects demand to exceed supply in both 2027 and 2028 with no date for balance. HBM3E spot reached ~$2,100 per 36GB module on 2026-09-04, 4-5x the $300-400 long-term-agreement price; DRAM and NAND prices set record highs in August. JPMorgan models HBM shortages of 20% (2026), 19% (2027), 16% (2028); an analyst raised the Micron target to $1,325 from $1,016. The 30-day halflife on this corporate_event means the stored decay is the binding limit on how much a confirmation is worth.",
+    "source": "Winbuzzer 2026-10-01 (Micron shortages through 2028); Benzinga 2026-09 (JPMorgan HBM shortage analysis); TheStreet Micron targets September 2026"
+  },
+  {
+    "catalyst_id": "cat_20260728_hyperscaler_capex_guidance_raise",
+    "verdict": "intact",
+    "evidence": "No subsequent hyperscaler guidance cut found; guidance stays at the July levels (Alphabet $195-205B, Meta $115-135B, Microsoft $110-120B) and Q2 combined capex printed $166.0B, +87% YoY. NVIDIA's Q3 FY27 guide of $108B (2026-08-26) corroborates demand. Analysts raised NVIDIA next-year EPS estimates 23.7% in the 90 days to 2026-09-29. Event is now 80+ days old on a 30-day halflife, so its contribution should be small regardless of verdict.",
+    "source": "yieldtheory hyperscaler capex tracker 2026; NVIDIA Q2 FY27 8-K; stocktargetadvisor analyst updates 2026-09-29"
+  },
+  {
+    "catalyst_id": "struct_glp1_obesity_supercycle",
+    "verdict": "intact",
+    "evidence": "Volume drivers keep widening: Novo's oral Wegovy has passed 3M cumulative prescriptions and runs ~142,000 prescriptions a week (31% of brand scripts); Lilly's oral Foundayo (orforglipron) was approved 2026-04-01 and had ~17,000 prescriptions by launch week 8; Medicare Part D coverage under the GENEROUS model began with a USD 50/month copay from 2026-07-01. Offsets: self-pay Wegovy list price fell from $1,349 to $149/month, and several commercial plans (Blue Cross Blue Shield of Massachusetts, MassHealth, Mass General Brigham) dropped weight-loss coverage in 2026, with 112,000 fewer commercially insured members using a GLP-1 for weight loss between 2025 and Q1 2026 (-52% in that cohort). No numeric update for ind_01 (no IQVIA weekly total found); all four indicators remain stale.",
+    "source": "Spherix Global Insights oral GLP-1 tracker; CNBC 2026-04-01; WGBH 2026-09-17; Boston Globe 2026-09-30"
+  },
+  {
+    "catalyst_id": "struct_cb_gold_accumulation",
+    "verdict": "intact",
+    "evidence": "Not on the work list; checked only because the C0 commodity query touched it. Gold fell ~6% in September (spot from ~4,489.80 to a seven-week low of 4,110.55; 4,121.39 USD/oz on 2026-10-06) after the 2026-09-16 Fed hike, while central banks bought a record 289 tonnes in Q2 2026 (+62-74% YoY) into the price decline. The price move is rate-driven, not a break in official-sector buying. ind_02 (last 2026-04-01) is still stale; no numeric update recorded."
+    ,
+    "source": "Bloomberg 2026-09-16 gold after Fed hike; Modern Diplomacy 2026-09-08; Discovery Alert gold outlook 2026-10"
+  }
+]

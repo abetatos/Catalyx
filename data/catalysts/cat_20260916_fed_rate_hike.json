@@ -1,0 +1,92 @@
+{
+  "$schema": "catalyx/schemas/catalyst_event.json",
+  "id": "cat_20260916_fed_rate_hike",
+  "schema_version": "1.3",
+  "type": "event",
+  "created_at": "2026-10-17T00:00:00Z",
+  "detected_at": "2026-10-17T00:00:00Z",
+  "event_date": "2026-09-16T00:00:00Z",
+  "source": {
+    "type": "news_article",
+    "url": "https://www.schwab.com/learn/story/fomc-meeting",
+    "publication": "Schwab FOMC recap / CNBC FOMC minutes coverage (2026-10-07)",
+    "published_at": "2026-09-16T00:00:00Z"
+  },
+  "catalyst_type": "monetary_policy",
+  "catalyst_subtype": "rate_hike",
+  "description": "At its 2026-09-16 meeting the FOMC raised the federal funds target range 25bp to 3.75-4.00% by a 12-0 vote -- the first US hike of this cycle and the realisation of the hawkish guidance registered as cat_20260617_fed_hawkish_pivot. The 2026-10-07 minutes say most participants judge another increase 'likely appropriate by year end'; the 10-year auction that day cleared at 5.3% (24-year high) and 10y yields have held ~5.2-5.3% since. Hot September CPI (2026-10-14: 3.7% headline vs 3.6% expected, core 2.6% vs 2.5%) pushed October-hike odds from ~20% to 37-50% intraday, with a December hike priced ~81%. Registered as its own dated event because the earlier Fed event (event_date 2026-06-17, halflife 30d) has decayed to a few percent weight while the regime it describes strengthened: the hike was a DECIDED action, widely expected going in (consensus_surprise low), so strength sits just above the ECB hike. Same driver family as the ECB hike and the Hormuz energy shock (related ids), but a distinct decision by a distinct central bank, which is how cat_20260910_ecb_rate_hike was registered.",
+  "geography": [
+    "USA",
+    "GLOBAL"
+  ],
+  "magnitude": "medium",
+  "novelty_score": 20,
+  "novelty_rubric_scores": {
+    "nov_01_different_type": false,
+    "nov_02_new_sector": false,
+    "nov_03_new_source": false,
+    "nov_04_changes_rate": true,
+    "nov_05_consensus_surprise_gt50": false
+  },
+  "strength_score": 60,
+  "strength_rubric_scores": {
+    "str_01": false,
+    "str_02": true,
+    "str_03": false,
+    "str_04": true,
+    "str_05": true
+  },
+  "strength_anchors": {
+    "stronger_than": "cat_20260910_ecb_rate_hike",
+    "weaker_than": "cat_20260630_drc_cobalt_export_quota",
+    "note": "Rubric total 55 (str_02+str_04+str_05): a single 25bp move priced at 85-90% is neither large nor a surprise. Set 60 because it is the first US hike of the cycle and the base of every long-duration discount rate, so it ranks above the ECB 25bp (56, second ECB hike) and below a supply-quota shock with a hard physical quantity (70)."
+  },
+  "consensus_surprise": 0.1,
+  "is_priced_in_estimate": 0.75,
+  "relation_to_structural": "independent",
+  "decay_halflife_days": 30,
+  "related_catalyst_ids": [
+    "cat_20260617_fed_hawkish_pivot",
+    "cat_20260910_ecb_rate_hike",
+    "cat_20260817_hormuz_reescalation"
+  ],
+  "affected_sectors": [
+    "eu_retail_banking",
+    "grid_infrastructure_utilities",
+    "water_infrastructure",
+    "biotech_drug_development",
+    "cybersecurity_commercial",
+    "ai_infrastructure_data_centers",
+    "copper_miners",
+    "gold_physical",
+    "gold_miners"
+  ],
+  "sector_impact": {
+    "eu_retail_banking": "supportive",
+    "grid_infrastructure_utilities": "adverse",
+    "water_infrastructure": "adverse",
+    "biotech_drug_development": "adverse",
+    "cybersecurity_commercial": "adverse",
+    "ai_infrastructure_data_centers": "adverse",
+    "copper_miners": "adverse",
+    "gold_physical": "adverse",
+    "gold_miners": "adverse"
+  },
+  "raw_signal_ids": [],
+  "status": "active",
+  "expires_at": null,
+  "user_rank": null,
+  "user_notes": "Registrado en el scan del 2026-10-17 (arrancado el 10-09). Responde a la pregunta del usuario del 10-07 'nos falta un catalizador para el regimen de tipos largos': NO se registra un estructural nuevo -- los estructurales solo SUMAN en catalyst_alignment (memoria catalyst-coverage-2026-07), asi que un headwind de tipos como estructural elevaria a los sectores que lo enlazan; el instrumento correcto es un evento con sector_impact adverse. Direccion por sector (JUICIO, confianza media): adverse en utilities/agua (coste de capital), biotech (duracion larga), ciber y data centers (multiplos / capex financiado), cobre (USD), oro fisico y mineras (tipo real; el oro cayo ~6% en septiembre pese a compras record de bancos centrales); supportive solo eu_retail_banking (curva global mas alta). Baja confianza: ciber (demanda resiliente, el golpe es de multiplo) y cobre. AVISO: los sectores solo ven este evento cuando su sector study lo lista en active_catalyst_ids -- hasta que el review actualice los studies de agua, biotech y los demas, el efecto sobre catalyst_alignment es cero salvo grid/ciber/cobre/oro/ai_infra/eu_banking, que ya listan el evento de junio. Las fechas clave: Fed 2026-10-28 (odds de subida ~18% antes del CPI, 37-50% tras el) y BCE 2026-10-29.",
+  "tags": [
+    "fed",
+    "fomc",
+    "rate_hike",
+    "monetary_policy",
+    "higher_for_longer",
+    "treasury_yields",
+    "macro",
+    "rate_sensitive"
+  ],
+  "status_last_reviewed": "2026-10-17",
+  "review_log": []
+}

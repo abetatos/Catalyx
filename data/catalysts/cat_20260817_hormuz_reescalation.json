@@ -15,7 +15,12 @@
   "catalyst_type": "geopolitical",
   "catalyst_subtype": "war_escalation",
   "description": "Re-escalation of the US-Iran confrontation around the Strait of Hormuz: the 60-day ceasefire expired and a tanker was seized in the Strait on 2026-08-17/18, followed by tougher US sanctions on Iran. Brent held ~$94/bbl (2026-08-24) and WTI above $84.50 with supply-disruption risk repricing. This is a NEW discrete development on the same driver as cat_20260228_hormuz_closure (archived, fully priced-in): that event documented the February closure; this one captures the August ceasefire breakdown, which was partially expected (markets stayed notably bullish per BofA FMS 2026-08-18).",
-  "geography": ["IRN", "USA", "MENA", "GLOBAL"],
+  "geography": [
+    "IRN",
+    "USA",
+    "MENA",
+    "GLOBAL"
+  ],
   "magnitude": "high",
   "novelty_score": 20,
   "novelty_rubric_scores": {
@@ -31,11 +36,45 @@
   "relation_to_structural": "independent",
   "decay_halflife_days": 60,
   "related_catalyst_ids": [],
-  "affected_sectors": ["oil_majors_integrated", "eu_defense_prime_contractors"],
+  "affected_sectors": [
+    "oil_majors_integrated",
+    "eu_defense_prime_contractors"
+  ],
   "raw_signal_ids": [],
   "status": "active",
   "expires_at": null,
   "user_rank": null,
   "user_notes": "Registrado por el refresh v7 del 2026-08-31 (C0 lo destapó). Mismo driver económico que cat_20260228_hormuz_closure pero desarrollo discreto NUEVO (expiración de tregua + captura de tanquero), no un des-archivado: el evento de febrero queda archived y fully-priced; este decae desde el 2026-08-17. is_priced_in 0.5: Brent ya en $94 pero el riesgo de disrupción de suministro sigue repricing (sanciones nuevas). Si se firma una tregua nueva, status: invalidated.",
-  "tags": ["geopolitical", "oil", "hormuz", "iran", "sanctions"]
+  "tags": [
+    "geopolitical",
+    "oil",
+    "hormuz",
+    "iran",
+    "sanctions"
+  ],
+  "sector_impact": {
+    "oil_majors_integrated": "supportive",
+    "eu_defense_prime_contractors": "supportive"
+  },
+  "strength_rubric_scores": {
+    "str_01": true,
+    "str_02": true,
+    "str_03": false,
+    "str_04": true,
+    "str_05": false
+  },
+  "strength_anchors": {
+    "stronger_than": "cat_20260910_ecb_rate_hike",
+    "weaker_than": "cat_20260724_trump_global_tariff_phase",
+    "note": "Rubric total 65 (str_01+str_02+str_04): ~20% of world oil flows is in scope and the US naval blockade is a decided action, but the escalation was not a consensus surprise and it is a level shift in supply, not a rate. Stored 68 sits inside the bracket. Backfilled 2026-10-17."
+  },
+  "status_last_reviewed": "2026-10-17",
+  "review_log": [
+    {
+      "date": "2026-10-17",
+      "verdict": "intact",
+      "evidence": "Brent settled ~103 USD after Trump said on ~2026-10-08 the US will not attack Iran before the 2026-11-03 midterms while the naval blockade 'remains in full force'; WTI 95.12 on 2026-10-14. Sources conflict on the level (89 vs 103; one result showing 83 is an April-dated page and was discarded). Brent is therefore elevated but the escalation risk has a stated pause until 2026-11-03, which is the date to re-verify. sector_impact BACKFILLED: oil_majors_integrated supportive, eu_defense_prime_contractors supportive. Not registered as a new event or an oil structural: same economic driver as this event, and the energy shock is also the cause of cat_20260617_fed_hawkish_pivot / cat_20260916_fed_rate_hike (a second oil catalyst would double count).",
+      "source": "democrata.es / Yahoo Finance Trump-Iran deadline coverage 2026-10-08; investingLive CPI wrap 2026-10-14"
+    }
+  ]
 }

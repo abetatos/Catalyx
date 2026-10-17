@@ -52,8 +52,14 @@
     "tsmc",
     "google"
   ],
-  "status_last_reviewed": "2026-08-31",
+  "status_last_reviewed": "2026-10-06",
   "review_log": [
+    {
+      "date": "2026-10-06",
+      "verdict": "intact",
+      "evidence": "No subsequent hyperscaler guidance cut found; guidance stays at the July levels (Alphabet $195-205B, Meta $115-135B, Microsoft $110-120B) and Q2 combined capex printed $166.0B, +87% YoY. NVIDIA's Q3 FY27 guide of $108B (2026-08-26) corroborates demand. Analysts raised NVIDIA next-year EPS estimates 23.7% in the 90 days to 2026-09-29. Event is now 80+ days old on a 30-day halflife, so its contribution should be small regardless of verdict.",
+      "source": "yieldtheory hyperscaler capex tracker 2026; NVIDIA Q2 FY27 8-K; stocktargetadvisor analyst updates 2026-09-29"
+    },
     {
       "date": "2026-08-31",
       "verdict": "intact",

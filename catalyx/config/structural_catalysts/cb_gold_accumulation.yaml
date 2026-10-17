@@ -31,12 +31,68 @@ user_notes: >
   Key differentiation: CB demand is sovereign-driven, price-insensitive, not reversible quickly.
 
 intensity:
-  current_score: 68.5
+  current_score: 70.6
   computation_method: "computed"
   computation_note: "Computed 2026-06-03: semaphores ind_01=🟢(100), ind_02=🟡(65), ind_03=🟢(100) → avg=88.3; trend ↑ (79→90
     vs Q1) → factor=1.02; result=90.1→90. ind_01 updated 290→315T (Q2 2026 WGC data)."
-  last_updated: "2026-09-01"
+  last_updated: "2026-10-16"
   history:
+  - period: '2026-10-16'
+    score: 70.6
+    note: 'Computed 2026-10-16: avg=70.6 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-13'
+    score: 70.6
+    note: 'Computed 2026-10-13: avg=70.6 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-09'
+    score: 70.6
+    note: 'Computed 2026-10-09: avg=70.6 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-06'
+    score: 70.6
+    note: 'Computed 2026-10-06: avg=70.6 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-02'
+    score: 70.6
+    note: 'Computed 2026-10-02: avg=70.6 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-29'
+    score: 70.6
+    note: 'Computed 2026-09-29: avg=70.6 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-25'
+    score: 70.6
+    note: 'Computed 2026-09-25: avg=70.6 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-22'
+    score: 70.6
+    note: 'Computed 2026-09-22: avg=70.6 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-18'
+    score: 70.6
+    note: 'Computed 2026-09-18: avg=70.6 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-15'
+    score: 70.6
+    note: 'Computed 2026-09-15: avg=70.6 trend=→ (flat) (was 72.6)'
+    computation_method: computed
+  - period: '2026-09-14'
+    score: 72.6
+    note: 'Computed 2026-09-14: avg=70.6 trend=↑ (rising 1 period) (was 71.5)'
+    computation_method: computed
+  - period: '2026-09-11'
+    score: 71.5
+    note: 'Computed 2026-09-11: avg=71.53 trend=→ (flat) (was 64.5)'
+    computation_method: computed
+  - period: '2026-09-08'
+    score: 64.5
+    note: 'Computed 2026-09-08: avg=71.53 trend=↓↓ (falling 2+ consecutive)'
+    computation_method: computed
+  - period: '2026-09-04'
+    score: 64.5
+    note: 'Computed 2026-09-04: avg=71.53 trend=↓↓ (falling 2+ consecutive) (was 68.5)'
+    computation_method: computed
   - period: '2026-09-01'
     score: 68.5
     note: 'Computed 2026-09-01: avg=71.53 trend=↓ (falling 1 period) (was 71.5)'
@@ -124,13 +180,13 @@ indicators:
   name: "Gold ETF AUM monthly change (institutional, ex-retail)"
   source: "iShares + WGC flow data"
   check_frequency: monthly
-  current_value: 0.034
+  current_value: 0.03
   unit: pct_change_monthly
   direction: higher_is_stronger
   threshold_strong: 0.02
   threshold_weak: -0.01
-  last_value: 0.028
-  last_date: "2026-06-01"
+  last_value: 0.034
+  last_date: "2026-09-14"
 
   semaphore: 🟡
   value_history:
@@ -252,7 +308,9 @@ indicators:
     value: -0.0322
   - date: '2021-08-01'
     value: -0.0008
-  score: 69.2
+  score: 66.4
+  update_note: 'August 2026 WGC ETF flow: +121t on a prior ~4068t base (to reach the 4189t ATH) = ~2.97% MoM AUM growth (stored
+    0.034, -11.8% -> within Rule 5 tolerance, recorded as the fresher print)'
 deactivation_conditions:
 - id: deact_01
   condition: "CB net purchases fall below 80 tonnes/quarter for two consecutive quarters per WGC data."
@@ -269,8 +327,27 @@ deactivation_conditions:
 linked_event_catalyst_ids: []
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-08-31"
+status_last_reviewed: "2026-10-06"
 review_log:
+- date: '2026-10-06'
+  verdict: intact
+  evidence: Not on the work list; checked only because the C0 commodity query touched it. Gold fell ~6% in September 
+    (spot from ~4,489.80 to a seven-week low of 4,110.55; 4,121.39 USD/oz on 2026-10-06) after the 2026-09-16 Fed hike, 
+    while central banks bought a record 289 tonnes in Q2 2026 (+62-74% YoY) into the price decline. The price move is 
+    rate-driven, not a break in official-sector buying. ind_02 (last 2026-04-01) is still stale; no numeric update 
+    recorded.
+  source: Bloomberg 2026-09-16 gold after Fed hike; Modern Diplomacy 2026-09-08; Discovery Alert gold outlook 2026-10
+- date: '2026-09-14'
+  verdict: intact
+  evidence: "Net accumulation continues despite near-term price pressure from rate-hike bets (Goldman cut its year-end gold
+    target 5400->4900; JPMorgan sees Q3 ~4300/Q4 ~4500). World Gold Council: 89% of central bankers expect reserve increases
+    over the next 12 months; the 4-year running average purchase pace (~1000t/yr) is double the prior decade's. Russia and
+    Turkey are net sellers YTD (81t and 34t respectively) but for idiosyncratic reasons (Russia: war-related fiscal pressure
+    under sanctions; Turkey: domestic lira/local-demand policy), not a reversal of the broader CB-accumulation trend. August
+    ETF demand was the second-largest monthly inflow on record: +121t to an all-time-high 4,189t, ~$18B -- this is the institutional-demand
+    indicator moving, distinct from and offsetting the real-rate headwind on spot price."
+  source: World Gold Council Central Bank Gold Reserves Survey 2026; Goldman/JPMorgan gold price targets via Yahoo 
+    Finance/goldsilver.com, accessed 2026-09-14
 - date: '2026-08-31'
   verdict: intact
   evidence: "Central banks bought a record 288.9t in Q2 2026, +62-74% YoY and a five-fold jump on Q1's revised 57t; Poland

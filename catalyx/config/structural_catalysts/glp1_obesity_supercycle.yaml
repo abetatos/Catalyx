@@ -52,11 +52,67 @@ user_notes: >
 intensity:
   current_score: 85.8
   computation_method: computed
-  last_updated: "2026-09-01"
+  last_updated: "2026-10-16"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: on par with struct_cb_gold_accumulation (84), below
     struct_ai_capex_supercycle (89.9). Consensus/mainstream but TAM still expanding (oral + Medicare onset).
   history:
+  - period: '2026-10-16'
+    score: 85.8
+    note: 'Computed 2026-10-16: avg=85.85 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-13'
+    score: 85.8
+    note: 'Computed 2026-10-13: avg=85.85 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-09'
+    score: 85.8
+    note: 'Computed 2026-10-09: avg=85.85 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-06'
+    score: 85.8
+    note: 'Computed 2026-10-06: avg=85.85 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-02'
+    score: 85.8
+    note: 'Computed 2026-10-02: avg=85.85 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-29'
+    score: 85.8
+    note: 'Computed 2026-09-29: avg=85.85 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-25'
+    score: 85.8
+    note: 'Computed 2026-09-25: avg=85.85 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-22'
+    score: 85.8
+    note: 'Computed 2026-09-22: avg=85.85 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-18'
+    score: 85.8
+    note: 'Computed 2026-09-18: avg=85.85 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-15'
+    score: 85.8
+    note: 'Computed 2026-09-15: avg=85.85 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-14'
+    score: 85.8
+    note: 'Computed 2026-09-14: avg=85.85 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-11'
+    score: 85.8
+    note: 'Computed 2026-09-11: avg=85.85 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-08'
+    score: 85.8
+    note: 'Computed 2026-09-08: avg=85.85 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-04'
+    score: 85.8
+    note: 'Computed 2026-09-04: avg=85.85 trend=→ (flat)'
+    computation_method: computed
   - period: '2026-09-01'
     score: 85.8
     note: 'Computed 2026-09-01: avg=85.85 trend=→ (flat) (was 87.8)'
@@ -194,8 +250,18 @@ linked_structural_catalyst_ids: []
 
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-08-31"
+status_last_reviewed: "2026-10-06"
 review_log:
+- date: '2026-10-06'
+  verdict: intact
+  evidence: "Volume drivers keep widening: Novo's oral Wegovy has passed 3M cumulative prescriptions and runs ~142,000 prescriptions
+    a week (31% of brand scripts); Lilly's oral Foundayo (orforglipron) was approved 2026-04-01 and had ~17,000 prescriptions
+    by launch week 8; Medicare Part D coverage under the GENEROUS model began with a USD 50/month copay from 2026-07-01. Offsets:
+    self-pay Wegovy list price fell from $1,349 to $149/month, and several commercial plans (Blue Cross Blue Shield of Massachusetts,
+    MassHealth, Mass General Brigham) dropped weight-loss coverage in 2026, with 112,000 fewer commercially insured members
+    using a GLP-1 for weight loss between 2025 and Q1 2026 (-52% in that cohort). No numeric update for ind_01 (no IQVIA weekly
+    total found); all four indicators remain stale."
+  source: Spherix Global Insights oral GLP-1 tracker; CNBC 2026-04-01; WGBH 2026-09-17; Boston Globe 2026-09-30
 - date: '2026-08-31'
   verdict: weakening
   evidence: The Trump administration struck agreements with Eli Lilly and Novo Nordisk to offer Most-Favored-Nation 

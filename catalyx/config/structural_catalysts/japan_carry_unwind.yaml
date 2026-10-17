@@ -48,13 +48,17 @@ user_notes: >
   struct_nato_rearmament (~71) unless an unwind is actually in motion.
 
 intensity:
-  current_score: 68.1
+  current_score: 62.3
   computation_method: computed
   computation_note: "Computed 2026-06-06 by intensity_engine: avg=68.1 (JGB above strong, CPI near strong, rate + positioning
     moderate), trend flat (insufficient history). Elevated-but-latent — no active unwind. Recompute via /catalyx-update each
     review."
-  last_updated: "2026-07-28"
+  last_updated: "2026-09-14"
   history:
+  - period: '2026-09-14'
+    score: 62.3
+    note: 'Computed 2026-09-14: avg=62.33 trend=→ (flat) (was 68.1)'
+    computation_method: computed
   - period: '2026-07-28'
     score: 68.1
     note: 'Computed 2026-07-28: avg=68.1 trend=→ (flat)'
@@ -73,55 +77,55 @@ indicators:
   source: "Bank of Japan policy statements"
   source_url_template: "https://www.boj.or.jp/en/mopo/mpmdeci/"
   check_frequency: monthly
-  current_value: 0.841
+  current_value: 1.043
   unit: percent
   direction: higher_is_stronger
   threshold_strong: 1.5
   threshold_weak: 0.25
-  last_value: 0.841
-  last_date: "2026-06-01"
+  last_value: 0.977
+  last_date: "2026-09-01"
   semaphore: "🟡"
   update_note: "auto: BoJ overnight call rate (FRED)"
   value_history:
   - date: "2026-04-28"
     value: 0.75
-  score: 62.0
+  score: 64.2
 - id: ind_02
   name: "10-year JGB yield"
   source: "JBMA / Tradingeconomics"
   source_url_template: "https://tradingeconomics.com/japan/government-bond-yield"
   check_frequency: weekly
-  current_value: 2.67
+  current_value: 3.05
   unit: percent
   direction: higher_is_stronger
   threshold_strong: 2.5
   threshold_weak: 1.0
-  last_value: 2.67
-  last_date: "2026-06-01"
+  last_value: 2.94
+  last_date: "2026-09-01"
   semaphore: "🟢"
   update_note: "auto: 10y JGB yield (FRED, OECD)"
   value_history:
   - date: "2026-06-05"
     value: 2.66
-  score: 81.4
+  score: 81.5
 - id: ind_03
   name: "CFTC JPY net non-commercial positioning (carry-trade size proxy, net short, k contracts)"
   source: "CFTC Commitments of Traders (COT)"
   source_url_template: "https://www.cftc.gov/dea/futures/financial_lf.htm"
   check_frequency: weekly
-  current_value: 63.3
+  current_value: -62.3
   unit: thousands_contracts_net_short
   direction: higher_is_stronger
   threshold_strong: 90
   threshold_weak: 30
-  last_value: 63.3
-  last_date: "2026-08-25"
-  semaphore: "🟡"
+  last_value: -62.3
+  last_date: "2026-10-06"
+  semaphore: "🔴"
   update_note: "auto: CFTC JPY net non-comm short (k)"
   value_history:
   - date: "2026-06-06"
     value: 40
-  score: 55.0
+  score: 29.6
 - id: ind_04
   name: "Japan core CPI (ex-fresh-food) YoY"
   source: "Statistics Bureau of Japan / BoJ Outlook"
@@ -159,7 +163,7 @@ linked_event_catalyst_ids: []
 linked_structural_catalyst_ids: []
 narrative_maturity: "emerging"
 status: active
-status_last_reviewed: "2026-08-25"
+status_last_reviewed: "2026-10-06"
 role: macro_context
 role_note: |
   Universo v2.0: no existe ningun ETF comprable desde Espana que exprese esta tesis —
@@ -167,3 +171,12 @@ role_note: |
   no una posicion. Se conserva como contexto macro que informa el sizing y el timing de
   entrada, pero queda FUERA del refresco de indicadores de /catalyx-scan y no debe
   aparecer en active_catalyst_ids de ningun sector study.
+review_log:
+- date: '2026-09-14'
+  verdict: strengthening
+  evidence: BoJ board member Kazuyuki Masu explicitly reaffirmed the bank 'will continue to raise its benchmark interest
+    rate' ahead of the 2026-09-17/18 meeting, where market-implied odds of a further 25bp hike stand at 62% -- directly 
+    on this catalyst's onset thesis (BoJ normalization -> carry-trade unwind risk). No new confirmed policy-rate print 
+    yet (the meeting has not happened as of 2026-09-14), so no indicator value is recorded; this is a pre-meeting 
+    strengthening of the WATCH signal, to be followed up with the actual decision next cycle.
+  source: Bloomberg BoJ Masu remarks 2026-09-10; centralbank.watch BoJ odds tracker, accessed 2026-09-14

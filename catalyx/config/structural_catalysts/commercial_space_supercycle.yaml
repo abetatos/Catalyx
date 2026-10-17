@@ -66,7 +66,7 @@ user_notes: >
   months if SpaceX IPO generates sustained institutional analyst coverage.
 
 intensity:
-  current_score: 81.5
+  current_score: 84.5
   computation_method: computed
   computation_note: >
     Bootstrap 2026-06-05. Three indicators: ind_01 (Starlink subscribers 10M vs strong=8M),
@@ -83,8 +83,64 @@ intensity:
     estimate: 82. Rationale: all three indicators are well above strong thresholds, trend is
     rising, but this is a cold-start file with no history — conservative relative to the
     formula's 92.9 output. Run intensity_engine --write-back after first quarterly data update.
-  last_updated: "2026-09-01"
+  last_updated: "2026-10-16"
   history:
+  - period: '2026-10-16'
+    score: 84.5
+    note: 'Computed 2026-10-16: avg=84.55 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-13'
+    score: 84.5
+    note: 'Computed 2026-10-13: avg=84.55 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-09'
+    score: 84.5
+    note: 'Computed 2026-10-09: avg=84.55 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-06'
+    score: 84.5
+    note: 'Computed 2026-10-06: avg=84.55 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-02'
+    score: 84.5
+    note: 'Computed 2026-10-02: avg=84.55 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-29'
+    score: 84.5
+    note: 'Computed 2026-09-29: avg=84.55 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-25'
+    score: 84.5
+    note: 'Computed 2026-09-25: avg=84.55 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-22'
+    score: 84.5
+    note: 'Computed 2026-09-22: avg=84.55 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-18'
+    score: 84.5
+    note: 'Computed 2026-09-18: avg=84.55 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-15'
+    score: 84.5
+    note: 'Computed 2026-09-15: avg=84.55 trend=→ (flat) (was 86.5)'
+    computation_method: computed
+  - period: '2026-09-14'
+    score: 86.5
+    note: 'Computed 2026-09-14: avg=84.55 trend=↑ (rising 1 period) (was 84.5)'
+    computation_method: computed
+  - period: '2026-09-11'
+    score: 84.5
+    note: 'Computed 2026-09-11: avg=84.55 trend=→ (flat) (was 77.5)'
+    computation_method: computed
+  - period: '2026-09-08'
+    score: 77.5
+    note: 'Computed 2026-09-08: avg=84.55 trend=↓↓ (falling 2+ consecutive)'
+    computation_method: computed
+  - period: '2026-09-04'
+    score: 77.5
+    note: 'Computed 2026-09-04: avg=84.55 trend=↓↓ (falling 2+ consecutive) (was 81.5)'
+    computation_method: computed
   - period: '2026-09-01'
     score: 81.5
     note: 'Computed 2026-09-01: avg=84.55 trend=↓ (falling 1 period) (was 84.5)'

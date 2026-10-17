@@ -42,11 +42,67 @@ user_notes: >
 intensity:
   current_score: 88.7
   computation_method: computed
-  last_updated: "2026-09-01"
+  last_updated: "2026-10-16"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: below struct_biopharma_patent_cliff_ma (80). Real platform
     inflection but early-cycle with binary clinical-validation risk.
   history:
+  - period: '2026-10-16'
+    score: 88.7
+    note: 'Computed 2026-10-16: avg=88.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-13'
+    score: 88.7
+    note: 'Computed 2026-10-13: avg=88.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-09'
+    score: 88.7
+    note: 'Computed 2026-10-09: avg=88.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-06'
+    score: 88.7
+    note: 'Computed 2026-10-06: avg=88.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-02'
+    score: 88.7
+    note: 'Computed 2026-10-02: avg=88.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-29'
+    score: 88.7
+    note: 'Computed 2026-09-29: avg=88.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-25'
+    score: 88.7
+    note: 'Computed 2026-09-25: avg=88.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-22'
+    score: 88.7
+    note: 'Computed 2026-09-22: avg=88.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-18'
+    score: 88.7
+    note: 'Computed 2026-09-18: avg=88.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-15'
+    score: 88.7
+    note: 'Computed 2026-09-15: avg=88.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-14'
+    score: 88.7
+    note: 'Computed 2026-09-14: avg=88.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-11'
+    score: 88.7
+    note: 'Computed 2026-09-11: avg=88.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-08'
+    score: 88.7
+    note: 'Computed 2026-09-08: avg=88.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-04'
+    score: 88.7
+    note: 'Computed 2026-09-04: avg=88.73 trend=→ (flat)'
+    computation_method: computed
   - period: '2026-09-01'
     score: 88.7
     note: 'Computed 2026-09-01: avg=88.73 trend=→ (flat) (was 90.7)'
@@ -149,7 +205,7 @@ linked_structural_catalyst_ids:
 
 narrative_maturity: "emerging"
 status: active
-status_last_reviewed: "2026-08-27"
+status_last_reviewed: "2026-10-06"
 absorbed_catalyst_ids:
 - struct_crispr_gene_editing_validation
 - struct_biosecure_biomanufacturing_reshoring
@@ -166,3 +222,23 @@ absorbed_note: |
   decidir explicitamente cual de estos indicadores merece promoverse a este fichero:
     - struct_crispr_gene_editing_validation (intensity 77.8): In-vivo gene-editing programs in Phase 3 / BLA (count), Whole-genome sequencing cost floor ($/genome, research), FDA gene/cell-therapy approvals YTD (count)
     - struct_biosecure_biomanufacturing_reshoring (intensity 83.0): Twist Bioscience quarterly revenue ($M), DNA synthesis cost ($/base pair), US federal / DoD biomanufacturing contract commitments ($B cumulative)
+review_log:
+- date: '2026-10-06'
+  verdict: intact
+  evidence: 'Funding and pipeline continue but the validation record is mixed. Isomorphic Labs closed a $2.1B Series B in
+    May 2026 (Thrive; Alphabet, GV, MGX, Temasek) and moved two AI-designed molecules into Phase I; 12 announced AI drug-discovery
+    financings between 2026-03-03 and 2026-07-22 totalled ~$2.64B; ~175 AI-originated programs have entered human trials cumulatively
+    and 15-20 could enter Phase 3 in 2026. No numeric indicator recorded: the sources count CUMULATIVE entrants (175) while
+    ind_02 counts molecules currently in the clinic (22), and the TTM capital figure for ind_01 cannot be built from the window
+    found, so a number would inject a definitional break into the percentile history. All three ind_01-03 remain stale (2025-12-31).'
+  source: IntuitionLabs Isomorphic Labs / AI-discovered drugs clinical trials 2026; newmarketpitch AI drug discovery 
+    funding news (September 2026); AI Media House 2026 clinical reality
+- date: '2026-09-14'
+  verdict: intact
+  evidence: "No funding pullback or program cancellation wave found. Cumulative 2022-2026 life-sciences AI investment remains
+    above $100B and Phase 1 success rates for AI-discovered molecules stay elevated (80-90% vs historic norms). The one real
+    headwind is a 'validation crisis' narrative: 117 AI-enabled assets in human trials, only 8 (6.8%) through Phase 2, Phase
+    2 success ~40% (in line with, not better than, historic industry averages), and zero FDA approvals of an AI-discovered-and-designed
+    drug as of July 2026 - this is a maturing-narrative risk (some names may be overvalued on unproven ROI), not an invalidation."
+  source: IntuitionLabs AI drug discovery pipeline/FDA tracker 2026; PubMed/MDPI validation-crisis review, accessed 
+    2026-09-14

@@ -31,8 +31,64 @@ user_notes: "Already played the first leg (EU defense prime ETFs). Monitoring fo
 
 intensity:
   current_score: 77.7
-  last_updated: "2026-09-01"
+  last_updated: "2026-10-16"
   history:
+  - period: '2026-10-16'
+    score: 77.7
+    note: 'Computed 2026-10-16: avg=77.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-13'
+    score: 77.7
+    note: 'Computed 2026-10-13: avg=77.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-09'
+    score: 77.7
+    note: 'Computed 2026-10-09: avg=77.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-06'
+    score: 77.7
+    note: 'Computed 2026-10-06: avg=77.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-02'
+    score: 77.7
+    note: 'Computed 2026-10-02: avg=77.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-29'
+    score: 77.7
+    note: 'Computed 2026-09-29: avg=77.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-25'
+    score: 77.7
+    note: 'Computed 2026-09-25: avg=77.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-22'
+    score: 77.7
+    note: 'Computed 2026-09-22: avg=77.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-18'
+    score: 77.7
+    note: 'Computed 2026-09-18: avg=77.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-15'
+    score: 77.7
+    note: 'Computed 2026-09-15: avg=77.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-14'
+    score: 77.7
+    note: 'Computed 2026-09-14: avg=77.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-11'
+    score: 77.7
+    note: 'Computed 2026-09-11: avg=77.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-08'
+    score: 77.7
+    note: 'Computed 2026-09-08: avg=77.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-04'
+    score: 77.7
+    note: 'Computed 2026-09-04: avg=77.73 trend=→ (flat)'
+    computation_method: computed
   - period: '2026-09-01'
     score: 77.7
     note: 'Computed 2026-09-01: avg=77.73 trend=→ (flat)'
@@ -204,8 +260,27 @@ linked_event_catalyst_ids:
 - cat_20260603_nato_defense_gdp
 - cat_20260603_nato_hague_5pct_gdp
 status: active
-status_last_reviewed: "2026-08-31"
+status_last_reviewed: "2026-10-06"
 review_log:
+- date: '2026-10-06'
+  verdict: intact
+  evidence: 'Rheinmetall H1 2026 (2026-08-06): Q2 sales EUR 3.289B +69% YoY, operating result +115%, backlog above EUR 80B
+    (+44% YoY, 70% fixed), Q2 order intake EUR 11.4B (+476%, book-to-bill above 3.0x), backlog guided to EUR 100-120B by end-2026;
+    shares nonetheless fell 5.7% on cash-flow concerns. NATO European allies on track for ~2.3% of GDP in 2026 (IISS), with
+    European NATO plus Canada at ~2.53% (~$634B); the 3.5% core / 5% total 2035 target stands. EU states agreed on 2026-09-25
+    to release EUR 6.6B of stalled European Peace Facility aid for Ukraine. No numeric indicator recorded: ind_02 is a three-company
+    combined order-book growth and only Rheinmetall (+44%) was found; ind_01 (stored 2.34) vs 2.3-2.53 is within 10%; no flow
+    data for ind_03 (only AUM levels: WisdomTree EUR 4,335M, iShares EUR 348.8M at 2026-09-29).'
+  source: "Rheinmetall H1 2026 financial report / Q2 2026 call (investing.com, quartr); IISS 'NATO defence spending: navigating
+    the noise' (2026-07); Euronews 2026-09-25"
+- date: '2026-09-14'
+  verdict: intact
+  evidence: No budget cut or procurement shortfall found at the alliance level. Germany's defense spend rose 18% in real
+    terms in 2025 with 2026 funding projected at EUR117.2B; the 5%-of-GDP target (3.5% core + 1.5% related) remains the 
+    stated NATO trajectory. Equipment INVENTORY is still below 2021 levels despite the spending increase (demand still 
+    outrunning supply, not a budget reversal), and a handful of members (Czechia, and financing constraints in 
+    France/Italy/UK) face pressure -- none of it a reversal of the aggregate trend this catalyst tracks.
+  source: ICDS Defence Spending Who Is Doing What July 2026; McKinsey Feb 2026 defence dashboard, accessed 2026-09-14
 - date: '2026-08-31'
   verdict: strengthening
   evidence: Rheinmetall order backlog at record EUR 80.4bn in early Aug 2026 (was EUR 73bn in May), new nominations 

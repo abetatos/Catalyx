@@ -65,7 +65,7 @@ user_notes: >
   schedule) is the novel angle: AI-specific security spend is a NEW budget line, not a reallocation.
 
 intensity:
-  current_score: 69.3
+  current_score: 72.3
   computation_method: computed
   computation_note: >
     Bootstrap at creation (2026-06-05). Anchor: stronger than struct_copper_datacenter_demand (83.9)
@@ -79,8 +79,64 @@ intensity:
     ind_05 (ZS AI Security ARR $400M, ahead of schedule → strong) → ~85.
     Unweighted avg ≈ 85.2, flat trend (no prior period to compute delta) → 85.2 → round to 86.0.
     Run /catalyx-update after first quarterly data update to switch to computed method.
-  last_updated: "2026-09-01"
+  last_updated: "2026-10-16"
   history:
+  - period: '2026-10-16'
+    score: 72.3
+    note: 'Computed 2026-10-16: avg=72.28 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-13'
+    score: 72.3
+    note: 'Computed 2026-10-13: avg=72.28 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-09'
+    score: 72.3
+    note: 'Computed 2026-10-09: avg=72.28 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-06'
+    score: 72.3
+    note: 'Computed 2026-10-06: avg=72.28 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-02'
+    score: 72.3
+    note: 'Computed 2026-10-02: avg=72.28 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-29'
+    score: 72.3
+    note: 'Computed 2026-09-29: avg=72.28 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-25'
+    score: 72.3
+    note: 'Computed 2026-09-25: avg=72.28 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-22'
+    score: 72.3
+    note: 'Computed 2026-09-22: avg=72.28 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-18'
+    score: 72.3
+    note: 'Computed 2026-09-18: avg=72.28 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-15'
+    score: 72.3
+    note: 'Computed 2026-09-15: avg=72.28 trend=→ (flat) (was 74.3)'
+    computation_method: computed
+  - period: '2026-09-14'
+    score: 74.3
+    note: 'Computed 2026-09-14: avg=72.28 trend=↑ (rising 1 period) (was 72.3)'
+    computation_method: computed
+  - period: '2026-09-11'
+    score: 72.3
+    note: 'Computed 2026-09-11: avg=72.28 trend=→ (flat) (was 65.3)'
+    computation_method: computed
+  - period: '2026-09-08'
+    score: 65.3
+    note: 'Computed 2026-09-08: avg=72.28 trend=↓↓ (falling 2+ consecutive)'
+    computation_method: computed
+  - period: '2026-09-04'
+    score: 65.3
+    note: 'Computed 2026-09-04: avg=72.28 trend=↓↓ (falling 2+ consecutive) (was 69.3)'
+    computation_method: computed
   - period: '2026-09-01'
     score: 69.3
     note: 'Computed 2026-09-01: avg=72.28 trend=↓ (falling 1 period) (was 76.0)'
@@ -284,8 +340,24 @@ linked_structural_catalyst_ids:
 - struct_ai_capex_supercycle    # AI capex expands attack surface (LLM workloads, model theft, prompt injection) → compounding demand
 
 status: active
-status_last_reviewed: "2026-09-01"
+status_last_reviewed: "2026-10-06"
 review_log:
+- date: '2026-10-06'
+  verdict: intact
+  evidence: 'Vendor prints are strong: Palo Alto FQ4 FY26 revenue +34% to $3.41B with next-gen security ARR +63% to $9.1B
+    and FY27 revenue guide $14.1-14.2B (+23-24%); CrowdStrike reported its best quarter ever, revenue +26% to $1.47B and a
+    full-year forecast of ~$6B. Gartner puts 2026 worldwide information-security end-user spending at $244B (stored 240, +1.7%,
+    within noise; series definitions vary so no numeric update recorded) and projects AI cybersecurity spend rising from $51.3B
+    (2026) to ~$86B (2027). ind_02 not updated: the +26% is quarterly REVENUE growth, not ARR growth (stored 0.24 is ARR).'
+  source: Benzinga 2026-09 AI cybersecurity stocks rally (PANW FQ4 FY26, CRWD); Gartner 2026 security forecast via 
+    Fool.com 2026-10-03; Cybersecurity Dive earnings coverage
+- date: '2026-09-14'
+  verdict: intact
+  evidence: No enterprise-wide slowdown found. Global cybersecurity spend is guided to $240B in 2026 (+12.5% YoY), an 
+    ACCELERATION from 2025's 4% growth (the slowest in five years). The only cuts found are US-federal-specific (CISA 
+    -$270M FY2026, civilian agency funding held at 2024 levels) and do not extend to enterprise spend, which is the 
+    driver behind the held position.
+  source: Axis Intelligence / StationX cybersecurity spending statistics 2026, accessed 2026-09-14
 - date: '2026-09-01'
   verdict: intact
   evidence: Gartner worldwide end-user information security spending reaches $240B in 2026, up from $213B in 2025 

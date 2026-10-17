@@ -31,9 +31,65 @@ user_notes: "Most visible structural catalyst in the market. Risk of being price
   cooling, networking as higher-alpha adjacent plays."
 
 intensity:
-  current_score: 95.0
-  last_updated: "2026-09-01"
+  current_score: 91.4
+  last_updated: "2026-10-16"
   history:
+  - period: '2026-10-16'
+    score: 91.4
+    note: 'Computed 2026-10-16: avg=91.4 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-13'
+    score: 91.4
+    note: 'Computed 2026-10-13: avg=91.4 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-09'
+    score: 91.4
+    note: 'Computed 2026-10-09: avg=91.4 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-06'
+    score: 91.4
+    note: 'Computed 2026-10-06: avg=91.4 trend=→ (flat) (was 92.4)'
+    computation_method: computed
+  - period: '2026-10-02'
+    score: 92.4
+    note: 'Computed 2026-10-02: avg=92.37 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-29'
+    score: 92.4
+    note: 'Computed 2026-09-29: avg=92.37 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-25'
+    score: 92.4
+    note: 'Computed 2026-09-25: avg=92.37 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-09-22'
+    score: 92.4
+    note: 'Computed 2026-09-22: avg=92.37 trend=→ (flat) (was 94.4)'
+    computation_method: computed
+  - period: '2026-09-18'
+    score: 94.4
+    note: 'Computed 2026-09-18: avg=92.37 trend=↑ (rising 1 period) (was 92.4)'
+    computation_method: computed
+  - period: '2026-09-15'
+    score: 92.4
+    note: 'Computed 2026-09-15: avg=92.37 trend=→ (flat) (was 85.4)'
+    computation_method: computed
+  - period: '2026-09-14'
+    score: 85.4
+    note: 'Computed 2026-09-14: avg=92.37 trend=↓↓ (falling 2+ consecutive)'
+    computation_method: computed
+  - period: '2026-09-11'
+    score: 85.4
+    note: 'Computed 2026-09-11: avg=92.37 trend=↓↓ (falling 2+ consecutive) (was 89.4)'
+    computation_method: computed
+  - period: '2026-09-08'
+    score: 89.4
+    note: 'Computed 2026-09-08: avg=92.37 trend=↓ (falling 1 period) (was 92.4)'
+    computation_method: computed
+  - period: '2026-09-04'
+    score: 92.4
+    note: 'Computed 2026-09-04: avg=92.37 trend=→ (flat) (was 95.0)'
+    computation_method: computed
   - period: '2026-09-01'
     score: 95.0
     note: 'Computed 2026-09-01: avg=92.37 trend=↑↑ (rising 2+ consecutive) (was 94.4)'
@@ -93,19 +149,21 @@ indicators:
   name: "Nvidia data center revenue quarterly growth"
   source: "Nvidia earnings"
   check_frequency: quarterly
-  current_value: 0.22
+  current_value: 0.18
   unit: yoy_growth_rate
   direction: higher_is_stronger
   threshold_strong: 0.15
   threshold_weak: 0.00
-  last_value: 0.28
-  last_date: "2026-05-28"
+  last_value: 0.22
+  last_date: "2026-10-06"
 
   semaphore: 🟢
   value_history:
   - date: "2026-05-28"
     value: 0.28
-  score: 85.5
+  score: 82.6
+  update_note: NVDA Q2 FY27 data center +18% QoQ ($89.0B vs $75.2B); same QoQ basis as stored 0.22 (-18%, Rule 5 flag). 
+    YoY on the same quarter is +117%.
 - id: ind_03
   name: "Global data center power demand growth (IEA estimate)"
   source: "IEA Electricity report"
@@ -136,7 +194,7 @@ linked_event_catalyst_ids: []
 linked_structural_catalyst_ids:
 - struct_copper_datacenter_demand    # Commodity expression: copper miners as physical beneficiary
 status: active
-status_last_reviewed: "2026-09-01"
+status_last_reviewed: "2026-10-06"
 absorbed_catalyst_ids:
 - struct_copper_datacenter_demand
 absorbed_at: '2026-08-27'
@@ -152,6 +210,22 @@ absorbed_note: |
   decidir explicitamente cual de estos indicadores merece promoverse a este fichero:
     - struct_copper_datacenter_demand (intensity 78.7): Combined hyperscaler AI capex guidance (Microsoft + Google + Amazon + Meta, $B quarterly), LME copper spot price (USD/tonne), LME copper warehouse inventory (tonnes) — low inventory = supply tightness, Data center copper demand estimate — analyst consensus (Wood Mackenzie / CRU)
 review_log:
+- date: '2026-10-06'
+  verdict: intact
+  evidence: "NVIDIA Q2 FY27 (reported 2026-08-26): data center revenue $89.0B, +117% YoY and +18% QoQ; Q3 FY27 guide $108.0B
+    +/-2%. Q2 2026 combined hyperscaler capex reported at $166.0B, +87% YoY and +27% QoQ; FY2026 guidance for the big four
+    stays $720-745B (Alphabet $195-205B, Meta $115-135B, Microsoft $110-120B). Micron FQ4 (period ended 2026-09-03) revenue
+    $54.23B vs $11.32B a year earlier. No hyperscaler guidance cut found. NOTE ind_02 basis: stored 0.22 is not a YoY figure
+    (NVDA Q1 FY27 data center was +92% YoY; 22% matches the QoQ step), so 0.18 is recorded on the SAME QoQ basis as the stored
+    value; the label 'yoy_growth_rate' on ind_02 is misleading and should be fixed by the user (YoY would be 1.17)."
+  source: NVIDIA Q2 FY27 8-K (sec.gov, 2026-08-26); FactSet/Broadband Breakfast hyperscaler capex 2026; yieldtheory 
+    hyperscaler capex tracker; Micron FQ4 2026 results
+- date: '2026-09-14'
+  verdict: intact
+  evidence: 'No cut found for the September 2026 window: the big four hyperscalers remain guided to $720-745B combined FY2026
+    capex (Meta raised to $125-145B from $115-135B), consistent with the 2026-09-01 refresh. Next hard data point is the Oct/Nov
+    earnings round for September-quarter results.'
+  source: FactSet/CreditSights/Ajussi hyperscaler capex trackers, accessed 2026-09-14
 - date: '2026-09-01'
   verdict: intact
   evidence: "Combined 2026 capex guidance for the big four hyperscalers is $720-745B, up ~77% from ~$410B in 2025. Alphabet,

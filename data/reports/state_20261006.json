@@ -1,0 +1,576 @@
+{
+  "as_of": "2026-10-06",
+  "book": {
+    "n_positions": 6,
+    "invested_eur": 7246.0,
+    "unrealized_eur": 366.78,
+    "unrealized_pct": 5.06,
+    "realized_ytd_eur": -78.38,
+    "held_sectors": [
+      "biotech_drug_development",
+      "copper_miners",
+      "grid_infrastructure_utilities",
+      "pharma_large_cap",
+      "robotics_automation",
+      "semiconductors_design"
+    ]
+  },
+  "positions": [
+    {
+      "sector_id": "copper_miners",
+      "etf": "4COP.DE",
+      "action": "watch",
+      "unrealized_pct": -0.08,
+      "unrealized_eur": -0.76,
+      "drawdown_tier": "clear",
+      "reverify_required": false,
+      "catalyst_freshness": "fresh",
+      "regime_state": "intact",
+      "fired_stops": [],
+      "assumptions_violated": 0
+    },
+    {
+      "sector_id": "grid_infrastructure_utilities",
+      "etf": "IQQH.DE",
+      "action": "hold",
+      "unrealized_pct": 4.24,
+      "unrealized_eur": 62.56,
+      "drawdown_tier": "clear",
+      "reverify_required": false,
+      "catalyst_freshness": "fresh",
+      "regime_state": "intact",
+      "fired_stops": [],
+      "assumptions_violated": 0
+    },
+    {
+      "sector_id": "pharma_large_cap",
+      "etf": "IUHE.AS",
+      "action": "hold",
+      "unrealized_pct": 0.95,
+      "unrealized_eur": 13.7,
+      "drawdown_tier": "clear",
+      "reverify_required": false,
+      "catalyst_freshness": "fresh",
+      "regime_state": "intact",
+      "fired_stops": [],
+      "assumptions_violated": 0
+    },
+    {
+      "sector_id": "biotech_drug_development",
+      "etf": "NBTK.DE",
+      "action": "hold",
+      "unrealized_pct": 0.94,
+      "unrealized_eur": 11.91,
+      "drawdown_tier": "clear",
+      "reverify_required": false,
+      "catalyst_freshness": "fresh",
+      "regime_state": "intact",
+      "fired_stops": [],
+      "assumptions_violated": 0
+    },
+    {
+      "sector_id": "semiconductors_design",
+      "etf": "SEC0.DE",
+      "action": "hold",
+      "unrealized_pct": 14.33,
+      "unrealized_eur": 152.5,
+      "drawdown_tier": "clear",
+      "reverify_required": false,
+      "catalyst_freshness": "fresh",
+      "regime_state": "intact",
+      "fired_stops": [],
+      "assumptions_violated": 0
+    },
+    {
+      "sector_id": "robotics_automation",
+      "etf": "2B76.DE",
+      "action": "hold",
+      "unrealized_pct": 12.62,
+      "unrealized_eur": 126.87,
+      "drawdown_tier": "clear",
+      "reverify_required": false,
+      "catalyst_freshness": "fresh",
+      "regime_state": "intact",
+      "fired_stops": [],
+      "assumptions_violated": 0
+    }
+  ],
+  "attention": {
+    "positions_needing_action": [],
+    "stale_verdicts": 18,
+    "stale_indicators": 33,
+    "pending_lifecycle": 1
+  },
+  "stale_verdicts": [
+    {
+      "catalyst_id": "struct_commercial_space_supercycle",
+      "age_days": 123,
+      "freshness": "very_stale"
+    },
+    {
+      "catalyst_id": "struct_stablecoin_payment_rails",
+      "age_days": 40,
+      "freshness": "stale"
+    },
+    {
+      "catalyst_id": "struct_glp1_obesity_supercycle",
+      "age_days": 36,
+      "freshness": "stale"
+    },
+    {
+      "catalyst_id": "cat_20260402_section232_pharma_tariffs",
+      "age_days": 36,
+      "freshness": "stale"
+    },
+    {
+      "catalyst_id": "cat_20260601_us_ai_chip_export_controls",
+      "age_days": 36,
+      "freshness": "stale"
+    },
+    {
+      "catalyst_id": "cat_20260603_copper_supply_deficit_2026",
+      "age_days": 36,
+      "freshness": "stale"
+    },
+    {
+      "catalyst_id": "cat_20260624_memory_shortage_confirmed",
+      "age_days": 36,
+      "freshness": "stale"
+    },
+    {
+      "catalyst_id": "cat_20260728_cybersecurity_ai_beneficiary_revision",
+      "age_days": 36,
+      "freshness": "stale"
+    },
+    {
+      "catalyst_id": "cat_20260728_hyperscaler_capex_guidance_raise",
+      "age_days": 36,
+      "freshness": "stale"
+    },
+    {
+      "catalyst_id": "cat_20260314_private_credit_redemption_crisis",
+      "age_days": null,
+      "freshness": "unknown"
+    },
+    {
+      "catalyst_id": "cat_20260603_nato_defense_gdp",
+      "age_days": null,
+      "freshness": "unknown"
+    },
+    {
+      "catalyst_id": "cat_20260603_nato_hague_5pct_gdp",
+      "age_days": null,
+      "freshness": "unknown"
+    },
+    {
+      "catalyst_id": "cat_20260611_super_el_nino_2026",
+      "age_days": null,
+      "freshness": "unknown"
+    },
+    {
+      "catalyst_id": "cat_20260612_spacex_ipo_listing",
+      "age_days": null,
+      "freshness": "unknown"
+    },
+    {
+      "catalyst_id": "cat_20260620_clarity_act_market_structure",
+      "age_days": null,
+      "freshness": "unknown"
+    },
+    {
+      "catalyst_id": "cat_20260630_drc_cobalt_export_quota",
+      "age_days": null,
+      "freshness": "unknown"
+    },
+    {
+      "catalyst_id": "cat_20260724_trump_global_tariff_phase",
+      "age_days": null,
+      "freshness": "unknown"
+    },
+    {
+      "catalyst_id": "cat_20260817_hormuz_reescalation",
+      "age_days": null,
+      "freshness": "unknown"
+    }
+  ],
+  "stale_indicators": [
+    {
+      "catalyst_id": "struct_ai_capex_supercycle",
+      "indicator": "ind_02",
+      "last_date": "2026-05-28",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_ai_capex_supercycle",
+      "indicator": "ind_03",
+      "last_date": "2026-03-01",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_ai_drug_discovery",
+      "indicator": "ind_01",
+      "last_date": "2025-12-31",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_ai_drug_discovery",
+      "indicator": "ind_02",
+      "last_date": "2025-12-31",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_ai_drug_discovery",
+      "indicator": "ind_03",
+      "last_date": "2025-12-31",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_biopharma_patent_cliff_ma",
+      "indicator": "ind_03",
+      "last_date": "2025-12-31",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_biopharma_patent_cliff_ma",
+      "indicator": "ind_04",
+      "last_date": "2025-12-31",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_cb_gold_accumulation",
+      "indicator": "ind_02",
+      "last_date": "2026-04-01",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_china_luxury_recovery",
+      "indicator": "ind_01",
+      "last_date": "2025-12-31",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_china_luxury_recovery",
+      "indicator": "ind_02",
+      "last_date": "2025-09-30",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_china_luxury_recovery",
+      "indicator": "ind_03",
+      "last_date": "2025-09-30",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_commercial_space_supercycle",
+      "indicator": "ind_01",
+      "last_date": "2026-02-01",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_commercial_space_supercycle",
+      "indicator": "ind_02",
+      "last_date": "2026-06-04",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_commercial_space_supercycle",
+      "indicator": "ind_03",
+      "last_date": "2026-06-01",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_commercial_space_supercycle",
+      "indicator": "ind_04",
+      "last_date": "2026-05-31",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_em_capital_attraction_india",
+      "indicator": "ind_02",
+      "last_date": "2026-05-31",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_em_capital_attraction_india",
+      "indicator": "ind_03",
+      "last_date": "2026-06-30",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_energy_transition_grid",
+      "indicator": "ind_02",
+      "last_date": "2026-03-01",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_enterprise_cyber_spend_supercycle",
+      "indicator": "ind_05",
+      "last_date": "2026-06-01",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_glp1_obesity_supercycle",
+      "indicator": "ind_01",
+      "last_date": "2026-05-31",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_glp1_obesity_supercycle",
+      "indicator": "ind_02",
+      "last_date": "2025-12-31",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_glp1_obesity_supercycle",
+      "indicator": "ind_03",
+      "last_date": "2025-12-31",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_glp1_obesity_supercycle",
+      "indicator": "ind_04",
+      "last_date": "2025-12-31",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_japan_carry_unwind",
+      "indicator": "ind_01",
+      "last_date": "2026-08-01",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_japan_carry_unwind",
+      "indicator": "ind_02",
+      "last_date": "2026-08-01",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_japan_carry_unwind",
+      "indicator": "ind_04",
+      "last_date": "2026-04-28",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_nato_rearmament",
+      "indicator": "ind_01",
+      "last_date": "2026-03-01",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_nato_rearmament",
+      "indicator": "ind_02",
+      "last_date": "2026-05-15",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_nato_rearmament",
+      "indicator": "ind_03",
+      "last_date": "2026-06-01",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_stablecoin_payment_rails",
+      "indicator": "ind_01",
+      "last_date": "2026-05-31",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_stablecoin_payment_rails",
+      "indicator": "ind_02",
+      "last_date": "2025-12-31",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_stablecoin_payment_rails",
+      "indicator": "ind_03",
+      "last_date": "2026-03-31",
+      "overdue_by": null,
+      "cadence": null
+    },
+    {
+      "catalyst_id": "struct_stablecoin_payment_rails",
+      "indicator": "ind_04",
+      "last_date": "2026-03-31",
+      "overdue_by": null,
+      "cadence": null
+    }
+  ],
+  "lifecycle_transitions": [
+    {
+      "catalyst_id": "struct_em_capital_attraction_india",
+      "from": "active",
+      "to": "dormant",
+      "reason": "intensity 32.9 < 40.0 for 7 consecutive cycles (need 2)"
+    }
+  ],
+  "ranking_top": [
+    {
+      "sector_id": "copper_miners",
+      "rank": 1,
+      "composite": 60.8,
+      "momentum": 88.2,
+      "narrative_maturity": "crowded"
+    },
+    {
+      "sector_id": "robotics_automation",
+      "rank": 2,
+      "composite": 60.8,
+      "momentum": 64.9,
+      "narrative_maturity": "mainstream"
+    },
+    {
+      "sector_id": "semiconductors_design",
+      "rank": 3,
+      "composite": 60.0,
+      "momentum": 71.7,
+      "narrative_maturity": "crowded"
+    },
+    {
+      "sector_id": "pharma_large_cap",
+      "rank": 4,
+      "composite": 57.9,
+      "momentum": 55.5,
+      "narrative_maturity": "crowded"
+    },
+    {
+      "sector_id": "biotech_drug_development",
+      "rank": 5,
+      "composite": 56.2,
+      "momentum": 74.4,
+      "narrative_maturity": "mainstream"
+    },
+    {
+      "sector_id": "ai_infrastructure_data_centers",
+      "rank": 6,
+      "composite": 56.1,
+      "momentum": 72.5,
+      "narrative_maturity": "crowded"
+    },
+    {
+      "sector_id": "water_infrastructure",
+      "rank": 7,
+      "composite": 55.0,
+      "momentum": 38.4,
+      "narrative_maturity": "emerging"
+    },
+    {
+      "sector_id": "grid_infrastructure_utilities",
+      "rank": 8,
+      "composite": 54.0,
+      "momentum": 40.9,
+      "narrative_maturity": "crowded"
+    }
+  ],
+  "ranking_note": null,
+  "work_list": {
+    "top_n": 8,
+    "must_reverify": [
+      {
+        "catalyst_id": "struct_ai_capex_supercycle",
+        "why": "drives an open position"
+      },
+      {
+        "catalyst_id": "struct_ai_drug_discovery",
+        "why": "drives an open position"
+      },
+      {
+        "catalyst_id": "struct_biopharma_patent_cliff_ma",
+        "why": "drives an open position"
+      },
+      {
+        "catalyst_id": "struct_energy_transition_grid",
+        "why": "drives an open position"
+      },
+      {
+        "catalyst_id": "struct_enterprise_cyber_spend_supercycle",
+        "why": "drives an open position"
+      },
+      {
+        "catalyst_id": "struct_nato_rearmament",
+        "why": "drives an open position"
+      }
+    ],
+    "should_reverify": [
+      {
+        "catalyst_id": "cat_20260402_section232_pharma_tariffs",
+        "why": "stale stale · drives a decision-relevant sector"
+      },
+      {
+        "catalyst_id": "cat_20260601_us_ai_chip_export_controls",
+        "why": "stale stale · drives a decision-relevant sector"
+      },
+      {
+        "catalyst_id": "cat_20260603_copper_supply_deficit_2026",
+        "why": "stale stale · drives a decision-relevant sector"
+      },
+      {
+        "catalyst_id": "cat_20260624_memory_shortage_confirmed",
+        "why": "stale stale · drives a decision-relevant sector"
+      },
+      {
+        "catalyst_id": "cat_20260728_hyperscaler_capex_guidance_raise",
+        "why": "stale stale · drives a decision-relevant sector"
+      },
+      {
+        "catalyst_id": "struct_glp1_obesity_supercycle",
+        "why": "stale stale · drives a decision-relevant sector"
+      }
+    ],
+    "optional_reverify": [
+      "cat_20260314_private_credit_redemption_crisis",
+      "cat_20260603_nato_defense_gdp",
+      "cat_20260603_nato_hague_5pct_gdp",
+      "cat_20260611_super_el_nino_2026",
+      "cat_20260612_spacex_ipo_listing",
+      "cat_20260620_clarity_act_market_structure",
+      "cat_20260630_drc_cobalt_export_quota",
+      "cat_20260724_trump_global_tariff_phase",
+      "cat_20260728_cybersecurity_ai_beneficiary_revision",
+      "cat_20260817_hormuz_reescalation",
+      "struct_commercial_space_supercycle",
+      "struct_stablecoin_payment_rails"
+    ],
+    "sectors_decision_relevant": [
+      "ai_infrastructure_data_centers",
+      "biotech_drug_development",
+      "copper_miners",
+      "grid_infrastructure_utilities",
+      "pharma_large_cap",
+      "robotics_automation",
+      "semiconductors_design",
+      "water_infrastructure"
+    ],
+    "note": "Spend searches on must_reverify, then should_reverify. optional_reverify collapses to a single 'no change' line with NO search, and every sector outside sectors_decision_relevant ranks on its momentum baseline. Skipping is explicit here so 'we did not look' never reads as 'nothing changed'."
+  }
+}
