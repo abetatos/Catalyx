@@ -13,6 +13,17 @@
 
 
 
+## v15.0 (in progress) — que el pipeline capte los catalizadores macro (docs/PLAN_v15_catalyst_capture.md)
+
+Entrada completa al cerrar la Fase 6. Migración de schema ya vigente:
+
+- **`schemas/sector_study.json` 1.3 → 1.4.** Añade el campo OPCIONAL `declined_catalyst_ids`
+  (`[{catalyst_id, date, reason}]`): eventos registrados que nombran el sector en
+  `affected_sectors` y se decidió NO enlazar a `active_catalyst_ids`, con motivo. Los estudios 1.2 y
+  1.3 se leen sin cambios (el campo es opcional y el enum de versión conserva 1.2/1.3); no hay
+  modelo Pydantic que actualizar, el lector es el schema + `catalyst_audit.event_not_linked`.
+  Ningún estudio necesita migración.
+
 ## v14.3 — El spec oficial de momentum llegaba al 48% del universo, y lo decidía el calendario de la plaza (2026-09-02)
 
 **Observación del usuario, no un test:** «la prioridad real es la cobertura, no el horizonte —

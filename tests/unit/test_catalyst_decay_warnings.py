@@ -105,3 +105,69 @@ def test_render_prints_the_sections():
     txt = audit.render(res)
     assert "REINFORCED BUT DECAYED" in txt and "cat_old" in txt
     assert "SAME-DRIVER STACK" in txt and "cat_a" in txt
+
+
+# ── v15 Phase 4 — event_not_linked ───────────────────────────────────────────
+
+def _linked(events, studies, structural=("struct_x",), investable=None):
+    return audit.event_not_linked(events, studies.get, set(structural), investable or {})
+
+
+def _ev4(eid="cat_e", sectors=("a", "b"), related=None, relation=None):
+    e = {"id": eid, "status": "active", "affected_sectors": list(sectors),
+         "related_catalyst_ids": related or []}
+    if relation:
+        e["relation_to_structural"] = relation
+    return e
+
+
+def test_only_the_sector_whose_study_omits_the_event_is_listed():
+    studies = {"a": {"active_catalyst_ids": ["cat_e"]}, "b": {"active_catalyst_ids": []}}
+    rows = _linked([_ev4()], studies)
+    assert [(r["event_id"], r["sector_id"]) for r in rows] == [("cat_e", "b")]
+
+
+def test_declined_in_writing_is_not_listed():
+    studies = {"a": {"active_catalyst_ids": ["cat_e"]},
+               "b": {"active_catalyst_ids": [],
+                     "declined_catalyst_ids": [{"catalyst_id": "cat_e", "date": "2026-10-17",
+                                                "reason": "headwind, not a demand driver"}]}}
+    assert _linked([_ev4()], studies) == []
+
+
+def test_linked_through_a_listed_structural_with_independent_relation():
+    studies = {s: {"active_catalyst_ids": ["struct_x"]} for s in ("a", "b")}
+    e = _ev4(related=["struct_x"], relation="independent")
+    assert _linked([e], studies) == []
+
+
+def test_a_structural_link_without_a_scoring_relation_does_not_count():
+    studies = {s: {"active_catalyst_ids": ["struct_x"]} for s in ("a", "b")}
+    e = _ev4(related=["struct_x"], relation="supports")
+    assert len(_linked([e], studies)) == 2
+
+
+def test_a_structural_the_study_does_not_list_does_not_link():
+    studies = {s: {"active_catalyst_ids": []} for s in ("a", "b")}
+    e = _ev4(related=["struct_x"], relation="confirms")
+    assert len(_linked([e], studies)) == 2
+
+
+def test_sector_without_study_is_named_no_study():
+    rows = _linked([_ev4(sectors=("a",))], {})
+    assert rows[0]["reason"] == "no_study"
+
+
+def test_investable_flag_is_carried_and_inactive_events_ignored():
+    rows = _linked([_ev4(sectors=("a",)), {**_ev4("cat_old"), "status": "archived"}],
+                   {"a": {"active_catalyst_ids": []}}, investable={"a": False})
+    assert len(rows) == 1 and rows[0]["investable"] is False
+
+
+def test_linking_relations_match_the_scorer():
+    import inspect
+    from catalyx.scorer import catalyst_scorer as cs
+    src = inspect.getsource(cs)
+    for r in audit.LINKING_RELATIONS:
+        assert f'"{r}"' in src
+    assert '("confirms", "contradicts", "independent")' in src

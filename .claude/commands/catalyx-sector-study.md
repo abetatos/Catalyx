@@ -44,6 +44,11 @@ fresh study still ranks — on its momentum baseline — so a cheap refresh is n
 3. Update only the decision-relevant fields:
    - `active_catalyst_ids` — which registered catalysts drive this sector NOW. This is the field
      the scorer reads; a catalyst that went dormant/archived must come out.
+     Run `uv run python -m catalyx.scorer.catalyst_audit --active --json` and read `event_not_linked`
+     for THIS sector: every registered event that names it is either added here or recorded in
+     `declined_catalyst_ids` (`{catalyst_id, date, reason}`, schema 1.4) — a macro headwind that
+     is not a demand driver is declined with that reason, not silently omitted. Bump
+     `schema_version` to `1.4` when you write the field.
    - `narrative_maturity` — the 5-level enum, anchored to `scoring_weights.yaml`
      `narrative_maturity_levels.score_equiv` (ignored→10, emerging→35, mainstream→60, crowded→80,
      exhausted→95) + `analyst_narrative_score` to the matching integer.

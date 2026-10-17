@@ -173,6 +173,52 @@ def decay_warnings(events: list[dict]) -> dict:
     return {"reinforced_but_decayed": reinforced, "same_driver_stack": stack}
 
 
+# ── v15 Phase 4 — does a registered event reach the score? ──────────────────────────────────────
+# The scorer reads `affected_sectors` NOWHERE: an event enters a sector's CA only through the
+# study's `active_catalyst_ids` — directly, or via a listed structural the event names in
+# `related_catalyst_ids` with one of the relations below (catalyst_scorer.py, the
+# `related_events` filter). The 2026-09-16 Fed hike was registered and weighed on no sector.
+LINKING_RELATIONS = ("confirms", "contradicts", "independent")   # must match catalyst_scorer
+
+
+def _investable_map() -> dict[str, bool]:
+    import yaml
+    from pathlib import Path
+    tax = yaml.safe_load((Path(__file__).parents[1] / "config" / "sector_taxonomy.yaml")
+                         .read_text(encoding="utf-8")) or {}
+    return {s["id"]: bool(s.get("investable")) for s in tax.get("sectors") or []}
+
+
+def _structural_ids() -> set[str]:
+    from catalyx.store import structural_catalyst_repo as scr
+    return {c.get("id") for c in scr._load_all() if c.get("id")}
+
+
+def event_not_linked(events: list[dict], load_study, structural_ids: set[str],
+                     investable: dict[str, bool]) -> list[dict]:
+    """Active events that name a sector which will never score them. `load_study(sector_id)`
+    returns the study dict or None. A sector whose study declined the event in writing
+    (`declined_catalyst_ids`) is not listed — a question answered stays answered."""
+    rows = []
+    for e in sorted((x for x in events if x.get("status") == "active" and x.get("id")),
+                    key=lambda x: x["id"]):
+        via = [r for r in (e.get("related_catalyst_ids") or []) if r in structural_ids] \
+            if e.get("relation_to_structural") in LINKING_RELATIONS else []
+        for sid in e.get("affected_sectors") or []:
+            row = {"event_id": e["id"], "sector_id": sid,
+                   "investable": investable.get(sid)}
+            study = load_study(sid)
+            if study is None:
+                rows.append({**row, "reason": "no_study"})
+                continue
+            listed = set(study.get("active_catalyst_ids") or [])
+            declined = {d.get("catalyst_id") for d in study.get("declined_catalyst_ids") or []}
+            if e["id"] in listed or e["id"] in declined or any(v in listed for v in via):
+                continue
+            rows.append({**row, "reason": "not_in_active_catalyst_ids"})
+    return rows
+
+
 def audit(active_only: bool = False) -> dict:
     events = _load_all_event_catalysts()
     by_id = {e.get("id"): e for e in events if e.get("id")}
@@ -254,6 +300,8 @@ def audit(active_only: bool = False) -> dict:
         "halflife_source": weights.halflife_source(),
         "strength_calibration": weights.event_strength_calibration().get("mode"),
         **decay_warnings(events),
+        "event_not_linked": event_not_linked(events, cs._load_sector_study, _structural_ids(),
+                                            _investable_map()),
         "events": rows,
     }
 
@@ -318,6 +366,15 @@ def render(res: dict) -> str:
                        f"  on {', '.join(r['shared_sectors'])}")
         out += ["", "  Real double counting if they are one driver; the review decides (CLAUDE.md:",
                 "  one catalyst = one driver). Sequential guidance → decision is allowed."]
+    nl = res.get("event_not_linked") or []
+    if nl:
+        out += ["", f"  EVENT NOT LINKED — {len(nl)} (event, sector) pair(s) the score will never read:", ""]
+        for r in nl:
+            inv = {True: "investable", False: "watch-only"}.get(r["investable"], "?")
+            out.append(f"    {r['event_id']:<46} {r['sector_id']:<34} {inv:<10} {r['reason']}")
+        out += ["", "  `affected_sectors` is not read by the scorer. Per pair: add the event id to the",
+                "  study's `active_catalyst_ids`, or name a listed structural in the event's",
+                "  `related_catalyst_ids`, or write it in `declined_catalyst_ids` with the reason."]
     return "\n".join(out)
 
 

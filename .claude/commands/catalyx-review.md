@@ -171,6 +171,17 @@ uv run python -m catalyx.store.sector_study_repo stale --days 7
 uv run python -m catalyx.store.sector_study_repo core --all   # maturity · trend · age · catalysts
 uv run python -m catalyx.store.movement_repo positions
 ```
+**Registered events must reach the score.** The scorer never reads an event's `affected_sectors`; it
+reads the study's `active_catalyst_ids`. Run
+```bash
+uv run python -m catalyx.scorer.catalyst_audit --active --json   # → `event_not_linked`
+```
+For each `event_not_linked` row of a sector being studied: **either** add the event id to
+`active_catalyst_ids` (or name a listed structural in the event's `related_catalyst_ids`), **or**
+write it in the study's `declined_catalyst_ids` (`catalyst_id`, `date`, `reason`). A row that is
+neither is a registered event weighing on nothing — that is how the 2026-09-16 Fed hike went
+unscored. Rows of sectors not being studied are reported, not swept.
+
 Report the work list, why each sector is on it, and the count skipped as unchanged. Fan the list out
 to background subagents following `catalyx-sector-study.md`.
 

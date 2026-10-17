@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "catalyx/schemas/sector_study.json",
-  "schema_version": "1.3",
+  "schema_version": "1.4",
   "title": "SectorStudy",
   "description": "Bottom-up sector analysis, independent of active catalysts. The sector's 'fundamental file'. TWO REFRESH DEPTHS (schema 1.3): `core` is the cheap, decision-relevant refresh that the monthly review runs by default (~2 searches); `full` is the deep dossier, run on first study, before opening a position, or quarterly. See study_type.",
   "type": "object",
@@ -28,9 +28,10 @@
       "type": "string",
       "enum": [
         "1.2",
-        "1.3"
+        "1.3",
+        "1.4"
       ],
-      "description": "1.3 adds study_type=core (cheap refresh) and deprecates etf_analysis. 1.2 files read back unchanged."
+      "description": "1.4 adds the optional declined_catalyst_ids (older files read back unchanged). 1.3 adds study_type=core (cheap refresh) and deprecates etf_analysis. 1.2 files read back unchanged."
     },
     "sector_id": {
       "type": "string"
@@ -279,6 +280,20 @@
       "type": "array",
       "items": {
         "type": "string"
+      }
+    },
+    "declined_catalyst_ids": {
+      "type": "array",
+      "description": "1.4. Registered events that name this sector in affected_sectors but were deliberately NOT linked into active_catalyst_ids, each with the date and the reason. A question answered must stay answered: catalyst_audit's event_not_linked stops listing them. Append-only in spirit \u2014 never used to hide an event the study should carry.",
+      "items": {
+        "type": "object",
+        "required": ["catalyst_id", "date", "reason"],
+        "properties": {
+          "catalyst_id": {"type": "string"},
+          "date": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+          "reason": {"type": "string", "minLength": 5}
+        },
+        "additionalProperties": false
       }
     },
     "historical_catalyst_performance": {

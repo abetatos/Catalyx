@@ -116,3 +116,22 @@ def test_deprecated_etf_block_accepts_an_honest_null(schema):
 def test_etf_analysis_is_marked_deprecated(schema):
     # etf_universe.yaml is the single source; the flag is what stops new studies re-duplicating it.
     assert schema["properties"]["etf_analysis"].get("deprecated") is True
+
+
+# ── 1.4 — declined_catalyst_ids ──────────────────────────────────────────────
+
+def test_declined_catalyst_ids_validates_and_is_optional(schema):
+    jsonschema.validate(_core_study(), schema)                      # absent: older files unchanged
+    jsonschema.validate(_core_study(schema_version="1.4", declined_catalyst_ids=[
+        {"catalyst_id": "cat_20260916_fed_rate_hike", "date": "2026-10-17",
+         "reason": "rate headwind, not a demand driver for this sector"}]), schema)
+
+
+@pytest.mark.parametrize("bad", [
+    {"catalyst_id": "cat_x", "date": "2026-10-17"},                     # no reason
+    {"catalyst_id": "cat_x", "date": "17/10/2026", "reason": "valid reason"},
+    {"catalyst_id": "cat_x", "date": "2026-10-17", "reason": "ok"},     # too short to be a reason
+])
+def test_declined_catalyst_ids_rejects_incomplete_entries(schema, bad):
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(_core_study(schema_version="1.4", declined_catalyst_ids=[bad]), schema)
