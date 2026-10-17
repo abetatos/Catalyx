@@ -204,7 +204,17 @@ sectors:
   retired_2026_08_27: true
   retired_reason: HDRO.L existe (UCITS, 113M USD) pero el proxy ya estaba marcado 'poor' y el catalizador no esta activo. Re-promocionar si el hidrogeno vuelve a tesis.
   watch_triggers:
-  - Aparece un ETF UCITS cotizado en LSE/XETRA/Euronext que exprese el sector con AUM > 200M USD
+  - >-
+    HDRO.L (o cualquier ETF de hidrogeno) supera 200M USD de AUM Y aparece en el buscador de
+    Revolut ES como ETF, no CFD. El AUM solo no basta: el UCITS ya existe desde la retirada.
+  - >-
+    Se registra un StructuralCatalyst activo que nombre hydrogen_clean_fuels en affected_sectors.
+    Hoy no hay ninguno -- es el unico de los cuatro retirados de 2026-08-27 sin ninguna referencia
+    viva en el registro de catalizadores.
+  - >-
+    Una subasta de la European Hydrogen Bank (o equivalente) adjudica contratos con precio firme y
+    FID, no una meta declarada. El retired_reason dice "el catalizador no esta activo"; esto es lo
+    que lo activaria.
 
   # ═══════════════════════════════════════════════
   # PRECIOUS METALS
@@ -378,7 +388,12 @@ sectors:
   retired_2026_08_27: true
   retired_reason: Sin UCITS de banca regional US (KRE/KBE son US). Banca europea disponible via eu_retail_banking.
   watch_triggers:
-  - Aparece un ETF UCITS cotizado en LSE/XETRA/Euronext que exprese el sector con AUM > 200M USD
+  - >-
+    Aparece un UCITS de banca regional US en LSE/XETRA/Euronext Y el broker lo lista (KRE/KBE son
+    US: PRIIPs los bloquea).
+  - >-
+    El ciclo Fed diverge del BCE lo bastante para que la tesis deje de estar cubierta por
+    eu_retail_banking, que es el superviviente que el retired_reason nombra y sigue investable.
 
 - id: insurance_eu
   label: "European Insurance — Life & Non-Life"
@@ -569,7 +584,14 @@ sectors:
   retired_2026_08_27: true
   retired_reason: Sin UCITS de dispositivos medicos (IHI es US). Absorbido por HEAL.L en biotech_drug_development.
   watch_triggers:
-  - Aparece un ETF UCITS cotizado en LSE/XETRA/Euronext que exprese el sector con AUM > 200M USD
+  - >-
+    Aparece un UCITS de dispositivos medicos en LSE/XETRA/Euronext Y el broker lo lista (IHI es US:
+    PRIIPs lo bloquea de raiz, asi que aqui hacen falta las dos cosas).
+  - >-
+    El HEADWIND medido en struct_glp1_obesity_supercycle se invierte: los volumenes de cirugia
+    bariatrica / cardio-metabolica dejan de caer interanual. OJO -- este sector NO esta hoy sin
+    catalizador, esta con uno EN CONTRA (-34% de volumenes 2022-2024 mientras el uso de GLP-1
+    subia ~140%), y por eso glp1 lo excluye deliberadamente de active_catalyst_ids.
 
 - id: genomics_precision_medicine
   label: "Genomics & Precision Medicine"
@@ -708,7 +730,16 @@ sectors:
   retired_2026_08_27: true
   retired_reason: Sin vehiculo accesible; proxy ya marcado 'poor'.
   watch_triggers:
-  - Aparece un ETF UCITS cotizado en LSE/XETRA/Euronext que exprese el sector con AUM > 200M USD
+  - >-
+    Aparece un ETF de biologia sintetica / biomanufactura listado EN EL BROKER (no basta con que
+    el UCITS exista: v14.0 midio que los UCITS de cloud existian, eran correctos, y Revolut ES no
+    los listaba).
+  - >-
+    struct_biosecure_biomanufacturing_reshoring (hoy status: merged) se reactiva, o su superviviente
+    vuelve a nombrar synthetic_biology como sector PRIMARIO. Su propia nota de merge dice que el
+    sector objetivo quedo watch-only por falta de vehiculo, no por falta de tesis.
+  - >-
+    BIOSECURE Act (o equivalente) pasa de propuesta a ley con presupuesto asignado.
 - id: space_commercial
   label: "Commercial Space — Launch, Satellites, Services"
   parent: deep_tech

@@ -619,9 +619,18 @@ def _bake_overview(dist: Path) -> dict:
                     "n_stops, n_fired, n_approaching, n_claude_check, fired_ids, approaching_ids, "
                     "claude_check_ids, loudest_fired_id, loudest_fired_severity, assumptions_total, "
                     "assumptions_violated, assumptions_weakening, unrealized_eur, unrealized_pct, "
-                    "tax_due_eur, net_proceeds_eur, harvestable_loss_eur "
+                    "tax_due_eur, net_proceeds_eur, harvestable_loss_eur, "
+                    "CAST(as_of AS VARCHAR) AS as_of "
                     f"FROM exit_signal WHERE run_id = '{run_id}'")
-                ov["exit_signal"] = {"run_id": run_id, "by_etf": {r["etf"]: r for r in rows}}
+                # `as_of` IS PART OF THE ANSWER, not decoration (2026-09-02). Nothing in
+                # `post_run.sh` wrote this table, so it sat at 2026-08-28 for five days while the
+                # page rendered it as the current state: a REDUCE badge on
+                # `grid_infrastructure_utilities` describing a lot closed on 2026-08-20, beside a
+                # sector closed on 09-01 and a vehicle replaced in v14.2. A SELL signal with no
+                # date on it is the one kind of stale data that reads as urgent.
+                ov["exit_signal"] = {"run_id": run_id, "by_etf": {r["etf"]: r for r in rows},
+                                     "as_of": next((r.get("as_of") for r in rows if r.get("as_of")),
+                                                   None)}
 
         # ── rebalance: the pipeline's target book vs the real one, in € and after tax ──
         # The one page that names amounts. Baked from lake `rebalance` (recommendation per sector),
@@ -651,7 +660,8 @@ def _bake_overview(dist: Path) -> dict:
                     "book_swap_hurdle_ic_effective", "book_sigma_cs_pct",
                     "book_sigma_cs_windows", "book_rank_size_spearman",
                     "book_selection_margin_z", "book_selection_last_in",
-                    "book_selection_first_out") if c in have)
+                    "book_selection_first_out",
+                    "book_selection_band_z", "book_selected_by_risk") if c in have)
                 rows = q(
                     "SELECT " + (f"{optional}, " if optional else "")
                     + "sector_id, etf, rank, score_rank, bucket, target_pct, actual_pct, "
@@ -714,11 +724,19 @@ def _bake_overview(dist: Path) -> dict:
                                 "sigma_cs_pct": rows[0].get("book_sigma_cs_pct"),
                                 "n_windows": rows[0].get("book_sigma_cs_windows")}
                                if rows and rows[0].get("book_swap_hurdle_verdict") else None),
+                    # `band_z` / `by_risk` (2026-09-02): the top-N cut is no longer a hard cliff.
+                    # Names within `band_z` of an incumbent are declared TIED and the marginal
+                    # slot goes to whichever lowers book variance, so a name can be in the book
+                    # without out-ranking anyone — and the page has to say which one, or its
+                    # "rank N" column describes a decision the ranking did not make.
                     "selection": ({"margin_z": rows[0].get("book_selection_margin_z"),
                                    "last_in": rows[0].get("book_selection_last_in"),
                                    "first_out": rows[0].get("book_selection_first_out"),
-                                   "rank_size_spearman": rows[0].get("book_rank_size_spearman")}
-                                  if rows and rows[0].get("book_selection_margin_z") is not None
+                                   "rank_size_spearman": rows[0].get("book_rank_size_spearman"),
+                                   "band_z": rows[0].get("book_selection_band_z"),
+                                   "by_risk": rows[0].get("book_selected_by_risk")}
+                                  if rows and (rows[0].get("book_selection_margin_z") is not None
+                                               or rows[0].get("book_selection_band_z") is not None)
                                   else None),
                     "tilt_lambda": rows[0].get("book_tilt_lambda") if rows else None,
                     # The cost of NOT acting, alongside the cost of acting (plan v4 §4 C1/C4).

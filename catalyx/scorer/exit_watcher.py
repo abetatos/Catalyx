@@ -291,12 +291,39 @@ def _regime_map(run_id: str | None, lake_dir: Path | None) -> tuple[dict, str | 
 # ── Risk-discipline gather: a position's invalidations + assumptions ──────────
 
 def _risk_for_etf(etf: str, movements: list[dict]) -> tuple[list[dict], list[dict], list[dict]]:
-    """Collect invalidation[] + assumptions[] from the OPEN/ADD movements of this vehicle that carry
-    a risk_discipline block, plus the attribution catalyst list. (Usually one opening movement.)"""
+    """Collect invalidation[] + assumptions[] from the buy movements of the CURRENTLY OPEN lot in
+    this vehicle, plus its attribution catalyst list.
+
+    THE CUTOFF IS THE LAST `close`, and it is the whole point of this function (2026-09-02). It
+    used to iterate every open/add ever recorded for the ETF, on a docstring that said "(usually
+    one opening movement)" — which is exactly the assumption that hid the defect. A sector that is
+    closed and later RE-OPENED carries two generations of stops, and the dead one is anchored to a
+    cost basis that no longer exists.
+
+    Live: `grid_infrastructure_utilities` was opened 2026-06-04 at 11.27, closed 2026-08-20, and
+    re-opened 2026-09-02 at 8.523. The June stop ("20% below entry" → threshold 9.20) evaluated
+    against a price of 8.591 and reported `consecutive_breaching: 13` — thirteen days of a stop
+    belonging to a position that had not existed for any of them. It fired `review_and_reduce`,
+    and the table answered REDUCE €744 on a line bought two hours earlier and up 0.8%, whose OWN
+    stop (threshold 6.818) was clear by 26%. The attribution list came back with each catalyst
+    twice for the same reason.
+
+    A `trim` does NOT reset the lot — it is partial, the position and its thesis survive it. Only
+    a `close` ends the generation. Movements with no `executed_at` are kept: dropping a row for a
+    missing timestamp would silently discard a live stop, and this function fails toward KEEPING
+    the discipline, not toward discarding it.
+    """
+    mine = [m for m in movements if m.get("vehicle", {}).get("etf") == etf]
+    closes = [str(m.get("executed_at") or "") for m in mine if m.get("action") == "close"]
+    since = max(closes) if closes else None
+
     invalidations, assumptions, attribution = [], [], []
-    for m in movements:
-        if m.get("vehicle", {}).get("etf") != etf or m.get("action") not in _BUY_ACTIONS:
+    for m in mine:
+        if m.get("action") not in _BUY_ACTIONS:
             continue
+        at = str(m.get("executed_at") or "")
+        if since and at and at <= since:
+            continue                      # belongs to a lot that was already sold
         rd = m.get("risk_discipline") or {}
         invalidations.extend(rd.get("invalidation") or [])
         assumptions.extend(rd.get("assumptions") or [])

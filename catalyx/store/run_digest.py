@@ -257,8 +257,12 @@ def _exposure() -> list[dict]:
 def _cap_breaches(reb_rows: list[dict]) -> list[dict]:
     from catalyx.store import movement_repo
 
-    proposed = [{"sector_id": r.get("sector_id"), "trade_eur": r.get("trade_eur")}
-                for r in (reb_rows or []) if r.get("rule_action") in ("BUY", "ADD")]
+    # The WHOLE table, sells included: `cap_check` deducts the money a SELL removes from its
+    # drivers, and filtering to BUY/ADD measured a book nobody proposed (2026-10-06: ai_capex read
+    # 63.0% with the grid and pharma exits left out; the table actually lands it at 48.2%).
+    proposed = [{"sector_id": r.get("sector_id"), "etf": r.get("etf"),
+                 "trade_eur": r.get("trade_eur")}
+                for r in (reb_rows or []) if float(r.get("trade_eur") or 0.0) != 0.0]
     return [c for c in movement_repo.cap_check(proposed) if c["over"]]
 
 

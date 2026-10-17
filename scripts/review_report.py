@@ -171,7 +171,7 @@ def _rebalance_rows(lake_dir: Path | None = None) -> list[dict]:
         return []
     latest = sorted(df["run_id"].unique())[-1]
     df = df[df["run_id"] == latest]
-    from catalyx.execution.rebalance import PRECEDENCE
+    from catalyx.execution.rebalance import PRECEDENCE, action_label
     order = {a: i for i, a in enumerate(PRECEDENCE)}
     # NaN → None at the parquet boundary, once. Downstream code checks `is None`, and a NaN that
     # survives it renders as a value ("rank nan") instead of the gap it is.
@@ -179,6 +179,8 @@ def _rebalance_rows(lake_dir: Path | None = None) -> list[dict]:
             for r in df.to_dict("records")]
     rows.sort(key=lambda r: (order.get(str(r.get("rule_action")), 9),
                              -abs(float(r.get("trade_eur") or 0))))
+    for r in rows:
+        r["action_label"] = action_label(r)        # display only; `rule_action` stays the enum
     return rows
 
 
@@ -189,7 +191,7 @@ def section_rebalance() -> str:
     # `rk` is the rank in this run's FULL ranking — one semantic, no per-row fallback. The
     # model-book rank stays internal; a column that switches meaning per row obscures both.
     cols = [("sector_id", "sector"), ("etf", "ETF"), ("score_rank", "rk"), ("target_pct", "target %"),
-            ("actual_pct", "actual %"), ("gap_eur", "gap €"), ("rule_action", "**action**"),
+            ("actual_pct", "actual %"), ("gap_eur", "gap €"), ("action_label", "**action**"),
             ("trade_eur", "trade €"), ("tax_eur", "CGT €"), ("breakeven_pct", "b/e %"),
             # The age of the evidence, next to the reason that rests on it (plan v5 E1).
             ("data_age", "data"), ("reason", "reason")]
@@ -653,8 +655,9 @@ def _cap_check_note() -> str:
     from catalyx.store import movement_repo
 
     rows = _safe(lambda: _rebalance_rows(), [])
-    proposed = [{"sector_id": r.get("sector_id"), "trade_eur": r.get("trade_eur")}
-                for r in rows if r.get("rule_action") in ("BUY", "ADD")]
+    proposed = [{"sector_id": r.get("sector_id"), "etf": r.get("etf"),
+                 "trade_eur": r.get("trade_eur")}
+                for r in rows if float(r.get("trade_eur") or 0.0) != 0.0]
     checked = _safe(lambda: movement_repo.cap_check(proposed), [])
     breaches = [c for c in checked if c["over"]]
     if not breaches:

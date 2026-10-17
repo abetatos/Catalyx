@@ -1070,8 +1070,20 @@ function renderPositions() {
       <td class="num">${taxc}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="6" class="lbl" style="padding:14px">no open positions</td></tr>';
+  // HOW OLD THE SIGNAL IS, ON THE PANEL. Nothing in `post_run.sh` used to write `exit_signal`, so
+  // it could sit for days while this table rendered it as the current state — on 2026-09-02 it
+  // showed REDUCE on a position bought that morning, describing the lot closed on 2026-08-20. A
+  // sell signal with no date on it is the one kind of stale data that reads as urgent, so the age
+  // is printed always and called out past a day.
+  const exAsOf = (OV.exit_signal || {}).as_of || null;
+  const exAgeDays = exAsOf ? Math.floor((Date.now() - Date.parse(exAsOf)) / 86400000) : null;
+  const exStale = exAgeDays != null && exAgeDays >= 1;
+  const exStamp = exAsOf
+    ? `<p class="hint" style="margin:0 0 6px">${exStale ? '<span class="pill a">STALE</span> ' : ''}as of <b>${exAsOf.slice(0, 10)}</b>${
+        exAgeDays ? ` — ${exAgeDays} day(s) old. Positions opened or closed since are NOT reflected; re-run <code>exit_watcher</code> before acting on a badge below.` : ' (today)'}</p>`
+    : '';
   $('pos-exit').innerHTML = exHas
-    ? `<div class="cmp"><table><thead><tr><th>position</th><th>signal</th><th>stops</th><th>assumptions</th><th>regime</th><th class="num">exit after-tax</th></tr></thead><tbody>${exrows}</tbody></table></div>`
+    ? exStamp + `<div class="cmp"><table><thead><tr><th>position</th><th>signal</th><th>stops</th><th>assumptions</th><th>regime</th><th class="num">exit after-tax</th></tr></thead><tbody>${exrows}</tbody></table></div>`
     : '<p class="hint">No exit-watch run yet — run <code>uv run python -m catalyx.scorer.exit_watcher</code> (persists per run).</p>';
   const ext = $('pos-exit').querySelector('tbody');
   if (ext) ext.onclick = (ev) => { const tr = ev.target.closest('tr[data-sid]'); if (tr) location.hash = '#/sectors/' + tr.dataset.sid; };
@@ -1439,9 +1451,17 @@ async function renderData() {
 // the action column is a closed enum with no hedging member, and any deviation shows up in the
 // override table below with an author. Recommend-only, like everything else in the app.
 // RE-SCORE is amber, not red: it moves no money, it names missing data as work to do.
-const ACTION_CLASS = { SELL: 'r', REDUCE: 'r', TRIM: 'a', 'RE-SCORE': 'a', ADD: 'g', BUY: 'g', HOLD: '' };
+const ACTION_CLASS = { SELL: 'r', CLOSE: 'r', REDUCE: 'r', TRIM: 'a', 'RE-SCORE': 'a', ADD: 'g', BUY: 'g', HOLD: '' };
 const eur = (v, d = 0) => (v === null || v === undefined || Number.isNaN(Number(v)))
   ? '—' : (Number(v) < 0 ? '−€' : '€') + num(Math.abs(Number(v)), d);
+// A TRIM that takes the line to zero is a full exit: show it as CLOSE (display only; the stored
+// rule_action stays the enum). Mirrors rebalance.action_label.
+function actionLabel(r) {
+  const a = r.rule_action;
+  if (a !== 'TRIM' || r.target_pct == null || r.actual_eur == null) return a;
+  const trade = Number(r.trade_eur || 0);
+  return (trade < 0 && Number(r.target_pct) <= 0 && Math.abs(trade) >= Number(r.actual_eur) - 0.01) ? 'CLOSE' : a;
+}
 function actionPill(a) { return a ? `<span class="pill ${ACTION_CLASS[a] || ''}">${escapeHtml(a)}</span>` : '—'; }
 function freshPill(f) { const c = { fresh: 'g', stale: 'a', very_stale: 'r' }[f] || ''; return f ? `<span class="pill ${c}">${escapeHtml(String(f).replace('_', ' '))}</span>` : ''; }
 
@@ -1459,14 +1479,35 @@ function selectionPanel(R) {
   if (!S && !drifted.length) return '';
   const rows = [];
   if (S && S.margin_z != null) {
-    rows.push(`<tr><td>boundary</td><td class="num"><b>${num(S.margin_z, 3)}</b></td>
-      <td class="hint">composite z — ${sectorLink(S.last_in)} is in, ${sectorLink(S.first_out)} is out</td></tr>`);
+    // A NEGATIVE margin is not an error and it is new: it means the last name in scored BELOW
+    // the first name out, i.e. the indifference band deliberately overrode the order because the
+    // two were tied on score and the lower one made the book less redundant. Printing it without
+    // that sentence would read as a bug in the ranking.
+    const neg = Number(S.margin_z) < 0;
+    rows.push(`<tr><td>boundary</td><td class="num ${neg ? 'neg' : ''}"><b>${num(S.margin_z, 3)}</b></td>
+      <td class="hint">composite z — ${sectorLink(S.last_in)} is in, ${sectorLink(S.first_out)} is out${neg
+        ? '. Negative: the name that took the slot scored LOWER and was inside the indifference band below — the ranking did not make this call, the covariance did'
+        : ''}</td></tr>`);
   }
   if (S && S.rank_size_spearman != null) {
     rows.push(`<tr><td>rank &rarr; size</td><td class="num"><b>${num(S.rank_size_spearman, 2)}</b></td>
       <td class="hint">Spearman between rank and target weight — ${Math.abs(Number(S.rank_size_spearman)) < 0.5
         ? 'order does not show up in size, which is correct while the tilt is neutral: the risk budget sizes, the ranking selects'
         : 'order and size still move together'}</td></tr>`);
+  }
+  // The top-N cut is no longer a hard cliff. A name inside the band did not out-rank anyone —
+  // it was declared tied and took the slot on measured covariance — and the page has to say so,
+  // or the `rank` column beside it describes a decision the ranking did not make.
+  if (S && S.band_z != null) {
+    const by = String(S.by_risk || '').split(',').map((s) => s.trim()).filter(Boolean);
+    rows.push(`<tr><td>indifference band</td><td class="num"><b>&plusmn;${num(S.band_z, 3)}</b></td>
+      <td class="hint">composite z the ranking cannot resolve = friction &divide; (IC &times; &sigma;<sub>cs</sub>).
+      Names this close are declared TIED and the marginal slot goes to whichever lowers book variance;
+      the band narrows as measured skill rises, so a ranking that works gets its hard cut back.</td></tr>`);
+    rows.push(`<tr><td>chosen by risk</td><td class="num"><b>${by.length}</b></td>
+      <td class="hint">${by.length
+        ? by.map(sectorLink).join(', ') + ' — in the book without out-ranking anyone: tied on score, less redundant on covariance'
+        : 'no swap cleared the band this run — the ranking stands on its own'}</td></tr>`);
   }
   drifted.forEach((r) => {
     const d = Number(r.composite_drift);
@@ -1601,11 +1642,11 @@ function renderRebalance() {
         .slice().sort((a, b) => (Number(a.trade_eur) > 0) - (Number(b.trade_eur) > 0))
         .map((r) => `<li><b>${Number(r.trade_eur) < 0 ? 'SELL' : 'BUY'}</b> ${escapeHtml(r.sector_id)}
           <span class="hint">${escapeHtml(r.etf || '')}</span> — <b>${eur(Math.abs(Number(r.trade_eur)))}</b>
-          <span class="hint">[${escapeHtml(r.rule_action)}]${r.cost_drag_eur ? ` · friction ${eur(r.cost_drag_eur)}` : ''}</span></li>`)
+          <span class="hint">[${escapeHtml(actionLabel(r))}]${r.cost_drag_eur ? ` · friction ${eur(r.cost_drag_eur)}` : ''}</span></li>`)
         .join('')}</ul>`
       : '<p class="hint" style="margin:6px 0 0">Nothing — every money-moving row is queued behind a scarcity.</p>'}
       ${held.length ? `<p class="hint" style="margin:6px 0 0">Queued to the next review, logged and priced like any
-        deviation: ${held.map((r) => `${escapeHtml(r.rule_action)} ${escapeHtml(r.sector_id)} ${eur(r.trade_eur)}`).join(' · ')}</p>` : ''}
+        deviation: ${held.map((r) => `${escapeHtml(actionLabel(r))} ${escapeHtml(r.sector_id)} ${eur(r.trade_eur)}`).join(' · ')}</p>` : ''}
     </div>` : '') + `<div class="tblwrap"><table>
     <thead><tr><th>sector</th><th>ETF</th><th class="num">target</th><th class="num">actual</th>
       <th class="num">gap</th><th>action</th><th class="num">trade</th><th class="num">CGT</th>
@@ -1616,7 +1657,7 @@ function renderRebalance() {
       <td class="num">${num(r.target_pct, 1)}%</td>
       <td class="num">${num(r.actual_pct, 1)}%</td>
       <td class="num ${(r.gap_eur ?? 0) >= 0 ? '' : 'neg'}">${eur(r.gap_eur)}</td>
-      <td>${actionPill(r.rule_action)}${r.ramp_never_fits
+      <td>${actionPill(actionLabel(r))}${r.ramp_never_fits
         ? '<span class="hint" title="this row exceeds a WHOLE ramp tranche — it is not queued for later, it is unbuyable at full size until a constant or the ask changes">**</span>'
         : queued(r)
         ? `<span class="hint" title="${r.ramp_state === 'deferred' ? 'queued behind this review\'s deployment tranche' : 'no free trade slot this review'}">*</span>` : ''}</td>

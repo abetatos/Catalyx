@@ -245,6 +245,174 @@ def conviction_transform(raw: list[float], transform: str, sharpness: float) -> 
     return [math.exp(sharpness * (x - mean) / std) for x in raw]
 
 
+def selection_band_z(lam: float, ic_target: float, sigma_cs_pct: float | None,
+                     friction_pct: float, max_band: float = 1.0) -> dict:
+    """How wide a composite_z gap the ranking cannot claim to resolve — the SELECTION twin of
+    `rebalance.swap_hurdle`, and derived from the same identity (v13.3):
+
+        E[Δr] ≈ IC · Δz · σ_cs        ⇒        Δz_band = friction ÷ (IC · σ_cs)
+
+    IC here is the DECLARED skill `λ · ic_target`, not the raw measured one. That is deliberate
+    and it is the whole point: λ is what we are willing to SIZE on, so it is what we are willing
+    to SELECT on. Reading the raw IC would send the band to ∞ (the hurdle's honest answer for a
+    rotation) while the sizing path happily tilts at λ=0.3 — the exact incoherence the λ floor
+    was raised to remove, re-introduced one function away.
+
+    The band SHRINKS as skill rises: at λ=1 it is 0.016z and the top-N cut returns unchanged,
+    which is the correct limit. A model that can order returns has no business deferring to risk
+    to break its ties; one that cannot should not be cutting a book on 0.074z.
+
+    Returns the band plus every input, because a number that decides which names are in the book
+    must be re-derivable from the row that reports it. `band` is None when σ_cs is unmeasured —
+    never 0, which would read as "the ranking resolves everything".
+    """
+    ic = max(0.0, float(lam)) * max(0.0, float(ic_target))
+    out = {"lambda": float(lam), "ic_target": float(ic_target), "ic_declared": round(ic, 4),
+           "sigma_cs_pct": sigma_cs_pct, "friction_pct": float(friction_pct),
+           "max_band_z": float(max_band), "band_z": None, "capped": False}
+    if sigma_cs_pct is None or float(sigma_cs_pct) <= 0:
+        out["note"] = ("σ_cs unmeasured → band not derivable; selection falls back to the plain "
+                       "top-N cut")
+        return out
+    if ic <= 0:
+        # λ=0 means the ranking claims nothing, so NO gap is resolvable and the band is unbounded.
+        # Capping it is not a fudge here — an unbounded band abolishes the ranking outright, and
+        # that is a policy change nobody declared. It is reported as capped, loudly.
+        out.update(band_z=float(max_band), capped=True,
+                   note=("λ=0 → the ranking resolves no gap at all; band capped at "
+                         f"{float(max_band):.3f}z, so the ranking still orders the safe set"))
+        return out
+    raw = (float(friction_pct) / 100.0) / (ic * (float(sigma_cs_pct) / 100.0))
+    band = min(raw, float(max_band))
+    out.update(band_z=round(band, 4), raw_band_z=round(raw, 4), capped=raw > float(max_band))
+    out["note"] = (f"Δz band {band:.3f} = friction {friction_pct:.2f}% ÷ (IC {ic:.3f} × σ_cs "
+                   f"{float(sigma_cs_pct):.2f}%)" + (" [capped]" if out["capped"] else ""))
+    return out
+
+
+def band_select(frame, n: int, rank_col: str, band: float | None, sigma_fn=None,
+                max_swaps: int | None = None) -> tuple:
+    """Top-N, except that a name the score CANNOT TELL APART from an incumbent may take its
+    slot if it makes the book less redundant.
+
+    `head(N)` re-decides the whole book every run off a dense, noisy column, so a name leaves on
+    whatever wobble lands at the boundary. This starts from the ranking and only allows a PAIRWISE
+    swap, incumbent ↔ challenger, when the two are within `band` of EACH OTHER.
+
+    WHY PAIRWISE AND NOT AN INDIFFERENCE ZONE. The first cut of this function declared everything
+    within ±band of z_cut "tied" and let any member displace any other — an interval of width
+    2·band, so on the live run a name at z=0.67 was displaced by one at z=0.16, half a sigma
+    apart, on a band of 0.27. Indifference is NOT TRANSITIVE: a≈b and b≈c does not give a≈c, and
+    a rule built as if it were will walk the whole ranking one hop at a time. The band is a
+    relation between two names and is applied as one.
+
+    EQUAL-WEIGHTED vol, not the final weights, and on purpose: sizing runs after selection and
+    would make this circular. The question here is which SET of exposures is least redundant — a
+    question about Σ, not about the weights Σ will later produce.
+
+    STEEPEST-DESCENT, one swap at a time, each recorded with the pair and the vol it bought. It
+    stops when no admissible swap lowers vol, so an inert run costs nothing and says so. Capped
+    at `max_swaps` (default n) — a selection rule that rewrites the whole book in one review is
+    not breaking ties any more, and the cap is where that shows up instead of being discovered
+    in the turnover.
+
+    Risk breaks the tie only because risk is what is MEASURED. The score is never overruled: a
+    challenger more than `band` below an incumbent cannot take its slot, whatever its covariance.
+
+    Returns `(selected_frame, report)`. With no band, no `sigma_fn`, or an unbuildable Σ it
+    returns `head(n)` and a report saying which — a book that silently walked a different
+    selection rule is a book whose composition is unattributable.
+    """
+    f = frame.sort_values(rank_col, ascending=False)
+    plain = f.head(int(n))
+    rep = {"applied": False, "band_z": band, "n_target": int(n)}
+    if band is None or band <= 0 or len(f) <= int(n) or sigma_fn is None:
+        rep["reason"] = ("no band" if band is None or band <= 0 else
+                         "pool not deeper than the book" if len(f) <= int(n) else "no covariance")
+        return plain, rep
+
+    zs = [float(x) for x in f[rank_col]]
+    tickers = [str(f.iloc[i].get("primary_etf") or "") for i in range(len(f))]
+    # Only names within `band` of the WEAKEST incumbent can ever matter — nothing below that
+    # can legally displace anyone, so Σ is built over the pairs that could actually trade.
+    reach = zs[int(n) - 1] - band
+    cand = [i for i in range(len(f)) if zs[i] >= reach]
+    rep.update(z_cut=round(zs[int(n) - 1], 4),
+               challengers=[str(f.iloc[i]["sector_id"]) for i in cand if i >= int(n)])
+    if len(cand) <= int(n):
+        rep["reason"] = "no challenger within the band of any incumbent"
+        return plain, rep
+
+    try:
+        sig = sigma_fn([t for t in (tickers[i] for i in cand) if t])
+    except Exception as exc:                                   # pragma: no cover - defensive
+        sig = {"error": str(exc)}
+    if not sig or sig.get("error"):
+        rep.update(reason=f"covariance unavailable ({(sig or {}).get('error')}) — plain top-N")
+        return plain, rep
+
+    import numpy as np
+
+    pos = {t: k for k, t in enumerate(sig["tickers"])}
+    S = np.asarray(sig["sigma"], dtype=float)
+
+    def _vol(idxs) -> float | None:
+        ks = [pos[tickers[i]] for i in idxs if tickers[i] in pos]
+        if len(ks) != len(idxs) or not ks:
+            return None
+        w = np.full(len(ks), 1.0 / len(ks))
+        return float(np.sqrt(max(0.0, w @ S[np.ix_(ks, ks)] @ w)) * (52 ** 0.5) * 100.0)
+
+    chosen = list(range(int(n)))
+    pool = [i for i in cand if i >= int(n)]
+    base = _vol(chosen)
+    if base is None:
+        rep["reason"] = "book vol not computable over the candidate matrix — plain top-N"
+        return plain, rep
+    rep["vol_pct_before"] = round(base, 2)
+
+    # EVERY SLOT REMEMBERS WHO IT WAS RANKED FOR, and admissibility is measured against THAT —
+    # never against the current occupant. Without this the walk simply moves from inside one
+    # iteration to across iterations: on the live run a name at z=0.67 lost its slot to one at
+    # z=0.16 through three individually legal hops (0.145 → 0.259 → 0.246), each inside a band of
+    # 0.272. Anchoring to the original occupant bounds total drift at ONE band, and a swapped-out
+    # name does not return to the pool to act as the next stepping stone.
+    ref = {i: zs[i] for i in chosen}
+
+    steps = []
+    for _ in range(int(max_swaps if max_swaps is not None else n)):
+        best = None
+        for out_i in chosen:
+            for in_j in pool:
+                if ref[out_i] - zs[in_j] > band:     # PAIRWISE, and against the slot's own rank
+                    continue
+                trial = [x for x in chosen if x != out_i] + [in_j]
+                v = _vol(trial)
+                if v is not None and v < base - 1e-9 and (best is None or v < best[0]):
+                    best = (v, out_i, in_j)
+        if best is None:
+            break
+        v, out_i, in_j = best
+        steps.append({"out": str(f.iloc[out_i]["sector_id"]), "in": str(f.iloc[in_j]["sector_id"]),
+                      "z_out": round(zs[out_i], 4), "z_in": round(zs[in_j], 4),
+                      "z_gap": round(ref[out_i] - zs[in_j], 4),
+                      "vol_pct": round(v, 2), "vol_delta_pp": round(v - base, 2)})
+        chosen = [x for x in chosen if x != out_i] + [in_j]
+        pool = [x for x in pool if x != in_j]
+        ref[in_j] = ref.pop(out_i)
+        base = v
+
+    if not steps:
+        rep["reason"] = "no admissible swap lowers book vol — the ranking stands"
+        return plain, rep
+    picked = f.iloc[sorted(chosen, key=lambda i: -zs[i])]
+    plain_ids, new_ids = set(plain["sector_id"]), set(picked["sector_id"])
+    rep.update(applied=True, steps=steps, vol_pct_after=round(base, 2),
+               dropped=sorted(plain_ids - new_ids), added=sorted(new_ids - plain_ids),
+               changed=bool(plain_ids != new_ids))
+    return picked, rep
+
+
 def skill_shrink(model: list[float], neutral: list[float], lam: float) -> list[float]:
     """Blend the model's conviction tilt toward a neutral book by λ (plan v4 §3 B1).
 
@@ -670,6 +838,50 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
     crowding_bar = c.get("max_crowding", 100)
     excl = set(c.get("exclude_narrative_maturity") or [])
 
+    # ── λ BEFORE the cut, because ONE λ governs both halves of the decision (2026-09-02) ──
+    # The pipeline used to compute λ after selection, which let the two halves run different
+    # philosophies: SELECTION at full conviction (a hard top-N) while SIZING stood aside (λ=0).
+    # CLAUDE.md names that seam; this closes it. λ is read once, here, and feeds the selection
+    # band and the tilt alike, so "how much do we trust the ordering" has exactly one answer.
+    pw = weights_cfg.portfolio_weighting()
+    lam_info = None
+    if weighting != "equal" and bool(c.get("tilt_shrinkage", pw.get("tilt_shrinkage", False))):
+        from catalyx.scorer import calibration
+        # THE λ FLOOR IS A PRIOR ABOUT THE COMPOSITE, so it may not reach a baseline. The floor
+        # was derived from the composite's own weight split against the backtest ICs; a momentum
+        # book is the COUNTERFACTUAL this book is measured against, and injecting a conviction it
+        # never claimed makes the comparison answer a different question. Same rule the CA tilt
+        # and the risk-budget sizing already obey: baselines stay clean.
+        floor = (float(c.get("tilt_lambda_floor", pw.get("tilt_lambda_floor", 0.0)))
+                 if weighting not in ("momentum", "equal") else 0.0)
+        lam_info = calibration.skill_lambda(
+            lake_dir=lake_dir, dimension=("momentum" if weighting == "momentum" else "composite"),
+            ic_target=float(c.get("tilt_ic_target", pw.get("tilt_ic_target", 0.20))),
+            prior_windows=float(c.get("tilt_prior_windows", pw.get("tilt_prior_windows", 3.0))),
+            floor=floor)
+
+    band_cfg = dict(c.get("selection_band") or pw.get("selection_band") or {})
+    band_info, band_sigma_fn = None, None
+    if bool(band_cfg.get("enabled")) and weighting not in ("momentum", "equal") and lam_info:
+        from catalyx.scorer import calibration as _cal
+        from catalyx.scorer import covariance as _cov
+        from catalyx.execution.nav_engine import _run_date
+        rr = weights_cfg.rebalance_rules()
+        band_info = selection_band_z(
+            lam=float(lam_info["lambda"]),
+            ic_target=float(c.get("tilt_ic_target", pw.get("tilt_ic_target", 0.20))),
+            sigma_cs_pct=(_cal.dispersion() or {}).get("sigma_cs_pct"),
+            friction_pct=float(rr.get("spread_bps", 20.0)) / 100.0,
+            max_band=float(band_cfg.get("max_band_z", 1.0)))
+        _wk = int(c.get("rb_cov_weeks", pw.get("rb_cov_weeks", 56)))
+        _mn = int(c.get("rb_min_weeks", pw.get("rb_min_weeks", 40)))
+
+        def band_sigma_fn(tickers):                                   # noqa: F811
+            # as_of from the RUN, never today — same reason the sizing matrix does it: a book
+            # rebuilt from an old run must reproduce that run's selection, not this afternoon's.
+            return _cov.budget_sigma(list(dict.fromkeys(tickers)), weeks=_wk, min_weeks=_mn,
+                                     as_of=_run_date(run_id))
+
     def _filter_and_select(frame, apply_crowding: bool):
         """The remaining filters + the top-N cut, as one reusable pass.
 
@@ -689,10 +901,12 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
             f = f[f["regime_state"] != "breaking"]
         f = f.sort_values(rank_col, ascending=False)
         f = f.drop_duplicates("primary_etf", keep="first")
-        return f.head(int(c["max_positions"]))
+        picked, rep = band_select(f, int(c["max_positions"]), rank_col,
+                                  (band_info or {}).get("band_z"), band_sigma_fn)
+        return picked, rep
 
     pre_filter = df
-    df = _filter_and_select(pre_filter, apply_crowding=True)
+    df, band_report = _filter_and_select(pre_filter, apply_crowding=True)
 
     # CROWDING IS AN ENTRY TEST, AND THE MODEL BOOK IS RIGHT TO APPLY IT (v11.1).
     #
@@ -715,7 +929,7 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
          "crowding_source": r.get("crowding_source"),
          "max_crowding": float(crowding_bar),
          "rank": int(r["rank"]) if "rank" in r and r["rank"] == r["rank"] else None}
-        for _, r in _filter_and_select(pre_filter, apply_crowding=False).iterrows()
+        for _, r in _filter_and_select(pre_filter, apply_crowding=False)[0].iterrows()
         if r["sector_id"] not in kept
     ]
 
@@ -741,7 +955,6 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
     # conviction sizing: shape the raw ranking scores BEFORE the cap, so a narrow score band
     # (e.g. composites 65–74) still produces dispersed weights. `equal` keeps flat scores (std≈0
     # → softmax falls back to equal anyway). Per-book override of the global portfolio_weighting.
-    pw = weights_cfg.portfolio_weighting()
     transform = str(c.get("weighting_transform", pw.get("transform", "proportional")))
     sharpness = float(c.get("sharpness", pw.get("sharpness", 0.25)))
     deadband = float(c.get("rebalance_deadband_pct", pw.get("rebalance_deadband_pct", 0.0)))
@@ -751,14 +964,9 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
     # rank IC of the very column doing the ranking, not assumed. The neutral leg carries the
     # regime haircut, so a contested sector stays de-risked even at λ=0 — the overlay is a risk
     # statement, not a conviction one, and only the conviction leg is being shrunk.
-    lam_info = None
-    if weighting != "equal" and bool(c.get("tilt_shrinkage", pw.get("tilt_shrinkage", False))):
-        from catalyx.scorer import calibration
-        lam_info = calibration.skill_lambda(
-            lake_dir=lake_dir, dimension=("momentum" if weighting == "momentum" else "composite"),
-            ic_target=float(c.get("tilt_ic_target", pw.get("tilt_ic_target", 0.20))),
-            prior_windows=float(c.get("tilt_prior_windows", pw.get("tilt_prior_windows", 3.0))),
-            floor=float(c.get("tilt_lambda_floor", pw.get("tilt_lambda_floor", 0.0))))
+    # `lam_info` is computed ONCE, before selection, and reused here: one λ governs which names
+    # are in the book and how big they are, so the two halves cannot run different philosophies.
+    if lam_info:
         neutral = [(1.0 - contested_haircut) if (veto_on and contested_action == "redistribute"
                                                 and st == "contested") else 1.0
                    for st in states]
@@ -960,6 +1168,14 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
             "regime_state": r.get("regime_state", "intact"),
             "weight_pct": round(w * 100.0, 2),
             "tilt_lambda": (lam_info or {}).get("lambda"),
+            # THE SELECTION BAND, per row (2026-09-02). `selection_by_risk` marks a name that is
+            # in the book because the score could not tell it apart from the incumbent it
+            # replaced — not because it out-ranked anyone. Persisted per row because that is the
+            # only place a reader can ask "why is THIS name here" six months from now, and
+            # because a rule whose effect is not on the row is a rule nobody audits.
+            "selection_band_z": (band_info or {}).get("band_z"),
+            "selection_by_risk": bool(r.get("sector_id") in set(
+                (band_report or {}).get("added") or [])),
             # The CA-tilt ledger (v10 P8): the input, the multiplier, and the δ=0 counterfactual
             # weight — persisted so `calibration.ca_tilt_edge` can price the tilt per window and
             # per driver, which is what makes the declared prior falsifiable.
@@ -1025,6 +1241,11 @@ def build_model_holdings(portfolio_id: str, run_id: str | None = None,
             "positions": len(rows), "cash_pct": cash_pct, "overlay": risk_overlay,
             "contested": n_contested, "tilt": lam_info, "ca_tilt": ca_info,
             "sizing_mode": sizing_mode, "risk_budget": rb_info,
+            # The band and what it actually did. Published even when it changed nothing: a
+            # selection rule whose effect is invisible on the runs where it is inert is a rule
+            # nobody can audit on the run where it bites.
+            "selection_band": ({**(band_info or {}), **(band_report or {})}
+                               if (band_info or band_report) else None),
             "conviction_gate": {
                 "enabled": bool((c.get("entry_gate") or {}).get("enabled", True)
                                 and (c.get("entry_gate") or {}).get("min_catalyst_alignment")

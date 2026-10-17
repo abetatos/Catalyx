@@ -656,8 +656,38 @@ def rebalance_rules() -> dict:
     position verdict OUT of LLM judgment — the model drifts to "hold / watch / consider", which
     is how a book ends up 70% in cash while its own ranking disagrees. Five actions, fixed
     precedence, every deviation logged as an override. See scoring_weights.yaml
-    `rebalance_rules` + docs/PLAN_v3_lean_pipeline_rebalance.md §4."""
-    return _section("rebalance_rules", _REBALANCE_RULES_DEFAULT)
+    `rebalance_rules` + docs/PLAN_v3_lean_pipeline_rebalance.md §4.
+
+    `buy_if`/`add_if` `rank_max` are DERIVED from `book_shape.n_target` (2026-09-02), the same
+    way `max_position_pct` and the conviction tiers already are — edit `n_target`, never these.
+
+    WHY THEY COULD NOT STAY FREE CONSTANTS. `decide_action` is handed `rank_in_portfolio`, which
+    runs 1..n_target, so a ceiling BELOW n_target makes the last slot of the model book
+    structurally unbuyable: a name can only occupy it by already being held. Live on
+    run_20260902_064125 that was not theoretical — the selection band put
+    `grid_infrastructure_utilities` in the book and the table answered HOLD on a €1,477 gap
+    ("no rule condition met"), because rank 6 met a ceiling of 5. A book with six slots and a
+    rank-5 buy gate is jointly infeasible in exactly the way v6 L1 found the old
+    ceiling/cap/deployment triple to be, and the resolution is the same: one declared knob,
+    everything else derived, and a feasibility test that fails when the two stop agreeing.
+
+    AND THE OBJECTION AGAINST IT DOES NOT HOLD. CLAUDE.md warned that raising `buy_if` to 6
+    "brings back the contradiction v12 B4b fixed" — that buy would stop being stricter than add.
+    It does not: buy and add are ALREADY equal on rank (5 = 5, and the config comment says 5 was
+    chosen as "the minimum that removes the contradiction"), and buy stays strictly stricter on
+    the three dimensions that actually carry the claim — gap (4.0 vs 3.0), regime (also excludes
+    `contested`) and maturity (excludes `exhausted`). Moving BOTH to n_target leaves that
+    relation exactly as it was and makes every slot of the book reachable.
+    """
+    c = dict(_section("rebalance_rules", _REBALANCE_RULES_DEFAULT))
+    # `book_shape()` is NOT called here: it reads `deploy_max()`, which reads this function, and
+    # the cycle is a RecursionError rather than a wrong number. `n_target` is the raw declared
+    # knob and needs none of book_shape's derivation to be read.
+    n = max(1, int((_section("book_shape", _BOOK_SHAPE_DEFAULT) or {}).get("n_target", 6)))
+    for rule in ("buy_if", "add_if"):
+        if isinstance(c.get(rule), dict):
+            c[rule] = {**c[rule], "rank_max": n}
+    return c
 
 
 def spread_bps_by_ticker() -> dict[str, float]:

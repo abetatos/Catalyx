@@ -62,6 +62,16 @@ echo "── POSITION & BOOK METRICS — measurement only ──"
 echo ""
 uv run python -m catalyx.execution.position_metrics
 
+# EXIT SIGNALS, PERSISTED (2026-09-02). `rebalance` calls the watcher with persist=False — it
+# needs the verdict, not the record — and NOTHING in this chain wrote the `exit_signal` table, so
+# it was only ever refreshed when someone ran the module by hand. It had been frozen at
+# `as_of: 2026-08-28` for five days while the dashboard, which bakes from that table, rendered it
+# as the current state: it showed REDUCE on `grid_infrastructure_utilities` describing the lot
+# closed on 2026-08-20, plus a sector closed on 09-01 and a vehicle replaced in v14.2. Verbose to
+# the log — the table is the artifact, not the printout; the rebalance below reports the verdicts.
+echo "▶ exit signals → lake (verbose → $LOG)"
+quiet python -m catalyx.scorer.exit_watcher
+
 echo ""
 echo "── REBALANCE — pipeline target vs the real book, in €, after tax ──"
 echo ""

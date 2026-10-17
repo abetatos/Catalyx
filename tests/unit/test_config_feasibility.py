@@ -256,3 +256,45 @@ def test_every_rank_ceiling_is_reachable():
         assert int(rm) <= n_max, (
             f"{rule}.rank_max = {rm} but rank_in_portfolio never exceeds max_positions "
             f"({n_max}) — the ceiling can never bind")
+
+
+def test_every_rank_ceiling_is_also_REACHABLE():
+    """The mirror of the test above, and the direction the suite was blind to (2026-09-02).
+
+    `test_every_rank_ceiling_is_reachable` catches a ceiling that is too LOOSE (dead config, above
+    `max_positions`). Nothing caught one that is too TIGHT: at `buy_if.rank_max: 5` with a
+    6-name book, the last slot could never be BOUGHT — only inherited by a name already held, so
+    the rule froze the book's composition instead of demanding a stronger case. The cost was
+    measured twice: €1,265.87 when biotech inherited that slot (v14.0), and again when the
+    selection band put `grid_infrastructure_utilities` there and the table answered HOLD on a
+    €1,477 gap. A book with N slots whose buy gate is below N is jointly infeasible in exactly
+    the way v6 L1 found the ceiling/cap/deployment triple to be.
+    """
+    cfg = weights.rebalance_rules()
+    n_max = int(portfolio.load_profile("catalyx")["construction"]["max_positions"])
+    for rule in ("buy_if", "add_if"):
+        rm = (cfg.get(rule) or {}).get("rank_max")
+        if rm is None:
+            continue
+        assert int(rm) >= n_max, (
+            f"{rule}.rank_max = {rm} < max_positions ({n_max}) — the book's last slot can never "
+            f"be filled by this rule, only inherited by a name already held")
+
+
+def test_the_rank_ceilings_are_derived_from_the_single_knob():
+    """`buy_if`/`add_if` rank_max are DERIVED, like `max_position_pct` and the tiers. A free
+    constant here can silently contradict `n_target`, which is what it did."""
+    n = int(weights.book_shape()["n_target"])
+    cfg = weights.rebalance_rules()
+    assert int(cfg["buy_if"]["rank_max"]) == n
+    assert int(cfg["add_if"]["rank_max"]) == n
+
+
+def test_buy_stays_stricter_than_add_where_the_claim_lives():
+    """Equal on rank (as they already were at 5 = 5), strictly stricter on the three dimensions
+    that carry "a new line needs a stronger case than an add"."""
+    cfg = weights.rebalance_rules()
+    buy, add = cfg["buy_if"], cfg["add_if"]
+    assert float(buy["gap_pp_min"]) > float(add["gap_pp_min"])
+    assert set(add.get("regime_not") or []) < set(buy.get("regime_not") or [])
+    assert buy.get("maturity_not")

@@ -404,7 +404,8 @@ def skill_lambda(lake_dir: Path | None = None, dimension: str = "composite",
     n_eff = int(m.get("effective_windows") or 0)
     cred = shrink_factor(n_eff, prior_windows)
     ic_leg = 0.0 if (ic is None or target <= 0) else max(0.0, min(1.0, ic / target))
-    lam = round(max(float(floor), ic_leg * cred), 4)
+    earned = round(ic_leg * cred, 4)
+    lam = round(max(float(floor), earned), 4)
     if ic is None:
         why = f"{dimension} IC unmeasured → tilt not earned yet"
     elif ic <= 0:
@@ -413,10 +414,17 @@ def skill_lambda(lake_dir: Path | None = None, dimension: str = "composite",
     else:
         why = (f"{dimension} IC {ic:+.3f} / target {target:.2f} = {ic_leg:.2f}, "
                f"credibility {cred:.2f} on {n_eff} independent window(s)")
+    # The floor is a DECLARED PRIOR, so when it is what sizes the book the note has to say so.
+    # Reporting λ=0.30 beside "no tilt earned" would state the number and its contradiction on
+    # one line, and every reader would have to guess which half was live.
+    floor_binds = float(floor) > earned
+    if floor_binds:
+        why = (f"{why}; λ floor {float(floor):.2f} BINDS (declared prior, not earned — "
+               f"the measured leg would give {earned:.2f})")
     return {"lambda": lam, "ic": ic, "se": m.get("se"), "verdict": m.get("verdict"),
             "dimension": dimension, "n_windows": m.get("n_windows"), "effective_windows": n_eff,
             "credibility": cred, "ic_target": target, "prior_windows": float(prior_windows),
-            "floor": float(floor),
+            "floor": float(floor), "lambda_earned": earned, "floor_binds": floor_binds,
             "note": f"λ = {lam:.2f} — {why}"}
 
 

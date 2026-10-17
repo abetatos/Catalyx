@@ -714,7 +714,7 @@ def _render_rows(rows: list[dict]) -> list[str]:
         # by zeroing the trade: the rule's ask stays visible and the constraint is what is new.
         # `*` = a scarcity queued this row for a LATER review. `**` = it exceeds a whole ramp
         # tranche, so "later" is never: the two states look identical on the table and are not.
-        act = row["rule_action"] + ("**" if row.get("ramp_never_fits")
+        act = action_label(row) + ("**" if row.get("ramp_never_fits")
                                     else "*" if row.get("budget_state") == "deferred"
                                     or row.get("ramp_state") == "deferred" else "")
         out.append(f"{row['sector_id'][:30]:<30} {str(row.get('etf') or '—')[:9]:<9} "
@@ -976,6 +976,19 @@ def is_full_exit(row: dict) -> bool:
     if target is None or actual is None:
         return False                                   # unknowable → not claimed as an exit
     return float(target) <= 0.0 and abs(trade) >= float(actual) - 0.01
+
+
+def action_label(row: dict) -> str:
+    """The verb a READER sees for this row. Presentation only — `rule_action` is the enum.
+
+    A TRIM that closes the line is a sale of the whole position wearing the name of a fine
+    adjustment (every exit from a sector the model book no longer holds arrives that way). The
+    rule table, the lake, the override log and the scorecard keep reading `TRIM` — changing the
+    enum would re-key every priced deviation — but a table that says "TRIM" over a line going to
+    zero makes the reader hunt the reason column to learn it is an exit.
+    """
+    act = str(row.get("rule_action") or "")
+    return "CLOSE" if act == "TRIM" and is_full_exit(row) else act
 
 
 def trade_budget_plan(rows: list[dict], cfg: dict) -> dict:
@@ -2588,6 +2601,13 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
             # built before it — the tilt line then simply does not print.
             "ca_tilt_delta": next((float(m["ca_tilt_delta"]) for m in model
                                    if _fnum(m.get("ca_tilt_delta")) is not None), None),
+            # The selection band and the names it put there (2026-09-02). A book whose marginal
+            # slot was decided by covariance rather than by rank has to say so on its own row —
+            # otherwise the reason reads "rank N" for a name the ranking did not choose.
+            "selection_band_z": next((float(m["selection_band_z"]) for m in model
+                                      if _fnum(m.get("selection_band_z")) is not None), None),
+            "selected_by_risk": sorted(str(m["sector_id"]) for m in model
+                                       if bool(m.get("selection_by_risk"))),
         },
     }
 
@@ -2783,6 +2803,10 @@ def persist(result: dict, lake_dir: Path | None = None) -> int:
              # WHICH sizing regime produced these targets — a target book read back six months
              # from now must say whether its dispersion was earned or assumed.
              "book_tilt_lambda": (b.get("model") or {}).get("tilt_lambda"),
+             # …and whether the ranking or the covariance chose the marginal slot.
+             "book_selection_band_z": (b.get("model") or {}).get("selection_band_z"),
+             "book_selected_by_risk": ", ".join(
+                 (b.get("model") or {}).get("selected_by_risk") or []) or None,
              # The cost of NOT acting, persisted beside the cost of acting. `review_report` and
              # the run digest render both from this table and neither may fetch a price to do it.
              "book_cash_drag_eur": (result.get("cash_drag") or {}).get("forgone_eur"),
@@ -3498,13 +3522,13 @@ def _render_ticket(res: dict) -> list[str]:
         cost = float(r.get("cost_drag_eur") or 0.0)
         out.append(f"  {('SELL' if t < 0 else 'BUY '):<5} {r['sector_id'][:30]:<30} "
                    f"{str(r.get('etf') or '—')[:9]:<9} {_eur(abs(t)):>9}"
-                   f"   [{r['rule_action']}]"
+                   f"   [{action_label(r)}]"
                    + (f" · friction {_eur(cost)}" if cost else ""))
     if not live:
         out.append("  (nothing — every money-moving row is queued behind a scarcity below)")
     if queued:
         out.append("  QUEUED to the next review, logged and priced like any deviation: "
-                   + ", ".join(f"{r['rule_action']} {r['sector_id']} {_eur(float(r['trade_eur']))}"
+                   + ", ".join(f"{action_label(r)} {r['sector_id']} {_eur(float(r['trade_eur']))}"
                                for r in queued))
     return out + [""]
 
@@ -3580,7 +3604,8 @@ def render(res: dict) -> str:
                "deviation; ** = the row exceeds a whole ramp tranche, so it is not queued for "
                "later — it is unbuyable at full size until a constant or the ask changes "
                "— the rows to execute today are the THIS ITERATION block above")
-    out.append(f"SIZING   SELL = 100% of the line · REDUCE = {rf:.0f}% · TRIM = back to target"
+    out.append(f"SIZING   SELL = 100% of the line · CLOSE = a TRIM that takes the line to zero · "
+               f"REDUCE = {rf:.0f}% · TRIM = back to target"
                + (f" (or {float(lf) * 100:.0f}% on a ladder rung)" if lf else ""))
     out.append("")
 

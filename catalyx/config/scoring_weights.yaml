@@ -887,7 +887,67 @@ portfolio_weighting:
                                 # deliberately the same bar `net_edge_gate.min_abs_ic` uses.
   tilt_prior_windows: 3.0       # credibility = n_eff/(n_eff+3): one independent 63d window buys
                                 # 25% of the tilt even if the IC is good. Three ≈ 9 months.
-  tilt_lambda_floor: 0.0        # no minimum tilt. Raise only with a CHANGELOG line.
+  # λ FLOOR AS A DECLARED PRIOR (2026-09-02, user decision). λ=0 is NOT the evidence-free
+  # position — it is a PRIOR, and the formula above is a shrinkage estimator with that prior
+  # hardcoded at IC=0. Nobody measured that zero. Three facts made it indefensible:
+  #   1. The live IC (−0.143, and −0.027 on the other window) carries se ≈ 0.21 on ONE
+  #      non-overlapping window. That interval excludes neither 0 nor +0.2, so the posterior is
+  #      ~100% prior — and the prior was chosen, not measured.
+  #   2. 59% of the composite's own weight is already declared prior (CA 0.35 + flow 0.24 were
+  #      NOT backtested; only momentum+crowding = 0.41 were). A composite that is majority-prior
+  #      feeding a sizing rule that admits no prior is incoherent.
+  #   3. The CA conviction tilt (v10 P8) already resolved this exact argument in the opposite
+  #      direction, and its reasoning applies verbatim: a tilt gated on λ can never be measured,
+  #      because with λ=0 no euro ever moves by the ranking, so no forward window can say whether
+  #      euros moved by it would have paid. THE FLOOR CREATES THE SERIES THAT WILL CALIBRATE IT.
+  # SUPPORTED BY THE BACKTEST, not invented: `validation/backtest_ic` (fwd63, 169 months) gives
+  # momentum_12_1 IC +0.104 (se 0.037, 69% positive) and crowding_comomentum +0.063. Weighted by
+  # this composite's own split and crediting CA and flow with ZERO, the implied composite IC is
+  # 0.275×0.104 + 0.135×0.063 ≈ 0.037 → λ ≈ 0.037/0.20 ≈ 0.19. A weighted mean of component ICs
+  # UNDERSTATES a blend's IC (noise diversifies), and CA/flow are credited nothing, so 0.19 is a
+  # floor on the floor. 0.30 sits above it and is the USER'S declared conviction in the approach,
+  # in the same epistemic class as CA's 0.35 composite weight: declared, not hidden.
+  # IT IS A FLOOR, NOT A FIX — it stops binding the moment the measured IC earns more, so the
+  # mechanism still adapts upward on evidence. Every run persists `w_pre_*` beside the final
+  # weight, so `calibration` prices this per complete 63d window like every other tilt.
+  tilt_lambda_floor: 0.3
+
+  # SELECTION INDIFFERENCE BAND (2026-09-02, user decision) — the top-N cut was a HARD CLIFF on a
+  # DENSE, NOISY variable, and this project already knows when a cliff is legitimate: the
+  # conviction gate's `min_catalyst_alignment: 40` was "read off the measured bimodal gap, not
+  # chosen" — it sits where the distribution has NO DENSITY, so noise cannot push a row across it.
+  # `head(max_positions)` fails that test. On run_20260902_064125 the 6th and 7th names are
+  # 0.074 composite_z apart, and the 7th (`water_infrastructure`, crowding 2.9 and the lowest ρ in
+  # the pool) is the book's only diversifier. A 0.074z wobble was deciding it.
+  #
+  # THE BAND IS DERIVED, NOT CHOSEN — the same arithmetic v13.3 built for the swap hurdle:
+  #     E[Δr] ≈ IC · Δz · σ_cs   ⇒   Δz_band = friction ÷ (IC · σ_cs)
+  # with IC = λ · tilt_ic_target (the DECLARED skill — if λ is what we are willing to size on, it
+  # is what we are willing to select on; using ∞ here while sizing at λ=0.3 would be the same
+  # incoherence the λ floor just removed), σ_cs from `calibration.dispersion`, and friction =
+  # `rebalance_rules.spread_bps` (round-trip). Live: 0.0020 ÷ (0.06 × 0.1226) = 0.272z.
+  #
+  # WHY THE SPREAD AND NOT THE ROTATION COST. The model book is a HOLDING decision and must stay
+  # reproducible from a run alone, so it may not read what you hold — a rotation's CGT depends on
+  # the real book's history, and importing it here would kill the execution-alpha measurement
+  # (the same rule that keeps `crowding_excluded` a counterfactual). The CGT belongs to
+  # `rebalance`, where model target meets real book, and the swap hurdle already prices it there.
+  #
+  # WHAT IT DOES: names within ±band of the cut are DECLARED TIED — the score is not claiming to
+  # tell them apart — and the remaining slots go to the tie that MINIMIZES book variance. Names
+  # clearly above the band keep their slots on score alone; rank order is never violated inside
+  # the safe set. λ=1 collapses the band to 0.016z and the behaviour back to plain top-N, which is
+  # the correct limit: a model that can order returns should not defer to risk to break its ties.
+  # Unmeasurable covariance falls back to `head(N)` and SAYS SO — never a silent second rule.
+  # Composite-weighted books only; `momentum` and `equal` are counterfactual baselines, kept clean.
+  selection_band:
+    enabled: true
+    friction_source: "spread_bps"   # round-trip; `rebalance_rules.spread_bps`
+    max_band_z: 1.0                 # a band wider than the pool is not an indifference band, it
+                                    # is the abolition of the ranking. Binds when λ is small; at
+                                    # λ=0.3 the derived 0.272 is well inside it. NOT a tuning
+                                    # knob — it is the guard that keeps a DEGENERATE λ from
+                                    # silently turning selection into pure minimum-variance.
 
   # CA CONVICTION TILT (v10 P8, 2026-09-01) — the catalyst score SIZES the book, as a DECLARED
   # PRIOR. User decision, and the reasoning is causal, not statistical: the catalyst score is
@@ -1243,23 +1303,30 @@ rebalance_rules:
   fee_eur: 0.0                 # Revolut retail: no explicit commission on the ETF lines held
 
   add_if:                      # already held, and the pipeline still ranks it a leader
-    rank_max: 5
+    rank_max: 6                # DERIVED from `book_shape.n_target` — weights.rebalance_rules()
+                               # overwrites this value. Mirrored here so the file reads true;
+                               # edit `n_target`, never this line.
     gap_pp_min: 3.0
     regime_not: [breaking]
   buy_if:                      # not held at all — a new line needs a stronger case than an add
-    rank_max: 5                # v12 B4: was 8, DEAD CONFIG. `decide_action` is handed
-                               # `rank_in_portfolio`, which runs 1..max_positions — 6 since v6 L1
-                               # cut the book from 10 names — so a ceiling of 8 passed every
-                               # member of the model book and filtered nothing.
-                               # 5, not 6, because the line above is a CLAIM and 8 contradicted
-                               # it: buy is stricter than add on gap (4.0 vs 3.0), on regime (it
-                               # also excludes `contested`) and on maturity (excludes
-                               # `exhausted`) — and was LOOSER than add on rank. `= add_if` is the
-                               # minimum that removes the contradiction, and it costs nothing
-                               # today: this run's buys sit at rank_in_portfolio 1, 2 and 4.
-                               # Going below `add_if.rank_max` would make buy strictly stronger
-                               # on all four and is a separate frozen-threshold decision;
-                               # `test_config_feasibility` now fails any ceiling that cannot bind.
+    rank_max: 6                # DERIVED from `book_shape.n_target` (2026-09-02) —
+                               # `weights.rebalance_rules()` overwrites this value, and the full
+                               # rationale lives in its docstring. Mirrored here so the file reads
+                               # true; EDIT `n_target`, NEVER THIS LINE.
+                               #
+                               # It was 5, and 5 was BELOW n_target, which made the last slot of
+                               # the model book structurally unbuyable — occupiable only by a name
+                               # already held. v12 B4 set it to 5 as "the minimum that removes the
+                               # contradiction" with `add_if`, on the note that it "costs nothing
+                               # today"; v14.0 measured the cost at €1,265.87 when biotech
+                               # inherited the 6th slot, and the selection band made it structural
+                               # (a name can now reach that slot on covariance, and then not be
+                               # buyable). Buy stays strictly stricter than add where the claim
+                               # actually lives — gap 4.0 vs 3.0, regime also excludes
+                               # `contested`, maturity excludes `exhausted` — and equal on rank,
+                               # which is exactly the relation 5 = 5 already had.
+                               # `test_config_feasibility` fails any ceiling that cannot bind AND
+                               # any ceiling that cannot be reached.
     gap_pp_min: 4.0
     regime_not: [contested, breaking]
     maturity_not: [exhausted]

@@ -1470,3 +1470,16 @@ def test_the_merge_fails_toward_the_sale():
 def test_a_single_lot_sector_is_passed_through_untouched():
     only = _lot("s", "A.DE", 100.0, mv=110.0)
     assert rb._positions_by_sector([only])["s"] is only
+
+
+def test_action_label_shows_a_full_exit_as_close_not_trim():
+    from catalyx.execution import rebalance as rb
+    full = {"rule_action": "TRIM", "trade_eur": -556.0, "target_pct": 0.0, "actual_eur": 556.0}
+    partial = {"rule_action": "TRIM", "trade_eur": -200.0, "target_pct": 8.0, "actual_eur": 556.0}
+    sell = {"rule_action": "SELL", "trade_eur": -556.0, "target_pct": 0.0, "actual_eur": 556.0}
+    unknown = {"rule_action": "TRIM", "trade_eur": -556.0, "target_pct": None, "actual_eur": None}
+    assert rb.action_label(full) == "CLOSE"
+    assert rb.action_label(partial) == "TRIM"        # a shave against a live target stays TRIM
+    assert rb.action_label(sell) == "SELL"
+    assert rb.action_label(unknown) == "TRIM"        # unknowable → not claimed as an exit
+    assert full["rule_action"] == "TRIM"             # the enum is untouched
