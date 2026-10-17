@@ -59,6 +59,8 @@ console = Console(highlight=False)
 SECTOR_TICKERS: dict[str, list[str]] = {
     # ── Defensa y espacio ────────────────────────────────────────────────────
     "eu_defense_prime_contractors":  ["EUDF.L", "NATO.PA", "DFEN.DE"],
+    # 2026-10-17: DFCU.DE lanzado 2026-06-29 (~80 barras): el spec 12-1 no es medible hasta 2027.
+    "us_defense_prime_contractors":  ["DFCU.DE"],
     "space_defense_satellite":       ["JEDI.DE", "JEDI.L"],
     # ── Energia ──────────────────────────────────────────────────────────────
     "oil_majors_integrated":         ["IUES.L"],
@@ -77,6 +79,7 @@ SECTOR_TICKERS: dict[str, list[str]] = {
     "water_infrastructure":          ["IQQQ.DE", "IH2O.L"],   # linea Xetra EUR; IH2O.L (GBp) no aparece en el buscador
     # ── Financiero ───────────────────────────────────────────────────────────
     "eu_retail_banking":             ["EXV1.DE"],
+    "us_retail_banking":             ["IUS2.DE", "BNKS.L"],   # mismo fondo iShares IE00BD3V0B10: Xetra EUR / LSE USD
     "crypto_infrastructure":         ["DAPP.L"],
     # ── Tecnologia ───────────────────────────────────────────────────────────
     # 2026-09-01: SEC0.DE pasa a cabeza. Es el MISMO fondo que SEMI.L (longName identico en

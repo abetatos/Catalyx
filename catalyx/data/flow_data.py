@@ -103,6 +103,7 @@ _SNAPSHOTS_DIR = _REPO_ROOT / "data" / "snapshots"
 SECTOR_FLOW_TICKERS: dict[str, list[str]] = {
     # ── DEFENSA Y ESPACIO ───────────────────────────────────────────────────────
     "eu_defense_prime_contractors":   ["EUDF.L", "NATO.PA", "DFEN.DE"],  # region-specific (EU) — sin proxy US limpio; puede quedarse en `estimated`
+    "us_defense_prime_contractors":   ["DFCU.DE", "ITA", "XAR"],  # ITA/XAR: US-listed, expose shares; mismo tema (A&D US)
     "space_defense_satellite":        ["JEDI.DE", "ROKT", "ARKX", "UFO"],
     # ── ENERGIA ─────────────────────────────────────────────────────────────────
     "oil_majors_integrated":          ["IUES.L", "XLE", "VDE"],
@@ -120,6 +121,7 @@ SECTOR_FLOW_TICKERS: dict[str, list[str]] = {
     "agriculture_soft_commodities":   ["SPAG.L", "MOO", "VEGI"],           # SPAG.L es agronegocio (equity) → MOO, no DBA (futuros)
     "water_infrastructure":           ["IQQQ.DE", "PHO", "FIW"],
     # ── FINANCIERO ──────────────────────────────────────────────────────────────
+    "us_retail_banking":              ["IUS2.DE", "KBE", "IAT"],         # KBE/IAT: US-listed, bancos US; exponen shares
     "eu_retail_banking":              ["EXV1.DE", "EUFN"],                 # EUFN cotiza en US (→ expone shares) pero tiene financieras EU
     "crypto_infrastructure":          ["DAPP.L", "DAPP", "BITQ"],          # DAPP US = mismo indice VanEck, expone shares
     # ── TECNOLOGIA ──────────────────────────────────────────────────────────────

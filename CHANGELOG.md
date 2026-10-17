@@ -13,6 +13,21 @@
 
 
 
+## v15.1 — Dos sectores vuelven al universo: banca y defensa de EE. UU. (2026-10-17)
+
+Comparación con los informes de Q4 2026 (State Street, BlackRock, Goldman, Morgan Stanley): financieras
+e industriales/defensa eran el hueco de cobertura. Dos retiradas del 2026-08-27 cumplían ya su propio
+`watch_trigger`: `us_defense_prime_contractors` → **DFCU.DE** (iShares U.S. Aerospace & Defence UCITS,
+Xetra, 458 M$; cotiza desde 2026-06-29, ~80 barras, sin 12-1 hasta mediados de 2027) y
+`us_retail_banking` → **IUS2.DE** (iShares S&P U.S. Banks UCITS, 1.004 M$, 506 barras; grandes bancos,
+no regionales) con **BNKS.L** como misma línea LSE. Ambos `broker_access: assumed`. `investable: true`,
+`watch_only: false`, `reinstated_2026_10_17`; los `retired_*` se conservan. Cableado en
+`SECTOR_TICKERS` / `SECTOR_FLOW_TICKERS`. **No se añadieron** QDVH.DE, 2B7C.DE ni 5J50.DE (sectores
+GICS amplios que rompen la granularidad o solapan con eu_defense). Medido: sin catalizador
+estructural su CA queda imputado y puntúan sobre momentum (IUS2 44,4 · DFCU 39,2), así que dan cobertura
+y no compras hasta registrar su catalizador. Alta de universo: el crowding se re-percentila y los
+composites del resto se mueven 0,1–0,5. Ni pesos ni umbrales. 1036 tests en verde (+2 preexistentes).
+
 ## v15.0 — Que el pipeline capte los catalizadores macro (2026-10-17)
 
 **Plan:** `docs/PLAN_v15_catalyst_capture.md`. **Origen:** el Fed subió tipos el 2026-09-16 (y el BCE

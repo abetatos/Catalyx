@@ -49,18 +49,25 @@ sectors:
 - id: us_defense_prime_contractors
   label: "US Defense — Prime Contractors"
   parent: defense
-  investable: false
+  investable: true
   etf_proxy_quality: good
   demand_drivers:
   - "US DoD budget (mandatory + discretionary)"
   - "FMS (Foreign Military Sales)"
   - "Geopolitical escalation cycles"
-
-  watch_only: true
+  differentiation: >-
+    US primes (USD cost base, DoD procurement law, FMS) are a different order book from the EU primes in
+    eu_defense_prime_contractors. The vehicle is U.S. Aerospace & Defence, so it also holds commercial
+    aerospace names, not only primes.
+  watch_only: false
+  reinstated_2026_10_17: true
+  reinstated_reason: >-
+    iShares U.S. Aerospace & Defence UCITS (IE000IR2DEM6, DFCU.DE, Xetra, ~$458M) meets the retirement
+    watch_trigger (UCITS on Xetra, AUM > 200M USD). It listed 2026-06-29, so it has ~80 bars: no 12-1
+    momentum until mid-2027. broker_access is `assumed`.
   retired_2026_08_27: true
   retired_reason: Sin UCITS de defensa US pura (ITA/XAR/PPA son US no-UCITS). Exposicion parcial via DFEN.DE (defensa global) en eu_defense_prime_contractors.
-  watch_triggers:
-  - Aparece un ETF UCITS cotizado en LSE/XETRA/Euronext que exprese el sector con AUM > 200M USD
+
 - id: cybersecurity_defense
   label: "Defense & Government Cybersecurity"
   parent: defense
@@ -381,19 +388,20 @@ sectors:
 - id: us_retail_banking
   label: "US Retail Banking"
   parent: financials
-  investable: false
+  investable: true
   etf_proxy_quality: good
   demand_drivers: ["Fed rate cycle", "Credit card delinquency", "Commercial real estate exposure"]
-  watch_only: true
+  differentiation: >-
+    US banks earn on a USD curve and a US credit cycle (card delinquency, CRE) that eu_retail_banking
+    does not carry; with the Fed hiking and the ECB on a different path the two diverge.
+  watch_only: false
+  reinstated_2026_10_17: true
+  reinstated_reason: >-
+    iShares S&P U.S. Banks UCITS (IE00BD3V0B10, IUS2.DE, Xetra EUR, ~$1.0bn) turned up. It holds large
+    US banks (39 names), not the regional banks (KRE/KBE) the original retirement named, so the
+    exposure is US banking, not US regional banking. broker_access is `assumed`.
   retired_2026_08_27: true
   retired_reason: Sin UCITS de banca regional US (KRE/KBE son US). Banca europea disponible via eu_retail_banking.
-  watch_triggers:
-  - >-
-    Aparece un UCITS de banca regional US en LSE/XETRA/Euronext Y el broker lo lista (KRE/KBE son
-    US: PRIIPs los bloquea).
-  - >-
-    El ciclo Fed diverge del BCE lo bastante para que la tesis deje de estar cubierta por
-    eu_retail_banking, que es el superviviente que el retired_reason nombra y sigue investable.
 
 - id: insurance_eu
   label: "European Insurance — Life & Non-Life"

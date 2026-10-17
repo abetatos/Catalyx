@@ -130,6 +130,20 @@ etf_universe:
       notes: "El mayor del grupo pero es defensa GLOBAL, no EU-pura. Usar solo si la tesis es NATO-amplia."
       last_verified: "2026-08-27"
 
+  us_defense_prime_contractors:
+    - ticker: "DFCU.DE"
+      name: "iShares U.S. Aerospace & Defence UCITS ETF USD Acc"
+      exchange: XETRA
+      currency: USD
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: 0.38
+      aum_m_usd: 458
+      recommendation_tier: 1
+      notes: "IE000IR2DEM6, indice Dow Jones U.S. Select Aerospace & Defence Capped 35/20. Cotiza en USD en Xetra (el FX EUR/USD entra en el retorno). Lanzado 2026-06-29 en yfinance: ~80 barras, SIN momentum 12-1 hasta mediados de 2027 y 6m incompleto. Incluye aeroespacial comercial, no solo primes. Reinstated 2026-10-17; `assumed` hasta confirmar en la app."
+      last_verified: "2026-10-17"
+
   space_defense_satellite:
     - ticker: "JEDI.DE"
       name: "VanEck Space Innovators UCITS ETF A USD Acc"
@@ -533,6 +547,32 @@ etf_universe:
       recommendation_tier: 1
       notes: "Banca europea, EUR. Unica entrada de la v1.1 que sobrevive sin cambios."
       last_verified: "2026-08-27"
+
+  us_retail_banking:
+    - ticker: "IUS2.DE"
+      name: "iShares S&P U.S. Banks ETF"
+      exchange: XETRA
+      currency: EUR
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: 0.35
+      aum_m_usd: 1004
+      recommendation_tier: 1
+      notes: "yfinance longName omite 'UCITS'; el fondo es iShares S&P U.S. Banks UCITS ETF USD (Acc), IE00BD3V0B10, Irlanda, 39 posiciones (grandes bancos US, NO regionales: no es KRE/KBE). Linea Xetra EUR, 506 barras. Reinstated 2026-10-17; `assumed` hasta confirmar en la app."
+      last_verified: "2026-10-17"
+    - ticker: "BNKS.L"
+      name: "iShares S&P U.S. Banks ETF"
+      exchange: LSE
+      currency: USD
+      ucits: true
+      instrument: etf
+      broker_access: assumed
+      ter: 0.35
+      aum_m_usd: 1004
+      recommendation_tier: 2
+      notes: "MISMO fondo que IUS2.DE (IE00BD3V0B10), linea LSE en USD. Solo si IUS2 no aparece en el buscador."
+      last_verified: "2026-10-17"
 
   crypto_infrastructure:
     - ticker: "DAPP.L"
