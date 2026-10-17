@@ -1,0 +1,114 @@
+{
+  "$schema": "catalyx/schemas/movement.json",
+  "id": "mov_20260902_grid_infrastructure_utilities_bandpick_open",
+  "schema_version": "1.3",
+  "executed_at": "2026-09-02T07:52:00Z",
+  "action": "open",
+  "sector_id": "grid_infrastructure_utilities",
+  "vehicle": {
+    "etf": "IQQH.DE",
+    "isin": null,
+    "currency": "EUR"
+  },
+  "amount_eur": 1477.0,
+  "qty": 173.29578786,
+  "price": 8.523,
+  "fees": 0.0,
+  "attribution": [
+    {
+      "catalyst_id": "struct_energy_transition_grid",
+      "weight": 0.7
+    },
+    {
+      "catalyst_id": "struct_ai_capex_supercycle",
+      "weight": 0.3
+    }
+  ],
+  "trigger": "rebalance",
+  "conviction": "medium",
+  "risk_discipline": {
+    "invalidation": [
+      {
+        "id": "inv_01",
+        "condition": "IQQH.DE closes more than 20% below entry (8.523 EUR) for 10 consecutive trading days.",
+        "severity": "review_and_reduce",
+        "source": "market_data",
+        "triggered": false,
+        "triggered_at": null,
+        "stop_price_level": 6.818,
+        "stop_price_ticker": "IQQH.DE",
+        "comparator": "below",
+        "threshold": 6.818,
+        "consecutive_days": 10,
+        "eval_ticker": "IQQH.DE",
+        "eval_note": "Machine-checkable. IQQH.DE is the traded vehicle, EUR-quoted on Xetra, so the threshold is already in the book's currency and there is no FX wedge against the cost basis.",
+        "rationale": "Same 20%/10d review trigger the rest of the book carries. Not a reflex exit."
+      },
+      {
+        "id": "inv_02",
+        "condition": "The selection band stops choosing this line: on a later run it is neither inside the band of an incumbent nor a book-vol reduction, AND its rank has not risen into the top n_target on score alone.",
+        "severity": "flag_for_review",
+        "source": "user_manual",
+        "triggered": false,
+        "triggered_at": null,
+        "eval_ticker": null,
+        "eval_note": "Reads `selection_band.by_risk` and `rank_in_portfolio` in the persisted model holdings. NOT a price stop.",
+        "rationale": "This position is in the book for a reason no previous position has had, and the honest weak point is that the reason is a MEASUREMENT that can change. It did not out-rank anyone: at rank 8 of 25 (composite_z +0.265) it was declared TIED with ai_infrastructure_data_centers (+0.410, gap 0.145z inside a band of 0.272) and took the slot because it lowered equal-weighted book vol 17.44% -> 16.77%. If the covariance stops saying that, the score alone does not hold this line."
+      },
+      {
+        "id": "inv_03",
+        "condition": "Rolling 56w EUR correlation of IQQH.DE against the held ai_capex names (4COP.DE, 2B76.DE, SEC0.DE) rises above 0.60, i.e. the diversification this line was bought for stops being measurable.",
+        "severity": "review_and_reduce",
+        "source": "market_data",
+        "triggered": false,
+        "triggered_at": null,
+        "eval_ticker": "IQQH.DE",
+        "eval_note": "catalyx.scorer.covariance, the same weekly EUR panel the risk budget reads (Epps: daily halves it, so weekly is the unit).",
+        "rationale": "The line's whole case is a covariance reading. A stop on the THESIS has to be a stop on that number, not on a narrative."
+      }
+    ],
+    "assumptions": [
+      {
+        "id": "asm_01",
+        "statement": "The measured covariance is telling the truth and the narrative label is not: grid_infrastructure_utilities carries the struct_ai_capex_supercycle tag, and was still bought as a diversifier against the three held ai_capex names.",
+        "measurability": "Falsified if inv_03 fires (56w rho vs the held ai_capex names above 0.60), or if the book's realized vol over the next 63d comes in at or above what the pre-swap book (with ai_infrastructure_data_centers in this slot) would have realized. Confirmed if the post-trade book's measured vol and mean rho stay below the counterfactual.",
+        "monitoring_source": "catalyx.scorer.covariance + the BOOK RISK block",
+        "check_frequency": "monthly",
+        "current_status": "unverified"
+      },
+      {
+        "id": "asm_02",
+        "statement": "A composite_z gap of 0.145 between this name and the one it displaced is genuinely inside the ranking's resolution, i.e. the band of 0.272z is not too wide.",
+        "measurability": "The band is friction / (IC x sigma_cs) with IC = lambda x ic_target = 0.06 — and that 0.06 is a DECLARED PRIOR (tilt_lambda_floor 0.3), not a measured skill. Falsified if the composite IC arms above 0.20 on 3+ independent 63d windows, which would narrow the band to ~0.082z and make this swap inadmissible in hindsight.",
+        "monitoring_source": "calibration.composite_ic + calibration.skill_lambda",
+        "check_frequency": "quarterly",
+        "current_status": "unverified"
+      },
+      {
+        "id": "asm_03",
+        "statement": "struct_energy_transition_grid at 0.7 is still the dominant driver of this line, as it was at the 2026-06-04 open — the sector was closed 2026-08-20 and re-opened today without a fresh attribution review.",
+        "measurability": "Falsified by a refreshed sector study that finds the grid buildout is no longer the primary demand driver, or by a reattribution entry. The study is dated 2026-08-31 and the rebalance row read `stale (90d)` on the catalyst evidence.",
+        "monitoring_source": "data/sector_studies/study_grid_infrastructure_utilities.json",
+        "check_frequency": "monthly",
+        "current_status": "unverified"
+      }
+    ],
+    "note": "FIRST POSITION IN THIS BOOK'S HISTORY SELECTED BY COVARIANCE RATHER THAN BY RANK. Two mechanisms shipped the same morning had to both be in force for this row to exist: the selection indifference band (it put the name in the model book at all) and the derivation of `buy_if.rank_max` from `n_target` (without it the row read HOLD on a 14.8pp gap, because rank_in_portfolio 6 met a ceiling of 5). Conviction is `medium`, not `high`, and deliberately so: the case is a measured covariance plus a DECLARED prior about skill, not a catalyst thesis anyone re-verified today. Sized at 14.8% of capital by the risk budget. Note also that the swap it won LOWERED book vol but RAISED the ai_capex cluster's variance share (74.0% against a 35% budget, enforcement `warn`) — the label and the tape disagree here, and this line is the bet that the tape is right."
+  },
+  "metadata": {
+    "created_at": "2026-09-02T08:10:00Z",
+    "created_by": "claude",
+    "fill_note": "Broker fill (Revolut, screenshot 2026-09-02 09:53 CEST): 173.29578786 units, EUR 1477.00, displayed price 8,52. The EUR amount is exact rather than rounded — the day's five transactions close to zero (1721.93 sale + 1200.00 funding - 1477.00 - 1265.00 - 179.93 swept back to Personal = 0.00), which pins both buys to whole euros; the implied price is 1477.00 / 173.29578786 = 8.5230, which the app rounds to 8,52. Recorded at the implied price so qty x price reconciles to the amount. Fees 0 (Revolut monthly franchise). EUR-quoted on Xetra, no FX wedge. Table asked EUR 1476.75; the 0.25 difference is a rounding of the order, immaterial.",
+    "history_note": "The sector was held 2026-06-05 to 2026-08-20 (mov_20260604_..._bindingconstraint, closed at EUR 388.87). Attribution weights 0.7/0.3 are carried forward from that opening rather than re-derived — re-deriving them silently would overrule a judgement someone wrote down with a reason. asm_03 is the flag that they are inherited, not re-verified."
+  },
+  "score_context": {
+    "run_id": "run_20260902_064125",
+    "rank": 8,
+    "composite": 54.0,
+    "catalyst_alignment": 98.1,
+    "momentum": 40.9,
+    "flow": 25.0,
+    "crowding": 26.5,
+    "regime_state": "intact"
+  }
+}

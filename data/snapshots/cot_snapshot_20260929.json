@@ -1,0 +1,22 @@
+{
+  "date": "2026-09-29",
+  "markets": {
+    "gold_comex": {
+      "code": "088691",
+      "error": "fetch failed or <52w history"
+    },
+    "silver_comex": {
+      "code": "084691",
+      "error": "fetch failed or <52w history"
+    },
+    "copper_comex": {
+      "code": "085692",
+      "error": "fetch failed or <52w history"
+    },
+    "wti_nymex": {
+      "code": "067651",
+      "error": "fetch failed or <52w history"
+    }
+  },
+  "sector_scores": {}
+}

@@ -1,0 +1,56 @@
+{
+  "date": "2026-09-25",
+  "markets": {
+    "gold_comex": {
+      "code": "088691",
+      "report_date": "2026-09-15",
+      "net_spec_ratio": 0.5619,
+      "cot_crowding": 96.9,
+      "n_history": 259
+    },
+    "silver_comex": {
+      "code": "084691",
+      "report_date": "2026-09-15",
+      "net_spec_ratio": 0.2441,
+      "cot_crowding": 57.5,
+      "n_history": 259
+    },
+    "copper_comex": {
+      "code": "085692",
+      "error": "fetch failed or <52w history"
+    },
+    "wti_nymex": {
+      "code": "067651",
+      "report_date": "2026-09-15",
+      "net_spec_ratio": 0.0695,
+      "cot_crowding": 15.8,
+      "n_history": 259
+    }
+  },
+  "sector_scores": {
+    "gold_physical": {
+      "cot_crowding": 96.9,
+      "market": "gold_comex",
+      "report_date": "2026-09-15",
+      "net_spec_ratio": 0.5619
+    },
+    "gold_miners": {
+      "cot_crowding": 96.9,
+      "market": "gold_comex",
+      "report_date": "2026-09-15",
+      "net_spec_ratio": 0.5619
+    },
+    "silver_physical": {
+      "cot_crowding": 57.5,
+      "market": "silver_comex",
+      "report_date": "2026-09-15",
+      "net_spec_ratio": 0.2441
+    },
+    "oil_majors_integrated": {
+      "cot_crowding": 15.8,
+      "market": "wti_nymex",
+      "report_date": "2026-09-15",
+      "net_spec_ratio": 0.0695
+    }
+  }
+}

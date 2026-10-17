@@ -1,0 +1,114 @@
+{
+  "$schema": "catalyx/schemas/movement.json",
+  "id": "mov_20260902_biotech_drug_development_open",
+  "schema_version": "1.3",
+  "executed_at": "2026-09-02T07:52:00Z",
+  "action": "open",
+  "sector_id": "biotech_drug_development",
+  "vehicle": {
+    "etf": "NBTK.DE",
+    "isin": null,
+    "currency": "EUR"
+  },
+  "amount_eur": 1265.0,
+  "qty": 19.52160493,
+  "price": 64.8,
+  "fees": 0.0,
+  "attribution": [
+    {
+      "catalyst_id": "struct_biopharma_patent_cliff_ma",
+      "weight": 0.65
+    },
+    {
+      "catalyst_id": "struct_ai_drug_discovery",
+      "weight": 0.35
+    }
+  ],
+  "trigger": "rebalance",
+  "conviction": "medium",
+  "risk_discipline": {
+    "invalidation": [
+      {
+        "id": "inv_01",
+        "condition": "NBTK.DE closes more than 20% below entry (64.80 EUR) for 10 consecutive trading days.",
+        "severity": "review_and_reduce",
+        "source": "market_data",
+        "triggered": false,
+        "triggered_at": null,
+        "stop_price_level": 51.84,
+        "stop_price_ticker": "NBTK.DE",
+        "comparator": "below",
+        "threshold": 51.84,
+        "consecutive_days": 10,
+        "eval_ticker": "NBTK.DE",
+        "eval_note": "Machine-checkable. NBTK.DE is the traded and the SCORED vehicle (v14.1 made it tier-1 after BTEC.L turned out not to be listed by the broker), EUR-quoted on XETRA — no FX wedge against the cost basis.",
+        "rationale": "The book's standard 20%/10d review trigger, not a reflex exit."
+      },
+      {
+        "id": "inv_02",
+        "condition": "The sector study is not refreshed by 2026-10-02. It is dated 2026-08-31 but the CATALYST evidence behind the score reads `blind (150d)` — the oldest in the book.",
+        "severity": "flag_for_review",
+        "source": "user_manual",
+        "triggered": false,
+        "triggered_at": null,
+        "eval_ticker": null,
+        "eval_note": "NOT a price stop. Freshness means RE-VERIFY, never auto-sell (CLAUDE.md), so this is a flag with a date on it.",
+        "rationale": "This is the weakest part of the entry and it should be written down rather than discovered later. The whole 12.7% weight rests on a catalyst_alignment of 94.4 computed from evidence last touched 150 days ago, and the rebalance row said so on its own line. Two structural drivers are claimed below; neither has been checked this quarter."
+      },
+      {
+        "id": "inv_03",
+        "condition": "A crowding reading that is MEASURED rather than inherited from the narrative label comes in above 90 while the position is held, i.e. the 94.1 is confirmed rather than assumed.",
+        "severity": "flag_for_review",
+        "source": "market_data",
+        "triggered": false,
+        "triggered_at": null,
+        "eval_ticker": "NBTK.DE",
+        "eval_note": "Reads `crowding_source` in the sector snapshot: `crowding_measured` (comomentum percentile) vs the narrative label fallback.",
+        "rationale": "Crowding 94.1 is the second-highest in the universe and the composite already charges it at weight 0.135. Crowding is an ENTRY test in this system, and this entry is being made against a high reading — so the reading itself deserves to be checked rather than carried."
+      }
+    ],
+    "assumptions": [
+      {
+        "id": "asm_01",
+        "statement": "struct_biopharma_patent_cliff_ma is a live takeout bid for clinical-stage biotech, not a story that has already been paid for — this is bought at a crowding of 94.1, the second-highest in the universe.",
+        "measurability": "Falsified if announced large-cap takeouts of clinical-stage names stall for two consecutive quarters, or if a refreshed study finds the LOE-driven M&A wave has been priced. Confirmed by continued deal flow at premia while the sector's composite holds.",
+        "monitoring_source": "structural_catalyst indicators + a refreshed sector study",
+        "check_frequency": "monthly",
+        "current_status": "unverified"
+      },
+      {
+        "id": "asm_02",
+        "statement": "This line diversifies the book rather than doubling pharma_large_cap, which is held at 16.0% and shares struct_biopharma_patent_cliff_ma.",
+        "measurability": "The two share a driver by declaration: the notional cap reads the FULL position behind each, so this pair puts struct_biopharma_patent_cliff_ma at 28.7% of capital against a 30% cap. Falsified if rolling 56w EUR rho between NBTK.DE and IUHE.AS exceeds 0.70, or if the cluster's variance share crosses the 35% budget. Today it sits at 21.6%.",
+        "monitoring_source": "catalyx.scorer.covariance + movement_repo.cap_check",
+        "check_frequency": "monthly",
+        "current_status": "unverified"
+      },
+      {
+        "id": "asm_03",
+        "statement": "NBTK.DE is a faithful vehicle for the sector's thesis, and the v14.1 substitution did not change what is being bought.",
+        "measurability": "Measured before it was adopted: NBTK.DE tracks the same index as BTEC.L at rho 0.984 weekly EUR, with 3m/6m/12m returns within 0.6pp. Falsified if that tracking degrades below 0.95, or if spread widens materially from the recorded 37bps.",
+        "monitoring_source": "catalyx.data.prices + etf_universe",
+        "check_frequency": "quarterly",
+        "current_status": "unverified"
+      }
+    ],
+    "note": "The row the pipeline had been unable to execute for two days. It was HELD at rank 6 by `buy_if.rank_max: 5` on 2026-09-01 (v14.0 measured the cost at EUR 1265.87 when biotech inherited the 6th slot after cloud_software_saas left the universe) and became buyable this morning when the rank ceiling was derived from `n_target`. Conviction `medium`: rank 5 on score alone, but bought on the blindest catalyst evidence in the book (150d) and at the second-highest crowding in the universe. Attribution 0.65/0.35 — patent-cliff M&A dominant, AI drug discovery secondary — matching the sector study's ordering; the pharma line already carries 0.5 of the same patent-cliff driver, which asm_02 exists to watch."
+  },
+  "metadata": {
+    "created_at": "2026-09-02T08:12:00Z",
+    "created_by": "claude",
+    "fill_note": "Broker fill (Revolut, screenshot 2026-09-02 09:53 CEST): 19.52160493 units at 64,80, EUR 1265.00. 19.52160493 x 64.80 = 1265.00 exactly, so fees are 0 (Revolut monthly franchise) and the amount needs no reconstruction. Confirmed independently by the day's cash closing to zero: 1721.93 sale + 1200.00 funding - 1477.00 - 1265.00 - 179.93 swept out = 0.00. EUR-quoted on XETRA, no FX wedge. Table asked EUR 1265.25; the 0.25 is order rounding.",
+    "vehicle_note": "NBTK.DE (Invesco, XETRA, EUR, $476M, spread 37bps) is the tier-1 and SCORED vehicle since v14.1, when BTEC.L was found not to be listed by the broker and marked `broker_absent`. It follows the same index at rho 0.984 against BTEC.L. OM3E.MU is the same iShares fund as BTEC.L but its Munich quote is market-maker only (median volume 6 units, 358bps spread, rho 0.727 against its own LSE line), so it is tier-2 and not the scored vehicle."
+  },
+  "score_context": {
+    "run_id": "run_20260902_064125",
+    "rank": 5,
+    "composite": 56.2,
+    "catalyst_alignment": 94.4,
+    "momentum": 74.4,
+    "flow": 55.6,
+    "crowding": 94.1,
+    "regime_state": "intact"
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "$schema": "catalyx/schemas/movement.json",
+  "id": "mov_20261006_grid_infrastructure_utilities_close",
+  "schema_version": "1.3",
+  "executed_at": "2026-10-06T12:07:00Z",
+  "action": "close",
+  "sector_id": "grid_infrastructure_utilities",
+  "vehicle": {
+    "etf": "IQQH.DE",
+    "isin": null,
+    "currency": "EUR"
+  },
+  "amount_eur": 1540.43,
+  "qty": 173.29578786,
+  "price": 8.889,
+  "fees": 0.0,
+  "attribution": [
+    {
+      "catalyst_id": "struct_energy_transition_grid",
+      "weight": 0.7
+    },
+    {
+      "catalyst_id": "struct_ai_capex_supercycle",
+      "weight": 0.3
+    }
+  ],
+  "trigger": "rebalance",
+  "conviction": "medium",
+  "outcome": {
+    "exit_reason": "Rule row from run_20261006_110833: TRIM to a 0% target, which is a full exit. Grid is rank 7 and its momentum (37.6) sits under the model book's min_momentum of 40, so the book drops it. The Step 6 review found the exit is about the VEHICLE, not the thesis: struct_energy_transition_grid is intact, but IQQH.DE holds solar/wind and moves on a different driver, and no grid-pure UCITS exists. Evidence did not contradict the rule, so no override.",
+    "exit_note": null,
+    "exit_note_at": null,
+    "exit_trigger_type": "rotation",
+    "signal_context": {
+      "exit_watcher_action": "hold",
+      "followed_signal": false
+    },
+    "assumption_resolution": [
+      {
+        "id": "asm_01",
+        "outcome": "unresolved",
+        "note": "34 days. 56w EUR correlation with the held ai_capex names averaged 0.37 but 0.63 against SEC0.DE, so it was weakening on one pair; not enough to call it falsified."
+      },
+      {
+        "id": "asm_02",
+        "outcome": "unresolved",
+        "note": "The 0.145 composite_z gap vs the displaced name is inside resolution by construction; the IC gate stands aside, so nothing could confirm or refute it."
+      },
+      {
+        "id": "asm_03",
+        "outcome": "unresolved",
+        "note": "The 0.7 attribution to the grid driver was never re-reviewed after the 08-20 close and 09-02 re-open; the study of 2026-10-06 says the vehicle moves on solar/wind policy rather than grid demand."
+      }
+    ],
+    "catalyst_materialized": null,
+    "catalyst_materialized_note": "Not assessable at 34 days. The driver is intact per the 2026-10-06 scan, but this vehicle does not carry it cleanly.",
+    "pnl": {
+      "gross_pnl_eur": 63.43,
+      "tax_due_eur": 0.0,
+      "after_tax_pnl_eur": 63.43,
+      "return_pct": 4.29,
+      "holding_days": 34
+    },
+    "behavioral_flags": [
+      "overrode_signal"
+    ],
+    "verdict": {
+      "right_thesis": true,
+      "right_reason": null,
+      "label": "indeterminate",
+      "confidence": "low",
+      "note": "Not enough resolved to judge the reason — revisit when the assumptions settle.",
+      "_assumptions": {
+        "validated": 0,
+        "falsified": 0,
+        "unresolved": 3
+      }
+    }
+  },
+  "metadata": {
+    "created_at": "2026-10-06T12:20:00Z",
+    "created_by": "claude",
+    "fill_note": "Broker fill (Revolut, screenshot 2026-10-06 14:09 CEST): 173.29578786 units, proceeds EUR 1540.43, displayed price 8,89. FULL line (qty equals the 2026-09-02 open exactly). The implied price is 1540.43 / 173.29578786 = 8.8890; amount_eur is authoritative. EUR-quoted on Xetra, fees 0. Realized 1540.43 - 1477.00 = +63.43 EUR over 34 days.",
+    "pnl_note": "pnl corrected by hand after `outcome evaluate`: the evaluator pooled buys of the same ETF across closed lots (grid: the 2026-06-04 lot closed 2026-08-20, giving 123 days and -33.57 EUR) and ignored a negative YTD when pricing tax (`max(0, ytd_prior)`). Here cost basis is the position being closed and CGT is 0 because the calendar-year net after this close is -14.95 EUR (losses offset gains within the year)."
+  },
+  "score_context": {
+    "run_id": "run_20261006_110833"
+  }
+}

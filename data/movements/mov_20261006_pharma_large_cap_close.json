@@ -1,0 +1,84 @@
+{
+  "$schema": "catalyx/schemas/movement.json",
+  "id": "mov_20261006_pharma_large_cap_close",
+  "schema_version": "1.3",
+  "executed_at": "2026-10-06T12:07:00Z",
+  "action": "close",
+  "sector_id": "pharma_large_cap",
+  "vehicle": {
+    "etf": "IUHE.AS",
+    "isin": null,
+    "currency": "EUR"
+  },
+  "amount_eur": 1446.99,
+  "qty": 190.97172211,
+  "price": 7.5774,
+  "fees": 0.0,
+  "attribution": [
+    {
+      "catalyst_id": "uncatalyzed",
+      "weight": 0.5
+    },
+    {
+      "catalyst_id": "struct_biopharma_patent_cliff_ma",
+      "weight": 0.5
+    }
+  ],
+  "trigger": "rebalance",
+  "conviction": "medium",
+  "outcome": {
+    "exit_reason": "Rule row from run_20261006_110833: TRIM to a 0% target (full exit). Pharma ranks 13 (composite_z 0.059 against a book cut at 0.347). The Step 6 review found the evidence did NOT contradict the catalyst side (patent-cliff M&A strengthening, tariffs intact) and partly contradicted the rule on book risk: the line carried -2.5% of book variance and its removal raises the estimated book vol from 16.8% to 19.8%. The user executed the rule as printed.",
+    "exit_note": null,
+    "exit_note_at": null,
+    "exit_trigger_type": "rotation",
+    "signal_context": {
+      "exit_watcher_action": "hold",
+      "followed_signal": false
+    },
+    "assumption_resolution": [
+      {
+        "id": "asm_01",
+        "outcome": "validated",
+        "note": "Defensive diversifier role held over 112 days: 56w weekly EUR correlation about -0.16 vs SEC0.DE and -0.17 vs IQQH.DE (own calculation in the Step 6 review)."
+      },
+      {
+        "id": "asm_02",
+        "outcome": "validated",
+        "note": "From the 2026-09-01 add: risk contribution of -2.52% at exit, i.e. the line was lowering book volatility, which is the job it was added for."
+      }
+    ],
+    "catalyst_materialized": null,
+    "catalyst_materialized_note": "The line was opened as uncatalyzed defensive beta and half-attributed to patent-cliff M&A on 2026-08-31. The M&A driver strengthened, but the position was not exited on it, so nothing is concluded about whether it paid.",
+    "pnl": {
+      "gross_pnl_eur": 11.99,
+      "tax_due_eur": 0.0,
+      "after_tax_pnl_eur": 11.99,
+      "return_pct": 0.84,
+      "holding_days": 112
+    },
+    "behavioral_flags": [
+      "overrode_signal"
+    ],
+    "verdict": {
+      "right_thesis": true,
+      "right_reason": true,
+      "label": "skill",
+      "confidence": "high",
+      "note": "Made money AND the stated reason held — the pattern is worth repeating.",
+      "_assumptions": {
+        "validated": 2,
+        "falsified": 0,
+        "unresolved": 0
+      }
+    }
+  },
+  "metadata": {
+    "created_at": "2026-10-06T12:20:00Z",
+    "created_by": "claude",
+    "fill_note": "Broker fill (Revolut, screenshot 2026-10-06 14:09 CEST): 190.97172211 units, proceeds EUR 1446.99, displayed price 7,58. FULL line (equals 72.013257 + 118.956743 held). Implied price 1446.99 / 190.97172211 = 7.5774; amount_eur is authoritative. EUR-hedged Amsterdam line, fees 0. Realized 1446.99 - 1435.00 = +11.99 EUR.",
+    "pnl_note": "pnl corrected by hand after `outcome evaluate`: the evaluator pooled buys of the same ETF across closed lots (grid: the 2026-06-04 lot closed 2026-08-20, giving 123 days and -33.57 EUR) and ignored a negative YTD when pricing tax (`max(0, ytd_prior)`). Here cost basis is the position being closed and CGT is 0 because the calendar-year net after this close is -2.96 EUR (losses offset gains within the year)."
+  },
+  "score_context": {
+    "run_id": "run_20261006_110833"
+  }
+}
