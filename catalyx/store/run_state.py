@@ -116,6 +116,21 @@ def _safe(fn, default):
         return {"error": str(e)} if isinstance(default, dict) else default
 
 
+def _calendar_block(today: date) -> tuple[list | None, list | None, str | None]:
+    """(due, upcoming, error) — central-bank decisions with a known date that no scan has triaged.
+
+    NOT wrapped in `_safe()`: a default of [] would read as "nothing due", the exact silence this
+    exists to prevent. On failure both lists are None and the reason travels as the third item.
+    """
+    try:
+        from catalyx.store import macro_calendar
+        cal = macro_calendar.load()
+        return (macro_calendar.due(today, cal, macro_calendar.resolved_keys()),
+                macro_calendar.upcoming(today, cal), None)
+    except Exception as exc:
+        return None, None, f"{type(exc).__name__}: {exc}"
+
+
 def build(top_n: int | None = None, as_of: date | None = None) -> dict:
     """Compose the digest. Read-only: computes, persists nothing, decides nothing."""
     from catalyx.scorer import catalyst_lifecycle, exit_watcher, freshness
@@ -194,6 +209,8 @@ def build(top_n: int | None = None, as_of: date | None = None) -> dict:
 
     must, should, optional = tier_work_list(driving, stale_by_id, top_drivers)
 
+    calendar_due, calendar_upcoming, calendar_error = _calendar_block(today)
+
     total_invested = float(book.get("total_invested_eur") or 0.0)
     marked = sum(float(r["unrealized_eur"] or 0) for r in exit_rows
                  if r.get("unrealized_eur") is not None)
@@ -227,6 +244,7 @@ def build(top_n: int | None = None, as_of: date | None = None) -> dict:
                          "composite": r.get("composite"), "momentum": r.get("momentum"),
                          "narrative_maturity": r.get("narrative_maturity")}
                         for r in ranking],
+        "calendar_error": calendar_error,
         "ranking_note": (f"{len(dropped)} sector(s) in the stored top-{top_n} are no longer "
                          f"investable and were dropped: {', '.join(dropped)}" if dropped else None),
         "work_list": {
@@ -235,6 +253,8 @@ def build(top_n: int | None = None, as_of: date | None = None) -> dict:
             "should_reverify": should,
             "optional_reverify": optional,
             "sectors_decision_relevant": relevant_sectors,
+            "calendar_due": calendar_due,
+            "calendar_upcoming": calendar_upcoming,
             "note": ("Spend searches on must_reverify, then should_reverify. optional_reverify "
                      "collapses to a single 'no change' line with NO search, and every sector "
                      "outside sectors_decision_relevant ranks on its momentum baseline. Skipping "
@@ -291,6 +311,13 @@ def render(digest: dict) -> str:
         out.append(f"    should {row['catalyst_id']:<48}{row['why']}")
     if len(wl["should_reverify"]) > 8:
         out.append(f"    should … +{len(wl['should_reverify']) - 8} more")
+    if digest.get("calendar_error"):
+        out.append(f"    CALENDAR ERROR  {digest['calendar_error']}")
+    for r in wl.get("calendar_due") or []:
+        out.append(f"    CALENDAR DUE   {r['key']:<18}{r['days_ago']}d ago — no scan has triaged it")
+    if wl.get("calendar_upcoming"):
+        out.append("    calendar upcoming: "
+                   + ", ".join(f"{r['key']} (+{r['days_ahead']}d)" for r in wl["calendar_upcoming"]))
     out.append(f"    sectors: {', '.join(wl['sectors_decision_relevant'][:10])}"
                + ("…" if len(wl["sectors_decision_relevant"]) > 10 else ""))
     return "\n".join(out)

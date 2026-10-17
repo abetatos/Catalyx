@@ -178,6 +178,13 @@ if flagged:
     # It is a LIST of sector ids, not a count — naming them is the whole value of the ping.
     names = flagged if isinstance(flagged, list) else [str(flagged)]
     alerts.append(f"{len(names)} position(s) the exit watcher flags: {', '.join(map(str, names))}")
+wl = st.get("work_list") or {}
+if st.get("calendar_error"):
+    alerts.append(f"macro calendar could not be evaluated: {st['calendar_error']}")
+cal_due = wl.get("calendar_due") or []
+if cal_due:
+    alerts.append(f"{len(cal_due)} central-bank decision(s) not triaged by any scan: "
+                  + ", ".join(d["key"] for d in cal_due))
 if att.get("stale_verdicts"):
     alerts.append(f"{att['stale_verdicts']} catalyst verdict(s) past the freshness limit")
 if att.get("pending_lifecycle"):

@@ -1,0 +1,72 @@
+version: 1
+# Central-bank decisions with a KNOWN date. A meeting that has happened and is not resolved by any
+# data/reports/scan_triage_*.json is "due": the heartbeat alerts and the next scan must close it.
+# `date` = the DECISION day (the last day of a two-day meeting).
+#
+# Why this exists: the Fed hiked on 2026-09-16 and nothing looked again after the fact. The ECB
+# event registered on 09-14 already named the Fed/BoJ dates in its own notes.
+#
+# Verified 2026-10-17 against the official pages below (fetched, not remembered):
+#   Fed  federalreserve.gov/monetarypolicy/fomccalendars.htm  — 2026 confirmed; 2027 TENTATIVE
+#   BoJ  boj.or.jp/en/mopo/mpmsche_minu/index.htm             — 2026 and 2027
+#   ECB  ecb.europa.eu/press/calendars/mgcgc/html/index.en.html — 2027 in full, 2026 from 10-28;
+#        2026-09-10 is the decision named by the ECB statement already cited in
+#        data/catalysts/cat_20260910_ecb_rate_hike.json
+#   BoE  bankofengland.co.uk/news/2025/december/mpc-dates-for-2027 — 2027 PROVISIONAL.
+#        2026: the official 2026-dates page fetched inconsistently (its table omitted 17 Sep while
+#        its text confirmed it); 2026-09-17 and 2026-12-17 follow the BoE schedule as returned by
+#        search and should be re-checked against bankofengland.co.uk if they ever matter.
+#
+# Meetings before `tracking_start` are deliberately absent: they are never due, and the BoJ
+# June/July 2026 dates could not be read back from the page as decision days.
+tracking_start: "2026-09-01"
+sources:
+  fed: "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+  ecb: "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html"
+  boj: "https://www.boj.or.jp/en/mopo/mpmsche_minu/index.htm"
+  boe: "https://www.bankofengland.co.uk/news/2025/december/mpc-dates-for-2027"
+meetings:
+  - {bank: ecb, date: "2026-09-10", kind: rate_decision}
+  - {bank: fed, date: "2026-09-16", kind: rate_decision}
+  - {bank: boe, date: "2026-09-17", kind: rate_decision}
+  - {bank: boj, date: "2026-09-18", kind: rate_decision}
+  - {bank: fed, date: "2026-10-28", kind: rate_decision}
+  - {bank: ecb, date: "2026-10-29", kind: rate_decision}
+  - {bank: boj, date: "2026-10-30", kind: rate_decision}
+  - {bank: boe, date: "2026-11-05", kind: rate_decision}
+  - {bank: fed, date: "2026-12-09", kind: rate_decision}
+  - {bank: ecb, date: "2026-12-17", kind: rate_decision}
+  - {bank: boe, date: "2026-12-17", kind: rate_decision}
+  - {bank: boj, date: "2026-12-18", kind: rate_decision}
+  - {bank: boj, date: "2027-01-22", kind: rate_decision}
+  - {bank: fed, date: "2027-01-27", kind: rate_decision}
+  - {bank: ecb, date: "2027-02-04", kind: rate_decision}
+  - {bank: boe, date: "2027-02-04", kind: rate_decision}
+  - {bank: fed, date: "2027-03-17", kind: rate_decision}
+  - {bank: ecb, date: "2027-03-18", kind: rate_decision}
+  - {bank: boe, date: "2027-03-18", kind: rate_decision}
+  - {bank: boj, date: "2027-03-18", kind: rate_decision}
+  - {bank: fed, date: "2027-04-28", kind: rate_decision}
+  - {bank: boj, date: "2027-04-28", kind: rate_decision}
+  - {bank: ecb, date: "2027-04-29", kind: rate_decision}
+  - {bank: boe, date: "2027-04-29", kind: rate_decision}
+  - {bank: fed, date: "2027-06-09", kind: rate_decision}
+  - {bank: ecb, date: "2027-06-10", kind: rate_decision}
+  - {bank: boj, date: "2027-06-11", kind: rate_decision}
+  - {bank: boe, date: "2027-06-17", kind: rate_decision}
+  - {bank: boj, date: "2027-07-22", kind: rate_decision}
+  - {bank: ecb, date: "2027-07-22", kind: rate_decision}
+  - {bank: fed, date: "2027-07-28", kind: rate_decision}
+  - {bank: boe, date: "2027-07-29", kind: rate_decision}
+  - {bank: ecb, date: "2027-09-09", kind: rate_decision}
+  - {bank: fed, date: "2027-09-15", kind: rate_decision}
+  - {bank: boe, date: "2027-09-16", kind: rate_decision}
+  - {bank: boj, date: "2027-09-22", kind: rate_decision}
+  - {bank: fed, date: "2027-10-27", kind: rate_decision}
+  - {bank: ecb, date: "2027-10-28", kind: rate_decision}
+  - {bank: boj, date: "2027-10-29", kind: rate_decision}
+  - {bank: boe, date: "2027-11-04", kind: rate_decision}
+  - {bank: fed, date: "2027-12-08", kind: rate_decision}
+  - {bank: ecb, date: "2027-12-16", kind: rate_decision}
+  - {bank: boe, date: "2027-12-16", kind: rate_decision}
+  - {bank: boj, date: "2027-12-17", kind: rate_decision}

@@ -181,3 +181,32 @@ def test_a_merge_cycle_stops_instead_of_hanging(tmp_path, monkeypatch):
         {"id": "struct_b", "status": "merged", "merged_into": "struct_a"}), encoding="utf-8")
     monkeypatch.setattr(scr, "_YAML_DIR", d)
     assert scr.resolve("struct_a") in ("struct_a", "struct_b")   # terminates, value unimportant
+
+
+# ── Central-bank calendar (v15 F2) ────────────────────────────────────────────
+
+def test_calendar_block_reports_an_unreadable_calendar_as_an_error_never_as_nothing_due(monkeypatch):
+    """`[]` would mean "no decision is waiting". A calendar that cannot be read means the question
+    was not answered, and the digest has to say that instead."""
+    from datetime import date
+
+    from catalyx.store import macro_calendar
+
+    def boom(*_a, **_k):
+        raise ValueError("macro_calendar: duplicate meeting fed:2026-09-16")
+
+    monkeypatch.setattr(macro_calendar, "load", boom)
+    due, upcoming, err = run_state._calendar_block(date(2026, 9, 18))
+    assert due is None and upcoming is None
+    assert err and "duplicate meeting" in err
+
+
+def test_render_shows_calendar_due_and_error():
+    wl = {"must_reverify": [], "should_reverify": [], "optional_reverify": [],
+          "sectors_decision_relevant": ["grid"],
+          "calendar_due": [{"key": "fed:2026-09-16", "bank": "fed", "date": "2026-09-16",
+                            "days_ago": 31}],
+          "calendar_upcoming": [{"key": "fed:2026-10-28", "days_ahead": 11}]}
+    text = run_state.render(_digest(work_list=wl, calendar_error="ValueError: x"))
+    assert "CALENDAR DUE" in text and "fed:2026-09-16" in text
+    assert "CALENDAR ERROR" in text and "fed:2026-10-28" in text
