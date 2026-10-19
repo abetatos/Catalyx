@@ -108,6 +108,10 @@ TABLES: dict[str, tuple[str, list[str]]] = {
     # Persisted because the one line that says a rotation does not pay for itself lived only in
     # the CLI render, and the dashboard therefore could not show it at all.
     "rebalance_swap":     ("portfolio/rebalance_swap",    ["run_id"]),
+    # v15.3 — the best-moves column's top picks per run (net €, its se and t, whether the greedy
+    # plan took it), so each pick can be priced at 63d like every other column. Only written when
+    # the column computed: an errored run leaves no partition rather than a false "nothing pays".
+    "rebalance_best_moves": ("portfolio/rebalance_best_moves", ["run_id"]),
     # every deviation from a rule action, with author + reason. The anti-conservatism ledger:
     # overrides are scored against the rule they replaced once the window matures.
     "override_log":       ("portfolio/override_log",      ["run_id"]),

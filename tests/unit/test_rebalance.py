@@ -1483,3 +1483,29 @@ def test_action_label_shows_a_full_exit_as_close_not_trim():
     assert rb.action_label(sell) == "SELL"
     assert rb.action_label(unknown) == "TRIM"        # unknowable → not claimed as an exit
     assert full["rule_action"] == "TRIM"             # the enum is untouched
+
+
+def test_best_moves_persist_at_their_own_grain_and_an_error_writes_nothing(tmp_path):
+    """v15.3 — the column is scored at 63d like the others, so its picks must reach the lake. An
+    errored column writes NO partition: an empty one would read as "no move pays"."""
+    from catalyx.store import lake
+
+    top = {"kind": "swap", "sell": "a", "buy": "b", "eur": 900.0, "net_eur": 2.5,
+           "net_se_eur": 8.0, "t": 0.31, "slots": 2}
+    res = {"run_id": "run_bm", "strategy": "catalyx", "as_of": "2026-10-19",
+           "book": {"deploy_ratio": {"ratio": 0.75}, "total_capital_eur": 10000.0,
+                    "deployable_eur": 7500.0, "cash_target_eur": 2500.0, "cash_eur": 7500.0,
+                    "cash_action_eur": 0.0, "model": {}},
+           "rows": [{"sector_id": "a", "rule_action": "HOLD", "trade_eur": 0.0}],
+           "best_moves": {"top": [top], "steps": [{"sell": "a", "buy": "b", "kind": "swap"}],
+                          "delta": 4.3, "erp": 0.05, "ic": 0.06, "ic_se": 0.2, "sigma_cs": 0.12,
+                          "horizon_days": 63, "n_moves": 9, "n_positive": 1,
+                          "variance_split": {"book_beta": 0.67, "systematic_pct": 39.7}}}
+    rb.persist(res, lake_dir=tmp_path)
+    df = lake.read_table("rebalance_best_moves", lake_dir=tmp_path)
+    assert len(df) == 1 and bool(df.iloc[0]["in_plan"]) is True and df.iloc[0]["t"] == 0.31
+
+    res["run_id"] = "run_bm2"
+    res["best_moves"] = {"error": "covariance unavailable"}
+    rb.persist(res, lake_dir=tmp_path)
+    assert set(lake.read_table("rebalance_best_moves", lake_dir=tmp_path)["run_id"]) == {"run_bm"}

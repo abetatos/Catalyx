@@ -1559,6 +1559,43 @@ function swapLedger(R) {
     veto: a rotation marked <i>does not pay</i> is still recommended above.</p></div>`;
 }
 
+// Best moves (v15.3): every candidate trade priced in one currency. A COLUMN — it moves nothing
+// and the rows above ignore it. The ± and t say how far a net is to be trusted; a move whose net
+// sits inside its own error is a measurement of nothing, and the page prints it as such.
+function bestMovesPanel(R) {
+  const M = R.best_moves || [];
+  if (!M.length) return '';
+  const h = M[0], inPlan = M.filter((m) => m.in_plan === true || m.in_plan === 'true');
+  const what = (m) => m.kind === 'swap' ? `${sectorLink(m.sell)} → ${sectorLink(m.buy)}` : `cash → ${sectorLink(m.buy)}`;
+  const signed = (v, d) => v == null ? '—' : (Number(v) > 0 ? '+' : '') + num(v, d);
+  const verdict = (m) => {
+    if (m.net_eur == null || Number(m.net_eur) <= 0) return '<span class="pill">does not pay</span>';
+    if (m.t == null) return '<span class="pill a">pays — error not measured</span>';
+    return Math.abs(Number(m.t)) < 1 ? '<span class="pill a">pays, inside its own error</span>' : '<span class="pill g">pays beyond its error</span>';
+  };
+  return `<div class="card" style="margin-top:14px">
+    <div class="lbl" style="text-transform:uppercase;letter-spacing:.5px;font-size:10px">best moves — every trade in one currency (column, moves nothing)</div>
+    <p class="hint" style="margin:4px 0 8px">${h.n_positive} of ${h.n_moves} moves pay over ${h.horizon_days}d ·
+      book β ${num(h.book_beta, 2)} · ${num(h.book_systematic_pct, 0)}% of its variance is market risk (paid) ·
+      δ ${num(h.delta, 2)} · IC ${num(h.ic, 3)} ± ${num(h.ic_se, 2)}</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>move</th><th class="num">moved</th><th class="num">Δ premium</th><th class="num">Δ alpha</th>
+        <th class="num">Δ risk</th><th class="num">cost</th><th class="num">net</th><th class="num">± se</th>
+        <th class="num">t</th><th>verdict</th></tr></thead>
+      <tbody>${M.map((m) => `<tr>
+        <td>${what(m)}${m.in_plan === true || m.in_plan === 'true' ? ' <span class="pill g">in plan</span>' : ''}</td>
+        <td class="num">${eur(m.eur)}</td><td class="num">${signed(m.d_premium_eur, 1)}</td>
+        <td class="num">${signed(m.d_alpha_eur, 1)}</td><td class="num">${signed(m.d_risk_eur, 1)}</td>
+        <td class="num">${num(m.cost_eur, 1)}</td><td class="num"><b>${signed(m.net_eur, 1)}</b></td>
+        <td class="num">${m.net_se_eur == null ? '—' : num(m.net_se_eur, 1)}</td>
+        <td class="num">${m.t == null ? '—' : num(m.t, 1)}</td><td>${verdict(m)}</td></tr>`).join('')}</tbody></table></div>
+    <p class="hint" style="margin:6px 0 0">Net = Δ market premium (β × equity risk premium) + Δ rank alpha
+    (IC × Δz × σ) + Δ risk (market-implied risk aversion × Δ variance) − CGT and spread, in euros. Cutting beta is
+    not free: a high-beta line is paid for its market risk, so only residual risk is worth trading away. ${inPlan.length
+      ? `The greedy plan takes ${inPlan.length} move${inPlan.length > 1 ? 's' : ''}.` : 'No move pays its cost: holding is the priced answer.'}
+    It is a read-out, not a rule.</p></div>`;
+}
+
 function renderRebalance() {
   const R = OV.rebalance;
   const card = (l, v, cls, sub) => `<div class="card"><div class="lbl">${l}</div><div class="big ${cls || ''}">${v}</div>${sub ? `<div class="lbl">${sub}</div>` : ''}</div>`;
@@ -1669,7 +1706,7 @@ function renderRebalance() {
           ? '—' : (r.dz_required == null ? '∞' : num(r.dz_required, 2))}</td>
       <td>${freshPill(r.catalyst_freshness)} ${regimePill(r.regime_state)}</td>
       <td class="hint">${escapeHtml(r.reason || '')}</td></tr>`).join('')}
-    </tbody></table></div>` + swapLedger(R) + selectionPanel(R);
+    </tbody></table></div>` + swapLedger(R) + bestMovesPanel(R) + selectionPanel(R);
 
 
 

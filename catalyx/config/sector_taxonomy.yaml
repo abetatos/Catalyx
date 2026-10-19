@@ -49,7 +49,7 @@ sectors:
 - id: us_defense_prime_contractors
   label: "US Defense — Prime Contractors"
   parent: defense
-  investable: true
+  investable: false
   etf_proxy_quality: good
   demand_drivers:
   - "US DoD budget (mandatory + discretionary)"
@@ -59,7 +59,18 @@ sectors:
     US primes (USD cost base, DoD procurement law, FMS) are a different order book from the EU primes in
     eu_defense_prime_contractors. The vehicle is U.S. Aerospace & Defence, so it also holds commercial
     aerospace names, not only primes.
-  watch_only: false
+  watch_only: true
+  retired_2026_10_19: true
+  retired_reason: >-
+    Sin vehiculo listado en el broker del usuario (Revolut ES). DFCU.DE (iShares U.S. Aerospace
+    & Defence UCITS, IE000IR2DEM6) es valido y comprable en teoria, pero el usuario lo busco el
+    2026-10-19 y no aparece. Mismo caso que cloud_software_saas (v14.0): la lista curada del
+    broker, no la regulacion. Se conserva el vehiculo como `broker_absent` para que vuelva intacto.
+  watch_triggers:
+  - Revolut ES lista DFCU.DE (o cualquier UCITS de aeroespacial y defensa de EE. UU.) como ETF
+  - >-
+    El usuario abre un broker adicional con acceso a Xetra o LSE (entonces vuelve directo --
+    el vehiculo y la tesis ya estan verificados, solo faltaba la plaza)
   reinstated_2026_10_17: true
   reinstated_reason: >-
     iShares U.S. Aerospace & Defence UCITS (IE000IR2DEM6, DFCU.DE, Xetra, ~$458M) meets the retirement

@@ -89,4 +89,10 @@ def test_a_cap_on_the_wrong_base_would_flatten_the_book():
     if "error" in out or len(out["holdings"]) < 6:
         pytest.skip("no lake snapshot in this environment")
     w = sorted(h["weight_pct"] for h in out["holdings"])
-    assert w[-1] - w[0] < 3.0
+    good = pf.build_model_holdings("catalyx", persist=False)
+    g = sorted(h["weight_pct"] for h in good["holdings"])
+    # Relative, not an absolute band: the live spread moves with every run's scores (it read 2.08
+    # when written and 5.06 later), but the wrong base must stay clamped to the total-capital
+    # number and visibly flatter than the correct one.
+    assert w[-1] <= prof["construction"]["max_position_pct"] + 1e-6
+    assert (w[-1] - w[0]) < 0.5 * (g[-1] - g[0])

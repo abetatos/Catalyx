@@ -16,6 +16,8 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 import pandas as pd
+import copy
+
 import pytest
 
 from catalyx.execution import portfolio, rebalance
@@ -79,7 +81,14 @@ def test_the_live_profile_gate_does_not_re_cut_todays_book():
     c = portfolio.load_profile("catalyx")["construction"]
     assert c["entry_gate"]["min_catalyst_alignment"] == 40
     built = portfolio.build_model_holdings("catalyx", persist=False)
-    assert built["conviction_gate"]["n_excluded"] == 0
+    # The property is "the gate does not move the book", not "nobody fails the floor": a name
+    # ranked below the cut can fail it (oil_majors, CA 32.9) without touching a single holding.
+    # Asserting n_excluded == 0 tied the test to the live tail of the ranking.
+    ungated = copy.deepcopy(portfolio.load_profile("catalyx"))
+    ungated["construction"]["entry_gate"]["enabled"] = False
+    baseline = portfolio.build_model_holdings("catalyx", persist=False, profile=ungated)
+    book = lambda b: sorted((h["sector_id"], h["weight_pct"]) for h in b["holdings"])
+    assert book(built) == book(baseline)
     assert built["positions"] == c["max_positions"]
 
 

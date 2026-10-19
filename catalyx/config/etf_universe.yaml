@@ -31,7 +31,8 @@
 #   `name` debe ser el longName REAL devuelto, no el que te gustaria que fuera.
 #
 # CAMPOS
-#   broker_access:  verified = operado de hecho por el usuario (evidencia en data/movements/)
+#   broker_access:  verified = operado de hecho por el usuario (evidencia en data/movements/),
+#                              o visto por el usuario en la app del broker (IUS2.DE, 2026-10-19)
 #                   assumed  = UCITS en LSE/XETRA/Euronext/SIX; alta probabilidad en
 #                              Revolut ES pero SIN confirmar en la app todavia
 #                   broker_absent = instrumento VALIDO (UCITS + KID + plaza PRIIPs) que el
@@ -137,12 +138,12 @@ etf_universe:
       currency: USD
       ucits: true
       instrument: etf
-      broker_access: assumed
+      broker_access: broker_absent
       ter: 0.38
       aum_m_usd: 458
-      recommendation_tier: 1
-      notes: "IE000IR2DEM6, indice Dow Jones U.S. Select Aerospace & Defence Capped 35/20. Cotiza en USD en Xetra (el FX EUR/USD entra en el retorno). Lanzado 2026-06-29 en yfinance: ~80 barras, SIN momentum 12-1 hasta mediados de 2027 y 6m incompleto. Incluye aeroespacial comercial, no solo primes. Reinstated 2026-10-17; `assumed` hasta confirmar en la app."
-      last_verified: "2026-10-17"
+      recommendation_tier: 3
+      notes: "NO LISTADO en Revolut ES (el usuario lo busco el 2026-10-19): instrumento valido, el broker no lo ofrece. Conservado intacto para si aparece. IE000IR2DEM6, indice Dow Jones U.S. Select Aerospace & Defence Capped 35/20. Cotiza en USD en Xetra (el FX EUR/USD entra en el retorno). Lanzado 2026-06-29 en yfinance: ~80 barras, SIN momentum 12-1 hasta mediados de 2027 y 6m incompleto. Incluye aeroespacial comercial, no solo primes. Reinstated 2026-10-17, retirado de nuevo 2026-10-19 por broker_absent."
+      last_verified: "2026-10-19"
 
   space_defense_satellite:
     - ticker: "JEDI.DE"
@@ -555,12 +556,12 @@ etf_universe:
       currency: EUR
       ucits: true
       instrument: etf
-      broker_access: assumed
+      broker_access: verified
       ter: 0.35
       aum_m_usd: 1004
       recommendation_tier: 1
-      notes: "yfinance longName omite 'UCITS'; el fondo es iShares S&P U.S. Banks UCITS ETF USD (Acc), IE00BD3V0B10, Irlanda, 39 posiciones (grandes bancos US, NO regionales: no es KRE/KBE). Linea Xetra EUR, 506 barras. Reinstated 2026-10-17; `assumed` hasta confirmar en la app."
-      last_verified: "2026-10-17"
+      notes: "yfinance longName omite 'UCITS'; el fondo es iShares S&P U.S. Banks UCITS ETF USD (Acc), IE00BD3V0B10, Irlanda, 39 posiciones (grandes bancos US, NO regionales: no es KRE/KBE). Linea Xetra EUR, 506 barras. Reinstated 2026-10-17. El usuario confirmo el 2026-10-19 que aparece en Revolut (visto en la app, aun no operado)."
+      last_verified: "2026-10-19"
     - ticker: "BNKS.L"
       name: "iShares S&P U.S. Banks ETF"
       exchange: LSE
@@ -571,7 +572,7 @@ etf_universe:
       ter: 0.35
       aum_m_usd: 1004
       recommendation_tier: 2
-      notes: "MISMO fondo que IUS2.DE (IE00BD3V0B10), linea LSE en USD. Solo si IUS2 no aparece en el buscador."
+      notes: "MISMO fondo que IUS2.DE (IE00BD3V0B10), linea LSE en USD. IUS2.DE aparece en el broker (2026-10-19), asi que esta linea ya no se necesita; se conserva como respaldo."
       last_verified: "2026-10-17"
 
   crypto_infrastructure:

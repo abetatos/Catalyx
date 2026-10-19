@@ -140,6 +140,55 @@ def effective_attribution(m: dict) -> tuple[list[dict], str | None, set[str]]:
             {str(c) for c in (last.get("not_attributed") or [])})
 
 
+ROLES = ("catalyst", "diversifier")
+
+
+def sector_roles(movements_dir: Path | None = None) -> dict[str, dict]:
+    """Why each OPEN line is held (schema 1.4): {sector: {role, as_of, rationale}}.
+
+    Only sectors with a declared non-default role appear, so the caller's default - `catalyst`,
+    the full rule table - is what an absent key means. The latest `reattribution` entry that
+    DECLARES a role wins; an entry with no `role` does not reset it (re-attributing drivers must
+    not silently turn a diversifier back into a rank-sold line). Only movements of the line's
+    CURRENT open episode count: qty is replayed per vehicle in time order, and the episode starts
+    when it leaves zero - a line closed and reopened starts as a `catalyst`, because a role was a
+    judgement about THAT holding. An unknown role value is ignored (reads as `catalyst`): a typo
+    must fail toward the rule that can sell, never toward the one that cannot.
+    """
+    qty: dict[str, float] = {}
+    episode: dict[str, list[dict]] = {}
+    for m in load_all(movements_dir):
+        etf = (m.get("vehicle") or {}).get("etf")
+        if not etf:
+            continue
+        q = float(m.get("qty") or 0.0)
+        if m.get("action") in _BUY_ACTIONS:
+            if qty.get(etf, 0.0) <= 1e-9:
+                episode[etf] = []
+            qty[etf] = qty.get(etf, 0.0) + q
+            episode.setdefault(etf, []).append(m)
+        elif m.get("action") in _SELL_ACTIONS:
+            qty[etf] = max(0.0, qty.get(etf, 0.0) - q)
+            if qty[etf] <= 1e-9:
+                episode[etf] = []
+            else:
+                episode.setdefault(etf, []).append(m)
+    out: dict[str, dict] = {}
+    for etf, movs in episode.items():
+        if qty.get(etf, 0.0) <= 1e-9:
+            continue
+        for m in movs:
+            for e in m.get("reattribution") or []:
+                role = e.get("role")
+                if role not in ROLES:
+                    continue
+                sid = m.get("sector_id")
+                if sid not in out or str(e.get("as_of") or "") >= str(out[sid]["as_of"] or ""):
+                    out[sid] = {"role": role, "as_of": str(e.get("as_of") or "") or None,
+                                "rationale": e.get("rationale")}
+    return {s: v for s, v in out.items() if v["role"] != "catalyst"}
+
+
 def catalyst_ledger(movements_dir: Path | None = None,
                     resolve_merged: bool = True) -> list[dict]:
     """Per-catalyst credit and per-catalyst RISK — two different numbers, and the cap needs the

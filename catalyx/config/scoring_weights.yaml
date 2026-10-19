@@ -1360,6 +1360,50 @@ rebalance_rules:
     exit_watcher: [reduce]
     reduce_fraction: 0.5       # "reduce" = halve the line, not a token trim
 
+  # HOLD ZONE + SLOT RULE (v15.2) — buy at the top, hold until the SELL rule fires.
+  # THE DEFECT. `sell_if_any.rank_out_of_top: 10` x `rank_out_consecutive: 2` declares that a
+  # held line is sold after two cycles outside the top-10. It never governed: a held name that
+  # falls out of the 6-name MODEL book gets a 0% target, reads as maximally overweight, and the
+  # overweight TRIM closes the whole line in the very first cycle it is out - the SELL rule's
+  # streak never gets to count. The 6/7 cut sits 0.02-0.12 composite_z apart and the cycle-to-cycle
+  # noise is 0.10-0.16 (median) - so the cut was deciding the book. Measured: 19 movements in 4.5
+  # months, cybersecurity sold at 8th and rebought 16.9% higher, water sold the day after buying.
+  # WHAT IT DOES. A held name absent from the model book keeps its euros (target = what is held,
+  # ceilinged at max_position_pct) while the sell rule has not fired, i.e. while its out-of-cut
+  # streak is under `rank_out_consecutive`. Every fundamental exit (exit watcher, broken regime,
+  # dead catalyst, drawdown), the overweight TRIM and the profit ladder still reach it first.
+  # AND the other half: a BUY of a name not held only FILLS A FREE LINE (held lines after this
+  # table's exits < n_target). A swap into a full book needs a line to free up through the exit
+  # rules above - the swap hurdle prices it, it does not authorise it.
+  # NO NEW THRESHOLD: the cut is `sell_if_any`, the line count is `book_shape.n_target`. The model
+  # book is untouched (it must stay reproducible from a run alone) - only `rebalance` changes.
+  hold_zone:
+    enabled: true              # false restores the v15.1 behaviour exactly
+
+  # BEST MOVES (v15.3) — a COLUMN, weight 0: it prints beside the table and moves nothing.
+  # Every candidate trade priced in one currency, € over the calibration horizon:
+  #     net = Δ(β·ERP) + Δ(IC·z·σ_cs) − δ/2·ΔVar − (CGT + spread)
+  # No threshold: δ = ERP/σ²(market) is the market's own implied risk aversion (Black-Litterman),
+  # IC is the skill the book is already sized on (λ·tilt_ic_target), σ_cs and Σ are measured, the
+  # cost is the row's real tax and spread, and the slot price is the best move left outside.
+  # The ERP is the one declared input, and the beta-vs-variance trade-off does NOT depend on it
+  # (δ and the premium scale together) — it only sets that trade-off against alpha and cost.
+  # Full rationale: catalyx/execution/best_moves.py. Promotion to a rule is a user decision.
+  best_moves:
+    enabled: true
+    equilibrium_erp: 0.05      # equity risk premium, the standard Black-Litterman input
+    market_proxy: "SPY"        # in EUR, like every other series in the covariance
+    cov_weeks: 56              # same window `cluster_risk_pass` and the risk budget read
+    min_weeks: 40
+    # The free trades are a PRICE, not a wall (user, 2026-10-19: "si nos cobran por alguna no pasa
+    # nada… prefiero una buena cartera"). Each leg beyond the review's free ones costs this much.
+    # ASSUMPTION, not a tariff: the user said "not super high" and gave no number. At EUR 1 it
+    # does not move the plans; replace with the real fee when known.
+    extra_trade_fee_eur: 1.0
+    # k × the market-implied risk aversion at which the RISK PRICE frontier is evaluated. A grid
+    # to read a price off, not a threshold: nothing is decided at any k.
+    risk_price_k: [1, 1.5, 2, 3, 4, 6, 10]
+
   # RE-SCORE — "we do not know" is a real state, and it used to masquerade as SELL (plan v4 D6).
   # `rank_out_streak` counted a MISSING rank as "outside the cut", so a sector absent from a run's
   # sector_snapshot — including absent because the universe changed shape — accumulated a sell

@@ -688,6 +688,11 @@ def _bake_overview(dist: Path) -> dict:
                 swaps = [w for w in (q("SELECT * FROM rebalance_swap "
                                        f"WHERE run_id = '{rid}'") if has("rebalance_swap") else [])
                          if w.get("from_sector")]
+                # v15.3 — the best-moves column. Absent when the column errored or was off: the page
+                # then shows nothing rather than a "no move pays" it never computed.
+                best_moves = (q("SELECT * FROM rebalance_best_moves "
+                                f"WHERE run_id = '{rid}' ORDER BY rank")
+                              if has("rebalance_best_moves") else [])
                 overrides = q("SELECT run_id, sector_id, rule_action, chosen_action, "
                               "chosen_trade_eur, author, reason, "
                               "substr(CAST(logged_at AS VARCHAR),1,19) AS logged_at "
@@ -750,6 +755,7 @@ def _bake_overview(dist: Path) -> dict:
                         "shortfall_breached": rows[0].get("book_shortfall_breached"),
                     } if rows else None),
                     "swaps": swaps,
+                    "best_moves": best_moves,
                     "rows": rows,
                     "metrics_by_sector": {m["sector_id"]: m for m in metrics},
                     "book": book,

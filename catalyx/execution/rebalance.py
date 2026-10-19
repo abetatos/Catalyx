@@ -57,6 +57,7 @@ PRECEDENCE = ("SELL", "REDUCE", "TRIM", "RE-SCORE", "ADD", "BUY", "HOLD")
 _TABLE = "rebalance"
 _OVERRIDE_TABLE = "override_log"
 _SWAP_TABLE = "rebalance_swap"
+_BEST_TABLE = "rebalance_best_moves"
 
 # Words the output may never contain in an action column. Kept as data so a test can assert it:
 # the prose ban of §4.4 is only real if something checks it.
@@ -174,7 +175,11 @@ def decide_action(row: dict, cfg: dict) -> dict:
 
         streak = int(row.get("rank_out_streak") or 0)
         need = int(sell.get("rank_out_consecutive", 2) or 2)
-        if streak >= need:
+        # v15.4 - a DIVERSIFIER is held to lower the book's variance, not for its rank; the
+        # rank-out streak measures something it was never bought for. Everything ABOVE this line
+        # (exit watcher, regime, dead driver, re-score) and below it (drawdown, the ceiling TRIM,
+        # the profit ladder) still applies - the role removes ONE exit, the one on the wrong axis.
+        if streak >= need and not row.get("diversifier"):
             # Name the span, not just the count: "3 consecutive cycles" covered anything from ten
             # days to two months before the cycle floor, and the reader could not tell which.
             span = row.get("rank_streak_days")
@@ -243,6 +248,26 @@ def decide_action(row: dict, cfg: dict) -> dict:
             return {"action": "TRIM",
                     "reason": f"profit ladder: +{row.get('unrealized_pct'):.0f}% ≥ "
                               f"{rung['gain_pct_min']:.0f}%"}
+        # v15.2 — left the model book, but the SELL rule above has not fired: the out-of-cut
+        # streak is under `rank_out_consecutive`. After both trims for the same reason as the
+        # crowding branch below: it suppresses the exit the model-book cut manufactured, never
+        # the ceiling nor the profit ladder.
+        if row.get("diversifier_hold"):
+            sr = row.get("score_rank")
+            return {"action": "HOLD",
+                    "reason": "diversifier: held to lower book variance, not for its rank"
+                              + (f" (universe rank {sr})" if sr else "")
+                              + " - exits by a fundamental rule, or when the best-moves plan finds"
+                                " a better diversifier"}
+        if row.get("hold_zone"):
+            sr = row.get("score_rank")
+            streak = int(row.get("rank_out_streak") or 0)
+            need = int(sell.get("rank_out_consecutive", 2) or 2)
+            return {"action": "HOLD",
+                    "reason": "hold zone: not in the model book"
+                              + (f" (universe rank {sr})" if sr else "")
+                              + f"; SELL-rule streak {streak}/{need} below top-"
+                                f"{sell.get('rank_out_of_top')} — exits by that rule, not by the cut"}
         if row.get("crowding_excluded_only"):
             cr = row.get("crowding_risk")
             bar = row.get("max_crowding")
@@ -1181,6 +1206,47 @@ def deployment_ramp_plan(rows: list[dict], deployed_eur: float, deployable_eur: 
 
 # ── The risk budget in the action table (v10 P6/P7) ─────────────────────────
 
+def new_line_slot_pass(rows: list[dict], n_target: int, cfg: dict) -> dict:
+    """A BUY of a line not held only fills a FREE line (v15.2). Mutates `rows`.
+
+    Lines held after this table's exits = held rows that are not a SELL and not a full exit. A
+    new line is allowed while that count is under `n_target`, in universe-rank order (the leader
+    is never skipped to make room). The rest become HOLD with the reason: the book is full and a
+    swap needs an exit rule to free a line - the same sentence for every deferred name, so it can
+    be audited. ADD rows are untouched (a held line is not a new line), and so is every sale.
+
+    It exists because the hold zone alone would leave the model free to ask for a 7th line: the
+    cut that used to SELL the old name now keeps it, and the BUY of the newcomer would double the
+    exposure the cut was meant to rotate. Together they make a swap a decision of the sell rules,
+    not of a 0.07z wobble.
+    """
+    if not (cfg.get("hold_zone", {}) or {}).get("enabled", False):
+        return {"enabled": False, "n_target": n_target, "lines_after_exits": None, "deferred": []}
+    lines = sum(1 for r in rows
+                if float(r.get("actual_eur") or 0.0) > 0
+                and r.get("rule_action") != "SELL" and not is_full_exit(r))
+    deferred, granted = [], []
+    buys = sorted((r for r in rows if r.get("rule_action") == "BUY"
+                   and float(r.get("actual_eur") or 0.0) <= 0),
+                  key=lambda r: (_clean_rank(r.get("score_rank")) or 999, r["sector_id"]))
+    for r in buys:
+        if lines < n_target:
+            lines += 1
+            granted.append(r["sector_id"])
+            continue
+        deferred.append({"sector_id": r["sector_id"], "trade_eur": float(r["trade_eur"] or 0.0),
+                         "score_rank": r.get("score_rank")})
+        r["rule_action"], r["trade_eur"] = "HOLD", 0.0
+        r["reason"] = (f"no free line: the book holds {n_target} lines after this table's exits "
+                       f"(n_target) — a swap needs a SELL rule to free one, not a rank cut")
+        for k in ("spread_eur", "cost_drag_eur"):
+            r[k] = 0.0
+        for k in ("breakeven_pct", "dz_required", "expected_edge_eur", "net_edge_eur"):
+            r[k] = None
+    return {"enabled": True, "n_target": n_target, "lines_after_exits": lines,
+            "granted": granted, "deferred": deferred}
+
+
 def cluster_risk_pass(rows: list[dict], clusters: list[dict], cfg: dict) -> dict:
     """Let CONCENTRATION IN RISK, not only in euros, speak in the action table.
 
@@ -1714,6 +1780,65 @@ def _snapshot_scores(run_id: str, lake_dir: Path | None = None) -> dict[str, dic
             "composite_z": float(z) if z is not None and z == z else None,
             "composite": float(c) if c is not None and c == c else None,
         }
+    return out
+
+
+def _best_moves_floor() -> float | None:
+    """The book's own entry floor on composite_z — `min_composite_z` of the catalyx profile."""
+    from catalyx.execution.portfolio import load_profile
+    f = (load_profile("catalyx").get("construction") or {}).get("min_composite_z")
+    return None if f is None else float(f)
+
+
+def _best_moves_drivers(sectors: set) -> dict:
+    """{sector: {driver, …}} the way the standing cap reads it (`movement_repo.cap_check`): a HELD
+    line by its effective attribution — including a driver the review deliberately declined —
+    and a name not held yet by the structural drivers of its sector study. One definition of
+    "cluster", so the risk price is judged against the same budget the table warns about."""
+    from catalyx.execution import portfolio
+    from catalyx.store import movement_repo as mr
+    from catalyx.store import structural_catalyst_repo as scr
+    smap, merged = portfolio._sector_catalyst_map(), scr.merged_map()
+    structural = {str(d.get("id")) for d in scr._load_all() if d.get("id")}
+    held: dict = {}
+    for m in mr.load_all():
+        if m["action"] in mr._BUY_ACTIONS:
+            held.setdefault(str(m.get("sector_id") or ""), m)
+    out = {}
+    for sid in sectors:
+        mov = held.get(sid)
+        raw = ({merged.get(a["catalyst_id"], a["catalyst_id"]) for a in mr.effective_attribution(mov)[0]}
+               if mov is not None else {merged.get(c, c) for c in (smap.get(sid) or [])})
+        out[sid] = raw & structural
+    return out
+
+
+def _best_moves_eligible(run_id: str, cfg: dict, investable: set,
+                         lake_dir: Path | None = None) -> set:
+    """Names a BUY could reach today (v15.3): investable, through the CA entry gate (an IMPUTED
+    CA is not judged), in a regime and maturity `buy_if` admits. The vehicle is checked by the
+    caller. Same gate the model book applies — the column chooses inside the mandate."""
+    from catalyx.execution.portfolio import load_profile
+    from catalyx.store import lake
+    df = lake.read_table("sector_snapshot", lake_dir=lake_dir)
+    if df.empty:
+        return set()
+    df = df[df["run_id"] == run_id]
+    gate = float(((load_profile("catalyx").get("construction") or {}).get("entry_gate") or {})
+                 .get("min_catalyst_alignment", 0.0) or 0.0)
+    buy = cfg.get("buy_if", {}) or {}
+    out = set()
+    for _, r in df.iterrows():
+        sid = str(r["sector_id"])
+        if investable and sid not in investable:
+            continue
+        ca, imp = r.get("catalyst_alignment"), r.get("ca_imputed")
+        if not (imp is True or (ca == ca and ca is not None and float(ca) >= gate)):
+            continue
+        if _in(r.get("regime_state"), buy.get("regime_not")) or \
+                _in(r.get("narrative_maturity"), buy.get("maturity_not")):
+            continue
+        out.add(sid)
     return out
 
 
@@ -2363,6 +2488,17 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
 
     model_by_sector = {m["sector_id"]: m for m in model}
     sectors = list(dict.fromkeys(list(model_by_sector) + list(positions)))
+    hold_zone_on = bool((cfg.get("hold_zone", {}) or {}).get("enabled", False))
+    hold_zone_names: list[str] = []
+    sell_need = int(sell_cfg.get("rank_out_consecutive", 2) or 2)
+    # v15.4 - why each open line is held. A failure reads as "no role declared", i.e. the full
+    # rule table: a mechanism that can cancel a sale must fail toward the sale.
+    try:
+        from catalyx.store import movement_repo as _mrr
+        roles = _mrr.sector_roles()
+    except Exception:                                          # pragma: no cover - defensive
+        roles = {}
+    diversifier_names: list[str] = []
 
     rows, realized_ytd = [], float(book.get("realized_ytd_eur", 0.0))
     for sid in sectors:
@@ -2391,6 +2527,28 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         if sid in crowd_excl and p is not None:
             cap_eur = denom * float(cfg.get("max_position_pct", 100.0)) / 100.0
             target_eur = round(min(actual_eur, cap_eur), 2)
+        # v15.2 — the same reading for a held name the 6-name cut left out while the SELL rule's
+        # streak has not completed: "no opinion yet", not "zero". See scoring_weights `hold_zone`.
+        in_hold_zone = (hold_zone_on and p is not None and sid not in model_by_sector
+                        and sid not in crowd_excl and not stale_cfg
+                        and int((streaks.get(sid) or {}).get("missing", 0) or 0) <
+                        int((cfg.get("rescore_if", {}) or {}).get("missing_runs_min", 2) or 2)
+                        and int((streaks.get(sid) or {}).get("streak", 0) or 0) < sell_need)
+        if in_hold_zone:
+            cap_eur = denom * float(cfg.get("max_position_pct", 100.0)) / 100.0
+            target_eur = round(min(actual_eur, cap_eur), 2)
+            hold_zone_names.append(sid)
+        # v15.4 - a diversifier outside the model book has no model opinion, not a zero one: the
+        # same reading as the crowding and hold-zone branches above (and the same ceiling), but
+        # permanent - it does not expire with the SELL streak, because that streak is not what
+        # it is held for. Inside the model book it is sized like any other line.
+        is_div = p is not None and (roles.get(sid) or {}).get("role") == "diversifier"
+        div_hold = (is_div and sid not in model_by_sector and not stale_cfg)
+        if div_hold:
+            diversifier_names.append(sid)
+            if not (in_hold_zone or sid in crowd_excl):
+                cap_eur = denom * float(cfg.get("max_position_pct", 100.0)) / 100.0
+                target_eur = round(min(actual_eur, cap_eur), 2)
         target_pct = round(target_eur / denom * 100.0, 2)
         actual_pct = round(actual_eur / denom * 100.0, 2)
         gap_pp = round(target_pct - actual_pct, 2)
@@ -2418,6 +2576,9 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
             # v11.1 — set only when lifting `max_crowding` would ACTUALLY have selected this
             # name. See `decide_action`: it suppresses the overweight TRIM and nothing else.
             "crowding_excluded_only": sid in crowd_excl,
+            "hold_zone": in_hold_zone,
+            "diversifier": is_div,
+            "diversifier_hold": div_hold,
             "crowding_risk": (crowd_excl.get(sid) or {}).get("crowding_risk"),
             "max_crowding": (crowd_excl.get(sid) or {}).get("max_crowding"),
             # v13.1 — held, but absent from a model book built under a config that has since
@@ -2525,6 +2686,12 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
             "override": None, "override_reason": None,
             **{k: costs[k] for k in ("tax_eur", "spread_eur", "cost_drag_eur")},
         })
+
+    try:
+        n_lines = int(weights.book_shape()["n_target"])
+    except Exception:                                          # pragma: no cover - defensive
+        n_lines = 6
+    slots = new_line_slot_pass(rows, n_lines, cfg)
 
     # RISK AND CONCENTRATION, before the scarcities ration anything (v10 P6/P7). It runs on the
     # finished table because a cluster's risk is a property of the POST-trade book, which does
@@ -2658,6 +2825,40 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
     # What the table does to the BOOK, beside what each row costs to trade (v11.1).
     risk_delta = book_risk_delta(rows)
 
+    # v15.3 — every candidate trade in one currency. A COLUMN: it reads the table, moves nothing.
+    # Priced against the book as HELD (before this table's rows), because the question it answers
+    # is "what is the best use of the next trade slot", not "what does the rule table leave".
+    best = {}
+    if (cfg.get("best_moves", {}) or {}).get("enabled", False):
+        try:
+            from catalyx.execution import best_moves
+            lam = (book_metrics.get("model") or {}).get("tilt_lambda") or 0.0
+            ic_target = float((weights.portfolio_weighting() or {}).get("tilt_ic_target", 0.20)) \
+                if hasattr(weights, "portfolio_weighting") else 0.20
+            shape = weights.book_shape()
+            sig_cs = (disp or {}).get("sigma_cs_pct")
+            if sig_cs is None:
+                raise ValueError("dispersion σ_cs not measured — the alpha leg cannot be priced")
+            best = best_moves.build(
+                rows, z_by_sector, cfg, capital=total_capital, cash_eur=cash_actual,
+                n_target=n_lines, slots=int(budget.get("budget", 6)),
+                neutral_eur=total_capital * float(shape["neutral_weight_pct"]) / 100.0,
+                ic=float(lam) * ic_target, sigma_cs=float(sig_cs) / 100.0,
+                horizon_days=int(exp.get("horizon_days") or 63),
+                realized_ytd=realized_ytd, spread_bps=spread_by_ticker,
+                default_bps=float(cfg.get("spread_bps", 20.0)),
+                eligible=_best_moves_eligible(run_id, cfg, investable, lake_dir=lake_dir),
+                vehicle_fn=_buyable_vehicle,
+                ic_se=(ic_stat or {}).get("se"),
+                drivers=_best_moves_drivers(set(z_by_sector)),
+                budget_pct=float(weights.correlated_catalyst_cap().get(
+                    "max_cluster_variance_pct", 35.0)),
+                min_z=_best_moves_floor(),
+                diversifiers={s for s, r in roles.items()
+                              if r.get("role") == "diversifier" and s in positions})
+        except Exception as exc:
+            best = {"error": f"{type(exc).__name__}: {exc}"}
+
     # ── What NOT acting costs (plan v4 §4 C1/C3/C4) ─────────────────────────────────────────
     as_of = date.today().isoformat()
     # The current run is not in the lake yet — it persists after this returns — so it is appended
@@ -2758,6 +2959,12 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         # running beside it. They are reported separately because where they DISAGREE is the
         # evidence that decides which one survives the cycle.
         "risk_budget": risk_budget, "catalyst_cap": clusters,
+        "best_moves": best,
+        "diversifiers": {s: dict(r) for s, r in roles.items()
+                         if r.get("role") == "diversifier" and s in positions},
+        "hold_zone": {"enabled": bool(slots.get("enabled")),
+                      "held": sorted(hold_zone_names),
+                      "slots": slots},
         "unrecorded": unrecorded, "prior_run_id": prior_run_id,
         "gate": gate, "composite_ic": ic_stat,
         # The entire partial-sale vocabulary, in one place, so the table can state it before the
@@ -2883,8 +3090,43 @@ def persist(result: dict, lake_dir: Path | None = None) -> int:
                                             "as_of": result["as_of"],
                                             "computed_at": computed_at}]),
                           {"run_id": run_id}, overwrite=True, lake_dir=lake_dir)
+    _persist_best_moves(result, computed_at, lake_dir=lake_dir)
     _log_unrecorded(result, lake_dir=lake_dir)
     _log_budget_defers(result, lake_dir=lake_dir)
+    return len(rows)
+
+
+def _persist_best_moves(result: dict, computed_at: str, lake_dir: Path | None = None) -> int:
+    """The best-moves column at its own grain (v15.3), so its picks can be priced at 63 days like
+    every other column: did the top move beat the book it would have replaced? Every priced move
+    of the first round is not kept — the top five plus the plan — and `in_plan` marks the greedy
+    sequence. An errored or disabled column writes NOTHING: an empty partition would read as "no
+    move pays", which is a different statement from "the column could not be computed"."""
+    import pandas as pd
+
+    from catalyx.store import lake
+
+    bm = result.get("best_moves") or {}
+    if not bm or bm.get("error"):
+        return 0
+    plan_keys = {(s["sell"], s["buy"]) for s in bm.get("steps") or []}
+    rows = []
+    for rank, m in enumerate(bm.get("top") or [], 1):
+        rows.append({**m, "rank": rank, "in_plan": (m["sell"], m["buy"]) in plan_keys,
+                     "delta": bm.get("delta"), "erp": bm.get("erp"), "ic": bm.get("ic"),
+                     "ic_se": bm.get("ic_se"), "sigma_cs": bm.get("sigma_cs"),
+                     "horizon_days": bm.get("horizon_days"), "n_moves": bm.get("n_moves"),
+                     "n_positive": bm.get("n_positive"),
+                     "book_beta": (bm.get("variance_split") or {}).get("book_beta"),
+                     "book_systematic_pct": (bm.get("variance_split") or {}).get("systematic_pct")})
+    if not rows:
+        return 0
+    run_id = result["run_id"]
+    lake.append_partition(_BEST_TABLE,
+                          pd.DataFrame([{**r, "run_id": run_id, "strategy": result["strategy"],
+                                         "as_of": result["as_of"], "computed_at": computed_at}
+                                        for r in rows]),
+                          {"run_id": run_id}, overwrite=True, lake_dir=lake_dir)
     return len(rows)
 
 
@@ -3665,6 +3907,10 @@ def render(res: dict) -> str:
         if brd.get("more_correlated"):
             out.append("  ⚠ this table leaves the book MORE correlated than it found it. No row "
                        "is blocked by that — it is the cost the friction lines do not carry.")
+
+    if res.get("best_moves"):
+        from catalyx.execution import best_moves as _bm
+        out.extend(_bm.render(res["best_moves"]))
 
     swaps = res.get("swaps") or []
     if swaps:

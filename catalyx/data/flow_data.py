@@ -103,7 +103,8 @@ _SNAPSHOTS_DIR = _REPO_ROOT / "data" / "snapshots"
 SECTOR_FLOW_TICKERS: dict[str, list[str]] = {
     # ── DEFENSA Y ESPACIO ───────────────────────────────────────────────────────
     "eu_defense_prime_contractors":   ["EUDF.L", "NATO.PA", "DFEN.DE"],  # region-specific (EU) — sin proxy US limpio; puede quedarse en `estimated`
-    "us_defense_prime_contractors":   ["DFCU.DE", "ITA", "XAR"],  # ITA/XAR: US-listed, expose shares; mismo tema (A&D US)
+    # us_defense_prime_contractors RETIRADO a watch_only 2026-10-19 — ver market_data.SECTOR_TICKERS.
+    # Su cadena era ["DFCU.DE", "ITA", "XAR"].
     "space_defense_satellite":        ["JEDI.DE", "ROKT", "ARKX", "UFO"],
     # ── ENERGIA ─────────────────────────────────────────────────────────────────
     "oil_majors_integrated":          ["IUES.L", "XLE", "VDE"],

@@ -60,7 +60,8 @@ SECTOR_TICKERS: dict[str, list[str]] = {
     # ── Defensa y espacio ────────────────────────────────────────────────────
     "eu_defense_prime_contractors":  ["EUDF.L", "NATO.PA", "DFEN.DE"],
     # 2026-10-17: DFCU.DE lanzado 2026-06-29 (~80 barras): el spec 12-1 no es medible hasta 2027.
-    "us_defense_prime_contractors":  ["DFCU.DE"],
+    # us_defense_prime_contractors RETIRADO a watch_only 2026-10-19 (DFCU.DE no esta en el
+    # buscador de Revolut). Su cadena era ["DFCU.DE"] — anotada para que vuelva intacta.
     "space_defense_satellite":       ["JEDI.DE", "JEDI.L"],
     # ── Energia ──────────────────────────────────────────────────────────────
     "oil_majors_integrated":         ["IUES.L"],

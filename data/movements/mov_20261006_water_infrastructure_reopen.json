@@ -1,7 +1,7 @@
 {
   "$schema": "catalyx/schemas/movement.json",
   "id": "mov_20261006_water_infrastructure_reopen",
-  "schema_version": "1.3",
+  "schema_version": "1.4",
   "executed_at": "2026-10-06T12:08:00Z",
   "action": "open",
   "sector_id": "water_infrastructure",
@@ -68,5 +68,19 @@
   },
   "score_context": {
     "run_id": "run_20261006_110833"
-  }
+  },
+  "reattribution": [
+    {
+      "as_of": "2026-10-19",
+      "role": "diversifier",
+      "attribution": [
+        {
+          "catalyst_id": "struct_ai_capex_supercycle",
+          "weight": 1.0
+        }
+      ],
+      "rationale": "Held to LOWER book variance, not for a catalyst. Filed 100% under struct_ai_capex_supercycle only because no water driver exists on file; measured over 56 weeks EUR, leave-one-out against the rest of the AI-capex basket it loads beta 0.15 (rho 0.29) vs 1.39 for semis, and against the whole book rho 0.34 +/- 0.11 (9.2% of book variance on 24.3% of capital). role=diversifier exempts it from the rank-out SELL only; every fundamental exit, the ceiling and the profit ladder still apply. ATTRIBUTION DELIBERATELY UNCHANGED at ai_capex 1.0: moving it to `uncatalyzed` would shrink the notional cap's ai_capex bucket by relabelling alone, which relaxes a risk limit without new evidence. The driver question (own water driver vs no thesis) is open and is decided separately.",
+      "author": "user"
+    }
+  ]
 }
