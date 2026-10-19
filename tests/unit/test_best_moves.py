@@ -190,3 +190,113 @@ def test_extra_trades_are_a_price_not_a_wall():
                    lambda *a: 0.0, 1, 6, 1_250.0, 0.0, over_slot_fee_eur=1.0)
     assert wall["steps"] == [] and len(soft["steps"]) == 1
     assert soft["steps"][0]["cost_eur"] == pytest.approx(1.0)       # one leg beyond the free slot
+
+
+# ── v15.5 — the 63d scorer ────────────────────────────────────────────────────
+
+from catalyx.execution import rebalance as rb  # noqa: E402
+
+_SC = {"scorecard": {"horizon_days": 63, "min_n": 2, "min_effective_windows": 1}}
+
+
+def _sm(pred, real, in_plan=True, as_of="2026-01-05"):
+    return {"predicted_eur": pred, "realized_eur": real, "in_plan": in_plan, "as_of": as_of}
+
+
+def test_a_scorecard_with_no_data_is_empty_not_a_crash():
+    sc = rb.best_moves_scorecard([], _SC)
+    assert sc["rows"] == [] and sc["n_scored"] == 0
+
+
+def test_error_inside_its_own_noise_reads_calibrated_and_outside_it_does_not():
+    ok = rb.best_moves_scorecard([_sm(10, 12), _sm(10, 8), _sm(10, 13), _sm(10, 7)], _SC)
+    assert ok["rows"][0]["verdict"].startswith("calibrated")
+    bad = rb.best_moves_scorecard([_sm(10, -20), _sm(10, -21), _sm(10, -19), _sm(10, -20)], _SC)
+    assert bad["rows"][0]["verdict"] == "over-predicted"
+    under = rb.best_moves_scorecard([_sm(1, 30), _sm(1, 31), _sm(1, 29), _sm(1, 30)], _SC)
+    assert under["rows"][0]["verdict"] == "under-predicted"
+
+
+def test_one_independent_window_is_not_enough_when_two_are_required():
+    sc = rb.best_moves_scorecard([_sm(1, 1)] * 6, {"scorecard": {"min_n": 2,
+                                                                   "min_effective_windows": 2}})
+    assert "not scoreable" in sc["rows"][0]["verdict"] and sc["effective_windows"] == 1
+
+
+def test_in_plan_and_out_of_plan_are_kept_apart():
+    sc = rb.best_moves_scorecard([_sm(5, 5), _sm(5, 5), _sm(5, -5, in_plan=False),
+                                  _sm(5, -5, in_plan=False)], _SC)
+    assert [r["group"] for r in sc["rows"]] == ["in plan", "not in plan"]
+    assert sc["rows"][0]["hit_pct"] == 100.0 and sc["rows"][1]["hit_pct"] == 0.0
+
+
+def _persist_moves(tmp_path, run, as_of, moves):
+    import pandas as pd
+
+    from catalyx.store import lake
+    lake.append_partition("rebalance_best_moves", pd.DataFrame(
+        [{"run_id": run, "as_of": as_of, "rank": i + 1, **m} for i, m in enumerate(moves)]),
+        {"run_id": run}, overwrite=True, lake_dir=tmp_path)
+
+
+def test_an_open_window_costs_no_price_fetch_and_is_pending(tmp_path):
+    _persist_moves(tmp_path, "run_20260828_000000", "2026-08-28", [
+        {"kind": "swap", "sell": "a", "buy": "b", "sell_etf": "A.DE", "buy_etf": "B.DE",
+         "eur": 1000.0, "in_plan": True, "d_premium_eur": 1.0, "d_alpha_eur": 1.0}])
+
+    def boom(*a, **k):
+        raise AssertionError("no complete window - must not fetch")
+    res = rb.score_best_moves(lake_dir=tmp_path, as_of="2026-09-10", price_fn=boom)
+    assert res["scored"] == [] and "window open" in res["pending"][0]["status"]
+
+
+def test_a_swap_is_priced_as_buy_minus_sell_and_a_cash_buy_against_cash(tmp_path):
+    import pandas as pd
+
+    _persist_moves(tmp_path, "run_20260105_000000", "2026-01-05", [
+        {"kind": "swap", "sell": "a", "buy": "b", "sell_etf": "A.DE", "buy_etf": "B.DE",
+         "eur": 1000.0, "in_plan": True, "d_premium_eur": 2.0, "d_alpha_eur": 1.0},
+        {"kind": "buy", "sell": None, "buy": "b", "sell_etf": None, "buy_etf": "B.DE",
+         "eur": 500.0, "in_plan": False, "d_premium_eur": 4.0, "d_alpha_eur": 0.0}])
+    idx = pd.to_datetime(["2026-01-05", "2026-03-06"])
+    px = pd.DataFrame({"A.DE": [100.0, 105.0], "B.DE": [50.0, 60.0]}, index=idx)
+    fn = lambda tickers, start, end: px
+    res = rb.score_best_moves(lake_dir=tmp_path, as_of="2026-04-20", price_fn=fn,
+                              ccy_fn=lambda t: {x: "EUR" for x in t}, fx_fn=lambda *a: {})
+    got = {(s["kind"]): s["realized_eur"] for s in res["scored"]}
+    assert got["swap"] == pytest.approx(1000 * (0.20 - 0.05))
+    assert got["buy"] == pytest.approx(500 * 0.20)
+    assert res["pending"] == []
+
+
+def test_build_stamps_the_vehicle_of_each_leg_on_the_move():
+    m = _built(0.2)["top"][0]
+    assert m["buy_etf"] == "LO.DE" and m["sell_etf"] == "HI.DE"
+
+
+# ── v15.5 — what the dashboard reads ──────────────────────────────────────────
+
+def _result_with(bm_out):
+    return {"run_id": "run_20261019_000000", "strategy": "catalyx", "as_of": "2026-10-19",
+            "best_moves": bm_out, "diversifiers": {"lo": {"role": "diversifier",
+                                                           "as_of": "2026-10-19"}}}
+
+
+def test_risk_price_and_diversifier_health_persist_one_row_per_k_and_per_line(tmp_path):
+    from catalyx.store import lake
+    out = _rp(budget=10.0)
+    bm_out = {"risk_price": out,
+              "diversifier_health": bm.diversifier_health(
+                  {"hi": 3_000.0, "lo": 1_000.0}, _two(s_hi=0.40, s_lo=0.15), 10_000.0, {"lo"}, 56)}
+    n = rb._persist_risk_price(_result_with(bm_out), "t", lake_dir=tmp_path)
+    assert n == len(out["frontier"]) + 1
+    rp = lake.read_table("rebalance_risk_price", lake_dir=tmp_path)
+    assert list(rp["k"]) == [r["k"] for r in out["frontier"]] and rp["budget_pct"].iloc[0] == 10.0
+    dv = lake.read_table("rebalance_diversifier", lake_dir=tmp_path)
+    assert list(dv["sector_id"]) == ["lo"] and dv["role_as_of"].iloc[0] == "2026-10-19"
+
+
+def test_an_errored_column_persists_neither_table(tmp_path):
+    assert rb._persist_risk_price(_result_with({"error": "no cached prices"}), "t",
+                                  lake_dir=tmp_path) == 0
+    assert not list(tmp_path.rglob("*.parquet"))

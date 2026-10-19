@@ -3091,6 +3091,7 @@ def persist(result: dict, lake_dir: Path | None = None) -> int:
                                             "computed_at": computed_at}]),
                           {"run_id": run_id}, overwrite=True, lake_dir=lake_dir)
     _persist_best_moves(result, computed_at, lake_dir=lake_dir)
+    _persist_risk_price(result, computed_at, lake_dir=lake_dir)
     _log_unrecorded(result, lake_dir=lake_dir)
     _log_budget_defers(result, lake_dir=lake_dir)
     return len(rows)
@@ -3128,6 +3129,50 @@ def _persist_best_moves(result: dict, computed_at: str, lake_dir: Path | None = 
                                         for r in rows]),
                           {"run_id": run_id}, overwrite=True, lake_dir=lake_dir)
     return len(rows)
+
+
+def _persist_risk_price(result: dict, computed_at: str, lake_dir: Path | None = None) -> int:
+    """The RISK PRICE frontier and the diversifiers' health, for the dashboard (v15.5). One row per
+    k and one per declared diversifier. An errored column writes nothing - same rule as the moves."""
+    import pandas as pd
+
+    from catalyx.store import lake
+
+    bm = result.get("best_moves") or {}
+    if not bm or bm.get("error"):
+        return 0
+    run_id = result["run_id"]
+    base = {"run_id": run_id, "strategy": result["strategy"], "as_of": result["as_of"],
+            "computed_at": computed_at}
+    n = 0
+    rp = bm.get("risk_price")
+    if rp and rp.get("frontier"):
+        before = sorted((rp.get("clusters_before") or {}).items(), key=lambda kv: -kv[1])
+        rows = []
+        for r in rp["frontier"]:
+            rows.append({**base, "k": r["k"], "legs": r["legs"], "d_return_eur": r["d_return_eur"],
+                         "cost_eur": r["cost_eur"], "vol_after_pct": r["vol_after_pct"],
+                         "worst_cluster": r["worst_cluster"], "worst_share_pct": r["worst_share_pct"],
+                         "within_budget": bool(r["within_budget"]),
+                         "moves": "; ".join((f"{m['sell']}>{m['buy']}" if m["kind"] == "swap"
+                                             else f"cash>{m['buy']}") for m in r["moves"]),
+                         "budget_pct": rp["budget_pct"], "vol_before_pct": rp["vol_before_pct"],
+                         "k_star": rp["k_star"], "closest_k": rp["closest_k"],
+                         "unreachable": bool(rp["unreachable"]),
+                         "worst_before_cluster": before[0][0] if before else None,
+                         "worst_before_pct": before[0][1] if before else None})
+        lake.append_partition("rebalance_risk_price", pd.DataFrame(rows), {"run_id": run_id},
+                              overwrite=True, lake_dir=lake_dir)
+        n += len(rows)
+    dh = bm.get("diversifier_health") or []
+    if dh:
+        roles = result.get("diversifiers") or {}
+        rows = [{**base, **d, "role_as_of": (roles.get(d["sector_id"]) or {}).get("as_of")}
+                for d in dh]
+        lake.append_partition("rebalance_diversifier", pd.DataFrame(rows), {"run_id": run_id},
+                              overwrite=True, lake_dir=lake_dir)
+        n += len(rows)
+    return n
 
 
 _AUTO_DEFER_AUTHORS = ("budget", "ramp")
@@ -3665,6 +3710,171 @@ def score_decisions(lake_dir: Path | None = None, cfg: dict | None = None, price
                     "means a threshold moves by config edit and a CHANGELOG line."}
 
 
+def best_moves_scorecard(scored: list[dict], cfg: dict | None = None) -> dict:
+    """Did the RETURN legs of a best move predict what the two vehicles then did? (v15.5)
+
+    Per move: predicted = d_premium + d_alpha (€, before risk and cost); realized =
+    eur x (r_buy - r_sell) over the window - a buy from cash is measured against cash, which is
+    how the utility priced it. `error` = realized - predicted. The risk leg is NOT scored here: it
+    is a statement about variance, which one 63d path cannot confirm, and the column would only
+    pretend. Grouped by `in_plan`, because the plan is what a rule would act on; ranks 2-5 are
+    context. Same honesty as `decision_scorecard`: a verdict needs `min_n` moves AND
+    `min_effective_windows` non-overlapping horizons, and five runs inside one window are one
+    observation. `calibrated` means |mean error| < 2 se - it is a statement about the SIZE of the
+    prediction, and a column earns a weight only after it is also right about the SIGN (`hit_pct`).
+    """
+    c = (cfg or {}).get("scorecard", {}) or {}
+    min_n = int(c.get("min_n", 5))
+    min_windows = int(c.get("min_effective_windows", 2))
+    horizon = int(c.get("horizon_days", 63))
+
+    starts = sorted({str(r.get("as_of"))[:10] for r in scored or [] if r.get("as_of")})
+    effective, last = 0, None
+    for st in starts:
+        try:
+            d = date.fromisoformat(st)
+        except ValueError:
+            continue
+        if last is None or (d - last).days >= horizon:
+            effective += 1
+            last = d
+
+    groups: dict[str, list[dict]] = {}
+    for r in scored or []:
+        if r.get("realized_eur") is None or r.get("predicted_eur") is None:
+            continue
+        groups.setdefault("in plan" if r.get("in_plan") else "not in plan", []).append(r)
+
+    rows = []
+    for name in ("in plan", "not in plan"):
+        g = groups.get(name) or []
+        if not g:
+            continue
+        err = [float(r["realized_eur"]) - float(r["predicted_eur"]) for r in g]
+        mean_err, se = _mean_se(err)
+        pred, _ = _mean_se([float(r["predicted_eur"]) for r in g])
+        real, _ = _mean_se([float(r["realized_eur"]) for r in g])
+        hits = sum(1 for r in g if (float(r["realized_eur"]) > 0) == (float(r["predicted_eur"]) > 0))
+        if effective < min_windows:
+            verdict = f"~{effective} independent window(s) - not scoreable yet"
+        elif len(g) < min_n:
+            verdict = f"n={len(g)} < {min_n} - not scoreable yet"
+        elif mean_err is None or se is None:
+            verdict = "unmeasured"
+        elif abs(mean_err) < 2 * se:
+            verdict = "calibrated (error inside its own noise)"
+        else:
+            verdict = ("under-predicted" if mean_err > 0 else "over-predicted")
+        rows.append({"group": name, "n": len(g), "mean_predicted_eur": pred,
+                     "mean_realized_eur": real, "mean_error_eur": mean_err, "se": se,
+                     "hit_pct": round(100.0 * hits / len(g), 1), "verdict": verdict})
+    return {"rows": rows, "effective_windows": effective, "horizon_days": horizon,
+            "n_scored": sum(r["n"] for r in rows),
+            "note": "Scores the return legs only (premium + alpha), never the risk leg. A column "
+                    "stays a column until this reads calibrated AND right on sign over >= "
+                    f"{min_windows} independent {horizon}d windows."}
+
+
+def score_best_moves(lake_dir: Path | None = None, cfg: dict | None = None, price_fn=None,
+                     as_of: str | None = None, ccy_fn=None, fx_fn=None) -> dict:
+    """Price every persisted best move over a COMPLETE forward window (v15.5)."""
+    from catalyx.execution import nav_engine
+    from catalyx.store import lake
+
+    cfg = cfg or weights.rebalance_rules()
+    horizon = int((cfg.get("scorecard", {}) or {}).get("horizon_days", 63))
+    as_of = as_of or date.today().isoformat()
+    today = date.fromisoformat(as_of)
+    try:
+        df = lake.read_table(_BEST_TABLE, lake_dir=lake_dir)
+    except Exception:
+        df = None
+    if df is None or df.empty:
+        return {"as_of": as_of, "horizon_days": horizon, "scored": [], "pending": [],
+                "scorecard": best_moves_scorecard([], cfg),
+                "note": "no best-moves run recorded - nothing to score"}
+
+    def _s(v):
+        return None if v is None or v != v else str(v)
+
+    items = []
+    for _, r in df.iterrows():
+        run_as_of = _run_as_of(str(r.get("run_id")), _s(r.get("as_of")))
+        if not run_as_of:
+            continue
+        items.append({"run_id": str(r.get("run_id")), "as_of": run_as_of, "kind": _s(r.get("kind")),
+                      "sell": _s(r.get("sell")), "buy": _s(r.get("buy")),
+                      "sell_etf": _s(r.get("sell_etf")), "buy_etf": _s(r.get("buy_etf")),
+                      "eur": float(r.get("eur") or 0.0), "in_plan": bool(r.get("in_plan")),
+                      "rank": int(r.get("rank") or 0),
+                      "predicted_eur": float(r.get("d_premium_eur") or 0.0)
+                      + float(r.get("d_alpha_eur") or 0.0),
+                      "net_eur": r.get("net_eur")})
+
+    horizon_cut = (today - timedelta(days=horizon)).isoformat()
+    tickers = sorted({t for i in items if i["as_of"] <= horizon_cut
+                      for t in (i["sell_etf"], i["buy_etf"]) if t})
+    px = None
+    if tickers:
+        start = min(i["as_of"] for i in items)
+        fn = price_fn or nav_engine.yfinance_prices
+        try:
+            native = fn(tickers, start, as_of)
+            px = nav_engine._eur_prices(native, start, as_of, ccy_fn or nav_engine._default_ccy_fn,
+                                        fx_fn or nav_engine._default_fx_fn)
+        except Exception:                                      # pragma: no cover - defensive
+            px = None
+
+    def _fwd(etf, a, b):
+        if px is None or not etf or etf not in getattr(px, "columns", []):
+            return None
+        col = px[str(etf)].dropna()
+        win = col[(col.index >= a) & (col.index <= b)] if len(col) else col
+        if len(win) >= 2 and float(win.iloc[0]):
+            return float(win.iloc[-1]) / float(win.iloc[0]) - 1.0
+        return None
+
+    scored, pending = [], []
+    for it in items:
+        end = (date.fromisoformat(it["as_of"]) + timedelta(days=horizon)).isoformat()
+        complete = end <= today.isoformat()
+        r_in = _fwd(it["buy_etf"], it["as_of"], end) if complete else None
+        r_out = _fwd(it["sell_etf"], it["as_of"], end) if (complete and it["kind"] == "swap") else 0.0
+        if r_in is not None and r_out is not None:
+            it["realized_eur"] = round(it["eur"] * (r_in - r_out), 2)
+            scored.append(it)
+        else:
+            it["status"] = (f"window open - {max(0, (date.fromisoformat(end) - today).days)}d to go"
+                            if not complete else
+                            ("no vehicle on the row - cannot price"
+                             if not it["buy_etf"] else "no usable price history in the window"))
+            pending.append(it)
+    return {"as_of": as_of, "horizon_days": horizon, "scored": scored, "pending": pending,
+            "scorecard": best_moves_scorecard(scored, cfg)}
+
+
+def render_best_moves_scorecard(res: dict) -> str:
+    sc = res.get("scorecard") or {}
+    out = [f"BEST MOVES SCORECARD - did the return legs predict the next "
+           f"{res.get('horizon_days')}d? ({res.get('as_of')})", ""]
+    if not sc.get("rows"):
+        out.append(f"  nothing scoreable yet: {len(res.get('pending') or [])} move(s) pending, "
+                   f"no complete {res.get('horizon_days')}d window.")
+        return "\n".join(out)
+    out.append(f"  {'group':<12}{'n':>4}{'pred EUR':>10}{'real EUR':>10}{'error':>9}{'+-se':>7}"
+               f"{'sign hit':>9}  verdict")
+    for r in sc["rows"]:
+        f = lambda v: "-" if v is None else f"{v:+.1f}"
+        out.append(f"  {r['group']:<12}{r['n']:>4}{f(r['mean_predicted_eur']):>10}"
+                   f"{f(r['mean_realized_eur']):>10}{f(r['mean_error_eur']):>9}"
+                   f"{('-' if r['se'] is None else format(r['se'], '.1f')):>7}"
+                   f"{r['hit_pct']:>8.0f}%  {r['verdict']}")
+    out += ["", f"  {sc['note']}"]
+    if res.get("pending"):
+        out.append(f"  {len(res['pending'])} move(s) pending a complete window.")
+    return "\n".join(out)
+
+
 def render_scorecard(res: dict) -> str:
     sc = res.get("scorecard") or {}
     out = [f"RULE SCORECARD — what the table's own actions earned "
@@ -4161,6 +4371,18 @@ def main() -> None:
         a = ap.parse_args(argv)
         res = score_decisions()
         print(json.dumps(res, indent=2, default=str) if a.json else render_scorecard(res))
+        return
+
+    if sub == "best-moves-scorecard":
+        ap = argparse.ArgumentParser(prog="rebalance best-moves-scorecard",
+                                     description="Price the persisted best moves over a complete "
+                                                 "forward window (return legs only).")
+        ap.add_argument("command")
+        ap.add_argument("--json", action="store_true")
+        a = ap.parse_args(argv)
+        res = score_best_moves()
+        print(json.dumps(res, indent=2, default=str) if a.json
+              else render_best_moves_scorecard(res))
         return
 
     ap = argparse.ArgumentParser(description="Target vs actual book, with rule actions and "

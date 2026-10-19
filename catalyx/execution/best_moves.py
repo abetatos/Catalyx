@@ -368,6 +368,11 @@ def build(rows: list[dict], snapshot: dict, cfg: dict, *, capital: float, cash_e
         rp = risk_price(held, {s: True for s in cands}, mu, sigma, delta, H, capital, cost, slots,
                         n_target, neutral_eur, cash_eur, drivers, float(budget_pct),
                         [float(k) for k in bm.get("risk_price_k", [1, 1.5, 2, 3, 4, 6, 10])], fee)
+    # The vehicles each leg would trade, stamped on the move: the 63-day scorer has to price what
+    # would have been BOUGHT, and the vehicle map changes with the universe (v14.x).
+    for m in list(p["first_round"]) + list(p["steps"]):
+        m["sell_etf"] = etf_of.get(m["sell"]) if m.get("sell") else None
+        m["buy_etf"] = etf_of.get(m["buy"])
     split = variance_split({s: e / capital for s, e in held.items()}, betas, sigma, var_mkt)
     dh = diversifier_health(held, sigma, capital, diversifiers or set(), T) if diversifiers else []
     return {"column": True, "delta": round(delta, 3), "diversifier_health": dh, "erp": erp, "market": market, "ic": ic,

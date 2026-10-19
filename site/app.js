@@ -1596,6 +1596,59 @@ function bestMovesPanel(R) {
     It is a read-out, not a rule.</p></div>`;
 }
 
+// RISK PRICE (v15.5): the declared cluster-variance budget read as a price list. Each row is the
+// best plan if variance were worth k x what the market pays for it; the page picks nothing.
+// Diversifiers (v15.4) sit under it: lines held to lower variance, exempt from the rank-out sale.
+function riskPricePanel(R) {
+  const P = R.risk_price || [], D = R.diversifiers || [];
+  if (!P.length && !D.length) return '';
+  const signed = (v, d) => v == null ? '—' : (Number(v) > 0 ? '+' : '') + num(v, d);
+  const short = (c) => String(c || '').replace(/^struct_/, '');
+  const mv = (t) => t ? String(t).split('; ').map((x) => {
+    const [a, b] = x.split('>'); return a === 'cash' ? `cash → ${sectorLink(b)}` : `${sectorLink(a)} → ${sectorLink(b)}`;
+  }).join('<br>') : '—';
+  let html = '';
+  if (P.length) {
+    const h = P[0], ks = h.k_star == null ? null : Number(h.k_star), cl = h.closest_k == null ? null : Number(h.closest_k);
+    const mark = (r) => ks != null && Number(r.k) === ks ? '<span class="pill g">within budget</span>'
+      : (h.unreachable === true || h.unreachable === 'true') && Number(r.k) === cl ? '<span class="pill a">closest to budget</span>' : '';
+    html += `<div class="card" style="margin-top:14px">
+      <div class="lbl" style="text-transform:uppercase;letter-spacing:.5px;font-size:10px">risk price — the ${num(h.budget_pct, 0)}% cluster-variance budget as a price (column, moves nothing)</div>
+      <p class="hint" style="margin:4px 0 8px">Today: vol ${num(h.vol_before_pct, 1)}% · ${short(h.worst_before_cluster)} carries
+        ${num(h.worst_before_pct, 1)}% of book variance. Each row is the same utility run at k × the market&rsquo;s own
+        risk aversion; ${h.unreachable === true || h.unreachable === 'true'
+          ? 'no plan in the grid brings every cluster inside the budget with the candidates on file.'
+          : `k=${num(ks, 1)} is the first that does.`}</p>
+      <div class="tblwrap"><table>
+        <thead><tr><th class="num">k</th><th class="num">Δ return</th><th class="num">friction</th><th class="num">legs</th>
+          <th class="num">vol</th><th>worst cluster</th><th>moves</th><th></th></tr></thead>
+        <tbody>${P.map((r) => `<tr><td class="num"><b>${num(r.k, 1)}</b></td>
+          <td class="num">${signed(r.d_return_eur, 1)}</td><td class="num">${num(r.cost_eur, 1)}</td>
+          <td class="num">${r.legs}</td><td class="num">${num(r.vol_after_pct, 1)}%</td>
+          <td>${short(r.worst_cluster)} ${num(r.worst_share_pct, 1)}%</td><td>${mv(r.moves)}</td><td>${mark(r)}</td></tr>`).join('')}</tbody></table></div>
+      <p class="hint" style="margin:6px 0 0">Δ return is expected premium + alpha in euros over the horizon; friction is CGT, spread and
+        the extra-trade fee (an assumption, not a tariff). A cluster&rsquo;s share of variance is not monotone in k: swapping into a
+        calmer line of the same driver also shrinks the denominator. You choose the point; nothing here trades.</p></div>`;
+  }
+  if (D.length) {
+    html += `<div class="card" style="margin-top:14px">
+      <div class="lbl" style="text-transform:uppercase;letter-spacing:.5px;font-size:10px">diversifiers — held to lower book variance (column, sells nothing)</div>
+      <div class="tblwrap"><table>
+        <thead><tr><th>line</th><th class="num">ρ to rest of book</th><th class="num">± se</th><th class="num">β to rest</th>
+          <th class="num">share of variance</th><th class="num">share of capital</th><th class="num">ratio</th><th>role since</th></tr></thead>
+        <tbody>${D.map((d) => d.rho_rest == null ? `<tr><td>${sectorLink(d.sector_id)}</td><td colspan="7">unmeasured</td></tr>`
+          : `<tr><td>${sectorLink(d.sector_id)}</td><td class="num">${num(d.rho_rest, 2)}</td><td class="num">${num(d.se_rho, 2)}</td>
+          <td class="num">${num(d.beta_rest, 2)}</td><td class="num">${num(d.risk_share_pct, 1)}%</td>
+          <td class="num">${num(d.capital_share_pct, 1)}%</td>
+          <td class="num"><b>${num(d.ratio, 2)}</b> ${Number(d.ratio) < 1 ? '<span class="pill g">diversifying</span>' : '<span class="pill a">no longer</span>'}</td>
+          <td>${d.role_as_of || '—'}</td></tr>`).join('')}</tbody></table></div>
+      <p class="hint" style="margin:6px 0 0">A diversifier is exempt from the rank-out sale only; every fundamental exit, the position ceiling and the
+        profit ladder still apply. Ratio &lt; 1 means the line carries less variance than capital. No threshold sells it:
+        the best-moves plan replaces it when a better diversifier pays its own cost.</p></div>`;
+  }
+  return html;
+}
+
 function renderRebalance() {
   const R = OV.rebalance;
   const card = (l, v, cls, sub) => `<div class="card"><div class="lbl">${l}</div><div class="big ${cls || ''}">${v}</div>${sub ? `<div class="lbl">${sub}</div>` : ''}</div>`;
@@ -1706,7 +1759,7 @@ function renderRebalance() {
           ? '—' : (r.dz_required == null ? '∞' : num(r.dz_required, 2))}</td>
       <td>${freshPill(r.catalyst_freshness)} ${regimePill(r.regime_state)}</td>
       <td class="hint">${escapeHtml(r.reason || '')}</td></tr>`).join('')}
-    </tbody></table></div>` + swapLedger(R) + bestMovesPanel(R) + selectionPanel(R);
+    </tbody></table></div>` + swapLedger(R) + bestMovesPanel(R) + riskPricePanel(R) + selectionPanel(R);
 
 
 

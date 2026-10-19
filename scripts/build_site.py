@@ -693,6 +693,12 @@ def _bake_overview(dist: Path) -> dict:
                 best_moves = (q("SELECT * FROM rebalance_best_moves "
                                 f"WHERE run_id = '{rid}' ORDER BY rank")
                               if has("rebalance_best_moves") else [])
+                risk_price = (q("SELECT * FROM rebalance_risk_price "
+                                f"WHERE run_id = '{rid}' ORDER BY k")
+                              if has("rebalance_risk_price") else [])
+                diversifiers = (q("SELECT * FROM rebalance_diversifier "
+                                  f"WHERE run_id = '{rid}' ORDER BY sector_id")
+                                if has("rebalance_diversifier") else [])
                 overrides = q("SELECT run_id, sector_id, rule_action, chosen_action, "
                               "chosen_trade_eur, author, reason, "
                               "substr(CAST(logged_at AS VARCHAR),1,19) AS logged_at "
@@ -756,6 +762,8 @@ def _bake_overview(dist: Path) -> dict:
                     } if rows else None),
                     "swaps": swaps,
                     "best_moves": best_moves,
+                    "risk_price": risk_price,
+                    "diversifiers": diversifiers,
                     "rows": rows,
                     "metrics_by_sector": {m["sector_id"]: m for m in metrics},
                     "book": book,

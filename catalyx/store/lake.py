@@ -112,6 +112,10 @@ TABLES: dict[str, tuple[str, list[str]]] = {
     # plan took it), so each pick can be priced at 63d like every other column. Only written when
     # the column computed: an errored run leaves no partition rather than a false "nothing pays".
     "rebalance_best_moves": ("portfolio/rebalance_best_moves", ["run_id"]),
+    # v15.5 — the RISK PRICE frontier (one row per risk-aversion multiple k) and the declared
+    # diversifiers' health (one row per line). Same rule as above: written only when computed.
+    "rebalance_risk_price": ("portfolio/rebalance_risk_price", ["run_id"]),
+    "rebalance_diversifier": ("portfolio/rebalance_diversifier", ["run_id"]),
     # every deviation from a rule action, with author + reason. The anti-conservatism ledger:
     # overrides are scored against the rule they replaced once the window matures.
     "override_log":       ("portfolio/override_log",      ["run_id"]),
