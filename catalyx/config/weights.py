@@ -647,7 +647,7 @@ _REBALANCE_RULES_DEFAULT = {
     "net_edge_gate": {"applies_to_taxable_sales": True, "applies_to_purchases": False,
                       "shrinkage_prior_windows": 6.0, "min_windows_to_gate": 3},
     "scorecard": {"horizon_days": 63, "min_n": 5, "min_effective_windows": 2},
-    "overrides": {"authors_allowed": ["user", "claude", "unrecorded", "budget"],
+    "overrides": {"authors_allowed": ["user", "claude", "unrecorded", "superseded", "budget"],
                   "reason_required": True,
                   "defer_is_an_override": True, "score_after_trading_days": 21,
                   "claude_suspended_if": {"min_scored": 5, "net_edge_eur_below": 0.0}},

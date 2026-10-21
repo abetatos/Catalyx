@@ -169,3 +169,66 @@ def test_the_covariance_keeps_the_holding_window_when_the_long_read_fails_or_is_
 def test_injected_prices_keep_their_own_window():
     short = _frame(96)
     assert pm._covariance_frame(short, ["A", "B"], "x", price_fn=lambda *a: None) is short
+
+
+# ── the model NAV: a closed venue is not a missing price ─────────────────────
+
+def _holdings(tmp_path, rows):
+    from catalyx.execution import portfolio as pf
+    from catalyx.store import lake
+    for rid in {r["run_id"] for r in rows}:
+        part = [dict(r, portfolio_id="catalyx", rank_in_portfolio=i + 1)
+                for i, r in enumerate(x for x in rows if x["run_id"] == rid)]
+        lake.append_partition(pf._HOLDING_TABLE, pd.DataFrame(part),
+                              {"portfolio_id": "catalyx", "run_id": rid},
+                              overwrite=True, lake_dir=tmp_path)
+
+
+def _live(tmp_path, frame):
+    return nav.compute_live_nav("catalyx", inception="2026-08-28", as_of="2026-09-02",
+                                price_fn=lambda t, s, e: frame, persist=False, lake_dir=tmp_path)
+
+
+def test_a_segment_opening_on_a_bank_holiday_does_not_turn_that_line_into_cash(tmp_path):
+    # 2026-08-31 was the UK summer bank holiday: the LSE line has no print on the day the second
+    # segment opens. It used to be held as CASH for the whole segment (59.9% of the real book's
+    # model on one day), so a -10% on it never reached the curve.
+    idx = pd.to_datetime(["2026-08-28", "2026-08-31", "2026-09-01", "2026-09-02"])
+    frame = pd.DataFrame({"A.L": [100.0, None, 90.0, 90.0], "B.DE": [100.0] * 4,
+                          "SPY": [100.0] * 4}, index=idx)
+    _holdings(tmp_path, [
+        {"run_id": "run_20260828_100000", "primary_etf": "B.DE", "weight_pct": 100.0},
+        {"run_id": "run_20260831_100000", "primary_etf": "A.L", "weight_pct": 50.0},
+        {"run_id": "run_20260831_100000", "primary_etf": "B.DE", "weight_pct": 50.0}])
+    r = _live(tmp_path, frame)
+    assert abs(r["last_nav"] - 95.0) < 1e-6                 # 0.5 x (-10%) reaches the curve
+    assert r["unpriced_weight_pct"] == 0.0 and r["unpriced_tickers"] == []
+
+
+def test_a_vehicle_that_never_resolves_is_cash_and_the_curve_says_so(tmp_path):
+    idx = pd.to_datetime(["2026-08-28", "2026-08-31", "2026-09-01", "2026-09-02"])
+    frame = pd.DataFrame({"B.DE": [100.0, 100.0, 110.0, 110.0], "SPY": [100.0] * 4}, index=idx)
+    _holdings(tmp_path, [
+        {"run_id": "run_20260828_100000", "primary_etf": "B.DE", "weight_pct": 60.0},
+        {"run_id": "run_20260828_100000", "primary_etf": "DEAD.DE", "weight_pct": 40.0}])
+    r = _live(tmp_path, frame)
+    assert r["unpriced_tickers"] == ["DEAD.DE"]
+    assert abs(r["unpriced_weight_pct"] - 40.0) < 1e-6 and abs(r["unpriced_weight_peak_pct"] - 40.0) < 1e-6
+    assert abs(r["last_nav"] - 106.0) < 1e-6                # 60% invested at +10%, 40% flat cash
+    assert "DEAD.DE" in nav._unpriced_line(r) and "CASH" in nav._unpriced_line(r)
+
+
+def test_a_fully_priced_curve_prints_no_warning():
+    assert nav._unpriced_line({"unpriced_weight_pct": 0.0}) is None
+    assert nav._unpriced_line({}) is None
+
+
+def test_unpriced_weight_mirrors_the_rule_holdings_nav_applies():
+    idx = pd.to_datetime(["2026-08-31", "2026-09-01"])
+    px = pd.DataFrame({"A.L": [None, 90.0], "B.DE": [100.0, 100.0]}, index=idx)
+    h = [{"primary_etf": "A.L", "weight_pct": 50.0}, {"primary_etf": "B.DE", "weight_pct": 50.0}]
+    # on the raw slice the holiday line IS unpriced - which is why the caller forward-fills first
+    assert nav.unpriced_weight(h, px) == (0.5, ["A.L"])
+    assert nav.unpriced_weight(h, px.ffill()) == (0.5, ["A.L"])   # still NaN: nothing before it
+    assert nav.unpriced_weight(h, pd.DataFrame({"A.L": [80.0, 90.0], "B.DE": [1.0, 1.0]},
+                                               index=idx)) == (0.0, [])

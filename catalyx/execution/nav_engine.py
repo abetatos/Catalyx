@@ -340,6 +340,35 @@ def holdings_nav(holdings: list[dict], prices, base: float = 100.0) -> list[dict
     return out
 
 
+def unpriced_weight(holdings: list[dict], prices) -> tuple[float, list[str]]:
+    """Weight (fraction of the book) that `holdings_nav` holds flat as cash for want of a price.
+
+    Mirrors the inclusion rule above exactly: a holding counts as priced only if its column exists
+    and has a value on the first row. Historical model books still name vehicles that no longer
+    resolve (`IQQR.DE`, `LUXE.PA`, `WTRD.L`, `PROL`); their weight is cash in the curve, which is
+    a defensible fallback and an invisible one - a reader comparing the curve with SPY had no way
+    to know that up to ~39% of one segment was not invested at all.
+    """
+    import pandas as pd
+
+    weights: dict[str, float] = {}
+    for h in holdings:
+        etf = h.get("primary_etf") or h.get("etf")
+        if etf:
+            weights[etf] = weights.get(etf, 0.0) + float(h.get("weight_pct", 0.0)) / 100.0
+    if not weights:
+        return 0.0, []
+    cols = [t for t in weights if t in getattr(prices, "columns", [])]
+    priced: set[str] = set()
+    if cols and prices is not None and len(prices):
+        px = prices[cols].ffill().dropna(how="all")
+        if not px.empty:
+            base = px.iloc[0]
+            priced = {t for t in cols if pd.notna(base[t])}
+    missing = sorted(t for t in weights if t not in priced)
+    return round(sum(weights[t] for t in missing), 6), missing
+
+
 # ── Persistence (mode-scoped) ────────────────────────────────────────────────
 
 def _persist_nav_rows(portfolio_id: str, mode: str | None, rows: list[dict],
@@ -527,15 +556,30 @@ def compute_live_nav(portfolio_id: str, inception: str | None = None, as_of: str
     if convert:
         prices = _eur_prices(prices, start, end, ccy_fn or _default_ccy_fn, fx_fn or _default_fx_fn)
 
+    # Carry the last known close INTO each segment. Segments start on run dates and the frame is
+    # the union of several exchanges' calendars, so a segment can open on a day one venue is shut
+    # (2026-08-31 was the UK summer bank holiday): the first row is NaN for LSE lines, and
+    # `holdings_nav` takes "no price on the first row" to mean "unpriceable" and holds that weight
+    # as cash for the whole segment - 59.9% of `catalyx` on one day. Forward-filling BEFORE the
+    # slice gives the base row the previous close, which was known on that day: no look-ahead.
+    prices_ff = prices.ffill() if prices is not None and len(prices) else prices
+
     running = 100.0
     chained: list[dict] = []
+    unpriced_pts = priced_pts = unpriced_peak = 0.0
+    unpriced_names: set[str] = set()
     for i, (d_k, rid) in enumerate(runs):
         seg_start = start if i == 0 else d_k                 # first segment anchored at inception
         seg_end = runs[i + 1][0] if i + 1 < len(runs) else end
-        seg_px = prices.loc[seg_start:seg_end] if prices is not None and len(prices) else prices
+        seg_px = prices_ff.loc[seg_start:seg_end] if prices_ff is not None and len(prices_ff) else prices_ff
         seg = holdings_nav(holdings_by_run[rid], seg_px)     # indexed 100 at seg_start
         if not seg:
             continue
+        u_w, u_tk = unpriced_weight(holdings_by_run[rid], seg_px)
+        unpriced_pts += u_w * len(seg)
+        priced_pts += len(seg)
+        unpriced_peak = max(unpriced_peak, u_w)
+        unpriced_names.update(u_tk)
         for j, pt in enumerate(seg):
             if i > 0 and j == 0:
                 continue                                      # boundary dup with prev segment's last point
@@ -570,6 +614,12 @@ def compute_live_nav(portfolio_id: str, inception: str | None = None, as_of: str
             "last_nav": last["nav"] if last else None,
             "last_return_pct": last["return_pct"] if last else None,
             "last_vs_benchmark_pct": last["vs_benchmark_pct"] if last else None,
+            # Share of the curve that sat in cash because a holding had no price (point-weighted
+            # average and worst segment) - a column on the track record, never a correction of it.
+            "unpriced_weight_pct": (round(unpriced_pts / priced_pts * 100.0, 2)
+                                    if priced_pts else 0.0),
+            "unpriced_weight_peak_pct": round(unpriced_peak * 100.0, 2),
+            "unpriced_tickers": sorted(unpriced_names),
             # The benchmark's OWN return, alongside the differential. `vs_benchmark_pct` is
             # `nav − benchmark_nav`, i.e. a DIFFERENCE in index points — and printing it under a
             # bare "SPY" label read as the benchmark's return, inverting the sign of the only
@@ -792,6 +842,14 @@ def show_nav(portfolio_id: str, lake_dir: Path | None = None) -> dict:
 
 # ── CLI ──────────────────────────────────────────────────────────────────────
 
+def _unpriced_line(r: dict) -> str | None:
+    u = r.get("unpriced_weight_pct") or 0.0
+    if u <= 0:
+        return None
+    return (f"  ⚠ {u:.1f}% of this curve (worst segment {r.get('unpriced_weight_peak_pct', 0):.1f}%) "
+            f"was held as CASH: no price for {', '.join(r.get('unpriced_tickers') or [])}")
+
+
 def _bench_line(r: dict) -> str:
     """`return=X%  SPY +Y%  →  vs benchmark ±Zpp` — the differential is never printed alone.
 
@@ -854,6 +912,8 @@ def main() -> None:
         print(f"  {r['portfolio_id']} (live)  inception={r['inception']}  rebalances={r['rebalances']}  "
               f"{r['start']} → {r['end']}  ({r['points']} pts)")
         print(f"  last NAV={r['last_nav']}  {_bench_line(r)}")
+        if _unpriced_line(r):
+            print(_unpriced_line(r))
     elif args.cmd == "live-all":
         # `post_run.sh` used to run this loop as four separate processes: four interpreter
         # startups, four import graphs and four passes over the same parquet, to answer four
@@ -868,6 +928,8 @@ def main() -> None:
             print(f"  {r['portfolio_id']} (live)  inception={r['inception']}  "
                   f"rebalances={r['rebalances']}  {r['start']} → {r['end']}  ({r['points']} pts)")
             print(f"  last NAV={r['last_nav']}  {_bench_line(r)}")
+            if _unpriced_line(r):
+                print(_unpriced_line(r))
     elif args.cmd == "real":
         r = compute_real_nav(args.portfolio_id, start=args.start, as_of=args.as_of,
                              benchmark=args.benchmark)

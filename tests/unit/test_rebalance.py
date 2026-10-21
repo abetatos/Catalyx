@@ -1509,3 +1509,51 @@ def test_best_moves_persist_at_their_own_grain_and_an_error_writes_nothing(tmp_p
     res["best_moves"] = {"error": "covariance unavailable"}
     rb.persist(res, lake_dir=tmp_path)
     assert set(lake.read_table("rebalance_best_moves", lake_dir=tmp_path)["run_id"]) == {"run_bm"}
+
+
+# ── v15.7: a deviation from a rule that was withdrawn is not a silent decline ─
+
+def test_a_row_the_rule_withdrew_is_superseded_not_unrecorded():
+    u = {"sector_id": "semis", "rule_action": "TRIM", "as_of": "2026-10-17"}
+    epochs = ["2026-10-18"]
+    assert rb.supersession(u, "HOLD", "2026-10-19", epochs) == "2026-10-18"
+
+
+def test_a_row_the_table_still_asks_for_stays_a_silent_decline():
+    u = {"sector_id": "semis", "rule_action": "TRIM", "as_of": "2026-10-17"}
+    assert rb.supersession(u, "TRIM", "2026-10-19", ["2026-10-18"]) is None
+
+
+def test_no_epoch_between_the_two_runs_means_a_price_move_not_a_rule_change():
+    u = {"sector_id": "semis", "rule_action": "TRIM", "as_of": "2026-10-19"}
+    assert rb.supersession(u, "HOLD", "2026-10-21", ["2026-10-18"]) is None   # before both runs
+    assert rb.supersession(u, "HOLD", "2026-10-21", []) is None
+    assert rb.supersession(u, "HOLD", "2026-10-21", None) is None
+
+
+def test_unknown_dates_read_as_not_superseded():
+    assert rb.supersession({"rule_action": "TRIM"}, "HOLD", "2026-10-19", ["2026-10-18"]) is None
+    assert rb.supersession({"rule_action": "TRIM", "as_of": "2026-10-17"}, "HOLD", None,
+                           ["2026-10-18"]) is None
+
+
+def test_the_log_writes_superseded_only_for_rows_marked_so(tmp_path):
+    from catalyx.store import lake
+    res = {"prior_run_id": "run_20261017_x", "as_of": "2026-10-19", "unrecorded": [
+        {"sector_id": "semis", "rule_action": "TRIM", "reason": "r1", "superseded_epoch": "2026-10-18"},
+        {"sector_id": "bio", "rule_action": "TRIM", "reason": "r2", "superseded_epoch": None}]}
+    assert rb._log_unrecorded(res, lake_dir=tmp_path) == 2
+    df = lake.read_table("override_log", lake_dir=tmp_path)
+    by = dict(zip(df["sector_id"], df["author"]))
+    assert by == {"semis": "superseded", "bio": "unrecorded"}
+    assert "retired rule" in df[df.sector_id == "semis"].iloc[0]["reason"]
+
+
+def test_a_superseded_defer_is_a_standing_decision_and_never_a_cash_stance(tmp_path):
+    from catalyx.store import lake
+    rb._log_unrecorded({"prior_run_id": "run_x", "as_of": "2026-10-19", "unrecorded": [
+        {"sector_id": "semis", "rule_action": "TRIM", "reason": "r", "superseded_epoch": "2026-10-18"}]},
+        lake_dir=tmp_path)
+    assert [d["sector_id"] for d in rb._unrecorded_defers(lake_dir=tmp_path)] == ["semis"]
+    assert rb.cash_stance(lake_dir=tmp_path) is None
+    assert "superseded" in rb.weights.rebalance_rules()["overrides"]["authors_allowed"]

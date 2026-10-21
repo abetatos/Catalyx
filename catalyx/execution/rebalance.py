@@ -1504,7 +1504,7 @@ def cash_stance(lake_dir: Path | None = None, cfg: dict | None = None,
     today = date.fromisoformat(as_of or date.today().isoformat())
     live = []
     for _, r in rows.iterrows():
-        if str(r.get("author")) in _AUTO_DEFER_AUTHORS + ("unrecorded",):
+        if str(r.get("author")) in _AUTO_DEFER_AUTHORS + ("unrecorded", "superseded"):
             continue
         try:
             started = date.fromisoformat(str(r.get("logged_at") or "")[:10])
@@ -1635,6 +1635,24 @@ def cash_drag(idle_eur: float, bench_return_pct: float | None, since: str | None
             "forgone_eur": forgone, "model_forgone_eur": model_forgone,
             "verdict": verdict, "headline": head,
             "note": " · ".join(lines)}
+
+
+def supersession(u: dict, current_action: str | None, as_of: str | None,
+                 epochs: list[str] | None) -> str | None:
+    """The rule epoch that withdrew the row behind an unrecorded deviation, or None.
+
+    A deviation is `superseded` when (1) a declared epoch (`rebalance_rules.rule_epochs`) falls
+    after the run that asked for it and on/before the run that detected it, AND (2) the current
+    table no longer asks for the same action on that sector. Both are needed: an epoch alone says
+    nothing about THIS row (the rule may still want it - then it is a real, silent decline), and a
+    changed action alone could be nothing but a price move. Unknown dates read as not superseded -
+    the failure that keeps a deviation charged to someone is the safe one.
+    """
+    prior, now = str(u.get("as_of") or "")[:10], str(as_of or "")[:10]
+    if not prior or not now or not epochs or str(current_action or "") == str(u.get("rule_action")):
+        return None
+    hit = [e for e in sorted(str(x)[:10] for x in epochs) if prior < e <= now]
+    return hit[-1] if hit else None
 
 
 def unrecorded_deviations(prior_rows: list[dict], movements: list[dict],
@@ -2244,7 +2262,7 @@ def _unrecorded_defers(lake_dir: Path | None = None) -> list[dict]:
         return []
     if df.empty or "author" not in df.columns:
         return []
-    return df[df["author"] == "unrecorded"].to_dict("records")
+    return df[df["author"].isin(["unrecorded", "superseded"])].to_dict("records")
 
 
 def _positions_by_sector(rows: list[dict]) -> dict[str, dict]:
@@ -2939,6 +2957,12 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
                         + ", ".join(f"{u['rule_action']} {u['sector_id']}" for u in unrecorded)
                         + ". No movement, no override — logged as DEFER by `unrecorded`.")
 
+    # Which of those silences are really a rule that was withdrawn in between (rule_epochs).
+    _now_action = {r.get("sector_id"): r.get("rule_action") for r in rows}
+    for u in unrecorded:
+        u["superseded_epoch"] = supersession(u, _now_action.get(u["sector_id"]), as_of,
+                                             cfg.get("rule_epochs"))
+
     return {
         "as_of": as_of, "strategy": strategy, "run_id": run_id,
         "book": book_metrics, "warnings": warnings, "overrides": overrides,
@@ -3275,10 +3299,15 @@ def _log_unrecorded(result: dict, lake_dir: Path | None = None) -> int:
     n = 0
     for u in result.get("unrecorded") or []:
         try:
+            epoch = u.get("superseded_epoch")
             log_override(prior, u["sector_id"], u["rule_action"], "DEFER",
                          reason=u["reason"] + " Detected by the run of "
-                                f"{result.get('as_of')}; nobody wrote this decision down.",
-                         author="unrecorded", chosen_trade_eur=0.0, lake_dir=lake_dir)
+                                f"{result.get('as_of')}; "
+                                + (f"the rule table changed on {epoch} (rule_epochs) and no "
+                                   f"longer asks for this - priced against the retired rule."
+                                   if epoch else "nobody wrote this decision down."),
+                         author="superseded" if epoch else "unrecorded",
+                         chosen_trade_eur=0.0, lake_dir=lake_dir)
             n += 1
         except Exception:                                      # pragma: no cover - defensive
             continue
@@ -4095,10 +4124,14 @@ def render(res: dict) -> str:
         out.append("")
         out.append(f"UNRECORDED DEVIATIONS — run {res.get('prior_run_id')} recommended "
                    f"{len(unrec)} action(s) that produced no movement and no override. Each is "
-                   f"logged as a DEFER authored `unrecorded` and priced in ~21 trading days.")
+                   f"logged as a DEFER (`unrecorded`, or `superseded` when a rule epoch "
+                   f"withdrew the row) and priced in ~21 trading days.")
         for u in unrec:
             out.append(f"  {u['rule_action']:<7}{u['sector_id']:<34}"
-                       f"€{abs(u['trade_eur']):>8,.0f}  not executed, not overridden")
+                       f"€{abs(u['trade_eur']):>8,.0f}  "
+                       + (f"not executed; the {u['superseded_epoch']} rule change withdrew it "
+                          f"(logged `superseded`)" if u.get("superseded_epoch")
+                          else "not executed, not overridden"))
     c = res["calibration"]
 
     # What the table does to the BOOK, printed beside what its rows cost to TRADE (v11.1).

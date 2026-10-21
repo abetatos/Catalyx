@@ -1290,6 +1290,14 @@ dislocation:
 # evidence — not an argument in a review. `weights.py _REBALANCE_RULES_DEFAULT` mirrors these.
 rebalance_rules:
   frozen: "2026-08-28"         # provenance only; nothing reads it, everything is dated by it
+  # RULE EPOCHS (v15.7): the dates on which the table started emitting different ROWS for the same
+  # facts (a new rule, a changed exit), not the dates a column was added. A deviation from a run
+  # BEFORE an epoch, detected AFTER it, whose action the current table no longer asks for, is
+  # logged by `superseded` and not by `unrecorded`: the person did not decline that row, the rule
+  # that produced it was withdrawn - and charging it to the "silent declines" tally teaches the
+  # wrong lesson. It is still priced, and kept separate. Add a date here in the same edit as the
+  # rule change, with the CHANGELOG line. 10-18 = v15.2 hold zone + slot rule, 10-19 = v15.4 role.
+  rule_epochs: ["2026-10-18", "2026-10-19"]
   deadband_pp: 2.0             # |gap| below this (points of TOTAL capital) → HOLD, never trade
   min_ticket_eur: 150.0        # below this a trade is spread + friction, not a position change
   max_position_pct: 17.5       # = conviction tier 1, DERIVED from `book_shape` (v6 L1). Was
@@ -1558,7 +1566,7 @@ rebalance_rules:
                                  # window are one observation, not five.
 
   overrides:
-    authors_allowed: [user, claude, unrecorded, budget, ramp]
+    authors_allowed: [user, claude, unrecorded, superseded, budget, ramp]
                                    # `ramp` is the deployment schedule, filed like `budget` and
                                    # for the same reason: a row queued behind this review's
                                    # tranche is the rule working, and pricing it at 21 days is

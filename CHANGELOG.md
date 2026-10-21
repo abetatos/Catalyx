@@ -13,6 +13,16 @@
 
 
 
+## v15.7 — El NAV modelo avisa del peso sin precio, un festivo ya no manda una línea a caja, y `superseded` (2026-10-21)
+
+**Fallo (`nav_engine.compute_live_nav`).** Cada segmento de la curva modelo empieza en una fecha de run y el marco de precios es la unión de calendarios de varias bolsas. `holdings_nav` toma «sin precio en la primera fila» por «sin precio», y deja ese peso en caja plana TODO el segmento. El 2026-08-31 fue festivo en Londres: IH2O.L, SEMI.L, USPY.L y WCLD.L no tenían cierre, y el segmento 08-31→09-01 de `catalyx` estuvo **59,9% en caja**, así que una caída del −10% en esas líneas no llegó a la curva. Ahora el marco se rellena hacia delante ANTES de recortar el segmento (el cierre anterior ya se conocía ese día: sin look-ahead). Efecto sobre el NAV vivo, medido: `catalyx` +2,66% → **+1,35%** (−5,8 → −7,2pp contra SPY), `equal_weight` −1,1pp, `momentum` −0,6pp, `low_crowding` −0,1pp. Las cifras de «caja que te salvó» y `execution_alpha_pp` que dependen de ese NAV se mueven con ellas.
+
+**Columna (`unpriced_weight`, `unpriced_weight_pct`, `unpriced_weight_peak_pct`, `unpriced_tickers`).** Lo que sigue sin precio de verdad (`IQQR.DE`, `LUXE.PA`, `WTRD.L`, `PROL`, el marcador `No pure-play ETF`) sigue siendo caja, que es un fallback defendible, pero ahora la curva lo dice: tras el arreglo `catalyx` 3,7% de la curva (pico 9,9%), `equal_weight` 11,2% (25,0%), `low_crowding` 17,3% (48,3%), `momentum` 0,3%. Mi estimación de v15.6 («décimas de pp») subestimaba el efecto en `low_crowding` y `equal_weight`. Es historia pre-universo-v2.0: no se reescribe, se muestra.
+
+**`superseded` (`rebalance_rules.rule_epochs`, `rebalance.supersession`).** Una desviación del run anterior que se detecta tras un cambio de reglas y cuya acción la tabla de hoy ya no pide se registra con autor `superseded` y no `unrecorded`: esa persona no declinó la fila, la regla que la emitió se retiró. Exige las dos condiciones (una época declarada entre ambos runs Y que la acción actual difiera); sin fechas legibles cae a `unrecorded`. Se sigue puntuando, en un tally aparte. `rule_epochs` hoy: 2026-10-18 (v15.2) y 2026-10-19 (v15.4); se añade una fecha en el mismo edit que cualquier cambio de reglas que altere qué filas emite la tabla. Aplicado a la única fila que cumple en el log real (`semiconductors_design` TRIM del run 10-17); `biotech_drug_development` sigue siendo `unrecorded` porque la tabla de hoy vuelve a pedir el TRIM.
+
+1128 tests.
+
 ## v15.6 — Las métricas de posición describen la posición ACTUAL, y la tabla dice el λ con el que se construyó (2026-10-21)
 
 Auditoría de un run real (pipeline completo del 2026-10-19) en busca de lo que "no cuadraba". Seis hallazgos, cuatro arreglos de código, ninguno toca una regla ni un umbral.
@@ -25,7 +35,7 @@ Auditoría de un run real (pipeline completo del 2026-10-19) en busca de lo que 
 
 **4. La línea SELECTION leía una clave que nadie escribe** (`res["tilt_lambda"]`) y siempre imprimía «λ=0.00 … el ranking no dimensiona el libro» junto a una línea TILT que decía 0,30. Lee `book.model.tilt_lambda` y el texto depende del valor.
 
-**Medido y NO cambiado.** (a) Las cuatro «volatilidades del libro» (11,1 / 15,0 / 18,0 / 23,8%) eran bases distintas, no un error: best moves pondera por capital TOTAL (la caja es vol 0: 15,1% × 0,72 ≈ 11%), BOOK RISK por capital invertido, la contribución de riesgo era el fallback diario (punto 3) y el 23,8% es la vol realizada del TWR, con la composición de cada momento. (b) Las carteras modelo históricas (junio–julio) siguen refiriendo `IQQR.DE`, `LUXE.PA`, `WTRD.L`, `PROL` y `NO PURE-PLAY ETF`, que no se pueden valorar: `holdings_nav` deja ese peso en caja plana sin avisar (7–10% en `catalyx`/`equal_weight`, hasta ~39% en `low_crowding` el 07-30). Efecto estimado en décimas de pp, sin cambiar ninguna conclusión; es historia pre-universo-v2.0 y no se reescribe. Abierto: que el NAV modelo AVISE el peso sin precio. (c) Las desviaciones `unrecorded` se puntúan contra la tabla que las emitió; si el código cambió entre medias (v15.2 retiró los TRIM de semis y biotech), la desviación se puntúa contra una regla que ya no existe. Abierto: marcarlas como `superseded`.
+**Medido y NO cambiado.** (a) Las cuatro «volatilidades del libro» (11,1 / 15,0 / 18,0 / 23,8%) eran bases distintas, no un error: best moves pondera por capital TOTAL (la caja es vol 0: 15,1% × 0,72 ≈ 11%), BOOK RISK por capital invertido, la contribución de riesgo era el fallback diario (punto 3) y el 23,8% es la vol realizada del TWR, con la composición de cada momento. (b) Las carteras modelo históricas (junio–julio) siguen refiriendo `IQQR.DE`, `LUXE.PA`, `WTRD.L`, `PROL` y `NO PURE-PLAY ETF`, que no se pueden valorar (ver v15.7: aquí estimé «décimas de pp» y estaba equivocado). (c) Las desviaciones `unrecorded` se puntúan contra la tabla que las emitió; si el código cambió entre medias (v15.2 retiró los TRIM de semis y biotech), la desviación se puntúa contra una regla que ya no existe. Abierto: marcarlas como `superseded`.
 
 1118 tests (16 nuevos en `test_position_episodes.py`, 2 en `test_diversifier_role.py`).
 
