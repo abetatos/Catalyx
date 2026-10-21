@@ -3009,6 +3009,14 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
                               if r.get("role") == "diversifier" and s in positions})
         except Exception as exc:
             best = {"error": f"{type(exc).__name__}: {exc}"}
+    # v15.8 — each line's share of book variance beside the notional ceiling, against the same
+    # budget a cluster gets. A COLUMN: the ceiling is notional, so a volatile line can grow to it
+    # carrying far more risk than a quiet one; this shows it coming. Unmeasured stays None.
+    _lr = (best or {}).get("line_risk") or {}
+    _budget = float(weights.correlated_catalyst_cap().get("max_cluster_variance_pct", 35.0))
+    for p in partials:
+        p["var_share_pct"] = _lr.get(p["sector_id"])
+        p["var_budget_pct"] = _budget
 
     # ── What NOT acting costs (plan v4 §4 C1/C3/C4) ─────────────────────────────────────────
     as_of = date.today().isoformat()
@@ -4398,7 +4406,8 @@ def render(res: dict) -> str:
         out.append("PARTIALS — distance to each rung (a partial should never arrive as a surprise)")
         lab = next((p["ladder"]["label"] for p in res["partials"] if p.get("ladder")), "—")
         out.append(f"  {'sector':<30} {'gain':>7} {'rk':>3}  {'ladder ' + lab:<44}"
-                   f"{'overweight ' + res['partials'][0]['overweight']['label']:<26} ")
+                   f"{'overweight ' + res['partials'][0]['overweight']['label']:<36}"
+                   f"{'var share / ' + format(res['partials'][0].get('var_budget_pct') or 35.0, '.0f') + '%':>16}")
         for p in res["partials"]:
             g = "—" if p["unrealized_pct"] is None else f"{p['unrealized_pct']:+.1f}%"
             lad = p.get("ladder")
@@ -4421,8 +4430,12 @@ def render(res: dict) -> str:
             ow_s = (f"MET ({ow['over_pp']:+.1f}pp)" if ow["met"]
                     else f"needs {ow['need_pp']:+.1f}pp more")
             live = f"  → {p['action']} LIVE" if p["live"] else ""
+            vs = p.get("var_share_pct")
+            vs_s = "unmeasured" if vs is None else (
+                f"{vs:.1f}% " + ("OVER" if vs > (p.get("var_budget_pct") or 35.0)
+                                 else f"({(p.get('var_budget_pct') or 35.0) - vs:.1f}pp left)"))
             out.append(f"  {str(p['sector_id'])[:30]:<30} {g:>7} "
-                       f"{str(p['rank'] or '—'):>3}  {lad_s:<44}{ow_s:<24}{live}")
+                       f"{str(p['rank'] or '—'):>3}  {lad_s:<44}{ow_s:<36}{vs_s:>16}{live}")
 
     # v13.3 — WHAT THE MODEL ACTUALLY CONTRIBUTES, printed instead of assumed. With λ=0 the
     # ranking sizes nothing, so the whole of the model's contribution is the top-N cut; these

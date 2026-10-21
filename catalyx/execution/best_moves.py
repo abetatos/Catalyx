@@ -227,6 +227,17 @@ def risk_price(held, candidates, mu, sigma, delta, horizon_years, capital, cost_
             "unreachable": k_star is None}
 
 
+def line_risk_shares(book: dict, sigma: dict, capital: float) -> dict:
+    """Each held line's Euler share of book variance, in %. A line is a cluster of one."""
+    names = [s for s, e in book.items() if e > 0 and s in sigma]
+    w = {s: book[s] / capital for s in names}
+    var = sum(w[a] * w[b] * sigma[a][b] for a in names for b in names)
+    if var <= 0:
+        return {}
+    return {a: round(w[a] * sum(w[b] * sigma[a][b] for b in names) / var * 100.0, 1)
+            for a in names}
+
+
 def variance_split(w: dict, betas: dict, sigma: dict, var_mkt: float) -> dict:
     """Book variance split into MARKET (β²σ²_m) and RESIDUAL. A driver can carry most of the
     book's variance because it carries most of its BETA — which is paid — or because it carries
@@ -381,6 +392,7 @@ def build(rows: list[dict], snapshot: dict, cfg: dict, *, capital: float, cash_e
             "n_positive": sum(1 for m in p["first_round"] if m["net_eur"] > 0),
             "betas": {s: round(b, 2) for s, b in betas.items()},
             "variance_split": split, "risk_price": rp,
+            "line_risk": line_risk_shares(held, sigma, capital),
             "min_z": min_z, "extra_trade_fee_eur": fee,
             **{k: v for k, v in p.items() if k != "book"},
             "top": p["first_round"][:5], "first_round": None,

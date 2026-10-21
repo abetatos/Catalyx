@@ -50,3 +50,12 @@ def test_render_names_the_origin_and_the_unreachable_book():
         origin, reachability({"deferred": [{"sector_id": "ai", "trade_eur": 2652.0}]}, [], 10_000),
         None))
     assert "target moved since +4.1" in out and "UNREACHABLE" in out and "ai" in out
+
+
+def test_line_risk_shares_are_euler_and_sum_to_the_book():
+    from catalyx.execution.best_moves import line_risk_shares
+    sig = {"a": {"a": 0.09, "b": 0.01}, "b": {"a": 0.01, "b": 0.01}}
+    sh = line_risk_shares({"a": 1000.0, "b": 1000.0}, sig, 10_000)
+    assert math.isclose(sum(sh.values()), 100.0, abs_tol=0.2)
+    assert sh["a"] > 80 > sh["b"], "the volatile line carries most of the variance at equal euros"
+    assert line_risk_shares({}, sig, 10_000) == {}
