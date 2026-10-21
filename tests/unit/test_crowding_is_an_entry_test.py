@@ -52,7 +52,7 @@ def test_a_held_name_excluded_only_by_crowding_is_not_trimmed(cfg):
 
 def test_an_overweight_name_NOT_excluded_by_crowding_is_still_trimmed(cfg):
     # The suppression must not become a general amnesty for overweight positions.
-    out = rb.decide_action(_row(gap_pp=-5.6), cfg)
+    out = rb.decide_action(_row(gap_pp=-5.6, actual_pct=19.0), cfg)
     assert out["action"] == "TRIM"
 
 
@@ -86,7 +86,7 @@ def test_crowding_suppresses_the_exit_but_never_the_concentration_ceiling(cfg):
     ceiling and becomes real above it — and the ordinary TRIM both fires and sizes to the cap.
     """
     # Above the ceiling: the excess is real overweight and is trimmed.
-    over_cap = rb.decide_action(_row(gap_pp=-6.0, crowding_excluded_only=True,
+    over_cap = rb.decide_action(_row(gap_pp=-6.0, actual_pct=19.0, crowding_excluded_only=True,
                                      crowding_risk=94.4, max_crowding=85.0, score_rank=4), cfg)
     assert over_cap["action"] == "TRIM"
     # Inside the ceiling the gap is zero by construction, and the row explains itself.
@@ -98,7 +98,7 @@ def test_crowding_suppresses_the_exit_but_never_the_concentration_ceiling(cfg):
 
 def test_a_missing_flag_reproduces_the_old_behaviour_exactly(cfg):
     # Rows built before this existed carry no flag at all. They must trim as they always did.
-    assert rb.decide_action(_row(gap_pp=-5.6), cfg)["action"] == "TRIM"
+    assert rb.decide_action(_row(gap_pp=-5.6, actual_pct=19.0), cfg)["action"] == "TRIM"
 
 
 # ── The counterfactual that sets the flag ────────────────────────────────────
@@ -224,5 +224,5 @@ def test_a_stale_model_book_degrades_to_re_score_not_a_trim(cfg):
 def test_the_stale_guard_does_not_swallow_a_real_overweight(cfg):
     """It is narrow by construction: only a name ABSENT from the model book gets the flag
     (`build` sets it that way), so a book member 5.6pp overweight is still trimmed for real."""
-    out = rb.decide_action(_row(gap_pp=-5.6, stale_model_cfg=None), cfg)
+    out = rb.decide_action(_row(gap_pp=-5.6, actual_pct=19.0, stale_model_cfg=None), cfg)
     assert out["action"] == "TRIM"

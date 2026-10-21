@@ -126,7 +126,7 @@ def test_the_role_never_shields_a_fundamental_exit(cfg):
 
 
 def test_the_role_does_not_lift_the_ceiling_or_the_ladder(cfg):
-    assert rb.decide_action(_row(gap_pp=-4.5), cfg)["action"] == "TRIM"
+    assert rb.decide_action(_row(gap_pp=-4.5, actual_pct=19.0), cfg)["action"] == "TRIM"
     assert rb.decide_action(_row(unrealized_pct=40.0), cfg)["action"] == "TRIM"
 
 

@@ -241,8 +241,24 @@ def decide_action(row: dict, cfg: dict) -> dict:
             return {"action": "RE-SCORE",
                     "reason": f"no model target: {row['stale_model_cfg']} — re-run the score "
                               f"before acting on this line"}
-        if over >= float(trim.get("overweight_pp_min", 4.0)):
-            return {"action": "TRIM", "reason": f"{over:.1f}pp above target"}
+        # v15.8 — the overweight TRIM is a CEILING, not a drift-from-target band. The 4pp-from-
+        # target version fired on the TARGET moving (biotech: 17.5% -> 13.4% when the model book
+        # recomposed, price flat) and sold winners for outgrowing a number the model keeps
+        # changing; it also contradicted the doctrine that deleted the +50% rung. What bounds a
+        # line is `max_position_pct`, applied to what is HELD. The minimum ticket is the dead band.
+        # With the hold zone off (v15.1) targets of 0% are the exit path, so the old basis stays.
+        basis = str(trim.get("overweight_basis", "ceiling")).lower()
+        if not (cfg.get("hold_zone", {}) or {}).get("enabled", False):
+            basis = "target"
+        if basis == "target":
+            if over >= float(trim.get("overweight_pp_min", 4.0)):
+                return {"action": "TRIM", "reason": f"{over:.1f}pp above target"}
+        else:
+            cap = float(cfg.get("max_position_pct", 100.0))
+            pct = row.get("actual_pct")
+            if pct is not None and float(pct) > cap:
+                return {"action": "TRIM", "to_ceiling": True,
+                        "reason": f"{float(pct):.1f}% of capital, above the {cap:.1f}% ceiling"}
         rung = profit_ladder_step(row.get("unrealized_pct"), rank, cfg.get("profit_ladder"))
         if rung:
             return {"action": "TRIM",
@@ -849,6 +865,9 @@ def partial_rungs(rows: list[dict], cfg: dict) -> list[dict]:
     """
     trim = cfg.get("trim_if", {}) or {}
     over_min = float(trim.get("overweight_pp_min", 4.0))
+    ceiling = (str(trim.get("overweight_basis", "ceiling")).lower() != "target"
+               and bool((cfg.get("hold_zone", {}) or {}).get("enabled", False)))
+    cap = float(cfg.get("max_position_pct", 100.0))
     ladder = sorted(cfg.get("profit_ladder") or [], key=lambda r: float(r.get("gain_pct_min", 0)))
     out: list[dict] = []
     for r in rows:
@@ -884,14 +903,99 @@ def partial_rungs(rows: list[dict], cfg: dict) -> list[dict]:
             "action": r.get("rule_action"),
             "live": r.get("rule_action") in ("TRIM", "REDUCE", "SELL"),
             "ladder": lad,
-            "overweight": {
+            "overweight": ({
+                "label": f"above the {cap:.1f}% ceiling",
+                "over_pp": round(float(r.get("actual_pct") or 0.0) - cap, 2),
+                "need_pp": (None if float(r.get("actual_pct") or 0.0) > cap
+                            else round(cap - float(r.get("actual_pct") or 0.0), 2)),
+                "met": float(r.get("actual_pct") or 0.0) > cap,
+            } if ceiling else {
                 "label": f"≥ {over_min:.0f}pp above target",
                 "over_pp": round(over_pp, 2),
                 "need_pp": None if over_pp >= over_min else round(over_min - over_pp, 2),
                 "met": over_pp >= over_min,
-            },
+            }),
         })
     return out
+
+
+def overweight_decomposition(rows: list[dict], anchors: dict[str, dict]) -> list[dict]:
+    """Where each held line's overweight COMES FROM, anchored to the last time it was decided.
+
+    `anchors` {sector: the rebalance row of the last review at or before the line's most recent
+    trade}. Then  over = actual - target_now  splits exactly into
+        (actual - target_anchor)      the position against what was AIMED at when it was decided
+                                      (price drift and execution),
+      + (target_anchor - target_now)  the model changing its mind since.
+    Comparing with the previous run instead hides a target that moved earlier (biotech: the
+    target fell 17.5% -> 13.4% between two runs and the line then read "position +0.1, target
+    0.0"). A COLUMN: pp of total capital, moves nothing.
+    """
+    out = []
+    for r in rows:
+        if float(r.get("actual_eur") or 0.0) <= 0:
+            continue
+        over = -float(r.get("gap_pp") or 0.0)
+        p = anchors.get(r["sector_id"])
+        if p is None or p.get("target_pct") is None:
+            out.append({"sector_id": r["sector_id"], "over_pp": round(over, 2),
+                        "from_position_pp": None, "from_target_pp": None, "anchor": None})
+            continue
+        t0 = float(p["target_pct"])
+        out.append({"sector_id": r["sector_id"], "over_pp": round(over, 2),
+                    "from_position_pp": round(float(r["actual_pct"]) - t0, 2),
+                    "from_target_pp": round(t0 - float(r["target_pct"]), 2),
+                    "anchor": str(p.get("as_of") or "")[:10] or None,
+                    "target_at_anchor_pct": round(t0, 2)})
+    return sorted(out, key=lambda d: -d["over_pp"])
+
+
+def _decision_anchors(sectors: set[str], lake_dir: Path | None = None) -> dict[str, dict]:
+    """{sector: rebalance row of the last review at or before its most recent trade}."""
+    from catalyx.store import lake, movement_repo
+
+    try:
+        last: dict[str, str] = {}
+        for movs in movement_repo.open_episodes(movement_repo.load_all()).values():
+            for m in movs:
+                sid, at = m.get("sector_id"), str(m.get("executed_at") or "")[:10]
+                if sid in sectors and at > last.get(sid, ""):
+                    last[sid] = at
+        df = lake.read_table(_TABLE, lake_dir=lake_dir)
+    except Exception:
+        return {}
+    if df.empty or "as_of" not in df.columns:
+        return {}
+    df = df.assign(_d=df["as_of"].astype(str).str[:10])
+    out = {}
+    for sid, day in last.items():
+        sub = df[(df["sector_id"] == sid) & (df["_d"] <= day)].sort_values(["_d", "run_id"])
+        if not sub.empty:
+            out[sid] = sub.iloc[-1].to_dict()
+    return out
+
+
+def reachability(slots: dict, rows: list[dict], total_capital: float,
+                 note: dict | None = None) -> dict:
+    """How much of the model book the slot rule forbids buying.
+
+    Every held line's target is a share of a book that includes the lines the table wants to
+    BUY; when the book is full (v15.2) those BUYs are deferred and the euros they would have
+    absorbed are nowhere - held lines were compared with a book that cannot exist, and a trim
+    toward it landed in cash. `build` now recomputes the targets WITHOUT the unreachable lines
+    (`note` carries what the first pass asked for); `unreachable_eur` is whatever is still
+    deferred after that.
+    """
+    deferred = (slots or {}).get("deferred") or []
+    eur = round(sum(float(d.get("trade_eur") or 0.0) for d in deferred), 2)
+    note = note or {}
+    return {"unreachable_eur": eur,
+            "unreachable_pct": round(eur / total_capital * 100.0, 2) if total_capital else None,
+            "sectors": [d["sector_id"] for d in deferred],
+            "excluded": sorted(note.get("excluded") or []),
+            "reallocated_eur": round(float(note.get("eur") or 0.0), 2),
+            "reallocated_pct": round(float(note.get("eur") or 0.0) / total_capital * 100.0, 2)
+            if total_capital else None}
 
 
 def close_target_weights(weights_pct: list[float], max_position_pct: float,
@@ -2348,8 +2452,13 @@ def _positions_by_sector(rows: list[dict]) -> dict[str, dict]:
 
 def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None = None,
           exit_fn=None, lake_dir: Path | None = None, total_capital: float | None = None,
-          expected_fn=None, overrides_fn=None) -> dict:
-    """Target-vs-actual with a rule action and an after-tax net edge per sector."""
+          expected_fn=None, overrides_fn=None, _unreachable: frozenset = frozenset(),
+          _depth: int = 0, _reach_note: dict | None = None,
+          _reserved_eur: float = 0.0, _ratio: dict | None = None) -> dict:
+    """Target-vs-actual with a rule action and an after-tax net edge per sector.
+
+    `_unreachable`/`_depth`/`_reach_note` are internal: the second pass that recomputes the
+    targets without the lines the slot rule will not let the book buy (see `reachability`)."""
     from catalyx.scorer import calibration, exit_watcher
 
     cfg = cfg or weights.rebalance_rules()
@@ -2384,12 +2493,19 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
     dropped_weights = sorted((float(m.get("weight_pct") or 0.0) for m in model
                               if m["sector_id"] in dropped), reverse=True)
     model = [m for m in model if m["sector_id"] not in dropped]
+    # Lines a previous pass found unbuyable (book full, v15.2) are not part of the book this
+    # table can reach. They leave the model like a dropped name does, but are NOT substituted:
+    # another unbuyable line would only move the problem. A held line always stays.
+    if _unreachable:
+        model = [m for m in model
+                 if m["sector_id"] not in _unreachable or m["sector_id"] in positions]
 
     # SUBSTITUTE before rescaling: a dropped name's weight goes to the next investable, buyable
     # sector by composite, not to the incumbents. Only what substitution cannot cover is
     # rescaled (`close_target_weights`), so a universe cut cannot masquerade as a conviction
     # increase in the six names that happened to survive it.
-    subs = _substitutes(run_id, {m["sector_id"] for m in model} | set(positions), investable,
+    subs = _substitutes(run_id, {m["sector_id"] for m in model} | set(positions) | set(_unreachable),
+                        investable,
                         n=len(dropped), lake_dir=lake_dir)
     for w, s in zip(dropped_weights, subs):
         s["weight_pct"] = w
@@ -2428,7 +2544,10 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
     n_intact = sum(1 for m in model
                    if int(m.get("rank_in_portfolio", 99)) <= intact_rank_max
                    and (m.get("regime_state") or "intact") == "intact")
-    ratio = deploy_ratio(n_intact, _vix_last(), cfg)
+    # The deploy ratio is a statement about the MARKET (how many leaders are intact), so the
+    # recomputed pass keeps the first pass's: a leader the book has no free line for today is
+    # still a leader.
+    ratio = _ratio or deploy_ratio(n_intact, _vix_last(), cfg)
     deployable = round(total_capital * ratio["ratio"], 2)
 
     exp = (expected_fn or (lambda: calibration.expected_returns(
@@ -2518,6 +2637,11 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         roles = {}
     diversifier_names: list[str] = []
 
+    # Reachable-targets pass: the lines held WITHOUT a model opinion (hold zone, diversifiers,
+    # crowding-excluded) take their own euros out of the deployable, so the model lines share
+    # what is left and the target book still closes on the deploy rule.
+    pool_eur = max(deployable - float(_reserved_eur), 0.0) if _depth else deployable
+    reserved_now = 0.0
     rows, realized_ytd = [], float(book.get("realized_ytd_eur", 0.0))
     for sid in sectors:
         m = model_by_sector.get(sid, {})
@@ -2529,7 +2653,9 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         # `weight_pct_effective` is the CLOSED weight (post substitution + rescale + cap); the
         # raw `weight_pct` is the frozen model weight and no longer sums to the book.
         target_eur = round(float(m.get("weight_pct_effective",
-                                       m.get("weight_pct", 0.0)) or 0.0) / 100.0 * deployable, 2)
+                                       m.get("weight_pct", 0.0)) or 0.0) / 100.0 * pool_eur, 2)
+        if _depth:                  # smaller pool, same euro ceiling per line (close_cap on deployable)
+            target_eur = min(target_eur, round(close_cap / 100.0 * deployable, 2))
         actual_eur = round(float(mv), 2) if mv is not None else (
             round(float(invested), 2) if invested is not None else 0.0)
         denom = total_capital or 1.0
@@ -2567,6 +2693,8 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
             if not (in_hold_zone or sid in crowd_excl):
                 cap_eur = denom * float(cfg.get("max_position_pct", 100.0)) / 100.0
                 target_eur = round(min(actual_eur, cap_eur), 2)
+        if p is not None and (in_hold_zone or div_hold or sid in crowd_excl):
+            reserved_now += target_eur
         target_pct = round(target_eur / denom * 100.0, 2)
         actual_pct = round(actual_eur / denom * 100.0, 2)
         gap_pp = round(target_pct - actual_pct, 2)
@@ -2576,6 +2704,7 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         ctx = {
             "held": p is not None,
             "gap_pp": gap_pp,
+            "actual_pct": actual_pct,
             "rank": rank,
             "regime_state": (p or m).get("regime_state") or "intact",
             "narrative_maturity": m.get("narrative_maturity"),
@@ -2609,7 +2738,11 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
 
         rung = profit_ladder_step(ctx["unrealized_pct"], rank, cfg.get("profit_ladder")) \
             if action == "TRIM" else None
-        sized = size_trade(action, gap_eur, mv, cfg,
+        size_gap_eur = gap_eur
+        if decision.get("to_ceiling"):          # a ceiling TRIM goes back to the ceiling, not the target
+            size_gap_eur = round(denom * float(cfg.get("max_position_pct", 100.0)) / 100.0
+                                 - actual_eur, 2)
+        sized = size_trade(action, size_gap_eur, mv, cfg,
                            ladder_fraction=(rung or {}).get("trim_fraction"))
         trade_eur = sized["trade_eur"]
         if sized.get("downgraded"):
@@ -2963,8 +3096,26 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         u["superseded_epoch"] = supersession(u, _now_action.get(u["sector_id"]), as_of,
                                              cfg.get("rule_epochs"))
 
+    # Reachable targets: when the slot rule deferred a BUY, rebuild the table without that line so
+    # the held lines are compared with a book that can exist. Bounded; the excluded set only grows.
+    deferred_ids = {d["sector_id"] for d in (slots.get("deferred") or [])}
+    if (deferred_ids and _depth < 3 and not stale_cfg
+            and (cfg.get("hold_zone", {}) or {}).get("reachable_targets", False)):
+        asked = float((_reach_note or {}).get("eur") or 0.0) + sum(
+            float(d.get("trade_eur") or 0.0) for d in slots["deferred"])
+        return build(strategy=strategy, cfg=cfg, run_id=run_id, exit_fn=lambda: book,
+                     lake_dir=lake_dir, total_capital=total_capital,
+                     expected_fn=lambda: exp, overrides_fn=overrides_fn,
+                     _unreachable=frozenset(set(_unreachable) | deferred_ids), _depth=_depth + 1,
+                     _reserved_eur=reserved_now, _ratio=ratio,
+                     _reach_note={"excluded": set(_unreachable) | deferred_ids, "eur": asked})
+
+    anchors = _decision_anchors({r["sector_id"] for r in rows if r["actual_eur"] > 0},
+                                lake_dir=lake_dir)
     return {
         "as_of": as_of, "strategy": strategy, "run_id": run_id,
+        "overweight_origin": overweight_decomposition(rows, anchors),
+        "reachability": reachability(slots, rows, total_capital, _reach_note),
         "book": book_metrics, "warnings": warnings, "overrides": overrides,
         "swaps": swaps, "rank_edge_evidence": evidence, "partials": partials,
         # v13.3 — the three diagnostics that make the ranking's own economics visible.
@@ -2997,7 +3148,7 @@ def build(strategy: str = "catalyx", cfg: dict | None = None, run_id: str | None
         "fractions": {
             "sell": 1.0,
             "reduce": float((cfg.get("reduce_if_any", {}) or {}).get("reduce_fraction", 0.5)),
-            "trim": "back to target",
+            "trim": "back to the ceiling",
             "ladder_trim": next((float(r.get("trim_fraction")) for r in (cfg.get("profit_ladder") or [])
                                  if r.get("trim_fraction")), None),
         },
@@ -3954,6 +4105,37 @@ def render_overrides(res: dict) -> str:
 
 # ── Render ───────────────────────────────────────────────────────────────────
 
+def _render_overweight_origin(origin: list[dict] | None, reach: dict | None,
+                              prior_run_id: str | None) -> list[str]:
+    """Terminal block: is an overweight the position's doing or the target's? (column)"""
+    over = [d for d in origin or [] if d["over_pp"] > 0]
+    reach = reach or {}
+    if not over and not reach.get("excluded") and not reach.get("unreachable_eur"):
+        return []
+    out = ["", "OVERWEIGHT ORIGIN — against the review that last decided each line, in pp of total "
+               "capital (COLUMN — moves nothing)"]
+    for d in over:
+        if d["from_position_pp"] is None:
+            out.append(f"  {d['sector_id'][:34]:34} over {d['over_pp']:+.1f}pp · no review row at "
+                       f"its last trade")
+            continue
+        out.append(f"  {d['sector_id'][:34]:34} over {d['over_pp']:+.1f}pp = position vs the "
+                   f"{d['target_at_anchor_pct']:.1f}% aimed at on {d['anchor']} "
+                   f"{d['from_position_pp']:+.1f} + target moved since {d['from_target_pp']:+.1f}")
+    if reach.get("excluded"):
+        out.append(f"  REACHABLE TARGETS  the slot rule would not let the book buy "
+                   f"{', '.join(reach['excluded'])} (€{reach['reallocated_eur']:,.0f}, "
+                   f"{reach['reallocated_pct']:.1f}% of capital): targets were recomputed without "
+                   f"them, so held lines are measured against a book that can exist")
+    if reach.get("unreachable_eur"):
+        out.append(f"  {'STILL ' if reach.get('excluded') else ''}UNREACHABLE  the model book asks "
+                   f"for €{reach['unreachable_eur']:,.0f} ({reach['unreachable_pct']:.1f}% of "
+                   f"capital) in lines the slot rule will not let you buy "
+                   f"({', '.join(reach['sectors'])}): held targets are measured against a book "
+                   f"that cannot exist")
+    return out
+
+
 def _eur(v) -> str:
     return "—" if v is None else f"€{v:,.0f}"
 
@@ -4086,7 +4268,7 @@ def render(res: dict) -> str:
                "later — it is unbuyable at full size until a constant or the ask changes "
                "— the rows to execute today are the THIS ITERATION block above")
     out.append(f"SIZING   SELL = 100% of the line · CLOSE = a TRIM that takes the line to zero · "
-               f"REDUCE = {rf:.0f}% · TRIM = back to target"
+               f"REDUCE = {rf:.0f}% · TRIM = back to the ceiling"
                + (f" (or {float(lf) * 100:.0f}% on a ladder rung)" if lf else ""))
     out.append("")
 
@@ -4154,6 +4336,9 @@ def render(res: dict) -> str:
     if res.get("best_moves"):
         from catalyx.execution import best_moves as _bm
         out.extend(_bm.render(res["best_moves"]))
+
+    out.extend(_render_overweight_origin(res.get("overweight_origin"), res.get("reachability"),
+                                         res.get("prior_run_id")))
 
     swaps = res.get("swaps") or []
     if swaps:

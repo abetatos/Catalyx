@@ -13,6 +13,22 @@
 
 
 
+## v15.8 — OVERWEIGHT ORIGIN, alcanzabilidad y un interruptor medido que queda apagado (2026-10-21)
+
+**Auditoría del TRIM por sobrepeso (`overweight_pp_min: 4.0`).** Origen: borrador de PLAN v3 sin derivación; contradice la doctrina que borró el escalón +50% citándolo; 10 TRIM en su historia, 8 salidas y 2 de la misma línea (biotech). El «sobrepeso» de biotech no era subida de precio: su objetivo cayó de 17,5% a 13,4% al recomponerse el libro modelo, con el precio plano 7 semanas. Simulación (4.000 libros de 6 ETFs sectoriales US, 2 años): banda de 4pp a caja −0,74pp de retorno sin mejora de retorno/riesgo (solo desapalanca); reinvirtiendo ≈ 0; solo tope duro, algo más de retorno y 0,56pp más de drawdown. Límites: proxies US, objetivos fijos, un régimen.
+
+**Medido y descartado: sustituir el 4pp por una utilidad de riesgo.** Con la aversión implícita del mercado, 5 de 6 líneas salían «sobre-arriesgadas» (la prima β·ERP no paga una apuesta sectorial) y con alpha la utilidad queda plana (netos de €0–3). No discrimina, no se construyó.
+
+**Columnas (no mueven nada).** `overweight_origin`: el sobrepeso de cada línea contra la revisión que decidió la línea por última vez (la última a fecha ≤ su último trade), partido exactamente en posición contra lo apuntado + objetivo movido desde entonces. `reachability`: lo que el libro modelo pide en líneas que la regla de huecos no deja comprar (hoy €2.652, 26,5% del capital).
+
+**Interruptor `hold_zone.reachable_targets` — APAGADO.** Encendido, recalcula la tabla sin las líneas inalcanzables y hace que las líneas sin opinión del modelo (hold zone, diversificadores) descuenten sus euros del desplegable. Medido el 2026-10-21 NO disuelve el TRIM de biotech: copper y semis (19,4%) quedan fuera del libro modelo, las 4 líneas del modelo reparten el resto y su objetivo baja a 13,0%; la tabla recorta biotech y water (€462 cada una) para financiar cyber. Aritmética correcta y otra decisión; espera una decisión del usuario. Apagado restaura los objetivos de v15.7 exactamente.
+
+**Cambio de regla (decisión del usuario, 2026-10-21): el TRIM por sobrepeso es un TECHO sobre lo que se tiene.** `trim_if.overweight_basis: ceiling` (nuevo; `target` restaura v15.7 y es lo que aplica con `hold_zone` apagada, porque ahí un objetivo 0% es la vía de salida). Una línea con `actual_pct > max_position_pct` (17,5% del capital) se recorta HASTA el techo (`decision["to_ceiling"]`, dimensionado en `build`); el ticket mínimo (€150) es la banda muerta. Ya no dispara por distancia al objetivo: el objetivo se mueve con la composición del libro modelo y vendía por ello. `overweight_pp_min` solo se lee con `basis: target`. Sin umbral nuevo. PARTIALS y los textos de SIZING dicen «techo». `rule_epochs` += `2026-10-21`, así que una desviación contra el TRIM viejo se puntúa como `superseded`. Efecto en la tabla del 2026-10-21: biotech 17,6% → HOLD («€10 por debajo del ticket»), 0 acciones; el override DEFER registrado el mismo día queda como desviación frente a la regla retirada.
+
+Pendiente de evidencia (no activado): el mismo criterio por varianza (cuota de varianza de una línea > `max_cluster_variance_pct`), hoy solo cubierto por `cluster_risk_pass` a nivel de cluster. Sin replay previo: la simulación (tope duro ≈ +0,37pp de retorno y 0,56pp más de drawdown) era la única evidencia; el replay de semanas grabadas sigue siendo el siguiente paso.
+
+1136 tests.
+
 ## v15.7 — El NAV modelo avisa del peso sin precio, un festivo ya no manda una línea a caja, y `superseded` (2026-10-21)
 
 **Fallo (`nav_engine.compute_live_nav`).** Cada segmento de la curva modelo empieza en una fecha de run y el marco de precios es la unión de calendarios de varias bolsas. `holdings_nav` toma «sin precio en la primera fila» por «sin precio», y deja ese peso en caja plana TODO el segmento. El 2026-08-31 fue festivo en Londres: IH2O.L, SEMI.L, USPY.L y WCLD.L no tenían cierre, y el segmento 08-31→09-01 de `catalyx` estuvo **59,9% en caja**, así que una caída del −10% en esas líneas no llegó a la curva. Ahora el marco se rellena hacia delante ANTES de recortar el segmento (el cierre anterior ya se conocía ese día: sin look-ahead). Efecto sobre el NAV vivo, medido: `catalyx` +2,66% → **+1,35%** (−5,8 → −7,2pp contra SPY), `equal_weight` −1,1pp, `momentum` −0,6pp, `low_crowding` −0,1pp. Las cifras de «caja que te salvó» y `execution_alpha_pp` que dependen de ese NAV se mueven con ellas.

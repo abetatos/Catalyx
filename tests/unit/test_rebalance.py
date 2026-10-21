@@ -109,9 +109,29 @@ def test_exhausted_narrative_blocks_a_new_line_but_the_deadband_speaks_first(cfg
     assert "deadband" in rb.decide_action(_row(gap_pp=1.0), cfg)["reason"]
 
 
-def test_overweight_trims_back_to_target(cfg):
-    out = rb.decide_action(_row(gap_pp=-6.0), cfg)
+def test_overweight_is_a_ceiling_on_what_is_held_not_a_drift_from_target(cfg):
+    cap = cfg["max_position_pct"]
+    over = rb.decide_action(_row(gap_pp=-1.0, actual_pct=cap + 2.0), cfg)
+    assert over["action"] == "TRIM" and over["to_ceiling"] and "ceiling" in over["reason"]
+    # 6pp above a target that MOVED, but inside the ceiling: nobody sells a winner for that.
+    moved = rb.decide_action(_row(gap_pp=-6.0, actual_pct=cap - 0.5), cfg)
+    assert moved["action"] != "TRIM"
+
+
+def test_the_target_basis_restores_the_v15_7_rule(cfg):
+    old = {**cfg, "trim_if": {**cfg["trim_if"], "overweight_basis": "target"}}
+    out = rb.decide_action(_row(gap_pp=-6.0, actual_pct=10.0), old)
     assert out["action"] == "TRIM" and "above target" in out["reason"]
+
+
+def test_a_ceiling_trim_is_sized_back_to_the_ceiling_not_to_the_target():
+    # The sizing helper takes the gap to whatever `build` passes; for a ceiling TRIM that is
+    # cap - actual, here -EUR 250 on a EUR 10,000 book at 17.5% with 2,000 held.
+    s = rb.size_trade("TRIM", gap_eur=17.5 / 100 * 10_000 - 2_000.0, market_value_eur=2_000.0,
+                      cfg={"min_ticket_eur": 150.0})
+    assert s["trade_eur"] == -250.0 and not s["downgraded"]
+    tiny = rb.size_trade("TRIM", gap_eur=-10.0, market_value_eur=1_760.0, cfg={"min_ticket_eur": 150.0})
+    assert tiny["downgraded"], "a few euros over the ceiling is spread, not a trade"
 
 
 # ── Profit ladder ────────────────────────────────────────────────────────────
@@ -536,10 +556,10 @@ def test_the_evidence_line_refuses_to_dress_up_a_thin_sample(cfg):
 # ── A5: partials stop arriving as a surprise ─────────────────────────────────
 
 def test_both_rungs_are_reported_because_their_units_are_not_comparable(cfg):
-    rows = [{"sector_id": "held", "actual_eur": 1000.0, "gap_pp": -1.0, "score_rank": 3,
-             "unrealized_pct": 13.4, "rule_action": "HOLD"}]
+    rows = [{"sector_id": "held", "actual_eur": 1000.0, "actual_pct": 16.5, "gap_pp": -1.0,
+             "score_rank": 3, "unrealized_pct": 13.4, "rule_action": "HOLD"}]
     p = rb.partial_rungs(rows, cfg)[0]
-    assert p["overweight"]["need_pp"] == pytest.approx(3.0)      # 4pp rung, 1pp above target
+    assert p["overweight"]["need_pp"] == pytest.approx(1.0)      # 17.5% ceiling, held at 16.5%
     assert p["ladder"]["need_gain_pct"] == pytest.approx(11.6)   # 25% rung, +13.4% so far
     # Rank 3 fails the rung's `rank_min: 6` — which is the rule WORKING (the ladder fires only
     # once the model has stopped leading the name), so this must not read as a blocked position.
@@ -561,7 +581,7 @@ def test_a_missing_rank_never_silently_satisfies_the_ladder(cfg):
 
 
 def test_a_firing_rung_is_marked_live_and_cash_only_rows_are_skipped(cfg):
-    rows = [{"sector_id": "held", "actual_eur": 1000.0, "gap_pp": -6.0, "score_rank": 8,
+    rows = [{"sector_id": "held", "actual_eur": 1000.0, "actual_pct": 19.0, "gap_pp": -6.0, "score_rank": 8,
              "unrealized_pct": 30.0, "rule_action": "TRIM"},
             {"sector_id": "not_held", "actual_eur": 0.0, "gap_pp": 5.0, "score_rank": 2,
              "unrealized_pct": None, "rule_action": "BUY"}]
@@ -578,7 +598,7 @@ def test_the_sizing_vocabulary_is_stated_before_any_verdict(tmp_path, monkeypatc
     text = rb.render(res)
     assert "SIZING" in text
     # All three fractions, or the reader cannot tell what a TRIM moved.
-    assert "SELL = 100%" in text and "REDUCE = 50%" in text and "back to target" in text
+    assert "SELL = 100%" in text and "REDUCE = 50%" in text and "back to the ceiling" in text
     assert text.index("SIZING") < text.index("ACTION"), "the vocabulary must precede the verdicts"
 
 

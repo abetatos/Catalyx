@@ -321,7 +321,7 @@ def section_partials() -> str:
                         ("overweight", "overweight rung"), ("live", "firing?")],
                   {"unrealized_pct": _num(1)})
     return body + (
-        f"\n\n_SELL = 100% of the line · REDUCE = {reduce_pct:.0f}% · TRIM = back to target"
+        f"\n\n_SELL = 100% of the line · REDUCE = {reduce_pct:.0f}% · TRIM = back to the ceiling"
         + (f" ({ladder_trim * 100:.0f}% on a ladder rung)" if ladder_trim else "")
         + ". The rank leg fires once the model has STOPPED leading the name._")
 

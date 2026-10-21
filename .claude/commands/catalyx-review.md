@@ -272,7 +272,7 @@ Two blocks travel with that table and answer the two questions a rebalance actua
   (`net_edge_eur` is still in the lake but no longer drives the table: it multiplied the trade by a
   rank-bucket mean one noisy window old and printed ±€1 beside a real tax bill.)
 - **PARTIALS — "¿parciales?"** Distance to each rung per held line. Both rungs are shown because
-  their units differ (pp of total capital above target vs % gain on the position). The ladder's
+  their units differ (pp of total capital above the position ceiling vs % gain on the position). The ladder's
   rank leg fires once the model has **stopped** leading a name, so a rank-1 position failing it is
   the rule working, not a blocked position — never report it as a problem.
 

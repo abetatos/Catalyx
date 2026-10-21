@@ -1297,7 +1297,7 @@ rebalance_rules:
   # that produced it was withdrawn - and charging it to the "silent declines" tally teaches the
   # wrong lesson. It is still priced, and kept separate. Add a date here in the same edit as the
   # rule change, with the CHANGELOG line. 10-18 = v15.2 hold zone + slot rule, 10-19 = v15.4 role.
-  rule_epochs: ["2026-10-18", "2026-10-19"]
+  rule_epochs: ["2026-10-18", "2026-10-19", "2026-10-21"]
   deadband_pp: 2.0             # |gap| below this (points of TOTAL capital) → HOLD, never trade
   min_ticket_eur: 150.0        # below this a trade is spread + friction, not a position change
   max_position_pct: 17.5       # = conviction tier 1, DERIVED from `book_shape` (v6 L1). Was
@@ -1339,12 +1339,22 @@ rebalance_rules:
     regime_not: [contested, breaking]
     maturity_not: [exhausted]
   trim_if:
-    overweight_pp_min: 4.0     # above target by this many points → trim BACK TO target
+    # v15.8 - the overweight TRIM is a CEILING on what is HELD: actual > max_position_pct (of total
+    # capital) -> back to the ceiling; the min ticket is the dead band. It used to be "4pp above
+    # TARGET -> back to target", which fired when the target moved (biotech 17.5% -> 13.4% with the
+    # price flat, 2026-10-17) and sold winners for outgrowing a number the model keeps changing.
+    # Audit: draft threshold from PLAN v3 with no derivation; 10 TRIM ever, 8 of them exits and 2
+    # the same line; simulated cost of a band-to-cash -0.74pp/2y with no gain in return per unit of
+    # risk, while a hard cap alone gave up 0.56pp of drawdown for letting winners run.
+    # "target" restores the v15.7 rule (and uses overweight_pp_min); it is also what applies when
+    # hold_zone is off, because there a 0% target is the exit path.
+    overweight_basis: ceiling
+    overweight_pp_min: 4.0     # only read when overweight_basis: target
   # FROZEN DECISION (plan §7.2): the default exit is TRAILING RANK, not a fixed-gain ladder.
   # The second rung ({gain_pct_min: 50, rank_min: 0}) was DELETED at the freeze: trimming a +50%
   # position the model still ranks #1 is the disposition effect wearing a discipline costume, and
   # it is the exact opposite of a momentum mandate. Concentration is already bounded twice without
-  # it — `max_position_pct` (tier 1, derived) caps the line and `trim_if.overweight_pp_min` trims a winner back
+  # it — `max_position_pct` (tier 1, derived) caps the line and `trim_if.overweight_basis: ceiling` trims a winner back
   # to target as it drifts. So the ladder survives only in its RANK-COUPLED form: a partial is
   # taken when the gain is real AND the model has stopped calling it a leader.
   profit_ladder:               # empty list disables the ladder entirely
@@ -1387,6 +1397,15 @@ rebalance_rules:
   # book is untouched (it must stay reproducible from a run alone) - only `rebalance` changes.
   hold_zone:
     enabled: true              # false restores the v15.1 behaviour exactly
+    # v15.8 - OFF, measured before arming. When the slot rule defers a BUY, `true` recomputes the
+    # targets WITHOUT that line (so a held line is compared with a book that can exist) and makes
+    # the lines held with no model opinion (hold zone, diversifiers) take their own euros out of
+    # the deployable. On the 2026-10-21 book that did NOT remove biotech's trim: the 4 model lines
+    # share 75% - 19.4% (copper + semis held outside the model) and their targets fall to 13.0%,
+    # so the table trims biotech and water (EUR 462 each) to fund cyber. Arithmetically right,
+    # and a different decision than the one it was meant to dissolve - so it waits for a user call.
+    # false restores the v15.7 targets exactly. Rebalance only; the model book is untouched.
+    reachable_targets: false
 
   # BEST MOVES (v15.3) — a COLUMN, weight 0: it prints beside the table and moves nothing.
   # Every candidate trade priced in one currency, € over the calibration horizon:

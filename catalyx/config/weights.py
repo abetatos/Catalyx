@@ -625,7 +625,7 @@ _REBALANCE_RULES_DEFAULT = {
     "add_if": {"rank_max": 5, "gap_pp_min": 3.0, "regime_not": ["breaking"]},
     "buy_if": {"rank_max": 8, "gap_pp_min": 4.0, "regime_not": ["contested", "breaking"],
                "maturity_not": ["exhausted"]},
-    "trim_if": {"overweight_pp_min": 4.0},
+    "trim_if": {"overweight_pp_min": 4.0, "overweight_basis": "ceiling"},
     # ONE rung, rank-coupled, by the 2026-08-28 freeze: the default exit is trailing rank, and
     # a fixed-gain trim of a position the model still leads is the disposition effect.
     "profit_ladder": [{"gain_pct_min": 25.0, "rank_min": 6, "trim_fraction": 0.33}],

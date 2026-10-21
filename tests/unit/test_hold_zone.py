@@ -60,7 +60,7 @@ def test_the_sell_rule_still_sells_when_its_streak_completes(cfg):
 def test_the_hold_zone_does_not_lift_the_concentration_ceiling(cfg):
     # Upstream target = min(actual, cap), so above the ceiling the gap is real and the ordinary
     # overweight TRIM sizes it back to the cap — not to zero.
-    out = rb.decide_action(_row(gap_pp=-4.5), cfg)
+    out = rb.decide_action(_row(gap_pp=-4.5, actual_pct=19.0), cfg)
     assert out["action"] == "TRIM"
 
 
@@ -73,15 +73,17 @@ def test_the_profit_ladder_still_reaches_a_hold_zone_winner(cfg):
 
 def test_without_the_flag_a_zero_target_is_still_an_exit(cfg):
     # v15.1 behaviour, exactly: this is what `enabled: false` restores.
-    out = rb.decide_action(_row(hold_zone=False, gap_pp=-9.0), cfg)
-    assert out["action"] == "TRIM"
+    off = {**cfg, "hold_zone": {**cfg["hold_zone"], "enabled": False}}
+    out = rb.decide_action(_row(hold_zone=False, gap_pp=-9.0, actual_pct=10.0), off)
+    assert out["action"] == "TRIM" and "above target" in out["reason"]
 
 
 def test_the_hold_zone_adds_no_threshold():
     # The cut is `sell_if_any`, the line count is `book_shape.n_target`. A second number here
     # would be the choice-of-constant the correlated cap forbids.
     hz = weights.rebalance_rules()["hold_zone"]
-    assert set(hz) == {"enabled"}
+    assert set(hz) == {"enabled", "reachable_targets"}
+    assert all(isinstance(v, bool) for v in hz.values())       # switches, never numbers
 
 
 # ── The slot rule ────────────────────────────────────────────────────────────
