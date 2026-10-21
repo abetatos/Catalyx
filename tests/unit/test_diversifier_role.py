@@ -211,3 +211,28 @@ def test_a_sole_line_is_unmeasured_not_a_comforting_number():
     h = bm.diversifier_health({"lo": 3_000.0}, {"lo": {"lo": 0.0225}}, 10_000.0, {"lo"}, 56)[0]
     assert h["rho_rest"] is None and h["ratio"] is None
     assert "unmeasured" in bm._render_diversifiers([h])[-2]
+
+
+# ── the SELECTION line states the lambda the book was actually built with ─────
+
+def _rendered_selection(tmp_path, monkeypatch, cfg, lam):
+    ids = [f"s{i}" for i in range(10)]
+    model = ids[:6]
+    held = [_held(s, 1200.0) for s in model[:5]]
+    _roles(monkeypatch, {})
+    res = _build(tmp_path, monkeypatch, cfg, held, model, ids)
+    res["rank_size_spearman"] = 0.17                  # guarantees the SELECTION block prints
+    res["book"].setdefault("model", {})["tilt_lambda"] = lam
+    return next(l for l in rb.render(res).splitlines() if l.startswith("SELECTION"))
+
+
+def test_selection_line_reads_the_lambda_of_the_book_not_a_key_nobody_sets(tmp_path, monkeypatch, cfg):
+    # It printed λ=0.00 and "the ranking does not size the book" beside a TILT line saying 0.30:
+    # the block read a top-level key that is never written.
+    line = _rendered_selection(tmp_path, monkeypatch, cfg, 0.3)
+    assert "λ=0.30" in line and "does not size the book" not in line and "30%" in line
+
+
+def test_selection_line_still_says_the_ranking_sizes_nothing_at_lambda_zero(tmp_path, monkeypatch, cfg):
+    line = _rendered_selection(tmp_path, monkeypatch, cfg, 0.0)
+    assert "λ=0.00" in line and "does not size the book" in line

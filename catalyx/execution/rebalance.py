@@ -4217,15 +4217,20 @@ def render(res: dict) -> str:
                      key=lambda r: float(r["composite_drift"]))
     if sm or rho is not None or drifted:
         out.append("")
-        lam = float(res.get("tilt_lambda") or 0.0)
+        # λ lives on the model book (`book.model.tilt_lambda`), the same place the TILT line reads
+        # it. This used to read a top-level key nobody sets, so it printed λ=0.00 beside a TILT
+        # line saying 0.30 - and told the reader the ranking sizes nothing when it sizes 30%.
+        lam = float((((res.get("book") or {}).get("model") or {}).get("tilt_lambda")) or 0.0)
         out.append(f"SELECTION — with λ={lam:.2f} the ranking does not size the book, so what the "
-                   f"model contributes IS the cut")
+                   f"model contributes IS the cut" if lam < 0.05 else
+                   f"SELECTION — λ={lam:.2f}: the ranking sizes only {lam:.0%} of the tilt, so "
+                   f"most of what the model contributes is still the cut")
         if sm:
             out.append(f"  boundary   {sm['note']}")
         if rho is not None:
             out.append(f"  rank↔size  Spearman {rho:+.2f} between rank and target weight — "
-                       + ("order does not show up in size (correct at λ=0: the risk budget "
-                          "sizes, the ranking selects)" if abs(rho) < 0.5
+                       + (f"order does not show up in size (expected at λ={lam:.2f}: the risk "
+                          f"budget sizes, the ranking selects)" if abs(rho) < 0.5
                           else "order and size still move together"))
         if drifted:
             out.append(f"  drift      composite at entry → now, for the lines held. NO RULE "

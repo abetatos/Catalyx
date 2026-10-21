@@ -254,6 +254,31 @@ def covariance(series: list[list[float]]) -> list[list[float]] | None:
     return cov
 
 
+def _covariance_frame(common, cols: list[str], as_of: str, price_fn=None, long_fn=None):
+    """The price frame the book's covariance is estimated on.
+
+    `common` starts at the first purchase: 96 days, 20 weeks, under the 52 the weekly estimator
+    needs - so the risk table fell back to daily returns and read this book at 18.0% where its own
+    weekly history says 14.6%. The vehicles have a year of EUR history in the lake whether or not
+    we owned them, so the covariance reads that, and falls back to `common` whenever the longer
+    frame is missing, errors, or is not actually longer. Injected prices (tests) have no lake
+    behind them and keep the short window unless `long_fn` says otherwise.
+    """
+    if long_fn is None:
+        if price_fn is not None:
+            return common
+        from catalyx.scorer import covariance as _cvm
+
+        def long_fn(c, a):
+            return _cvm._prices(c, _cvm._WEEKS_DEFAULT, a)
+    try:
+        longer = long_fn(cols, as_of)
+        longer = longer[cols].dropna() if longer is not None else None
+    except Exception:
+        return common
+    return longer if longer is not None and len(longer) > len(common) else common
+
+
 def book_covariance(prices) -> tuple[list[list[float]] | None, dict]:
     """The book's annualized covariance, on the same basis the rest of v6 uses.
 
@@ -388,24 +413,64 @@ def fx_exposure(rows: list[dict]) -> dict:
 # ── Assembly (I/O) ───────────────────────────────────────────────────────────
 
 def _entry_facts(movements: list[dict]) -> dict[str, dict]:
-    """Weighted-average NATIVE entry price + first entry date per ETF, from the buy movements."""
-    from catalyx.store.movement_repo import _BUY_ACTIONS
+    """Weighted-average NATIVE entry price + first entry date per ETF, from the buy movements of
+    the line's CURRENT holding.
+
+    A line that was sold and bought again is a new position. Averaging across both holdings priced
+    the reopened USPY.L against a lot that no longer exists (and dated it 133 days old when it was
+    13), which printed a price gain and a currency loss that were both made up.
+
+    A lot whose `price` is the EUR figure on a non-EUR line (`movement_repo.price_is_eur`) cannot
+    be averaged with native lots as it stands. It is kept apart in `eur_lots` and converted by
+    `_entry_price_native`, which has the frames that carry the exchange rate of that day.
+    """
+    from catalyx.store.movement_repo import _BUY_ACTIONS, open_episodes, price_is_eur
 
     acc: dict[str, dict] = {}
-    for m in sorted(movements, key=lambda x: x.get("executed_at") or ""):
-        if m["action"] not in _BUY_ACTIONS:
-            continue
-        etf = m["vehicle"]["etf"]
-        qty, px = float(m.get("qty") or 0.0), m.get("price")
-        a = acc.setdefault(etf, {"qty": 0.0, "notional_native": 0.0, "first_entry": None,
-                                 "currency": m["vehicle"].get("currency")})
-        if px is not None:
-            a["qty"] += qty
-            a["notional_native"] += qty * float(px)
-        a["first_entry"] = a["first_entry"] or (m.get("executed_at") or "")[:10]
+    for etf, movs in open_episodes(movements).items():
+        for m in movs:
+            if m["action"] not in _BUY_ACTIONS:
+                continue
+            qty, px = float(m.get("qty") or 0.0), m.get("price")
+            a = acc.setdefault(etf, {"qty": 0.0, "notional_native": 0.0, "first_entry": None,
+                                     "currency": m["vehicle"].get("currency"), "eur_lots": []})
+            if px is not None:
+                if price_is_eur(m):
+                    a["eur_lots"].append(((m.get("executed_at") or "")[:10], qty, float(px)))
+                else:
+                    a["qty"] += qty
+                    a["notional_native"] += qty * float(px)
+            a["first_entry"] = a["first_entry"] or (m.get("executed_at") or "")[:10]
     for a in acc.values():
-        a["entry_price_native"] = round(a["notional_native"] / a["qty"], 6) if a["qty"] else None
+        a["entry_price_native"] = (round(a["notional_native"] / a["qty"], 6)
+                                   if a["qty"] and not a["eur_lots"] else None)
     return acc
+
+
+def _entry_price_native(e: dict, native, eur, etf: str) -> float | None:
+    """The line's average entry price in its own currency, EUR-priced lots included.
+
+    Each EUR lot is converted at that day's EUR-per-native rate, read off the two price frames
+    (`eur / native` on the entry date) - the same rate the position is marked with today. If the
+    frames cannot give it, the answer is None and the split is left blank: a made-up entry price
+    prints a price gain and a currency loss that never happened.
+    """
+    lots = e.get("eur_lots") or []
+    if not lots:
+        return e.get("entry_price_native")
+    qty, notional = float(e.get("qty") or 0.0), float(e.get("notional_native") or 0.0)
+    try:
+        for on, q, p_eur in lots:
+            n = native[etf].dropna()
+            x = eur[etf].dropna()
+            n_px, x_px = float(n[n.index <= on].iloc[-1]), float(x[x.index <= on].iloc[-1])
+            if n_px <= 0 or x_px <= 0:
+                return None
+            qty += q
+            notional += q * p_eur / (x_px / n_px)
+    except Exception:
+        return None
+    return round(notional / qty, 6) if qty else None
 
 
 def _snapshot_now(run_id: str | None, lake_dir: Path | None = None) -> dict[str, dict]:
@@ -420,12 +485,29 @@ def _snapshot_now(run_id: str | None, lake_dir: Path | None = None) -> dict[str,
 
 
 def _entry_context(movements: list[dict]) -> dict[str, dict]:
-    """The point-in-time score the pipeline gave each sector when it was opened."""
+    """The point-in-time score the pipeline gave each sector when its CURRENT holding was opened.
+
+    Not the first movement the sector ever had: a line closed and reopened is judged against the
+    score it was reopened under. `cybersecurity_commercial` read 77.1 -> 55.1 (-22, "the worst
+    drift in the book") against the lot sold on 2026-09-01 at 54.0. A movement that cites only a
+    run id is resolved from that run's snapshot; one with nothing stays unknown (never zero drift).
+    """
+    from catalyx.store import movement_repo
+
     out: dict[str, dict] = {}
-    for m in sorted(movements, key=lambda x: x.get("executed_at") or ""):
+    held = [m for movs in movement_repo.open_episodes(movements).values() for m in movs]
+    for m in sorted(held, key=lambda x: x.get("executed_at") or ""):
+        sid = m["sector_id"]
+        if sid in out:
+            continue
         sc = m.get("score_context") or {}
-        if m["sector_id"] not in out and (sc.get("composite") is not None or sc.get("rank")):
-            out[m["sector_id"]] = {"composite": sc.get("composite"), "rank": sc.get("rank")}
+        if sc.get("composite") is None and not sc.get("rank") and sc.get("run_id"):
+            try:
+                sc = movement_repo.context_for_run(sid, sc["run_id"]) or sc
+            except Exception:                                  # pragma: no cover - defensive
+                pass
+        if sc.get("composite") is not None or sc.get("rank"):
+            out[sid] = {"composite": sc.get("composite"), "rank": sc.get("rank")}
     return out
 
 
@@ -510,7 +592,7 @@ def build(run_id: str | None = None, lake_dir: Path | None = None, exit_fn=None,
         # entry_fx is IMPLIED by the cost basis (EUR/unit ÷ native/unit), so no FX history is
         # needed and the rate used is the one actually paid. An EUR listing is pinned to 1.0 —
         # otherwise fee rounding would print a phantom currency effect on a domestic vehicle.
-        entry_px = e.get("entry_price_native")
+        entry_px = _entry_price_native(e, native, eur, etf) if e else None
         is_eur = (e.get("currency") or "EUR").upper() == "EUR"
         avg_cost_eur = cost_by_etf.get(etf)
         entry_fx = 1.0 if is_eur else (
@@ -560,10 +642,13 @@ def build(run_id: str | None = None, lake_dir: Path | None = None, exit_fn=None,
                 # capital column beside it and both sum to 100.
                 mv = [float(r.get("market_value_eur") or 0.0) for r in rows]
                 gross = sum(mv) or 1.0
-                cov, cov_meta = book_covariance(common)
+                # Σ is a property of the VEHICLES, not of how long we have held them: see
+                # `_covariance_frame`.
+                cov_frame = _covariance_frame(common, cols, as_of, price_fn)
+                cov, cov_meta = book_covariance(cov_frame)
                 rc = risk_contribution([m / gross * 100.0 for m in mv], series, cov=cov)
                 if rc:
-                    rc["window_days"] = len(common)
+                    rc["window_days"] = len(cov_frame)
                     rc.update({k: v for k, v in cov_meta.items() if v is not None})
                     for r, cap, contrib, marg, vol in zip(
                             rows, mv, rc["contribution_pct"], rc["marginal_pct"], rc["vol_pct"]):

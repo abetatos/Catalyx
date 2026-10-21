@@ -179,7 +179,8 @@ def daily_ledger(movements: list[dict], index) -> tuple:
     return qty, flow
 
 
-def execution_price_checks(movements: list[dict], prices, tol_pct: float = 1.5) -> list[dict]:
+def execution_price_checks(movements: list[dict], prices, tol_pct: float = 1.5,
+                           eur_prices=None) -> list[dict]:
     """Flag movements whose recorded `price` is far from the execution date's close.
 
     The TWR anchors each new position at the price actually paid, so a mis-recorded fill is not a
@@ -189,6 +190,8 @@ def execution_price_checks(movements: list[dict], prices, tol_pct: float = 1.5) 
     Recorded qty is derived from that same price, so the ambiguity is real and only the broker
     statement can settle it — hence a warning that names the alternative, never a silent repair.
     """
+    from catalyx.store.movement_repo import price_is_eur
+
     out: list[dict] = []
     cols = getattr(prices, "columns", [])
     if prices is None or len(cols) == 0:
@@ -197,9 +200,16 @@ def execution_price_checks(movements: list[dict], prices, tol_pct: float = 1.5) 
         et = (m.get("vehicle") or {}).get("etf") or m.get("etf")
         px_rec = m.get("price")
         on = str(m.get("executed_at") or "")[:10]
-        if not et or et not in cols or not px_rec or not on:
+        frame = prices
+        if price_is_eur(m):
+            # An EUR fill on a USD/GBP line is compared against the EUR close, or not at all:
+            # against the native close it is a unit error, not a drift.
+            frame = eur_prices
+            if frame is None or et not in getattr(frame, "columns", []):
+                continue
+        if not et or et not in getattr(frame, "columns", []) or not px_rec or not on:
             continue
-        s = prices[et].dropna()
+        s = frame[et].dropna()
         by_date = {str(i)[:10]: float(v) for i, v in s.items()}
         same = by_date.get(on)
         if same is None:
@@ -754,7 +764,8 @@ def compute_real_nav(portfolio_id: str, start: str | None = None, as_of: str | N
             "return_pct_vs_cost": round(pnl_eur / total_cost * 100.0, 2)
                                   if (pnl_eur is not None and total_cost) else None,
             "realized_eur": rh.get("realized_eur"),
-            "execution_price_warnings": execution_price_checks(movs, native_ext),
+            "execution_price_warnings": execution_price_checks(
+                movs, native_ext, eur_prices=prices if convert else None),
             "fx_pnl_eur": round(fx_pnl_eur, 2), "fx_breakdown": fx_breakdown,
             "last_nav": last["nav"] if last else None,
             "last_return_pct": last["return_pct"] if last else None,

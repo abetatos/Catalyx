@@ -143,21 +143,39 @@ def effective_attribution(m: dict) -> tuple[list[dict], str | None, set[str]]:
 ROLES = ("catalyst", "diversifier")
 
 
-def sector_roles(movements_dir: Path | None = None) -> dict[str, dict]:
-    """Why each OPEN line is held (schema 1.4): {sector: {role, as_of, rationale}}.
+def price_is_eur(m: dict, tol: float = 0.005) -> bool:
+    """True when a NON-EUR vehicle's `price` is the EUR per-unit price the broker showed.
 
-    Only sectors with a declared non-default role appear, so the caller's default - `catalyst`,
-    the full rule table - is what an absent key means. The latest `reattribution` entry that
-    DECLARES a role wins; an entry with no `role` does not reset it (re-attributing drivers must
-    not silently turn a diversifier back into a rank-sold line). Only movements of the line's
-    CURRENT open episode count: qty is replayed per vehicle in time order, and the episode starts
-    when it leaves zero - a line closed and reopened starts as a `catalyst`, because a role was a
-    judgement about THAT holding. An unknown role value is ignored (reads as `catalyst`): a typo
-    must fail toward the rule that can sell, never toward the one that cannot.
+    The schema defines `price` in the vehicle's currency, but the two USPY.L fills of 2026-09-01
+    and 2026-10-06 carry the EUR figure (their `fill_note` says so: Revolut shows EUR, and
+    `amount_eur` is the authoritative number). The record can say which it is on its own: when
+    price x qty reproduces amount_eur the price is already in euros - a USD price would be off by
+    the whole exchange rate. A reader that assumed native compared 45.53 EUR with a 51.25 USD
+    close, printed a -11% "execution drift", and booked a currency loss on a position that had
+    just been opened. An EUR vehicle is never flagged: there native and EUR are the same thing.
+    """
+    ccy = str((m.get("vehicle") or {}).get("currency") or "EUR").upper()
+    if ccy == "EUR":
+        return False
+    try:
+        px, q, amt = float(m.get("price")), float(m.get("qty")), float(m.get("amount_eur"))
+    except (TypeError, ValueError):
+        return False
+    return amt > 0 and abs(px * q / amt - 1.0) <= tol
+
+
+def open_episodes(movements: list[dict]) -> dict[str, list[dict]]:
+    """The CURRENT holding of every vehicle still held: {etf: its movements, in time order}.
+
+    qty is replayed per vehicle and an episode starts when the line leaves zero, so a line that
+    was closed and reopened is a NEW holding - bought at a different price, under a different
+    score, for a different reason. Anything that describes "this position since it was bought"
+    (cost basis, entry score, days held, a declared role) has to read this and not the vehicle's
+    whole history: the history includes lots that were sold.
     """
     qty: dict[str, float] = {}
     episode: dict[str, list[dict]] = {}
-    for m in load_all(movements_dir):
+    for m in sorted(movements, key=lambda x: str(x.get("executed_at") or "")):
         etf = (m.get("vehicle") or {}).get("etf")
         if not etf:
             continue
@@ -173,10 +191,23 @@ def sector_roles(movements_dir: Path | None = None) -> dict[str, dict]:
                 episode[etf] = []
             else:
                 episode.setdefault(etf, []).append(m)
+    return {etf: movs for etf, movs in episode.items() if qty.get(etf, 0.0) > 1e-9}
+
+
+def sector_roles(movements_dir: Path | None = None) -> dict[str, dict]:
+    """Why each OPEN line is held (schema 1.4): {sector: {role, as_of, rationale}}.
+
+    Only sectors with a declared non-default role appear, so the caller's default - `catalyst`,
+    the full rule table - is what an absent key means. The latest `reattribution` entry that
+    DECLARES a role wins; an entry with no `role` does not reset it (re-attributing drivers must
+    not silently turn a diversifier back into a rank-sold line). Only movements of the line's
+    CURRENT open episode count: qty is replayed per vehicle in time order, and the episode starts
+    when it leaves zero - a line closed and reopened starts as a `catalyst`, because a role was a
+    judgement about THAT holding. An unknown role value is ignored (reads as `catalyst`): a typo
+    must fail toward the rule that can sell, never toward the one that cannot.
+    """
     out: dict[str, dict] = {}
-    for etf, movs in episode.items():
-        if qty.get(etf, 0.0) <= 1e-9:
-            continue
+    for etf, movs in open_episodes(load_all(movements_dir)).items():
         for m in movs:
             for e in m.get("reattribution") or []:
                 role = e.get("role")
@@ -621,6 +652,33 @@ def point_in_time_context(sector_id: str, executed_at: str, lake_dir: Path | Non
         "crowding": val("crowding_risk"),
         "regime_state": val("regime_state"),
     }
+
+
+def context_for_run(sector_id: str, run_id: str, lake_dir: Path | None = None) -> dict | None:
+    """The score a NAMED run gave a sector, for a movement that cites its run and nothing else.
+
+    A hand-written `score_context: {"run_id": ...}` is not empty, so `ingest` never backfills it -
+    and `point_in_time_context` could not do it right anyway: the run is stamped later in the day
+    than the movement's date-only `executed_at`, and "latest run before the date" would hand back
+    an older one. The run the movement names is the one it was bought under; read that.
+    """
+    try:
+        ss = lake.read_table("sector_snapshot", lake_dir=lake_dir)
+    except Exception:
+        return None
+    if ss is None or ss.empty or "run_id" not in ss.columns:
+        return None
+    r = ss[(ss["sector_id"] == sector_id) & (ss["run_id"] == run_id)]
+    if r.empty:
+        return None
+    r = r.iloc[0]
+
+    def val(col):
+        return None if col not in ss.columns or r[col] != r[col] else r[col]
+    rank = val("rank")
+    comp = val("composite")
+    return {"run_id": run_id, "rank": None if rank is None else int(rank),
+            "composite": None if comp is None else float(comp)}
 
 
 def _is_empty_context(ctx: dict | None) -> bool:
