@@ -68,8 +68,14 @@
     "weaker_than": "cat_20260724_trump_global_tariff_phase",
     "note": "Rubric total 65 (str_01+str_02+str_04): ~20% of world oil flows is in scope and the US naval blockade is a decided action, but the escalation was not a consensus surprise and it is a level shift in supply, not a rate. Stored 68 sits inside the bracket. Backfilled 2026-10-17."
   },
-  "status_last_reviewed": "2026-10-17",
+  "status_last_reviewed": "2026-10-21",
   "review_log": [
+    {
+      "date": "2026-10-21",
+      "verdict": "strengthening",
+      "evidence": "Escalation continued after the 2026-10-17 review: Brent touched about USD 110 on 2026-10-17 (first time since May) and USD 111.99 intraday on 2026-10-20 before settling at USD 108.79; WTI USD 101.79 (expiring Nov contract) after an eight-session run of more than 20%. On 2026-10-20 the IRGC said two tankers were set ablaze by mines it laid in the strait (US CENTCOM disputes the claim, unconfirmed independently); one tracker logged 4 transits on 2026-10-18 vs a pre-crisis 85 per day; the US blockade of Iranian ports continues. Offsetting: mediators were reported trying to bring the US and Iran together on 2026-10-20, which pulled oil back. Trump's pause until the 2026-11-03 midterms (recorded 2026-10-17) is the next re-verify date.",
+      "source": "CappNotes Closing Look 2026-10-20; Yahoo Finance / Investopedia 2026-10-20; Euronews 2026-10-20; MercoPress 2026-10-17; straits.live brief 2026-10-20"
+    },
     {
       "date": "2026-10-17",
       "verdict": "strengthening",

@@ -1,0 +1,48 @@
+{
+  "scan_date": "2026-10-19",
+  "items": [
+    {
+      "key": "c0:us-cpi-sep-2026-10-14",
+      "source": "c0",
+      "fact": "US September CPI 3.7% YoY vs 3.6% expected, core 2.6% vs 2.5% (released 2026-10-14); hot print put an October Fed hike back in play, with odds quoted anywhere from about 20% to 50% depending on source and date",
+      "outcome": "refresh_of",
+      "catalyst_id": "cat_20260916_fed_rate_hike",
+      "reason": "that event already records the 2026-10-14 CPI print (3.7% vs 3.6%, core 2.6% vs 2.5%), triaged the same way in scan_triage_20261017; no new decision, the 2026-10-28 FOMC is still pending"
+    },
+    {
+      "key": "c0:us-sep-payrolls-weak-2026-10-02",
+      "source": "c0",
+      "fact": "US September payrolls (released 2026-10-02) came in weaker than expected, pushing hike expectations from October toward the 2026-12-09 meeting",
+      "outcome": "below_threshold",
+      "reason": "strength_score 40 by rubric: a published data release (str_02 = 25) corroborated by two outlets (str_04 = 15) but a single-month labour print is a level, not a rate shift, with no sector-relative magnitude, and the consensus miss was modest. Sources: NST/Bloomberg 'Fed policymakers lean against October rate hike', 247wallst 2026-09-30"
+    },
+    {
+      "key": "c0:waller-dots-16-of-18-2026-10-08",
+      "source": "c0",
+      "fact": "Fed Governor Waller said on 2026-10-08 that 16 of 18 FOMC participants project at least one more hike in 2026, not necessarily at consecutive meetings; Williams said there is no urgency (hike could wait for December)",
+      "outcome": "not_an_event",
+      "reason": "central-bank speakers describing projections and guidance; nothing decided. The decision is the 2026-10-28 FOMC (calendar_upcoming) and the 2026-09-16 hike is already event cat_20260916_fed_rate_hike"
+    },
+    {
+      "key": "c0:us10y-above-5pct-2026-10-13",
+      "source": "c0",
+      "fact": "US 10-year Treasury yield 5.16% on 2026-10-13 (5.09% on 2026-10-16 per the prior scan); EURUSD at a 2026 low on 2026-10-12 as the dollar rose",
+      "outcome": "not_an_event",
+      "reason": "a market level with no discrete decision behind it; work_list.market_moves in state_20261019.json is empty (no 25-40bp 10y trigger fired), so the tape trigger did not register a move. The rates driver is carried by cat_20260916_fed_rate_hike and cat_20260910_ecb_rate_hike"
+    },
+    {
+      "key": "c0:ecb-oct-hold-expected-2026-10-29",
+      "source": "c0",
+      "fact": "ECB deposit rate 2.50%; Reuters poll (2026-10-08) expects a hold on 2026-10-29 and a hike in December; futures priced about 60% for a hike as of 2026-09-24",
+      "outcome": "not_an_event",
+      "reason": "forecast and market pricing ahead of an undecided meeting; the decided fact (the 2026-09-10 hike) is event cat_20260910_ecb_rate_hike. Decision lands in calendar_upcoming (ecb:2026-10-29)"
+    },
+    {
+      "key": "c0:rheinmetall-f126-guidance-cut-2026-08-06",
+      "source": "c0",
+      "fact": "Rheinmetall cut FY2026 sales guidance by about EUR 300M to EUR 13.7-14.2B and its year-end backlog target from about EUR 135B to above EUR 100B after Germany cancelled the F126 frigate programme (2026-08-06); surfaced by the C2c disconfirming search on struct_nato_rearmament",
+      "outcome": "below_threshold",
+      "reason": "strength_score 40 by rubric: decided (str_02 = 25) and corroborated by four outlets plus the company release (str_04 = 15), but about 2% of Rheinmetall sales, programme-specific rather than a budget or procurement-rate change (str_01 and str_05 false), and not a surprise to the sector. Recorded as a disconfirming hit in scan_deltas for struct_nato_rearmament, not as an event"
+    }
+  ]
+}

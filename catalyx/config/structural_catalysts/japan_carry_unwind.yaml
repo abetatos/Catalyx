@@ -118,7 +118,7 @@ indicators:
   direction: higher_is_stronger
   threshold_strong: 90
   threshold_weak: 30
-  last_value: -62.3
+  last_value: -50.2
   last_date: "2026-10-13"
   semaphore: "🔴"
   update_note: "auto: CFTC JPY net non-comm short (k)"

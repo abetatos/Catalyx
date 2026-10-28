@@ -39,13 +39,21 @@ user_notes: >
   are the primary confirmation; refresh quarterly against IQVIA/BioPharma deal trackers.
 
 intensity:
-  current_score: 85.0
+  current_score: 78.0
   computation_method: computed
-  last_updated: "2026-10-17"
+  last_updated: "2026-10-23"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: just below struct_ai_capex_supercycle (89.9). Durable
     LOE-driven takeout pressure with clear deal-flow indicators.
   history:
+  - period: '2026-10-23'
+    score: 78.0
+    note: 'Computed 2026-10-23: avg=84.97 trend=↓↓ (falling 2+ consecutive) (was 82.0)'
+    computation_method: computed
+  - period: '2026-10-20'
+    score: 82.0
+    note: 'Computed 2026-10-20: avg=84.97 trend=↓ (falling 1 period) (was 85.0)'
+    computation_method: computed
   - period: '2026-10-17'
     score: 85.0
     note: 'Computed 2026-10-17: avg=84.97 trend=→ (flat) (was 87.8)'
@@ -235,8 +243,31 @@ linked_structural_catalyst_ids:
 
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-10-17"
+status_last_reviewed: "2026-10-21"
 review_log:
+- date: '2026-10-21'
+  verdict: strengthening
+  evidence: "New dated deal on the core mechanism: Merck KGaA agreed on 2026-10-19 to buy Silence Therapeutics for USD 20
+    per ADS in cash (about USD 1.3B equity), a 130% premium to the prior close (82% over the 30-day VWAP) for a phase-3-ready
+    siRNA asset; BioPharma Dive's M&A tracker (updated 2026-10-19) ranks it the second-highest premium of the year. Same buyer
+    has the pending USD 11.3B Bio-Techne deal. Roche signed its 10th China licensing deal since the start of 2025 (five since
+    late August, per BioPharma Dive 2026-10-13). Counter-evidence is only sentiment: J&J -6% on earnings and a sideways XBI
+    (Cantor note 2026-10-02). No FTC action found. No numeric indicator recorded: a single deal's premium is not the 'average
+    clinical-stage takeout premium' that ind_03 defines, and the three YTD value trackers still disagree on definition (ind_01)."
+  source: Reuters via KSL 2026-10-19 and Cooley deal note 2026-10-19; BioPharma Dive M&A tracker updated 2026-10-19; 
+    BioPharma Dive 2026-10-13
+- date: '2026-10-19'
+  verdict: intact
+  evidence: 'M&A flow still strong: Gibson Dunn mid-cap public-target survey H1 2026 and secondary summaries report more USD
+    1B+ biotech acquisitions completed in 2026 than in all of 2025, private-company deals outpacing public ones (26 vs 21
+    YTD), median startup deal about USD 1B, healthcare M&A about USD 419B YTD (most since 2021; source undated within 2026).
+    XBI described as trading sideways over recent months (Cantor note dated 2026-10-02 per BioPharma Dive chart piece), consistent
+    with the -11% pullback from the 2026-08-31 high already recorded on 2026-10-17. ind_02 already recorded 34.3 on 2026-10-17;
+    no fresh recompute needed 2 days later. The GSK/RAPT USD 2.2B (65% premium) hit the search returned is not dated reliably
+    to October 2026 and was NOT used. No FTC action against a 2026 biotech deal found (the Amgen/Horizon suit that surfaced
+    is a 2023 item).'
+  source: Gibson Dunn Biotech Briefings H1 2026 mid-cap survey; BioPharma Dive XBI/M&A charts; Janus Henderson 'What's 
+    next for biotech's M&A boom?'
 - date: '2026-10-17'
   verdict: intact
   evidence: 'ind_02 XBI trailing-12M total return recomputed from yfinance adjusted closes: +34.3% (2025-10-16 close 107.45

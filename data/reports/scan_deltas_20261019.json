@@ -1,0 +1,80 @@
+[
+  {
+    "catalyst_id": "struct_ai_capex_supercycle",
+    "verdict": "intact",
+    "evidence": "No hyperscaler capex cut found. As of mid-August 2026 every major hyperscaler had RAISED near-term guidance (Alphabet 2026 capex to USD 195-205B with 2027 'significantly' higher; Amazon 2026 ~USD 220B; Microsoft guiding FY27 Q1 capex >USD 50B; Meta 2026 USD 125-145B); aggregate 2026 hyperscaler capex quoted at USD 700-800B+. Q3 prints (Microsoft, Amazon, Meta, Alphabet) fall in the last days of October, after this scan, so ind_01 is not refreshed. Nearest hits to the short case are forecasts and opinion, not decisions: UBS models capex growth slowing 76% (2026) to 25% (2027) to 6% (2028); BofA projects hyperscaler free cash flow at about -USD 144B by 2027; secondary sources say power shortages and local opposition delay about half of planned 2026 AI data centres; Nvidia FY26 Q4 data-centre revenue USD 62.3B (+75% YoY), Q1 FY27 guide USD 78B +/-2%. Decelerating growth is not an invalidation. Source dating caveat: the capex-cut query returned mostly 2025 and spring-2026 items; only the mid-August guidance summary and the Nvidia print are dated within the thesis window.",
+    "source": "Aggregated mid-August 2026 hyperscaler guidance summaries (LPL Research, Yahoo Finance 2026-05-01 and later); NVIDIA FY2026 Q4 release (sec.gov 8-K); UBS and BofA capex notes as summarised by Futuriom/Seeking Alpha",
+    "indicators": [],
+    "disconfirming": {
+      "searched": true,
+      "query": "hyperscaler capex cut guidance lowered datacenter delay AI bubble October 2026",
+      "found": false,
+      "evidence": null
+    }
+  },
+  {
+    "catalyst_id": "struct_ai_drug_discovery",
+    "verdict": "intact",
+    "evidence": "Clinic: Insilico's rentosertib (IPF) Phase IIa published in Nature Medicine (April 2026): +98.4 mL FVC at 60 mg over 12 weeks vs -20.3 mL on placebo; Phase 3 registered 2026-07-07 (already in the 2026-10-17 delta). Capital: Isomorphic Labs USD 2.1B Series B (2026-05-13) and an Insilico USD 110M Series E are the largest rounds found; no new October round found. No indicator recorded: the stored definitions (22 molecules, 20 partnerships, USD 6B TTM) still match no 2026 source. Verdict stays intact rather than strengthening because nothing new and dated inside the last two days moved.",
+    "source": "Nature Medicine rentosertib Phase IIa (April 2026) as summarised by IntuitionLabs; PharmaVoice on Isomorphic Labs Series B (2026-05-13)",
+    "indicators": [],
+    "disconfirming": {
+      "searched": true,
+      "query": "AI-designed drug clinical trial failure discontinued Recursion layoffs biotech AI skepticism October 2026",
+      "found": false,
+      "evidence": null
+    }
+  },
+  {
+    "catalyst_id": "struct_biopharma_patent_cliff_ma",
+    "verdict": "intact",
+    "evidence": "M&A flow still strong: Gibson Dunn mid-cap public-target survey H1 2026 and secondary summaries report more USD 1B+ biotech acquisitions completed in 2026 than in all of 2025, private-company deals outpacing public ones (26 vs 21 YTD), median startup deal about USD 1B, healthcare M&A about USD 419B YTD (most since 2021; source undated within 2026). XBI described as trading sideways over recent months (Cantor note dated 2026-10-02 per BioPharma Dive chart piece), consistent with the -11% pullback from the 2026-08-31 high already recorded on 2026-10-17. ind_02 already recorded 34.3 on 2026-10-17; no fresh recompute needed 2 days later. The GSK/RAPT USD 2.2B (65% premium) hit the search returned is not dated reliably to October 2026 and was NOT used. No FTC action against a 2026 biotech deal found (the Amgen/Horizon suit that surfaced is a 2023 item).",
+    "source": "Gibson Dunn Biotech Briefings H1 2026 mid-cap survey; BioPharma Dive XBI/M&A charts; Janus Henderson 'What's next for biotech's M&A boom?'",
+    "indicators": [],
+    "disconfirming": {
+      "searched": true,
+      "query": "biotech M&A slowdown FTC deal blocked XBI selloff rates October 2026",
+      "found": false,
+      "evidence": null
+    }
+  },
+  {
+    "catalyst_id": "struct_energy_transition_grid",
+    "verdict": "intact",
+    "evidence": "Rystad Energy (2026-06-06/08): global grid capex to exceed USD 650B in 2026, +5% YoY and more than double 2020, with transformer prices up about 77% since 2019 and lead times and prices now stagnating at high levels rather than rising; Wood Mackenzie Q2 2025 survey: power-transformer lead times averaged 128 weeks (about 29.5 months), generator step-up 144 weeks, US supply deficit about 30%; Hitachi Energy (>USD 1B, South Boston plant online 2028) and Siemens (USD 421M Charlotte) adding capacity. ind_01 NOT recorded: the 128-week figure is a Q2 2025 survey, older than the stored 26-month reading, and no 2026 survey was found. ind_02 (EU grid investment) has no 2026 EU-specific number. Adjacent headwind, not a grid-capex cut: US cancellations of solar/wind/storage capacity (more than 8 GW in Q1 2026, more than 21 GW since the start of 2025) and DOE grant terminations; the thesis's grid leg is not touched. Rates at 5.1-5.2% on the 10y (2026-10-13) are a valuation headwind for utilities, not a capex cut.",
+    "source": "Rystad Energy via pv magazine (2026-06-06); Wood Mackenzie transformer survey Q2 2025; Foley & Lardner 'The grid's bottleneck isn't just money, it's materials' (2026-09); Renewable Energy World / Carbon Pulse on cancellations",
+    "indicators": [],
+    "disconfirming": {
+      "searched": true,
+      "query": "utilities grid capex cut renewable project cancelled yields 5% clean energy stocks selloff October 2026",
+      "found": false,
+      "evidence": null
+    }
+  },
+  {
+    "catalyst_id": "struct_enterprise_cyber_spend_supercycle",
+    "verdict": "intact",
+    "evidence": "Thin freshness: the supportive hits are not dated inside the last 2 days. CrowdStrike reported record net new ARR of USD 333M (+51% YoY) and Falcon Flex ending ARR USD 2.29B (+101%) in its latest quarter (quarter date not shown in the source); Gartner-based figures quoted around USD 244B global information-security spend for 2026 (vs stored 240, within 2%, so NOT recorded) and AI-cybersecurity spend rising from USD 51.3B (2026) to nearly USD 86B (2027). ind_05 was recorded 2026-10-17 (USD 19,411M). The short-case query returned only 2022-2024 items (CrowdStrike -19% on weak guide, Palo Alto -23% on billings cut), none dated 2026, so no 2026 contradiction was found, but the retrieval was weak.",
+    "source": "CrowdStrike latest-quarter results as summarised by TIKR/Webull; Gartner forecast as quoted by TIKR",
+    "indicators": [],
+    "disconfirming": {
+      "searched": true,
+      "query": "cybersecurity budgets cut spending slowdown security software stocks selloff October 2026",
+      "found": false,
+      "evidence": null
+    }
+  },
+  {
+    "catalyst_id": "struct_nato_rearmament",
+    "verdict": "intact",
+    "evidence": "Downgraded from the 2026-10-17 'strengthening' to intact because the short-case search found a corroborated, dated company-level crack the previous scan missed: on 2026-08-06 Rheinmetall cut FY2026 sales guidance to EUR 13.7-14.2B (from 14.0-14.5B, about -EUR 300M) after the German government cancelled the delayed F126 frigate programme, cut its year-end order-backlog target to above EUR 100B from about EUR 135B, and cut its capex target to 8-9% of sales from 16%; H1 operating cash flow was about -EUR 1.6B. Four independent outlets agree (Defense News 2026-08-06, Baird Maritime, defence-industry.eu, maritime-professionals). It is a programme cancellation inside one prime, not a budget reversal: H1 sales were still +39% with backlog EUR 80.5B (+44%), the alliance core average is 2.86% of GDP, Germany's 2026 defence budget is about EUR 83B, and the 5%-by-2035 Hague commitment is untouched. Not scored as an event (strength 40 by rubric, see triage). Flag for the review: ind_02 (combined order-book growth) relies on Rheinmetall's backlog, whose forward path was just guided down by about a quarter. The October German procurement orders the search returned (Skyranger, Eurofighter, Schakal) could not be dated to 2026 (the Eurofighter/Skyranger items match the 2025 Bundestag approvals) and were NOT used.",
+    "source": "Defense News 'Rheinmetall scales down 2026 sales outlook on scrapped frigate program' (2026-08-06); Baird Maritime; defence-industry.eu; Rheinmetall H1 2026 press release (2026-08-06)",
+    "indicators": [],
+    "disconfirming": {
+      "searched": true,
+      "query": "defense budget delayed cut procurement shortfall Europe peace deal Ukraine ceasefire defence stocks fall October 2026",
+      "found": true,
+      "evidence": "Rheinmetall (2026-08-06): FY2026 sales guidance cut by about EUR 300M to EUR 13.7-14.2B after Germany cancelled the F126 frigate programme; year-end backlog target cut from about EUR 135B to above EUR 100B; capex target cut to 8-9% of sales from 16%; H1 operating cash flow about -EUR 1.6B. Programme-specific, budgets and the 5% commitment unchanged; scored 40 by rubric, below the 55 write bar, so no contradicts event is registered."
+    }
+  }
+]

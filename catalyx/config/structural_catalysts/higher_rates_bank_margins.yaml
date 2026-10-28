@@ -53,11 +53,19 @@ user_notes: >
 intensity:
   current_score: 69.3
   computation_method: computed
-  last_updated: "2026-10-17"
+  last_updated: "2026-10-23"
   computation_note: >
     Bootstrap at creation 2026-10-17. Anchor: below struct_cb_gold_accumulation (71) — cyclical, with a
     live contrary signal in deposit competition.
   history:
+  - period: '2026-10-23'
+    score: 69.3
+    note: 'Computed 2026-10-23: avg=69.35 trend=→ (flat) (was 71.3)'
+    computation_method: computed
+  - period: '2026-10-20'
+    score: 71.3
+    note: 'Computed 2026-10-20: avg=69.35 trend=↑ (rising 1 period) (was 69.3)'
+    computation_method: computed
   - period: '2026-09-16'
     score: 69.3
     note: 'Computed 2026-10-17: avg=69.35 trend=→ (flat — insufficient history) (was 60)'

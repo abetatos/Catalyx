@@ -31,8 +31,16 @@ user_notes: "Already played the first leg (EU defense prime ETFs). Monitoring fo
 
 intensity:
   current_score: 77.7
-  last_updated: "2026-10-16"
+  last_updated: "2026-10-23"
   history:
+  - period: '2026-10-23'
+    score: 77.7
+    note: 'Computed 2026-10-23: avg=77.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-20'
+    score: 77.7
+    note: 'Computed 2026-10-20: avg=77.73 trend=→ (flat)'
+    computation_method: computed
   - period: '2026-10-16'
     score: 77.7
     note: 'Computed 2026-10-16: avg=77.73 trend=→ (flat)'
@@ -260,8 +268,34 @@ linked_event_catalyst_ids:
 - cat_20260603_nato_defense_gdp
 - cat_20260603_nato_hague_5pct_gdp
 status: active
-status_last_reviewed: "2026-10-17"
+status_last_reviewed: "2026-10-21"
 review_log:
+- date: '2026-10-21'
+  verdict: intact
+  evidence: "No change since the 2026-10-19 verdict. Fresh, dated and supportive but US-side: Northrop Grumman Q3 (2026-10-20)
+    raised 2026 segment operating income guidance to USD 4,940-5,040M and EPS to USD 29.35-29.75; NOC +4.5% and RTX +0.7%
+    on 2026-10-20. Germany's 2026 core defence budget about EUR 83B with defence exempt from the debt brake and a 3.7%-of-GDP
+    target from 2030 (May 2026 update). The Rheinmetall F126 / guidance-cut crack recorded on 2026-10-19 stands and nothing
+    new reverses or deepens it; no dated October 2026 European procurement order or budget decision was retrievable (searches
+    returned April 2026 and 2025 items). Ukraine-side: Zelensky dropped an energy-sites ceasefire Trump had announced (about
+    2026-10-17), so no peace-driven demand shock. ind_02 still carries the Rheinmetall backlog caveat from 2026-10-19."
+  source: Northrop Grumman Q3 2026 8-K (sec.gov) 2026-10-20; Yahoo Finance / Investopedia markets 2026-10-20; MercoPress
+    2026-10-17; Reuters on Germany 2026 defence budget
+- date: '2026-10-19'
+  verdict: intact
+  evidence: "Downgraded from the 2026-10-17 'strengthening' to intact because the short-case search found a corroborated,
+    dated company-level crack the previous scan missed: on 2026-08-06 Rheinmetall cut FY2026 sales guidance to EUR 13.7-14.2B
+    (from 14.0-14.5B, about -EUR 300M) after the German government cancelled the delayed F126 frigate programme, cut its year-end
+    order-backlog target to above EUR 100B from about EUR 135B, and cut its capex target to 8-9% of sales from 16%; H1 operating
+    cash flow was about -EUR 1.6B. Four independent outlets agree (Defense News 2026-08-06, Baird Maritime, defence-industry.eu,
+    maritime-professionals). It is a programme cancellation inside one prime, not a budget reversal: H1 sales were still +39%
+    with backlog EUR 80.5B (+44%), the alliance core average is 2.86% of GDP, Germany's 2026 defence budget is about EUR 83B,
+    and the 5%-by-2035 Hague commitment is untouched. Not scored as an event (strength 40 by rubric, see triage). Flag for
+    the review: ind_02 (combined order-book growth) relies on Rheinmetall's backlog, whose forward path was just guided down
+    by about a quarter. The October German procurement orders the search returned (Skyranger, Eurofighter, Schakal) could
+    not be dated to 2026 (the Eurofighter/Skyranger items match the 2025 Bundestag approvals) and were NOT used."
+  source: Defense News 'Rheinmetall scales down 2026 sales outlook on scrapped frigate program' (2026-08-06); Baird 
+    Maritime; defence-industry.eu; Rheinmetall H1 2026 press release (2026-08-06)
 - date: '2026-10-17'
   verdict: strengthening
   evidence: 'NATO 2026 defence-expenditure estimates (reported 2026-07-07, Anadolu/Reuters): alliance combined defence spending

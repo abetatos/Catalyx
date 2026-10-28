@@ -47,11 +47,19 @@ user_notes: >
 intensity:
   current_score: 86.6
   computation_method: computed
-  last_updated: "2026-10-16"
+  last_updated: "2026-10-23"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: on par with struct_solar_lcoe_deployment (64.1). Onset-phase,
     high-novelty adoption trend with an incumbent-capture floor.
   history:
+  - period: '2026-10-23'
+    score: 86.6
+    note: 'Computed 2026-10-23: avg=86.58 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-20'
+    score: 86.6
+    note: 'Computed 2026-10-20: avg=86.58 trend=→ (flat)'
+    computation_method: computed
   - period: '2026-10-16'
     score: 86.6
     note: 'Computed 2026-10-16: avg=86.58 trend=→ (flat)'

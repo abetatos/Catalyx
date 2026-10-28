@@ -1,0 +1,87 @@
+[
+  {
+    "catalyst_id": "struct_ai_capex_supercycle",
+    "verdict": "intact",
+    "evidence": "Demand side still confirming, funding side stressed; no capex cut found. TSMC Q3 (2026-10-15) kept 2026 capex at USD 60-64B, raised 2026 revenue growth to about 44% in USD (from just over 40%), guided Q4 revenue to USD 52.3-54.3B and said AI demand still exceeds supply and 2026-2028 capex will be 'significantly higher' than the prior three years. Schneider Electric Q3 (2026-10-16): record EUR 11.46B revenue, +16.9% organic, data-centre demand 'triple-digit' growth, 2026 guidance raised for the second time. Counter-signal on cost of capital, not on spending: CoreWeave fell about 25% from 2026-10-09 to 2026-10-16 (USD 82 to 61) as its 2032 notes yielded about 15%, 5y CDS hit a record 1,194.5bp and S&P rates it B; Oracle fell nearly 10% the same week on AI-debt worries. None of the sources reports a customer capex cut, delay or cancellation (CoreWeave added over USD 25B of commitments in early Q3, backlog USD 104B). Q3 hyperscaler prints (Meta 2026-10-21 after close, others the following week) are not out, so ind_01 is not refreshed. Verdict stays intact rather than strengthening because the financing stress is a live risk to the build-out pace that the next prints have to answer.",
+    "source": "TSMC Q3 2026 release as reported by CRN Asia / CryptoBriefing 2026-10-15; Schneider Electric Q3 2026 (KSL/Reuters 2026-10-16); TIKR CoreWeave bond-distress piece (2026-10-16) and Trefis 2026-10-15",
+    "indicators": [],
+    "disconfirming": {
+      "searched": true,
+      "query": "hyperscaler capex cut guidance lowered datacenter delay earnings Meta Microsoft Alphabet Amazon October 2026; plus CoreWeave 25% drop debt concerns AI data center financing October 2026",
+      "found": false,
+      "evidence": "No capex cut, guidance cut or data-centre delay found in October 2026. Nearest hit to the short case is a financing signal, not a spending decision: CoreWeave 5y CDS 1,194.5bp (record, 452bp in June), 2032 notes about 79.5c / 15% yield, Oracle about -10% in the week of 2026-10-14, Reuters tying it to rate-hike fears. Treated as a risk flag for the Q3 hyperscaler prints, not as a contradicts event."
+    }
+  },
+  {
+    "catalyst_id": "struct_ai_drug_discovery",
+    "verdict": "intact",
+    "evidence": "Capital markets open to AI-native biotech: Iambic Therapeutics (Nvidia-backed, AI-driven platform, lead HER2 inhibitor IAM1363) priced a USD 150M Nasdaq IPO at USD 16 (midpoint) and debuted 2026-10-15, up roughly 13-18% on day one (valuation about USD 0.76-0.9B). Earlier dated anchors unchanged: Isomorphic Labs USD 2.1B Series B (2026-05-13), Insilico ISM6331 FDA Fast Track (2026-07-29). No new clinical readout for an AI-designed asset found in the last two days. Verdict stays intact: one small IPO, and the stored definitions of ind_01-03 (USD 6B TTM, 22 molecules, 20 partnerships) still match no 2026 source, so nothing is recorded.",
+    "source": "Iambic 424B4 / pricing release and Fierce Biotech via dealroom and valueaddvc 2026-10-15; BioPharma Dive IPO tracker (captured 2026-10-21)",
+    "indicators": [],
+    "disconfirming": {
+      "searched": true,
+      "query": "AI-designed drug trial failure discontinued Recursion Exscientia layoffs biotech funding October 2026",
+      "found": false,
+      "evidence": null
+    }
+  },
+  {
+    "catalyst_id": "struct_biopharma_patent_cliff_ma",
+    "verdict": "strengthening",
+    "evidence": "New dated deal on the core mechanism: Merck KGaA agreed on 2026-10-19 to buy Silence Therapeutics for USD 20 per ADS in cash (about USD 1.3B equity), a 130% premium to the prior close (82% over the 30-day VWAP) for a phase-3-ready siRNA asset; BioPharma Dive's M&A tracker (updated 2026-10-19) ranks it the second-highest premium of the year. Same buyer has the pending USD 11.3B Bio-Techne deal. Roche signed its 10th China licensing deal since the start of 2025 (five since late August, per BioPharma Dive 2026-10-13). Counter-evidence is only sentiment: J&J -6% on earnings and a sideways XBI (Cantor note 2026-10-02). No FTC action found. No numeric indicator recorded: a single deal's premium is not the 'average clinical-stage takeout premium' that ind_03 defines, and the three YTD value trackers still disagree on definition (ind_01).",
+    "source": "Reuters via KSL 2026-10-19 and Cooley deal note 2026-10-19; BioPharma Dive M&A tracker updated 2026-10-19; BioPharma Dive 2026-10-13",
+    "indicators": [],
+    "disconfirming": {
+      "searched": true,
+      "query": "biotech M&A slowdown FTC challenge deal pharma tariffs most favored nation pricing XBI selloff October 2026",
+      "found": false,
+      "evidence": null
+    }
+  },
+  {
+    "catalyst_id": "struct_energy_transition_grid",
+    "verdict": "strengthening",
+    "evidence": "Schneider Electric Q3 (2026-10-16): record EUR 11.46B revenue, +16.9% organic, Energy Management +18.8% to EUR 9.62B, record order backlog at end-September, FY2026 organic growth guidance raised to 12-14% and adjusted EBITA growth to 18-21%, with 'increasing visibility into 2027 and 2028' (CEO Blum). GE Vernova Q3 is due 2026-10-28 (Q2: electrification orders +66% to about USD 6.3B, equipment backlog about USD 40.6B). Utilities were a leading S&P sector on 2026-10-20 (+1.26%). Wood Mackenzie / pv magazine (2026-05-11): US transformer lead times up to about four years. ind_01 NOT recorded: no 2026 like-for-like lead-time survey; ind_03 copper is auto-recorded (about USD 14,400/t on 2026-10-21, -0.7% vs stored). Adjacent headwinds unchanged and not a grid-capex cut: 10y at about 5.12% (peak 5.365% on 2026-10-14), US clean-energy project cancellations (USD 14B in Q1 2026).",
+    "source": "Schneider Electric Q3 2026 via HL / KSL-Reuters 2026-10-16; MarketBeat GE Vernova Q2 call 2026-07-22; CappNotes 2026-10-20; pv magazine USA 2026-05-11",
+    "indicators": [],
+    "disconfirming": {
+      "searched": true,
+      "query": "grid investment cut cancelled transmission project utilities yields clean energy stocks selloff October 2026",
+      "found": false,
+      "evidence": null
+    }
+  },
+  {
+    "catalyst_id": "struct_enterprise_cyber_spend_supercycle",
+    "verdict": "intact",
+    "evidence": "Thin freshness again: no dated cyber print inside the last two days. Barchart (about 2026-10-17) has CrowdStrike +123%, Fortinet +141% and Palo Alto +117% YTD on AI-driven security demand, with a Morningstar overvaluation warning and CrowdStrike at about 220x forward earnings; that is price, not spend. IANS/Artico 2026 CISO benchmark: average budget growth 5%, median flat for the second year, 55% of CISOs flat or cut, 69% prioritising AI-for-security for incremental spend; Wiz 2026 benchmark: 88% expect spending to rise but 56% say it will fall short. Slower budget growth with consolidation, not a cut. ind_05 was recorded 2026-10-17; no new numeric.",
+    "source": "Barchart 2026-10-17; IANS/Artico 2026 CISO Compensation and Budget Benchmark; Wiz 2026 CISO Budget Benchmark",
+    "indicators": [],
+    "disconfirming": {
+      "searched": true,
+      "query": "cybersecurity spending slowdown budget cuts security software guidance cut 2026 CISO survey",
+      "found": false,
+      "evidence": null
+    }
+  },
+  {
+    "catalyst_id": "struct_nato_rearmament",
+    "verdict": "intact",
+    "evidence": "No change since the 2026-10-19 verdict. Fresh, dated and supportive but US-side: Northrop Grumman Q3 (2026-10-20) raised 2026 segment operating income guidance to USD 4,940-5,040M and EPS to USD 29.35-29.75; NOC +4.5% and RTX +0.7% on 2026-10-20. Germany's 2026 core defence budget about EUR 83B with defence exempt from the debt brake and a 3.7%-of-GDP target from 2030 (May 2026 update). The Rheinmetall F126 / guidance-cut crack recorded on 2026-10-19 stands and nothing new reverses or deepens it; no dated October 2026 European procurement order or budget decision was retrievable (searches returned April 2026 and 2025 items). Ukraine-side: Zelensky dropped an energy-sites ceasefire Trump had announced (about 2026-10-17), so no peace-driven demand shock. ind_02 still carries the Rheinmetall backlog caveat from 2026-10-19.",
+    "source": "Northrop Grumman Q3 2026 8-K (sec.gov) 2026-10-20; Yahoo Finance / Investopedia markets 2026-10-20; MercoPress 2026-10-17; Reuters on Germany 2026 defence budget",
+    "indicators": [],
+    "disconfirming": {
+      "searched": true,
+      "query": "defense budget delayed cut procurement shortfall Europe peace deal Ukraine ceasefire defence stocks fall October 2026",
+      "found": false,
+      "evidence": null
+    }
+  },
+  {
+    "catalyst_id": "cat_20260817_hormuz_reescalation",
+    "verdict": "strengthening",
+    "evidence": "Escalation continued after the 2026-10-17 review: Brent touched about USD 110 on 2026-10-17 (first time since May) and USD 111.99 intraday on 2026-10-20 before settling at USD 108.79; WTI USD 101.79 (expiring Nov contract) after an eight-session run of more than 20%. On 2026-10-20 the IRGC said two tankers were set ablaze by mines it laid in the strait (US CENTCOM disputes the claim, unconfirmed independently); one tracker logged 4 transits on 2026-10-18 vs a pre-crisis 85 per day; the US blockade of Iranian ports continues. Offsetting: mediators were reported trying to bring the US and Iran together on 2026-10-20, which pulled oil back. Trump's pause until the 2026-11-03 midterms (recorded 2026-10-17) is the next re-verify date.",
+    "source": "CappNotes Closing Look 2026-10-20; Yahoo Finance / Investopedia 2026-10-20; Euronews 2026-10-20; MercoPress 2026-10-17; straits.live brief 2026-10-20",
+    "indicators": []
+  }
+]

@@ -18,3 +18,14 @@
 
   • 1 auto-indicator(s) moved >10% vs stored (Rule 5) — see data/reports/heartbeat_20261013.log
 · quiet — nothing needs a review (2026-10-16)
+── CATALYX heartbeat: a review is worth running ──
+  • 9 catalyst verdict(s) past the freshness limit
+  • 1 pending lifecycle transition(s)
+
+  Facts: data/reports/state_20261020.json  ·  full log: data/reports/pre_run_check_20261020.log
+  Next: /catalyx-review scheduled
+── CATALYX heartbeat: a review is worth running ──
+  • 9 catalyst verdict(s) past the freshness limit
+
+  Facts: data/reports/state_20261023.json  ·  full log: data/reports/pre_run_check_20261023.log
+  Next: /catalyx-review scheduled

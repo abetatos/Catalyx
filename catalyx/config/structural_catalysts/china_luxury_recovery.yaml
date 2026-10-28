@@ -46,14 +46,22 @@ user_notes: >
   in confirmation and capped by tariff margin drag + EUR strength. Run intensity_engine after first refresh.
 
 intensity:
-  current_score: 71.5
+  current_score: 74.4
   computation_method: computed
-  last_updated: "2026-10-16"
+  last_updated: "2026-10-23"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: near struct_solar_lcoe_deployment (64.1); below
     struct_cb_gold_accumulation (84) because the recovery is only one-to-two quarters confirmed and
     tariff/FX drags cap the near-term upside.
   history:
+  - period: '2026-10-23'
+    score: 74.4
+    note: 'Computed 2026-10-23: avg=69.38 trend=↑↑ (rising 2+ consecutive)'
+    computation_method: computed
+  - period: '2026-10-20'
+    score: 74.4
+    note: 'Computed 2026-10-20: avg=69.38 trend=↑↑ (rising 2+ consecutive) (was 71.5)'
+    computation_method: computed
   - period: '2026-10-16'
     score: 71.5
     note: 'Computed 2026-10-16: avg=69.53 trend=↑ (rising 1 period) (was 67.4)'
@@ -208,13 +216,13 @@ indicators:
   source: "ECB / Bloomberg USD/CNY"
   source_url_template: "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/"
   check_frequency: monthly
-  current_value: 6.692
+  current_value: 6.6861
   unit: cny_per_usd
   direction: lower_is_stronger
   threshold_strong: 6.9
   threshold_weak: 7.4
   last_value: 6.692
-  last_date: "2026-10-09"
+  last_date: "2026-10-16"
   update_note: >-
     auto: USD/CNY (FRED DEXCHUS)
   semaphore: 🟡
@@ -226,7 +234,7 @@ indicators:
   - date: "2025-06-30"
     value: 7.25
 
-  score: 55.6
+  score: 55.0
 deactivation_conditions:
 - id: deact_01
   condition: >
@@ -249,4 +257,4 @@ linked_structural_catalyst_ids: []
 
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-10-09"
+status_last_reviewed: "2026-10-16"

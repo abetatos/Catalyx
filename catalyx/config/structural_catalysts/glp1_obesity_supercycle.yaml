@@ -52,11 +52,19 @@ user_notes: >
 intensity:
   current_score: 85.8
   computation_method: computed
-  last_updated: "2026-10-16"
+  last_updated: "2026-10-23"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: on par with struct_cb_gold_accumulation (84), below
     struct_ai_capex_supercycle (89.9). Consensus/mainstream but TAM still expanding (oral + Medicare onset).
   history:
+  - period: '2026-10-23'
+    score: 85.8
+    note: 'Computed 2026-10-23: avg=85.85 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-20'
+    score: 85.8
+    note: 'Computed 2026-10-20: avg=85.85 trend=→ (flat)'
+    computation_method: computed
   - period: '2026-10-16'
     score: 85.8
     note: 'Computed 2026-10-16: avg=85.85 trend=→ (flat)'

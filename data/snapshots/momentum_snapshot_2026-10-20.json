@@ -1,0 +1,888 @@
+{
+  "generated_at": "2026-10-20T08:56:43.939329",
+  "date": "2026-10-20",
+  "source": "prices_cache",
+  "sectors": {
+    "eu_defense_prime_contractors": {
+      "primary": {
+        "ticker": "EUDF.L",
+        "current_price": 31.188,
+        "currency": "USD",
+        "return_basis": "EUR",
+        "return_1m_pct": -1.07,
+        "return_3m_pct": 0.89,
+        "return_6m_pct": -0.82,
+        "return_1y_pct": -0.85,
+        "high_52w": 35.5095,
+        "low_52w": 27.444,
+        "near_52w_high_pct": -12.17,
+        "momentum_score": 49.8,
+        "data_points": 312,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": [
+        {
+          "ticker": "NATO.PA",
+          "current_price": 18.2713,
+          "currency": "EUR",
+          "return_basis": "EUR",
+          "return_1m_pct": -1.27,
+          "return_3m_pct": 2.35,
+          "return_6m_pct": 9.93,
+          "return_1y_pct": 10.78,
+          "high_52w": 19.8795,
+          "low_52w": 15.1634,
+          "near_52w_high_pct": -8.09,
+          "momentum_score": 57.1,
+          "data_points": 313,
+          "last_date": "2026-10-19"
+        },
+        {
+          "ticker": "DFEN.DE",
+          "current_price": 51.7,
+          "currency": "EUR",
+          "return_basis": "EUR",
+          "return_1m_pct": -1.82,
+          "return_3m_pct": 0.98,
+          "return_6m_pct": -10.57,
+          "return_1y_pct": -2.75,
+          "high_52w": 64.09,
+          "low_52w": 49.1,
+          "near_52w_high_pct": -19.33,
+          "momentum_score": 44.0,
+          "data_points": 311,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "space_defense_satellite": {
+      "primary": {
+        "ticker": "JEDI.DE",
+        "current_price": 61.91,
+        "currency": "EUR",
+        "return_basis": "EUR",
+        "return_1m_pct": -11.16,
+        "return_3m_pct": -15.05,
+        "return_6m_pct": -28.53,
+        "return_1y_pct": 7.15,
+        "high_52w": 118.16,
+        "low_52w": 45.34,
+        "near_52w_high_pct": -47.6,
+        "momentum_score": 22.0,
+        "data_points": 311,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": [
+        {
+          "ticker": "JEDI.L",
+          "current_price": 62.0908,
+          "currency": "USD",
+          "return_basis": "EUR",
+          "return_1m_pct": -11.02,
+          "return_3m_pct": -14.01,
+          "return_6m_pct": -29.79,
+          "return_1y_pct": 13.9,
+          "high_52w": 118.5411,
+          "low_52w": 45.2206,
+          "near_52w_high_pct": -47.62,
+          "momentum_score": 22.1,
+          "data_points": 311,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "oil_majors_integrated": {
+      "primary": {
+        "ticker": "IUES.L",
+        "current_price": 12.8612,
+        "currency": "USD",
+        "return_basis": "EUR",
+        "return_1m_pct": 9.11,
+        "return_3m_pct": 19.25,
+        "return_6m_pct": 30.6,
+        "return_1y_pct": 67.42,
+        "high_52w": 12.8612,
+        "low_52w": 7.7054,
+        "near_52w_high_pct": 0.0,
+        "momentum_score": 80.4,
+        "data_points": 312,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": []
+    },
+    "nuclear_energy": {
+      "primary": {
+        "ticker": "NUKL.DE",
+        "current_price": 39.865,
+        "currency": "EUR",
+        "return_basis": "EUR",
+        "return_1m_pct": -12.08,
+        "return_3m_pct": -10.73,
+        "return_6m_pct": -28.02,
+        "return_1y_pct": -31.59,
+        "high_52w": 58.48,
+        "low_52w": 39.865,
+        "near_52w_high_pct": -31.83,
+        "momentum_score": 24.3,
+        "data_points": 311,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": []
+    },
+    "uranium_miners": {
+      "primary": {
+        "ticker": "URNM.L",
+        "current_price": 9.7582,
+        "currency": "USD",
+        "return_basis": "EUR",
+        "return_1m_pct": -14.86,
+        "return_3m_pct": -11.79,
+        "return_6m_pct": -31.32,
+        "return_1y_pct": -13.76,
+        "high_52w": 15.8151,
+        "low_52w": 9.6765,
+        "near_52w_high_pct": -38.3,
+        "momentum_score": 21.7,
+        "data_points": 312,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": [
+        {
+          "ticker": "URNU.DE",
+          "current_price": 18.72,
+          "currency": "EUR",
+          "return_basis": "EUR",
+          "return_1m_pct": -22.61,
+          "return_3m_pct": -29.62,
+          "return_6m_pct": -30.5,
+          "return_1y_pct": null,
+          "high_52w": 30.875,
+          "low_52w": 18.0,
+          "near_52w_high_pct": -39.37,
+          "momentum_score": 13.0,
+          "data_points": 242,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "solar_energy": {
+      "primary": {
+        "ticker": "RAYS.L",
+        "current_price": 19.3984,
+        "currency": "GBp",
+        "return_basis": "EUR",
+        "return_1m_pct": -7.87,
+        "return_3m_pct": -21.85,
+        "return_6m_pct": -21.54,
+        "return_1y_pct": -10.89,
+        "high_52w": 33.0329,
+        "low_52w": 19.3984,
+        "near_52w_high_pct": -41.28,
+        "momentum_score": 22.0,
+        "data_points": 310,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": []
+    },
+    "grid_infrastructure_utilities": {
+      "primary": {
+        "ticker": "IQQH.DE",
+        "current_price": 8.445,
+        "currency": "EUR",
+        "return_basis": "EUR",
+        "return_1m_pct": -4.88,
+        "return_3m_pct": -10.5,
+        "return_6m_pct": -14.77,
+        "return_1y_pct": 1.85,
+        "high_52w": 11.642,
+        "low_52w": 7.8387,
+        "near_52w_high_pct": -27.46,
+        "momentum_score": 32.6,
+        "data_points": 311,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": [
+        {
+          "ticker": "INRG.L",
+          "current_price": 8.3935,
+          "currency": "GBp",
+          "return_basis": "EUR",
+          "return_1m_pct": -5.91,
+          "return_3m_pct": -10.62,
+          "return_6m_pct": -12.88,
+          "return_1y_pct": 0.07,
+          "high_52w": 11.6322,
+          "low_52w": 7.87,
+          "near_52w_high_pct": -27.84,
+          "momentum_score": 33.2,
+          "data_points": 310,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "gold_physical": {
+      "primary": {
+        "ticker": "PPFB.DE",
+        "current_price": 71.67,
+        "currency": "EUR",
+        "return_basis": "EUR",
+        "return_1m_pct": -2.73,
+        "return_3m_pct": 1.38,
+        "return_6m_pct": -8.61,
+        "return_1y_pct": 0.88,
+        "high_52w": 87.855,
+        "low_52w": 65.86,
+        "near_52w_high_pct": -18.42,
+        "momentum_score": 45.1,
+        "data_points": 311,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": [
+        {
+          "ticker": "IGLN.L",
+          "current_price": 71.6895,
+          "currency": "USD",
+          "return_basis": "EUR",
+          "return_1m_pct": -2.74,
+          "return_3m_pct": 3.4,
+          "return_6m_pct": -8.2,
+          "return_1y_pct": -1.05,
+          "high_52w": 87.4637,
+          "low_52w": 65.9815,
+          "near_52w_high_pct": -18.04,
+          "momentum_score": 46.9,
+          "data_points": 312,
+          "last_date": "2026-10-19"
+        },
+        {
+          "ticker": "4GLD.DE",
+          "current_price": 118.91,
+          "currency": "EUR",
+          "return_basis": "EUR",
+          "return_1m_pct": -2.66,
+          "return_3m_pct": 1.47,
+          "return_6m_pct": -8.51,
+          "return_1y_pct": 1.09,
+          "high_52w": 145.49,
+          "low_52w": 109.05,
+          "near_52w_high_pct": -18.27,
+          "momentum_score": 45.3,
+          "data_points": 311,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "gold_miners": {
+      "primary": {
+        "ticker": "SPGP.L",
+        "current_price": 36.2234,
+        "currency": "GBp",
+        "return_basis": "EUR",
+        "return_1m_pct": -7.0,
+        "return_3m_pct": 20.39,
+        "return_6m_pct": -3.15,
+        "return_1y_pct": 18.89,
+        "high_52w": 44.5146,
+        "low_52w": 27.2614,
+        "near_52w_high_pct": -18.63,
+        "momentum_score": 60.9,
+        "data_points": 311,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": [
+        {
+          "ticker": "GDX.L",
+          "current_price": 87.6042,
+          "currency": "USD",
+          "return_basis": "EUR",
+          "return_1m_pct": -7.6,
+          "return_3m_pct": 19.34,
+          "return_6m_pct": -4.32,
+          "return_1y_pct": 16.1,
+          "high_52w": 110.0988,
+          "low_52w": 67.3591,
+          "near_52w_high_pct": -20.43,
+          "momentum_score": 59.3,
+          "data_points": 311,
+          "last_date": "2026-10-19"
+        },
+        {
+          "ticker": "AUCO.L",
+          "current_price": 98.8999,
+          "currency": "USD",
+          "return_basis": "EUR",
+          "return_1m_pct": -6.58,
+          "return_3m_pct": 23.29,
+          "return_6m_pct": -2.79,
+          "return_1y_pct": 14.02,
+          "high_52w": 122.621,
+          "low_52w": 74.1208,
+          "near_52w_high_pct": -19.35,
+          "momentum_score": 63.3,
+          "data_points": 312,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "silver_physical": {
+      "primary": {
+        "ticker": "PHAG.L",
+        "current_price": 46.3944,
+        "currency": "USD",
+        "return_basis": "EUR",
+        "return_1m_pct": -11.03,
+        "return_3m_pct": -1.47,
+        "return_6m_pct": -21.97,
+        "return_1y_pct": 13.04,
+        "high_52w": 87.0602,
+        "low_52w": 36.6241,
+        "near_52w_high_pct": -46.71,
+        "momentum_score": 33.1,
+        "data_points": 312,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": [
+        {
+          "ticker": "SSLN.L",
+          "current_price": 48.6385,
+          "currency": "GBp",
+          "return_basis": "EUR",
+          "return_1m_pct": -11.08,
+          "return_3m_pct": -1.71,
+          "return_6m_pct": -21.92,
+          "return_1y_pct": -14.45,
+          "high_52w": 130.2264,
+          "low_52w": 46.5738,
+          "near_52w_high_pct": -62.65,
+          "momentum_score": 33.0,
+          "data_points": 312,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "copper_miners": {
+      "primary": {
+        "ticker": "4COP.DE",
+        "current_price": 55.85,
+        "currency": "EUR",
+        "return_basis": "EUR",
+        "return_1m_pct": -6.12,
+        "return_3m_pct": 1.4,
+        "return_6m_pct": -0.78,
+        "return_1y_pct": 35.61,
+        "high_52w": 64.99,
+        "low_52w": 38.19,
+        "near_52w_high_pct": -14.06,
+        "momentum_score": 48.6,
+        "data_points": 311,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": [
+        {
+          "ticker": "COPX.L",
+          "current_price": 55.7125,
+          "currency": "USD",
+          "return_basis": "EUR",
+          "return_1m_pct": -6.36,
+          "return_3m_pct": 4.34,
+          "return_6m_pct": 0.33,
+          "return_1y_pct": 40.98,
+          "high_52w": 64.6599,
+          "low_52w": 38.3326,
+          "near_52w_high_pct": -13.84,
+          "momentum_score": 51.3,
+          "data_points": 311,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "lithium_miners": {
+      "primary": {
+        "ticker": "VOLT.L",
+        "current_price": 39.1965,
+        "currency": "USD",
+        "return_basis": "EUR",
+        "return_1m_pct": -8.11,
+        "return_3m_pct": -7.56,
+        "return_6m_pct": -17.18,
+        "return_1y_pct": -2.29,
+        "high_52w": 54.7646,
+        "low_52w": 37.5957,
+        "near_52w_high_pct": -28.43,
+        "momentum_score": 32.4,
+        "data_points": 312,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": [
+        {
+          "ticker": "LITU.L",
+          "current_price": 10.3069,
+          "currency": "USD",
+          "return_basis": "EUR",
+          "return_1m_pct": -6.39,
+          "return_3m_pct": -5.02,
+          "return_6m_pct": -19.51,
+          "return_1y_pct": 17.93,
+          "high_52w": 14.0853,
+          "low_52w": 8.8264,
+          "near_52w_high_pct": -26.83,
+          "momentum_score": 33.4,
+          "data_points": 311,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "agriculture_soft_commodities": {
+      "primary": {
+        "ticker": "SPAG.L",
+        "current_price": 48.656,
+        "currency": "GBp",
+        "return_basis": "EUR",
+        "return_1m_pct": -5.46,
+        "return_3m_pct": -2.23,
+        "return_6m_pct": -1.89,
+        "return_1y_pct": 13.96,
+        "high_52w": 52.5763,
+        "low_52w": 41.894,
+        "near_52w_high_pct": -7.46,
+        "momentum_score": 45.4,
+        "data_points": 310,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": []
+    },
+    "water_infrastructure": {
+      "primary": {
+        "ticker": "IQQQ.DE",
+        "current_price": 67.36,
+        "currency": "EUR",
+        "return_basis": "EUR",
+        "return_1m_pct": 3.85,
+        "return_3m_pct": 0.94,
+        "return_6m_pct": 1.97,
+        "return_1y_pct": 4.37,
+        "high_52w": 68.5546,
+        "low_52w": 62.36,
+        "near_52w_high_pct": -1.74,
+        "momentum_score": 53.1,
+        "data_points": 311,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": [
+        {
+          "ticker": "IH2O.L",
+          "current_price": 67.3554,
+          "currency": "GBp",
+          "return_basis": "EUR",
+          "return_1m_pct": 3.51,
+          "return_3m_pct": 1.22,
+          "return_6m_pct": 2.59,
+          "return_1y_pct": 2.91,
+          "high_52w": 69.1713,
+          "low_52w": 62.0352,
+          "near_52w_high_pct": -2.63,
+          "momentum_score": 53.6,
+          "data_points": 310,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "eu_retail_banking": {
+      "primary": {
+        "ticker": "EXV1.DE",
+        "current_price": 38.71,
+        "currency": "EUR",
+        "return_basis": "EUR",
+        "return_1m_pct": -9.25,
+        "return_3m_pct": -5.97,
+        "return_6m_pct": 11.73,
+        "return_1y_pct": 36.05,
+        "high_52w": 42.9513,
+        "low_52w": 28.7749,
+        "near_52w_high_pct": -9.87,
+        "momentum_score": 49.3,
+        "data_points": 312,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": []
+    },
+    "us_retail_banking": {
+      "primary": {
+        "ticker": "IUS2.DE",
+        "current_price": 7.066,
+        "currency": "EUR",
+        "return_basis": "EUR",
+        "return_1m_pct": -2.54,
+        "return_3m_pct": -7.37,
+        "return_6m_pct": 3.71,
+        "return_1y_pct": 22.91,
+        "high_52w": 7.761,
+        "low_52w": 5.868,
+        "near_52w_high_pct": -8.96,
+        "momentum_score": 45.8,
+        "data_points": 312,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": [
+        {
+          "ticker": "BNKS.L",
+          "current_price": 7.0625,
+          "currency": "USD",
+          "return_basis": "EUR",
+          "return_1m_pct": -2.61,
+          "return_3m_pct": -6.84,
+          "return_6m_pct": 3.72,
+          "return_1y_pct": 20.38,
+          "high_52w": 7.79,
+          "low_52w": 5.885,
+          "near_52w_high_pct": -9.34,
+          "momentum_score": 46.2,
+          "data_points": 312,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "crypto_infrastructure": {
+      "primary": {
+        "ticker": "DAPP.L",
+        "current_price": 9.9844,
+        "currency": "USD",
+        "return_basis": "EUR",
+        "return_1m_pct": -14.82,
+        "return_3m_pct": -16.69,
+        "return_6m_pct": -12.14,
+        "return_1y_pct": -29.55,
+        "high_52w": 15.9598,
+        "low_52w": 8.7574,
+        "near_52w_high_pct": -37.44,
+        "momentum_score": 27.3,
+        "data_points": 311,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": []
+    },
+    "semiconductors_design": {
+      "primary": {
+        "ticker": "SEC0.DE",
+        "current_price": 16.9,
+        "currency": "EUR",
+        "return_basis": "EUR",
+        "return_1m_pct": -1.77,
+        "return_3m_pct": -7.28,
+        "return_6m_pct": 22.09,
+        "return_1y_pct": 87.57,
+        "high_52w": 21.295,
+        "low_52w": 8.529,
+        "near_52w_high_pct": -20.64,
+        "momentum_score": 56.8,
+        "data_points": 311,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": [
+        {
+          "ticker": "SEMI.L",
+          "current_price": 16.8964,
+          "currency": "GBP",
+          "return_basis": "EUR",
+          "return_1m_pct": -2.14,
+          "return_3m_pct": -6.98,
+          "return_6m_pct": 28.24,
+          "return_1y_pct": 84.28,
+          "high_52w": 21.1624,
+          "low_52w": 8.4836,
+          "near_52w_high_pct": -20.16,
+          "momentum_score": 60.4,
+          "data_points": 312,
+          "last_date": "2026-10-19"
+        },
+        {
+          "ticker": "SMGB.L",
+          "current_price": 91.907,
+          "currency": "GBP",
+          "return_basis": "EUR",
+          "return_1m_pct": -0.23,
+          "return_3m_pct": -5.4,
+          "return_6m_pct": 31.97,
+          "return_1y_pct": 81.31,
+          "high_52w": 109.1981,
+          "low_52w": 47.5342,
+          "near_52w_high_pct": -15.83,
+          "momentum_score": 64.1,
+          "data_points": 310,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "ai_infrastructure_data_centers": {
+      "primary": {
+        "ticker": "V9N.DE",
+        "current_price": 21.01,
+        "currency": "EUR",
+        "return_basis": "EUR",
+        "return_1m_pct": -4.63,
+        "return_3m_pct": -8.03,
+        "return_6m_pct": -5.13,
+        "return_1y_pct": 21.75,
+        "high_52w": 25.615,
+        "low_52w": 15.198,
+        "near_52w_high_pct": -17.98,
+        "momentum_score": 39.6,
+        "data_points": 311,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": [
+        {
+          "ticker": "XAIX.DE",
+          "current_price": 212.35,
+          "currency": "EUR",
+          "return_basis": "EUR",
+          "return_1m_pct": -0.89,
+          "return_3m_pct": 7.6,
+          "return_6m_pct": 26.93,
+          "return_1y_pct": 41.43,
+          "high_52w": 226.5,
+          "low_52w": 142.82,
+          "near_52w_high_pct": -6.25,
+          "momentum_score": 69.9,
+          "data_points": 312,
+          "last_date": "2026-10-19"
+        },
+        {
+          "ticker": "AIAI.L",
+          "current_price": 35.5352,
+          "currency": "USD",
+          "return_basis": "EUR",
+          "return_1m_pct": 0.16,
+          "return_3m_pct": 6.72,
+          "return_6m_pct": 33.77,
+          "return_1y_pct": 42.48,
+          "high_52w": 39.8991,
+          "low_52w": 21.9326,
+          "near_52w_high_pct": -10.94,
+          "momentum_score": 72.9,
+          "data_points": 312,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "robotics_automation": {
+      "primary": {
+        "ticker": "2B76.DE",
+        "current_price": 18.938,
+        "currency": "EUR",
+        "return_basis": "EUR",
+        "return_1m_pct": 3.83,
+        "return_3m_pct": 7.7,
+        "return_6m_pct": 21.23,
+        "return_1y_pct": 37.05,
+        "high_52w": 20.435,
+        "low_52w": 12.958,
+        "near_52w_high_pct": -7.33,
+        "momentum_score": 68.5,
+        "data_points": 312,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": [
+        {
+          "ticker": "RBOT.L",
+          "current_price": 18.9034,
+          "currency": "USD",
+          "return_basis": "EUR",
+          "return_1m_pct": 3.54,
+          "return_3m_pct": 7.54,
+          "return_6m_pct": 21.71,
+          "return_1y_pct": 32.68,
+          "high_52w": 20.4911,
+          "low_52w": 12.9481,
+          "near_52w_high_pct": -7.75,
+          "momentum_score": 68.6,
+          "data_points": 313,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "cybersecurity_commercial": {
+      "primary": {
+        "ticker": "USPY.L",
+        "current_price": 41.3434,
+        "currency": "USD",
+        "return_basis": "EUR",
+        "return_1m_pct": -2.29,
+        "return_3m_pct": 8.35,
+        "return_6m_pct": 49.77,
+        "return_1y_pct": 50.33,
+        "high_52w": 45.8485,
+        "low_52w": 23.1985,
+        "near_52w_high_pct": -9.83,
+        "momentum_score": 79.9,
+        "data_points": 312,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": [
+        {
+          "ticker": "LOCK.L",
+          "current_price": 11.6449,
+          "currency": "USD",
+          "return_basis": "EUR",
+          "return_1m_pct": 2.46,
+          "return_3m_pct": 13.26,
+          "return_6m_pct": 27.2,
+          "return_1y_pct": 30.83,
+          "high_52w": 12.2661,
+          "low_52w": 8.0002,
+          "near_52w_high_pct": -5.06,
+          "momentum_score": 74.4,
+          "data_points": 312,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "pharma_large_cap": {
+      "primary": {
+        "ticker": "IUHE.AS",
+        "current_price": 7.94,
+        "currency": "EUR",
+        "return_basis": "EUR",
+        "return_1m_pct": 4.58,
+        "return_3m_pct": 9.66,
+        "return_6m_pct": 20.54,
+        "return_1y_pct": 19.5,
+        "high_52w": 8.08,
+        "low_52w": 6.4397,
+        "near_52w_high_pct": -1.73,
+        "momentum_score": 69.6,
+        "data_points": 315,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": [
+        {
+          "ticker": "IUHC.L",
+          "current_price": 12.6509,
+          "currency": "USD",
+          "return_basis": "EUR",
+          "return_1m_pct": 6.89,
+          "return_3m_pct": 12.19,
+          "return_6m_pct": 26.93,
+          "return_1y_pct": 28.07,
+          "high_52w": 12.9343,
+          "low_52w": 9.7757,
+          "near_52w_high_pct": -2.19,
+          "momentum_score": 74.8,
+          "data_points": 312,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "biotech_drug_development": {
+      "primary": {
+        "ticker": "NBTK.DE",
+        "current_price": 63.7,
+        "currency": "EUR",
+        "return_basis": "EUR",
+        "return_1m_pct": -0.61,
+        "return_3m_pct": 6.88,
+        "return_6m_pct": 19.2,
+        "return_1y_pct": 36.92,
+        "high_52w": 66.03,
+        "low_52w": 45.745,
+        "near_52w_high_pct": -3.53,
+        "momentum_score": 65.6,
+        "data_points": 311,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": [
+        {
+          "ticker": "HEAL.L",
+          "current_price": 9.5898,
+          "currency": "USD",
+          "return_basis": "EUR",
+          "return_1m_pct": 2.65,
+          "return_3m_pct": 14.48,
+          "return_6m_pct": 26.76,
+          "return_1y_pct": 30.56,
+          "high_52w": 9.7498,
+          "low_52w": 7.1664,
+          "near_52w_high_pct": -1.64,
+          "momentum_score": 74.9,
+          "data_points": 312,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "infrastructure_core": {
+      "primary": {
+        "ticker": "INFR.L",
+        "current_price": 33.7345,
+        "currency": "GBp",
+        "return_basis": "EUR",
+        "return_1m_pct": 2.61,
+        "return_3m_pct": -2.95,
+        "return_6m_pct": 2.32,
+        "return_1y_pct": 8.47,
+        "high_52w": 35.5944,
+        "low_52w": 29.768,
+        "near_52w_high_pct": -5.23,
+        "momentum_score": 50.0,
+        "data_points": 310,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": []
+    },
+    "luxury_goods": {
+      "primary": {
+        "ticker": "GLUX.SW",
+        "current_price": 199.2,
+        "currency": "EUR",
+        "return_basis": "EUR",
+        "return_1m_pct": 5.16,
+        "return_3m_pct": -3.88,
+        "return_6m_pct": -1.92,
+        "return_1y_pct": -2.57,
+        "high_52w": 222.7,
+        "low_52w": 188.5,
+        "near_52w_high_pct": -10.55,
+        "momentum_score": 47.7,
+        "data_points": 306,
+        "last_date": "2026-10-16"
+      },
+      "alternatives": [
+        {
+          "ticker": "LUXU.L",
+          "current_price": 197.6306,
+          "currency": "USD",
+          "return_basis": "EUR",
+          "return_1m_pct": 3.12,
+          "return_3m_pct": -4.31,
+          "return_6m_pct": -2.02,
+          "return_1y_pct": -7.47,
+          "high_52w": 222.8203,
+          "low_52w": 186.7186,
+          "near_52w_high_pct": -11.3,
+          "momentum_score": 46.6,
+          "data_points": 312,
+          "last_date": "2026-10-19"
+        }
+      ]
+    },
+    "consumer_india_em": {
+      "primary": {
+        "ticker": "NDIA.L",
+        "current_price": 7.4812,
+        "currency": "USD",
+        "return_basis": "EUR",
+        "return_1m_pct": 0.1,
+        "return_3m_pct": -2.59,
+        "return_6m_pct": -1.39,
+        "return_1y_pct": -12.18,
+        "high_52w": 8.6756,
+        "low_52w": 6.9518,
+        "near_52w_high_pct": -13.77,
+        "momentum_score": 47.3,
+        "data_points": 312,
+        "last_date": "2026-10-19"
+      },
+      "alternatives": []
+    }
+  },
+  "standalone_tickers": {}
+}

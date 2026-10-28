@@ -33,9 +33,17 @@ user_notes: "Less crowded than pure AI play. Copper miners is the physical commo
   infrastructure expression."
 
 intensity:
-  current_score: 88.0
-  last_updated: "2026-10-16"
+  current_score: 77.5
+  last_updated: "2026-10-23"
   history:
+  - period: '2026-10-23'
+    score: 77.5
+    note: 'Computed 2026-10-23: avg=80.47 trend=↓ (falling 1 period) (was 84.8)'
+    computation_method: computed
+  - period: '2026-10-20'
+    score: 84.8
+    note: 'Computed 2026-10-20: avg=82.83 trend=↑ (rising 1 period) (was 88.0)'
+    computation_method: computed
   - period: '2026-10-16'
     score: 88.0
     note: 'Computed 2026-10-16: avg=88.03 trend=→ (flat) (was 81.0)'
@@ -168,13 +176,13 @@ indicators:
   name: "Copper price trend (spot, USD/tonne)"
   source: "LME spot price"
   check_frequency: monthly
-  current_value: 14398.3735
+  current_value: 14234.1291
   unit: USD_per_tonne
   direction: higher_is_stronger
   threshold_strong: 9000
   threshold_weak: 7000
-  last_value: 14892.2084
-  last_date: "2026-10-16"
+  last_value: 14498.6833
+  last_date: "2026-10-23"
   update_note: "auto: COMEX copper front month, USD/lb → USD/tonne"
 
   semaphore: 🟡
@@ -283,7 +291,7 @@ indicators:
     value: 9017.0
   - date: '2021-07-01'
     value: 9878.0
-  score: 78.3
+  score: 55.6
 deactivation_conditions:
 - id: deact_01
   condition: "Grid connection queue clears materially (lead times drop below 6 months for 2 consecutive quarters)."
@@ -296,7 +304,7 @@ deactivation_conditions:
 linked_event_catalyst_ids: []
 narrative_maturity: "mainstream"
 status: active
-status_last_reviewed: "2026-10-17"
+status_last_reviewed: "2026-10-23"
 absorbed_catalyst_ids:
 - struct_solar_lcoe_deployment
 - struct_battery_storage_supercycle
@@ -314,6 +322,32 @@ absorbed_note: |
     - struct_solar_lcoe_deployment (intensity 64.1): US utility-scale solar LCOE (BloombergNEF global benchmark, fixed-axis), US utility-scale solar capacity additions (annualized, GW), China polysilicon spot price (CNY/kg) — inverse signal: lower price = developer tailwind, not structural strength, North American utility-scale solar PPA price (USD/MWh, LevelTen Energy quarterly index)
     - struct_battery_storage_supercycle (intensity 87.0): Lithium carbonate battery-grade spot (USD/t), Global grid-scale BESS annual installations (GWh), BESS share of total lithium demand (%), Global EV sales run-rate (millions units/yr)
 review_log:
+- date: '2026-10-21'
+  verdict: strengthening
+  evidence: "Schneider Electric Q3 (2026-10-16): record EUR 11.46B revenue, +16.9% organic, Energy Management +18.8% to EUR
+    9.62B, record order backlog at end-September, FY2026 organic growth guidance raised to 12-14% and adjusted EBITA growth
+    to 18-21%, with 'increasing visibility into 2027 and 2028' (CEO Blum). GE Vernova Q3 is due 2026-10-28 (Q2: electrification
+    orders +66% to about USD 6.3B, equipment backlog about USD 40.6B). Utilities were a leading S&P sector on 2026-10-20 (+1.26%).
+    Wood Mackenzie / pv magazine (2026-05-11): US transformer lead times up to about four years. ind_01 NOT recorded: no 2026
+    like-for-like lead-time survey; ind_03 copper is auto-recorded (about USD 14,400/t on 2026-10-21, -0.7% vs stored). Adjacent
+    headwinds unchanged and not a grid-capex cut: 10y at about 5.12% (peak 5.365% on 2026-10-14), US clean-energy project
+    cancellations (USD 14B in Q1 2026)."
+  source: Schneider Electric Q3 2026 via HL / KSL-Reuters 2026-10-16; MarketBeat GE Vernova Q2 call 2026-07-22; 
+    CappNotes 2026-10-20; pv magazine USA 2026-05-11
+- date: '2026-10-19'
+  verdict: intact
+  evidence: "Rystad Energy (2026-06-06/08): global grid capex to exceed USD 650B in 2026, +5% YoY and more than double 2020,
+    with transformer prices up about 77% since 2019 and lead times and prices now stagnating at high levels rather than rising;
+    Wood Mackenzie Q2 2025 survey: power-transformer lead times averaged 128 weeks (about 29.5 months), generator step-up
+    144 weeks, US supply deficit about 30%; Hitachi Energy (>USD 1B, South Boston plant online 2028) and Siemens (USD 421M
+    Charlotte) adding capacity. ind_01 NOT recorded: the 128-week figure is a Q2 2025 survey, older than the stored 26-month
+    reading, and no 2026 survey was found. ind_02 (EU grid investment) has no 2026 EU-specific number. Adjacent headwind,
+    not a grid-capex cut: US cancellations of solar/wind/storage capacity (more than 8 GW in Q1 2026, more than 21 GW since
+    the start of 2025) and DOE grant terminations; the thesis's grid leg is not touched. Rates at 5.1-5.2% on the 10y (2026-10-13)
+    are a valuation headwind for utilities, not a capex cut."
+  source: Rystad Energy via pv magazine (2026-06-06); Wood Mackenzie transformer survey Q2 2025; Foley & Lardner 'The 
+    grid's bottleneck isn't just money, it's materials' (2026-09); Renewable Energy World / Carbon Pulse on 
+    cancellations
 - date: '2026-10-17'
   verdict: intact
   evidence: 'ind_03 recorded by indicator_sources --apply (1.44e+04, 2026-10-16). ind_02 (EU grid investment announced, EUR

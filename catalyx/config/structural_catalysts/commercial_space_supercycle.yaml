@@ -83,8 +83,16 @@ intensity:
     estimate: 82. Rationale: all three indicators are well above strong thresholds, trend is
     rising, but this is a cold-start file with no history — conservative relative to the
     formula's 92.9 output. Run intensity_engine --write-back after first quarterly data update.
-  last_updated: "2026-10-16"
+  last_updated: "2026-10-23"
   history:
+  - period: '2026-10-23'
+    score: 84.5
+    note: 'Computed 2026-10-23: avg=84.55 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-20'
+    score: 84.5
+    note: 'Computed 2026-10-20: avg=84.55 trend=→ (flat)'
+    computation_method: computed
   - period: '2026-10-16'
     score: 84.5
     note: 'Computed 2026-10-16: avg=84.55 trend=→ (flat)'

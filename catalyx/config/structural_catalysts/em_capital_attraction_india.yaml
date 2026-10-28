@@ -43,13 +43,21 @@ user_notes: >
   stale on its old weak-dollar premise and should be refreshed via /catalyx-sector-study.
 
 intensity:
-  current_score: 38.1
+  current_score: 60.6
   computation_method: computed
-  last_updated: "2026-10-16"
+  last_updated: "2026-10-23"
   computation_note: >
     Bootstrap at creation 2026-07-01. Deliberately weakest active structural: real long-run EM-consumption floor
     but the near-term driver is contested (RBI on hold, DXY back to ~101, FPI outflows).
   history:
+  - period: '2026-10-23'
+    score: 60.6
+    note: 'Computed 2026-10-23: avg=58.58 trend=↑ (rising 1 period) (was 57.1)'
+    computation_method: computed
+  - period: '2026-10-20'
+    score: 57.1
+    note: 'Computed 2026-10-20: avg=57.1 trend=→ (flat) (was 38.1)'
+    computation_method: computed
   - period: '2026-10-16'
     score: 38.1
     note: 'Computed 2026-10-16: avg=33.15 trend=↑↑ (rising 2+ consecutive) (was 40.0)'
@@ -130,16 +138,16 @@ indicators:
   source: "ICE / Bloomberg DXY"
   source_url_template: "https://www.marketwatch.com/investing/index/dxy"
   check_frequency: weekly
-  current_value: 101.84
+  current_value: 101.771
   unit: dxy_index
   direction: lower_is_stronger
   threshold_strong: 97
   threshold_weak: 104
-  last_value: 102.305
-  last_date: "2026-10-16"
+  last_value: 101.783
+  last_date: "2026-10-23"
   update_note: >-
     auto: ICE DXY (yfinance)
-  semaphore: 🔴
+  semaphore: 🟡
   value_history:
   - date: "2026-05-31"
     value: 99
@@ -148,7 +156,7 @@ indicators:
   - date: "2025-06-30"
     value: 104
 
-  score: 12.5
+  score: 52.6
 - id: ind_02
   name: "FPI net equity+debt flows into India, trailing 12M ($B)"
   source: "NSDL / CDSL FPI data"
@@ -200,23 +208,23 @@ indicators:
   source: "RBI / Bloomberg USD/INR"
   source_url_template: "https://www.rbi.org.in/"
   check_frequency: weekly
-  current_value: 96.73
+  current_value: 94.96
   unit: inr_per_usd
   direction: lower_is_stronger
   threshold_strong: 92
   threshold_weak: 97
-  last_value: 96.73
-  last_date: "2026-10-09"
+  last_value: 94.96
+  last_date: "2026-10-16"
   update_note: >-
     auto: INR/USD (FRED DEXINUS)
-  semaphore: 🔴
+  semaphore: 🟡
   value_history:
   - date: "2026-05-31"
     value: 95.5
   - date: "2025-12-31"
     value: 94.0
 
-  score: 11.1
+  score: 72.7
 deactivation_conditions:
 - id: deact_01
   condition: >
@@ -239,8 +247,8 @@ linked_structural_catalyst_ids:
 - struct_japan_carry_unwind   # both are USD/DXY-gated EM-flow regimes; watch together
 
 narrative_maturity: "emerging"
-status: dormant
-status_last_reviewed: "2026-10-16"
+status: active
+status_last_reviewed: "2026-10-23"
 review_log:
 - date: '2026-09-14'
   verdict: weakening
@@ -251,6 +259,10 @@ review_log:
     per protocol, but the evidence surfaced unprompted while researching the rate story and is recorded rather than discarded."
   source: MUFG Research IndiaPulse/RBI coverage 2026; Outlook Money Fed-rate-hike-impact-on-India, accessed 2026-09-14
 lifecycle_log:
+- date: '2026-10-21'
+  from: dormant
+  to: active
+  reason: 'reactivated: intensity 57.1 back above 40.0'
 - date: '2026-10-06'
   from: active
   to: dormant

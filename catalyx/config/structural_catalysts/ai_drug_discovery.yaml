@@ -42,11 +42,19 @@ user_notes: >
 intensity:
   current_score: 88.7
   computation_method: computed
-  last_updated: "2026-10-16"
+  last_updated: "2026-10-23"
   computation_note: >
     Bootstrap at creation 2026-07-01. Anchor: below struct_biopharma_patent_cliff_ma (80). Real platform
     inflection but early-cycle with binary clinical-validation risk.
   history:
+  - period: '2026-10-23'
+    score: 88.7
+    note: 'Computed 2026-10-23: avg=88.73 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-20'
+    score: 88.7
+    note: 'Computed 2026-10-20: avg=88.73 trend=→ (flat)'
+    computation_method: computed
   - period: '2026-10-16'
     score: 88.7
     note: 'Computed 2026-10-16: avg=88.73 trend=→ (flat)'
@@ -205,7 +213,7 @@ linked_structural_catalyst_ids:
 
 narrative_maturity: "emerging"
 status: active
-status_last_reviewed: "2026-10-17"
+status_last_reviewed: "2026-10-21"
 absorbed_catalyst_ids:
 - struct_crispr_gene_editing_validation
 - struct_biosecure_biomanufacturing_reshoring
@@ -223,6 +231,25 @@ absorbed_note: |
     - struct_crispr_gene_editing_validation (intensity 77.8): In-vivo gene-editing programs in Phase 3 / BLA (count), Whole-genome sequencing cost floor ($/genome, research), FDA gene/cell-therapy approvals YTD (count)
     - struct_biosecure_biomanufacturing_reshoring (intensity 83.0): Twist Bioscience quarterly revenue ($M), DNA synthesis cost ($/base pair), US federal / DoD biomanufacturing contract commitments ($B cumulative)
 review_log:
+- date: '2026-10-21'
+  verdict: intact
+  evidence: 'Capital markets open to AI-native biotech: Iambic Therapeutics (Nvidia-backed, AI-driven platform, lead HER2
+    inhibitor IAM1363) priced a USD 150M Nasdaq IPO at USD 16 (midpoint) and debuted 2026-10-15, up roughly 13-18% on day
+    one (valuation about USD 0.76-0.9B). Earlier dated anchors unchanged: Isomorphic Labs USD 2.1B Series B (2026-05-13),
+    Insilico ISM6331 FDA Fast Track (2026-07-29). No new clinical readout for an AI-designed asset found in the last two days.
+    Verdict stays intact: one small IPO, and the stored definitions of ind_01-03 (USD 6B TTM, 22 molecules, 20 partnerships)
+    still match no 2026 source, so nothing is recorded.'
+  source: Iambic 424B4 / pricing release and Fierce Biotech via dealroom and valueaddvc 2026-10-15; BioPharma Dive IPO 
+    tracker (captured 2026-10-21)
+- date: '2026-10-19'
+  verdict: intact
+  evidence: "Clinic: Insilico's rentosertib (IPF) Phase IIa published in Nature Medicine (April 2026): +98.4 mL FVC at 60
+    mg over 12 weeks vs -20.3 mL on placebo; Phase 3 registered 2026-07-07 (already in the 2026-10-17 delta). Capital: Isomorphic
+    Labs USD 2.1B Series B (2026-05-13) and an Insilico USD 110M Series E are the largest rounds found; no new October round
+    found. No indicator recorded: the stored definitions (22 molecules, 20 partnerships, USD 6B TTM) still match no 2026 source.
+    Verdict stays intact rather than strengthening because nothing new and dated inside the last two days moved."
+  source: Nature Medicine rentosertib Phase IIa (April 2026) as summarised by IntuitionLabs; PharmaVoice on Isomorphic 
+    Labs Series B (2026-05-13)
 - date: '2026-10-17'
   verdict: strengthening
   evidence: 'Capital: BioPharma Dive / PharmaVoice H1 2026 venture review (USD 9.1B across 68 biotechs, highest first half

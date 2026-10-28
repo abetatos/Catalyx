@@ -1,0 +1,104 @@
+{
+  "scan_date": "2026-10-21",
+  "items": [
+    {
+      "key": "c0:fed-oct28-hold-odds-2026-10-20",
+      "source": "c0",
+      "fact": "Kalshi priced 87% hold / 13% hike and CME FedWatch 14.9% hike odds (22.1% a week earlier) for the 2026-10-27/28 FOMC, after the hot 2026-10-14 CPI",
+      "outcome": "not_an_event",
+      "reason": "market pricing ahead of an undecided meeting; the decision lands in calendar_upcoming (fed:2026-10-28) and the 2026-09-16 hike is already cat_20260916_fed_rate_hike"
+    },
+    {
+      "key": "c0:ecb-oct-hold-expected-2026-10-29",
+      "source": "c0",
+      "fact": "Reuters poll (2026-10-05/08) of 73 economists expects the ECB to hold the deposit rate at 2.50% on 2026-10-29 and hike in December (64 of 73)",
+      "outcome": "not_an_event",
+      "reason": "forecast ahead of an undecided meeting; the decided fact is cat_20260910_ecb_rate_hike and the meeting is calendar_upcoming (ecb:2026-10-29)"
+    },
+    {
+      "key": "c0:us10y-peak-5p365-2026-10-14",
+      "source": "c0",
+      "fact": "US 10-year Treasury yield peaked at 5.365% on 2026-10-14 (highest since April 2002) after the hot CPI, then eased to 5.12% on 2026-10-20; 2s10s about 33bp",
+      "outcome": "not_an_event",
+      "reason": "a market level with no discrete decision behind it; work_list.market_moves in state_20261021.json is empty (no 25-40bp 10y trigger fired). The rates driver is carried by cat_20260916_fed_rate_hike and cat_20260910_ecb_rate_hike"
+    },
+    {
+      "key": "c0:brent-110-hormuz-2026-10-17",
+      "source": "c0",
+      "fact": "Brent touched about USD 110 on 2026-10-17 (first since May) and settled USD 108.79 on 2026-10-20; IRGC said two tankers hit mines in the Strait of Hormuz on 2026-10-20 while the US blockade of Iranian ports continues",
+      "outcome": "refresh_of",
+      "catalyst_id": "cat_20260817_hormuz_reescalation",
+      "reason": "that event already records the US naval blockade and the oil level move through 2026-10-16 (review_log 2026-10-17); the new Brent high and the mine incident are the same driver and are refreshed in scan_deltas. A second oil catalyst would double count"
+    },
+    {
+      "key": "c0:tsmc-q3-2026-10-15",
+      "source": "c0",
+      "fact": "TSMC Q3 2026 (2026-10-15): revenue +50.9% YoY, 2026 growth guide raised to about 44% in USD, capex held at USD 60-64B, AI demand above supply",
+      "outcome": "below_threshold",
+      "reason": "strength_score 40 by rubric: decided (str_02 = 25) and corroborated by several outlets plus the company release (str_04 = 15), but a confirmation of a guided capex range, one company, no consensus surprise (str_03 false), not a rate shift for the sector. Used as evidence in the struct_ai_capex_supercycle delta"
+    },
+    {
+      "key": "c0:schneider-q3-2026-10-16",
+      "source": "c0",
+      "fact": "Schneider Electric Q3 2026 (2026-10-16): revenue EUR 11.46B (+16.9% organic) vs EUR 11.13B consensus, data-centre demand triple-digit, FY guidance raised for the second time",
+      "outcome": "below_threshold",
+      "reason": "strength_score 40 by rubric: decided (str_02 = 25) and corroborated by Reuters plus the company release (str_04 = 15); single-company beat of about 3% over consensus (str_03 false), not >10% of a sector flow (str_01 false). Used as evidence in the struct_energy_transition_grid and struct_ai_capex_supercycle deltas"
+    },
+    {
+      "key": "c0:coreweave-oracle-ai-credit-stress-2026-10-14",
+      "source": "c0",
+      "fact": "CoreWeave fell about 25% in the week to 2026-10-16 (bonds about 15% yield, 5y CDS record 1,194.5bp, S&P B); Oracle fell nearly 10% in the same week on AI-debt concerns",
+      "outcome": "below_threshold",
+      "reason": "strength_score 40 by rubric: reported as fact by Reuters and others (str_02 = 25, str_04 = 15) but company-specific credit repricing, not a decided policy or a change in AI capex plans; no customer cut found. Recorded as the near-miss in the struct_ai_capex_supercycle disconfirming block"
+    },
+    {
+      "key": "c0:merck-kgaa-silence-2026-10-19",
+      "source": "c0",
+      "fact": "Merck KGaA agreed to buy Silence Therapeutics for about USD 1.3B in cash at a 130% premium (2026-10-19)",
+      "outcome": "below_threshold",
+      "reason": "strength_score 40 by rubric: signed (str_02 = 25) and corroborated by Reuters plus the company release (str_04 = 15); about USD 1.3B is small against the year's USD 10B+ deals (str_01 false), not a consensus surprise. Used as evidence in the struct_biopharma_patent_cliff_ma delta"
+    },
+    {
+      "key": "c0:iambic-ipo-2026-10-15",
+      "source": "c0",
+      "fact": "Iambic Therapeutics (AI-driven oncology, Nvidia-backed) priced a USD 150M Nasdaq IPO at USD 16 on 2026-10-15 and rose about 13-18% on debut",
+      "outcome": "below_threshold",
+      "reason": "strength_score 40 by rubric: completed (str_02 = 25) and corroborated by the 424B4 plus press (str_04 = 15); USD 150M against the USD 2.1B Isomorphic round is small (str_01 false). Used as evidence in the struct_ai_drug_discovery delta"
+    },
+    {
+      "key": "c0:noc-q3-guidance-raise-2026-10-20",
+      "source": "c0",
+      "fact": "Northrop Grumman raised 2026 segment operating income and EPS guidance with Q3 results (2026-10-20); stock +4.5%",
+      "outcome": "below_threshold",
+      "reason": "strength_score 40 by rubric: published in an 8-K (str_02 = 25) and corroborated by market reports (str_04 = 15); one US prime, not a European budget or procurement-rate change (str_01 and str_05 false), and not a surprise to the sector. Noted in the struct_nato_rearmament delta"
+    },
+    {
+      "key": "c0:us-pending-home-sales-sep-2026-10-20",
+      "source": "c0",
+      "fact": "US September pending home sales fell 7.3% MoM (vs -0.4% expected), lowest since the series began in 2001; housing starts -5.2%",
+      "outcome": "below_threshold",
+      "reason": "strength_score 40 by rubric: published data release (str_02 = 25) corroborated by two outlets (str_04 = 15) and a large consensus miss, but a single-month level in a sector the book does not hold, with no catalyst or sector linkage to a registered driver"
+    },
+    {
+      "key": "c0:china-fiscal-support-lan-foan-2026-10-01",
+      "source": "c0",
+      "fact": "China Finance Minister Lan Foan (reported 2026-10-01) called for new highly targeted fiscal policies, incl. wider interest subsidies and unused local-bond quotas; no supplementary budget confirmed",
+      "outcome": "not_an_event",
+      "reason": "proposals and signalling, nothing decided; the Politburo economic meeting outcome could not be confirmed in the searches"
+    },
+    {
+      "key": "c0:gold-copper-levels-2026-10-20",
+      "source": "c0",
+      "fact": "Gold about USD 4,140/oz (-0.4%) and copper about USD 6.62/lb (+1.2%) on 2026-10-20",
+      "outcome": "not_an_event",
+      "reason": "market levels with no discrete decision behind them; copper is auto-recorded through indicator_sources (energy_transition_grid ind_03, -0.7% vs stored)"
+    },
+    {
+      "key": "c0:kospi-chip-selloff-2026-10-20",
+      "source": "c0",
+      "fact": "South Korea's Kospi fell 3.73% on 2026-10-20 on chip-led selling; SOX -0.29%, memory ETF -1.3%, Lam Research -3.2%",
+      "outcome": "not_an_event",
+      "reason": "a one-day move whose driver the searches did not identify (no decision, no announcement); the memory driver is already carried by cat_20260624_memory_shortage_confirmed and the US semi index barely moved"
+    }
+  ]
+}

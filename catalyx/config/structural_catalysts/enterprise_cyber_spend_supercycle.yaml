@@ -79,8 +79,16 @@ intensity:
     ind_05 (ZS AI Security ARR $400M, ahead of schedule → strong) → ~85.
     Unweighted avg ≈ 85.2, flat trend (no prior period to compute delta) → 85.2 → round to 86.0.
     Run /catalyx-update after first quarterly data update to switch to computed method.
-  last_updated: "2026-10-17"
+  last_updated: "2026-10-23"
   history:
+  - period: '2026-10-23'
+    score: 72.0
+    note: 'Computed 2026-10-23: avg=72.0 trend=→ (flat)'
+    computation_method: computed
+  - period: '2026-10-20'
+    score: 72.0
+    note: 'Computed 2026-10-20: avg=72.0 trend=→ (flat)'
+    computation_method: computed
   - period: '2026-10-17'
     score: 72.0
     note: 'Computed 2026-10-17: avg=72.0 trend=→ (flat) (was 72.3)'
@@ -341,8 +349,26 @@ linked_structural_catalyst_ids:
 - struct_ai_capex_supercycle    # AI capex expands attack surface (LLM workloads, model theft, prompt injection) → compounding demand
 
 status: active
-status_last_reviewed: "2026-10-17"
+status_last_reviewed: "2026-10-21"
 review_log:
+- date: '2026-10-21'
+  verdict: intact
+  evidence: 'Thin freshness again: no dated cyber print inside the last two days. Barchart (about 2026-10-17) has CrowdStrike
+    +123%, Fortinet +141% and Palo Alto +117% YTD on AI-driven security demand, with a Morningstar overvaluation warning and
+    CrowdStrike at about 220x forward earnings; that is price, not spend. IANS/Artico 2026 CISO benchmark: average budget
+    growth 5%, median flat for the second year, 55% of CISOs flat or cut, 69% prioritising AI-for-security for incremental
+    spend; Wiz 2026 benchmark: 88% expect spending to rise but 56% say it will fall short. Slower budget growth with consolidation,
+    not a cut. ind_05 was recorded 2026-10-17; no new numeric.'
+  source: Barchart 2026-10-17; IANS/Artico 2026 CISO Compensation and Budget Benchmark; Wiz 2026 CISO Budget Benchmark
+- date: '2026-10-19'
+  verdict: intact
+  evidence: 'Thin freshness: the supportive hits are not dated inside the last 2 days. CrowdStrike reported record net new
+    ARR of USD 333M (+51% YoY) and Falcon Flex ending ARR USD 2.29B (+101%) in its latest quarter (quarter date not shown
+    in the source); Gartner-based figures quoted around USD 244B global information-security spend for 2026 (vs stored 240,
+    within 2%, so NOT recorded) and AI-cybersecurity spend rising from USD 51.3B (2026) to nearly USD 86B (2027). ind_05 was
+    recorded 2026-10-17 (USD 19,411M). The short-case query returned only 2022-2024 items (CrowdStrike -19% on weak guide,
+    Palo Alto -23% on billings cut), none dated 2026, so no 2026 contradiction was found, but the retrieval was weak.'
+  source: CrowdStrike latest-quarter results as summarised by TIKR/Webull; Gartner forecast as quoted by TIKR
 - date: '2026-10-17'
   verdict: intact
   evidence: 'ind_05 combined cybersecurity ETF AUM: CIBR USD 17,322M + BUG USD 2,089M = USD 19,411M (yfinance totalAssets
